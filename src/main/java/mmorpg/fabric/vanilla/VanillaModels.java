@@ -192,7 +192,14 @@ final class VanillaModels {
         if (look == null) return;
         MobModel m = new MobModel(mob, look);
         MODELS.put(mob, m);
-        EntityAttachment.ofTicking(m, mob); // 이미 보던 사람은 여기서 startWatching (아래 — 태우기 · 크기를 보냄)
+        EntityAttachment.ofTicking(m, mob); // 이미 보던 사람은 여기서 startWatching (크기를 보냄)
+        m.attached = true;
+        // 태우기: 홀더가 엔티티에 등록된 뒤에야 Polymer 가 태우는 패킷에 뼈 번호를 실음 (ofTicking 안의 startWatching 때는 아직 — 그때 보내면 빈 목록,
+        // CI 43107622066 클라이언트 기록 passengers 0) → 붙인 뒤 이미 보던 사람에게 한 번
+        if (!m.getWatchingPlayers().isEmpty()) {
+            ClientboundSetPassengersPacket mount = new ClientboundSetPassengersPacket(mob);
+            for (ServerGamePacketListenerImpl c : new ArrayList<>(m.getWatchingPlayers())) c.send(mount);
+        }
     }
 
     /** 엔티티 하나의 뼈 표시 엔티티 묶음 — 모드 없는 클라이언트만 봄 */
@@ -208,6 +215,8 @@ final class VanillaModels {
         private int every = 2;
         private float hitW = -1;
         private float hitH = -1;
+        /** 엔티티에 붙음 (EntityAttachment 등록 뒤 — 태우는 패킷에 뼈 번호가 실림) */
+        boolean attached;
 
         MobModel(BedrockMob mob, Look look) {
             this.mob = mob;
@@ -257,7 +266,8 @@ final class VanillaModels {
          *     (Polymer 가 VanillaEntities.StandIn 의 대역 크기로 바꿈)</li>
          * <li>태우기: Polymer 는 탄 것을 짝을 맺을 때 (addPairing) 만 태우는 패킷에 실음 — 엔티티를 불러온 때 (ENTITY_LOAD) 는 곁의 사람과 이미 짝을 맺은
          *     뒤라 이미 보던 사람에게는 뼈가 태워지지 않고 처음 자리에 머물렀음 (곁에서 솟은 샐러맨더가 땅에 묻히고 따라오지 않던 원인 — 이름표 (진짜 탄 것) 가
-         *     있는 몬스터는 이름표가 탈 때의 패킷에 뼈가 같이 실려 괜찮았음). 이 사람에게 한 번 보냄 (Polymer 가 이 사람이 보는 뼈 번호를 더함)</li>
+         *     있는 몬스터는 이름표가 탈 때의 패킷에 뼈가 같이 실려 괜찮았음). 붙인 뒤 (attach — 홀더가 엔티티에 등록된 뒤) 보냄 (Polymer 가 이 사람이 보는
+         *     뼈 번호를 더함)</li>
          * </ol>
          */
         @Override
@@ -266,7 +276,7 @@ final class VanillaModels {
             if (!super.startWatching(player)) return false;
             AttributeInstance size = mob.getAttribute(Attributes.SCALE);
             if (size != null) player.send(new ClientboundUpdateAttributesPacket(mob.getId(), List.of(size)));
-            player.send(new ClientboundSetPassengersPacket(mob));
+            if (attached) player.send(new ClientboundSetPassengersPacket(mob)); // 붙인 뒤 짝을 맺은 사람 (Polymer 도 보냄 — 겹쳐도 같음)
             return true;
         }
 
