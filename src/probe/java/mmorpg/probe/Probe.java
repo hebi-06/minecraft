@@ -117,6 +117,7 @@ public final class Probe implements ClientModInitializer {
                     -Math.sin(yaw), Math.cos(yaw)};
             mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
             if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+            mc.gui.toastManager().clear(); // 접속 때의 알림 (채팅 확인 불가 등) 이 영상 첫 장을 가리지 않게
         } else if (cmd.equals("cam off")) {
             filmCam = null;
             if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
