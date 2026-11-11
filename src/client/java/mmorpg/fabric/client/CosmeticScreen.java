@@ -33,18 +33,17 @@ import org.joml.Vector3f;
 
 /**
  * 장식 창 (0.13.0 — 스탯 창 장식 단추 · U 키 · /장식): 왼쪽은 내 모습 미리보기 (끌어서 돌리기 · 고른 것을 입어 본 모습 · 칭호 · 오라),
- * 오른쪽은 탭 (무기 · 갑옷 · 머리 장식 · 등 장식 · 오라 · 칭호) 과 목록. 무기 탭은 무기 종류 줄 (스킨은 종류마다 하나 — 숨기기 없음),
- * 갑옷 탭은 부위 줄 (투구 · 갑옷 · 바지 · 신발) + 모두 숨기기 · 모두 보이기 (무료). 줄을 누르면 고르고 (미리보기에 입혀 봄),
- * 아래 단추로 장착 · 원래대로 · 숨기기 · 구매 (골드 — 0.21.0, 두 번 눌러 확인). 게임은 멈추지 않음.
+ * 오른쪽은 탭 (무기 · 머리 장식 · 등 장식 · 오라 · 칭호) 과 목록. 무기 탭은 무기 종류 줄 (스킨은 종류마다 하나).
+ * 줄을 누르면 고르고 (미리보기에 입혀 봄), 아래 단추로 장착 · 원래대로 · 구매 (골드 — 0.21.0, 두 번 눌러 확인). 게임은 멈추지 않음.
+ * 2026-11-11 사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고": 갑옷 탭 (갑옷 스킨 · 숨기기 · 모두 숨기기 · 모두 보이기) 을 뺌 — 입은 갑옷은 늘 보이지 않음.
  */
 public final class CosmeticScreen extends Screen {
     public static final int W = 384;
     public static final int H = 234;
-    public static final List<String> TABS = List.of("weapon", "armor", "head", "back", "aura", "title");
-    private static final Map<String, String> TAB_LABEL = Map.of("weapon", "무기", "armor", "갑옷", "head", "머리", "back", "등", "aura", "오라", "title", "칭호");
-    private static final Map<String, String> TAB_TIP = Map.of("weapon", "무기 스킨 (무기 종류마다 하나 · 숨길 수 없음)", "armor", "갑옷 스킨 · 숨기기",
-            "head", "머리 장식", "back", "등 장식", "aura", "오라 (몸 둘레 빛)", "title", "칭호 (이름 위 한 줄)");
-    private static final Map<String, String> PIECE_LABEL = Map.of("helmet", "투구", "chest", "갑옷", "legs", "바지", "boots", "신발");
+    public static final List<String> TABS = List.of("weapon", "head", "back", "aura", "title");
+    private static final Map<String, String> TAB_LABEL = Map.of("weapon", "무기", "head", "머리", "back", "등", "aura", "오라", "title", "칭호");
+    private static final Map<String, String> TAB_TIP = Map.of("weapon", "무기 스킨 (무기 종류마다 하나)", "head", "머리 장식", "back", "등 장식",
+            "aura", "오라 (몸 둘레 빛)", "title", "칭호 (이름 위 한 줄)");
 
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
@@ -53,7 +52,6 @@ public final class CosmeticScreen extends Screen {
     private static final Identifier TAB_ON = Mmorpg.id("ui/mode_btn_on");
     private static final Identifier PANEL = Mmorpg.id("ui/dialog_name");
     private static final Identifier CHECK = Mmorpg.id("ui/icon_check");
-    private static final Identifier CROSS = Mmorpg.id("ui/icon_cross");
     /** 값 그림 (0.21.0 — 금화) */
     private static final ItemStack COIN = new ItemStack(mmorpg.fabric.economy.EconomyItems.GOLD_COIN);
 
@@ -74,14 +72,13 @@ public final class CosmeticScreen extends Screen {
     static final int FOOT_Y = H - 30;
     static final int ACTION_W = 96;
 
-    /** 목록 한 줄: kind = default (기본 · 원래 · 없음) · hide (숨기기) · item (장식) */
+    /** 목록 한 줄: kind = default (기본 · 없음) · item (장식) */
     record Row(String kind, CosmeticDefs.Def def) {}
 
     private int left;
     private int top;
     private String tab = "weapon";
     private String weaponType;
-    private String armorSlot = "helmet";
     private int selected = -1;
     private int scroll;
     /** 미리보기 방향 (0 = 앞, 180 = 뒤) */
@@ -126,25 +123,20 @@ public final class CosmeticScreen extends Screen {
 
     // ------------------------------------------------------------ 목록
 
-    /** 지금 탭의 칸 (weapon · helmet … · head · back · aura · title) */
+    /** 지금 탭의 칸 (weapon · head · back · aura · title — 탭 이름과 같음) */
     String slot() {
-        return switch (tab) {
-            case "weapon" -> "weapon";
-            case "armor" -> armorSlot;
-            default -> tab;
-        };
+        return tab;
     }
 
     List<Row> rows() {
         List<Row> out = new ArrayList<>();
         String slot = slot();
         out.add(new Row("default", null));
-        if (CosmeticDefs.ARMOR.contains(slot)) out.add(new Row("hide", null));
         for (CosmeticDefs.Def d : CosmeticDefs.of(slot, "weapon".equals(slot) ? weaponType : null)) out.add(new Row("item", d));
         return out;
     }
 
-    /** 칸의 지금 값 (내 모습 — 서버가 보낸 것): 장식 키 · HIDE · null (원래) */
+    /** 칸의 지금 값 (내 모습 — 서버가 보낸 것): 장식 키 · null (없음) */
     private String current() {
         Look mine = ClientCosmetics.mine();
         return "weapon".equals(slot()) ? mine.weaponSkin(weaponType) : mine.get(slot());
@@ -154,7 +146,6 @@ public final class CosmeticScreen extends Screen {
         String cur = current();
         return switch (r.kind()) {
             case "default" -> cur == null;
-            case "hide" -> Look.HIDE.equals(cur);
             default -> r.def().id().equals(cur);
         };
     }
@@ -173,7 +164,6 @@ public final class CosmeticScreen extends Screen {
             String slot = slot();
             String v = switch (r.kind()) {
                 case "default" -> null;
-                case "hide" -> Look.HIDE;
                 default -> r.def().id();
             };
             look = "weapon".equals(slot) ? base.withWeapon(weaponType, v) : base.with(slot, v);
@@ -208,12 +198,9 @@ public final class CosmeticScreen extends Screen {
         if (isCurrent(r)) return new Action("§a✔ 지금 모습", false, null, List.of("§7이미 이 모습입니다"));
         switch (r.kind()) {
             case "default": {
-                String label = CosmeticDefs.ARMOR.contains(slot) ? "원래 갑옷으로" : "weapon".equals(slot) ? "기본 모습으로" : "벗기";
+                String label = "weapon".equals(slot) ? "기본 모습으로" : "벗기";
                 return new Action("§f" + label, true, () -> ClientCosmetics.send("clear", slot, weaponType), List.of("§7무료"));
             }
-            case "hide":
-                return new Action("§f숨기기", true, () -> ClientCosmetics.send("hide", slot, ""),
-                        List.of("§7무료 · 언제든 다시 보이게 할 수 있음", "§8막는 수치는 그대로 (모습만)"));
             default: {
                 CosmeticDefs.Def d = r.def();
                 if (ClientCosmetics.owns(d.id())) return new Action("§e장착", true, () -> ClientCosmetics.send("equip", d.id(), ""), List.of("§7가진 장식"));
@@ -271,7 +258,7 @@ public final class CosmeticScreen extends Screen {
         return new int[] {left + PREVIEW_X + PREVIEW_W / 2, top + PREVIEW_Y + PREVIEW_H / 2};
     }
 
-    /** 시험용: 목록 줄의 장식 키 ("" = 기본 · 숨기기) */
+    /** 시험용: 목록 줄의 장식 키 (기본 = "default") */
     public List<String> rowIds() {
         List<String> out = new ArrayList<>();
         for (Row r : rows()) out.add(r.def() == null ? r.kind() : r.def().id());
@@ -287,11 +274,6 @@ public final class CosmeticScreen extends Screen {
         select(-1);
     }
 
-    public void setArmorSlot(String slot) {
-        armorSlot = slot;
-        select(-1);
-    }
-
     public void setYaw(float y) {
         yaw = y;
     }
@@ -300,25 +282,15 @@ public final class CosmeticScreen extends Screen {
         return (RIGHT_W - 3 * (TABS.size() - 1)) / TABS.size();
     }
 
-    /** 아래 줄 단추 i 의 {x, y, w, h}: 무기 = 무기 종류들, 갑옷 = 부위 넷 + 모두 숨기기 · 모두 보이기 */
+    /** 아래 줄 단추 i 의 {x, y, w, h}: 무기 탭의 무기 종류들 */
     private int[] subRect(int i) {
-        int x0 = left + RIGHT_X;
-        int y = top + SUB_Y;
-        if ("weapon".equals(tab)) {
-            int n = Weapons.allTypes().size();
-            int w = (RIGHT_W - (n - 1)) / n;
-            return new int[] {x0 + i * (w + 1), y, w, SUB_H};
-        }
-        if (i < 4) return new int[] {x0 + i * 48, y, 46, SUB_H};
-        return new int[] {x0 + 4 * 48 + (i - 4) * 22 + 2, y, 20, SUB_H};
+        int n = Weapons.allTypes().size();
+        int w = (RIGHT_W - (n - 1)) / n;
+        return new int[] {left + RIGHT_X + i * (w + 1), top + SUB_Y, w, SUB_H};
     }
 
     private int subCount() {
-        return switch (tab) {
-            case "weapon" -> Weapons.allTypes().size();
-            case "armor" -> 6;
-            default -> 0;
-        };
+        return "weapon".equals(tab) ? Weapons.allTypes().size() : 0;
     }
 
     private static boolean in(int[] r, double mx, double my) {
@@ -338,7 +310,7 @@ public final class CosmeticScreen extends Screen {
 
         // 제목 · 가진 골드
         g.text(font, "§d§l장식", left + 12, top + 9, 0xFFFFFFFF, true);
-        g.text(font, "§7· 무기 · 갑옷 스킨, 장식, 오라, 칭호", left + 46, top + 9, 0xFFFFFFFF, true);
+        g.text(font, "§7· 무기 스킨, 장식, 오라, 칭호", left + 46, top + 9, 0xFFFFFFFF, true);
         String money = "§6§l" + ClientCosmetics.money();
         int mw = font.width(money);
         g.text(font, money, left + W - 12 - mw, top + 9, 0xFFFFFFFF, true);
@@ -366,38 +338,21 @@ public final class CosmeticScreen extends Screen {
             if (over) tip = List.of("§d" + TAB_TIP.get(t));
         }
 
-        // 아래 줄 (무기 종류 · 갑옷 부위)
+        // 아래 줄 (무기 탭의 무기 종류)
         int nsub = subCount();
         for (int i = 0; i < nsub; i++) {
             int[] r = subRect(i);
             boolean over = in(r, mx, my);
-            if ("weapon".equals(tab)) {
-                String type = Weapons.allTypes().get(i);
-                boolean on = type.equals(weaponType);
-                RpgHud.sprite(g, on ? TAB_ON : over ? BTN_HOVER : TAB, r[0], r[1], r[2], r[3]);
-                ItemStack icon = typeIcon(type);
-                if (!icon.isEmpty()) g.item(icon, r[0] + (r[2] - 16) / 2, r[1] + 1);
-                if (ClientCosmetics.mine().weaponSkin(type) != null) g.fill(r[0] + r[2] - 4, r[1] + 2, r[0] + r[2] - 2, r[1] + 4, 0xFFFF7FD8);
-                if (over) {
-                    String skin = ClientCosmetics.mine().weaponSkin(type);
-                    CosmeticDefs.Def d = CosmeticDefs.get(skin);
-                    tip = List.of("§f" + typeName(type), d == null ? "§8기본 모습" : "§d스킨: " + d.name());
-                }
-            } else if (i < 4) {
-                String piece = CosmeticDefs.ARMOR.get(i);
-                boolean on = piece.equals(armorSlot);
-                RpgHud.sprite(g, on ? TAB_ON : over ? BTN_HOVER : TAB, r[0], r[1], r[2], r[3]);
-                g.item(pieceIcon(piece), r[0] + 2, r[1] + 1);
-                String v = ClientCosmetics.mine().get(piece);
-                String state = v == null ? "" : Look.HIDE.equals(v) ? "§c" : "§d";
-                g.text(font, (on ? "§f" : over ? "§0" : "§7") + PIECE_LABEL.get(piece), r[0] + 19, r[1] + 6, 0xFFFFFFFF, !over || on);
-                if (!state.isEmpty()) g.fill(r[0] + r[2] - 4, r[1] + 2, r[0] + r[2] - 2, r[1] + 4, Look.HIDE.equals(v) ? 0xFFFF5555 : 0xFFFF7FD8);
-                if (over) tip = List.of("§f" + PIECE_LABEL.get(piece), v == null ? "§8원래 갑옷" : Look.HIDE.equals(v) ? "§c숨김" : "§d스킨: " + name(v));
-            } else {
-                boolean hideAll = i == 4;
-                RpgHud.sprite(g, over ? BTN_HOVER : BTN, r[0], r[1], r[2], r[3]);
-                RpgHud.sprite(g, hideAll ? CROSS : CHECK, r[0] + 2, r[1] + 1, 16, 16);
-                if (over) tip = List.of(hideAll ? "§c갑옷 모두 숨기기" : "§a갑옷 모두 원래대로", "§7무료 · 투구 · 갑옷 · 바지 · 신발");
+            String type = Weapons.allTypes().get(i);
+            boolean on = type.equals(weaponType);
+            RpgHud.sprite(g, on ? TAB_ON : over ? BTN_HOVER : TAB, r[0], r[1], r[2], r[3]);
+            ItemStack icon = typeIcon(type);
+            if (!icon.isEmpty()) g.item(icon, r[0] + (r[2] - 16) / 2, r[1] + 1);
+            if (ClientCosmetics.mine().weaponSkin(type) != null) g.fill(r[0] + r[2] - 4, r[1] + 2, r[0] + r[2] - 2, r[1] + 4, 0xFFFF7FD8);
+            if (over) {
+                String skin = ClientCosmetics.mine().weaponSkin(type);
+                CosmeticDefs.Def d = CosmeticDefs.get(skin);
+                tip = List.of("§f" + typeName(type), d == null ? "§8기본 모습" : "§d스킨: " + d.name());
             }
         }
         if (nsub == 0) {
@@ -434,7 +389,7 @@ public final class CosmeticScreen extends Screen {
         // 아래: 고른 것의 설명 · 할 일 단추
         g.fill(left + RIGHT_X, top + FOOT_Y - 4, left + W - 10, top + FOOT_Y - 3, 0x60C8A050);
         Row sr = selectedRow();
-        String info = sr == null ? "§8줄을 누르면 미리보기에 입혀 봅니다" : sr.def() == null ? (sr.kind().equals("hide") ? "§7이 칸의 갑옷을 숨깁니다 (무료)" : "§7원래 모습 (무료)")
+        String info = sr == null ? "§8줄을 누르면 미리보기에 입혀 봅니다" : sr.def() == null ? "§7원래 모습 (무료)"
                 : sr.def().desc().isEmpty() ? "§7" + sr.def().name() : sr.def().desc().get(0);
         drawFit(g, BedrockText.toJava(info), left + RIGHT_X + 2, top + FOOT_Y + 7, RIGHT_W - ACTION_W - 8);
         Action a = action();
@@ -481,12 +436,7 @@ public final class CosmeticScreen extends Screen {
         switch (r.kind()) {
             case "default" -> {
                 RpgHud.sprite(g, CHECK, x + 4, iy, 16, 16);
-                name = "§f" + ("weapon".equals(slot()) ? "기본 모습" : CosmeticDefs.ARMOR.contains(slot()) ? "원래 갑옷" : "없음");
-                right = cur ? "§a사용 중" : "§8무료";
-            }
-            case "hide" -> {
-                RpgHud.sprite(g, CROSS, x + 4, iy, 16, 16);
-                name = "§c숨기기";
+                name = "§f" + ("weapon".equals(slot()) ? "기본 모습" : "없음");
                 right = cur ? "§a사용 중" : "§8무료";
             }
             default -> {
@@ -546,13 +496,8 @@ public final class CosmeticScreen extends Screen {
         List<String> tip = new ArrayList<>();
         switch (r.kind()) {
             case "default" -> {
-                tip.add("§f" + ("weapon".equals(slot()) ? "기본 모습" : CosmeticDefs.ARMOR.contains(slot()) ? "원래 갑옷" : "없음"));
-                tip.add("weapon".equals(slot()) ? "§7스킨 없이 무기 그대로" : CosmeticDefs.ARMOR.contains(slot()) ? "§7입은 갑옷을 그대로 보임" : "§7이 칸의 장식을 벗음");
-            }
-            case "hide" -> {
-                tip.add("§c" + PIECE_LABEL.get(slot()) + " 숨기기");
-                tip.add("§7입은 갑옷을 보이지 않게 (무료)");
-                tip.add("§8막는 수치는 그대로");
+                tip.add("§f" + ("weapon".equals(slot()) ? "기본 모습" : "없음"));
+                tip.add("weapon".equals(slot()) ? "§7스킨 없이 무기 그대로" : "§7이 칸의 장식을 벗음");
             }
             default -> {
                 CosmeticDefs.Def d = r.def();
@@ -562,7 +507,6 @@ public final class CosmeticScreen extends Screen {
                 tip.addAll(d.desc());
                 if (d.aura() != null) tip.add("§7" + CosmeticAura.label(d.aura().kind()));
                 if ("weapon".equals(d.slot())) tip.add("§8손에 든 모습만 바뀜 (아이콘 · 수치는 그대로)");
-                if (d.hideHelmet()) tip.add("§8쓰는 동안 투구는 보이지 않음 (머리에 얹는 장식)");
                 tip.add(cur ? "§a장착 중" : ClientCosmetics.owns(d.id()) ? "§7가진 장식 — 장착 단추로 입기" : "§6골드 " + d.price() + " §7(가진 것 " + ClientCosmetics.money() + ")");
             }
         }
@@ -608,15 +552,6 @@ public final class CosmeticScreen extends Screen {
                 }
             }
             return ItemStack.EMPTY;
-        });
-    }
-
-    private static ItemStack pieceIcon(String piece) {
-        return new ItemStack(switch (piece) {
-            case "helmet" -> Items.IRON_HELMET;
-            case "chest" -> Items.IRON_CHESTPLATE;
-            case "legs" -> Items.IRON_LEGGINGS;
-            default -> Items.IRON_BOOTS;
         });
     }
 
@@ -928,12 +863,7 @@ public final class CosmeticScreen extends Screen {
         for (int i = 0; i < subCount(); i++) {
             if (!in(subRect(i), mx, my)) continue;
             click();
-            if ("weapon".equals(tab)) setWeaponType(Weapons.allTypes().get(i));
-            else if (i < 4) setArmorSlot(CosmeticDefs.ARMOR.get(i));
-            else {
-                ClientCosmetics.send(i == 4 ? "hide_all" : "show_all", "", "");
-                select(-1); // 미리보기도 바뀐 모습 그대로
-            }
+            setWeaponType(Weapons.allTypes().get(i));
             return true;
         }
         List<Row> rows = rows();

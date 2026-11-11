@@ -138,7 +138,7 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 123, "123 runes (0.25.0 두 스탯 계열 30 더함) " + runes);
+        check(runes == 120, "120 runes (0.25.0 두 스탯 계열 30 더함 · 2026-11-11 한정 3 뺌) " + runes);
 
         // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
@@ -147,7 +147,7 @@ public final class RuneTipTest {
         check(near(gS, 0.8 * 1.3 * 0.95) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS)) && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
                 && gl.contains("유틸 −20% · 시간 보정 +30% 포함")
                 && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
-                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 36초 · 한정 · 원소 얼음 −5%")
+                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 32초 · 한정 · 원소 얼음 −5%")
                 && glj.contains("띄움"), "glacier: " + gl);
         check(glj.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 42 * gS)) && glj.contains("얼음 필드 6 → 7칸") && glj.contains("거대한 얼음 8 → 10번")
                 && glj.contains("빙결 2 → 2.5초") && glj.contains("☆6돌 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * gS)) && glj.contains("빙결 2.5 → 3초"), "glacier tiers: " + glj);
@@ -198,17 +198,16 @@ public final class RuneTipTest {
         // 천붕 6돌: 한 번 더 (60% — 천붕은 6돌에도 배율 32, 범위 · 사거리만 바뀜)
         String hf = joined(RuneTip.lines(rune("str", "transcend"), 6, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
         check(hf.contains("◆ 검이 한 번 더 떨어짐 (지금 겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
-        // 만상귀일 (네 스탯 31 · 31 · 31 · 32 = 125 → P 42): 구슬 17 + 폭발 17
-        String ar = joined(RuneTip.lines(rune("arcana", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
-        double aS = Runes.damageScale(rune("arcana", "transcend")); // 0.49.0 띄움 −5% × (선딜 1.2초 · 장판 → 최대 ×1.3)
-        check(near(aS, 0.95 * 1.3) && ar.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * aS) + " (구슬 " + RuneTip.fmt(714 * aS) + " + 귀일 폭발 " + RuneTip.fmt(714 * aS) + ")")
-                && ar.contains("유틸 −5% · 시간 보정 +30% 포함") && ar.contains("재사용 36초 · 한정") && ar.contains("적용 = 네 스탯의 합 × 1.0"), "arcana: " + ar);
         // 0.17.0 무간참역: 베기 2 × 10 + 마무리 일섬 14 (P 42 → 84 × 10번 + 588 — 나눔이 길어 다음 줄), 영역 줄, 6돌 기절
         List<String> en = plain(RuneTip.lines(rune("endless", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         double eS = Runes.damageScale(rune("endless", "transcend")); // 0.49.0 유틸 없음 × (선딜 0.8초 · 장판 · 4초 넘게 → 최대 ×1.3)
         check(near(eS, 1.3) && en.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * eS)) && en.contains("  베기 " + RuneTip.fmt(84 * eS) + " × 10번 + 마무리 일섬 " + RuneTip.fmt(588 * eS))
                 && en.contains("영역 반지름 8칸 · 0.5초마다 영역 안 모든 적")
-                && en.get(0).equals("재사용 36초 · 한정"), "endless: " + en);
+                && en.get(0).equals("재사용 36초 · 한정") && en.stream().anyMatch(l -> l.contains("적용 = 네 스탯의 합 × 1.0")), "endless: " + en);
+        // 2026-11-11 룬마다 재사용 (cd): 만년빙하 32초 · 세계수의 가호 48초 · 심연의 낙인 42초
+        check(plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 32초 · 한정"), "glacier cd 32");
+        check(plain(RuneTip.lines(rune("yggdrasil", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 48초 · 한정"), "yggdrasil cd 48");
+        check(plain(RuneTip.lines(rune("abyss", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 42초 · 한정"), "abyss cd 42");
         String en6 = joined(RuneTip.lines(rune("endless", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
         check(en6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * eS)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
         // 0.18.0 대지 가르기: 대검 16 (먼저) + 여진 3 × 6 (P 42 → 672 + 126 × 6번), 균열 줄 (앞으로 14칸 · 폭 5칸), 6돌 20칸 · 폭 7칸 · 기절

@@ -19,13 +19,14 @@ public final class CosmeticDefs {
     private CosmeticDefs() {}
 
     public static final String RESOURCE = "/mmorpg/cosmetics.json";
-    /** 칸 순서 (장식 창의 탭 순서와 같음) */
-    public static final List<String> SLOTS = List.of("weapon", "helmet", "chest", "legs", "boots", "head", "back", "aura", "title");
-    /** 갑옷 칸 (숨기기 · 스킨) */
-    public static final List<String> ARMOR = List.of("helmet", "chest", "legs", "boots");
+    /**
+     * 칸 순서 (장식 창의 탭 순서와 같음). 2026-11-11 사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고": 갑옷 칸 (투구 · 갑옷 · 바지 · 신발 — 갑옷 스킨 · 숨기기) 을 뺌
+     * — 입은 갑옷은 늘 보이지 않음 (VanillaCosmetics · 모드 CosmeticRender)
+     */
+    public static final List<String> SLOTS = List.of("weapon", "head", "back", "aura", "title");
 
-    /** 칸 하나 (hide = 숨기기 가능 — 갑옷 칸만, 무기는 숨길 수 없음) */
-    public record Slot(String key, String name, boolean hide) {}
+    /** 칸 하나 */
+    public record Slot(String key, String name) {}
 
     /** 오라: kind (embers · orbit · frost) · 초당 수 · 색들 (0~1) */
     public record Aura(String kind, double rate, List<double[]> colors) {}
@@ -34,12 +35,12 @@ public final class CosmeticDefs {
     public record Dust(double rate, List<double[]> colors, String style) {}
 
     /**
-     * 장식 하나. weapon · design = 무기 스킨 (무기 종류 · 디자인), model = 갑옷 스킨 · 머리 · 등 장식 모델 (assets/mmorpg/cosmetic/&lt;model&gt;.json),
-     * set = 갑옷 스킨 세트, aura · title = 오라 · 칭호 글, hideHelmet = 머리 장식을 쓴 동안 투구를 그리지 않음 (머리에 얹는 모자 · 왕관),
+     * 장식 하나. weapon · design = 무기 스킨 (무기 종류 · 디자인), model = 머리 · 등 장식 모델 (assets/mmorpg/cosmetic/&lt;model&gt;.json),
+     * aura · title = 오라 · 칭호 글, hideHelmet = 머리 장식을 쓴 동안 머리에 쓴 블록 (호박 · 머리) 을 그리지 않음 (머리에 얹는 모자 · 왕관),
      * nameLift = 머리 장식을 쓴 동안 이름표 · 칭호를 그만큼 (블록) 위로 (높은 모자), translucent = 모델을 반투명으로 (0.14.2), dust = 등 장식의 반짝이는 가루 (0.14.2)
      */
     public record Def(String id, String slot, String name, int price, List<String> desc, double[] color, String weapon, String design, String model,
-            String set, Aura aura, String title, boolean hideHelmet, double nameLift, boolean translucent, Dust dust) {
+            Aura aura, String title, boolean hideHelmet, double nameLift, boolean translucent, Dust dust) {
         /** 목록 · 연출 색 (0xRRGGBB) */
         public int rgb() {
             return (to255(color[0]) << 16) | (to255(color[1]) << 8) | to255(color[2]);
@@ -104,7 +105,7 @@ public final class CosmeticDefs {
         Map<String, Object> rawSlots = root.get("slots") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         for (String key : SLOTS) {
             Map<String, Object> o = rawSlots.get(key) instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
-            s.put(key, new Slot(key, str(o.get("name"), key), Boolean.TRUE.equals(o.get("hide"))));
+            s.put(key, new Slot(key, str(o.get("name"), key)));
         }
         Map<String, Def> out = new LinkedHashMap<>();
         Map<String, Object> items = root.get("items") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
@@ -133,7 +134,7 @@ public final class CosmeticDefs {
             }
             out.put(e.getKey(), new Def(e.getKey(), slot, str(o.get("name"), e.getKey()), o.get("price") instanceof Number n ? Math.max(0, n.intValue()) : 0,
                     List.copyOf(desc), color(o.get("color")), strOrNull(o.get("weapon")), strOrNull(o.get("design")), strOrNull(o.get("model")),
-                    strOrNull(o.get("set")), aura, strOrNull(o.get("title")), Boolean.TRUE.equals(o.get("hideHelmet")),
+                    aura, strOrNull(o.get("title")), Boolean.TRUE.equals(o.get("hideHelmet")),
                     o.get("nameLift") instanceof Number n ? n.doubleValue() : 0, Boolean.TRUE.equals(o.get("translucent")), dust));
         }
         slots = s;

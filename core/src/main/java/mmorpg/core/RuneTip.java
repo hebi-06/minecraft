@@ -284,9 +284,6 @@ public final class RuneTip {
         if (fn == null) return "";
         return switch (fn) {
             case "crimsonMoon" -> "칼날 ";
-            case "arcanaUnity" -> "구슬 ";
-            case "sevenStars" -> "별빛 ";
-            case "heavenEye" -> "광선 ";
             case "gravityReverse" -> "띄우기 ";
             case "blackHole" -> "띄워 치기 ";
             case "endlessSlash" -> "베기 ";
@@ -301,9 +298,6 @@ public final class RuneTip {
         if (fn == null) return "마무리";
         return switch (fn) {
             case "crimsonMoon" -> "달 추락";
-            case "arcanaUnity" -> "귀일 폭발";
-            case "sevenStars" -> "별 낙하";
-            case "heavenEye" -> "마무리 폭발";
             case "endlessSlash" -> "마무리 일섬";
             case "earthSplitter" -> "대검";
             case "glacierField" -> "빙하 붕괴";
@@ -400,8 +394,6 @@ public final class RuneTip {
         }
         // 0.25.0 두 스탯 계열: 흐름 줄 (def.flow — {key} · {t:key})
         for (String l : Runes.flowLines(d)) out.add("§r" + L + l);
-        if ("arcanaUnity".equals(fn)) out.add("§r" + L + "구슬 몫은 스탯 비율로 · 폭발 반지름 " + d.text("radius") + "칸");
-        if ("sevenStars".equals(fn)) out.add("§r" + L + "별빛 기둥 " + d.text("beam") + "칸 · 별 낙하 반지름 " + d.text("radius") + "칸");
         if ("endlessSlash".equals(fn)) out.add("§r" + L + "영역 반지름 " + d.text("radius") + "칸 · " + sec(d.numOr("gap", 10)) + "마다 영역 안 모든 적");
         if ("earthSplitter".equals(fn)) {
             out.add("§r" + L + "앞으로 " + d.text("length") + "칸 균열 (폭 " + n(d.numOr("width", 0) * 2) + "칸) 안 모든 적");
@@ -422,10 +414,6 @@ public final class RuneTip {
             out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 안 적 · " + sec(d.numOr("ticks", 0)) + " (보스 포함)");
             out.add("§r" + L + Runes.brandFormula(d));
             out.add("§r" + L + "모든 플레이어의 피해에 · 가호와 곱");
-        }
-        if ("heavenEye".equals(fn)) {
-            out.add("§r" + L + "광선이 바라보는 곳을 따라감 (굵기 " + d.text("width") + "칸)");
-            out.add("§r" + L + "폭발 반지름 " + d.text("radius") + "칸 · 쓰는 동안 천천히 걸음");
         }
         if (fam.equals(COMBO.str("family"))) {
             out.add("§r§d콤보" + L + ": " + Js.str(Math.round(COMBO.num("window") / 20)) + "초 안에 다른 암살자 룬 → +" + pct(COMBO.num("step")) + "%씩");

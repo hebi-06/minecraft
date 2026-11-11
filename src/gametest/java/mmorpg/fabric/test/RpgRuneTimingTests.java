@@ -293,21 +293,6 @@ public final class RpgRuneTimingTests {
         probe(h, "strike");
     }
 
-    @GameTest(environment = "mmorpg:rt_arcana", maxTicks = 460)
-    public void timingArcana(GameTestHelper h) {
-        probe(h, "arcana");
-    }
-
-    @GameTest(environment = "mmorpg:rt_dipper", maxTicks = 460)
-    public void timingDipper(GameTestHelper h) {
-        probe(h, "dipper");
-    }
-
-    @GameTest(environment = "mmorpg:rt_skyeye", maxTicks = 460)
-    public void timingSkyeye(GameTestHelper h) {
-        probe(h, "skyeye");
-    }
-
     @GameTest(environment = "mmorpg:rt_endless", maxTicks = 460)
     public void timingEndless(GameTestHelper h) {
         probe(h, "endless");

@@ -26,6 +26,9 @@ import org.joml.Vector3f;
 
 /**
  * 피해 숫자 (fx.js showDamageText): 맞은 대상 머리 위에 숫자가 떠올라 0.9초 뒤 사라짐.
+ * 2026-11-11 지침 (사용자 "딜이 얼마나 들어갔는지 흰색 또는 노랑색(치명타), 속성 딜은 각 속성에 맞는 색으로 표현 치명타시 찐한색으로"): 플레이어가 준 피해의 숫자 색은
+ * {@link #ruleColor} 하나 — 무속성 흰색 · 치명타 노랑, 원소 피해 (그 타의 원소 맥락 — ElementSystem) 는 원소 색 · 치명타는 짙은 원소 색. 모양 (Style) 은 크기 ·
+ * 앞뒤 글자 (반응 이름 · "!") 만 씀 (예전 스킬마다 색 · 직업 그라데이션 · 무지개는 뺌). 회복 (초록 +) · 내가 받은 피해 (빨강 −) · 상태 글자는 그대로.
  * 자바는 글자 표시 엔티티 (text_display) — 늘 카메라를 보고 (billboard), 밤에도 밝게, 그림자 있는 글자.
  * 18틱 동안 처음 5틱은 빠르게 (0.09칸/틱), 그 뒤 천천히 (0.025) 오름. 한 번에 30개까지 (애드온과 같음).
  * 처음엔 크게 나와 3틱 동안 원래 크기로 줄어듦 (클라이언트 보간). 서버가 꺼질 때 남아 저장된 숫자는 다시 불러오지 않음 (태그 mmorpg_dmg).
@@ -50,20 +53,6 @@ public final class DamageNumbers {
         RUNE("§e§l", "", "", 1.5F),
         SPELL("§9§l", "", "", 1.5F),
         SPELLCRIT("§9§l", "", "!!", 1.75F),
-        // 0.16.0 한정 초월 룬: 만상귀일의 스탯 구슬 (그 스탯 색) · 귀일 폭발 (무지갯빛 숫자) · 칠성 강림 별 낙하 · 천공의 눈 광선 · 마무리
-        STAT_STR("§6§l", "", "", 1.5F),
-        STAT_DEX("§a§l", "", "", 1.5F),
-        STAT_VIT("§d§l", "", "", 1.5F),
-        STAT_INT("§9§l", "", "", 1.5F),
-        PRISM("§f§l", "", "", 1.95F) {
-            @Override
-            public String format(String n) {
-                return rainbow(n);
-            }
-        },
-        STARFALL("§e§l", "", "", 1.95F),
-        SOLAR("§6§l", "", "", 1.5F),
-        JUDGE("§6§l", "", "!", 1.95F),
         // 0.17.0 무간참역: 영역 베기 (흰 기울임 — 작게, 자주) · 마무리 일섬 (굵은 흰 기울임 !)
         CUT("§f§o", "", "", 1.3F),
         ISSEOM("§f§l§o", "", "!", 2.0F),
@@ -134,22 +123,6 @@ public final class DamageNumbers {
         }
     }
 
-    /** 무지갯빛 글자 (글자마다 색 — 빨강 · 주황 · 노랑 · 초록 · 하늘 · 파랑 · 보라, 굵게) */
-    public static String rainbow(String s) {
-        String[] cs = {"§c", "§6", "§e", "§a", "§b", "§9", "§d"};
-        StringBuilder b = new StringBuilder();
-        int k = 0;
-        for (int i = 0; i < s.length(); i++) {
-            char ch = s.charAt(i);
-            if (Character.isWhitespace(ch)) {
-                b.append(ch);
-                continue;
-            }
-            b.append(cs[k++ % cs.length]).append("§l").append(ch);
-        }
-        return b.toString();
-    }
-
     /** 얼음빛 글자 (글자마다 얼음빛 · 흰빛 번갈아, 굵게 — 빙하 붕괴) */
     public static String icy(String s) {
         StringBuilder b = new StringBuilder();
@@ -167,6 +140,63 @@ public final class DamageNumbers {
 
     /** 처음 크기 배율 (톡 튀어나옴) */
     private static final float POP = 1.45F;
+
+    // ------------------------------------------------------------ 2026-11-11 숫자 색 규칙
+
+    /** 무속성 · 치명타 (노랑) */
+    public static final int WHITE = 0xFFFFFF, YELLOW = 0xFFE03A;
+
+    /** 원소 색 {보통, 치명타 = 짙게} (보통은 rules_more ELEMENTS.list 의 첫 색과 같음 — 머리 위 원소 그림 · 도감의 원소 표) */
+    public static int[] elementColors(String el) {
+        if (el == null) return null;
+        return switch (el) {
+            case "fire" -> new int[] {0xFF6B1A, 0xD02A00};
+            case "water" -> new int[] {0x2E80FF, 0x0A45C8};
+            case "thunder" -> new int[] {0xB861FF, 0x7419D6};
+            case "ice" -> new int[] {0x80E6FF, 0x0F9BD6};
+            case "rock" -> new int[] {0xCC8F33, 0x8C540A};
+            default -> null;
+        };
+    }
+
+    /** 숫자 색: 원소 (fire · water · thunder · ice · rock — 그 밖 · null 은 무속성) 와 치명타로 */
+    public static int ruleColor(boolean crit, String el) {
+        int[] c = elementColors(el);
+        if (c != null) return crit ? c[1] : c[0];
+        return crit ? YELLOW : WHITE;
+    }
+
+    /** 치명타 모양 (예전 치명타 숫자 — 표시가 치명타인 타) */
+    static boolean critStyle(Style s) {
+        return s == Style.CRIT || s == Style.SKILLCRIT || s == Style.SPELLCRIT;
+    }
+
+    /** 지금 타의 원소 (직업 · 룬 원소 맥락 — 없으면 null) */
+    static String hitElement() {
+        mmorpg.fabric.job.ElementSystem.Ctx c = mmorpg.fabric.job.ElementSystem.ctx();
+        return c != null && mmorpg.core.Elements.known(c.el()) ? c.el() : null;
+    }
+
+    /** 한 색 글자 (앞 표시 mark 는 베드락 서식 그대로, bold = 굵게) */
+    public static Component colored(String mark, String text, int rgb, boolean bold) {
+        net.minecraft.network.chat.MutableComponent out = Component.empty();
+        if (mark != null && !mark.isEmpty()) out.append(Component.literal(BedrockText.toJava(mark)));
+        net.minecraft.network.chat.MutableComponent t = Component.literal(text).withColor(rgb);
+        if (bold) t = t.withStyle(net.minecraft.ChatFormatting.BOLD);
+        return out.append(t);
+    }
+
+    /** 규칙 색 숫자 하나 (모양의 크기 · 앞뒤 글자 · 굵기 — 스킬 모양은 굵게) */
+    public static void showColor(LivingEntity victim, double amount, Style style, int rgb, String mark, double lift) {
+        if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT")) return;
+        if (ACTIVE.size() >= MAX_TEXTS) return;
+        if (!(victim.level() instanceof ServerLevel level) || victim.isRemoved()) return;
+        Vec3 at = anchor.apply(victim);
+        Vec3 head = at != null ? at : victim.getEyePosition();
+        RandomSource r = victim.getRandom();
+        Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
+        spawnText(level, pos, colored(mark, style.before + number(amount) + style.after, rgb, style.codes.contains("§l")), style.scale, POP);
+    }
 
     /**
      * 숫자를 띄울 자리 (null 이면 눈 높이 — fx.js showDamageText 의 head). 훈련용 허수아비는 머리 위에 기록이 떠 있어서 몸통 높이 (npc.Dummy 가 채움 —
@@ -259,12 +289,13 @@ public final class DamageNumbers {
         if (mark == null) mark = "";
         String vm = victimMark.apply(victim);
         if (vm != null && !vm.isEmpty()) mark = vm + mark;
+        // 2026-11-11 숫자 색 규칙: 무속성 흰색 · 치명타 노랑, 원소 피해는 원소 색 (치명타 짙게)
+        boolean crit = m != null && (m.crit() || critStyle(m.style()));
+        int rgb = ruleColor(crit, hitElement());
         if (m != null && m.style() != null) {
-            // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback), 0.27.0 직업 스킬은 직업 색 그라데이션
-            if (m.grad() != null && m.grad().length >= 2) {
-                if (m.split() > 1) showSplit(victim, dealt, m.style(), m.grad(), mark, m.split(), m.gap(), m.weights());
-                else showGradient(victim, dealt, m.style(), m.grad(), mark, 0);
-            } else show(victim, dealt, m.style(), mark, 0);
+            // 스킬 · 룬 피해: 그 모양의 크기 · 앞뒤 글자 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback), 빠른 연타는 여러 줄 (0.28.0)
+            if (m.split() > 1) showSplit(victim, dealt, m.style(), new int[] {rgb, rgb}, mark, m.split(), m.gap(), m.weights());
+            else showColor(victim, dealt, m.style(), rgb, mark, 0);
             return;
         }
         Style style = Style.NORMAL;
@@ -284,8 +315,8 @@ public final class DamageNumbers {
                 Fx.crit(victim);
             }
         }
-        if (shown > 0) show(victim, shown, style, mark, 0);
-        if (extra > 0) showBonus(victim, extra, m.bonus());
+        if (shown > 0) showColor(victim, shown, style, rgb, mark, 0);
+        if (extra > 0) showBonus(victim, extra, m.bonus(), rgb);
         if (m != null && m.melee() && m.w() != null) {
             Slash.hit(attacker, victim, m.w(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
             WeaponTraits.hit(attacker, victim, m.w(), m.crit(), dealt); // 12단계 새 무기: 넓게 베기 · 내려찍기 · 회복
@@ -293,10 +324,10 @@ public final class DamageNumbers {
     }
 
     /**
-     * 평타 숫자 위에 더한 몫 (숫자 모양이 같은 것끼리 합쳐 — 마검 부여 = 보라 SPELL, 평타 강화 = 노랑 RUNE). 0.27.0 직업 몫 (명경지수 두 번째 베기 · 마검 각성 잔상 ·
-     * 마력 각인 폭발 — Bonus.grad) 은 몫마다 직업 색 그라데이션 숫자
+     * 평타 숫자 위에 더한 몫 (숫자 모양이 같은 것끼리 합쳐 — 마검 부여 SPELL, 평타 강화 RUNE). 0.27.0 직업 몫 (명경지수 두 번째 베기 · 마검 각성 잔상 ·
+     * 마력 각인 폭발 — Bonus.grad) 은 몫마다 한 줄. 색은 평타와 같은 규칙 색 rgb (2026-11-11)
      */
-    private static void showBonus(LivingEntity victim, double extra, RpgCombat.WeaponBonus b) {
+    private static void showBonus(LivingEntity victim, double extra, RpgCombat.WeaponBonus b, int rgb) {
         java.util.Map<Style, double[]> by = new java.util.LinkedHashMap<>();
         java.util.Map<Style, String> marks = new java.util.LinkedHashMap<>();
         List<RpgCombat.Bonus> graded = new ArrayList<>();
@@ -315,17 +346,17 @@ public final class DamageNumbers {
         }
         if (graded.isEmpty() && (by.size() <= 1 || !(all > 0))) {
             Style st = by.isEmpty() ? Style.SPELL : by.keySet().iterator().next();
-            show(victim, extra, st, b.mark() == null ? "" : b.mark(), 0.45);
+            showColor(victim, extra, st, rgb, b.mark() == null ? "" : b.mark(), 0.45);
             return;
         }
         if (!(all > 0)) return;
         double lift = 0.45;
         for (var e : by.entrySet()) {
-            show(victim, extra * e.getValue()[0] / all, e.getKey(), marks.getOrDefault(e.getKey(), ""), lift);
+            showColor(victim, extra * e.getValue()[0] / all, e.getKey(), rgb, marks.getOrDefault(e.getKey(), ""), lift);
             lift += 0.4;
         }
         for (RpgCombat.Bonus p : graded) {
-            showGradient(victim, extra * p.add() / all, p.style() != null ? p.style() : Style.JOB, p.grad(), p.mark() == null ? "" : p.mark(), lift);
+            showColor(victim, extra * p.add() / all, p.style() != null ? p.style() : Style.JOB, rgb, p.mark() == null ? "" : p.mark(), lift);
             lift += 0.4;
         }
     }

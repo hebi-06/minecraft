@@ -713,16 +713,18 @@ def menu_home():
 
 # ------------------------------------------------------------------ 꾸미기 전용 창 (2026-11-08 로드맵 3번 — 홈 빠른 단추 · /장식)
 #
-# 위 탭 없음 (뽑기 창처럼). 줄 0: 돌아가기 (0, 0) · 닫기 (0, 8) · 가운데 판. 줄 1: 칸 탭 아홉 (무기 · 투구 · 갑옷 · 바지 · 신발 · 머리 · 등 ·
-# 오라 · 칭호 — 그림은 Java 가 글자 cat_<칸> 으로 물들여 그림, 고른 탭은 tab_sel 빛). 줄 2 ~ 4: 그 칸의 장식 27칸 (가진 것 = 그림, 아직 = 어둡게,
-# 입은 것 = 금 ring). 줄 5: 원래대로 · 숨기기 · 모두 숨기기 · 모두 원래대로 · 미리보기 · 도움말. 아래 판: 진짜 가방 (비춤).
+# 위 탭 없음 (뽑기 창처럼). 줄 0: 돌아가기 (0, 0) · 닫기 (0, 8) · 가운데 판. 줄 1: 칸 탭 다섯 (무기 · 머리 · 등 · 오라 · 칭호 — 가운데 칸 2 ~ 6,
+# 그림은 Java 가 글자 cat_<칸> 으로 물들여 그림, 고른 탭은 tab_sel 빛). 줄 2 ~ 4: 그 칸의 장식 27칸 (가진 것 = 그림, 아직 = 어둡게,
+# 입은 것 = 금 ring). 줄 5: 원래대로 · 미리보기 · 도움말. 아래 판: 진짜 가방 (비춤).
+# 2026-11-11 갑옷 칸 탭 넷 (투구 · 갑옷 · 바지 · 신발 — 갑옷 스킨) 을 뺌 (사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고").
 
-COSMETIC_TABS = ["weapon", "helmet", "chest", "legs", "boots", "head", "back", "aura", "title"]
+COSMETIC_TABS = ["weapon", "head", "back", "aura", "title"]
+# 첫 탭의 칸 (가운데로 — VanillaCosmeticPage.TAB0 과 같게)
+COSMETIC_TAB0 = (9 - len(COSMETIC_TABS)) // 2
 
 
 def cosmetic_tab_art(key):
-    return {"weapon": art.GHOST["sword"], "helmet": art.GHOST["helmet"], "chest": art.TAB["equip"], "legs": art.GHOST["legs"],
-            "boots": art.GHOST["boots"]}.get(key) or art.COSMETIC[key]
+    return art.GHOST["sword"] if key == "weapon" else art.COSMETIC[key]
 
 
 def menu_cosmetic():
@@ -734,8 +736,8 @@ def menu_cosmetic():
     c.box(cell_x(1) + 1, cell_y(0) + 2, cell_x(7) + 16, cell_y(0) + 15, (16, 18, 38), edge=GOLD_DK, r=2, hi=(30, 34, 64))
     button(c, cell_x(8) + 1, cell_y(0) + 1, cell_x(8) + 16, cell_y(0) + 16, tint=(150, 50, 50))
     icon(c, art.QUICK["close"], cell_x(8) + 3, cell_y(0) + 3, GOLD_HI)
-    # 줄 1: 칸 탭 (단추 판 — 그림은 Java 글자)
-    for col in range(9):
+    # 줄 1: 칸 탭 (단추 판 — 그림은 Java 글자, 가운데 칸 COSMETIC_TAB0 부터)
+    for col in range(COSMETIC_TAB0, COSMETIC_TAB0 + len(COSMETIC_TABS)):
         button(c, cell_x(col) + 1, cell_y(1) + 1, cell_x(col) + 16, cell_y(1) + 16, tint=(40, 44, 84))
     c.rect(8, cell_y(2) - 1, MW - 9, cell_y(2) - 1, GOLD_LO)
     # 줄 2 ~ 4: 장식 칸 (안쪽 판 + 칸 27)

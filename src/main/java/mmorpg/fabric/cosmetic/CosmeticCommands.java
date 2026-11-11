@@ -25,7 +25,7 @@ import net.minecraft.server.permissions.Permissions;
  * 장식 명령어 (영어 /cosmetic · 한글 /장식):
  * <ul>
  * <li>/장식 — 장식 창 (모드가 있는 클라이언트) · /장식 목록 — 가진 장식 · 입은 모습 (채팅)</li>
- * <li>/장식 입기 &lt;키&gt; · /장식 벗기 &lt;칸&gt; [무기 종류] · /장식 숨기기 &lt;갑옷 칸&gt; · /장식 사기 &lt;키&gt; (창과 같은 일 — 모드가 없어도)</li>
+ * <li>/장식 입기 &lt;키&gt; · /장식 벗기 &lt;칸&gt; [무기 종류] · /장식 사기 &lt;키&gt; (창과 같은 일 — 모드가 없어도)</li>
  * <li>운영자: /장식 지급 &lt;키|all&gt; [대상] · /장식 회수 &lt;키|all&gt; [대상] · /장식 초기화 [대상]</li>
  * </ul>
  */
@@ -39,7 +39,6 @@ public final class CosmeticCommands {
         return SharedSuggestionProvider.suggest(k, b);
     };
     private static final SuggestionProvider<CommandSourceStack> SLOTS = (c, b) -> SharedSuggestionProvider.suggest(CosmeticDefs.SLOTS, b);
-    private static final SuggestionProvider<CommandSourceStack> ARMOR = (c, b) -> SharedSuggestionProvider.suggest(CosmeticDefs.ARMOR, b);
 
     static void init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
@@ -69,10 +68,6 @@ public final class CosmeticCommands {
                         .then(Commands.argument("type", StringArgumentType.word())
                                 .executes(c -> run(c, Cosmetics.clear(c.getSource().getPlayerOrException(), StringArgumentType.getString(c, "slot"),
                                         StringArgumentType.getString(c, "type")))))));
-            }
-            for (String w : List.of("hide", "숨기기")) {
-                cmd.then(Commands.literal(w).then(Commands.argument("slot", StringArgumentType.word()).suggests(ARMOR)
-                        .executes(c -> run(c, Cosmetics.hide(c.getSource().getPlayerOrException(), StringArgumentType.getString(c, "slot"))))));
             }
             cmd.then(adminCmd("give")).then(adminCmd("지급")).then(adminCmd("take")).then(adminCmd("회수"));
             for (String w : List.of("reset", "초기화")) {
@@ -120,7 +115,7 @@ public final class CosmeticCommands {
                         .map(e -> e.getKey() + " → " + name(e.getValue())).toList()));
             } else {
                 String v = s.look().get(slot);
-                sb.append(v == null ? (sl.hide() ? "§8원래" : "§8없음") : Look.HIDE.equals(v) ? "§c숨김" : "§f" + name(v));
+                sb.append(v == null ? "§8없음" : "§f" + name(v));
             }
         }
         for (CosmeticDefs.Def d : CosmeticDefs.all().values()) {

@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 /**
  * 장식 패킷 (0.13.0): 서버 → 클라이언트 내 장식 (가진 것 · 모습 · 창 열기) · 모두의 모습 (보이는 사람마다 그리기),
- * 클라이언트 → 서버 장식 창의 일 (사기 · 입기 · 벗기 · 숨기기). 모드가 없는 클라이언트에는 보내지 않음 (canSend).
+ * 클라이언트 → 서버 장식 창의 일 (사기 · 입기 · 벗기). 모드가 없는 클라이언트에는 보내지 않음 (canSend).
  */
 public final class CosmeticNet {
     private CosmeticNet() {}
@@ -55,8 +55,8 @@ public final class CosmeticNet {
     }
 
     /**
-     * 클라이언트 → 서버: 장식 창의 일. action = buy (a = 키) · equip (a = 키) · clear (a = 칸, b = 무기 종류 — 무기 칸) · hide (a = 갑옷 칸) ·
-     * hide_all · show_all (갑옷 넷) · sync
+     * 클라이언트 → 서버: 장식 창의 일. action = buy (a = 키) · equip (a = 키) · clear (a = 칸, b = 무기 종류 — 무기 칸) · sync
+     * (2026-11-11 갑옷 숨기기 hide · hide_all · show_all 을 뺌 — 오면 "모르는 장식 일")
      */
     public record ActionPayload(String action, String a, String b) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ActionPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("cosmetic_action"));

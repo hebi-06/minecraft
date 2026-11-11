@@ -101,8 +101,8 @@ public final class RuneScaleTest {
                 check(Math.abs(total - budget) <= budget * 0.01, id + " total " + total + " = budget " + budget);
             }
         }
-        check(runes == 123, "123 runes " + runes);
-        check(ruled == 102, "102 runes under the rule " + ruled);
+        check(runes == 120, "120 runes (2026-11-11 한정 3 뺌) " + runes);
+        check(ruled == 99, "99 runes under the rule " + ruled);
         check(leaps == 6, "6 leap runes " + leaps);
         check(singles == 10 && narrows == 35, "area kinds 10 single · 35 narrow: " + singles + " · " + narrows);
         Obj area = Rules.get().obj("RUNE_SPREAD").obj("area");

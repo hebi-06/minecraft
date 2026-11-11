@@ -24,6 +24,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Husk;
@@ -211,11 +212,43 @@ public final class RpgSkillTests {
                 e -> e.entityTags().contains(DamageNumbers.TAG));
         h.assertTrue(nums.size() == 1, "one number, got " + nums.size());
         String text = nums.get(0).getText().getString();
-        h.assertTrue(text.contains("§e") && text.contains("12.3"), "rune style number: " + text);
+        // 2026-11-11 숫자 색 규칙: 무속성 · 치명타 아님 = 흰색 (예전 룬 노랑 §e 대신)
+        h.assertTrue(text.contains("12.3") && colorOf(nums.get(0), "12.3") == DamageNumbers.WHITE, "rune number white: " + text + " " + colorOf(nums.get(0), "12.3"));
         // 무적 시간 안의 두 번째 (같은 양) 는 들어가지 않음
         h.assertFalse(Kit.applySkillDamage(sp, z, 12.34, false, Kit.Cause.ATTACK, null), "blocked by i-frames");
         h.assertTrue(Math.abs(TestDummies.dealt(z) - 12.34) < 1e-3, "dealt once: " + TestDummies.dealt(z));
+        // 치명타 = 노랑, 원소 피해 = 원소 색 (치명타 = 짙게)
+        Husk z2 = dummy(h, 6.5, 2, 3.5);
+        h.assertTrue(Kit.applySkillDamage(sp, z2, 23.45, true, Kit.Cause.ATTACK, DamageNumbers.Style.RUNE), "crit damage applied");
+        h.assertTrue(numberColor(h, z2, "23.5") == DamageNumbers.YELLOW, "crit number yellow " + numberColor(h, z2, "23.5"));
+        Husk z3 = dummy(h, 3.5, 2, 6.5);
+        mmorpg.fabric.job.ElementSystem.with("fire", 10, false, () -> Kit.applySkillDamage(sp, z3, 34.56, false, Kit.Cause.ATTACK, DamageNumbers.Style.RUNE));
+        int fire = numberColor(h, z3, "34.6");
+        h.assertTrue(!mmorpg.core.Elements.on() || fire == DamageNumbers.ruleColor(false, "fire"), "fire number orange " + Integer.toHexString(fire));
+        Husk z4 = dummy(h, 6.5, 2, 6.5);
+        mmorpg.fabric.job.ElementSystem.with("ice", 10, false, () -> Kit.applySkillDamage(sp, z4, 45.67, true, Kit.Cause.ATTACK, DamageNumbers.Style.RUNE));
+        int ice = numberColor(h, z4, "45.7");
+        h.assertTrue(!mmorpg.core.Elements.on() || ice == DamageNumbers.ruleColor(true, "ice"), "ice crit number deep blue " + Integer.toHexString(ice));
+        h.assertTrue(DamageNumbers.ruleColor(true, "ice") != DamageNumbers.ruleColor(false, "ice"), "crit element color differs");
         done(h, sp);
+    }
+
+    /** 피해 숫자 글자 조각 중 text 를 담은 조각의 색 (없으면 -1) */
+    static int colorOf(Display.TextDisplay td, String text) {
+        for (net.minecraft.network.chat.Component c : td.getText().getSiblings()) {
+            if (c.getString().contains(text) && c.getStyle().getColor() != null) return c.getStyle().getColor().getValue();
+        }
+        return -1;
+    }
+
+    /** 대상 둘레 숫자 중 text 를 담은 것의 색 */
+    static int numberColor(GameTestHelper h, LivingEntity z, String text) {
+        for (Display.TextDisplay td : h.getLevel().getEntitiesOfClass(Display.TextDisplay.class, new AABB(z.getEyePosition(), z.getEyePosition()).inflate(3),
+                e -> e.entityTags().contains(DamageNumbers.TAG))) {
+            int c = colorOf(td, text);
+            if (c >= 0) return c;
+        }
+        return -1;
     }
 
     // ------------------------------------------------------------ 감소 · 반사 · 상태

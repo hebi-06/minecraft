@@ -35,9 +35,12 @@ public final class SkillBar {
     /** 돌파 (Breakthrough.Held) 에서 스킬 칸을 나타내는 칸 번호의 시작 (가방 0 ~ 35 · 왼손 40 과 겹치지 않게) */
     public static final int SLOT_BASE = 100;
 
-    /** 저장하는 칸들 (늘 SIZE 개 — 빈 칸은 EMPTY) */
+    /**
+     * 저장하는 칸들 (늘 SIZE 개 — 빈 칸은 EMPTY). 2026-11-11 칸마다 따로 읽음 (orElse) — 지운 룬 (만상귀일 · 칠성 강림 · 천공의 눈) 처럼
+     * 이제 없는 아이템이 한 칸에 있어도 그 칸만 비고 나머지 칸은 그대로.
+     */
     public record Data(List<ItemStack> slots) {
-        public static final Codec<Data> CODEC = ItemStack.OPTIONAL_CODEC.listOf().xmap(Data::of, Data::slots);
+        public static final Codec<Data> CODEC = ItemStack.OPTIONAL_CODEC.orElse(ItemStack.EMPTY).listOf().xmap(Data::of, Data::slots);
 
         /** SIZE 칸으로 맞춤 (모자라면 빈 칸, 넘치면 버림) — 복사본 */
         static Data of(List<ItemStack> list) {

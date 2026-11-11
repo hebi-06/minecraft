@@ -118,7 +118,6 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
                 for (String id : CosmeticDefs.all().keySet()) Cosmetics.give(me(s), id);
             });
             ctx.waitTicks(3);
-            part(ctx, "armor", () -> armor(ctx, server, conn));
             part(ctx, "head", () -> head(ctx, server, conn));
             part(ctx, "back", () -> back(ctx, server, conn));
             part(ctx, "aura_title", () -> auraTitle(ctx, server, conn));
@@ -190,43 +189,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         check(synced, "client knows it is owned");
     }
 
-    // ------------------------------------------------------------ 갑옷 · 머리 · 등 · 오라 · 칭호
-
-    private void armor(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
-        if (!ensureScreen(ctx)) return;
-        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("armor"));
-        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(0));
-        List<String> rows = ctx.computeOnClient(mc -> ((CosmeticScreen) mc.gui.screen()).rowIds());
-        check(rows.size() >= 3 && rows.get(1).equals("hide") && rows.contains("paladin_helmet"), "helmet rows " + rows);
-        click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(1));
-        click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
-        check(waitServer(ctx, server, s -> Cosmetics.look(me(s)).hidden("helmet"), 40), "helmet hidden by clicking (free)");
-        // 성기사 세트: 부위마다 줄 → 장착
-        for (int i = 0; i < 4; i++) {
-            int piece = i;
-            String id = "paladin_" + CosmeticDefs.ARMOR.get(i);
-            click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(piece));
-            int row = rowIndex(ctx, id);
-            click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
-            click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
-        }
-        check(waitServer(ctx, server, s -> {
-            Look l = Cosmetics.look(me(s));
-            return "paladin_helmet".equals(l.get("helmet")) && "paladin_chest".equals(l.get("chest")) && "paladin_legs".equals(l.get("legs"))
-                    && "paladin_boots".equals(l.get("boots"));
-        }, 40), "paladin set worn");
-        away(ctx);
-        shot(ctx, "c_armor_paladin");
-        // 모두 숨기기 단추 → 미리보기에서 갑옷이 사라짐 → 모두 원래대로
-        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(4));
-        check(waitServer(ctx, server, s -> Cosmetics.look(me(s)).hidden("chest") && Cosmetics.look(me(s)).hidden("boots"), 40), "hide all");
-        away(ctx);
-        shot(ctx, "c_armor_hidden");
-        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(5));
-        check(waitServer(ctx, server, s -> Cosmetics.look(me(s)).get("chest") == null, 40), "show all");
-        // 다시 성기사 갑옷 (세계 사진용)
-        for (String slot : CosmeticDefs.ARMOR) server.runOnServer(s -> Cosmetics.equip(me(s), "paladin_" + slot));
-    }
+    // ------------------------------------------------------------ 머리 · 등 · 오라 · 칭호 (2026-11-11 갑옷 스킨 · 숨기기를 뺌)
 
     private void head(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         if (!ensureScreen(ctx)) return;
@@ -330,7 +293,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         camera(ctx, CameraType.THIRD_PERSON_FRONT);
         ctx.waitTicks(30);
         shot(ctx, "c_world_front");
-        // 왕관 (hideHelmet) → 성기사 투구는 그리지 않음 · 마법사 모자로 바꿔 봄 (사람 모델의 hat 뼈와 이름이 겹치지 않는지 — 머리 위에 앉음)
+        // 마법사 모자로 바꿔 봄 (사람 모델의 hat 뼈와 이름이 겹치지 않는지 — 머리 위에 앉음)
         server.runOnServer(s -> Cosmetics.equip(me(s), "wizard_hat"));
         ctx.waitTicks(15);
         shot(ctx, "c_world_wizard_hat");
@@ -371,7 +334,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             r.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
             sendEquipment(r);
             for (String id : CosmeticDefs.all().keySet()) Cosmetics.give(r, id);
-            for (String id : List.of("lava_axe", "wizard_hat", "demon_wings", "ember_aura", "title_slayer", "frost_dragon_chest")) Cosmetics.equip(r, id);
+            for (String id : List.of("lava_axe", "wizard_hat", "demon_wings", "ember_aura", "title_slayer")) Cosmetics.equip(r, id);
         });
         ctx.waitTicks(30);
         boolean seen = ctx.computeOnClient(mc -> mc.level.players().stream().anyMatch(p -> p.getUUID().equals(rivalId)));
@@ -392,7 +355,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
 
     private void rivalArmor(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
-        // 입은 다이아몬드 갑옷 (처음부터) — 장식을 벗기면 진짜 갑옷이 보임 → 모두 숨기기 → 빙룡 갑옷 스킨
+        // 입은 다이아몬드 갑옷 (처음부터) — 갑옷은 늘 그리지 않음 (2026-11-08 사용자 "갑옷 효과만") · 장식만 (2026-11-11 갑옷 스킨 · 숨기기 없음)
         server.runOnServer(s -> {
             ServerPlayer r = rival(s);
             Cosmetics.clear(r, "chest", null);
@@ -403,24 +366,17 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
                 && mc.level.getPlayerByUUID(rivalId).getItemBySlot(EquipmentSlot.CHEST).is(Items.DIAMOND_CHESTPLATE), 40);
         check(worn, "rival's real diamond armor reached my client");
         viewRival(ctx, server, "front");
-        shot(ctx, "c_rival_diamond");
-        server.runOnServer(s -> Cosmetics.action(rival(s), "hide_all", "", ""));
-        boolean hidden = waitFor(ctx, mc -> ClientCosmetics.lookOf(rivalId).hidden("chest"), 40);
-        check(hidden, "rival armor hidden on my client");
-        ctx.waitTicks(5);
-        shot(ctx, "c_rival_diamond_hidden");
+        shot(ctx, "c_rival_diamond_not_drawn");
         boolean stillWorn = server.computeOnServer(s -> rival(s).getItemBySlot(EquipmentSlot.CHEST).is(Items.DIAMOND_CHESTPLATE));
-        check(stillWorn, "hiding keeps the real chestplate on (looks only)");
+        check(stillWorn, "real chestplate stays on (armor not drawn — looks only)");
         server.runOnServer(s -> {
             ServerPlayer r = rival(s);
-            for (String id : List.of("frost_dragon_helmet", "frost_dragon_chest", "frost_dragon_legs", "frost_dragon_boots", "halo", "crimson_cape")) {
-                Cosmetics.equip(r, id);
-            }
+            for (String id : List.of("halo", "crimson_cape")) Cosmetics.equip(r, id);
         });
         ctx.waitTicks(15);
-        shot(ctx, "c_rival_frost_dragon");
+        shot(ctx, "c_rival_halo_cape");
         viewRival(ctx, server, "back");
-        shot(ctx, "c_rival_frost_dragon_back");
+        shot(ctx, "c_rival_halo_cape_back");
         viewRival(ctx, server, "front");
     }
 
@@ -439,7 +395,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         }
     }
 
-    /** 요정의 날개 (0.14.2): 두 번째 플레이어가 입음 (갑옷 숨김 · 오라 · 머리 장식 없이) — 뒤 · 뒤 가까이 · 옆 · 밤 (날개맥 빛) · 가루 */
+    /** 요정의 날개 (0.14.2): 두 번째 플레이어가 입음 (오라 · 머리 장식 없이 — 갑옷은 늘 안 보임) — 뒤 · 뒤 가까이 · 옆 · 밤 (날개맥 빛) · 가루 */
     private void fairy(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
         int dust0 = ctx.computeOnClient(mc -> CosmeticAura.dustSpawned);
@@ -447,7 +403,6 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             ServerPlayer r = rival(s);
             Cosmetics.clear(r, "aura", null);
             Cosmetics.clear(r, "head", null);
-            Cosmetics.action(r, "hide_all", "", "");
             Cosmetics.equip(r, "fairy_wings");
         });
         boolean worn = waitFor(ctx, mc -> "fairy_wings".equals(ClientCosmetics.lookOf(rivalId).get("back")), 40);
@@ -480,7 +435,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         }
     }
 
-    /** 0.15.0 새 장식 묶음 셋을 두 번째 플레이어가 입음 (갑옷 숨김) — 앞 · 뒤 사진, 새 칭호 (글자 ☾ ❄ ♥), 불사조 날개의 불티 */
+    /** 0.15.0 새 장식 묶음 셋을 두 번째 플레이어가 입음 (갑옷은 늘 안 보임) — 앞 · 뒤 사진, 새 칭호 (글자 ☾ ❄ ♥), 불사조 날개의 불티 */
     private void looks(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
         String[][] sets = {
@@ -494,7 +449,6 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
                 int dust0 = ctx.computeOnClient(mc -> CosmeticAura.dustSpawned);
                 server.runOnServer(s -> {
                     ServerPlayer r = rival(s);
-                    Cosmetics.action(r, "hide_all", "", "");
                     for (String id : set) Cosmetics.equip(r, id);
                 });
                 boolean got = waitFor(ctx, mc -> set[1].equals(ClientCosmetics.lookOf(rivalId).get("back")) && set[0].equals(ClientCosmetics.lookOf(rivalId).get("head")), 40);

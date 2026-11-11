@@ -81,16 +81,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * <li>무기 스킨: 손에 든 RPG 무기에 custom_model_data 글자 = 스킨 키 → 무기 아이템 정의 (VanillaPack 이 감쌈) 가 손 (1 · 3인칭) 에서만 스킨 모델
  * — 가방 · 핫바 아이콘은 그대로 (모드와 같음)</li>
  * <li>갑옷 (2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마"): 사람 (플레이어 · 마네킹) 의 갑옷은 늘 그리지 않음
- * (RPG 갑옷 = equippable asset 을 뺌, 바닐라 갑옷 = 다른 사람에게 빈 칸). 막는 수치는 그대로. 갑옷 스킨 (꾸미기) 만 그림 rpg:&lt;세트&gt;
- * (갑옷 · 바지 · 신발 — 평면 그림). 머리 장식 · 투구 스킨 = 투구 칸 아이템 모델 (custom_model_data → 투구 아이템 정의의 head 자리 · 빈 칸이면
- * 다른 사람에게는 그 그림만 보냄) — 바닐라 CustomHeadLayer 가 머리 움직임 그대로 그림</li>
+ * (RPG 갑옷 = equippable asset 을 뺌, 바닐라 갑옷 = 다른 사람에게 빈 칸). 막는 수치는 그대로 (2026-11-11 갑옷 스킨도 뺌). 머리 장식 = 투구 칸 아이템 모델
+ * (custom_model_data → 투구 아이템 정의의 head 자리 · 빈 칸이면 다른 사람에게는 그 그림만 보냄) — 바닐라 CustomHeadLayer 가 머리 움직임 그대로 그림</li>
  * <li>칭호 · 등 장식: 그 사람을 따라가는 표시 엔티티 (글자 · 아이템 — Polymer, 자리 보간 3틱). 등 장식은 서버가 몸 방향 · 웅크림 · 날갯짓을
  * 2 ~ 8틱마다 (그 사이는 보간 — VanillaModels 와 같은 변환 차례)</li>
  * <li>오라 · 날개 가루: 바닐라 파티클 (보는 사람마다 — 48칸)</li>
  * </ul>
- * 내가 보는 내 모습: 무기 스킨 (1인칭에서도) · 갑옷 (안 보임) · 갑옷 스킨 · 머리 장식은 입은 칸만 (3인칭 F5 — 투구를 쓴 때만 머리 장식). 칭호 · 등 장식 ·
+ * 내가 보는 내 모습: 무기 스킨 (1인칭에서도) · 갑옷 (안 보임) · 머리 장식은 입은 칸만 (3인칭 F5 — 투구를 쓴 때만 머리 장식). 칭호 · 등 장식 ·
  * 오라는 다른 사람에게만 (서버는 1 · 3인칭을 모름 — 모드도 1인칭에서는 내 오라를 뿌리지 않음) — 꾸미기 창의 미리보기 (마네킹) 로 봄.
- * 투명 (투명화 물약) 이면 모드처럼: 머리 · 등 장식 · 오라 · 칭호 없음, 갑옷 스킨은 그대로.
+ * 투명 (투명화 물약) 이면 모드처럼: 머리 · 등 장식 · 오라 · 칭호 없음.
  */
 public final class VanillaCosmetics {
     private VanillaCosmetics() {}
@@ -115,7 +114,6 @@ public final class VanillaCosmetics {
     /** 투구 칸 아이템의 뼈 모델들 (모델 → rpg:item/vcos/&lt;모델&gt;/&lt;뼈&gt; …) — VanillaPack 이 투구 정의를 감쌀 때 */
     private static final Map<String, List<String>> HEAD_MODELS = new LinkedHashMap<>();
     private static final Map<String, Rig> RIGS = new HashMap<>();
-    private static final Set<String> SETS = new HashSet<>();
     /** 무기 스킨 (손에 든 모델이 있는 것) */
     private static final Set<String> SKINS = new HashSet<>();
 
@@ -172,7 +170,6 @@ public final class VanillaCosmetics {
                 }
                 RIGS.put(e.getKey(), new Rig(r.get("root").getAsString(), bones));
             }
-            SETS.addAll(o.getAsJsonObject("equipment").keySet());
         } catch (Exception e) {
             Mmorpg.LOG.warn("[vanilla] cosmetics: {}", e.toString());
         }
@@ -180,7 +177,7 @@ public final class VanillaCosmetics {
             if (!"weapon".equals(d.slot()) || d.design() == null) continue;
             if (VanillaCosmetics.class.getResource("/assets/rpg/models/item/model/" + d.design() + ".json") != null) SKINS.add(d.id());
         }
-        Mmorpg.LOG.info("[vanilla] cosmetics: head {}, rigs {}, armor sets {}, weapon skins {}", HEAD.size(), RIGS.size(), SETS.size(), SKINS.size());
+        Mmorpg.LOG.info("[vanilla] cosmetics: head {}, rigs {}, weapon skins {}", HEAD.size(), RIGS.size(), SKINS.size());
     }
 
     private static String str(JsonObject o, String k) {
@@ -298,7 +295,6 @@ public final class VanillaCosmetics {
                 if ("helmet".equals(slot)) out.set(DataComponents.CUSTOM_MODEL_DATA, cmd("hide"));
                 out.set(DataComponents.EQUIPPABLE, withAsset(eq, null, lookup));
             }
-            case SET -> out.set(DataComponents.EQUIPPABLE, withAsset(eq, Mmorpg.NS + ":" + v.value(), lookup));
             default -> {
             }
         }
@@ -317,7 +313,7 @@ public final class VanillaCosmetics {
     /** 레지스트리 (아이템을 만드는 곳이 넘겨주지 않을 때) — 서버 틱에서 */
     private static volatile HolderLookup.Provider SERVER_LOOKUP;
 
-    static final int NONE = 0, HIDE = 1, SET = 2, HEAD_ITEM = 3;
+    static final int NONE = 0, HIDE = 1, HEAD_ITEM = 3;
 
     record Visual(int kind, String value) {}
 
@@ -327,18 +323,14 @@ public final class VanillaCosmetics {
 
     /**
      * 사람의 갑옷 칸 하나의 모습 (2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마" — 갑옷은 늘 안 보임):
-     * 투구 칸 = 머리 장식 (투명이면 없음) → 투구 스킨 → 안 보임, 다른 칸 = 갑옷 스킨 → 안 보임. 투명해도 갑옷 스킨은 그림 (모드와 같음)
+     * 투구 칸 = 머리 장식 (투명이면 없음) → 안 보임, 다른 칸 = 안 보임. 2026-11-11 갑옷 스킨을 뺌 (사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고")
      */
     static Visual visual(Look look, String slot, boolean invisible) {
         if ("helmet".equals(slot)) {
             CosmeticDefs.Def hat = invisible ? null : look.def("head");
             if (hat != null && hat.model() != null && HEAD.containsKey(hat.model())) return new Visual(HEAD_ITEM, hat.model());
-            CosmeticDefs.Def skin = look.def("helmet");
-            if (skin != null && skin.model() != null && HEAD.containsKey(skin.model())) return new Visual(HEAD_ITEM, skin.model());
-            return HIDDEN;
         }
-        CosmeticDefs.Def d = look.def(slot);
-        return d != null && d.set() != null && SETS.contains(d.set()) ? new Visual(SET, d.set()) : HIDDEN;
+        return HIDDEN;
     }
 
     /** 사람 (플레이어 · 마네킹 — 갑옷을 그리지 않고 장식을 입는 몸) */
@@ -422,7 +414,7 @@ public final class VanillaCosmetics {
             if (slot == EquipmentSlot.HEAD) lastHead = v.kind() == HEAD_ITEM ? v.value() : "";
             return c;
         }
-        // 빈 칸 · 바닐라 아이템: 머리 장식 · 갑옷 스킨은 그 그림만, 갑옷은 빈 칸 (겉날개 · 호박 · 머리 같은 갑옷 아닌 것은 그대로)
+        // 빈 칸 · 바닐라 아이템: 머리 장식은 그 그림만, 갑옷은 빈 칸 (겉날개 · 호박 · 머리 같은 갑옷 아닌 것은 그대로)
         if (v.kind() == HIDE && !st.isEmpty() && !armor(st)) return st;
         switch (v.kind()) {
             case HEAD_ITEM -> {
@@ -432,23 +424,10 @@ public final class VanillaCosmetics {
             case HIDE -> {
                 return ItemStack.EMPTY;
             }
-            case SET -> {
-                ItemStack base = st.isEmpty() ? new ItemStack(Items.PAPER) : st.copy();
-                Equippable eq = base.get(DataComponents.EQUIPPABLE);
-                base.set(DataComponents.EQUIPPABLE, eq != null ? withAsset(eq, Mmorpg.NS + ":" + v.value(), lookup) : fakeEquippable(slot, v.value(), lookup));
-                return base;
-            }
             default -> {
                 return st;
             }
         }
-    }
-
-    private static Equippable fakeEquippable(EquipmentSlot slot, String set, HolderLookup.Provider lookup) {
-        JsonObject o = new JsonObject();
-        o.addProperty("slot", slot.getSerializedName());
-        o.addProperty("asset_id", Mmorpg.NS + ":" + set);
-        return Equippable.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, lookup), o).getOrThrow();
     }
 
     // ------------------------------------------------------------ 틱: 가방 다시 보냄 · 오라 · 미리보기

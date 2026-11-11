@@ -350,8 +350,11 @@ public final class Gacha {
             return w;
         }
 
+        /** 뽑기 (2026-11-11: 없어진 계열 — 지운 한정 룬 만상 · 칠성 · 천공 — 이 저장된 픽업에 남아 있으면 빼고 뽑음) */
         public Banner banner() {
-            return new Banner(weights(), defaultPity().with(hard, softStart, heroEvery), featured5, featured4, share / 100.0, Runes.FAMILY_ORDER);
+            List<String> f5 = featured5.stream().filter(Runes.ALL_FAMILIES::contains).toList();
+            List<String> f4 = featured4.stream().filter(Runes.ALL_FAMILIES::contains).toList();
+            return new Banner(weights(), defaultPity().with(hard, softStart, heroEvery), f5, f4, share / 100.0, Runes.FAMILY_ORDER);
         }
 
         /** 틀린 곳 (없으면 빈 목록) — 관리자 설정 창 · 명령어가 보여 줌 */

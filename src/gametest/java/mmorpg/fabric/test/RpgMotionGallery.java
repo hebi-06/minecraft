@@ -106,7 +106,6 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"rn_thunder_spear", "wand", "10,20.6,25"},
         {"rn_gravity_reverse", "wand", "3,20,24.5"},
         {"rn_spirit_water", "wand", "3,6,9"},
-        {"rn_heaven_eye", "wand", "5,25,50"},
     };
     /** 마네킹을 보는 쪽 {이름, yaw} — 3/4 (오른쪽 앞) · 오른쪽 옆 · 앞 */
     private static final String[][] VIEWS = {{"34", "-35"}, {"side", "-90"}, {"front", "0"}};

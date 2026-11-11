@@ -2,15 +2,14 @@
 """모드 없는 클라이언트의 장식 (2026-11-08 로드맵 3번 꾸미기) — 모드 장식 모델 (assets/mmorpg/cosmetic/<모델>.json — PieceModel, 자바 ModelPart
 좌표: 아래 +y · 앞 -z · 사람의 왼쪽 +x) 을 바닐라 그림으로.
 
-1. 투구 칸 아이템 (머리 장식 모두 — 왕관 · 천사의 고리 · 마법사 모자 · 고양이 귀 · 악마의 뿔 · 꽃 화관 · 얼음 왕관, 투구 스킨 — 성기사 · 빙룡.
+1. 투구 칸 아이템 (머리 장식 모두 — 왕관 · 천사의 고리 · 마법사 모자 · 고양이 귀 · 악마의 뿔 · 꽃 화관 · 얼음 왕관.
    갑옷은 늘 안 보이므로 (사용자 2026-11-08) 투구와 겹치지 않음):
    assets/rpg/items/vcos/<모델>.json = composite (뼈마다 모델 — 모델마다 display.head 변환). 바닐라 CustomHeadLayer 가 투구 칸 아이템을
    머리 움직임 그대로 그림 (투구 그림 — equippable asset 이 없을 때). 머리 기준: 아이템 공간 p = 1.6 · (j − (0, 0.25, 0)) (블록,
    j = 머리 뼈 가운데 (목) 에서 본 j 공간 — CustomHeadLayer.translateToHead: T(0, −0.25) · Ry(180) · S(0.625, −0.625, −0.625)).
 2. 태우는 장식 (등 장식 — 망토 · 날개, 천사의 고리): 뼈마다 아이템 (assets/rpg/items/vcos/<모델>/<뼈>.json) — 서버 (VanillaCosmetics) 가
    플레이어에 태운 아이템 표시 엔티티로 몸 방향 · 웅크림 · 날갯짓을 줌. 목록 mmorpg/vanilla_cosmetics.json ("rigs").
-3. 갑옷 스킨 (갑옷 · 바지 · 신발): 바닐라 갑옷 그림 (equipment asset rpg:<세트> — 그림 _1 · _2 의 위 반 64 × 32 = 바닐라 갑옷 칸 자리 그대로).
-   덧붙은 상자 (어깨 받이 · 등 가시 · 발톱) 는 없음.
+(2026-11-11 갑옷 스킨 · 투구 스킨을 뺌 — 사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고". 예전 equipment asset · 그림은 지움.)
 
 j 공간 (vanilla_models.py 와 같음 — 위 +y · 앞 -z · 사람의 오른쪽 +x, 픽셀): ModelPart 점 m → j = (−m.x, −m.y, m.z).
 ModelPart 회전 (x, y, z) (rotationZYX) → j 공간 Rz(z) · Ry(−y) · Rx(−x). 뼈 모델 좌표 = k · (뼈 가운데에서 본 j) + c0 (vanilla_models.fit).
@@ -41,8 +40,6 @@ RPG = os.path.join(RES, "assets", "rpg")
 OUT_MODELS = os.path.join(RPG, "models", "item", "vcos")
 OUT_ITEMS = os.path.join(RPG, "items", "vcos")
 OUT_TEX = os.path.join(RPG, "textures", "item", "vcos")
-OUT_EQUIP = os.path.join(RPG, "equipment")
-OUT_EQUIP_TEX = os.path.join(RPG, "textures", "entity", "equipment")
 OUT_MANIFEST = os.path.join(RES, "mmorpg", "vanilla_cosmetics.json")
 
 HEAD_SCALE = 1.6    # 아이템 공간 1 블록 = 머리 0.625 블록 (CustomHeadLayer)
@@ -171,7 +168,7 @@ def main():
     args = ap.parse_args()
     defs = json.load(open(COSMETICS, encoding="utf-8"))["items"]
 
-    head_models, rig_models, sets = [], [], {}
+    head_models, rig_models = [], []
     for key, d in defs.items():
         if key.startswith("_"):
             continue
@@ -181,10 +178,6 @@ def main():
             head_models.append(model)
         elif slot == "back" and model:
             rig_models.append(model)
-        elif slot == "helmet" and model:
-            head_models.append(model)
-        if slot in ("chest", "legs", "boots") and d.get("set"):
-            sets.setdefault(d["set"], set()).add(slot)
     head_models = sorted(set(head_models))
     rig_models = sorted(set(rig_models))
 
@@ -192,13 +185,8 @@ def main():
         for p in (OUT_MODELS, OUT_ITEMS, OUT_TEX):
             if os.path.isdir(p):
                 shutil.rmtree(p)
-        for layer in ("humanoid", "humanoid_leggings"):
-            for s in sets:
-                p = os.path.join(OUT_EQUIP_TEX, layer, s + ".png")
-                if os.path.exists(p):
-                    os.remove(p)
 
-    manifest = {"head": {}, "rigs": {}, "equipment": {}}
+    manifest = {"head": {}, "rigs": {}}
     used_tex = {}
     n_bones = n_glow = 0
     for model in head_models + rig_models:
@@ -263,29 +251,13 @@ def main():
             assert len(roots) == 1, (model, roots)
             manifest["rigs"][model] = {"root": roots[0], "translucent": bool(piece.get("translucent")), "bones": rig}
 
-    for s, slots in sorted(sets.items()):
-        layers = {}
-        for layer, src in (("humanoid", s + "_1.png"), ("humanoid_leggings", s + "_2.png")):
-            if layer == "humanoid_leggings" and "legs" not in slots:
-                continue
-            if layer == "humanoid" and not (slots & {"chest", "boots"}):
-                continue
-            layers[layer] = [{"texture": f"rpg:{s}"}]
-            if not args.check:
-                img = Image.open(os.path.join(TEX_SRC, src)).convert("RGBA")
-                os.makedirs(os.path.join(OUT_EQUIP_TEX, layer), exist_ok=True)
-                img.crop((0, 0, 64, 32)).save(os.path.join(OUT_EQUIP_TEX, layer, s + ".png"))
-        if not args.check:
-            vm.write_json(os.path.join(OUT_EQUIP, s + ".json"), {"layers": layers})
-        manifest["equipment"][s] = f"rpg:{s}"
-
     if not args.check:
         os.makedirs(OUT_TEX, exist_ok=True)
         for name, src in sorted(used_tex.items()):
             shutil.copy(src, os.path.join(OUT_TEX, name + ".png"))
         vm.write_json(OUT_MANIFEST, manifest)
     print(f"head {len(manifest['head'])}, rigs {len(manifest['rigs'])}, bones {n_bones} (glow {n_glow}), "
-          f"textures {len(used_tex)}, equipment {len(manifest['equipment'])}")
+          f"textures {len(used_tex)}")
 
 
 if __name__ == "__main__":

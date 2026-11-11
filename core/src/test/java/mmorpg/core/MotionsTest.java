@@ -269,7 +269,7 @@ public final class MotionsTest {
             }
         }
         check(weapon >= 32, "weapon skills " + weapon);
-        check(fns.size() >= 120, "rune fns " + fns.size());
+        check(fns.size() >= 117, "rune fns " + fns.size() + " (2026-11-11 한정 3 뺌)");
         check(jobs >= 55, "job skills " + jobs);
         for (String k : want) check(Motions.skillMotion(k) != null, "skill motion " + k);
         // 0.46.0 등급마다 다른 룬 동작 열쇠 (rune:fn:등급 — 정령 소환): fn 이 있는 룬 · 그 등급이 있어야 함

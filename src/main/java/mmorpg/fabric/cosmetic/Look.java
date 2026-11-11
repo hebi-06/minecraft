@@ -8,13 +8,10 @@ import mmorpg.core.Json;
 
 /**
  * 한 사람의 장식 모습 (다른 사람에게도 보내는 것 — 가진 목록은 없음). weapon = 무기 종류 → 스킨 키,
- * slots = 칸 (helmet · chest · legs · boots · head · back · aura · title) → 장식 키 또는 {@link #HIDE} (갑옷 숨기기).
- * 없는 칸 = 원래 모습 (갑옷은 입은 그대로, 장식은 없음). 바꿀 때마다 새 Look (바뀌지 않음).
- * JSON: {"weapon": {"sword": "sakura_sword"}, "helmet": "hide", "back": "angel_wings", …}
+ * slots = 칸 (head · back · aura · title) → 장식 키. 없는 칸 = 장식 없음. 바꿀 때마다 새 Look (바뀌지 않음).
+ * JSON: {"weapon": {"sword": "sakura_sword"}, "back": "angel_wings", …}. 2026-11-11 갑옷 칸 · 숨기기 ("hide") 를 뺌 — 예전 기록의 그 값은 sanitize 가 버림.
  */
 public record Look(Map<String, String> weapon, Map<String, String> slots) {
-    /** 갑옷 숨기기 */
-    public static final String HIDE = "hide";
     public static final Look EMPTY = new Look(Map.of(), Map.of());
 
     public Look {
@@ -27,19 +24,15 @@ public record Look(Map<String, String> weapon, Map<String, String> slots) {
         return type == null ? null : weapon.get(type);
     }
 
-    /** 칸의 값 (장식 키 · HIDE · 없으면 null) */
+    /** 칸의 값 (장식 키 · 없으면 null) */
     public String get(String slot) {
         return slots.get(slot);
     }
 
-    public boolean hidden(String slot) {
-        return HIDE.equals(slots.get(slot));
-    }
-
-    /** 칸의 장식 (HIDE · 없음 · 모르는 키면 null) */
+    /** 칸의 장식 (없음 · 모르는 키면 null) */
     public CosmeticDefs.Def def(String slot) {
         String v = slots.get(slot);
-        return v == null || HIDE.equals(v) ? null : CosmeticDefs.get(v);
+        return v == null ? null : CosmeticDefs.get(v);
     }
 
     public boolean isEmpty() {
@@ -62,7 +55,7 @@ public record Look(Map<String, String> weapon, Map<String, String> slots) {
         return new Look(w, slots);
     }
 
-    /** 맞지 않는 값을 뺀 모습: 모르는 키 · 칸이 다른 키 · 가지지 않은 키 (owned 가 거짓), 숨길 수 없는 칸의 HIDE */
+    /** 맞지 않는 값을 뺀 모습: 모르는 칸 (예전 갑옷 칸) · 모르는 키 (예전 "hide") · 칸이 다른 키 · 가지지 않은 키 (owned 가 거짓) */
     public Look sanitize(Predicate<String> owned) {
         Map<String, String> w = new LinkedHashMap<>();
         for (Map.Entry<String, String> e : weapon.entrySet()) {
@@ -73,10 +66,6 @@ public record Look(Map<String, String> weapon, Map<String, String> slots) {
         for (Map.Entry<String, String> e : slots.entrySet()) {
             CosmeticDefs.Slot slot = CosmeticDefs.slot(e.getKey());
             if (slot == null || "weapon".equals(slot.key())) continue;
-            if (HIDE.equals(e.getValue())) {
-                if (slot.hide()) s.put(slot.key(), HIDE);
-                continue;
-            }
             CosmeticDefs.Def d = CosmeticDefs.get(e.getValue());
             if (d != null && d.slot().equals(slot.key()) && owned.test(d.id())) s.put(slot.key(), d.id());
         }

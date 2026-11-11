@@ -227,7 +227,7 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
             sp.getInventory().setItem(4, Breakthrough.stack("vit", "rare", 2)); // 생명의 샘 (회복)
             sp.getInventory().setItem(5, Breakthrough.stack("holy", "transcend", 3)); // 대천사 강림 (회복 · 보호막)
             sp.getInventory().setItem(6, Breakthrough.stack("strike", "hero", 0)); // 피의 칼날 (평타 강화)
-            sp.getInventory().setItem(7, Breakthrough.stack("arcana", "transcend", 6)); // 만상귀일 (한정)
+            sp.getInventory().setItem(7, Breakthrough.stack("endless", "transcend", 6)); // 무간참역 (한정 — 2026-11-11 만상귀일을 뺌)
             sp.getInventory().setItem(8, Breakthrough.stack("assassin", "transcend", 0)); // 월광 암살 (콤보)
             sp.getInventory().setSelectedSlot(8);
         });
@@ -247,7 +247,7 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         ctx.getInput().pressKey(o -> o.keyInventory);
         if (!waitScreen(ctx, sc -> sc instanceof InventoryScreen, "inventory")) return;
         away(ctx);
-        String[] names = {"meteor0", "meteor6", "crimson6", "spiritking0", "spring2", "archangel3", "bloodblade0", "arcana6", "moon0"};
+        String[] names = {"meteor0", "meteor6", "crimson6", "spiritking0", "spring2", "archangel3", "bloodblade0", "endless6", "moon0"};
         for (int i = 0; i < names.length; i++) {
             final int slot = i;
             hover(ctx, sc -> hotbar(sc, slot));

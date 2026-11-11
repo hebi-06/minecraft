@@ -745,11 +745,11 @@ final class VanillaProbe {
             case 174 -> {
                 check("bought and wearing sword skin", mmorpg.fabric.cosmetic.Cosmetics.owns(p, "sakura_sword")
                         && "sakura_sword".equals(VanillaCosmetics.lookOf(p).weaponSkin("sword")));
-                for (String id : List.of("crown", "paladin_chest", "paladin_legs", "paladin_boots", "angel_wings", "star_aura", "title_hero")) {
+                for (String id : List.of("crown", "angel_wings", "star_aura", "title_hero")) {
                     mmorpg.fabric.cosmetic.Cosmetics.give(p, id);
                     mmorpg.fabric.cosmetic.Cosmetics.equip(p, id);
                 }
-                say(p, "slot 14"); // 머리 장식 탭
+                say(p, "slot " + (9 + VanillaCosmeticPage.TAB0 + 1)); // 머리 장식 탭 (2026-11-11 탭 다섯 — 가운데 칸 2 ~ 6)
                 next(p, 175, 10);
             }
             case 175 -> {
@@ -762,13 +762,16 @@ final class VanillaProbe {
             case 176 -> {
                 mmorpg.fabric.cosmetic.Look look = VanillaCosmetics.lookOf(p);
                 check("vanilla look cache follows equips", "crown".equals(look.get("head")) && "angel_wings".equals(look.get("back"))
-                        && "title_hero".equals(look.get("title")) && "paladin_chest".equals(look.get("chest")));
+                        && "title_hero".equals(look.get("title")));
                 check("crown replaces helmet on head", VanillaCosmetics.visual(look, "helmet", false).kind() == VanillaCosmetics.HEAD_ITEM);
                 // 2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마"
                 check("armor hidden by default", VanillaCosmetics.visual(mmorpg.fabric.cosmetic.Look.EMPTY, "helmet", false).kind() == VanillaCosmetics.HIDE
                         && VanillaCosmetics.visual(mmorpg.fabric.cosmetic.Look.EMPTY, "chest", false).kind() == VanillaCosmetics.HIDE
-                        && VanillaCosmetics.visual(look, "boots", true).kind() == VanillaCosmetics.SET);
-                check("armor skin uses equipment asset", VanillaCosmetics.visual(look, "chest", false).kind() == VanillaCosmetics.SET);
+                        && VanillaCosmetics.visual(look, "chest", false).kind() == VanillaCosmetics.HIDE
+                        && VanillaCosmetics.visual(look, "helmet", true).kind() == VanillaCosmetics.HIDE);
+                // 2026-11-11 사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고"
+                check("no armor skin slots", !mmorpg.fabric.cosmetic.CosmeticDefs.SLOTS.contains("chest")
+                        && mmorpg.fabric.cosmetic.CosmeticDefs.all().values().stream().allMatch(d -> mmorpg.fabric.cosmetic.CosmeticDefs.SLOTS.contains(d.slot())));
                 String info = VanillaCosmetics.holderInfo(p);
                 log("holder " + info);
                 check("title and wings ride the player", info.startsWith("title") && !info.endsWith("bones 0"));

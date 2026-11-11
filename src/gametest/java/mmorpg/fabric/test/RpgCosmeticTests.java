@@ -48,10 +48,11 @@ public final class RpgCosmeticTests {
         Map<String, CosmeticDefs.Def> all = CosmeticDefs.all();
         h.assertTrue(all.size() >= 30, "items " + all.size());
         h.assertTrue(CosmeticDefs.slots().keySet().equals(Set.copyOf(CosmeticDefs.SLOTS)), "slots " + CosmeticDefs.slots().keySet());
-        for (String s : CosmeticDefs.SLOTS) {
-            h.assertTrue(CosmeticDefs.slot(s).hide() == CosmeticDefs.ARMOR.contains(s), "hide flag of " + s);
-            h.assertTrue(!CosmeticDefs.of(s, null).isEmpty(), "samples in slot " + s);
-        }
+        // 2026-11-11 사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고": 갑옷 칸 (갑옷 스킨) 없음
+        h.assertTrue(CosmeticDefs.SLOTS.equals(List.of("weapon", "head", "back", "aura", "title")), "slots without armor " + CosmeticDefs.SLOTS);
+        for (String s : CosmeticDefs.SLOTS) h.assertTrue(!CosmeticDefs.of(s, null).isEmpty(), "samples in slot " + s);
+        for (String id : List.of("paladin_chest", "frost_dragon_helmet")) h.assertTrue(CosmeticDefs.get(id) == null && !res("/assets/rpg/items/cosmetic_" + id + ".json"),
+                "armor skin removed " + id);
         for (String type : Weapons.allTypes()) h.assertTrue(!CosmeticDefs.of("weapon", type).isEmpty(), "weapon skin sample for " + type);
         // 요정의 날개 (0.14.2): 반투명 · 반짝이는 가루 · 빛 그림
         CosmeticDefs.Def fairy = CosmeticDefs.get("fairy_wings");
@@ -92,7 +93,6 @@ public final class RpgCosmeticTests {
                     String tex = String.valueOf(m.get("texture"));
                     h.assertTrue(tex.startsWith("mmorpg:") && res("/assets/mmorpg/" + tex.substring(7)), "texture " + tex);
                     h.assertTrue(m.get("parts") instanceof Map<?, ?> parts && !parts.isEmpty(), "parts " + d.model());
-                    if (CosmeticDefs.ARMOR.contains(d.slot())) h.assertTrue(d.set() != null, "armor skin set " + d.id());
                 }
             }
         }
@@ -147,22 +147,20 @@ public final class RpgCosmeticTests {
         RpgGearTests.done(h, sp);
     }
 
+    /** 2026-11-11 갑옷 숨기기 · 갑옷 스킨을 뺌: 예전 일 (hide · hide_all · show_all) 은 모르는 일, 갑옷 칸 · 숨김 · 산 갑옷 스킨 기록은 읽을 때 버림 */
     @GameTest(environment = ENV, maxTicks = 20)
-    public void hideArmor(GameTestHelper h) {
+    public void armorSkinsRemoved(GameTestHelper h) {
         ServerPlayer sp = player(h, 0);
-        h.assertTrue(Cosmetics.hide(sp, "helmet") == null && Cosmetics.look(sp).hidden("helmet"), "hide helmet (free, no money)");
-        h.assertTrue(Cosmetics.hide(sp, "weapon") != null, "weapon cannot be hidden");
-        h.assertTrue(Cosmetics.hide(sp, "head") != null && Cosmetics.hide(sp, "aura") != null, "decorations have no hide");
-        h.assertTrue(Cosmetics.look(sp).get("weapon") == null && Cosmetics.look(sp).weapon().isEmpty(), "weapon untouched");
-        Cosmetics.action(sp, "hide_all", "", "");
-        for (String s : CosmeticDefs.ARMOR) h.assertTrue(Cosmetics.look(sp).hidden(s), "hide all → " + s);
-        Cosmetics.action(sp, "show_all", "", "");
-        for (String s : CosmeticDefs.ARMOR) h.assertTrue(Cosmetics.look(sp).get(s) == null, "show all → " + s);
-        // 스킨은 숨김을 바꿈 · 원래대로 = 입은 갑옷
-        Cosmetics.give(sp, "paladin_chest");
-        Cosmetics.hide(sp, "chest");
-        h.assertTrue(Cosmetics.equip(sp, "paladin_chest") == null && "paladin_chest".equals(Cosmetics.look(sp).get("chest")), "skin replaces hide");
-        h.assertTrue(Cosmetics.clear(sp, "chest", null) == null && Cosmetics.look(sp).get("chest") == null, "back to own armor");
+        Props.set(sp, Cosmetics.DATA, "{\"owned\":[\"halo\",\"paladin_chest\"],\"look\":{\"head\":\"halo\",\"chest\":\"paladin_chest\",\"helmet\":\"hide\","
+                + "\"boots\":\"hide\"}}");
+        Cosmetics.State s = Cosmetics.state(sp);
+        h.assertTrue(s.owned().equals(Set.of("halo")), "old armor skin dropped from owned " + s.owned());
+        h.assertTrue("halo".equals(s.look().get("head")) && s.look().slots().keySet().equals(Set.of("head")), "old armor slots dropped " + s.look());
+        for (String a : List.of("hide", "hide_all", "show_all")) {
+            Cosmetics.action(sp, a, "helmet", "");
+            h.assertTrue(Cosmetics.look(sp).slots().keySet().equals(Set.of("head")), a + " does nothing " + Cosmetics.look(sp));
+        }
+        h.assertTrue(Cosmetics.clear(sp, "chest", null) != null, "armor slot unknown");
         RpgGearTests.done(h, sp);
     }
 
@@ -171,24 +169,24 @@ public final class RpgCosmeticTests {
         ServerPlayer sp = player(h, 0);
         Cosmetics.give(sp, "halo");
         Cosmetics.equip(sp, "halo");
-        Cosmetics.hide(sp, "boots");
         Map<String, Object> m = Json.parseObject(Props.get(sp, Cosmetics.DATA));
         h.assertTrue(m.get("owned") instanceof java.util.List<?> o && o.contains("halo"), "record owned " + m);
-        h.assertTrue(m.get("look") instanceof Map<?, ?> lm && "halo".equals(lm.get("head")) && Look.HIDE.equals(lm.get("boots")), "record look " + m);
-        // 잘못된 기록: 모르는 키 · 다른 칸의 키 · 가지지 않은 것 · 장식 칸의 hide · 무기 종류가 다른 스킨 → 뺌
+        h.assertTrue(m.get("look") instanceof Map<?, ?> lm && "halo".equals(lm.get("head")), "record look " + m);
+        // 잘못된 기록: 모르는 키 · 다른 칸의 키 · 가지지 않은 것 · 예전 hide · 예전 갑옷 칸 · 무기 종류가 다른 스킨 → 뺌
         Props.set(sp, Cosmetics.DATA, "{\"owned\":[\"halo\",\"nope\",\"crown\",\"sakura_sword\"],\"look\":{\"head\":\"crown\",\"back\":\"halo\","
                 + "\"aura\":\"hide\",\"title\":\"title_hero\",\"legs\":\"hide\",\"weapon\":{\"bow\":\"sakura_sword\",\"sword\":\"sakura_sword\"}}}");
         Cosmetics.State s = Cosmetics.state(sp);
         h.assertTrue(s.owned().equals(Set.of("halo", "crown", "sakura_sword")), "unknown owned dropped " + s.owned());
         Look l = s.look();
-        h.assertTrue("crown".equals(l.get("head")) && l.get("back") == null && l.get("aura") == null && l.get("title") == null && l.hidden("legs"),
+        h.assertTrue("crown".equals(l.get("head")) && l.get("back") == null && l.get("aura") == null && l.get("title") == null && l.get("legs") == null,
                 "sanitized slots " + l);
         h.assertTrue("sakura_sword".equals(l.weaponSkin("sword")) && l.weaponSkin("bow") == null, "sanitized weapon " + l);
         Props.set(sp, Cosmetics.DATA, "not json");
         h.assertTrue(Cosmetics.state(sp).owned().isEmpty() && Cosmetics.look(sp).isEmpty(), "broken record = empty");
         // Look JSON 왕복
-        Look round = Look.parse(new Look(Map.of("axe", "lava_axe"), Map.of("head", "crown", "helmet", Look.HIDE)).json());
-        h.assertTrue("lava_axe".equals(round.weaponSkin("axe")) && "crown".equals(round.get("head")) && round.hidden("helmet"), "json round trip " + round);
+        Look round = Look.parse(new Look(Map.of("axe", "lava_axe"), Map.of("head", "crown", "back", "angel_wings")).json());
+        h.assertTrue("lava_axe".equals(round.weaponSkin("axe")) && "crown".equals(round.get("head")) && "angel_wings".equals(round.get("back")),
+                "json round trip " + round);
         RpgGearTests.done(h, sp);
     }
 

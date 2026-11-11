@@ -1,4 +1,4 @@
-"""0.46.0 룬 동작 — 던지고 · 부리고 · 끌어당기는 룬 (암살자 · 사냥꾼 · 화산 · 투사) 과 한정 초월 (만상귀일 · 칠성 · 천공의 눈 · 세계수 · 심연 · 빙하).
+"""0.46.0 룬 동작 — 던지고 · 부리고 · 끌어당기는 룬 (암살자 · 사냥꾼 · 화산 · 투사) 과 한정 초월 (세계수 · 심연 · 빙하 — 2026-11-11 만상귀일 · 칠성 · 천공의 눈을 뺌).
 던지는 것은 손에 소품을 쥐었다가 (rpg:prop_* — tools/prop_art.py) 놓는 순간 사라짐 (효과가 그 자리에서 날아가는 것을 그림):
   prop — 주 손 무기 대신 소품, 던진 뒤는 빈손 (1인칭 fp 열쇠: 소품 → 빈 팔) · swap — 소품 구간 밖은 무기 그대로 (연막탄을 던지고 다시 단검)
   왼손 prop — 왼손에 소품 (holdOff), 던진 뒤 왼손은 빈손 (fpo)."""
@@ -364,59 +364,6 @@ fpl(m, 24, FP_CHAMBER)
 use(m, "warChains")
 
 # ------------------------------------------------------------ 한정 초월 (마법)
-
-# 만상귀일: 두 손을 가슴 앞에 모아 네 구슬을 감돌게 함 (2 ~ 14 — 손이 작은 원을 그림) → 두 팔을 앞 위로 뻗어 구슬을 조준한 곳으로 날림 (16.6)
-m = off_bare(Motion("arcana_unity", 26, "만상귀일 — 두 손을 가슴 앞에 모아 네 스탯의 구슬을 감돌게 하다가 두 팔을 뻗어 날려 보냄", fade=(0.04, 0.1)))
-ORBIT = P(body=[4, 0, 0], head=[4, 0], ra=bent([0.25, -0.35, 0.6], 95, (-1, 0.6, 0.2)), la=L(bent([0.25, -0.35, 0.6], 95, (-1, 0.6, 0.2))), **LEGS_WIDE)
-keyp(m, 2, ORBIT, "out3")
-FPL_ORB = ((-0.12, -0.05, -0.05), (25, 55, 0))
-fpw(m, 2, FPW_UP, "out3", dp=(-0.15, -0.3, -0.1))
-fpl(m, 2, FPL_ORB, "out3")
-for i, (x, y) in enumerate(((0.06, 0.06), (0.0, 0.1), (-0.06, 0.06), (0.0, 0.0))):
-    tick = 5 + i * 3
-    keyp(m, tick, P(ORBIT, ra=bent([0.25 + x, -0.35 + y, 0.6], 95, (-1, 0.6, 0.2)), la=L(bent([0.25 - x, -0.35 + y, 0.6], 95, (-1, 0.6, 0.2)))), "linear")
-    fpw(m, tick, FPW_UP, "linear", dp=(-0.15 + x, -0.3 + y, -0.1))
-    fpl(m, tick, nudge(FPL_ORB, (-x, y, 0)), "linear")
-FLING2 = P(body=[-6, -4, 0], head=[-10, 0], ra=arm([0.1, 0.4, 0.91], 4, [0, 0.8, 0.6]), la=L(arm([0.1, 0.4, 0.91], 4, [0, 1, 0.3])), **LEGS_LUNGE)
-keyp(m, 16.6, FLING2, "out3")
-keyp(m, 22, P(FLING2, body=[-4, -4, 0]))
-fpw(m, 16.6, FPW_FWD, "out3", dp=(0.15, 0.15, 0))
-fpw(m, 22, FPW_FWD, dp=(0.15, 0.1, 0))
-fpl(m, 16.6, FP_PALM_UP, "out3")
-fpl(m, 22, FP_PALM_UP)
-use(m, "arcanaUnity")
-
-# 칠성 강림: 무기 끝으로 하늘에 북두칠성을 그림 (2 ~ 20 — 별이 3틱마다 켜지며 선으로 이어짐, 일곱 점) → 빛기둥이 내릴 때 (24) 조준한 곳을 가리킴
-m = Motion("seven_stars", 32, "칠성 강림 — 무기 끝으로 하늘에 북두칠성의 일곱 별을 차례로 찍어 잇고 조준한 곳을 가리킴", fade=(0.04, 0.1))
-STARS = [(-0.35, 0.55), (-0.2, 0.62), (-0.05, 0.6), (0.08, 0.52), (0.12, 0.38), (0.32, 0.36), (0.36, 0.52)]  # 무기 끝 방향 (가로 · 세로)
-TRACE = P(body=[-6, -6, 0], head=[-16, 0], ra=RA_POINT, la=L(A_HIP), **LEGS_WIDE)
-for i, (x, y) in enumerate(STARS):
-    tick = 2 + i * 3
-    keyp(m, tick, P(TRACE, ra=arm([x - 0.05, y, 0.85], 4, [x * 1.2, y + 0.15, 0.8])), "out" if i else "out3")
-    fpw(m, tick, FPW_FWD, "out" if i else "out3", dp=(x * 0.9, y * 0.9 - 0.1, 0))
-STAR_AIM = P(body=[8, -12, 0], ra=RA_POINT_LOW, la=L(A_HIP), **LEGS_FIGHT)
-keyp(m, 24.4, STAR_AIM, "in")
-keyp(m, 28, P(STAR_AIM, body=[6, -10, 0]))
-fpw(m, 24.4, FPW_DOWN, "in", dp=(0, 0.15, -0.1))
-fpw(m, 28, FPW_DOWN, dp=(0, 0.15, -0.1))
-use(m, "sevenStars")
-
-# 천공의 눈: 두 손을 이마 위로 모아 눈 모양을 만듦 (3 ~ 17 — 마법진이 눈을 뜸) → 광선이 내리꽂히는 동안 (20 ~) 무기로 앞을 가리켜 광선을 이끎 (바라보는 곳을 따라감)
-m = off_bare(Motion("heaven_eye", 64, "천공의 눈 — 두 손을 이마 위로 모아 하늘의 눈을 뜨게 하고, 무기로 앞을 가리켜 광선을 이끎", fade=(0.03, 0.06)))
-EYE = P(body=[-8, 0, 0], head=[-20, 0], ra=bent([0.35, 0.85, 0.35], 100, (-1, 0.2, 0.3)), la=L(bent([0.35, 0.85, 0.35], 100, (-1, 0.2, 0.3))), **LEGS_WIDE)
-keyp(m, 3, EYE, "out3")
-keyp(m, 17, P(EYE, body=[-10, 0, 0]))
-GUIDE = P(body=[6, -12, 0], ra=RA_POINT, la=L(A_HIP), **LEGS_WIDE)
-keyp(m, 20.5, GUIDE, "in")
-keyp(m, 60, P(GUIDE, body=[6, -12, 0]))
-fpw(m, 3, FPW_SKY, "out3", dp=(-0.2, -0.05, 0))
-fpw(m, 17, FPW_SKY, dp=(-0.2, -0.05, 0))
-fpw(m, 20.5, FPW_FWD, "in")
-fpw(m, 60, FPW_FWD)
-fpl(m, 3, nudge(FP_RAISE, (-0.05, 0.02, 0), (2, 5, 0)), "out3")
-fpl(m, 17, nudge(FP_RAISE, (-0.05, 0.02, 0), (2, 5, 0)))
-fpl(m, 20.5, FP_LOW, "in")
-use(m, "heavenEye")
 
 # 세계수의 가호: 무릎을 꿇고 왼손을 땅에 대 씨앗을 심음 (2 ~ 6 — 앞 왼쪽에 세계수가 자라기 시작) → 일어서며 두 팔을 천천히 들어 올려 나무를 키움 (8 ~ 16) →
 # 잎 지붕이 필 때 (18) 두 팔을 활짝 펴 가호를 내림

@@ -1,9 +1,7 @@
 package mmorpg.fabric.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import mmorpg.core.Weapon;
@@ -30,8 +28,8 @@ import net.minecraft.world.item.ItemStack;
  * <ul>
  * <li>무기 스킨 ({@link #skinned}): 사람 (플레이어 · 마네킹) 이 손에 든 RPG 무기를 그릴 때 (1인칭 · 3인칭 손 — ItemModelResolver.updateForLiving),
  * 그 무기 종류의 스킨이 있으면 아이템 모델만 rpg:cosmetic_&lt;스킨&gt; 으로 바꾼 복사본을 그림. 가방 · 핫바 아이콘 (GUI) · 땅에 떨어진 것은 그대로</li>
- * <li>갑옷 · 장식 ({@link #extract} — AvatarRenderer.extractRenderState 끝): 갑옷은 늘 비움 (2026-11-08 사용자 — 갑옷 스킨만 그림), 스킨을 입은 갑옷 칸도 비움 (바닐라 · RPG 갑옷 모두
- * 그리지 않음 — 투구 칸은 머리에 쓴 블록 · 머리도, 머리에 얹는 장식 (hideHelmet — 모자 · 왕관) 을 쓰면 투구도), 그릴 것 (갑옷 스킨 · 머리 · 등 장식 · 칭호) 은
+ * <li>갑옷 · 장식 ({@link #extract} — AvatarRenderer.extractRenderState 끝): 갑옷은 늘 비움 (2026-11-08 사용자 — 바닐라 · RPG 갑옷 모두 그리지 않음,
+ * 2026-11-11 갑옷 스킨 · 숨기기도 뺌), 머리에 얹는 장식 (hideHelmet — 모자 · 왕관) 을 쓰면 머리에 쓴 블록 · 머리도 비움, 그릴 것 (머리 · 등 장식 · 칭호) 은
  * 렌더 상태에 붙여 둠 → {@link CosmeticLayer}.
  * 등 장식이 있으면 바닐라 망토는 그리지 않음</li>
  * <li>칭호 ({@link #title} — AvatarRenderer.submitNameDisplay 끝): 이름 (아래 점수 줄이 있으면 그 위) 위에 한 줄 더. 높은 모자 (nameLift) 를 쓰면
@@ -42,9 +40,9 @@ public final class CosmeticRender {
     private CosmeticRender() {}
 
     /** 렌더 상태에 붙이는 그릴 것 (nameLift = 이름표 · 칭호를 올릴 높이 — 블록) */
-    public record Data(List<PieceModel> armor, PieceModel head, PieceModel back, Component title, float nameLift) {}
+    public record Data(PieceModel head, PieceModel back, Component title, float nameLift) {}
 
-    public static final Data NONE = new Data(List.of(), null, null, null, 0F);
+    public static final Data NONE = new Data(null, null, null, 0F);
     public static final RenderStateDataKey<Data> KEY = RenderStateDataKey.create(() -> "mmorpg:cosmetics");
 
     /** 무기 아이템 → 무기 종류 ("" = RPG 무기 아님) */
@@ -107,37 +105,21 @@ public final class CosmeticRender {
             state.setData(KEY, NONE);
             return;
         }
-        List<PieceModel> armor = new ArrayList<>(4);
         CosmeticDefs.Def headDef = look.def("head");
-        // 투명 (투명화 물약) 이면 바닐라처럼 갑옷은 보임: 숨김 · 모자의 투구 가림은 쓰지 않음 (머리 · 등 장식도 그리지 않으므로 — 결투에서 갑옷까지 사라지지 않게)
-        boolean invisible = state.isInvisible;
-        // 머리에 얹는 장식 (모자 · 왕관) 을 쓰면 투구는 그리지 않음 (투구 스킨도)
-        boolean noHelmet = !invisible && headDef != null && headDef.hideHelmet();
-        if (noHelmet) clear(state, "helmet");
-        for (String slot : CosmeticDefs.ARMOR) {
-            String v = look.get(slot);
-            if (v == null || (noHelmet && slot.equals("helmet"))) continue;
-            if (Look.HIDE.equals(v)) {
-                if (!invisible) clear(state, slot);
-                continue;
-            }
-            clear(state, slot);
-            PieceModel m = CosmeticModels.of(CosmeticDefs.get(v));
-            if (m != null) armor.add(m);
-        }
+        // 머리에 얹는 장식 (모자 · 왕관) 을 쓰면 머리에 쓴 블록 · 머리도 그리지 않음 (투명이면 장식도 그리지 않으므로 그대로)
+        if (!state.isInvisible && headDef != null && headDef.hideHelmet()) clear(state, "helmet");
         PieceModel head = CosmeticModels.of(headDef);
         PieceModel back = CosmeticModels.of(look.def("back"));
         if (back != null) state.showCape = false;
         CosmeticDefs.Def t = look.def("title");
         Component title = t == null || t.title() == null ? null : TITLES.computeIfAbsent(t.title(), s -> Component.literal(BedrockText.toJava(s)));
         float lift = headDef == null ? 0F : (float) headDef.nameLift();
-        state.setData(KEY, armor.isEmpty() && head == null && back == null && title == null ? NONE
-                : new Data(List.copyOf(armor), head, back, title, lift));
+        state.setData(KEY, head == null && back == null && title == null ? NONE : new Data(head, back, title, lift));
     }
 
     /**
      * 2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마": 사람 (플레이어 · 마네킹) 의 갑옷 (RPG 갑옷 · 바닐라 갑옷) 은 늘 그리지 않음
-     * — 막는 수치는 그대로, 갑옷 스킨 (장식) 만 그림. 겉날개 · 호박 · 머리처럼 갑옷이 아닌 것은 그대로 (모드 없는 클라이언트도 같음 — VanillaCosmetics)
+     * — 막는 수치는 그대로. 겉날개 · 호박 · 머리처럼 갑옷이 아닌 것은 그대로 (모드 없는 클라이언트도 같음 — VanillaCosmetics)
      */
     private static void hideArmor(AvatarRenderState state) {
         if (armor(state.headEquipment)) clear(state, "helmet");

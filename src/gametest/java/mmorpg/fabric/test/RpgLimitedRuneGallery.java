@@ -39,9 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 0.16.0 한정 초월 룬 사진첩 (화면 시험 — 키 limited): 평평한 세계에서 과녁 허스크 여섯 (12 ~ 15칸 앞 — 하늘의 별자리 · 눈이 화면에 들어오게) 앞에서
+ * 0.16.0 한정 초월 룬 사진첩 (화면 시험 — 키 limited): 평평한 세계에서 과녁 허스크 여섯 (12 ~ 15칸 앞) 앞에서
  * 룬마다 실제 입력 (스킬 칸 1번의 키) 으로 쓰고 단계마다 사진 (lr_&lt;계열&gt;_&lt;돌&gt;_&lt;틱&gt;[_3p]): 0돌 (1인칭) · 6돌 (3인칭 — 전용 연출 finale).
- * 천공의 눈은 광선 동안 몸을 천천히 돌려 광선이 따라가는지 (lr_skyeye_0_*). 칠성 강림 6돌은 밤에도 한 번 (lr_dipper_6n_*).
+ * 2026-11-11 0.16.0 의 셋 (만상귀일 · 칠성 강림 · 천공의 눈) 을 뺌 — 영상 (film) 은 남은 다섯.
  * 0.17.0 무간참역 (쓴 자리 영역 — 과녁 가까이 z = 1.5 에 섬): 0돌 1인칭 · 6돌 3인칭 (하늘 가르기) · 6돌 밤 1인칭 (lr_endless_…).
  * 0.18.0 대지 가르기 (앞쪽 균열 — z = -3 에 서서 과녁이 균열 안 · 대검은 머리 위에서 앞으로 휘둘러 과녁 앞에 박힘): 0돌 1인칭 · 6돌 3인칭 (지맥 폭발) ·
  * 6돌 밤 1인칭 (lr_terra_…),
@@ -96,25 +96,11 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (film) {
                 RpgFilm f = new RpgFilm(ctx).view(9.0, 4.2, 2.6).angle(105).follow(0.6);
-                for (String family : List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier")) film(ctx, server, family, f);
+                for (String family : List.of("endless", "terra", "yggdrasil", "abyss", "glacier")) film(ctx, server, family, f);
                 LOG.info("[limited-gallery] film done, {} failed", failures.size());
                 if (!failures.isEmpty()) throw new AssertionError("limited film: " + String.join(" / ", failures));
                 return;
             }
-            // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 끝 (글자 없음)
-            run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82, 98}, null, false);
-            run(ctx, server, "arcana", 6, true, new int[] {30, 72, 80, 90, 100, 114}, null, false);
-            // 칠성 강림: 별이 켜짐 (0 ~ 18틱) → 별빛 기둥 7 (24 ~ 84틱) → 접힘 (92) → 큰 별 (98) → 떨어짐 (106) → 끝 (글자 없음)
-            run(ctx, server, "dipper", 0, false, new int[] {12, 26, 50, 94, 100, 108, 116, 132}, null, false);
-            run(ctx, server, "dipper", 6, true, new int[] {30, 104, 118, 126, 136, 150, 162}, null, false);
-            // 천공의 눈: 눈을 뜸 (0 ~ 20틱) → 광선 6번 (20 ~ 70틱 — 30틱부터 몸을 천천히 오른쪽으로 돌림) → 마무리 폭발 (80) → 끝 (글자 없음)
-            run(ctx, server, "skyeye", 0, false, new int[] {10, 24, 44, 66, 82, 90, 106}, "turn", false);
-            run(ctx, server, "skyeye", 6, true, new int[] {12, 40, 70, 92, 100, 116}, null, false);
-            // 밤: 칠성 강림 6돌 (별 · 별똥별 비)
-            server.runCommand("time set 18000");
-            run(ctx, server, "dipper", 6, false, new int[] {40, 118, 130, 145, 160}, null, true);
-            server.runCommand("time set 6000");
-            ctx.waitTicks(100); // 앞 시전의 6돌 하늘빛이 다 걷힌 뒤 (무간참역 0돌 사진에 남지 않게)
             // 무간참역 (0.17.0): 영역 전개 (0 ~ 16틱 — 검이 떨어져 꽂힘) → 베기 0.5초마다 (16 ~ 106틱) → 검이 모임 (110) → 일섬 (118 — 0.15초에 그어짐)
             //   → 끝 (글자 없음). 사진 틱은 클라이언트 기준 (사진 찍는 동안 서버가 앞서 — 뒤 사진일수록 서버가 몇 틱 앞)
             run(ctx, server, "endless", 0, false, new int[] {12, 30, 62, 100, 106, 110, 114, 124, 132, 142}, null, false, 1.5, 175);

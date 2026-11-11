@@ -30,10 +30,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.16.0 한정 초월 룬 셋 게임 시험 (서버): 만상귀일 · 칠성 강림 · 천공의 눈을 실제로 써서 과녁 하나에 들어간 피해 = 위력 P × 배율 합
- * (0돌 34 · 6돌 55 — 처음 설계 32 · 50 보다 5 ~ 12% 위, 몹 무적 시간을 피해 모두), P 의 적용 스탯 = 네 스탯의 합 (네 스탯 150 → 600 · 마력만 150 → 150),
- * 만상귀일은 스탯 비율로 구슬 몫을 나눔 (마력만 찍으면 마력 구슬 하나가 17 을 다), 타격 수 (구슬 넷 + 폭발 · 별 7 + 낙하 · 광선 6 + 폭발),
- * 천공의 눈은 시전 중 시전자 구속 (천천히 걸음). 0.17.0 무간참역: 쓴 자리 영역 (과녁 4.5칸 — 반지름 8 안) 베기 2 × 10 + 마무리 일섬 14 = 34 (6돌 2.5 × 14 + 20 = 55),
+ * 한정 초월 룬 게임 시험 (서버): 실제로 써서 과녁 하나에 들어간 피해 = 위력 P × 배율 합 (0돌 34 · 6돌 55, 몹 무적 시간을 피해 모두),
+ * P 의 적용 스탯 = 네 스탯의 합 (네 스탯 150 → 600 · 마력만 150 → 150). 2026-11-11 0.16.0 의 셋 (만상귀일 · 칠성 강림 · 천공의 눈) 을 뺌 — 사용자 "삭제".
+ * 0.17.0 무간참역: 쓴 자리 영역 (과녁 4.5칸 — 반지름 8 안) 베기 2 × 10 + 마무리 일섬 14 = 34 (6돌 2.5 × 14 + 20 = 55),
  * 타격 = 베기 10 (6돌 14) + 일섬 1.
  * 0.19.0 세계수의 가호 (버프 — 피해 없음): 반지름 안 아군 (나 포함) 만 가하는 피해 × (1 + 가호) · 받는 피해 × (1 − 가호, Guards 감소와는 센 것 하나),
  * 끝나면 그대로 (0.20.1 — 끝에 띄우던 요약 글자는 없음).
@@ -207,42 +206,6 @@ public final class RpgLimitedRuneTests {
     }
 
     private static final double[] EVEN = {150, 150, 150, 150};
-
-    @GameTest(environment = "mmorpg:lr_arcana", maxTicks = 160)
-    public void arcanaUnity(GameTestHelper h) {
-        cast(h, "arcana", 0, EVEN, 17 + 17, 5, 110, false);
-    }
-
-    @GameTest(environment = "mmorpg:lr_arcana_int", maxTicks = 160)
-    public void arcanaUnityOneOrb(GameTestHelper h) {
-        // 마력만: 마력 구슬 하나가 빛줄기 몫 17 을 다 (타격 = 빛줄기 하나 + 폭발)
-        cast(h, "arcana", 0, new double[] {0, 0, 0, 150}, 17 + 17, 2, 90, false);
-    }
-
-    @GameTest(environment = "mmorpg:lr_arcana6", maxTicks = 160)
-    public void arcanaUnitySixStars(GameTestHelper h) {
-        cast(h, "arcana", 6, EVEN, 29 + 26, 5, 110, false);
-    }
-
-    @GameTest(environment = "mmorpg:lr_dipper", maxTicks = 180)
-    public void sevenStars(GameTestHelper h) {
-        cast(h, "dipper", 0, EVEN, 2 * 7 + 20, 8, 140, false);
-    }
-
-    @GameTest(environment = "mmorpg:lr_dipper6", maxTicks = 200)
-    public void sevenStarsSixStars(GameTestHelper h) {
-        cast(h, "dipper", 6, EVEN, 3.5 * 8 + 27, 9, 160, false);
-    }
-
-    @GameTest(environment = "mmorpg:lr_eye", maxTicks = 160)
-    public void heavenEye(GameTestHelper h) {
-        cast(h, "skyeye", 0, EVEN, 3 * 6 + 16, 7, 110, true);
-    }
-
-    @GameTest(environment = "mmorpg:lr_eye6", maxTicks = 170)
-    public void heavenEyeSixStars(GameTestHelper h) {
-        cast(h, "skyeye", 6, EVEN, 5 * 7 + 20, 8, 125, true);
-    }
 
     @GameTest(environment = "mmorpg:lr_endless", maxTicks = 200)
     public void endlessSlash(GameTestHelper h) {
@@ -557,14 +520,36 @@ public final class RpgLimitedRuneTests {
         String[] keys = {"str", "dex", "vit", "int"};
         for (double[] b : builds) {
             for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], (int) b[i]);
-            for (String f : List.of("arcana", "dipper", "skyeye", "endless", "terra", "glacier")) {
+            for (String f : List.of("endless", "terra", "glacier")) {
                 double P = RuneCast.power(sp, f);
                 h.assertTrue(Math.abs(P - 12 * (1 + 125 * 0.02)) < 1e-6, f + " P " + P + " for " + java.util.Arrays.toString(b));
             }
         }
         for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], i == 3 ? 125 : 0);
-        h.assertTrue(Math.abs(RuneCast.power(sp, "int") - RuneCast.power(sp, "arcana")) < 1e-6, "pure mage: meteor P = limited P");
+        h.assertTrue(Math.abs(RuneCast.power(sp, "int") - RuneCast.power(sp, "endless")) < 1e-6, "pure mage: meteor P = limited P");
         h.getLevel().getServer().getPlayerList().remove(sp);
+        h.succeed();
+    }
+
+    /** 2026-11-11 뺀 한정 룬 셋: 아이템이 등록되지 않음 · 예전 스킬 칸 기록에 남은 그 룬은 그 칸만 빔 (나머지 칸은 그대로 — SkillBar.Data.CODEC 칸마다 orElse) */
+    @GameTest(maxTicks = 20)
+    public void removedLimitedRunes(GameTestHelper h) {
+        for (String f : List.of("arcana", "dipper", "skyeye")) {
+            h.assertTrue(mmorpg.fabric.rune.RuneItems.stack(f, "transcend").isEmpty(), f + " item gone");
+            h.assertFalse(net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(mmorpg.fabric.Mmorpg.rpg("rune_" + f + "_transcend")), f + " not registered");
+        }
+        var ops = net.minecraft.resources.RegistryOps.create(com.mojang.serialization.JsonOps.INSTANCE, h.getLevel().registryAccess());
+        net.minecraft.world.item.ItemStack endless = mmorpg.fabric.rune.RuneItems.stack("endless", "transcend");
+        com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+        com.google.gson.JsonObject old = new com.google.gson.JsonObject();
+        old.addProperty("id", "rpg:rune_arcana_transcend");
+        old.addProperty("count", 1);
+        arr.add(old);
+        arr.add(net.minecraft.world.item.ItemStack.OPTIONAL_CODEC.encodeStart(ops, endless).getOrThrow());
+        mmorpg.fabric.rune.SkillBar.Data back = mmorpg.fabric.rune.SkillBar.Data.CODEC.parse(ops, arr).getOrThrow();
+        Runes.Rune kept = mmorpg.fabric.rune.RuneItems.runeOf(back.slots().get(1));
+        h.assertTrue(back.slots().size() == mmorpg.fabric.rune.SkillBar.SIZE && back.slots().get(0).isEmpty() && kept != null && "endless".equals(kept.family()),
+                "old skill bar: removed rune slot empty, others kept " + back.slots());
         h.succeed();
     }
 }

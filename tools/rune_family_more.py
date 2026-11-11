@@ -415,8 +415,8 @@ def glacier_layers():
             (flake(22.8, 7.4, 1.4), (255, 255, 255), (190, 236, 255), (40, 96, 160))]
 
 
-LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers, "terra": terra_layers,
-                  "yggdrasil": yggdrasil_layers, "abyss": abyss_layers, "glacier": glacier_layers}
+# 2026-11-11 만상 · 칠성 · 천공 (arcana · dipper · skyeye) 을 뺌 — 그 문양 함수 (arcana_layers · dipper_layers · skyeye_layers) 는 남겨 둠 (쓰지 않음)
+LIMITED_GLYPHS = {"endless": endless_layers, "terra": terra_layers, "yggdrasil": yggdrasil_layers, "abyss": abyss_layers, "glacier": glacier_layers}
 
 
 # ------------------------------------------------------------ 0.25.0 두 스탯 계열 여섯 (층 문양 — 다섯 등급 같은 문양)

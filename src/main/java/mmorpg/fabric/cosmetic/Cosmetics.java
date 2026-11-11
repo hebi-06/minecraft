@@ -24,14 +24,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 장식 (0.13.0 — 무기 스킨 · 갑옷 스킨 · 머리 · 등 장식 · 오라 · 칭호, 목록은 cosmetics.json {@link CosmeticDefs}).
+ * 장식 (0.13.0 — 무기 스킨 · 머리 · 등 장식 · 오라 · 칭호, 목록은 cosmetics.json {@link CosmeticDefs}).
  * <ul>
  * <li>얻기: 장식 창 (스탯 창 장식 단추 · U 키 · /장식) 에서 골드로 사기 (0.21.0 — 사용자 요청 "치장템은 골드로", 예전 에메랄드 값의 1/10) — 산 것은 바로 입음.
  * 한 번 사면 계속 가짐 (죽어도 그대로)</li>
  * <li>입기 · 벗기: 가진 것만. 무기 스킨은 무기 종류마다 하나 (손에 든 모습만 — 가방 아이콘 · 수치는 그대로). 무기는 숨길 수 없음</li>
- * <li>갑옷 숨기기: 투구 · 갑옷 · 바지 · 신발 칸마다 무료로 언제든 (원래 · 숨기기 · 갑옷 스킨 중 하나) — 막는 수치는 그대로</li>
+ * <li>갑옷: 입은 갑옷은 늘 보이지 않음 (2026-11-08 사용자 — 효과만). 2026-11-11 갑옷 스킨 · 숨기기를 뺌 (사용자 "없애 갑옷 스킨과 모드 창의 숨기기 없애고")</li>
  * <li>기록: 플레이어 속성 rpg:cosmetics {"owned": [키…], "look": 모습} — 모습 ({@link Look}) 은 모두에게 보냄 (들어올 때 전체 표 · 바뀔 때 그 사람만),
- * 클라이언트가 보이는 사람마다 그림 (모드가 없는 클라이언트는 보지 못함)</li>
+ * 클라이언트가 보이는 사람마다 그림 (모드가 없는 클라이언트는 서버가 바닐라 모습으로 — VanillaCosmetics)</li>
  * </ul>
  */
 public final class Cosmetics {
@@ -95,9 +95,6 @@ public final class Cosmetics {
             case "buy" -> buy(sp, a);
             case "equip" -> equip(sp, a);
             case "clear" -> clear(sp, a, b);
-            case "hide" -> hide(sp, a);
-            case "hide_all" -> setArmor(sp, Look.HIDE);
-            case "show_all" -> setArmor(sp, null);
             case "sync" -> null;
             default -> "§c모르는 장식 일: " + action;
         };
@@ -140,38 +137,13 @@ public final class Cosmetics {
         return null;
     }
 
-    /** 칸을 원래대로 (무기 칸은 type 의 스킨 → 기본 모습 — type 이 없으면 모든 무기 종류, 갑옷 칸 → 입은 갑옷 그대로, 장식 칸 → 없음) */
+    /** 칸을 원래대로 (무기 칸은 type 의 스킨 → 기본 모습 — type 이 없으면 모든 무기 종류, 장식 칸 → 없음) */
     public static String clear(ServerPlayer sp, String slot, String type) {
         if (CosmeticDefs.slot(slot) == null) return "§c모르는 칸: " + slot;
         State s = state(sp);
         Look next;
         if ("weapon".equals(slot)) next = type == null || type.isBlank() ? new Look(java.util.Map.of(), s.look().slots()) : s.look().withWeapon(type, null);
         else next = s.look().with(slot, null);
-        if (next.equals(s.look())) return null;
-        save(sp, new State(s.owned(), next));
-        broadcast(sp);
-        return null;
-    }
-
-    /** 갑옷 칸 숨기기 (무료). 무기 · 장식 칸은 숨길 수 없음 */
-    public static String hide(ServerPlayer sp, String slot) {
-        CosmeticDefs.Slot sl = CosmeticDefs.slot(slot);
-        if (sl == null) return "§c모르는 칸: " + slot;
-        if ("weapon".equals(slot)) return "§c무기는 숨길 수 없습니다 §7(무기 스킨으로 모습만 바꿀 수 있음)";
-        if (!sl.hide()) return "§c" + sl.name() + " 칸은 숨기기가 없습니다 §7(원래대로 = 벗기)";
-        State s = state(sp);
-        Look next = s.look().with(slot, Look.HIDE);
-        if (next.equals(s.look())) return null;
-        save(sp, new State(s.owned(), next));
-        broadcast(sp);
-        return null;
-    }
-
-    /** 갑옷 넷을 모두 숨기기 (value = HIDE) 또는 모두 원래대로 (null) */
-    static String setArmor(ServerPlayer sp, String value) {
-        State s = state(sp);
-        Look next = s.look();
-        for (String slot : CosmeticDefs.ARMOR) next = next.with(slot, value);
         if (next.equals(s.look())) return null;
         save(sp, new State(s.owned(), next));
         broadcast(sp);

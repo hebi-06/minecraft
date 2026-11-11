@@ -143,7 +143,7 @@ final class RuneBoost {
             Map.entry("axe", 1), Map.entry("bow", 6), Map.entry("holy", 9), Map.entry("storm", 8), Map.entry("assassin", 5), Map.entry("blade", 0),
             Map.entry("spellblade", 2), Map.entry("element", 0), Map.entry("spirit", 4), Map.entry("gravity", 3), Map.entry("strike", 0), Map.entry("reaper", 7),
             Map.entry("tide", 4), Map.entry("golem", 10), Map.entry("monk", 6), Map.entry("hunter", 1), Map.entry("volcano", 3), Map.entry("gladiator", 10),
-            Map.entry("arcana", 3), Map.entry("dipper", 3), Map.entry("skyeye", 8), Map.entry("endless", 0), Map.entry("terra", 10), Map.entry("glacier", 10));
+            Map.entry("endless", 0), Map.entry("terra", 10), Map.entry("glacier", 10));
     /** rfx_jhits 한 줄의 장 수 (JobFx.HITS) · rfx_jburst2 장 수 (JobFx.BURST) */
     private static final int MARK_FRAMES = 6;
     private static final int BURST_FRAMES = 8;

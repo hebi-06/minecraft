@@ -76,7 +76,7 @@ public final class Runes {
      *
      * @param stat    the family's representative stat (icon group), {@code famName}: family name
      * @param def     RUNES[family][grade] (fn = effect, mult/hits/... = its numbers)
-     * @param cd      cooldown in seconds (RUNE_GRADES)
+     * @param cd      cooldown in seconds (def.cd when the rune sets its own, else RUNE_GRADES)
      */
     public record Rune(String id, String family, String stat, String famName, String grade, Obj def, double cd, String gradeName, String gradeColor) {}
 
@@ -115,7 +115,8 @@ public final class Runes {
         Obj f = FAMILIES.objOrNull(family);
         if (def == null || f == null) return null;
         Grade g = R.grade(grade);
-        return new Rune(typeId, family, f.str("stat"), f.str("name"), grade, def, RUNE_GRADES.obj(grade).num("cd"),
+        // 2026-11-11 룬마다 재사용 (def.cd — 사용자 도감 표시: 세계수의 가호 48 · 심연의 낙인 42 · 만년빙하 32), 없으면 등급의 재사용
+        return new Rune(typeId, family, f.str("stat"), f.str("name"), grade, def, def.has("cd") ? def.num("cd") : RUNE_GRADES.obj(grade).num("cd"),
                 g == null ? grade : g.name(), g == null ? "§f" : g.color());
     }
 
@@ -599,27 +600,11 @@ public final class Runes {
         return out;
     }
 
-    /** 0.16.0 한정 초월 룬 (만상귀일 · 칠성 강림 · 천공의 눈): 흐름 */
+    /** 0.16.0 한정 초월 룬: 흐름 (2026-11-11 처음 셋 — 만상귀일 · 칠성 강림 · 천공의 눈 — 을 뺌) */
     private static List<String> limitedLore(Obj d, String L, boolean dark) {
         String N = dark ? "§0" : "§f";
         String fn = d.strOrNull("fn");
         List<String> out = new ArrayList<>();
-        if ("arcanaUnity".equals(fn)) {
-            out.add("§r" + L + "구슬 넷: 힘 · 민첩 · 체력 · 마력 (크기 = 비율)");
-            out.add("§r" + L + "구슬 빛줄기 " + N + "위력×" + d.text("mult") + L + " (스탯 비율로 나눔)");
-            out.add("§r" + L + "귀일 폭발 " + N + "위력×" + d.text("crush") + L + " (반지름 " + d.text("radius") + "칸)");
-        }
-        if ("sevenStars".equals(fn)) {
-            out.add("§r" + L + "북두칠성 별 " + d.text("hits") + "개 · " + sec(d.numOr("gap", Double.NaN)) + "마다 별빛 기둥");
-            out.add("§r" + L + "별빛 기둥 " + N + "위력×" + d.text("mult") + L + " (" + d.text("beam") + "칸)");
-            out.add("§r" + L + "별 낙하 " + N + "위력×" + d.text("crush") + L + " (반지름 " + d.text("radius") + "칸)");
-        }
-        if ("heavenEye".equals(fn)) {
-            out.add("§r" + L + "광선 " + sec(d.numOr("hits", Double.NaN) * d.numOr("gap", Double.NaN)) + " · 바라보는 곳을 따라감");
-            out.add("§r" + L + sec(d.numOr("gap", Double.NaN)) + "마다 " + N + "위력×" + d.text("mult") + L + " (굵기 " + d.text("width") + "칸)");
-            out.add("§r" + L + "마무리 폭발 " + N + "위력×" + d.text("crush") + L + " (반지름 " + d.text("radius") + "칸)");
-            out.add("§r" + L + "광선 동안 천천히 걸음");
-        }
         if (isGrace(d)) {
             // 0.19.0 세계수의 가호: 피해 없음 — 가호 (스탯 합 125 기준) · 세기 공식 · 범위 (끝 요약 글자는 0.20.1 에서 뺌)
             double up = graceUp(d, GRACE_REF);

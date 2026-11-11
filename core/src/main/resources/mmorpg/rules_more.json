@@ -381,12 +381,6 @@
       "hero": {"fn": "arenaDomain", "name": "투기장", "desc": "사슬 울타리로 투기장을 세우고 사슬로 내려침", "use": "주위 영역 · 가둠 · 내려치기 4번 · 받는 피해 감소", "mult": 4, "hits": 4, "gap": 20, "crush": 4, "radius": 6, "reduce": 0.2, "ticks": 90, "multName": "내려치기 ", "crushName": "마무리", "flow": ["반지름 {radius}칸 투기장 {t:ticks} · 적은 못 나감", "{t:gap}마다 안의 적을 사슬로 내려침"]},
       "transcend": {"fn": "warChains", "name": "투신의 사슬", "desc": "거대한 사슬이 솟아 적을 묶고 조인 뒤 거대한 철퇴가 내리꽂힘", "use": "원거리 광역 · 묶음 · 조이기 연타 · 철퇴", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 16, "root": 40, "multName": "조이기 ", "crushName": "철퇴", "flow": ["조준한 곳 반지름 {radius}칸 · 사슬이 솟아 묶고 {t:gap}마다 조임", "끝에 거대한 철퇴"]}
     },
-    "arcana": {
-      "transcend": {"fn": "arcanaUnity", "name": "만상귀일", "desc": "네 스탯의 구슬이 하나로 모여 터짐", "use": "원거리 광역 · 스탯 구슬 연격 · 대폭발", "mult": 17, "crush": 17, "range": 22, "zone": 4, "radius": 7, "charge": 16, "gap": 10, "height": 3.4, "lift": 0.8}
-    },
-    "dipper": {
-      "transcend": {"fn": "sevenStars", "name": "칠성 강림", "desc": "하늘에 북두칠성을 그려 별빛을 내리꽂음", "use": "원거리 광역 · 별빛 7연타 · 별 낙하", "mult": 2, "hits": 7, "crush": 20, "range": 24, "radius": 6, "beam": 2.5, "draw": 24, "gap": 10, "height": 7, "lift": 0.9}
-    },
     "endless": {
       "transcend": {"fn": "endlessSlash", "name": "무간참역", "desc": "주위를 영역으로 덮고 무수한 참격으로 벰", "use": "주위 영역 · 참격 연타 · 마무리 일섬", "mult": 2, "hits": 10, "crush": 14, "radius": 8, "charge": 16, "gap": 10, "finish": 12, "lift": 0.5}
     },
@@ -394,20 +388,17 @@
       "transcend": {"fn": "earthSplitter", "name": "대지 가르기", "desc": "거대한 대지의 대검이 땅을 가름", "use": "앞쪽 직선 · 대검 내려치기 · 갈라진 땅 여진", "mult": 3, "hits": 6, "crush": 16, "length": 14, "width": 2.5, "start": 1.5, "charge": 24, "gap": 10, "lift": 0.9}
     },
     "yggdrasil": {
-      "transcend": {"fn": "worldTreeGrace", "name": "세계수의 가호", "desc": "세계수의 환영이 둘레 아군에게 가호를 내림", "use": "아군 버프 · 가하는 피해 증가 · 받는 피해 감소", "graceUp": 0.1, "graceCut": 0.1, "gracePer": 0.0008, "graceCap": 0.12, "ticks": 240, "radius": 8, "charge": 18, "tree": 2.8, "dist": 12, "side": 6}
+      "transcend": {"fn": "worldTreeGrace", "cd": 48, "name": "세계수의 가호", "desc": "세계수의 환영이 둘레 아군에게 가호를 내림", "use": "아군 버프 · 가하는 피해 증가 · 받는 피해 감소", "graceUp": 0.1, "graceCut": 0.1, "gracePer": 0.0008, "graceCap": 0.12, "ticks": 240, "radius": 8, "charge": 18, "tree": 2.8, "dist": 12, "side": 6}
     },
     "abyss": {
-      "transcend": {"fn": "abyssBrand", "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "ticks": 200, "radius": 6, "range": 20, "charge": 14}
+      "transcend": {"fn": "abyssBrand", "cd": 42, "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "ticks": 200, "radius": 6, "range": 20, "charge": 14}
     },
     "glacier": {
-      "transcend": {"fn": "glacierField", "name": "만년빙하", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
-    },
-    "skyeye": {
-      "transcend": {"fn": "heavenEye", "name": "천공의 눈", "desc": "하늘의 눈이 바라보는 곳을 광선으로 태움", "use": "조종하는 광선 · 6연타 · 마무리 폭발", "mult": 3, "hits": 6, "crush": 16, "range": 24, "width": 2.5, "speed": 6, "charge": 20, "gap": 10, "radius": 5, "height": 10, "fire": 3}
+      "transcend": {"fn": "glacierField", "cd": 32, "name": "만년빙하", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
     }
   },
   "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike"],
-  "RUNE_LIMITED_ORDER": ["arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier"],
+  "RUNE_LIMITED_ORDER": ["endless", "terra", "yggdrasil", "abyss", "glacier"],
   "RUNE_FAMILIES": {
     "_comment": "0.12.6: 성기사 룬 적용 스탯 체력 → 체력 + 힘 × 0.5 (사용자 요청 '성기사 체력힘으로' — 도끼 · 검사처럼 둘째 스탯 0.5), 사신 계열 (민첩 + 마력 × 0.5 = 낫의 요구 비율 — 0.12.6 에는 낫 전용 (weapon: 이 무기를 든 동안만 씀) 이었으나 0.27.0 에 사용자 요청 '사신의 룬 조건인 낫을 없애고' 로 뺌: 아무 무기나, weapon 키는 코드에 남아 있으나 쓰는 계열 없음) 0.16.0: 한정 계열 셋 (arcana 만상 · dipper 칠성 · skyeye 천공 — 마법 피해 · 0.17.0 endless 무간 · 0.18.0 terra 대지 · 0.19.0 yggdrasil 세계수 — 버프 · 0.20.0 abyss 심연 — 적 약화 · 0.24.0 glacier 빙하) 은 적용 스탯 = 네 스탯의 합 × 1.0 (coef 넷이 1 — sum: 설명 · 알림을 '총 스탯' 으로, limited: 한정 뽑기 전용)",
     "holy": {"stat": "vit", "name": "성기사", "coef": {"vit": 1, "str": 0.5}},
@@ -418,9 +409,6 @@
     "hunter": {"stat": "dex", "name": "사냥꾼", "coef": {"dex": 1, "vit": 0.5}},
     "volcano": {"stat": "str", "name": "화산", "coef": {"str": 1, "int": 0.5}},
     "gladiator": {"stat": "vit", "name": "투사", "coef": {"vit": 1, "dex": 0.5}},
-    "arcana": {"stat": "int", "name": "만상", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
-    "dipper": {"stat": "int", "name": "칠성", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
-    "skyeye": {"stat": "int", "name": "천공", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
     "endless": {"stat": "int", "name": "무간", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
     "terra": {"stat": "int", "name": "대지", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
     "yggdrasil": {"stat": "int", "name": "세계수", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
@@ -429,7 +417,7 @@
   },
   "RUNE": {
     "_comment": "0.12.6: 사신 계열 색 (핏빛 · 연분홍 심지) · 뽑기권 설명 (계열 17개) · 0.16.0 한정 계열 색 (만상 진줏빛 · 칠성 별빛 · 천공 해빛 · 0.17.0 무간 먹빛 보라 · 0.18.0 대지 호박빛 · 0.19.0 세계수 비췻빛 · 금빛 심지 · 0.20.0 심연 핏빛 보라 · 분홍 심지 · 0.24.0 빙하 얼음빛 · 흰 심지)",
-    "color": {"str": [[1, 0.42, 0.18], [1, 0.86, 0.62]], "dex": [[0.35, 1, 0.55], [0.9, 1, 0.92]], "vit": [[1, 0.42, 0.68], [1, 0.9, 0.95]], "int": [[0.45, 0.62, 1], [0.86, 0.92, 1]], "axe": [[0.95, 0.2, 0.14], [1, 0.78, 0.62]], "bow": [[0.66, 1, 0.28], [0.95, 1, 0.82]], "holy": [[1, 0.82, 0.32], [1, 0.98, 0.86]], "storm": [[0.62, 0.48, 1], [0.9, 0.92, 1]], "assassin": [[0.84, 0.18, 0.96], [1, 0.84, 1]], "blade": [[0.3, 0.92, 0.92], [0.9, 1, 1]], "spellblade": [[0.5, 0.3, 1], [0.55, 1, 1]], "element": [[1, 0.58, 0.22], [1, 0.95, 0.82]], "spirit": [[0.42, 1, 0.76], [0.92, 1, 0.97]], "gravity": [[0.6, 0.24, 0.9], [1, 0.86, 0.98]], "body": [[1, 0.66, 0.2], [1, 0.96, 0.82]], "strike": [[0.78, 0.86, 1], [1, 1, 1]], "reaper": [[0.86, 0.06, 0.12], [1, 0.72, 0.68]], "arcana": [[0.9, 0.84, 1], [1, 1, 1]], "dipper": [[0.6, 0.76, 1], [1, 0.94, 0.72]], "skyeye": [[1, 0.74, 0.25], [1, 0.97, 0.85]], "endless": [[0.74, 0.04, 0.1], [1, 0.84, 0.84]], "terra": [[0.86, 0.52, 0.2], [1, 0.86, 0.58]], "yggdrasil": [[0.36, 0.86, 0.46], [1, 0.93, 0.62]], "abyss": [[0.62, 0.1, 0.42], [1, 0.62, 0.86]], "glacier": [[0.45, 0.82, 1], [0.92, 0.98, 1]], "tide": [[0.12, 0.52, 1], [0.72, 0.98, 1]], "golem": [[0.32, 0.92, 0.7], [0.88, 1, 0.94]], "monk": [[1, 0.7, 0.18], [1, 0.97, 0.82]], "hunter": [[0.6, 0.86, 0.3], [0.97, 1, 0.8]], "volcano": [[1, 0.3, 0.04], [1, 0.86, 0.42]], "gladiator": [[0.66, 0.76, 0.9], [1, 0.95, 0.85]]},
+    "color": {"str": [[1, 0.42, 0.18], [1, 0.86, 0.62]], "dex": [[0.35, 1, 0.55], [0.9, 1, 0.92]], "vit": [[1, 0.42, 0.68], [1, 0.9, 0.95]], "int": [[0.45, 0.62, 1], [0.86, 0.92, 1]], "axe": [[0.95, 0.2, 0.14], [1, 0.78, 0.62]], "bow": [[0.66, 1, 0.28], [0.95, 1, 0.82]], "holy": [[1, 0.82, 0.32], [1, 0.98, 0.86]], "storm": [[0.62, 0.48, 1], [0.9, 0.92, 1]], "assassin": [[0.84, 0.18, 0.96], [1, 0.84, 1]], "blade": [[0.3, 0.92, 0.92], [0.9, 1, 1]], "spellblade": [[0.5, 0.3, 1], [0.55, 1, 1]], "element": [[1, 0.58, 0.22], [1, 0.95, 0.82]], "spirit": [[0.42, 1, 0.76], [0.92, 1, 0.97]], "gravity": [[0.6, 0.24, 0.9], [1, 0.86, 0.98]], "body": [[1, 0.66, 0.2], [1, 0.96, 0.82]], "strike": [[0.78, 0.86, 1], [1, 1, 1]], "reaper": [[0.86, 0.06, 0.12], [1, 0.72, 0.68]], "endless": [[0.74, 0.04, 0.1], [1, 0.84, 0.84]], "terra": [[0.86, 0.52, 0.2], [1, 0.86, 0.58]], "yggdrasil": [[0.36, 0.86, 0.46], [1, 0.93, 0.62]], "abyss": [[0.62, 0.1, 0.42], [1, 0.62, 0.86]], "glacier": [[0.45, 0.82, 1], [0.92, 0.98, 1]], "tide": [[0.12, 0.52, 1], [0.72, 0.98, 1]], "golem": [[0.32, 0.92, 0.7], [0.88, 1, 0.94]], "monk": [[1, 0.7, 0.18], [1, 0.97, 0.82]], "hunter": [[0.6, 0.86, 0.3], [0.97, 1, 0.8]], "volcano": [[1, 0.3, 0.04], [1, 0.86, 0.42]], "gladiator": [[0.66, 0.76, 0.9], [1, 0.95, 0.85]]},
     "ticketLore": ["§r§7보스·퀘스트·룬술사에게서 얻음", "§r§7들고 누르면 룬 하나를 뽑습니다", "§r§7일반 50% · 희귀 28% · 고귀 14%", "§r§7영웅 6.5% · 초월 1.5%", "§r§7계열 23개 중 하나 (같은 확률)"]
   },
   "RUNE_SPREAD": {
@@ -589,9 +577,6 @@
       "strike.rare": {"a": "narrow"},
       "strike.noble": {"a": "narrow"},
       "strike.hero": {"a": "single", "u": ["lifesteal"]},
-      "arcana.transcend": {"t": 70, "w": 24, "zone": true, "u": ["lift"]},
-      "dipper.transcend": {"t": 106, "w": 24, "zone": true, "u": ["lift"]},
-      "skyeye.transcend": {"t": 80, "w": 20, "u": ["slow"]},
       "endless.transcend": {"t": 118, "w": 16, "zone": true},
       "terra.transcend": {"t": 90, "w": 24, "zone": true, "u": ["lift"], "elem": "rock"},
       "glacier.transcend": {"t": 128, "w": 17, "zone": true, "u": ["stun2"], "elem": "ice"}
@@ -1106,36 +1091,35 @@
       "phoenix_ult:dive": "jb_phoenix_ult_dive", "darkknight_crunch": "jb_darkknight_crunch", "darkknight_crunch:2": "jb_darkknight_crunch_2", "darkknight_lunge": "jb_darkknight_lunge",
       "darkknight_feast": "jb_darkknight_feast", "darkknight_feast:bite": "jb_darkknight_feast_bite", "darkknight_frenzy": "jb_darkknight_frenzy", "darkknight_ult": "jb_darkknight_ult",
       "darkknight_ult:crush": "jb_darkknight_ult_crush",
-      "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
-      "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
-      "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
-      "rune:beastKing": "rn_beast_king", "rune:berserker": "rn_berserker", "rune:blackHole": "rn_black_hole",
-      "rune:bladeFan": "rn_blade_fan", "rune:bladeStorm": "rn_blade_storm", "rune:blink": "rn_blink",
-      "rune:blizzard": "rn_blizzard", "rune:bloodBlade": "rn_blood_blade", "rune:bloodBrand": "rn_blood_brand",
-      "rune:bloodCleave": "rn_blood_cleave", "rune:bloodCrescent": "rn_blood_crescent", "rune:bloodHarvest": "rn_blood_harvest",
-      "rune:bloodWhirl": "rn_blood_whirl", "rune:bulwark": "rn_bulwark", "rune:chainFist": "rn_chain_fist",
-      "rune:chainHook": "rn_chain_hook", "rune:chainLightning": "rn_chain_lightning", "rune:chainWhirl": "rn_chain_whirl",
-      "rune:cleave": "rn_cleave", "rune:colossus": "rn_colossus", "rune:counterStance": "rn_counter_stance",
-      "rune:crimsonMoon": "rn_crimson_moon", "rune:divineSmite": "rn_divine_smite", "rune:earthSplitter": "rn_earth_splitter",
-      "rune:edgeHone": "rn_edge_hone", "rune:elementRelease": "rn_element_release", "rune:endlessSlash": "rn_endless_slash",
-      "rune:execute": "rn_execute", "rune:falconStrike": "rn_falcon_strike", "rune:fightingSpirit": "rn_fighting_spirit",
-      "rune:fireStorm": "rn_fire_storm", "rune:fireball": "rn_fireball", "rune:fissure": "rn_fissure",
-      "rune:flameSlash": "rn_flame_slash", "rune:flurry": "rn_flurry", "rune:flyingKick": "rn_flying_kick",
-      "rune:frostNova": "rn_frost_nova", "rune:frostThrust": "rn_frost_thrust", "rune:galeSlash": "rn_gale_slash",
-      "rune:glacierField": "rn_glacier_field", "rune:golemSummon": "rn_golem_summon", "rune:grandEruption": "rn_grand_eruption",
-      "rune:gravityOrb": "rn_gravity_orb", "rune:gravityReverse": "rn_gravity_reverse", "rune:gravityWell": "rn_gravity_well",
-      "rune:groundSlam": "rn_ground_slam", "rune:guardShout": "rn_guard_shout", "rune:healingRain": "rn_healing_rain",
-      "rune:heavenEye": "rn_heaven_eye", "rune:heavenFall": "rn_heaven_fall", "rune:heavenFist": "rn_heaven_fist",
-      "rune:heavenSplit": "rn_heaven_split", "rune:hundredFists": "rn_hundred_fists", "rune:huntNet": "rn_hunt_net",
-      "rune:ironSkin": "rn_iron_skin", "rune:judgeHammer": "rn_judge_hammer", "rune:lavaBombs": "rn_lava_bombs",
-      "rune:leapSlam": "rn_leap_slam", "rune:leviathan": "rn_leviathan", "rune:lifeSpring": "rn_life_spring",
-      "rune:liftSlam": "rn_lift_slam", "rune:lightBarrier": "rn_light_barrier", "rune:maelstrom": "rn_maelstrom",
-      "rune:magmaField": "rn_magma_field", "rune:magmaGeyser": "rn_magma_geyser", "rune:magmaSlam": "rn_magma_slam",
-      "rune:manaBlaster": "rn_mana_blaster", "rune:meteor": "rn_meteor", "rune:moonAssassin": "rn_moon_assassin",
-      "rune:orbitBlades": "rn_orbit_blades", "rune:palmBlast": "rn_palm_blast", "rune:petrify": "rn_petrify",
-      "rune:pierceArrow": "rn_pierce_arrow", "rune:pinArrow": "rn_pin_arrow", "rune:poisonStars": "rn_poison_stars",
-      "rune:purify": "rn_purify", "rune:quickDraw": "rn_quick_draw", "rune:regenBody": "rn_regen_body",
-      "rune:riftSlash": "rn_rift_slash", "rune:sevenStars": "rn_seven_stars", "rune:shadowFlurry": "rn_shadow_flurry",
+      "rune:abyssBrand": "rn_abyss_brand", "rune:arcaneCut": "rn_arcane_cut", "rune:archangel": "rn_archangel",
+      "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening", "rune:axeBoomerang": "rn_axe_boomerang",
+      "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep", "rune:beastKing": "rn_beast_king",
+      "rune:berserker": "rn_berserker", "rune:blackHole": "rn_black_hole", "rune:bladeFan": "rn_blade_fan",
+      "rune:bladeStorm": "rn_blade_storm", "rune:blink": "rn_blink", "rune:blizzard": "rn_blizzard",
+      "rune:bloodBlade": "rn_blood_blade", "rune:bloodBrand": "rn_blood_brand", "rune:bloodCleave": "rn_blood_cleave",
+      "rune:bloodCrescent": "rn_blood_crescent", "rune:bloodHarvest": "rn_blood_harvest", "rune:bloodWhirl": "rn_blood_whirl",
+      "rune:bulwark": "rn_bulwark", "rune:chainFist": "rn_chain_fist", "rune:chainHook": "rn_chain_hook",
+      "rune:chainLightning": "rn_chain_lightning", "rune:chainWhirl": "rn_chain_whirl", "rune:cleave": "rn_cleave",
+      "rune:colossus": "rn_colossus", "rune:counterStance": "rn_counter_stance", "rune:crimsonMoon": "rn_crimson_moon",
+      "rune:divineSmite": "rn_divine_smite", "rune:earthSplitter": "rn_earth_splitter", "rune:edgeHone": "rn_edge_hone",
+      "rune:elementRelease": "rn_element_release", "rune:endlessSlash": "rn_endless_slash", "rune:execute": "rn_execute",
+      "rune:falconStrike": "rn_falcon_strike", "rune:fightingSpirit": "rn_fighting_spirit", "rune:fireStorm": "rn_fire_storm",
+      "rune:fireball": "rn_fireball", "rune:fissure": "rn_fissure", "rune:flameSlash": "rn_flame_slash",
+      "rune:flurry": "rn_flurry", "rune:flyingKick": "rn_flying_kick", "rune:frostNova": "rn_frost_nova",
+      "rune:frostThrust": "rn_frost_thrust", "rune:galeSlash": "rn_gale_slash", "rune:glacierField": "rn_glacier_field",
+      "rune:golemSummon": "rn_golem_summon", "rune:grandEruption": "rn_grand_eruption", "rune:gravityOrb": "rn_gravity_orb",
+      "rune:gravityReverse": "rn_gravity_reverse", "rune:gravityWell": "rn_gravity_well", "rune:groundSlam": "rn_ground_slam",
+      "rune:guardShout": "rn_guard_shout", "rune:healingRain": "rn_healing_rain", "rune:heavenFall": "rn_heaven_fall",
+      "rune:heavenFist": "rn_heaven_fist", "rune:heavenSplit": "rn_heaven_split", "rune:hundredFists": "rn_hundred_fists",
+      "rune:huntNet": "rn_hunt_net", "rune:ironSkin": "rn_iron_skin", "rune:judgeHammer": "rn_judge_hammer",
+      "rune:lavaBombs": "rn_lava_bombs", "rune:leapSlam": "rn_leap_slam", "rune:leviathan": "rn_leviathan",
+      "rune:lifeSpring": "rn_life_spring", "rune:liftSlam": "rn_lift_slam", "rune:lightBarrier": "rn_light_barrier",
+      "rune:maelstrom": "rn_maelstrom", "rune:magmaField": "rn_magma_field", "rune:magmaGeyser": "rn_magma_geyser",
+      "rune:magmaSlam": "rn_magma_slam", "rune:manaBlaster": "rn_mana_blaster", "rune:meteor": "rn_meteor",
+      "rune:moonAssassin": "rn_moon_assassin", "rune:orbitBlades": "rn_orbit_blades", "rune:palmBlast": "rn_palm_blast",
+      "rune:petrify": "rn_petrify", "rune:pierceArrow": "rn_pierce_arrow", "rune:pinArrow": "rn_pin_arrow",
+      "rune:poisonStars": "rn_poison_stars", "rune:purify": "rn_purify", "rune:quickDraw": "rn_quick_draw",
+      "rune:regenBody": "rn_regen_body", "rune:riftSlash": "rn_rift_slash", "rune:shadowFlurry": "rn_shadow_flurry",
       "rune:shadowRaid": "rn_shadow_raid", "rune:shadowless": "rn_shadowless", "rune:shieldRush": "rn_shield_rush",
       "rune:skyBow": "rn_sky_bow", "rune:smokeBomb": "rn_smoke_bomb", "rune:snipe": "rn_snipe",
       "rune:spellbladeRelease": "rn_spellblade_release", "rune:spiritKing": "rn_spirit_king", "rune:staticPrison": "rn_static_prison",
@@ -1169,8 +1153,7 @@
       "rn_backstab", "rn_poison_stars", "rn_smoke_bomb", "rn_shadow_flurry", "rn_moon_assassin", "rn_steel_trap",
       "rn_falcon_strike", "rn_hunt_net", "rn_wolf_pack", "rn_beast_king", "rn_magma_slam", "rn_lava_bombs",
       "rn_magma_geyser", "rn_magma_field", "rn_grand_eruption", "rn_chain_hook", "rn_shield_rush", "rn_chain_whirl",
-      "rn_arena_domain", "rn_war_chains", "rn_arcana_unity", "rn_seven_stars", "rn_heaven_eye", "rn_world_tree",
-      "rn_abyss_brand", "rn_glacier_field"
+      "rn_arena_domain", "rn_war_chains", "rn_world_tree", "rn_abyss_brand", "rn_glacier_field"
     ],
     "jobMotions": [
       "jb_swordsman_flurry", "jb_swordsman_flash", "jb_swordsman_moon", "jb_swordsman_mirror", "jb_swordsman_ult", "jb_warrior_crush",
