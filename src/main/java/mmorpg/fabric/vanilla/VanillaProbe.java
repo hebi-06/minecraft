@@ -924,10 +924,8 @@ final class VanillaProbe {
         run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 12");
         mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
         mmorpg.fabric.RpgHealth.healFull(p);
-        // 과녁: 앞 무리 넷 (도약 · 처형 · 정령이 노림) — 광전사의 혼은 둘레 넷 (반지름 4 안)
-        double[][] spots = "berserker".equals(r.def().str("fn"))
-                ? new double[][] {{0.5, 3.0}, {2.8, 1.2}, {-1.8, 1.4}, {0.5, -1.6}}
-                : new double[][] {{0.5, 4.6}, {2.6, 7.0}, {-1.6, 7.2}, {0.5, 9.4}};
+        // 과녁: 모드 영상 (RpgRuneGallery.TARGETS) 과 같은 여섯 자리 — 앞 무리 넷 · 양옆 둘 (두 영상을 나란히 견주게)
+        double[][] spots = {{0.5, 5.5}, {-1.0, 6.5}, {2.0, 6.0}, {0.5, 8.0}, {-1.8, 2.2}, {2.8, 2.2}};
         for (double[] sp : spots) {
             net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(sp[0], y, sp[1]), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {

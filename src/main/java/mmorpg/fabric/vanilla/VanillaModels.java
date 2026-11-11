@@ -15,6 +15,7 @@ import mmorpg.fabric.mob.MobData;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -189,6 +190,13 @@ final class VanillaModels {
         MobModel m = new MobModel(mob, look);
         MODELS.put(mob, m);
         EntityAttachment.ofTicking(m, mob);
+        // 2026-11-11: 엔티티를 불러온 때 (ENTITY_LOAD) 는 곁의 사람과 이미 짝을 맺은 뒤 — Polymer 는 태우는 패킷을 짝을 맺을 때 (addPairing) 만 보내므로
+        // 이미 보던 사람에게는 뼈가 태워지지 않고 처음 자리 (발 − 키) 에 머묾 (곁에서 솟은 샐러맨더가 땅에 묻히고 따라오지 않던 원인 — 이름표 (진짜 탄 것) 가 있는
+        // 몬스터는 이름표가 탈 때의 패킷에 뼈가 같이 실려 괜찮았음). 지금 보는 사람에게 한 번 보냄 (Polymer 가 이 사람이 보는 뼈 번호를 더함)
+        if (!m.getWatchingPlayers().isEmpty()) {
+            ClientboundSetPassengersPacket mount = new ClientboundSetPassengersPacket(mob);
+            for (ServerGamePacketListenerImpl c : new ArrayList<>(m.getWatchingPlayers())) c.send(mount);
+        }
     }
 
     /** 엔티티 하나의 뼈 표시 엔티티 묶음 — 모드 없는 클라이언트만 봄 */
