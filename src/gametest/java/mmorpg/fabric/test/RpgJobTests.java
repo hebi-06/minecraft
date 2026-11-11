@@ -8,6 +8,7 @@ import mmorpg.core.Economy;
 import mmorpg.core.Jobs;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
+import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgData;
 import mmorpg.fabric.RpgHealth;
@@ -118,14 +119,19 @@ public final class RpgJobTests {
     }
 
     /** 과녁 둘레의 피해 숫자 중 직업 색 그라데이션 (첫 글자 색이 직업 첫째 빛 · 굵게) 이 있는지 */
-    static boolean gradientNumber(GameTestHelper h, Husk z, Jobs.Job j) {
-        int a = Jobs.rgb(j.color()[0]);
+    /**
+     * 직업 스킬 피해 숫자가 맞은 대상 둘레에 떴는지 (굵게). 2026-11-11 사용자 지침 피해 숫자 색: 직업 색 그라데이션 대신 흰색 · 노랑 (치명타) ·
+     * 속성 피해는 그 원소 색 (치명타는 진한 쪽) — DamageNumbers.ruleColor. j 는 예전 호출 모양 그대로 (쓰지 않음)
+     */
+    static boolean ruleNumber(GameTestHelper h, Husk z, Jobs.Job j) {
+        java.util.Set<Integer> ok = new java.util.HashSet<>(List.of(DamageNumbers.WHITE, DamageNumbers.YELLOW));
+        for (String el : List.of("fire", "water", "thunder", "ice", "rock")) for (int c : DamageNumbers.elementColors(el)) ok.add(c);
         for (Display.TextDisplay d : h.getLevel().getEntitiesOfClass(Display.TextDisplay.class, new AABB(z.blockPosition()).inflate(4), e -> true)) {
             Component c = d.getText();
             for (Component part : c.getSiblings()) {
                 TextColor col = part.getStyle().getColor();
                 if (col == null) continue;
-                if (col.getValue() == a && part.getStyle().isBold()) return true;
+                if (ok.contains(col.getValue()) && part.getStyle().isBold()) return true;
                 break;
             }
         }
@@ -364,7 +370,7 @@ public final class RpgJobTests {
         steps.add(new Step(5, () -> {
             double want = expected(sp, j, j.skill(1), 3);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "섬보 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));
@@ -449,7 +455,7 @@ public final class RpgJobTests {
             double want = expected(sp, j, j.skill(0), 8.5);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "비전 참격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "one mark per cast: " + JobTraits.marks(sp, z.get(0)));
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
         }));
         // 폭발의 무적 시간 (10틱) 이 지난 뒤 평타: 각인 하나가 터짐
         steps.add(new Step(10, () -> {
@@ -567,7 +573,7 @@ public final class RpgJobTests {
             double want = expected(sp, j, j.skill(0), 6.5 * 1.3);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "파쇄격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.1) < 1e-9, "armor break × 1.1: " + JobTraitsMore.breakMult(z.get(0)));
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 6));
@@ -636,7 +642,7 @@ public final class RpgJobTests {
         steps.add(new Step(16, () -> {
             double want = expected(sp, j, j.skill(0), 7);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "마탄 연사 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 4));
@@ -870,7 +876,7 @@ public final class RpgJobTests {
         steps.add(new Step(14, () -> {
             double want = expected(sp, j, j.skill(0), 4.75);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "낙화 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 1.2));
@@ -988,7 +994,7 @@ public final class RpgJobTests {
         steps.add(new Step(16, () -> {
             double want = expected(sp, j, j.skill(0), 7.25) * 1.1;
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "삼연창 (기세 +10%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 5));
@@ -1089,7 +1095,7 @@ public final class RpgJobTests {
             double want = expected(sp, j, j.skill(0), 6.25);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "갈퀴 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits3.souls(sp) == 2, "two hits → 2 souls: " + JobTraits3.souls(sp));
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 3));
@@ -1229,7 +1235,7 @@ public final class RpgJobTests {
             double want = expected(sp, j, j.skill(0), 5.5);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "뇌격 강타 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "smite → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 5));
@@ -1346,7 +1352,7 @@ public final class RpgJobTests {
         steps.add(new Step(80, () -> {
             double want = expected(sp, j, j.skill(2), 5.6) * 1.3;
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "성가 (신앙 3) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             h.assertTrue(ally[0].getHealth() - mark[0] >= RpgHealth.maxOf(ally[0]) * 0.12 - 0.01, "hymn healed the ally ≥ 12%: " + (ally[0].getHealth() - mark[0]));
             z.get(0).discard();
             home(h, sp);
@@ -1451,7 +1457,7 @@ public final class RpgJobTests {
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "방패 치기 + 반격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits4.counter(sp) == 0, "counter used");
             h.assertTrue(z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "bash stuns");
-            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ruleNumber(h, z.get(0), j), "rule-colored job number (white · yellow · element)");
             // 철옹성: 정면 100% · 옆 60% · 뒤 없음 · 이동 −40% · 밀려나지 않음
             h.assertTrue(JobSkills.press(sp, 3), "철옹성 cast");
             h.assertTrue(JobTraits.stanceOn(sp, "guardian_bulwark") && close(JobTraits4.slowBonus(sp), -0.4, 1e-9) && RpgCombat.isSteadfast(sp),

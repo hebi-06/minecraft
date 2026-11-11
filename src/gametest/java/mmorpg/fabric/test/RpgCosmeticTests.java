@@ -22,7 +22,7 @@ import net.minecraft.world.item.Items;
 
 /**
  * 0.13.0 게임 시험 (서버) — 장식: 목록 (칸 · 무기 종류 · 모델 · 아이콘 · 무기 스킨 모델 파일), 사기 (골드 — 0.21.0 · 이미 가짐 · 모자람 · 바로 입음),
- * 입기 · 벗기 (가진 것만 · 무기 종류마다 하나), 갑옷 숨기기 (무료 · 무기 · 장식 칸은 안 됨 · 모두 숨기기 · 모두 보이기), 기록 (플레이어 속성 JSON · 모르는 키는 뺌),
+ * 입기 · 벗기 (가진 것만 · 무기 종류마다 하나), 기록 (플레이어 속성 JSON · 모르는 키는 뺌 — 2026-11-11 갑옷 스킨 · 숨기기를 뺀 뒤 예전 기록),
  * 운영자 (지급 · 회수 — 입은 것 벗김 · 초기화), 스탯 창 단추 (cosmetic), 명령어 (/장식 · /cosmetic).
  */
 public final class RpgCosmeticTests {
@@ -204,9 +204,10 @@ public final class RpgCosmeticTests {
         h.assertTrue(RpgNet.statAction(sp, "cosmetic"), "stat window button");
         var root = h.getLevel().getServer().getCommands().getDispatcher().getRoot();
         h.assertTrue(root.getChild("장식") != null && root.getChild("cosmetic") != null, "commands");
-        for (String sub : new String[] {"입기", "벗기", "숨기기", "사기", "목록", "지급", "회수", "초기화"}) {
+        for (String sub : new String[] {"입기", "벗기", "사기", "목록", "지급", "회수", "초기화"}) {
             h.assertTrue(root.getChild("장식").getChild(sub) != null, "/장식 " + sub);
         }
+        h.assertTrue(root.getChild("장식").getChild("숨기기") == null, "/장식 숨기기 gone (2026-11-11)");
         RpgGearTests.done(h, sp);
     }
 }

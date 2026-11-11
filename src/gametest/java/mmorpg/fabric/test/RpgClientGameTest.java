@@ -183,7 +183,7 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         ctx.takeScreenshot("aura_3p");
         camera(ctx, CameraType.FIRST_PERSON);
 
-        // 도끼 치명타 → 화면 흔들림 (애드온 camerashake 0.35 · 0.2초)
+        // 도끼 치명타 → 화면 흔들림 없음 (2026-11-11 사용자 "화면 흔들림은 넣지마 멀미나" — RpgNet.SHAKE 끔)
         select(ctx, 4);
         look(ctx, MELEE);
         ctx.waitTicks(30);
@@ -192,7 +192,7 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         ctx.waitTicks(8);
         int f1 = ctx.computeOnClient(mc -> CameraShake.frames);
         float deg = ctx.computeOnClient(mc -> CameraShake.maxDegrees);
-        check(f1 > f0 && deg > 0.3F, String.format("camera shake on axe crit (%d frames, max %.2f deg)", f1 - f0, deg));
+        check(f1 == f0, String.format("no camera shake on axe crit (%d frames, max %.2f deg)", f1 - f0, deg));
         server.runOnServer(s -> RpgCombat.forceCrit = null);
         select(ctx, 0);
         ctx.waitTicks(10);

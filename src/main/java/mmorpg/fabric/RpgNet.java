@@ -313,10 +313,17 @@ public final class RpgNet {
     }
 
     /** 화면 흔들림 (모드가 있는 클라이언트만 — 없으면 아무 일 없음) */
+    /**
+     * 화면 흔들림 — 2026-11-11 모두 끔 (사용자 "화면 흔들림은 넣지마 멀미나": 직업 스킬에 이어 룬 · 무기 스킬 · 보스 · 평타 치명타도). 부르는 곳은 그대로 두고
+     * 보내지 않음 (SHAKE 를 켜면 예전처럼 — 클라이언트 CameraShake 는 남아 있음)
+     */
     public static void shake(ServerPlayer sp, double intensity, double seconds) {
-        if (!ServerPlayNetworking.canSend(sp, ShakePayload.TYPE)) return;
+        if (!SHAKE || !ServerPlayNetworking.canSend(sp, ShakePayload.TYPE)) return;
         ServerPlayNetworking.send(sp, new ShakePayload((float) intensity, (float) seconds));
     }
+
+    /** 화면 흔들림을 보낼지 (2026-11-11 끔) */
+    public static boolean SHAKE = false;
 
     /** 하늘빛 보내기 (모드가 있는 클라이언트만) */
     public static void sky(ServerPlayer sp, SkyPayload p) {

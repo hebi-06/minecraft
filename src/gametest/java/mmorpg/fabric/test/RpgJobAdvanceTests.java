@@ -425,7 +425,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(10, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 5);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "칼집 섬광 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "swordmaster gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "swordmaster rule-colored number");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2));
@@ -538,7 +538,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(6, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 1.4 * sweet * bonus);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핏빛 대검 1 (칼끝) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "bloodknight gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "bloodknight rule-colored number");
             h.assertTrue(!JobSkills.press(sp, 0), "recast before the gap (10) is ignored");
         }));
         steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(JobSkills.press(sp, 0), "핏빛 대검 2 cast")));
@@ -660,7 +660,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(14, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 3.9);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "동면 wake " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "warlord gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "warlord rule-colored number");
             h.assertTrue(!JobTraits6.slumbering(sp), "slumber over");
             // 분노 96 에서 도끼 평타 (50 이상 +10%) → +8 → 100 → 곰의 화신 (8초 · 받는 피해 −15% · 곰 발톱 평타 모습)
             z.get(0).discard();
@@ -826,7 +826,7 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(got, want), "프로스트 바이트 on frozen +30% " + got + " vs " + want);
             h.assertTrue(!JobTraits16.frozen(z.get(0)) && JobTraits16.frost(sp, z.get(0)) == 1, "shattered (thawed) · frost 1: " + JobTraits16.frost(sp, z.get(0)));
             h.assertTrue(FrostraiderSkills.embedded(sp) == z.get(0) && JobRecast.pending(sp, "frostraider_throw"), "axe stuck · recall window open");
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "frostraider gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "frostraider rule-colored number");
         }));
         // 다시 누름 (14 — gap 10 뒤): 5틱 비틀다 뽑혀 4 → 손으로
         steps.add(new RpgJobTests.Step(6, () -> {
@@ -924,7 +924,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 8.5);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크레센트 엣지 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "one mark per cast: " + JobTraits.marks(sp, z.get(0)));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "arcane blade gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "arcane blade rule-colored number");
             // 과녁 곁 (1.5칸 앞) 에 서고 · 각인 찍힌 과녁 뒤 2.2칸에 다른 과녁 (번짐을 받음 — 평타는 닿지 않는 거리)
             homeAt(h, sp, 3.0);
             z.add(dummy(h, 0, 5.2));
@@ -1074,7 +1074,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(10, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 8.5);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "플레어 엣지 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), JobTraits17.tintOf(j, "fire")), "fire gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), JobTraits17.tintOf(j, "fire")), "fire rule-colored number");
             z.get(0).discard();
             z.set(0, dummy(h, 0, 2.5));
             home(h, sp);
@@ -1190,7 +1190,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 7);
             h.assertTrue(RpgJobTests.near(sum, want), "스타 체인 sum " + sum + " vs " + want);
             for (Husk x : z) h.assertTrue(TestDummies.dealt(x) > 0, "chain reached every dummy: " + TestDummies.dealt(x));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "arcmage gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "arcmage rule-colored number");
             // 헤일로 배리어: 앞 3칸 과녁 — 갈 때 2.1 · 올 때 2.1 (벽을 지나 10칸까지 갔다가 돌아옴) · 돌려 받으면 보호막
             for (Husk x : z) x.discard();
             z.clear();
@@ -1322,7 +1322,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 7);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "그레이브 콜 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits8.marked(sp, z.get(0)) && !JobTraits8.mistMarked(sp, z.get(0)), "grave call mark");
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "necromancer gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "necromancer rule-colored number");
             // 표식 → 바로 망자: 쓰러질 몹 (체력 1) 을 그레이브 콜로 쓰러뜨림 → 무덤 없이 그 자리에서 망자 선원
             z.get(0).discard();
             Husk v = h.spawnWithNoFreeWill(EntityTypes.HUSK, 4.5F, 2F, 4.5F);
@@ -1477,7 +1477,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(6, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 7.5 * mark[0]);
             h.assertTrue(mark[0] < 1 && RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "하트시커 (part " + mark[0] + ") " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "sniper gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "sniper rule-colored number");
             // 끝까지 당김 (다시 누르지 않음): 20틱에 저절로 놓음 → 7.5 × 호흡 5 (1 + 0.06 × 5) · 호흡 3 씀
             z.get(0).discard();
             home(h, sp);
@@ -1684,7 +1684,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 3.75);
             for (int i = 0; i < 2; i++) h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(i)), want), "호넷 스웜 (" + i + ") " + TestDummies.dealt(z.get(i)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "battlearcher gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "battlearcher rule-colored number");
             // 팰컨 다이브: 과녁 무리 가운데로 뛰어올라 내려앉으며 둘레 과녁마다 화살 (활 평타 × 1 · 가까워 × 1.2) · 둔화 · 1.5초 안에 쓰러지면 재사용 대기가 돌아옴
             for (Husk x : z) x.discard();
             z.clear();
@@ -1820,7 +1820,7 @@ public final class RpgJobAdvanceTests {
             double cut = RpgJobTests.expected(sp, j, j.skill(0), 0.35);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), cut), "섀도 스와프 (환영이 꿰뚫음) " + TestDummies.dealt(z.get(0)) + " vs " + cut);
             h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "swap cut marks +1: " + JobTraits3.marks(sp, z.get(0)));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "trickster gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "trickster rule-colored number");
             h.assertTrue(sp.position().z < z.get(0).getZ(), "still in front before the recast");
         }));
         steps.add(new RpgJobTests.Step(6, () -> {
@@ -1968,7 +1968,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(10, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 2.85);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핸드스프링 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "pierrot gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "pierrot rule-colored number");
             h.assertTrue(sp.position().z - mark[0] > 3.5, "flipped ahead: " + (sp.position().z - mark[0]));
             Monsters.Fight tf = Monsters.fightOf(mob[0]);
             h.assertTrue(tf != null && sp.getUUID().equals(tf.tauntId()), "the landing taunts the monster (it targets me)");
@@ -2022,7 +2022,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(46, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 4.75);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "잭 인 더 박스 (칼 다섯) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "pierrot gradient number (box knives)");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "pierrot rule-colored number (box knives)");
             PierrotSummon b = PierrotSummons.bodies(sp, PierrotSummons.BOX).get(0);
             // 플레이어의 공격은 막힘
             float bh = b.getHealth();
@@ -2192,7 +2192,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 7.25);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크로스 게일 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "storm lancer gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "storm lancer rule-colored number");
             // 게일 드라이브: 0.5 에서 앞 6칸을 꿰뚫고 지나감 (2.5칸 과녁 — 지나갈 때 1.45) → 다시 누르면 돌아서 바람 창 2.9 (과녁을 봄)
             z.get(0).discard();
             homeAt(h, sp, 0.5);
@@ -2428,7 +2428,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "리핑 크레센트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits3.souls(sp) == 2, "two job hits → 2 souls: " + JobTraits3.souls(sp));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "soul reaper gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "soul reaper rule-colored number");
             // 영혼 해방: 영혼 14 에서 직업 스킬이 맞으면 15 → 망령 여섯이 둘레 8칸 적 (가까운 순) 에게 나눠 박힘 (위력 × 0.6 씩) · 체력 10% 회복 · 영혼 0
             z.get(0).discard();
             home(h, sp);
@@ -2604,7 +2604,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0 * 1.25);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "헤드헌트 (잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobRecast.pending(sp, "executioner_headhunt") && !JobTraits12.condemned(sp, z.get(0)), "X window open · no mark yet");
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "executioner gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "executioner rule-colored number");
             mark[0] = TestDummies.dealt(z.get(0));
         }));
         steps.add(new RpgJobTests.Step(5, () -> {
@@ -2832,7 +2832,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 2.5);
             for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "아크 스매시 휩쓸기 " + TestDummies.dealt(x) + " vs " + want);
             h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the nearest swept foe is stunned");
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "thunderlord gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "thunderlord rule-colored number");
         }));
         steps.add(new RpgJobTests.Step(9, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 5.5);
@@ -2994,7 +2994,7 @@ public final class RpgJobAdvanceTests {
             double want = tyrantHit(sp, j, j.skill(0), 5.5, 0);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "필리지 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits13.power(sp) == 2, "pillage steals 2: " + JobTraits13.power(sp));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "tyrant gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "tyrant rule-colored number");
             z.get(0).discard();
             z.clear();
             // 섀클 볼트: 6칸 앞 과녁에 사슬 (4 감음) → 끌려가 10 어깨로 들이받음 3.3 (힘 2 — × 1.06) · 기절 → 힘 3
@@ -3169,7 +3169,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(9, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6) * 1.2;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 첫 나비 (신앙 2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "saint gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "saint rule-colored number");
         }));
         steps.add(new RpgJobTests.Step(32, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 5.6) * 1.2;
@@ -3285,7 +3285,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(13, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.2;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "생귄 랜스 (몫 둘 — +20%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "warlock gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "warlock rule-colored number");
             mark[1] = sp.getHealth();
         }));
         steps.add(new RpgJobTests.Step(20, () -> {
@@ -3432,7 +3432,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(4, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 4);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피닉스 배시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "phoenix gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "phoenix rule-colored number");
         }));
         // 반격 + 불사조의 재: 왼쪽 2칸 아군 (체력 50% — 가장 위험) · 앞 과녁의 평타를 웅크려 막음 → 반격 c (막은 양 × 30%) → 다음 틱에 그 아군 보호막 c ÷ 0.3 × 0.2
         steps.add(new RpgJobTests.Step(4, () -> {
@@ -3612,7 +3612,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 1.6);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크런치 물기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 12, 1e-9), "hunger +12: " + JobTraits15.hunger(sp));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "darkknight gradient number");
+            h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "darkknight rule-colored number");
         }));
         steps.add(new RpgJobTests.Step(5, () -> h.assertTrue(JobSkills.press(sp, 0), "크런치 recast (11)")));
         steps.add(new RpgJobTests.Step(5, () -> {

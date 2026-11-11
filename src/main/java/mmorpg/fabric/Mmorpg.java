@@ -40,6 +40,7 @@ public final class Mmorpg implements ModInitializer {
         RpgCombat.init();
         DamageNumbers.init();
         FxDisplays.init(); // 0.18.0 연출용 표시 엔티티 (대지 가르기의 대검 · 들리는 땅)
+        mmorpg.fabric.vfx.Vfx.init(); // 2026-11-11 3D 효과 엔진 (모드 없는 클라이언트도 보는 입체 소품 · 2D 그림 — 글꼴 rpg:vfx)
         Transcend.init();
         RuneSystem.init();
         mmorpg.fabric.job.JobSystem.init(); // 0.27.0 직업 (전직 · 직업 스킬 칸 다섯 · 특성 · /job — 직업 스킬 칸 패킷은 RuneSystem 의 SkillBar 가 등록)

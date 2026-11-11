@@ -321,14 +321,24 @@ public final class RuneKit {
      * air 틱에 onLand (죽거나 차원이 바뀌면 부르지 않음 — 착지 자리는 sp.position()). 선딜 = air 틱 (첫 피해가 착지)
      */
     public static void leap(ServerPlayer sp, Vec3 land, double peak, int air, double[] glow, double[] core, Runnable onLand) {
+        leap(sp, land, peak, air, glow, core, onLand, true);
+    }
+
+    /**
+     * 도약 (몸이 포물선으로 날아감). particles = 거짓이면 모드만 보는 파티클 (발밑 고리 · 불꽃 · 지나간 빛줄기) 없이 — 2026-11-11 Vfx 로 옮긴 룬
+     * (모드 없는 클라이언트도 같은 그림 — 그림은 룬이 그림)
+     */
+    public static void leap(ServerPlayer sp, Vec3 land, double peak, int air, double[] glow, double[] core, Runnable onLand, boolean particles) {
         ServerLevel level = sp.level();
         String life = lifeToken(sp);
         Vec3 start = sp.position();
         boolean[] stuck = {false};
         int n = Math.max(1, air);
         Kit.noFall(sp, n + 30);
-        zonePulse(level, start, new double[] {0.62, 0.55, 0.46}, 1.4, 0.3);
-        SkillFx.sparks(level, V.up(start, 0.2), new double[] {0.72, 0.64, 0.54}, 6, 3);
+        if (particles) {
+            zonePulse(level, start, new double[] {0.62, 0.55, 0.46}, 1.4, 0.3);
+            SkillFx.sparks(level, V.up(start, 0.2), new double[] {0.72, 0.64, 0.54}, 6, 3);
+        }
         SkillFx.play(level, "entity.breeze.jump", start, 0.9, 0.9);
         SkillFx.play(level, "entity.player.attack.sweep", start, 0.6, 0.5);
         for (int t = 1; t <= n; t++) {
@@ -342,6 +352,7 @@ public final class RuneKit {
                     return;
                 }
                 Kit.noFall(sp, 20);
+                if (!particles) return;
                 streak(level, V.up(a, 1.0), V.up(b, 1.0), glow, 0.34, 0.32, 0.9, 0);
                 if (tt % 2 == 0) streak(level, V.up(a, 0.55), V.up(b, 0.55), core, 0.16, 0.24, 0.9, 0);
             });
