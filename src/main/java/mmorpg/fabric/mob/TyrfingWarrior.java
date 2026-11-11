@@ -56,7 +56,8 @@ public class TyrfingWarrior extends BedrockMob {
     public static final String SALAMANDER_SUMMON = "animation.rpg.monster.spirit_salamander.summon";
     public static final String SALAMANDER_SPIT = "animation.rpg.monster.spirit_salamander.attack";
     public static final String SALAMANDER_VANISH = "animation.rpg.monster.spirit_salamander.vanish";
-    public static final int SALAMANDER_SPIT_AT = 6;
+    /** 뱉기 동작을 시작해 턱이 가장 크게 벌어지는 틱 (동작 0.2초) — 공격 틱보다 이만큼 먼저 동작을 틂 */
+    public static final int SALAMANDER_SPIT_AT = 4;
 
     /** 전사 하나를 at (발) 에 yaw (자바 각도) 로 세움 — maxAge 틱 뒤 스스로 사라짐. 못 세우면 null */
     public static TyrfingWarrior spawn(ServerLevel level, Vec3 at, float yaw, int maxAge) {

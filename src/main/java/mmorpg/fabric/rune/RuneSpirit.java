@@ -92,6 +92,8 @@ final class RuneSpirit {
         /** 2026-11-11 3D 몹 정령 (불의 정령 샐러맨더 — 빛 대신 진짜 몹이 곁을 걸으며 불덩이를 뱉음, 없으면 null) */
         TyrfingWarrior body;
         long pathAt = -99;
+        /** 뱉기 동작을 시작한 대상 (불덩이가 나가면 null) */
+        LivingEntity windupFoe;
 
         Spirit(String kind, ServerLevel level, double P, Obj k, long now, int left, long nextAt, int slot, Vec3 pos, Vec3 eye, String token) {
             this.kind = kind;
@@ -394,7 +396,7 @@ final class RuneSpirit {
     }
 
     /**
-     * 불덩이: 대상 쪽을 보고 뱉는 동작 (SALAMANDER_SPIT_AT 틱 뒤 입을 크게 벌림) → 입에서 불덩이 (빛 무리 · 지나간 불티) 가 대상을 쫓아 날아감 →
+     * 불덩이: 대상 쪽을 보고 뱉는 동작 (공격 틱보다 SALAMANDER_SPIT_AT 틱 먼저 시작 — 이 틱에 턱을 크게 벌림) → 입에서 불덩이 (빛 무리 · 지나간 불티) 가 대상을 쫓아 날아감 →
      * 터짐 (불 폭발 · 불기둥 · 고리 · 그을린 땅 · 불꽃) + 피해 · 불붙음 (반지름 radius)
      */
     private static void salamanderSpit(ServerPlayer sp, Spirit s, LivingEntity tgt) {
@@ -408,14 +410,13 @@ final class RuneSpirit {
         long now = Tasks.now();
         b.getNavigation().stop();
         faceTo(b, tgt.position());
-        b.playAnimation(TyrfingWarrior.SALAMANDER_SPIT);
+        if (s.windupFoe == null) b.playAnimation(TyrfingWarrior.SALAMANDER_SPIT); // 앞서 시작하지 못했으면 지금 (늦은 동작)
         Vec3 aim0 = Kit.bodyPoint(tgt);
         double len0 = V.len(V.sub(aim0, salamanderMouth(b)));
         int fly = Math.max(2, (int) Math.round(len0 / d.num("speed") * 20));
-        s.busyUntil = now + TyrfingWarrior.SALAMANDER_SPIT_AT + fly;
+        s.busyUntil = now + fly;
         SkillFx.play(level, "mob.blaze.shoot", b.position(), 1.5, 0.5);
-        RuneKit.later(TyrfingWarrior.SALAMANDER_SPIT_AT, () -> {
-            if (!RuneKit.sameLife(sp, life) || b.isRemoved()) return;
+        {
             Vec3 mouth = salamanderMouth(b);
             Vfx.Fx fx = Vfx.at(level, mouth, fly + 40);
             VfxKit.burst(fx, mouth, 1.0, s.glow, 0);
@@ -454,7 +455,7 @@ final class RuneSpirit {
                 SkillFx.play(level, "random.explode", at, 0.5, 1.4);
                 for (LivingEntity e : spiritFoesAround(sp, at, radius)) spiritDamage(sp, e, P, mult, x -> RuneKit.burn(x, d.num("fire")), s);
             });
-        });
+        }
     }
 
     /** 떠남: 작아지며 불꽃으로 흩어짐 (vanish 동작 8틱 뒤 지움) */
@@ -795,13 +796,24 @@ final class RuneSpirit {
                         continue;
                     }
                     walkSalamander(player, s, now);
-                    if (s.left > 0 && now >= s.nextAt && now >= s.busyUntil) {
+                    // 뱉기 동작은 SALAMANDER_SPIT_AT 틱 먼저 (불덩이가 나가는 틱 = 빛 정령과 같음 — 룬의 시간표 RUNE_SPREAD 그대로)
+                    if (s.left > 0 && s.windupFoe == null && now >= s.nextAt - TyrfingWarrior.SALAMANDER_SPIT_AT && now >= s.busyUntil) {
                         LivingEntity tgt = spiritTarget(player, s);
+                        if (tgt != null) {
+                            s.windupFoe = tgt;
+                            s.body.getNavigation().stop();
+                            faceTo(s.body, tgt.position());
+                            s.body.playAnimation(TyrfingWarrior.SALAMANDER_SPIT);
+                        }
+                    }
+                    if (s.left > 0 && now >= s.nextAt && now >= s.busyUntil) {
+                        LivingEntity tgt = s.windupFoe != null && !s.windupFoe.isRemoved() && s.windupFoe.isAlive() ? s.windupFoe : spiritTarget(player, s);
                         if (tgt != null) {
                             s.left--;
                             s.nextAt = now + Math.round(s.k.num("gap"));
                             spiritAttack(player, s, tgt);
                         }
+                        s.windupFoe = null;
                     }
                     continue;
                 }

@@ -342,7 +342,7 @@ final class RuneAxe {
         axe.to(null, axeRot(up0, edge0), 1.7, 0);
         Vfx.Sprite aura = fx.sprite("glow", V.up(start, 2.6)).color(BLOOD).size(2.2).alpha(0.55);
         double reach = headReach(r.grade()) / 16.0 * 1.7;
-        fx.each(1, air, 1, t -> {
+        fx.each(1, air - 1, 1, t -> { // 내려선 틱 (air) 은 내리찍기가 정함
             if (sp.isRemoved()) return;
             Vec3 grip = V.add(V.up(sp.position(), 1.45), f, -0.15);
             axe.to(grip, null, -1, 1);
@@ -422,7 +422,7 @@ final class RuneAxe {
         Vfx.Prop axe = fx.prop(axeModel(r), V.up(target.position(), top + 2.4)).grip(8, 14, 8).bright();
         axe.to(null, axeRot(V.UP, f), 0.5, 0);
         Vfx.Sprite halo = fx.sprite("glow", V.up(target.position(), top + 2.4)).color(BLOOD).size(1.2).alpha(0.6);
-        fx.each(1, delay, 1, t -> {
+        fx.each(1, delay - 1, 1, t -> { // 내리꽂는 틱 (delay) 은 아래가 정함
             if (target.isRemoved()) return;
             double u = t / (double) delay;
             Vec3 at = V.up(target.position(), top + 2.4 + u * 1.6);
