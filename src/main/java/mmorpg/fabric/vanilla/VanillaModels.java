@@ -52,6 +52,9 @@ import java.util.WeakHashMap;
 final class VanillaModels {
     private VanillaModels() {}
 
+    /** 아이템 표시가 아이템 모델을 Y 둘레로 돌려 그리는 각 (되돌림 — 표시 변환 끝에 곱함) */
+    static final float ITEM_FLIP = (float) Math.PI;
+
     /** 엔티티 ID → 모습 */
     private static final Map<String, Look> LOOKS = new HashMap<>();
     private static final Map<Entity, MobModel> MODELS = new WeakHashMap<>();
@@ -395,7 +398,10 @@ final class VanillaModels {
                 if (!show) continue;
                 float kk = L.k[i] <= 0 ? 1F : L.k[i];
                 float[] c = L.c0[i];
-                Matrix4f d = new Matrix4f(world[i]).scale(1F / kk).translate(-(c[0] - 8F) / 16F, -(c[1] - 8F) / 16F, -(c[2] - 8F) / 16F);
+                // 끝의 Y 180°: 아이템 표시는 아이템 모델을 Y 둘레로 180° 돌려 그림 (DisplayRenderer.ItemDisplayRenderer) — 되돌리지 않으면 뼈마다 제자리에서
+                // 뒤로 돌아 그려짐 (2026-11-12 사용자 "드라우그 저렇게 안생기지 않았나" — 얼굴이 뒤통수에 · 방패 · 도끼 · 망토가 뒤집혀 있었음)
+                Matrix4f d = new Matrix4f(world[i]).scale(1F / kk).translate(-(c[0] - 8F) / 16F, -(c[1] - 8F) / 16F, -(c[2] - 8F) / 16F)
+                        .rotateY(ITEM_FLIP);
                 bones[i].setTransformation(d);
                 bones[i].startInterpolationIfDirty();
                 if (glows[i] != null) {

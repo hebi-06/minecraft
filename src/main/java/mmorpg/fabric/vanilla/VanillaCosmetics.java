@@ -697,8 +697,10 @@ public final class VanillaCosmetics {
             for (Part p : parts) {
                 Matrix4f[] w = worlds.computeIfAbsent(p.rig(), r -> chain(r, "head".equals(r.root()) ? head : body, ageTicks, speed));
                 Bone b = p.rig().bones().get(p.index());
+                // 끝의 Y 180°: 아이템 표시의 뒤집힘을 되돌림 (VanillaModels.ITEM_FLIP — 2026-11-12 몹 모델과 같은 고침)
                 Matrix4f d = new Matrix4f(w[p.index()]).scale(1F / b.k())
-                        .translate(-(b.c0()[0] - 8F) / 16F, -(b.c0()[1] - 8F) / 16F, -(b.c0()[2] - 8F) / 16F);
+                        .translate(-(b.c0()[0] - 8F) / 16F, -(b.c0()[1] - 8F) / 16F, -(b.c0()[2] - 8F) / 16F)
+                        .rotateY(VanillaModels.ITEM_FLIP);
                 p.base().setTransformation(d);
                 p.base().startInterpolationIfDirty();
                 if (p.glow() != null) {
