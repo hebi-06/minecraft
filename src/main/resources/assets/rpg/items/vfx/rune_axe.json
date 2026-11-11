@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "rpg:item/model/axe_noble_lv0"
+    "model": "rpg:item/vfx/rune_axe"
   }
 }

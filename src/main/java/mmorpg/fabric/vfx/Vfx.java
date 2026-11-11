@@ -222,7 +222,7 @@ public final class Vfx {
             return this;
         }
 
-        /** 입체 소품 (아이템 모델 — 아이템 정의 id, 예: rpg:vfx/axe_hero) */
+        /** 입체 소품 (아이템 모델 — 아이템 정의 id, 예: rpg:vfx/rune_axe) */
         public Prop prop(String itemModel, Vec3 at) {
             Prop p = new Prop(this, itemModel, at);
             props.add(p);

@@ -43,12 +43,33 @@ final class RuneAxe {
 
     // ------------------------------------------------------------ 2026-11-11 Vfx (모드 없는 클라이언트도 보는 입체 도끼 + 2D 연출)
 
-    /** 도끼 모델 (사용자 무기 디자인 — 그 등급의 도끼: rpg:vfx/axe_<등급>) */
+    /**
+     * 도끼 모델: 2026-11-12 룬 전용 도끼 하나 (사용자 "룬 전용 도끼 하나" — 룬 등급 · 손에 든 무기와 상관없이, 무기 디자인과 따로) —
+     * 흑요석 자루 · 붉은 마력 초승달 날 (룬 글자 맥동) · 흰 빛 날 끝 (tools/rune_props.py → rpg:vfx/rune_axe)
+     */
+    static final String RUNE_AXE = "rpg:vfx/rune_axe";
+    /** 룬 도끼 모델 길이 (픽셀 — tools/rune_props.py) */
+    static final double RUNE_AXE_LEN = 34.5;
+
     static String axeModel(Runes.Rune r) {
-        return "rpg:vfx/axe_" + r.grade();
+        return RUNE_AXE;
     }
 
-    /** 도끼 모델 축 (tools/weapon_art): 자루 = 모델 +Y (자루 끝 → 머리), 날 = 모델 −Z, 넓은 면 = ±X. handle · edge (자루와 직교하게 맞춤) 로 가는 회전 */
+    /**
+     * 연출 크기 몫: 시범 (2026-11-11 — 등급마다 무기 디자인 도끼) 때의 화면 크기를 그대로 두려고 그때 모델 길이 ÷ 룬 도끼 길이를 곱함
+     * (회전 도끼 · 도약 찍기 · 처형은 보통 도끼만큼, 광전사의 혼은 큰 도끼만큼)
+     */
+    static double fitOf(String grade) {
+        double old = switch (grade) {
+            case "common", "rare" -> 21.8;
+            case "noble" -> 21.4;
+            case "hero" -> 23.6;
+            default -> 47.5;
+        };
+        return old / RUNE_AXE_LEN;
+    }
+
+    /** 도끼 모델 축 (tools/rune_props.py): 자루 = 모델 +Y (자루 끝 → 머리), 날 = 모델 −Z, 넓은 면 = ±X. handle · edge (자루와 직교하게 맞춤) 로 가는 회전 */
     static Quaternionf axeRot(Vec3 handle, Vec3 edge) {
         Vec3 y = V.unit(handle);
         Vec3 e = V.unit(V.sub(edge, V.scale(y, V.dot(edge, y))));
@@ -57,25 +78,17 @@ final class RuneAxe {
         return Vfx.basis(x, y, z);
     }
 
-    /** 등급마다 도끼 모델의 쥔 곳 · 머리 가운데 (모델 픽셀) — tools/weapon_art 의 자루 (x 8 · z) 와 날 */
+    /** 룬 도끼의 쥔 곳 (모델 픽셀 — 자루 아래 · 자루 끝 보석 위) */
     static double[] gripOf(String grade) {
-        return switch (grade) {
-            case "common" -> new double[] {8, 3.7, 10.25};
-            case "rare" -> new double[] {8, 3.7, 10.0};
-            case "noble" -> new double[] {8, 3.75, 9.55};
-            case "hero" -> new double[] {8, 3.4, 8.45};
-            default -> new double[] {8, 6.2, 11.0};
-        };
+        return new double[] {8, -4, 8};
     }
+
+    /** 룬 도끼의 머리 가운데 (모델 픽셀 — 날 · 자루 꽂이의 가운데) */
+    static final double[] AXE_HEAD = {8, 15.5, 5};
 
     /** 쥔 곳에서 머리 가운데까지 (모델 픽셀 — 자루 방향) */
     static double headReach(String grade) {
-        return switch (grade) {
-            case "common", "rare" -> 10.8;
-            case "noble" -> 9.8;
-            case "hero" -> 10.6;
-            default -> 14.0;
-        };
+        return AXE_HEAD[1] - gripOf(grade)[1];
     }
 
     /** 1인칭 눈 가까이 (1.3칸 안) 를 지나는 소품은 쓴 사람에게 숨김 — 화면을 덮지 않게 */
@@ -85,7 +98,7 @@ final class RuneAxe {
 
     /**
      * 회전 도끼: 도끼를 던져 range 칸 (벽 앞까지) 날아가 hover 틱 제자리에서 돌다가 돌아옴. 갈 때 · 올 때 선 가까이 width 칸의 적을 한 번씩.
-     * 2026-11-11 Vfx: 일반 등급 도끼 (사용자 디자인 3D) 가 던진 쪽으로 날아가며 톱날처럼 돎 (원반 면이 던진 사람 쪽을 봄 — 1인칭에서 날이 보임) ·
+     * 2026-11-11 Vfx: 룬 도끼 (3D) 가 던진 쪽으로 날아가며 톱날처럼 돎 (원반 면이 던진 사람 쪽을 봄 — 1인칭에서 날이 보임) ·
      * 원반의 흐린 빛 · 지나간 자리의 빛 → 끝에서 머물며 둘레를 휩쓰는 초승달 · 땅의 고리 → 돌아와 손에 잡힘 (번쩍). 맞은 적마다 X 베기 · 피 · 불꽃,
      * 처음 맞은 적 발밑에 터짐 · 고리 · 갈라진 땅
      */
@@ -114,9 +127,10 @@ final class RuneAxe {
         Vfx.Fx fx = Vfx.at(level, from, back0 + 60);
         // 던지는 손의 초승달 (오른쪽 → 왼쪽, 눈 앞 1.3칸 · 조금 아래 — 1인칭 화면 아래쪽)
         VfxKit.slash(fx, V.up(V.add(sp.getEyePosition(), f, 1.4), -0.45), V.scale(side, -1), V.unit(V.add(V.scale(f, -0.7), V.UP, 0.7)), 2.4, glow, 0);
-        // 무게 중심 (자루와 머리 사이) 둘레로 돎
-        Vfx.Prop axe = fx.prop(axeModel(r), V.add(sp.getEyePosition(), f, 0.9)).grip(g[0], g[1] + reach * 16 * 0.62, (g[2] + 7.5) / 2).bright();
-        axe.size(0.7, 0);
+        double fit = fitOf(r.grade());
+        // 무게 중심 (자루와 날 사이) 둘레로 돎
+        Vfx.Prop axe = fx.prop(axeModel(r), V.add(sp.getEyePosition(), f, 0.9)).grip(g[0], g[1] + reach * 16 * 0.62, (g[2] + AXE_HEAD[2]) / 2).bright();
+        axe.size(0.7 * fit, 0);
         Vfx.Sprite disc = fx.sprite("spin", from).color(glow).alpha(0.5).fixed(Vfx.basis(a, b, n)).size(0.1);
         Vec3[] last = {from};
         Vec3[] home = {null};
@@ -124,7 +138,7 @@ final class RuneAxe {
         String life = RuneKit.lifeToken(sp);
         fx.each(0, back0 + 80, 1, t -> {
             Vec3 pos;
-            double sc = Math.min(1.75, 0.7 + t * 0.26);
+            double sc = Math.min(1.75, 0.7 + t * 0.26) * fit;
             if (t <= out) pos = V.add(from, f, len * t / out);
             else if (t <= back0) pos = V.up(tip, Math.sin((t - out) * 0.5) * 0.12);
             else {
@@ -144,13 +158,13 @@ final class RuneAxe {
                     return;
                 }
                 pos = V.add(tip, V.sub(home[0], tip), (double) tt / backTicks[0]);
-                if (tt >= backTicks[0] - 2) sc = 0.8;
+                if (tt >= backTicks[0] - 2) sc = 0.8 * fit;
             }
             double th = Math.toRadians(t * 74.0);
             Vec3 h = V.add(V.scale(a, Math.cos(th)), b, Math.sin(th));
             Vec3 e = V.add(V.scale(a, -Math.sin(th)), b, Math.cos(th));
             axe.to(pos, axeRot(h, e), sc, 1);
-            disc.to(pos, (t > out && t <= back0 ? 2.9 : 2.3) * sc / 1.75, 1).roll(-t * 47.0, 1);
+            disc.to(pos, (t > out && t <= back0 ? 2.9 : 2.3) * sc / (1.75 * fit), 1).roll(-t * 47.0, 1);
             // 지나간 자리의 빛 (2틱마다 — 옅어짐)
             if (t % 2 == 0 && V.len(V.sub(pos, last[0])) > 0.4) {
                 VfxKit.glow(fx, pos, 1.1, glow, 0.55, 6);
@@ -316,7 +330,7 @@ final class RuneAxe {
     /**
      * 도약 찍기 (0.49.0 — 몸이 포물선으로 날아가는 도약 RuneKit.leap · 둔화 → 방어 깨짐): 조준한 곳 (range 칸, 막히면 벽 앞) 으로 air 틱 동안 뛰어올라
      * 내려찍음 (반지름 radius, 조금 띄움 · 맞은 적 vulnTicks 동안 받는 피해 + vuln).
-     * 2026-11-11 Vfx: 뛰어오르는 자리의 흙먼지 고리 → 뛰는 동안 머리 위로 치켜든 고귀 등급 도끼 (사용자 디자인 3D — 몸을 따라감, 머리 뒤 핏빛 빛) →
+     * 2026-11-11 Vfx: 뛰어오르는 자리의 흙먼지 고리 → 뛰는 동안 머리 위로 치켜든 룬 도끼 (3D — 몸을 따라감, 머리 뒤 핏빛 빛) →
      * 내려서며 앞으로 내리찍어 날이 땅에 박힘 (2틱) · 위에서 아래로 그어지는 초승달 → 갈라진 땅 · 충격파 고리 둘 · 터짐 · 흙먼지 · 튀는 돌 → 도끼가 땅속으로
      * 가라앉으며 사라짐. 맞은 적마다 피 · 불꽃
      */
@@ -338,10 +352,11 @@ final class RuneAxe {
         // 머리 위로 치켜든 도끼 (자루가 뒤로 젖혀짐 · 날이 앞) — 몸을 따라감 (틱마다)
         Vec3 up0 = V.unit(V.add(V.UP, f, -0.55));
         Vec3 edge0 = V.unit(V.add(f, V.UP, 0.55));
+        double fit = fitOf(r.grade());
         Vfx.Prop axe = fx.prop(axeModel(r), V.add(V.up(start, 1.5), f, -0.2)).grip(g[0], g[1], g[2]).bright();
-        axe.to(null, axeRot(up0, edge0), 1.7, 0);
+        axe.to(null, axeRot(up0, edge0), 1.7 * fit, 0);
         Vfx.Sprite aura = fx.sprite("glow", V.up(start, 2.6)).color(BLOOD).size(2.2).alpha(0.55);
-        double reach = headReach(r.grade()) / 16.0 * 1.7;
+        double reach = headReach(r.grade()) / 16.0 * 1.7 * fit;
         boolean[] landed = {false}; // 내려섰으면 따라가기를 멈춤 (효과 틱과 일 틱의 차례가 달라도 내리찍은 모습을 덮지 않게)
         fx.each(1, air + 4, 1, t -> {
             if (landed[0] || sp.isRemoved()) return;
@@ -361,7 +376,7 @@ final class RuneAxe {
             Vec3 mid = V.unit(V.add(V.add(up0, down), f, 0.6));
             Vec3 edgeMid = V.unit(V.cross(mid, V.rightOf(f))); // 날 = 자루 × 오른쪽 (휘두르는 쪽)
             Vec3 edgeEnd = V.unit(V.cross(down, V.rightOf(f)));
-            double sc = Math.max(1.7, (V.len(V.sub(V.up(hit, 0.15), grip)) + 0.25) / (headReach(r.grade()) / 16.0));
+            double sc = Math.max(1.7 * fit, (V.len(V.sub(V.up(hit, 0.15), grip)) + 0.25) / (headReach(r.grade()) / 16.0));
             axe.to(grip, axeRot(mid, edgeMid), sc * 0.95, 1);
             fx.on(fx.age() + 1, () -> axe.to(grip, axeRot(down, edgeEnd), sc, 1));
             aura.remove();
@@ -398,7 +413,7 @@ final class RuneAxe {
 
     /**
      * 처형: 앞 range 칸의 대상 위로 거대한 도끼가 떠올라 돌다가 (delay) 내려찍음. 체력이 below 이하면 bonus 배.
-     * 2026-11-11 Vfx: 대상 발밑에 도는 핏빛 칼날 고리 → 대상 위에 영웅 등급 도끼 (사용자 디자인 3D) 가 나타나 커지며 넓은 면이 나를 본 채 한 바퀴 돌아
+     * 2026-11-11 Vfx: 대상 발밑에 도는 핏빛 칼날 고리 → 대상 위에 룬 도끼 (3D) 가 나타나 커지며 넓은 면이 나를 본 채 한 바퀴 돌아
      * 날이 아래로 → 단두대처럼 내리꽂힘 (2틱) → X 베기 · 터짐 · 번쩍 · 고리 · 갈라진 땅 · 불꽃 · 피 (처형이면 핏빛 X 둘 · 큰 피 터짐) → 박힌 도끼가 가라앉음
      */
     static boolean execute(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -421,8 +436,9 @@ final class RuneAxe {
         sig.play(0, 0, 8, 2, true);
         sig.to(null, 3.6, 4);
         // 떠오르는 도끼: 머리 가운데를 축으로 넓은 면 (모델 ±X) 이 나 (−f) 를 봄 — 자루가 위에서 한 바퀴 돌아 오른쪽 수평 · 날이 아래로
-        Vfx.Prop axe = fx.prop(axeModel(r), V.up(target.position(), top + 1.2)).grip(8, 14, 8).bright();
-        axe.to(null, axeRot(V.UP, f), 0.5, 0);
+        double fit = fitOf(r.grade());
+        Vfx.Prop axe = fx.prop(axeModel(r), V.up(target.position(), top + 1.2)).grip(AXE_HEAD[0], AXE_HEAD[1], AXE_HEAD[2]).bright();
+        axe.to(null, axeRot(V.UP, f), 0.5 * fit, 0);
         Vfx.Sprite halo = fx.sprite("glow", V.up(target.position(), top + 1.2)).color(BLOOD).size(1.2).alpha(0.6);
         boolean[] struck = {false}; // 내리꽂았으면 떠오르기를 멈춤 (효과 틱과 일 틱의 차례가 달라도 박힌 도끼를 하늘로 되돌리지 않게)
         fx.each(1, delay + 4, 1, t -> {
@@ -432,7 +448,7 @@ final class RuneAxe {
             double th = Math.toRadians(270 * u * u * (3 - 2 * u)); // 자루: 위 → 왼쪽 → 아래 → 오른쪽 수평 (한 바퀴의 3/4) — 날은 그때 아래
             Vec3 h = V.add(V.scale(V.UP, Math.cos(th)), side, -Math.sin(th));
             Vec3 e = V.cross(h, V.scale(f, -1)); // 날: 자루를 돌린 쪽 (넓은 면은 늘 나를 봄)
-            axe.to(at, axeRot(h, e), 0.5 + 1.9 * u, 1);
+            axe.to(at, axeRot(h, e), (0.5 + 1.9 * u) * fit, 1);
             halo.to(at, 1.2 + 2.2 * u, 1);
             sig.to(V.up(VfxKit.ground(level, target.position()), 0.07), -1, 1);
             if (t % 2 == 0) VfxKit.sparks(fx, at, glow, 2, 1.4, 0);
@@ -451,7 +467,7 @@ final class RuneAxe {
             double[] hitColor = low ? BLOOD : glow;
             // 내리꽂힘 (2틱): 날이 아래 · 자루가 오른쪽 수평
             Quaternionf chop = axeRot(side, V.DOWN);
-            axe.to(V.up(g, 1.0), chop, 2.4, 2);
+            axe.to(V.up(g, 1.0), chop, 2.4 * fit, 2);
             halo.remove();
             sig.fade(fx.age() + 2, 6);
             VfxKit.slash(fx, V.up(at, 0.6), V.DOWN, V.scale(f, -1), 3.6, hitColor, 0);
@@ -467,7 +483,7 @@ final class RuneAxe {
                 fx.on(fx.age() + 3, () -> fx.sprite("burst2", at).color(BLOOD).size(2.0).play(fx.age(), 0, 8, 1, false).to(null, 4.4, 7));
             }
             // 박힌 도끼: 땅속으로 가라앉으며 사라짐
-            fx.on(fx.age() + 18, () -> axe.to(V.up(g, 0.2), null, 1.0, 8));
+            fx.on(fx.age() + 18, () -> axe.to(V.up(g, 0.2), null, 1.0 * fit, 8));
             fx.on(fx.age() + 27, axe::remove);
             SkillFx.play(level, "mace.heavy_smash_ground", g, 0.7, 1);
             SkillFx.play(level, "game.player.attack.critical", at, 0.7, 1);
@@ -491,7 +507,7 @@ final class RuneAxe {
      * 광전사의 혼: hits × gap 틱 동안 광폭화 (받는 피해 -reduce). gap 틱마다 주위 radius 칸을 난타, 맞힌 적마다 최대 체력 × heal 회복 (healMax 명까지).
      * 죽으면 끝 (차원 이동으로는 끝나지 않음). 초월: 핏빛 하늘 · 번쩍임 (모드 클라이언트 — 화면 색).
      * 2026-11-11 Vfx: 광폭화 순간 핏빛 터짐 · 번쩍 · 고리 둘 · 솟는 핏빛 불기둥 · 발밑의 거대한 칼날 고리 (광폭화 동안 몸을 따라 돎) · 몸의 핏빛 불꽃 셋 →
-     * 초월 도끼 둘 (사용자 디자인 3D — 머리가 바깥, 날이 도는 쪽) 이 허리 높이에서 몸 둘레를 천천히 돌다가 난타마다 반 바퀴를 휩씀 · 휩쓴 자리의 초승달 ·
+     * 룬 도끼 둘 (3D — 머리가 바깥, 날이 도는 쪽) 이 허리 높이에서 몸 둘레를 천천히 돌다가 난타마다 반 바퀴를 휩씀 · 휩쓴 자리의 초승달 ·
      * 발밑 고리 · 맞은 적마다 X 베기 · 피 → 마지막 난타는 큰 핏빛 터짐. 죽으면 모두 사라짐
      */
     static boolean berserker(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -527,8 +543,9 @@ final class RuneAxe {
             flames[i] = fx.sprite("aura", V.up(c0, 1.0)).color(i == 1 ? glow : BLOOD).size(2.0).alpha(0.75);
             flames[i].play(0, i * 3, 8, 2, true);
         }
-        // 초월 도끼 둘: 쥔 곳이 몸에서 1칸 · 머리가 바깥 (허리 높이)
+        // 룬 도끼 둘: 쥔 곳이 몸에서 1칸 · 머리가 바깥 (허리 높이)
         double[] g = gripOf(r.grade());
+        double fit = fitOf(r.grade());
         Vfx.Prop[] axes = new Vfx.Prop[2];
         for (int j = 0; j < 2; j++) axes[j] = fx.prop(axeModel(r), V.up(c0, 0.75)).grip(g[0], g[1], g[2]).bright();
         double[] ang = {Kit.rand() * 360};
@@ -547,7 +564,7 @@ final class RuneAxe {
                 Vec3 radial = V.turnY(new Vec3(1, 0, 0), ang[0] + j * 180);
                 Vec3 tangent = V.turnY(radial, 90); // 도는 쪽 (ang 이 커지는 쪽 — 날이 앞)
                 Vec3 grip = V.add(V.up(c, 0.75), radial, 0.95);
-                axes[j].to(grip, axeRot(radial, tangent), ending ? 0.2 : (t < 4 ? 0.2 + t * 0.2 : 0.82), 1);
+                axes[j].to(grip, axeRot(radial, tangent), (ending ? 0.2 : (t < 4 ? 0.2 + t * 0.2 : 0.82)) * fit, 1);
             }
             sigil.to(V.up(c, 0.07), -1, 1);
             for (int i = 0; i < 3; i++) {
