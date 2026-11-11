@@ -25,7 +25,8 @@ import java.util.Optional;
 /**
  * 모드 없는 클라이언트 시험의 사진기 (2026-11-07 1번 — CI ci/vanilla_probe.sh). Fabric API 없이 Fabric Loader 만 — 서버가 보기에 바닐라 클라이언트.
  * 서버 (모드 jar, -Dmmorpg.probe=true) 가 장면을 만들고 채팅 "[probe] …" 로 신호: shot 이름 (지금 화면) · inv 이름 (인벤토리를 열고 찍고 닫음) ·
- * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · shift on|off (Shift 누름) · slot N · shiftslot N (상자 메뉴 칸 누름 · Shift) ·
+ * cam back|first · cam film 각 거리 높이 보는높이 앞 따라감 (2026-11-11 — 모드 영상 (RpgFilm) 과 같은 자리: 처음 몸 자리 · 보는 쪽에서 왼쪽으로 각도, 화면 줄 숨김) ·
+ * cam off · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · shift on|off (Shift 누름) · slot N · shiftslot N (상자 메뉴 칸 누름 · Shift) ·
  * hover N (마우스를 칸 N 위로 — 설명 상자) ·
  * close (상자 메뉴 닫기) · click id sel (대화창 단추) ·
  * submit id (입력창 확인) · film 이름 n (2026-11-11 영상 — 지금부터 클라이언트 틱마다 n 장: screenshots/../films/이름/f0000.png … + manifest.json —
@@ -44,6 +45,8 @@ public final class Probe implements ClientModInitializer {
     private static int filmLeft;
     private static int filmIndex;
     private static final java.util.List<Integer> FILM_TICKS = new java.util.ArrayList<>();
+    /** 영상 카메라 (cam film): {각(라디안), 거리, 높이, 보는 높이, 앞, 따라감, 처음 x, y, z, 앞 x, 앞 z} — null 이면 보통 카메라 */
+    private static volatile double[] filmCam;
 
     @Override
     public void onInitializeClient() {
@@ -105,6 +108,18 @@ public final class Probe implements ClientModInitializer {
             mc.gui.setScreen(new InventoryScreen(mc.player));
             pendingInv = cmd.substring(4);
             wait = 20;
+        } else if (cmd.startsWith("cam film ") && mc.player != null) {
+            // 모드 영상 (RpgFilm) 과 같은 카메라: 처음 몸 자리 · 보는 쪽 기준 — 옆 뒤 높이에서 몸 앞을 봄 (3인칭이라 몸이 그려짐)
+            String[] a = cmd.substring(9).trim().split(" ");
+            double yaw = Math.toRadians(mc.player.getYRot());
+            filmCam = new double[] {Math.toRadians(Double.parseDouble(a[0])), Double.parseDouble(a[1]), Double.parseDouble(a[2]),
+                    Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), mc.player.getX(), mc.player.getY(), mc.player.getZ(),
+                    -Math.sin(yaw), Math.cos(yaw)};
+            mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+            if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+        } else if (cmd.equals("cam off")) {
+            filmCam = null;
+            if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
         } else if (cmd.equals("cam back")) {
             mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
         } else if (cmd.equals("cam first")) {
@@ -177,6 +192,34 @@ public final class Probe implements ClientModInitializer {
             log("done");
             quitIn = 40;
         }
+    }
+
+    /**
+     * 영상 카메라 자리 · 방향 {x, y, z, yaw, pitch} (ProbeCameraMixin — 그림마다) 또는 null. 가로는 몸을 따라감 몫만큼 · 높이는 60% 만 (솟구쳐도 땅이 남게) ·
+     * 보는 곳 = 몸 앞 (RpgFilm.place 와 같은 셈)
+     */
+    public static double[] filmCamera(Minecraft mc) {
+        double[] c = filmCam;
+        if (c == null || mc.player == null) return null;
+        double px = mc.player.getX();
+        double py = mc.player.getY();
+        double pz = mc.player.getZ();
+        double fx = c[9];
+        double fz = c[10];
+        double by = c[7] + (py - c[7]) * 0.6;
+        double lx = fz;
+        double lz = -fx;
+        double ox = Math.cos(c[0]) * fx + Math.sin(c[0]) * lx;
+        double oz = Math.cos(c[0]) * fz + Math.sin(c[0]) * lz;
+        double cx = c[6] + (px - c[6]) * c[5] + ox * c[1];
+        double cy = by + c[2];
+        double cz = c[8] + (pz - c[8]) * c[5] + oz * c[1];
+        double dx = px + fx * c[4] - cx;
+        double dy = by + c[3] - cy;
+        double dz = pz + fz * c[4] - cz;
+        double yaw = Math.toDegrees(Math.atan2(-dx, dz));
+        double pitch = -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
+        return new double[] {cx, cy, cz, yaw, pitch};
     }
 
     /** 영상 한 장 (클라이언트 틱마다) — 다 찍으면 manifest.json (틱 목록) */

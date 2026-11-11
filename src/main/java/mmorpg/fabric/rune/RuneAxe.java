@@ -342,8 +342,9 @@ final class RuneAxe {
         axe.to(null, axeRot(up0, edge0), 1.7, 0);
         Vfx.Sprite aura = fx.sprite("glow", V.up(start, 2.6)).color(BLOOD).size(2.2).alpha(0.55);
         double reach = headReach(r.grade()) / 16.0 * 1.7;
-        fx.each(1, air - 1, 1, t -> { // 내려선 틱 (air) 은 내리찍기가 정함
-            if (sp.isRemoved()) return;
+        boolean[] landed = {false}; // 내려섰으면 따라가기를 멈춤 (효과 틱과 일 틱의 차례가 달라도 내리찍은 모습을 덮지 않게)
+        fx.each(1, air + 4, 1, t -> {
+            if (landed[0] || sp.isRemoved()) return;
             Vec3 grip = V.add(V.up(sp.position(), 1.45), f, -0.15);
             axe.to(grip, null, -1, 1);
             aura.to(V.add(grip, up0, reach), -1, 1);
@@ -351,6 +352,7 @@ final class RuneAxe {
         });
         SkillFx.play(level, "mob.enderdragon.flap", start, 1.2, 0.7);
         RuneKit.leap(sp, land, 2.0 + V.hdist(land, start) * 0.15, air, glow, core, () -> {
+            landed[0] = true;
             Vec3 c = sp.position();
             Vec3 hit = VfxKit.ground(level, V.add(c, f, 1.8));
             // 내리찍음: 2틱에 자루가 머리 위 → 앞 아래 (날이 땅에 박힘)
@@ -419,13 +421,14 @@ final class RuneAxe {
         sig.play(0, 0, 8, 2, true);
         sig.to(null, 3.6, 4);
         // 떠오르는 도끼: 머리 가운데를 축으로 넓은 면 (모델 ±X) 이 나 (−f) 를 봄 — 자루가 위에서 한 바퀴 돌아 오른쪽 수평 · 날이 아래로
-        Vfx.Prop axe = fx.prop(axeModel(r), V.up(target.position(), top + 2.4)).grip(8, 14, 8).bright();
+        Vfx.Prop axe = fx.prop(axeModel(r), V.up(target.position(), top + 1.2)).grip(8, 14, 8).bright();
         axe.to(null, axeRot(V.UP, f), 0.5, 0);
-        Vfx.Sprite halo = fx.sprite("glow", V.up(target.position(), top + 2.4)).color(BLOOD).size(1.2).alpha(0.6);
-        fx.each(1, delay - 1, 1, t -> { // 내리꽂는 틱 (delay) 은 아래가 정함
-            if (target.isRemoved()) return;
-            double u = t / (double) delay;
-            Vec3 at = V.up(target.position(), top + 2.4 + u * 1.6);
+        Vfx.Sprite halo = fx.sprite("glow", V.up(target.position(), top + 1.2)).color(BLOOD).size(1.2).alpha(0.6);
+        boolean[] struck = {false}; // 내리꽂았으면 떠오르기를 멈춤 (효과 틱과 일 틱의 차례가 달라도 박힌 도끼를 하늘로 되돌리지 않게)
+        fx.each(1, delay + 4, 1, t -> {
+            if (struck[0] || target.isRemoved()) return;
+            double u = Math.min(1, t / (double) delay);
+            Vec3 at = V.up(target.position(), top + 1.2 + u * 1.0);
             double th = Math.toRadians(270 * u * u * (3 - 2 * u)); // 자루: 위 → 왼쪽 → 아래 → 오른쪽 수평 (한 바퀴의 3/4) — 날은 그때 아래
             Vec3 h = V.add(V.scale(V.UP, Math.cos(th)), side, -Math.sin(th));
             Vec3 e = V.cross(h, V.scale(f, -1)); // 날: 자루를 돌린 쪽 (넓은 면은 늘 나를 봄)
@@ -437,6 +440,7 @@ final class RuneAxe {
         SkillFx.play(level, "mob.ravager.roar", sp.position(), 0.9, 0.8);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", target.position(), 0.6, 0.8);
         RuneKit.later(delay, () -> {
+            struck[0] = true;
             if (sp.isRemoved() || target.isRemoved()) {
                 fx.end();
                 return;
@@ -514,7 +518,7 @@ final class RuneAxe {
         VfxKit.ring(fx, c0, radius, BLOOD, 0, 12);
         VfxKit.ring(fx, c0, radius * 1.35, glow, 3, 12);
         fx.sprite("cinder", V.up(c0, 1.9)).color(BLOOD).size(4.6).alpha(0.9).play(0, 0, 8, 2, false);
-        Vfx.Sprite sigil = fx.sprite("bladering", V.up(c0, 0.07)).color(BLOOD).fixed(Vfx.flat(0)).size(4.0).alpha(0.85);
+        Vfx.Sprite sigil = fx.sprite("bladering", V.up(c0, 0.07)).color(BLOOD).fixed(Vfx.flat(0)).size(4.0).alpha(0.6);
         sigil.play(0, 0, 8, 2, true);
         sigil.to(null, radius * 2.3, 6);
         // 몸의 핏빛 불꽃 셋 (양옆 · 뒤 — 1인칭 화면을 덮지 않게 앞은 비움)

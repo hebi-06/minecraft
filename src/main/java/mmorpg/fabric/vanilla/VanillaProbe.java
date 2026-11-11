@@ -878,7 +878,8 @@ final class VanillaProbe {
     static final int FILM_RATE = 5;
 
     /**
-     * -Dmmorpg.probe.films=true 일 때 (ci/vanilla_probe.sh VFILM): 다른 장면 없이 룬마다 과녁 앞에서 쓰고 3인칭 (뒤) 으로 틱마다 사진 →
+     * -Dmmorpg.probe.films=true 일 때 (ci/vanilla_probe.sh VFILM): 다른 장면 없이 룬마다 과녁 앞에서 쓰고 모드 영상 (RpgRuneGallery) 과 같은 카메라
+     * (옆 뒤 105° · 높이 — 사진기의 cam film, 화면 줄 숨김) 로 틱마다 사진 →
      * films/vanilla_&lt;계열&gt;_&lt;등급&gt; (ci/films.py 가 mp4)
      */
     private static void film(ServerPlayer p, int step) {
@@ -900,7 +901,6 @@ final class VanillaProbe {
             mmorpg.fabric.RpgPlayers.checkLevelUp(p);
             for (String k : new String[]{"str", "dex", "vit", "int"}) mmorpg.fabric.RpgPlayers.setStat(p, k, 150);
             p.getInventory().clearContent();
-            say(p, "cam back");
             Tasks.later(40, () -> film(p, 1));
             return;
         }
@@ -909,6 +909,7 @@ final class VanillaProbe {
         SPAWNED.clear();
         if (i >= FILM_RUNES.size()) {
             run(server, "tick rate 20");
+            say(p, "cam off");
             say(p, "done");
             log("done");
             return;
@@ -939,6 +940,9 @@ final class VanillaProbe {
         }
         String name = "vanilla_" + r.family() + "_" + r.grade();
         int frames = FILM_FRAMES[Math.min(i, FILM_FRAMES.length - 1)];
+        // 카메라: 모드 영상과 같은 자리 (RpgRuneGallery.film — 영웅 · 초월은 넓게), 사진기가 지금 (옮긴 뒤) 몸 자리를 기준으로 삼음
+        boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
+        say(p, "cam film 105 " + (big ? "7.6 4.2 1.9" : "7.0 3.6 1.1") + " 3.0 0.6");
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);

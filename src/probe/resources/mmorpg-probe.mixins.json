@@ -4,6 +4,7 @@
   "package": "mmorpg.probe.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "ProbeCameraMixin",
     "ProbeChatMixin",
     "ProbeMinecraftMixin",
     "ProbePackMixin"
