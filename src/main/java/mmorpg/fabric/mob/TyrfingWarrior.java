@@ -48,6 +48,15 @@ public class TyrfingWarrior extends BedrockMob {
     /** 늑대 정령의 물어뜯기 · 울부짖음 (서리 늑대 동작 0.55초 · 1.2초) */
     public static final String WOLF_BITE = "animation.rpg.monster.frost_wolf.attack";
     public static final String WOLF_HOWL = "animation.rpg.monster.frost_wolf.howl";
+    /**
+     * 2026-11-11 불의 정령 샐러맨더 (정령 룬 일반 — 3D 몹 시범, tools/spirit_salamander_art.py): 움직임은 rune.RuneSpirit (불덩이 · 따라다님).
+     * 동작 summon (땅의 불길에서 솟음) · attack (불덩이를 뱉음 — SALAMANDER_SPIT_AT 틱) · vanish (흩어짐)
+     */
+    public static final String SALAMANDER_ID = "rpg:spirit_salamander";
+    public static final String SALAMANDER_SUMMON = "animation.rpg.monster.spirit_salamander.summon";
+    public static final String SALAMANDER_SPIT = "animation.rpg.monster.spirit_salamander.attack";
+    public static final String SALAMANDER_VANISH = "animation.rpg.monster.spirit_salamander.vanish";
+    public static final int SALAMANDER_SPIT_AT = 6;
 
     /** 전사 하나를 at (발) 에 yaw (자바 각도) 로 세움 — maxAge 틱 뒤 스스로 사라짐. 못 세우면 null */
     public static TyrfingWarrior spawn(ServerLevel level, Vec3 at, float yaw, int maxAge) {

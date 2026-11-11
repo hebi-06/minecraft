@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_spirit_salamander_emissive","particle":"rpg:item/vmob/allies_spirit_salamander_emissive"},"elements":[{"from":[6.48,6.98,5.48],"to":[9.52,9.02,10.52],"faces":{"up":{"uv":[5.75,5.75,5.375,4.5],"texture":"#0"},"down":{"uv":[6.125,4.5,5.75,5.75],"texture":"#0"}},"light_emission":15}]}

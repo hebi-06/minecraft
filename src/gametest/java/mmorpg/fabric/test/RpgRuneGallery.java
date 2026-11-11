@@ -60,13 +60,20 @@ public final class RpgRuneGallery implements FabricClientGameTest {
 
     private final List<String> failures = new ArrayList<>();
 
+    /** 2026-11-11 3D 효과 엔진 시범 룬 (도끼 넷 · 불의 정령) */
+    static final List<String> PILOT = List.of("rpg:rune_axe_common", "rpg:rune_axe_noble", "rpg:rune_axe_hero", "rpg:rune_axe_transcend",
+            "rpg:rune_spirit_common");
+
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
         // 0.48.2 룬 영상 (only=film,filmrune1 · 2 · 3 — 계열 여섯 · 여섯 · 다섯): 사진 대신 틱마다
         // 초월만 (only=film,filmtr — 0.48.2 초월 룬 손보기: 단일 스탯 17 · 두 스탯 6 · 한정 8 의 초월을 한 번에)
         boolean trOnly = RpgFilm.on() && RpgFilm.listed("filmtr");
-        int filmPart = RpgFilm.on() ? (trOnly ? 9 : RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2 : RpgFilm.listed("filmrune3") ? 3 : 0) : 0;
+        // 2026-11-11 3D 효과 엔진 시범 (only=film,filmpilot): 도끼 넷 · 불의 정령 — 모드 클라이언트 모습 (모드 없는 클라이언트는 vfilm)
+        boolean pilot = RpgFilm.on() && RpgFilm.listed("filmpilot");
+        int filmPart = RpgFilm.on() ? (pilot ? 10 : trOnly ? 9 : RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2
+                : RpgFilm.listed("filmrune3") ? 3 : 0) : 0;
         if (filmPart == 0 && (RpgFilm.on() || !RpgProdSmoke.only("rune"))) return; // 고른 시험만 (MMORPG_ONLY)
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -86,6 +93,12 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (filmPart > 0) {
                 RpgFilm f = new RpgFilm(ctx).angle(105).follow(0.6);
+                if (pilot) {
+                    for (String id : PILOT) film(ctx, server, Runes.parseRune(id), f);
+                    LOG.info("[rune-gallery] film done, {} failed", failures.size());
+                    if (!failures.isEmpty()) throw new AssertionError("rune film: " + String.join(" / ", failures));
+                    return;
+                }
                 List<String> fams = Runes.FAMILY_ORDER.stream().filter(x -> !Runes.PAIR_FAMILIES.contains(x)).toList();
                 int from = (filmPart - 1) * 6;
                 for (String family : trOnly ? fams : fams.subList(Math.min(from, fams.size()), Math.min(from + 6, fams.size()))) {

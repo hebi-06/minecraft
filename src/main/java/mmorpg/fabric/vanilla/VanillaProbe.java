@@ -42,7 +42,10 @@ final class VanillaProbe {
             ServerPlayer p = handler.getPlayer();
             String name = p.getGameProfile().name();
             log("joined " + name + " modded=" + VanillaClients.isModded(p));
-            if (NAME.equals(name)) Tasks.later(160, () -> scene(p, 0));
+            if (NAME.equals(name)) Tasks.later(160, () -> {
+                if (Boolean.getBoolean("mmorpg.probe.films")) film(p, 0);
+                else scene(p, 0);
+            });
         });
     }
 
@@ -863,6 +866,90 @@ final class VanillaProbe {
 
     private static void next(ServerPlayer p, int step, int ticks) {
         Tasks.later(ticks, () -> scene(p, step));
+    }
+
+    // ------------------------------------------------------------ 2026-11-11 영상 (VFILM — 3D 효과 엔진 시범)
+
+    /** 영상으로 찍을 룬 (도끼 넷 · 불의 정령) · 찍을 장 수 (틱) */
+    static final List<String> FILM_RUNES = List.of("rpg:rune_axe_common", "rpg:rune_axe_noble", "rpg:rune_axe_hero", "rpg:rune_axe_transcend",
+            "rpg:rune_spirit_common");
+    static final int[] FILM_FRAMES = {72, 62, 66, 150, 96};
+    /** 영상 동안 서버 틱 빠르기 (클라이언트가 틱마다 한 장을 찍을 틈 — 클라이언트도 같은 빠르기로 돎) */
+    static final int FILM_RATE = 5;
+
+    /**
+     * -Dmmorpg.probe.films=true 일 때 (ci/vanilla_probe.sh VFILM): 다른 장면 없이 룬마다 과녁 앞에서 쓰고 3인칭 (뒤) 으로 틱마다 사진 →
+     * films/vanilla_&lt;계열&gt;_&lt;등급&gt; (ci/films.py 가 mp4)
+     */
+    private static void film(ServerPlayer p, int step) {
+        if (p.isRemoved() || p.hasDisconnected()) {
+            log("left film at step " + step);
+            return;
+        }
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        int y = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(0, 0, 0)).getY();
+        if (step == 0) {
+            run(server, "gamerule advance_time false");
+            run(server, "gamerule advance_weather false");
+            run(server, "time set noon");
+            run(server, "weather clear");
+            p.getAbilities().invulnerable = true;
+            p.onUpdateAbilities();
+            p.setExperienceLevels(40);
+            mmorpg.fabric.RpgPlayers.checkLevelUp(p);
+            for (String k : new String[]{"str", "dex", "vit", "int"}) mmorpg.fabric.RpgPlayers.setStat(p, k, 150);
+            p.getInventory().clearContent();
+            say(p, "cam back");
+            Tasks.later(40, () -> film(p, 1));
+            return;
+        }
+        int i = step - 1;
+        for (net.minecraft.world.entity.Entity e : SPAWNED) if (e != null && !e.isRemoved()) e.discard();
+        SPAWNED.clear();
+        if (i >= FILM_RUNES.size()) {
+            run(server, "tick rate 20");
+            say(p, "done");
+            log("done");
+            return;
+        }
+        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(FILM_RUNES.get(i));
+        if (r == null) {
+            check("film rune " + FILM_RUNES.get(i), false);
+            Tasks.later(2, () -> film(p, step + 1));
+            return;
+        }
+        run(server, "tick rate 20");
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 12");
+        mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
+        mmorpg.fabric.RpgHealth.healFull(p);
+        // 과녁: 앞 무리 넷 (도약 · 처형 · 정령이 노림) — 광전사의 혼은 둘레 넷 (반지름 4 안)
+        double[][] spots = "berserker".equals(r.def().str("fn"))
+                ? new double[][] {{0.5, 3.0}, {2.8, 1.2}, {-1.8, 1.4}, {0.5, -1.6}}
+                : new double[][] {{0.5, 4.6}, {2.6, 7.0}, {-1.6, 7.2}, {0.5, 9.4}};
+        for (double[] sp : spots) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(sp[0], y, sp[1]), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000); // 영상 동안 쓰러지지 않게
+                m.setHealth(m.getMaxHealth());
+            }
+            SPAWNED.add(e);
+        }
+        String name = "vanilla_" + r.family() + "_" + r.grade();
+        int frames = FILM_FRAMES[Math.min(i, FILM_FRAMES.length - 1)];
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            Tasks.later(3, () -> {
+                boolean ok = mmorpg.fabric.rune.RuneCast.castRune(p, r, false);
+                check("film cast " + name, ok);
+                log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active() + " fx · props " + mmorpg.fabric.vfx.Vfx.propsMade + " · sprites "
+                        + mmorpg.fabric.vfx.Vfx.spritesMade);
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
     }
 
     /** 핫바: 무기 넷 (검 · 활 · 완드 · 마검 — 종류마다 마지막 = 높은 등급) · 룬 · 장신구 · 유물 · 재료 · 제단, 갑옷: 힘 계열 한 벌 */

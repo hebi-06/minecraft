@@ -25,7 +25,10 @@ printf 'online-mode=false\nenforce-secure-profile=false\nlevel-type=minecraft\\:
 cd "$dir" || exit 2
 rm -f in exit.code
 mkfifo in
-(java -Xmx3G -Dmmorpg.probe=true -jar server.jar nogui < in > out.log 2>&1; echo $? > exit.code) &
+# 2026-11-11 VFILM=true (묶음 키 vfilm): 장면 없이 3D 효과 엔진 시범 룬 영상만 (VanillaProbe.film — 클라이언트가 틱마다 사진 → films.py)
+FILMS_FLAG=""
+[ "${VFILM:-}" = "true" ] && FILMS_FLAG="-Dmmorpg.probe.films=true"
+(java -Xmx3G -Dmmorpg.probe=true $FILMS_FLAG -jar server.jar nogui < in > out.log 2>&1; echo $? > exit.code) &
 exec 3>in
 t=0; up=0
 while [ $t -lt 480 ]; do
@@ -71,6 +74,11 @@ fi
 cp "$dir/out.log" ci-out/vanilla-server.log 2>/dev/null || true
 cp run-probe/logs/latest.log ci-out/vanilla-client-latest.log 2>/dev/null || true
 for f in run-probe/screenshots/probe_*.png; do [ -f "$f" ] && cp "$f" "ci-out/shots/vanilla_$(basename "$f" .png | sed 's/^probe_//').png"; done
+# 영상 (VFILM): 틱마다 찍은 사진 → mp4 (ci/films.py — ci-out/films/vanilla_<계열>_<등급>.mp4 · .json)
+if [ -d run-probe/films ]; then
+  sudo apt-get install -y -qq ffmpeg > /dev/null 2>&1 || true
+  python3 ci/films.py run-probe/films ci-out/films "" | tee ci-out/films-vanilla.txt || true
+fi
 ls -la ci-out/shots | grep vanilla || true
 echo "----- [vanilla] server errors"
 grep -n -E "Exception|Caused by|/ERROR\]|/FATAL\]|\[vanilla-probe\]" ci-out/vanilla-server.log | head -n 80

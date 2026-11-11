@@ -28,7 +28,8 @@ import java.util.Optional;
  * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · shift on|off (Shift 누름) · slot N · shiftslot N (상자 메뉴 칸 누름 · Shift) ·
  * hover N (마우스를 칸 N 위로 — 설명 상자) ·
  * close (상자 메뉴 닫기) · click id sel (대화창 단추) ·
- * submit id (입력창 확인) ·
+ * submit id (입력창 확인) · film 이름 n (2026-11-11 영상 — 지금부터 클라이언트 틱마다 n 장: screenshots/../films/이름/f0000.png … + manifest.json —
+ * 서버가 /tick rate 를 늦춰 틱마다 한 장이 되게, ci/films.py 가 mp4 로) ·
  * done (닫힘). 접속이 끊기면 끊긴 화면을 찍고 닫힘. 아무 신호 없이 12분이면 찍고 닫힘. 사진은 게임 폴더 screenshots/probe_&lt;이름&gt;.png.
  */
 public final class Probe implements ClientModInitializer {
@@ -38,6 +39,11 @@ public final class Probe implements ClientModInitializer {
     private static int ticks;
     private static int quitIn = -1;
     private static boolean disconnectedShot;
+    /** 영상: 이름 · 남은 장 · 찍은 장 · 틱 */
+    private static String filmName;
+    private static int filmLeft;
+    private static int filmIndex;
+    private static final java.util.List<Integer> FILM_TICKS = new java.util.ArrayList<>();
 
     @Override
     public void onInitializeClient() {
@@ -70,6 +76,10 @@ public final class Probe implements ClientModInitializer {
             shot(mc, "timeout");
             quitIn = 40;
         }
+        if (filmName != null) {
+            filmFrame(mc);
+            return;
+        }
         if (wait > 0 && --wait > 0) return;
         if (pendingInv != null) {
             shot(mc, pendingInv);
@@ -84,6 +94,13 @@ public final class Probe implements ClientModInitializer {
         if (cmd.startsWith("shot ")) {
             shot(mc, cmd.substring(5));
             wait = 5;
+        } else if (cmd.startsWith("film ")) {
+            String[] a = cmd.split(" ");
+            filmName = a[1];
+            filmLeft = Integer.parseInt(a[2]);
+            filmIndex = 0;
+            FILM_TICKS.clear();
+            log("film start " + filmName + " " + filmLeft);
         } else if (cmd.startsWith("inv ") && mc.player != null) {
             mc.gui.setScreen(new InventoryScreen(mc.player));
             pendingInv = cmd.substring(4);
@@ -160,6 +177,37 @@ public final class Probe implements ClientModInitializer {
             log("done");
             quitIn = 40;
         }
+    }
+
+    /** 영상 한 장 (클라이언트 틱마다) — 다 찍으면 manifest.json (틱 목록) */
+    private static void filmFrame(Minecraft mc) {
+        Path dir = mc.gameDirectory.toPath().resolve("films").resolve(filmName);
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            log("film mkdir failed " + e);
+        }
+        Path file = dir.resolve(String.format("f%04d.png", filmIndex++));
+        FILM_TICKS.add(ticks);
+        Screenshot.takeScreenshot(mc.gameRenderer.mainRenderTarget(), (NativeImage image) -> {
+            try (image) {
+                image.writeToFile(file);
+            } catch (IOException e) {
+                log("film shot failed " + file + " " + e);
+            }
+        });
+        if (--filmLeft > 0) return;
+        StringBuilder b = new StringBuilder("{\"id\": \"").append(filmName).append("\", \"ticks\": [");
+        for (int i = 0; i < FILM_TICKS.size(); i++) b.append(i == 0 ? "" : ", ").append(FILM_TICKS.get(i));
+        b.append("]}\n");
+        try {
+            Files.writeString(dir.resolve("manifest.json"), b.toString());
+        } catch (IOException e) {
+            log("film manifest failed " + e);
+        }
+        log("film done " + filmName + " " + filmIndex);
+        filmName = null;
+        wait = 5;
     }
 
     private static void shot(Minecraft mc, String name) {

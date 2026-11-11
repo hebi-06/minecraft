@@ -67,7 +67,9 @@ public final class RpgEntities {
         // 0.50.0 티르빙 망자의 각성의 아군 전사 (드라우그 모델 · 보랏빛 — 스킬이 움직임)
         // 0.51.0 네크로맨서 의 망자 선원도 같은 몹 (독초록 · 뼈색 — job.NecroCrew 가 움직임)
         // 2026-11-07 정령 궁수 와일드 헌트의 늑대 정령도 같은 몹 (서리 늑대 모델 · 정령빛 — job.SpiritWolves 가 움직임)
-        if (TyrfingWarrior.ID.equals(d.id()) || TyrfingWarrior.CREW_ID.equals(d.id()) || TyrfingWarrior.WOLF_ID.equals(d.id()))
+        // 2026-11-11 불의 정령 샐러맨더도 같은 몹 (rune.RuneSpirit 가 움직임)
+        if (TyrfingWarrior.ID.equals(d.id()) || TyrfingWarrior.CREW_ID.equals(d.id()) || TyrfingWarrior.WOLF_ID.equals(d.id())
+                || TyrfingWarrior.SALAMANDER_ID.equals(d.id()))
             b = EntityType.Builder.<TyrfingWarrior>of(TyrfingWarrior::new, MobCategory.MISC);
         // 2026-11-06 피에로의 소환물 (깜짝 상자 · 광대 인형 — 몬스터가 노리고 때림, job.PierrotSummons 가 움직임)
         else if (PierrotSummon.BOX.equals(d.id()) || PierrotSummon.DOLL.equals(d.id())) b = EntityType.Builder.<PierrotSummon>of(PierrotSummon::new, MobCategory.MISC);
