@@ -30,6 +30,8 @@ final class VanillaEntities {
 
     /** 공유 상태 바이트 (Entity 데이터 0번) 의 보이지 않음 칸 */
     private static final byte INVISIBLE = 0x20;
+    /** 살아 있는 것 (LivingEntity) 의 칸 다음 — 몹 (Mob) 깃발부터 (갑옷 거치대에서는 거치대 깃발 · 자세 칸 — 둘 다 LivingEntity 바로 다음 번호) */
+    static final int MOB_DATA_FROM = net.minecraft.world.entity.decoration.ArmorStand.DATA_CLIENT_FLAGS.id();
 
     static void init() {
         int n = 0;
@@ -64,9 +66,15 @@ final class VanillaEntities {
             return VanillaClients.isModded(ctx) ? entity.getType() : EntityTypes.ARMOR_STAND;
         }
 
+        /**
+         * 모드 없는 클라이언트: 보이지 않게 (공유 상태 0번의 보이지 않음 칸). 2026-11-11: 몹 (Mob) 이 더한 칸 (15번 — 몹 깃발 · 그 뒤 BedrockMob 의 글자 칸) 은
+         * 갑옷 거치대에서는 다른 뜻 (15번 = 거치대 깃발 — 1 작은 거치대 · 4 팔 · 16 표시 전용) 이라 뺌 — AI 를 끈 몹 (몹 깃발 1) 이 작은 거치대가 되어
+         * 뼈가 거치대 키의 반에 타서 땅에 묻혀 있었음 (영상의 과녁 드라우그)
+         */
         @Override
         public void modifyRawTrackedData(List<SynchedEntityData.DataValue<?>> data, ServerPlayer player, boolean initial) {
             if (shown || VanillaClients.isModded(player)) return;
+            data.removeIf(v -> v.id() >= MOB_DATA_FROM);
             for (int i = 0; i < data.size(); i++) {
                 SynchedEntityData.DataValue<?> v = data.get(i);
                 if (v.id() == 0 && v.value() instanceof Byte b) {

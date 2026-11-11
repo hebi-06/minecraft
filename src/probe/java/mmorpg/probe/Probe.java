@@ -223,8 +223,23 @@ public final class Probe implements ClientModInitializer {
         return new double[] {cx, cy, cz, yaw, pitch};
     }
 
+    /**
+     * 2026-11-11 진단: 둘레 12칸의 갑옷 거치대 (RPG 몹의 대역) 마다 발 높이 · 크기 · 키 · 작은 거치대 · 탄 것 수 · 첫 탄 것의 높이 (뼈가 타는 높이 — 발 + 키 여야 함)
+     */
+    private static void dumpStands(Minecraft mc, String tag) {
+        if (mc.level == null || mc.player == null) return;
+        for (net.minecraft.world.entity.Entity e : mc.level.entitiesForRendering()) {
+            if (!(e instanceof net.minecraft.world.entity.decoration.ArmorStand a) || e.distanceTo(mc.player) > 12) continue;
+            java.util.List<net.minecraft.world.entity.Entity> ps = a.getPassengers();
+            double py = ps.isEmpty() ? Double.NaN : ps.get(0).getY() - a.getY();
+            log(String.format(java.util.Locale.ROOT, "stand %s id %d y %.2f scale %.3f height %.3f small %s passengers %d rider %.3f", tag, a.getId(), a.getY(),
+                    a.getScale(), a.getBbHeight(), a.isSmall(), ps.size(), py));
+        }
+    }
+
     /** 영상 한 장 (클라이언트 틱마다) — 다 찍으면 manifest.json (틱 목록) */
     private static void filmFrame(Minecraft mc) {
+        if (filmIndex == 30) dumpStands(mc, filmName);
         Path dir = mc.gameDirectory.toPath().resolve("films").resolve(filmName);
         try {
             Files.createDirectories(dir);

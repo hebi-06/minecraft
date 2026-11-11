@@ -16,11 +16,14 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.joml.Matrix4f;
@@ -189,14 +192,7 @@ final class VanillaModels {
         if (look == null) return;
         MobModel m = new MobModel(mob, look);
         MODELS.put(mob, m);
-        EntityAttachment.ofTicking(m, mob);
-        // 2026-11-11: 엔티티를 불러온 때 (ENTITY_LOAD) 는 곁의 사람과 이미 짝을 맺은 뒤 — Polymer 는 태우는 패킷을 짝을 맺을 때 (addPairing) 만 보내므로
-        // 이미 보던 사람에게는 뼈가 태워지지 않고 처음 자리 (발 − 키) 에 머묾 (곁에서 솟은 샐러맨더가 땅에 묻히고 따라오지 않던 원인 — 이름표 (진짜 탄 것) 가 있는
-        // 몬스터는 이름표가 탈 때의 패킷에 뼈가 같이 실려 괜찮았음). 지금 보는 사람에게 한 번 보냄 (Polymer 가 이 사람이 보는 뼈 번호를 더함)
-        if (!m.getWatchingPlayers().isEmpty()) {
-            ClientboundSetPassengersPacket mount = new ClientboundSetPassengersPacket(mob);
-            for (ServerGamePacketListenerImpl c : new ArrayList<>(m.getWatchingPlayers())) c.send(mount);
-        }
+        EntityAttachment.ofTicking(m, mob); // 이미 보던 사람은 여기서 startWatching (아래 — 태우기 · 크기를 보냄)
     }
 
     /** 엔티티 하나의 뼈 표시 엔티티 묶음 — 모드 없는 클라이언트만 봄 */
@@ -253,10 +249,25 @@ final class VanillaModels {
             }
         }
 
+        /**
+         * 뼈를 보기 시작 (짝을 맺을 때 · 이미 보던 사람에게 홀더를 붙일 때): 뼈 표시 엔티티를 띄운 뒤
+         * <ol>
+         * <li>대역 갑옷 거치대의 크기 (SCALE — 거치대 키 × 크기 = 엔티티 키, 뼈가 타는 높이): 짝을 맺을 때의 속성 패킷은 서버에 만들어진 속성만 실으므로
+         *     (크기 속성을 건드린 적 없는 몹은 빠짐 — 2026-11-11 샐러맨더 (키 0.8) 의 뼈가 거치대 키 1.975 에 타서 1.2칸 떠 있던 원인) 크기를 담아 한 번 더 보냄
+         *     (Polymer 가 VanillaEntities.StandIn 의 대역 크기로 바꿈)</li>
+         * <li>태우기: Polymer 는 탄 것을 짝을 맺을 때 (addPairing) 만 태우는 패킷에 실음 — 엔티티를 불러온 때 (ENTITY_LOAD) 는 곁의 사람과 이미 짝을 맺은
+         *     뒤라 이미 보던 사람에게는 뼈가 태워지지 않고 처음 자리에 머물렀음 (곁에서 솟은 샐러맨더가 땅에 묻히고 따라오지 않던 원인 — 이름표 (진짜 탄 것) 가
+         *     있는 몬스터는 이름표가 탈 때의 패킷에 뼈가 같이 실려 괜찮았음). 이 사람에게 한 번 보냄 (Polymer 가 이 사람이 보는 뼈 번호를 더함)</li>
+         * </ol>
+         */
         @Override
         public boolean startWatching(ServerGamePacketListenerImpl player) {
             if (VanillaClients.isModded(player.getPlayer())) return false;
-            return super.startWatching(player);
+            if (!super.startWatching(player)) return false;
+            AttributeInstance size = mob.getAttribute(Attributes.SCALE);
+            if (size != null) player.send(new ClientboundUpdateAttributesPacket(mob.getId(), List.of(size)));
+            player.send(new ClientboundSetPassengersPacket(mob));
+            return true;
         }
 
         @Override
