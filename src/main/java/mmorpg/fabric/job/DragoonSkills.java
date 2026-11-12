@@ -9,6 +9,7 @@ import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneMob;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -48,6 +49,50 @@ final class DragoonSkills {
 
     private static Vec3 chest(ServerPlayer sp) {
         return V.up(sp.position(), 1.15);
+    }
+
+    // ------------------------------------------------------------ 2026-11-12 붉은 용 (3D 몹 rpg:job_dragon — tools/job_mobs_art.py)
+
+    /**
+     * 사용자 직업 도감 메모 (하이 점프 · 임페일 · 드래곤 브레스 · 드래곤폴 — "용을 3d 모델링으로 하고 싶음"): 예전 2D 용의 혼 (rfx_jdragon) 대신 진짜 3D 몹 (진홍 비늘 ·
+     * 금빛 배 · 불씨처럼 빛나는 비늘 틈 · 날개 막 끝) 을 스킬이 옮기고 동작을 틂 (rune.RuneMob — 모드 · 모드 없는 클라이언트가 같은 뼈 모델). 못 세우면 예전 그림
+     */
+    static final String DRAGON = "rpg:job_dragon";
+    /** 불을 토하는 자세 (breathe) 의 입 — 몸 자리 (발) 에서 앞 · 위 (크기 1 칸) */
+    static final double MOUTH_FWD = 2.55;
+    static final double MOUTH_UP = 1.33;
+    /** 등 위 (날개 뿌리) — 몸 자리에서 위 (크기 1 칸): 탄 사람의 발이 닿는 높이 */
+    static final double BACK_UP = 1.62;
+    /** 하이 점프로 떠 있는 사람 → 곁의 용 (내리꽂으면 함께) */
+    private static final Map<UUID, RuneMob> JUMP_DRAGONS = new HashMap<>();
+
+    /** 보는 쪽 f 의 오른쪽 (수평) */
+    private static Vec3 right(Vec3 f) {
+        return new Vec3(-f.z, 0, f.x);
+    }
+
+    /** 용 하나를 at (발) 에 face 쪽을 보게 세움 — 생겨남 동작 · 불티 · life 틱 뒤 스스로 사라짐. 못 세우면 null (예전 2D 그림을 씀) */
+    private static RuneMob dragon(ServerLevel level, Vec3 at, Vec3 face, double scale, int life) {
+        RuneMob d = RuneMob.spawn(DRAGON, level, at, face, life, scale, true);
+        if (d == null) return null;
+        d.anim("summon");
+        Vec3 c = V.up(at, 1.3 * scale);
+        JobFx.burst(level, c, 1.4 * scale, FIRE_GLOW, FIRE_CORE, 0.3, Opt.empty());
+        JobFx.fire(level, c, 1.2 * scale, 0.4, Opt.of("spin", 0.0), FIRE_GLOW, FIRE_CORE);
+        SkillFx.sparks(level, c, FIRE_GLOW, 12, 3.4);
+        SkillFx.play(level, "entity.ender_dragon.flap", at, 0.9, 1.0);
+        return d;
+    }
+
+    /** 용이 불티로 흩어짐 (after 틱 뒤 지움): 흩어지는 동작 · 불꽃 덩이 · 불티 */
+    private static void dragonGone(RuneMob d, int after) {
+        if (d == null || !d.alive()) return;
+        ServerLevel level = d.level();
+        Vec3 c = V.up(d.pos(), 1.3 * d.scale());
+        JobFx.fire(level, c, 1.4 * d.scale(), 0.5, Opt.of("vel", new Vec3(0, 2.0, 0)), FIRE_GLOW, FIRE_CORE);
+        SkillFx.sparks(level, c, FIRE_GLOW, 16, 4.0);
+        SkillFx.play(level, "entity.blaze.shoot", c, 0.5, 0.7);
+        d.leave("vanish", after);
     }
 
     /** p 자리의 땅 (턱 하나 — 없으면 p 높이) */
@@ -248,15 +293,38 @@ final class DragoonSkills {
             SkillFx.play(lv, "entity.ender_dragon.flap", c0, 1.2, 1.0);
             SkillFx.play(lv, "mob.breeze.jump", c0, 0.8, 0.9);
         });
-        // 떠 있는 동안 (4틱마다): 등 뒤 용의 혼 (날갯짓) · 조준한 곳의 표식 (고리 · 가운데 불빛)
+        // 2026-11-12 붉은 용 (3D): 뛰어오를 때 오른쪽 곁에서 불티로 생겨나 함께 솟음 → 꼭대기에서 포효 → 떠 있는 동안 날갯짓하며 곁을 따라다님 (카메라는 왼쪽 뒤)
+        JUMP_DRAGONS.remove(sp.getUUID());
+        RuneKit.later(3, () -> {
+            if (!life.equals(JUMPS.get(sp.getUUID())) || !RuneKit.sameLife(sp, life)) return;
+            RuneMob d = dragon(sp.level(), jumpSide(sp), Kit.facingOf(sp), JUMP_SCALE, rise + hover + 60);
+            if (d == null) return;
+            JUMP_DRAGONS.put(sp.getUUID(), d);
+            d.follow(() -> life.equals(JUMPS.get(sp.getUUID())) && !sp.isRemoved() ? jumpSide(sp) : null, 0.55, rise + hover + 4);
+            RuneKit.later(rise - 3, () -> {
+                if (d.alive() && life.equals(JUMPS.get(sp.getUUID()))) d.anim("roar");
+            });
+            RuneKit.later(rise + 9, () -> {
+                if (d.alive() && life.equals(JUMPS.get(sp.getUUID()))) d.hold("fly");
+            });
+            // 내리꽂지 않고 끝났으면 (죽음 · 막힘) 흩어짐
+            RuneKit.later(rise + hover + 16, () -> {
+                if (JUMP_DRAGONS.get(sp.getUUID()) == d) {
+                    JUMP_DRAGONS.remove(sp.getUUID());
+                    dragonGone(d, 10);
+                }
+            });
+        });
+        // 떠 있는 동안 (4틱마다): 등 뒤 용의 혼 (날갯짓 — 3D 용을 못 세웠을 때만) · 조준한 곳의 표식 (고리 · 가운데 불빛)
         for (int t = rise - 2; t < rise + hover; t += 4) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!life.equals(JUMPS.get(sp.getUUID())) || !RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 f = Kit.facingOf(sp);
-                JobFx.dragon(lv, V.up(V.add(sp.position(), f, 0.5), 1.2), 1.7, tt == rise - 2 ? 0 : 2, tt == rise - 2 ? 2 : 4, 0.22, tt != rise - 2,
-                        JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.8, "solo", 70.0), DRAGON_GLOW, DRAGON_CORE);
+                RuneMob dd = JUMP_DRAGONS.get(sp.getUUID());
+                if (dd == null || !dd.alive()) JobFx.dragon(lv, V.up(V.add(sp.position(), f, 0.5), 1.2), 1.7, tt == rise - 2 ? 0 : 2, tt == rise - 2 ? 2 : 4, 0.22,
+                        tt != rise - 2, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.8, "solo", 70.0), DRAGON_GLOW, DRAGON_CORE);
                 Vec3 d = aimSpot(sp, k.num("range", 10), k.num("fallback", 3), 12);
                 JobFx.ring(lv, V.up(d, 0.1), k.num("radius", 3.5), j, (tt / 4) % 2 == 0, 0.22, Opt.of("alpha", 0.7));
                 JobFx.glint(lv, V.up(d, 0.3), 0.5, DRAGON_GLOW, DRAGON_CORE, 0.22, Opt.empty());
@@ -268,6 +336,14 @@ final class DragoonSkills {
         });
         JobSystem.note(sp, "§6다시 누르면 조준한 곳으로 내리꽂음 §7(" + (rise + hover) / 20.0 + "초)");
         return true;
+    }
+
+    /** 하이 점프의 용 크기 (날개 끝 사이 약 3.3칸) · 곁 자리 (오른쪽 2.3칸 · 조금 뒤 · 조금 아래 — 왼쪽 뒤 카메라에서 사람과 용이 다 보이게) */
+    static final double JUMP_SCALE = 0.6;
+
+    private static Vec3 jumpSide(ServerPlayer sp) {
+        Vec3 f = Kit.facingOf(sp);
+        return V.up(V.add(V.add(sp.position(), right(f), 2.3), f, -0.4), -0.5);
     }
 
     /** 하이 점프 내리꽂음: diveTicks 틱에 조준한 곳 (range 칸 — 없으면 앞 fallback 칸) 으로 · 용의 혼이 함께 내리꽂힘 · 불꽃 꼬리 → 둘레 radius 칸 total × 높이 덤 */
@@ -288,9 +364,22 @@ final class DragoonSkills {
         RpgCombat.setSteadfast(sp, ticks + 4);
         Vec3 dir = V.unit(V.sub(dest, from));
         double speed = from.distanceTo(dest) / (ticks / 20.0);
-        // 내리꽂음: 용의 혼 (내리꽂는 꼴) 이 함께 · 불꽃 꼬리 · 1인칭 빠른 줄 · 소리
-        JobFx.dragon(level, V.up(from, 1.2), 1.9, 7, 1, ticks / 20.0 + 0.05, false, JobFx.hide1p(sp).with("vel", V.scale(dir, speed), "alpha", 0.9), DRAGON_GLOW,
-                DRAGON_CORE);
+        // 내리꽂음: 용 (3D — 머리를 아래로 날개를 접고 곁에서 함께 → 땅에 닿아 날개를 활짝 · 포효 → 불티로 흩어짐, 못 세웠으면 2D 용의 혼) · 불꽃 꼬리 · 1인칭 빠른 줄 · 소리
+        RuneMob drg = JUMP_DRAGONS.remove(sp.getUUID());
+        if (drg != null && drg.alive()) {
+            Vec3 ff = Kit.facingOf(sp);
+            drg.hold("dive");
+            drg.moveTo(V.up(V.add(dest, right(ff), 2.0), 0.3), ticks, 0, RuneMob.IN, false);
+            RuneKit.later(ticks, () -> {
+                if (!drg.alive()) return;
+                drg.hold("crash");
+                JobFx.fire(level, V.up(drg.pos(), 0.8), 1.2, 0.5, Opt.of("spin", 0.0), FIRE_GLOW, FIRE_CORE);
+            });
+            RuneKit.later(ticks + 14, () -> dragonGone(drg, 10));
+        } else {
+            JobFx.dragon(level, V.up(from, 1.2), 1.9, 7, 1, ticks / 20.0 + 0.05, false, JobFx.hide1p(sp).with("vel", V.scale(dir, speed), "alpha", 0.9), DRAGON_GLOW,
+                    DRAGON_CORE);
+        }
         JobFx.comet(level, V.up(from, 0.6), dir, 1.8, speed, ticks / 20.0 + 0.05, FIRE_GLOW, FIRE_CORE, JobFx.hide1p(sp));
         JobFx.speed(sp, j, 0.3, 0.8);
         SkillFx.play(level, "entity.ender_dragon.flap", from, 0.8, 1.0);
@@ -350,6 +439,29 @@ final class DragoonSkills {
         });
         Vec3 land = ground(level0, V.add(c0, f, RuneKit.dashDistance(sp, f, k.num("ahead", 2.5), 0.3, 1.5)));
         Vec3[] at = {null};
+        // 2026-11-12 붉은 용 (3D): 꿰는 순간 들어 올린 적 너머 하늘에 불티로 생겨나 나를 보고 (카메라 쪽) → 꼭대기에서 포효 → 내리꽂는 창과 함께 머리부터 땅에 박힘 →
+        // 날개를 활짝 · 포효 → 불티로 흩어짐 (못 세웠으면 내리꽂을 때 2D 용의 혼)
+        RuneMob[] drg = {null};
+        int upEnd0 = slamAt - 6;
+        RuneKit.later(skewerAt + 1, () -> {
+            if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
+            Vec3 above = V.up(V.add(carry ? V.add(c0, f, 1.1) : e.position(), f, 2.2), carry ? liftH + 0.4 : 2.0);
+            drg[0] = dragon(sp.level(), above, V.scale(f, -1), IMPALE_SCALE, slamAt + 50);
+        });
+        RuneKit.later(upEnd0 - 2, () -> {
+            if (drg[0] != null && drg[0].alive() && RuneKit.sameLife(sp, life)) drg[0].anim("roar");
+        });
+        RuneKit.later(slamAt - 4, () -> {
+            RuneMob d = drg[0];
+            if (d == null || !d.alive() || !RuneKit.sameLife(sp, life)) return;
+            d.hold("dive");
+            Vec3 tgt = carry && at[0] != null ? land : ground(sp.level(), e.isRemoved() ? land : e.position());
+            d.moveTo(V.up(V.add(tgt, f, 1.2), 0.2), 4, 0, RuneMob.IN, false);
+        });
+        RuneKit.later(slamAt, () -> {
+            if (drg[0] != null && drg[0].alive()) drg[0].hold("crash");
+        });
+        RuneKit.later(slamAt + 16, () -> dragonGone(drg[0], 10));
         if (carry) {
             Vec3 top = V.up(V.add(c0, f, 1.1), Math.max(1.5, liftH - 0.9));
             int upEnd = slamAt - 6;
@@ -393,7 +505,7 @@ final class DragoonSkills {
             if (carry && e.isAlive()) Kit.launch(e, 0, -0.4, 0);
             plungeFx(sp, j, g, radius, 1.5);
             JobFx.quake(lv, V.up(g, 0.05), radius, j, 0.55, Opt.empty());
-            JobFx.dragon(lv, V.up(g, 2.6), 2.4, 5, 1, 0.45, false, Opt.of("alpha", 0.85), DRAGON_GLOW, DRAGON_CORE);
+            if (drg[0] == null || !drg[0].alive()) JobFx.dragon(lv, V.up(g, 2.6), 2.4, 5, 1, 0.45, false, Opt.of("alpha", 0.85), DRAGON_GLOW, DRAGON_CORE);
             for (int q = 0; q < 6; q++) {
                 double a = Math.toRadians(q * 60 + 30);
                 Vec3 p = ground(lv, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * 0.6));
@@ -411,6 +523,9 @@ final class DragoonSkills {
         });
         return true;
     }
+
+    /** 임페일의 용 크기 (날개 끝 사이 약 4.1칸) */
+    static final double IMPALE_SCALE = 0.75;
 
     // ------------------------------------------------------------ 드래곤 브레스
 
@@ -433,13 +548,22 @@ final class DragoonSkills {
         JobFx.ring(level0, V.up(c0, 0.08), 1.8, j, false, 0.4, Opt.empty());
         SkillFx.play(level0, "item.trident.hit_ground", c0, 0.8, 0.9);
         SkillFx.play(level0, "entity.ender_dragon.growl", c0, 0.9, 0.7);
-        // 용의 혼: 생겨남 (0 · 1) → 날갯짓 → breathAt 에 포효
+        // 2026-11-12 붉은 용 (3D): 등 뒤 위에서 불티로 생겨나 (목을 내 머리 위로 뻗어 불을 토하는 입이 mouth 에 오게) 숨을 들이켬 → breathAt 에 목을 앞 아래로 내밀어
+        // 입을 활짝 → 불길이 끝나면 불티로 흩어짐. 못 세웠으면 예전 2D 용의 혼: 생겨남 (0 · 1) → 날갯짓 → breathAt 에 포효
         Vec3 dragonAt = V.up(V.add(c0, f, 0.7), 1.7);
-        JobFx.dragon(level0, dragonAt, 2.1, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
-        RuneKit.later(6, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), dragonAt, 2.1, 2, 4, (breathAt - 6) / 20.0, true, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW,
-                    DRAGON_CORE);
-        });
+        RuneMob drg = dragon(level0, V.up(V.add(c0, f, 0.9 - MOUTH_FWD * BREATH_SCALE), 3.3 - MOUTH_UP * BREATH_SCALE), f, BREATH_SCALE, breathAt + 50);
+        if (drg != null) {
+            RuneKit.later(7, () -> {
+                if (drg.alive() && RuneKit.sameLife(sp, life)) drg.hold("inhale");
+            });
+            RuneKit.later(breathAt + 16, () -> dragonGone(drg, 10));
+        } else {
+            JobFx.dragon(level0, dragonAt, 2.1, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
+            RuneKit.later(6, () -> {
+                if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), dragonAt, 2.1, 2, 4, (breathAt - 6) / 20.0, true, JobFx.hide1p(sp).with("alpha", 0.9),
+                        DRAGON_GLOW, DRAGON_CORE);
+            });
+        }
         // 숨을 들이켬 (2틱마다): 둘레에서 입으로 빨려 드는 불티 · 커지는 불빛
         for (int t = 2; t < breathAt; t += 2) {
             int tt = t;
@@ -461,7 +585,8 @@ final class DragoonSkills {
             sp.removeEffect(MobEffects.SLOWNESS);
             ServerLevel lv = sp.level();
             Vec3 ff = Kit.facingOf(sp);
-            JobFx.dragon(lv, dragonAt, 2.2, 6, 1, 0.5, false, JobFx.hide1p(sp).with("alpha", 0.95), DRAGON_GLOW, DRAGON_CORE);
+            if (drg != null && drg.alive()) drg.hold("breathe");
+            else JobFx.dragon(lv, dragonAt, 2.2, 6, 1, 0.5, false, JobFx.hide1p(sp).with("alpha", 0.95), DRAGON_GLOW, DRAGON_CORE);
             // 입 앞 번쩍 · 첫 불길 (토하는 순간이 보이게)
             JobFx.burst(lv, V.add(mouth, ff, 0.8), 1.3, FIRE_GLOW, FIRE_CORE, 0.3, Opt.empty());
             JobFx.fire(lv, V.add(mouth, ff, 1.2), 1.5, 0.4, Opt.of("vel", V.scale(V.unit(V.add(ff, new Vec3(0, -0.35, 0), 1.0)), 7.0), "grow", 1.6), FIRE_GLOW, FIRE_CORE);
@@ -505,7 +630,19 @@ final class DragoonSkills {
         return true;
     }
 
+    /** 드래곤 브레스의 용 크기 (날개 끝 사이 약 4.4칸 — 몸은 내 뒤 약 1.1칸 · 등은 머리 위) */
+    static final double BREATH_SCALE = 0.8;
+
     // ------------------------------------------------------------ 드래곤폴
+
+    /** 드래곤폴의 용 크기: 처음 · 하늘 (날개 끝 사이 약 5.2칸) → 내리꽂을 때 (약 8.8칸) */
+    static final double ULT_SCALE = 0.95;
+    static final double ULT_BIG = 1.6;
+
+    /** 드래곤폴: 용의 등에 탄 자리 — 몸 자리 = 내 발 아래 (등 높이) · 조금 뒤 (어깨 위에 서게) */
+    private static Vec3 ultRide(ServerPlayer sp, double scale) {
+        return V.up(V.add(sp.position(), Kit.facingOf(sp), -0.25 * scale), -BACK_UP * scale);
+    }
 
     /**
      * 드래곤폴 (롤 판테온 R): 용의 하늘 (rpg:ult_wyrm) — 크게 웅크려 용의 혼을 두르고 (등 뒤에서 솟는 용 · 창끝 빛) soarAt 틱에 하늘 높이 (height 칸 — 머리 위 여유까지)
@@ -536,11 +673,43 @@ final class DragoonSkills {
         Kit.noFall(sp, impactAt + 40);
         // 웅크림: 등 뒤에서 솟는 용의 혼 · 창끝 빛 · 발밑 불꽃 고리 · 낮은 포효
         JobFx.charge(sp, j, new Vec3(0.2, 1.7, 0.3), soarAt, 1.0);
-        JobFx.dragon(level0, V.up(V.add(c0, f, 0.9), 2.0), 2.8, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
-        RuneKit.later(6, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), V.up(V.add(c0, f, 0.9), 2.0), 2.8, 5, 2, (soarAt - 6) / 20.0 + 0.05, false, JobFx.hide1p(sp)
-                    .with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
-        });
+        // 2026-11-12 붉은 용 (3D): 등 뒤에서 불티로 생겨나 포효 → 솟구칠 때 발밑으로 날아들어 등에 태우고 하늘로 → 조준한 곳 위로 날아감 (날갯짓) → 내리꽂을 때 거대해지며
+        // 머리부터 함께 내리꽂힘 → 땅에 닿아 날개를 활짝 · 포효 (불기둥이 터질 때까지) → 불티로 흩어짐. 못 세웠으면 예전 2D 용의 혼
+        RuneMob drg = dragon(level0, V.add(c0, f, -1.6), f, ULT_SCALE, pillarsAt + 60);
+        if (drg != null) {
+            RuneKit.later(7, () -> {
+                if (drg.alive() && RuneKit.sameLife(sp, life)) drg.anim("roar");
+            });
+            RuneKit.later(soarAt - 1, () -> {
+                if (!drg.alive() || !RuneKit.sameLife(sp, life)) return;
+                drg.hold("fly");
+                drg.follow(() -> RuneKit.sameLife(sp, life) ? ultRide(sp, drg.scale()) : null, 0.6, diveAt - soarAt + 1);
+            });
+            // 내리꽂기 앞 4틱: 거대해짐 (ULT_SCALE → ULT_BIG)
+            for (int q = 1; q <= 4; q++) {
+                double sz = ULT_SCALE + (ULT_BIG - ULT_SCALE) * q / 4.0;
+                RuneKit.later(diveAt - 4 + q, () -> {
+                    if (drg.alive() && RuneKit.sameLife(sp, life)) drg.size(sz);
+                });
+            }
+            RuneKit.later(diveAt, () -> {
+                if (!drg.alive() || !RuneKit.sameLife(sp, life)) return;
+                drg.hold("dive");
+                drg.follow(() -> RuneKit.sameLife(sp, life) ? V.up(V.add(sp.position(), Kit.facingOf(sp), 0.8), -0.6) : null, 0.75, impactAt - diveAt + 1);
+            });
+            RuneKit.later(impactAt, () -> {
+                if (!drg.alive() || !RuneKit.sameLife(sp, life)) return;
+                drg.place(V.add(dest, Kit.facingOf(sp), 0.6));
+                drg.hold("crash");
+            });
+            RuneKit.later(pillarsAt + 8, () -> dragonGone(drg, 12));
+        } else {
+            JobFx.dragon(level0, V.up(V.add(c0, f, 0.9), 2.0), 2.8, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
+            RuneKit.later(6, () -> {
+                if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), V.up(V.add(c0, f, 0.9), 2.0), 2.8, 5, 2, (soarAt - 6) / 20.0 + 0.05, false, JobFx.hide1p(sp)
+                        .with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
+            });
+        }
         JobFx.ring(level0, V.up(c0, 0.08), 2.2, j, false, soarAt / 20.0, Opt.empty());
         SkillFx.play(level0, "entity.ender_dragon.growl", c0, 0.8, 1.0);
         // 솟구침 → 조준한 곳 위로 옮겨 감 → 떠 있음 → 내리꽂음
@@ -580,7 +749,7 @@ final class DragoonSkills {
                 // 2026-11-06 영상 1: 하늘에 있는 동안 (1초) 화면이 빈 하늘 · 먼 땅뿐이었음 → 표식 자리를 위에서 내리비추는 불빛 기둥 · 내 앞 아래에서 날갯짓하는 붉은 용
                 // (영상 2: 발 높이 앞 2.6칸이면 3인칭 카메라 위로 꼬리만 보였음 → 발보다 1.5칸 아래 — 땅의 표식으로 날아가는 꼴)
                 JobFx.spotlight(lv, dest, 4 + 8 * u, 0.24, Opt.of("alpha", 0.55 + 0.3 * u), FIRE_GLOW, FIRE_CORE);
-                if (tt >= hideAt && tt < diveAt) {
+                if (tt >= hideAt && tt < diveAt && (drg == null || !drg.alive())) {
                     Vec3 ff = Kit.facingOf(sp);
                     JobFx.dragon(lv, V.up(V.add(sp.position(), ff, 2.6), -1.5), 3.0, 2, 4, 0.24, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9,
                             "solo", 70.0), DRAGON_GLOW, DRAGON_CORE);
@@ -595,7 +764,7 @@ final class DragoonSkills {
             top[0] = Math.max(top[0], p.y);
             double secs = (impactAt - diveAt) / 20.0;
             Vec3 vel = V.scale(V.sub(dest, p), 1 / secs);
-            JobFx.dragon(lv, V.up(p, 2.5), 5.0, 7, 1, secs + 0.08, false, Opt.of("vel", vel, "alpha", 0.95), DRAGON_GLOW, DRAGON_CORE);
+            if (drg == null || !drg.alive()) JobFx.dragon(lv, V.up(p, 2.5), 5.0, 7, 1, secs + 0.08, false, Opt.of("vel", vel, "alpha", 0.95), DRAGON_GLOW, DRAGON_CORE);
             JobFx.comet(lv, V.up(p, 1.0), V.unit(V.sub(dest, p)), 3.0, V.len(vel), secs + 0.05, FIRE_GLOW, FIRE_CORE, JobFx.hide1p(sp));
             SkillFx.play(lv, "entity.ender_dragon.growl", dest, 0.7, 1.0);
         });
@@ -612,7 +781,7 @@ final class DragoonSkills {
             plungeFx(sp, j, dest, outerR, 2.4);
             JobFx.quake(lv, V.up(dest, 0.05), outerR, j, 0.6, Opt.empty());
             JobFx.burst(lv, V.up(dest, 1.2), 3.4, j, 0.4, Opt.empty());
-            JobFx.dragon(lv, V.up(dest, 3.4), 3.6, 6, 1, 0.55, false, Opt.of("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
+            if (drg == null || !drg.alive()) JobFx.dragon(lv, V.up(dest, 3.4), 3.6, 6, 1, 0.55, false, Opt.of("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
             JobFx.radialWaves(sp, j, dest, 10, 1.0, outerR + 0.5, 0.8, 1.5, 0.4, 0);
             SkillFx.shock(lv, V.up(dest, 0.1), FIRE_GLOW, outerR * 1.1, 0.55);
             SkillFx.play(lv, "entity.generic.explode", dest, 0.7, 1.0);

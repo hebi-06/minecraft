@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_job_dragon_emissive","particle":"rpg:item/vmob/allies_job_dragon_emissive"},"elements":[{"from":[7.73,7.48,10.98],"to":[8.77,8.52,15.02],"faces":{"up":{"uv":[9.625,10.75,9.5,10.5],"texture":"#0"}},"light_emission":15}]}

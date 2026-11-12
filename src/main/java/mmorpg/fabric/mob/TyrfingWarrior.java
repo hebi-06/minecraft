@@ -65,9 +65,12 @@ public class TyrfingWarrior extends BedrockMob {
     public static final java.util.Set<String> RUNE_MOBS = java.util.Set.of("rpg:rune_hawk", "rpg:rune_beast_king", "rpg:rune_undine", "rpg:rune_sylph",
             "rpg:rune_gnome", "rpg:rune_spirit_king");
 
+    /** 2026-11-12 직업 스킬의 3D 몹 (tools/job_mobs_art.py — 움직임은 rune.RuneMob 을 쓰는 스킬): 드라군의 붉은 용 */
+    public static final java.util.Set<String> JOB_MOBS = java.util.Set.of("rpg:job_dragon");
+
     /** 이 몹 (스스로 생각하지 않고 스킬이 움직이는 아군 몹) 꼴로 등록할 엔티티 id 인지 */
     public static boolean isAllyId(String id) {
-        return ID.equals(id) || CREW_ID.equals(id) || WOLF_ID.equals(id) || SALAMANDER_ID.equals(id) || RUNE_MOBS.contains(id);
+        return ID.equals(id) || CREW_ID.equals(id) || WOLF_ID.equals(id) || SALAMANDER_ID.equals(id) || RUNE_MOBS.contains(id) || JOB_MOBS.contains(id);
     }
 
     /** 전사 하나를 at (발) 에 yaw (자바 각도) 로 세움 — maxAge 틱 뒤 스스로 사라짐. 못 세우면 null */

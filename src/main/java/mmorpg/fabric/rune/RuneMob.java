@@ -21,21 +21,22 @@ import net.minecraft.world.phys.Vec3;
  * <li>동작: 그 몹의 동작 (animation.rpg.monster.&lt;키&gt;.&lt;이름&gt; — 모드 클라이언트 BedrockRenderer · 모드 없는 클라이언트 VanillaModels 가 같은 계산)</li>
  * <li>떠남 (leave): 흩어지는 동작 뒤 after 틱에 지움 (스킬이 치우지 못해도 maxAge 틱 뒤 스스로 사라짐)</li>
  * </ul>
+ * 2026-11-12 직업 스킬도 씀 (드라군의 붉은 용 rpg:job_dragon — job.DragoonSkills): 따라가기 (follow) · 크기 바꾸기 (size)
  */
-final class RuneMob {
-    static final String HAWK = "rpg:rune_hawk";
-    static final String BEAST_KING = "rpg:rune_beast_king";
-    static final String UNDINE = "rpg:rune_undine";
-    static final String SYLPH = "rpg:rune_sylph";
-    static final String GNOME = "rpg:rune_gnome";
-    static final String SPIRIT_KING = "rpg:rune_spirit_king";
-    static final String WOLF = TyrfingWarrior.WOLF_ID;
+public final class RuneMob {
+    public static final String HAWK = "rpg:rune_hawk";
+    public static final String BEAST_KING = "rpg:rune_beast_king";
+    public static final String UNDINE = "rpg:rune_undine";
+    public static final String SYLPH = "rpg:rune_sylph";
+    public static final String GNOME = "rpg:rune_gnome";
+    public static final String SPIRIT_KING = "rpg:rune_spirit_king";
+    public static final String WOLF = TyrfingWarrior.WOLF_ID;
 
     /** 빠르기 곡선: 고르게 · 빨리 시작해 느려짐 · 느리게 시작해 빨라짐 · 부드럽게 */
-    static final int LINEAR = 0;
-    static final int OUT = 1;
-    static final int IN = 2;
-    static final int SMOOTH = 3;
+    public static final int LINEAR = 0;
+    public static final int OUT = 1;
+    public static final int IN = 2;
+    public static final int SMOOTH = 3;
 
     final TyrfingWarrior x;
     /** 동작 이름의 키 (rune_hawk · spirit_wolf …) */
@@ -46,6 +47,11 @@ final class RuneMob {
     private boolean leaving;
 
     private record Move(Vec3 from, Supplier<Vec3> to, long t0, int ticks, double arc, int ease, boolean faceMove) {}
+
+    /** 따라가기: 틱마다 지금 자리에서 to 쪽으로 k 몫 (1 = 바로) — until 틱까지 */
+    private record Follow(Supplier<Vec3> to, double k, long until) {}
+
+    private Follow follow;
 
     private static final List<RuneMob> LIVE = new ArrayList<>();
 
@@ -63,7 +69,7 @@ final class RuneMob {
      * id 몹 하나를 at (발) 에 face 쪽을 보게 세움 — life 틱 뒤 스스로 사라짐, 크기 scale (1 = 모델 그대로), scripted = 스킬이 옮김 (물리 · 중력 끔).
      * 못 세우면 null
      */
-    static RuneMob spawn(String id, ServerLevel level, Vec3 at, Vec3 face, int life, double scale, boolean scripted) {
+    public static RuneMob spawn(String id, ServerLevel level, Vec3 at, Vec3 face, int life, double scale, boolean scripted) {
         TyrfingWarrior x = TyrfingWarrior.spawnAs(id, level, at, yawOf(face), life);
         if (x == null) return null;
         if (scale != 1) {
@@ -79,53 +85,58 @@ final class RuneMob {
     }
 
     /** 자바 몸 각도 (face 쪽을 봄) */
-    static float yawOf(Vec3 face) {
+    public static float yawOf(Vec3 face) {
         return (float) Math.toDegrees(Math.atan2(-face.x, face.z));
     }
 
-    boolean alive() {
+    public boolean alive() {
         return !x.isRemoved() && !leaving;
     }
 
-    Vec3 pos() {
+    /** 몹이 있는 세계 */
+    public ServerLevel level() {
+        return (ServerLevel) x.level();
+    }
+
+    public Vec3 pos() {
         return x.position();
     }
 
     /** 크기 (Attributes.SCALE — 모델 몇 배) */
-    double scale() {
+    public double scale() {
         return x.getScale();
     }
 
     /** 몸 앞 쪽 (보는 쪽, 수평) */
-    Vec3 forward() {
+    public Vec3 forward() {
         double yaw = Math.toRadians(x.getYRot());
         return new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
     }
 
     /** 스킬이 옮김 (물리 · 중력 끔) / 스스로 걸음 */
-    void scripted(boolean on) {
+    public void scripted(boolean on) {
         x.noPhysics = on;
         x.setNoGravity(on);
         if (on) x.getNavigation().stop();
     }
 
     /** 이 몹의 동작 (animation.rpg.monster.키.이름) — 끝나면 늘 트는 동작으로 */
-    void anim(String name) {
+    public void anim(String name) {
         x.playAnimation("animation.rpg.monster." + key + "." + name);
     }
 
     /** 끝 자세를 다음 동작까지 그대로 (일어선 자세 · 든 팔) */
-    void hold(String name) {
+    public void hold(String name) {
         x.playAnimation("animation.rpg.monster." + key + "." + name, null, "0");
     }
 
     /** 다른 몹의 동작 이름 그대로 (늑대 정령의 서리 늑대 동작) */
-    void play(String fullName) {
+    public void play(String fullName) {
         x.playAnimation(fullName);
     }
 
     /** dir 쪽을 봄 (수평) */
-    void face(Vec3 dir) {
+    public void face(Vec3 dir) {
         if (dir == null || Math.hypot(dir.x, dir.z) < 1e-4) return;
         face = dir;
         float yaw = yawOf(dir);
@@ -135,27 +146,43 @@ final class RuneMob {
     }
 
     /** 바로 옮김 */
-    void place(Vec3 p) {
+    public void place(Vec3 p) {
         move = null;
+        follow = null;
         x.setPos(p.x, p.y, p.z);
         x.setDeltaMovement(Vec3.ZERO);
     }
 
     /** 지금 자리에서 to 까지 ticks 틱 (arc = 가운데에서 솟는 칸, faceMove = 가는 쪽을 봄) */
-    void moveTo(Vec3 to, int ticks, double arc, int ease, boolean faceMove) {
+    public void moveTo(Vec3 to, int ticks, double arc, int ease, boolean faceMove) {
         moveTo(() -> to, ticks, arc, ease, faceMove);
     }
 
-    void moveTo(Supplier<Vec3> to, int ticks, double arc, int ease, boolean faceMove) {
+    public void moveTo(Supplier<Vec3> to, int ticks, double arc, int ease, boolean faceMove) {
+        follow = null;
         move = new Move(x.position(), to, Tasks.now(), Math.max(1, ticks), arc, ease, faceMove);
     }
 
-    boolean moving() {
+    /** 틱마다 to 쪽으로 k 몫 다가감 (늦게 따라감 — 1 = 바로 붙음) · ticks 틱 동안 (옮기기를 끊음) */
+    public void follow(Supplier<Vec3> to, double k, int ticks) {
+        move = null;
+        follow = new Follow(to, Math.max(0.05, Math.min(1, k)), Tasks.now() + Math.max(1, ticks));
+    }
+
+    /** 크기 (Attributes.SCALE — 모델 몇 배): 모드 · 모드 없는 클라이언트 모두 뼈 표시가 그만큼 */
+    public void size(double s) {
+        var a = x.getAttribute(Attributes.SCALE);
+        if (a == null || x.isRemoved()) return;
+        a.setBaseValue(Math.max(0.0625, Math.min(16, s)));
+        x.refreshDimensions();
+    }
+
+    public boolean moving() {
         return move != null;
     }
 
     /** 떠남: 동작 (없으면 null) 뒤 after 틱에 지움 */
-    void leave(String anim, int after) {
+    public void leave(String anim, int after) {
         if (x.isRemoved() || leaving) return;
         leaving = true;
         if (anim != null) anim(anim);
@@ -163,7 +190,7 @@ final class RuneMob {
     }
 
     /** 바로 지움 */
-    void discard() {
+    public void discard() {
         leaving = true;
         x.discard();
     }
@@ -185,6 +212,21 @@ final class RuneMob {
             if (m.x.isRemoved()) {
                 LIVE.remove(i);
                 continue;
+            }
+            Follow fl = m.follow;
+            if (fl != null && m.move == null) {
+                if (now > fl.until()) {
+                    m.follow = null;
+                } else {
+                    Vec3 to = fl.to().get();
+                    if (to != null) {
+                        Vec3 p = V.lerp(m.x.position(), to, fl.k());
+                        m.x.setPos(p.x, p.y, p.z);
+                        m.x.setDeltaMovement(Vec3.ZERO);
+                    }
+                    if (m.face != null) m.face(m.face);
+                    continue;
+                }
             }
             Move mv = m.move;
             if (mv == null) {

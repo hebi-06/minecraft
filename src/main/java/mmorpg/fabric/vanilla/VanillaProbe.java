@@ -1379,8 +1379,7 @@ final class VanillaProbe {
         }
         var e = nearest(p.position(), foes);
         if (e == null) return;
-        p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
-        p.attack(e);
+        p.attack(e); // 평타 동작 · 참격은 Slash.onAttack (PlayerMixin) 이 둘레에 알림
     }
 
     /** 핫바: 무기 넷 (검 · 활 · 완드 · 마검 — 종류마다 마지막 = 높은 등급) · 룬 · 장신구 · 유물 · 재료 · 제단, 갑옷: 힘 계열 한 벌 */
