@@ -407,18 +407,20 @@ def gray_img(lvl, a):
 
 def shock():
     """땅의 충격파 고리 (땅에 눕힘): 0 ~ 5 커지며 가늘어짐 · 부서짐. 바깥 = 외곽선 + 흰 심지, 안쪽 = 계열 색 → 짙은 색 (계단 가장자리)"""
-    S = 128
+    # 2026-11-12 256 픽셀 (룬 전체 — 반지름 10칸이 넘는 고리도 픽셀이 너무 크지 않게, 128 판의 모양을 두 배로)
+    S = 256
+    k = S / 128
     x, y = grid(S, S)
     r = np.hypot(x - S / 2, y - S / 2)
     ang = np.arctan2(y - S / 2, x - S / 2)
     frames = []
     for f in range(6):
         t = f / 5
-        R = 18 + 44 * (1 - (1 - t) ** 1.6)
-        th = 11 * (1 - t) + 3
+        R = (18 + 44 * (1 - (1 - t) ** 1.6)) * k
+        th = (11 * (1 - t) + 3) * k
         rng = np.random.default_rng(400 + f)
-        jag = np.kron(rng.integers(0, 4, (S // 2, S // 2)), np.ones((2, 2)))
-        spikes = np.maximum(0, np.sin(ang * 17 + f)) ** 3 * 4 * (1 - t)
+        jag = np.kron(rng.integers(0, 4, (S // 2, S // 2)), np.ones((2, 2))) * k
+        spikes = np.maximum(0, np.sin(ang * 17 + f)) ** 3 * 4 * k * (1 - t)
         d = R - r
         inner = th + jag * (1 - t) + spikes
         c = Cv(S, S)
@@ -426,8 +428,8 @@ def shock():
         c.A(band, DARK)
         c.A(band & (d < th * 0.7), MID)
         c.A(band & (d < th * 0.45), BASE)
-        c.B(band & (d >= 1.2) & (d < 1.2 + max(1.0, th * 0.18)) & (f < 4))
-        c.A(band & (d < 1.2), OUT)
+        c.B(band & (d >= 1.2 * k) & (d < 1.2 * k + max(1.0, th * 0.18)) & (f < 4))
+        c.A(band & (d < 1.2 * k), OUT)
         if f >= 3:
             dis = coarse(np.random.default_rng(420 + f), S, S, 2)
             c.clear((dis < 0.25 * (f - 2)) & (c.a + c.b > 0))

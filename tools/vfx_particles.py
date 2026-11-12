@@ -133,9 +133,19 @@ def q_colored(cells):
     return bool(sat) and float(np.mean(sat)) > 0.12
 
 
-def q_cell(cell, colored, nw, nh):
-    """칸 하나 → (A, B, C) RGBA uint8 판 (nh × nw) · B 에 픽셀이 있는지"""
-    a = np.asarray(cell.convert("RGBA"), np.float32) / 255
+def q_cell(cell, colored, nw, nh, alpha=1.0):
+    """칸 하나 → (A, B, C) RGBA uint8 판 (nh × nw) · B 에 픽셀이 있는지. alpha = A 층 불투명도 몫 (빛줄기)"""
+    cell = cell.convert("RGBA")
+    if nw > cell.size[0] * 1.05 or nh > cell.size[1] * 1.05:
+        # 원본보다 크게: 부드럽게 늘린 뒤 띠로 (모서리가 계단이 아니라 고운 픽셀로)
+        pm = np.asarray(cell, np.float32) / 255
+        pm[..., :3] *= pm[..., 3:4]
+        up = Image.fromarray((pm * 255 + 0.5).astype(np.uint8), "RGBA").resize((nw * 2, nh * 2), Image.BICUBIC)
+        b = np.asarray(up, np.float32) / 255
+        al = b[..., 3:4]
+        b[..., :3] = np.where(al > 1e-4, b[..., :3] / np.maximum(al, 1e-4), 0)
+        cell = Image.fromarray((np.clip(b, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
+    a = np.asarray(cell, np.float32) / 255
     lum = a[..., 0] * 0.3 + a[..., 1] * 0.55 + a[..., 2] * 0.15
     v = _q_resize_v(lum * a[..., 3], nw, nh)
     rgb, al = _q_resize_rgba(a, nw, nh)
@@ -150,7 +160,10 @@ def q_cell(cell, colored, nw, nh):
     # 심지 봉우리: 밝고 둘레 (흐린 판) 보다 밝은 곳 — 평평한 면 전체가 하얘지지 않게 (가장자리 안쪽 빛 · 가는 빛줄 · 빛 덩이 가운데)
     blur = np.asarray(Image.fromarray((np.clip(v, 0, 1) * 255 + 0.5).astype(np.uint8), "L").filter(
         ImageFilter.GaussianBlur(max(1.0, max(nw, nh) / 24))), np.float32) / 255
-    core = (v >= t3) & (v >= blur + 0.05) & ~dark
+    # 능선 (둘레 3 × 3 의 가장 밝은 곳 — 굵은 빛줄은 가운데 한두 픽셀만 흰 심지, 나머지는 계열 색)
+    pad = np.pad(v, 1, mode="edge")
+    mx3 = np.max(np.stack([pad[dy:dy + nh, dx:dx + nw] for dy in range(3) for dx in range(3)]), axis=0)
+    core = (v >= t3) & (v >= blur + 0.05) & (v >= mx3 - 0.03) & ~dark
     lvl = np.where(v >= t2, Q_BASE, np.where(v >= t1, Q_MID, Q_DARK)).astype(np.float32)
     A = np.zeros((nh, nw, 4), np.float32)
     if colored:
@@ -170,6 +183,7 @@ def q_cell(cell, colored, nw, nh):
         A[ring, :3] = 0.16 if colored else Q_OUT
         A[ring, 3] = 1.0
     A[core, 3] = 0.0
+    A[..., 3] *= alpha
     B = np.zeros((nh, nw, 4), np.float32)
     B[..., :3] = 1.0
     B[..., 3] = core
@@ -186,6 +200,60 @@ def q_cell(cell, colored, nw, nh):
         return (np.clip(x, 0, 1) * 255 + 0.5).astype(np.uint8)
 
     return u8(A), u8(B), u8(C), bool(core.any())
+
+
+# 칸의 긴 변 (픽셀) — 화면에서 보이는 크기 (칸) × 약 16 (블록 질감 밀도). 땅의 큰 고리 · 마법진 · 균열은 반지름 3 ~ 15칸이라 256 (원본보다 크면 부드럽게 늘린 뒤 띠로)
+Q_LONG = [
+    (("slash_shock_ring", "fx_rfx_nova", "fx_rfx_sigil", "fx_rfx_crack", "fx_rfx_aurora", "fx_rfx_fissure"), 256),
+    (("magic_magic_circle", "fx_rfx_flare", "fx_rfx_hole", "fx_rfx_sun", "boss_whirlpool"), 192),
+    (("fx_rfx_jpool", "fx_rfx_splash", "fx_rfx_bloom", "fx_rfx_cloud", "fx_rfx_king", "fx_rfx_emblem", "fx_rfx_fist", "fx_rfx_net", "fx_rfx_frost",
+      "fx_rfx_rift", "fx_rfx_spiritking", "fx_rfx_punch", "fx_rfx_beast", "fx_rfx_wings", "fx_rfx_boom", "fx_rfx_meteor", "fx_rfx_moon", "fx_rfx_spear",
+      "fx_rfx_bolt", "fx_rfx_chain", "fx_rfx_rays", "slash_bash_burst"), 128),
+    (("boss_ground_crack", "fx_rfx_wave", "slash_slash_"), 96),
+]
+
+
+# 빛줄기 (하늘에서 내리는 빛 — 대천사 강림 · 천권 강림 둘레에 여럿): 픽셀로 단단히 그리면 둘레를 가리는 기둥이 됨 → A 층을 반투명 (B 심지는 그대로)
+Q_ALPHA = {"fx_rfx_rays": 0.55}
+
+
+def q_alpha(key):
+    for n, a in Q_ALPHA.items():
+        if key.startswith(n):
+            return a
+    return 1.0
+
+
+def q_long(key, long128):
+    """판 key 의 픽셀 칸 긴 변 (없으면 rpg:vfxp 칸의 반)"""
+    for names, L in Q_LONG:
+        if any(key.startswith(n) for n in names):
+            return L
+    return max(8, round(long128 / QDIV))
+
+
+def rune_sheets(of):
+    """룬이 쓰는 파티클의 판 (픽셀 글꼴은 이것만 — 나머지는 rpg:vfxp 로 그림): 룬 코드의 "rpg:…" · rfx 그림 이름 + 공용 도구가 쓰는 파티클"""
+    import glob
+    import re
+    src = ""
+    for f in glob.glob(os.path.join(ROOT, "src/main/java/mmorpg/fabric/rune/*.java")):
+        src += open(f, encoding="utf-8").read()
+    ids = set(re.findall(r'"(rpg:[a-z_0-9]+)"', src))
+    for m in re.finditer(r'(?:rfx2a?|rfx|aura|auraCell|skyPlate|two)\([a-zA-Z_.()]+, "([a-z_0-9]+)"', src):
+        ids.add("rpg:rfx_" + m.group(1))
+    # RuneKit · RuneBoost 안에서 이름을 정한 그림 (마법진 · 고리 · 균열 · 섬광 · 빛기둥 · 분신 · 구슬 · 회오리 · 기운 · 방패 · 육각 · 화살 · 맞은 자리 …)
+    for n in ("sigil", "nova", "crack", "flare", "rays", "shade", "plasma", "vortex", "aura", "shield", "hex", "arrow", "prop", "wave", "jhits", "jburst2",
+              "jbreak", "jelem", "jpool", "jsmoke2"):
+        ids.add("rpg:rfx_" + n)
+    # SkillFx 도우미 (빛줄기 · 번개 · 베인 자국 · 바닥 룬 · 터짐 · 고리 · 충격파 · 불꽃 · 휘두름)
+    ids.update(("rpg:arrow_trail", "rpg:light_cut", "rpg:skill_rune", "rpg:bash_burst", "rpg:bash_ring", "rpg:shock_ring", "rpg:arrow_spark", "rpg:arrow_shot",
+                "rpg:slash_x"))
+    for sh in ("arc", "heavy", "thin"):
+        for lr in "lr":
+            for layer in ("aura", "glow", "core"):
+                ids.add("rpg:slash_%s_%s_%s" % (sh, lr, layer))
+    return set(of[i] for i in ids if i in of)
 
 
 def particle_sheets(defs):
@@ -213,12 +281,15 @@ def particle_sheets(defs):
         sx, sy = W / tw, Hh / th
         cols, rows = round(tw / uw), round(th / vh)
         cells = []
+        full = []
         for r in range(rows):
             for c in range(cols):
                 x0, y0 = round(c * uw * sx), round(r * vh * sy)
                 x1, y1 = round((c + 1) * uw * sx), round((r + 1) * vh * sy)
-                cells.append(shrink(im.crop((x0, y0, x1, y1)), CAP_OF.get(pid, CAP)))
-        sheets[key] = (cells, [uw, vh], [cols, rows])
+                crop = im.crop((x0, y0, x1, y1))
+                cells.append(shrink(crop, CAP_OF.get(pid, CAP)))
+                full.append(shrink(crop, 256))  # 픽셀 글꼴의 원본 (큰 그림은 256 까지)
+        sheets[key] = (cells, [uw, vh], [cols, rows], full)
     return of, sheets
 
 
@@ -310,44 +381,70 @@ def build():
         advance = int(0.5 + cw * scale) + 1
         return chars, cw, ch, advance
 
-    def q_sheet(key, cells, chars):
-        """픽셀 글꼴 판 셋 (A · B · C — 같은 칸 차례, 번호 + 0 · QB · QC) → 칸 크기 · advance · 심지가 있는 칸 ("0101…")"""
+    def q_png(name, glyphs, gw, gh):
+        """(그림, 글자 번호) 목록 → 판 하나 (COLS 칸씩 — 빈 칸은 \u0000)"""
+        cols = min(COLS, len(glyphs))
+        rows = (len(glyphs) + cols - 1) // cols
+        img = Image.new("RGBA", (cols * gw, rows * gh), (0, 0, 0, 0))
+        lines = []
+        for r in range(rows):
+            line = ""
+            for c in range(cols):
+                i = r * cols + c
+                if i < len(glyphs):
+                    arr, code = glyphs[i]
+                    arr = arr.copy()
+                    if arr[0, gw - 1, 3] == 0:
+                        arr[0, gw - 1] = (255, 255, 255, 1)  # 너비가 줄지 않게
+                    img.paste(Image.fromarray(arr, "RGBA"), (c * gw, r * gh))
+                    line += chr(code)
+                else:
+                    line += "\u0000"
+            lines.append(line)
+        buf = BytesIO()
+        img.save(buf, "PNG", optimize=True)
+        files[os.path.join(OUT_QTEX, name + ".png")] = buf.getvalue()
+        qproviders.append({"type": "bitmap", "file": "rpg:font/vfxq/%s.png" % name, "height": H, "ascent": H // 2 - 2, "chars": lines})
+
+    def q_sheet(key, cells, chars, L):
+        """
+        픽셀 글꼴 판 (번호 + 0 · QB · QC): A (모든 칸) · B (흰 심지가 있는 칸만 촘촘히) · C (겹치는 심지 층 — 반 크기, 따로 띄우는 글자라 A 와 픽셀을 맞출
+        필요 없음) → 칸 크기 · advance · 심지가 있는 칸 ("0101…"). L = 칸의 긴 변 (픽셀)
+        """
         cw, ch = cells[0].size
-        nw, nh = q_size(cw, ch)
+        k = L / max(cw, ch)
+        nw, nh = max(4, round(cw * k)), max(4, round(ch * k))
+        cnw, cnh = max(4, round(nw / 2)), max(4, round(nh / 2))
         colored = q_colored(cells)
-        cols = min(COLS, len(cells))
-        rows = (len(cells) + cols - 1) // cols
-        imgs = [Image.new("RGBA", (cols * nw, rows * nh), (0, 0, 0, 0)) for _ in range(3)]
+        As, Bs, Cs = [], [], []
         has_b = ""
+        qa = q_alpha(key)
         for i, cell in enumerate(cells):
-            A, B, C, hb = q_cell(cell, colored, nw, nh)
+            A, B, _c, hb = q_cell(cell, colored, nw, nh, qa)
+            C = q_cell(cell, colored, cnw, cnh)[2]
             has_b += "1" if hb else "0"
-            r, c = divmod(i, cols)
-            for img, arr in zip(imgs, (A, B, C)):
-                arr = arr.copy()
-                if arr[0, nw - 1, 3] == 0:
-                    arr[0, nw - 1] = (255, 255, 255, 1)  # 너비가 줄지 않게
-                img.paste(Image.fromarray(arr, "RGBA"), (c * nw, r * nh))
-        for img, suf, off in zip(imgs, ("", "_b", "_c"), (0, QB, QC)):
-            lines = []
-            for r in range(rows):
-                line = ""
-                for c in range(cols):
-                    i = r * cols + c
-                    line += chr(chars[i] + off) if i < len(chars) else "\u0000"
-                lines.append(line)
-            buf = BytesIO()
-            img.save(buf, "PNG", optimize=True)
-            files[os.path.join(OUT_QTEX, key + suf + ".png")] = buf.getvalue()
-            qproviders.append({"type": "bitmap", "file": "rpg:font/vfxq/%s%s.png" % (key, suf), "height": H, "ascent": H // 2 - 2, "chars": lines})
+            As.append((A, chars[i]))
+            if hb:
+                Bs.append((B, chars[i] + QB))
+            Cs.append((C, chars[i] + QC))
+        q_png(key, As, nw, nh)
+        if Bs:
+            q_png(key + "_b", Bs, nw, nh)
+        q_png(key + "_c", Cs, cnw, cnh)
         return {"px": [nw, nh], "adv": int(0.5 + nw * H / nh) + 1, "b": has_b, "colored": colored}
 
+    rune = rune_sheets(of)
     for key in sorted(sheets):
-        cells, uvc, grid = sheets[key]
-        uniform = []
-        chars, cw, ch, adv = sheet_png(key, cells, uniform)
-        index_sheets[key] = {"first": chars[0], "n": len(chars), "cols": grid[0], "rows": grid[1], "uw": uvc[0], "vh": uvc[1], "px": [cw, ch], "adv": adv,
-                             "q": q_sheet(key, uniform, chars)}
+        cells, uvc, grid, full = sheets[key]
+        chars, cw, ch, adv = sheet_png(key, cells)
+        index_sheets[key] = {"first": chars[0], "n": len(chars), "cols": grid[0], "rows": grid[1], "uw": uvc[0], "vh": uvc[1], "px": [cw, ch], "adv": adv}
+        if key in rune:
+            # 픽셀 글꼴: 같은 크기로 맞춘 원본 칸 (판의 가로세로 비 — rpg:vfxp 칸과 같게)
+            fw = max(c.size[0] for c in full)
+            fh = max(c.size[1] for c in full)
+            fw, fh = (fw, round(fw * ch / cw)) if cw >= ch else (round(fh * cw / ch), fh)
+            uni = [c if c.size == (fw, fh) else c.resize((fw, fh), Image.LANCZOS) for c in full]
+            index_sheets[key]["q"] = q_sheet(key, uni, chars, q_long(key, max(cw, ch)))
     index_cards = {}
     for name in CARDS:
         frames = []
