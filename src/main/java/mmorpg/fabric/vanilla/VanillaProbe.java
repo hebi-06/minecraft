@@ -884,8 +884,9 @@ final class VanillaProbe {
     static boolean census;
 
     /**
-     * 찍을 룬 (-Dmmorpg.probe.films=…): true = 시범, census = 모든 룬 (사진 · 셈), 그 밖 = 쉼표 목록 — 계열 (그 계열의 모든 등급) 또는 계열_등급.
-     * 장 수는 등급마다 (영웅 · 초월은 길게 — 모드 영상 RpgFilm.untilQuiet 의 끝과 비슷하게)
+     * 찍을 룬 (-Dmmorpg.probe.films=…): true = 시범, census = 모든 룬 (사진 · 셈), 그 밖 = 쉼표 목록 — 계열 (그 계열의 모든 등급) 또는 계열_등급,
+     * 2026-11-12 job:&lt;직업 id&gt; (다섯 칸) · job:&lt;스킬 id&gt; (그 칸 — films/vanilla_job_&lt;스킬 id&gt;).
+     * 장 수는 등급마다 (영웅 · 초월은 길게 — 모드 영상 RpgFilm.untilQuiet 의 끝과 비슷하게), 직업 스킬은 모드 영상의 끝 틱 (JOB_TIMES)
      */
     static void filmList(String spec) {
         FILM_RUNES.clear();
@@ -905,6 +906,10 @@ final class VanillaProbe {
             for (String k : spec.split(",")) {
                 k = k.trim();
                 if (k.isEmpty()) continue;
+                if (k.startsWith("job:")) {
+                    jobList(k.substring(4)); // 2026-11-12 직업 스킬 (job:<직업> = 다섯 칸 · job:<스킬 id> = 하나)
+                    continue;
+                }
                 if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(k + "_" + g);
                 else keys.add(k);
             }
@@ -924,7 +929,7 @@ final class VanillaProbe {
                 default -> 66;
             });
         }
-        log("film list " + spec + " → " + FILM_RUNES.size() + " runes" + (census ? " (census)" : ""));
+        log("film list " + spec + " → " + FILM_RUNES.size() + " films" + (census ? " (census)" : ""));
     }
     /** 영상 동안 서버 틱 빠르기 (클라이언트가 틱마다 한 장을 찍을 틈 — 클라이언트도 같은 빠르기로 돎) */
     static final int FILM_RATE = 5;
@@ -968,6 +973,10 @@ final class VanillaProbe {
             say(p, "cam off");
             say(p, "done");
             log("done");
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("job:")) {
+            jobFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(FILM_RUNES.get(i));
@@ -1046,6 +1055,332 @@ final class VanillaProbe {
                     + mmorpg.fabric.vfx.Vfx.active() + " | " + b.toString().trim());
             Tasks.later(2, () -> film(p, step + 1));
         });
+    }
+
+    // ------------------------------------------------------------ 2026-11-12 직업 스킬 영상 (VFILM job:<직업> · job:<스킬 id>)
+
+    /**
+     * 직업 스킬 영상의 끝 틱 (모드 영상 RpgJobGallery 의 CASES — 칸 순서. "24a3" = 태세 · 강화라 끝에 평타를 치고 3틱 더): 영상 장 수 = 쓰기 전 3 + 끝 + 8
+     * (+ 평타 뒤 + 12)
+     */
+    private static final java.util.Map<String, String> JOB_TIMES = java.util.Map.ofEntries(
+            java.util.Map.entry("swordsman", "30 16 22 24a3 66"),
+            java.util.Map.entry("spellblade", "22 20 42 28 72"),
+            java.util.Map.entry("warrior", "24 22 54 24a3 80"),
+            java.util.Map.entry("mage", "18 18 76 58 84"),
+            java.util.Map.entry("archer", "18 30a4 52 40a4 64"),
+            java.util.Map.entry("assassin", "20 50 50 24a4 58"),
+            java.util.Map.entry("lancer", "20 22 24 30a3 66"),
+            java.util.Map.entry("reaper", "22 34 16 24a3 90"),
+            java.util.Map.entry("paladin", "20 18 30 24a3 90"),
+            java.util.Map.entry("priest", "14 16 76 24 60"),
+            java.util.Map.entry("guardian", "14 16 30 24a3 180"),
+            java.util.Map.entry("swordmaster", "28 26 36 26a3 52"),
+            java.util.Map.entry("bloodknight", "42 18 46 26a3 52"),
+            java.util.Map.entry("warlord", "46 56 28 36 50"),
+            java.util.Map.entry("frostraider", "34 26 42 26a3 66"),
+            java.util.Map.entry("arcaneblade", "28 22 32 30 48"),
+            java.util.Map.entry("elementalblade", "30 22 50 20a4 86"),
+            java.util.Map.entry("arcmage", "28 32 82 80 80"),
+            java.util.Map.entry("necromancer", "36 80 56 124 90"),
+            java.util.Map.entry("sniper", "34 30 24 30a4 52"),
+            java.util.Map.entry("battlearcher", "20 30 18 30a4 84"),
+            java.util.Map.entry("trickster", "28 26 46 24a8 76"),
+            java.util.Map.entry("pierrot", "58 22 34 70 100"),
+            java.util.Map.entry("stormlancer", "36 28 48 34 86"),
+            java.util.Map.entry("dragoon", "30 34 32 30 72"),
+            java.util.Map.entry("soulreaper", "30 30 62 26a3 66"),
+            java.util.Map.entry("executioner", "30 24 34 26a3 80"),
+            java.util.Map.entry("thunderlord", "28 24 40 24a3 66"),
+            java.util.Map.entry("tyrant", "22 24 54 24a3 62"),
+            java.util.Map.entry("saint", "24 22 60 24a3 104"),
+            java.util.Map.entry("warlock", "26 54 54 24a3 90"),
+            java.util.Map.entry("phoenix", "22 32 46 28a3 64"),
+            java.util.Map.entry("darkknight", "30 26 30 22a3 70"));
+    /** 다시 쓰는 스킬 (RpgJobGallery.AGAIN — JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 */
+    private static final java.util.Map<String, int[]> JOB_AGAIN = java.util.Map.ofEntries(java.util.Map.entry("bloodknight_cleave", new int[] {12, 24}),
+            java.util.Map.entry("necromancer_call", new int[] {16}), java.util.Map.entry("sniper_ult", new int[] {22}),
+            java.util.Map.entry("trickster_swap", new int[] {12}), java.util.Map.entry("trickster_dash", new int[] {16}),
+            java.util.Map.entry("stormlancer_drive", new int[] {12}), java.util.Map.entry("stormlancer_rend", new int[] {20}),
+            java.util.Map.entry("dragoon_jump", new int[] {16}), java.util.Map.entry("executioner_ult", new int[] {36}),
+            java.util.Map.entry("darkknight_crunch", new int[] {12}), java.util.Map.entry("executioner_headhunt", new int[] {14}),
+            java.util.Map.entry("frostraider_throw", new int[] {14}), java.util.Map.entry("elementalblade_flare", new int[] {12}));
+    /** 과녁 자리 (RpgJobGallery.TARGETS — 앞 과녁 · 무리 · 양옆): 집 (0.5, 0.5) 에서 남쪽 (+z) 을 봄 */
+    private static final double[][] JOB_TARGETS = {{0.5, 3.2}, {-1.2, 4.5}, {2.2, 4.5}, {0.5, 6.0}, {-3.0, 2.5}, {4.0, 2.5}};
+
+    /** what = 직업 id (다섯 칸) 또는 스킬 id (그 칸 하나) */
+    private static void jobList(String what) {
+        mmorpg.core.Jobs.Job j = mmorpg.core.Jobs.job(what);
+        if (j != null) {
+            for (int s = 0; s < mmorpg.core.Jobs.SLOTS; s++) {
+                mmorpg.core.Jobs.Skill k = j.skill(s);
+                if (k != null && !k.id().isEmpty()) addJob(j, s);
+            }
+            return;
+        }
+        List<mmorpg.core.Jobs.Job> all = new ArrayList<>(mmorpg.core.Jobs.all());
+        all.addAll(mmorpg.core.Jobs.allAdvanced());
+        for (mmorpg.core.Jobs.Job x : all) {
+            mmorpg.core.Jobs.Skill k = x.skill(what);
+            if (k != null) {
+                addJob(x, k.slot());
+                return;
+            }
+        }
+        log("film list: no job or job skill '" + what + "'");
+    }
+
+    private static void addJob(mmorpg.core.Jobs.Job j, int slot) {
+        int[] t = jobTime(j.id(), slot);
+        FILM_RUNES.add("job:" + j.id() + ":" + slot);
+        FILM_FRAMES.add(3 + t[0] + 8 + (t[1] > 0 ? t[2] + 12 : 0));
+    }
+
+    /** {끝 틱, 평타를 치는지 (1), 평타 뒤 틱} — 표에 없으면 60틱 */
+    private static int[] jobTime(String job, int slot) {
+        String row = JOB_TIMES.get(job);
+        String[] a = row == null ? new String[0] : row.split(" ");
+        if (slot < 0 || slot >= a.length) return new int[] {60, 0, 3};
+        String c = a[slot];
+        int cut = c.indexOf('a');
+        if (cut < 0) return new int[] {Integer.parseInt(c), 0, 3};
+        return new int[] {Integer.parseInt(c.substring(0, cut)), 1, Integer.parseInt(c.substring(cut + 1))};
+    }
+
+    /** 영상 카메라 (RpgJobGallery.filmView — 거리 · 높이 · 보는 높이 · 따라가는 몫, 그 밖은 RpgFilm 처음 값) */
+    private static double[] jobView(String id) {
+        return switch (id) {
+            case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4};
+            case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3};
+            case "archer_ult" -> new double[] {11.0, 3.4, 2.8, 0.4};
+            case "archer_focus" -> new double[] {7.5, 2.8, 1.2, 0.6};
+            case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5};
+            case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
+            case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};
+            case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35};
+            case "arcmage_ult" -> new double[] {12.0, 3.6, 5.0, 0.4};
+            case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6};
+            case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4};
+            case "frostraider_throw" -> new double[] {8.0, 3.0, 2.2, 0.6};
+            case "executioner_ult" -> new double[] {12.0, 3.6, 4.4, 0.35};
+            case "executioner_raven" -> new double[] {8.0, 3.0, 1.4, 0.4};
+            case "executioner_chains" -> new double[] {8.5, 3.0, 1.6, 0.5};
+            case "executioner_knell" -> new double[] {7.0, 2.8, 2.0, 0.6};
+            case "soulreaper_scythe" -> new double[] {8.0, 3.0, 1.8, 0.6};
+            case "warlock_ult" -> new double[] {12.0, 3.4, 4.2, 0.4};
+            case "elementalblade_ult" -> new double[] {12.0, 3.4, 4.6, 0.4};
+            case "elementalblade_surge" -> new double[] {8.5, 3.0, 1.4, 0.5};
+            case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
+            case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
+            case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
+            case "phoenix_wing", "darkknight_lunge" -> new double[] {7.0, 2.6, 1.3, 0.7};
+            default -> new double[] {6.0, 2.1, 1.0, 1.0};
+        };
+    }
+
+    /**
+     * 직업 스킬 하나 (모드 영상 RpgJobGallery.filmSkills 와 같은 차림): 집으로 · 직업 다시 (앞 칸의 태세 · 자원 지움) · 직업 무기 (40렙 영웅 — 1번 칸) · 과녁 여섯
+     * (드라우그 — 룬 영상과 같음, 쓰러지지 않게) → 30틱 뒤 영상 시작 · 게이지 차림 (RpgJobGallery.prepare 중 서버에서 되는 것 — 아군 · 무덤 연출은 빼고) →
+     * 3틱 뒤 JobSkills.press (모드 · 바닐라 클라이언트와 같은 길) · 다시 쓰기 · 태세면 끝에 평타
+     */
+    private static void jobFilm(ServerPlayer p, int step, String entry, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        String[] a = entry.split(":");
+        mmorpg.core.Jobs.Job j = a.length < 3 ? null : mmorpg.core.Jobs.job(a[1]);
+        int slot = a.length < 3 ? -1 : Integer.parseInt(a[2]);
+        mmorpg.core.Jobs.Skill k = j == null ? null : j.skill(slot);
+        if (k == null) {
+            check("film job " + entry, false);
+            Tasks.later(2, () -> film(p, step + 1));
+            return;
+        }
+        run(server, "tick rate 20");
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
+        String type = j.weapons().isEmpty() ? "sword" : j.weapons().get(0);
+        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:" + type + "_l40_hero");
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        mmorpg.fabric.job.JobSystem.setJob(p, j.id());
+        mmorpg.fabric.job.JobSkills.resetCooldowns(p);
+        mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
+        mmorpg.fabric.RpgHealth.healFull(p);
+        List<net.minecraft.world.entity.LivingEntity> foes = new ArrayList<>();
+        for (double[] t : JOB_TARGETS) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                m.setHealth(m.getMaxHealth());
+                foes.add(m);
+            }
+            SPAWNED.add(e);
+        }
+        String id = k.id();
+        String name = "vanilla_job_" + id;
+        int[] time = jobTime(j.id(), slot);
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        double[] cam = jobView(id);
+        // 모드 직업 영상 (RpgFilm) 과 같은 카메라: 보는 쪽에서 왼쪽 뒤 125° · 몸 앞 2.5칸을 봄
+        say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + FILM_RATE);
+            jobPrepare(p, j, id, foes, y);
+            say(p, "film " + name + " " + frames);
+            Tasks.later(3, () -> {
+                if (id.equals("assassin_shade")) run(server, "tp " + NAME + " ~ ~ ~ ~180 ~"); // 과녁을 등지고 씀 (모드 영상 TURN_AFTER)
+                jobBeforeCast(p, id, foes);
+                boolean ok = mmorpg.fabric.job.JobSkills.press(p, slot);
+                check("film cast " + name, ok);
+                log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active() + " fx · props " + mmorpg.fabric.vfx.Vfx.propsMade + " · sprites "
+                        + mmorpg.fabric.vfx.Vfx.spritesMade);
+                for (int again : JOB_AGAIN.getOrDefault(id, new int[0])) {
+                    Tasks.later(again, () -> log("film " + name + " again " + mmorpg.fabric.job.JobSkills.press(p, slot)));
+                }
+                if (time[1] > 0) Tasks.later(time[0], () -> jobBasic(p, j, foes));
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /** 게이지 차림 (RpgJobGallery.prepare 의 서버 쪽 — 과녁은 드라우그, 아군 · 시험 허스크만 쓰는 것은 뺌) */
+    private static void jobPrepare(ServerPlayer sp, mmorpg.core.Jobs.Job j, String id, List<net.minecraft.world.entity.LivingEntity> foes, int y) {
+        String job = j.id();
+        net.minecraft.world.entity.LivingEntity front = foes.isEmpty() ? null : foes.get(0);
+        if (id.equals("swordsman_flurry")) mmorpg.fabric.job.JobTraits.setStacks(sp, 3);
+        if (id.equals("warrior_crush")) mmorpg.fabric.job.JobTraitsMore.setRage(sp, 60);
+        if (id.equals("archer_rapid")) mmorpg.fabric.job.JobTraitsMore.setBreath(sp, 3);
+        mmorpg.fabric.job.JobTraitsMore.setChain(sp, 0);
+        if (id.equals("assassin_bloom") || id.equals("assassin_ult")) for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits3.setMarks(sp, e, 5);
+        if (id.equals("reaper_burst")) mmorpg.fabric.job.JobTraits3.setSouls(sp, 10);
+        if (id.equals("paladin_smite") || id.equals("thunderlord_arc") || id.equals("thunderlord_spire")) {
+            for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits4.setJudges(sp, e, 3);
+        }
+        if (id.equals("priest_hymn") || id.equals("priest_ult") || id.equals("saint_wing") || id.equals("saint_ult")) mmorpg.fabric.job.JobTraits4.setFaith(sp, 3);
+        if (id.equals("guardian_bash")) mmorpg.fabric.job.JobTraits4.setCounter(sp, 30);
+        if (id.equals("swordmaster_draw")) mmorpg.fabric.job.JobTraits.setStacks(sp, 3);
+        if (id.equals("swordmaster_echo")) mmorpg.fabric.job.JobTraits.setStacks(sp, 8);
+        if (id.startsWith("bloodknight_")) sp.setHealth(sp.getMaxHealth() * 0.6F);
+        if (id.startsWith("warlord_")) mmorpg.fabric.job.JobTraitsMore.setRage(sp, 60);
+        if (id.startsWith("frostraider_") && front != null) mmorpg.fabric.job.JobTraits16.setFrost(sp, front, 3);
+        if (job.equals("elementalblade")) {
+            mmorpg.fabric.job.ElementSystem.testClear();
+            mmorpg.fabric.job.JobTraits17.testBlade(sp, null);
+            String pre = switch (id) {
+                case "elementalblade_flare", "elementalblade_bolt" -> "water";
+                case "elementalblade_surge" -> "ice";
+                case "elementalblade_tide" -> "fire";
+                default -> null;
+            };
+            double power = mmorpg.fabric.job.JobSystem.power(sp, j);
+            for (var e : foes) {
+                e.addTag(mmorpg.fabric.job.ElementSystem.TEST_ELEMENTS);
+                if (pre != null) mmorpg.fabric.job.ElementSystem.apply(sp, e, pre, power, true, false);
+            }
+        }
+        if (id.equals("arcmage_vortex")) {
+            mmorpg.fabric.job.JobTraitsMore.setChain(sp, 4);
+            mmorpg.fabric.job.JobTraits8.testStars(sp, 4);
+        }
+        if (job.equals("necromancer")) {
+            mmorpg.fabric.job.JobTraits8.clearGraves();
+            mmorpg.fabric.job.NecroCrew.testClear(sp);
+        }
+        if (id.equals("necromancer_call")) {
+            for (double[] g : new double[][] {{-2.5, 1.0}, {3.5, 1.0}, {0.5, -2.5}}) mmorpg.fabric.job.JobTraits8.testGrave(sp.level(), new Vec3(g[0], y, g[1]), 200);
+        }
+        if (id.equals("necromancer_mist")) {
+            mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, y, -1.0));
+            mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(2.5, y, -1.0));
+        }
+        if (id.startsWith("sniper_")) mmorpg.fabric.job.JobTraitsMore.setBreath(sp, 5);
+        if (id.equals("trickster_swap")) for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits3.setMarks(sp, e, 6);
+        if (id.equals("trickster_ult")) for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits3.setMarks(sp, e, 3);
+        if (job.equals("stormlancer")) mmorpg.fabric.job.JobTraits11.setWind(sp, 3);
+        if (job.equals("soulreaper")) mmorpg.fabric.job.JobTraits3.setSouls(sp, id.equals("soulreaper_crescent") ? 14 : 6);
+        if (job.equals("tyrant")) mmorpg.fabric.job.JobTraits13.setPower(sp, 4);
+        // 엑시큐셔너: 체인 오브 저지먼트 · 길로틴 오브 헤븐은 앞 과녁이 체력 10% (처형 — 큰 숫자 · 해골 · 길로틴 오브 헤븐 다시 쓰기)
+        if ((id.equals("executioner_chains") || id.equals("executioner_ult")) && front != null) front.setHealth(front.getMaxHealth() * 0.1F);
+        if (job.equals("phoenix") || job.equals("darkknight")) {
+            mmorpg.fabric.job.JobTraits15.testClear(sp);
+            mmorpg.fabric.RpgHealth.clearShield(sp);
+            if (id.equals("phoenix_wing") || id.equals("darkknight_lunge")) {
+                // 앞으로 움직이는 스킬: 앞 과녁 · 오른쪽 과녁을 비킴 (모드 영상과 같음)
+                moveFoe(sp, foes, new Vec3(0.5, y, 3.2), new Vec3(-1.6, y, 2.0));
+                moveFoe(sp, foes, new Vec3(4.0, y, 2.5), new Vec3(-4.2, y, 5.4));
+            }
+            if (job.equals("phoenix")) mmorpg.fabric.job.JobTraits4.setCounter(sp, mmorpg.fabric.job.JobTraits4.counterCap(sp, j) * 0.6);
+            else mmorpg.fabric.job.JobTraits15.setHunger(sp, id.equals("darkknight_lunge") ? 100 : 40);
+        }
+    }
+
+    /** 먼 것부터 (게이지 대상 = 마지막에 찍은 가까운 과녁 — 모드 영상과 같음) */
+    private static List<net.minecraft.world.entity.LivingEntity> byFar(ServerPlayer sp, List<net.minecraft.world.entity.LivingEntity> foes) {
+        List<net.minecraft.world.entity.LivingEntity> out = new ArrayList<>(foes);
+        out.removeIf(e -> e.isRemoved() || !e.isAlive());
+        out.sort(java.util.Comparator.comparingDouble(e -> -e.distanceToSqr(sp)));
+        return out;
+    }
+
+    private static net.minecraft.world.entity.LivingEntity nearest(Vec3 at, List<net.minecraft.world.entity.LivingEntity> foes) {
+        net.minecraft.world.entity.LivingEntity best = null;
+        for (var e : foes) {
+            if (e.isRemoved() || !e.isAlive()) continue;
+            if (best == null || e.distanceToSqr(at) < best.distanceToSqr(at)) best = e;
+        }
+        return best;
+    }
+
+    private static void moveFoe(ServerPlayer sp, List<net.minecraft.world.entity.LivingEntity> foes, Vec3 from, Vec3 to) {
+        var e = nearest(from, foes);
+        if (e == null || e.distanceToSqr(from) > 9) return;
+        e.snapTo(to.x, to.y, to.z, 180F, 0F);
+        e.setYHeadRot(180F);
+        e.setYBodyRot(180F);
+    }
+
+    /** 키를 누르기 바로 전 (RpgJobGallery.beforeCast — 헌터스 마크 둘째까지 맞힘 · 받아넘기기에 맞음 · 이그니션 막음 · 맞음) */
+    private static void jobBeforeCast(ServerPlayer sp, String id, List<net.minecraft.world.entity.LivingEntity> foes) {
+        switch (id) {
+            case "sniper_mark" -> Tasks.later(2, () -> {
+                var e = nearest(sp.position(), foes);
+                if (e != null && !sp.isRemoved()) mmorpg.fabric.job.JobTraits9.testMarkHits(sp, e, 2);
+            });
+            case "swordmaster_parry" -> Tasks.later(4, () -> foeHits(sp, nearest(sp.position(), foes), 4F, false));
+            case "phoenix_ignition" -> {
+                Tasks.later(8, () -> foeHits(sp, nearest(new Vec3(0.5, sp.getY(), 3.2), foes), 8F, true));
+                Tasks.later(18, () -> foeHits(sp, nearest(new Vec3(0.5, sp.getY(), 3.2), foes), 8F, false));
+            }
+            default -> {}
+        }
+    }
+
+    /** 과녁이 나를 침 (받는 피해 처리 — 과녁은 움직이지 않음 · block 이면 그 틱만 웅크려 막음) */
+    private static void foeHits(ServerPlayer who, net.minecraft.world.entity.LivingEntity from, float amount, boolean block) {
+        if (who == null || from == null || who.isRemoved() || from.isRemoved()) return;
+        boolean was = who.isShiftKeyDown();
+        if (block) who.setShiftKeyDown(true);
+        float hp = who.getHealth();
+        who.setHealth(mmorpg.fabric.RpgHealth.onLoss(who, who.damageSources().mobAttack(from), hp, hp - amount));
+        if (block) who.setShiftKeyDown(was);
+    }
+
+    /** 태세 · 강화 뒤 평타 (모드 영상의 마우스 — 활 · 완드는 쓰기 (우클릭), 그 밖은 가장 가까운 과녁을 침 (Player#attack → 참격 · 범위)) */
+    private static void jobBasic(ServerPlayer p, mmorpg.core.Jobs.Job j, List<net.minecraft.world.entity.LivingEntity> foes) {
+        if (p.isRemoved()) return;
+        boolean ranged = j.usesWeapon("bow") || j.usesWeapon("wand");
+        if (ranged) {
+            p.gameMode.useItem(p, p.level(), p.getMainHandItem(), net.minecraft.world.InteractionHand.MAIN_HAND);
+            Tasks.later(1, () -> {
+                if (!p.isRemoved() && p.isUsingItem()) p.releaseUsingItem();
+            });
+            return;
+        }
+        var e = nearest(p.position(), foes);
+        if (e == null) return;
+        p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+        p.attack(e);
     }
 
     /** 핫바: 무기 넷 (검 · 활 · 완드 · 마검 — 종류마다 마지막 = 높은 등급) · 룬 · 장신구 · 유물 · 재료 · 제단, 갑옷: 힘 계열 한 벌 */

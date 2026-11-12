@@ -44,6 +44,7 @@ def groups(only):
         keys = [k.strip() for k in part.split(",") if k.strip()]
         prod = "prod" in keys
         # 2026-11-11 모드 없는 클라이언트 영상 (VanillaProbe.film): vfilm = 시범, 2026-11-12 vfilm=<룬+룬…> (계열 또는 계열_등급) · vcensus (모든 룬 사진 · 셈)
+        # 직업 스킬은 vfilm=job:<직업>+job:<스킬 id> (VanillaProbe.jobList)
         vfilm = False
         for k in keys:
             if k == "vfilm":

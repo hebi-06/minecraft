@@ -30,6 +30,7 @@ rm -f in exit.code
 mkfifo in
 # 2026-11-11 VFILM=true (묶음 키 vfilm): 장면 없이 3D 효과 엔진 시범 룬 영상만 (VanillaProbe.film — 클라이언트가 틱마다 사진 → films.py)
 # 2026-11-12 VFILM=<룬 목록> (묶음 키 vfilm=str_common+int+… — 계열 또는 계열_등급) · census (묶음 키 vcensus — 모든 룬의 사진 둘 · 파티클 다리 셈)
+# 2026-11-12 직업 스킬도: vfilm=job:dragoon+job:executioner_ult (job:<직업> = 다섯 칸 · job:<스킬 id> = 하나 — films/vanilla_job_<스킬 id>)
 FILMS_FLAG=""
 if [ -n "${VFILM:-}" ] && [ "${VFILM}" != "false" ]; then FILMS_FLAG="-Dmmorpg.probe.films=${VFILM}"; fi
 (java -Xmx3G -Dmmorpg.probe=true $FILMS_FLAG -jar server.jar nogui < in > out.log 2>&1; echo $? > exit.code) &
