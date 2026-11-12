@@ -8,9 +8,10 @@ import org.joml.Quaternionf;
 
 /**
  * 2026-11-12 룬의 3D 물체 (사용자 룬 도감 메모 — "검 3d" · "망치 3d" · "얼음 가시 3d" · "바위 가시 3d" · "구름 3d" · "파도 · 물 연출 3d" · "운석" ·
- * "달 3d" · "손 모양 3d" · "거대한 주먹 고퀄" · "그물 3d"): tools/vfx_props.py 의 아이템 모델 (rpg:vfx/&lt;이름&gt;) 을 서버가 아이템 표시로 띄움 (vfx.Vfx —
+ * "달 3d" · "손 모양 3d" · "거대한 주먹 고퀄" · "그물 3d"): 아이템 모델 (rpg:vfx/&lt;이름&gt;) 을 서버가 아이템 표시로 띄움 (vfx.Vfx —
  * 모드 · 모드 없는 클라이언트 모두 같은 모습). 계열 색이 드는 재질 (빛 · 속빛) 은 아이템의 custom_model_data 색 (Prop.tint).
- * 모델 치수 (픽셀) 는 tools/vfx_props.py 와 같음 — 길이 · 쥔 곳.
+ * 모델 치수 (픽셀) 는 tools/vfx_blocky.py (2026-11-12 사진 방식 — 큰 상자 + 면마다 그린 픽셀 그림, 사용자 "그냥 3d모델링만 내가 보낸 저 사진처럼") ·
+ * tools/vfx_props.py (그물) 와 같음 — 길이 · 쥔 곳.
  */
 public final class RuneProps {
     private RuneProps() {}

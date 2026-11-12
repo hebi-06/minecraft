@@ -894,6 +894,11 @@ VIEWS = {"fist": ((0.35, -0.35, -1.0), (0.25, 0.3, 1.0), (1.0, -0.15, -0.35), (0
 BUILD = {"rune_sword": rune_sword, "rune_hammer": rune_hammer, "ice_spike": ice_spike, "ice_blade": ice_blade, "rock_spike": rock_spike, "cloud": cloud,
          "meteor": meteor, "moon": moon, "palm": palm, "fist": fist, "net": net,
          "wave": wave, "water_column": water_column}
+# 2026-11-12 사진 방식으로 다시 만든 물체 (사용자 "그냥 3d모델링만 내가 보낸 저 사진처럼") 는 tools/vfx_blocky.py 가 씀 — 여기서는 건너뜀 (그물만 여기)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vfx_blocky  # noqa: E402
+
+BUILD = {k: v for k, v in BUILD.items() if k not in vfx_blocky.BUILD}
 
 
 def outputs(names=None):
