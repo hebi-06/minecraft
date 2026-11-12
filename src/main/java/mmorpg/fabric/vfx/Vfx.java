@@ -246,7 +246,15 @@ public final class Vfx {
 
         /** 입체 소품 (아이템 모델 — 아이템 정의 id, 예: rpg:vfx/rune_axe) */
         public Prop prop(String itemModel, Vec3 at) {
-            Prop p = new Prop(this, itemModel, at);
+            return prop(itemModel, at, null);
+        }
+
+        /**
+         * 2026-11-12 처음 모습 (init — 크기 · 회전 · 쥔 곳 · 빛 · 물들임) 을 정한 뒤 띄움: 띄우는 패킷에 처음 모습이 담겨, 같은 틱에 준 움직임 (to … ticks) 이
+         * 처음 모습에서부터 보간됨
+         */
+        public Prop prop(String itemModel, Vec3 at, java.util.function.Consumer<Prop> init) {
+            Prop p = new Prop(this, itemModel, at, init);
             props.add(p);
             propsMade++;
             return p;
@@ -254,7 +262,12 @@ public final class Vfx {
 
         /** 2D 그림 (글꼴 rpg:vfx 의 그림판 이름) — 카메라를 봄 */
         public Sprite sprite(String sheet, Vec3 at) {
-            Sprite s = new Sprite(this, sheet(sheet), at);
+            return sprite(sheet, at, null);
+        }
+
+        /** 2026-11-12 처음 모습 (init — 색 · 방향 · 크기 · 칸 · 늘림) 을 정한 뒤 띄움 (prop 과 같은 까닭) */
+        public Sprite sprite(String sheet, Vec3 at, java.util.function.Consumer<Sprite> init) {
+            Sprite s = new Sprite(this, sheet(sheet), at, init);
             sprites.add(s);
             spritesMade++;
             return s;
@@ -316,7 +329,7 @@ public final class Vfx {
         Vector3f grip = new Vector3f(8, 8, 8);
         boolean removed;
 
-        Prop(Fx fx, String itemModel, Vec3 at) {
+        Prop(Fx fx, String itemModel, Vec3 at, java.util.function.Consumer<Prop> init) {
             this.fx = fx;
             ItemStack stack = new ItemStack(Items.PAPER);
             stack.set(DataComponents.ITEM_MODEL, Identifier.parse(itemModel));
@@ -327,6 +340,10 @@ public final class Vfx {
             this.pos = at;
             e.setOffset(at.subtract(fx.origin));
             apply();
+            if (init != null) {
+                init.accept(this);
+                e.setInterpolationDuration(0);
+            }
             fx.addElement(e);
         }
 
@@ -470,7 +487,7 @@ public final class Vfx {
         int fadeTicks;
         double fadeStart = 1;
 
-        Sprite(Fx fx, Sheet sheet, Vec3 at) {
+        Sprite(Fx fx, Sheet sheet, Vec3 at, java.util.function.Consumer<Sprite> init) {
             this.fx = fx;
             this.sheet = sheet;
             this.pos = at;
@@ -486,6 +503,10 @@ public final class Vfx {
             e.setOffset(at.subtract(fx.origin));
             text();
             transform();
+            if (init != null) {
+                init.accept(this);
+                e.setInterpolationDuration(0);
+            }
             fx.addElement(e);
         }
 

@@ -629,9 +629,12 @@ def pillar():
         c.A(dx < edge * 0.78, MID)
         c.A(dx < edge * 0.56, BASE)
         c.B(dx < edge * 0.3)
-        rings = ((y + f * 6) % 24 < 2) & (dx < edge * 0.9)
-        c.A(rings & (dx >= edge * 0.3), BASE)
-        c.B(rings & (dx < edge * 0.3))
+        # 흐르는 빛 알갱이 (가장자리 띠 안 — 칸마다 아래로 내려감) · 바깥의 날름거리는 가시
+        spk = coarse(np.random.default_rng(730), Hc + 64, W, 2)[(64 - f * 8) % 64:(64 - f * 8) % 64 + Hc]
+        c.B((spk > 0.93) & (dx < edge * 0.78) & (dx >= edge * 0.3))
+        flick = np.kron(np.random.default_rng(740 + f % 4).integers(0, 4, (Hc // 4 + 1, 1)), np.ones((4, 1)))[:Hc]
+        flick = np.repeat(flick, W, axis=1)
+        c.A((dx >= edge) & (dx < edge + flick) & ((y.astype(int) // 2) % 3 != 0), MID)
         # 위 1/3 은 성기게 (하늘로)
         thin = coarse(np.random.default_rng(710 + f), Hc, W, 2)
         top = np.clip((50 - y) / 50, 0, 1)
@@ -649,7 +652,7 @@ def pillar():
 
 
 def panel():
-    """감옥 벽 한 장 (원통을 이루는 판 — 땅에 세움): A = 반투명 계열 색 몸 (알파 0.42) · 세로 테 · 위아래 밝은 테두리, B = 흰 번개 무늬 (모양 넷)"""
+    """감옥 벽 한 장 (원통을 이루는 판 — 땅에 세움): A = 반투명 계열 색 몸 (알파 0.56) · 세로 테 · 위아래 밝은 테두리, B = 흰 번개 무늬 (모양 넷)"""
     W, Hc = 48, 80
     x, y = grid(W, Hc)
     frames = []
@@ -657,9 +660,9 @@ def panel():
         rng = np.random.default_rng(800 + f)
         c = Cv(W, Hc)
         body = np.ones((Hc, W), bool)
-        c.A(body, BASE, 0.42)
+        c.A(body, BASE, 0.56)
         fade = coarse(np.random.default_rng(810 + f), Hc, W, 2)
-        c.A(body & (fade < 0.25) & (y > 10), MID, 0.5)
+        c.A(body & (fade < 0.25) & (y > 10), MID, 0.66)
         c.A((x < 1.5) | (x > W - 1.5), MID, 0.75)
         c.A(y > Hc - 3, BASE, 1.0)
         c.A((y > Hc - 5) & (y <= Hc - 3), MID, 1.0)
@@ -790,7 +793,7 @@ def crack():
                 xi, yi = int(px), int(py)
                 if not (1 <= xi < S - 1 and 1 <= yi < S - 1):
                     return
-                w = width if i < length * 0.45 else 1
+                w = (width + 1 if i < length * 0.2 else width) if i < length * 0.7 else 1
                 for oy in range(w):
                     for ox in range(w):
                         if 0 <= yi + oy < S and 0 <= xi + ox < S:
@@ -831,8 +834,8 @@ RES = os.path.join(ROOT, "src/main/resources/assets/rpg")
 
 
 def arena_wall():
-    """투기장 벽 한 칸 (아이템 모델 rpg:vfx/arena_wall — 예시 사진의 흰 돌 지그재그 벽): 폭 3칸 (x −16 ~ 32) · 두께 6픽셀 · 몸 높이 22픽셀 위에
-    계단 모양 이빨 여섯 (꼭대기 32). 석영 벽돌 질감 (바닐라 블록 그림 그대로), 아래 검은 돌 띠 · 그 위의 빛 띠 (물들임 0 — 계열 색, 빛 15).
+    """투기장 벽 한 칸 (아이템 모델 rpg:vfx/arena_wall — 예시 사진의 흰 돌 지그재그 벽): 폭 3칸 (x −16 ~ 32) · 두께 5픽셀 · 몸 높이 10픽셀 위에
+    계단 모양 이빨 여섯 (꼭대기 20 — 낮게: 안이 가려지지 않게). 석영 벽돌 질감 (바닐라 블록 그림 그대로), 아래 검은 돌 띠 · 그 위의 빛 띠 (물들임 0 — 계열 색, 빛 15).
     쥔 곳 = 아래 가운데 (8, 0, 8)"""
     els = []
 
@@ -866,14 +869,13 @@ def arena_wall():
             e["light_emission"] = 15
         els.append(e)
 
-    z0, z1 = 5.0, 11.0
+    z0, z1 = 5.5, 10.5
     for x0 in (-16, 0, 16):
-        box((x0, 2, z0), (x0 + 16, 16, z1), "wall")
-        box((x0, 16, z0), (x0 + 16, 22, z1), "wall")
+        box((x0, 2, z0), (x0 + 16, 10, z1), "wall")
         box((x0, 0, z0 - 0.5), (x0 + 16, 2, z1 + 0.5), "dark", name="base")
     box((-16, 2, z0 - 0.3), (32, 3, z1 + 0.3), "glow", tint=0, glow=True, name="seam")
     for k, cx in enumerate((-12, -4, 4, 12, 20, 28)):
-        steps = [(22, 26, 8), (26, 29, 6), (29, 31, 4), (31, 32, 2)] if k % 2 == 0 else [(22, 25, 8), (25, 27, 6), (27, 28.5, 4)]
+        steps = [(10, 14, 8), (14, 17, 6), (17, 19, 4), (19, 20, 2)] if k % 2 == 0 else [(10, 13, 8), (13, 15, 6), (15, 16.5, 4)]
         for y0, y1, w in steps:
             box((cx - w / 2, y0, z0 + 0.5), (cx + w / 2, y1, z1 - 0.5), "top")
     for e in els:

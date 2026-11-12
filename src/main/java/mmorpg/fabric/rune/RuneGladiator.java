@@ -359,23 +359,22 @@ final class RuneGladiator {
         SkillFx.play(level, "mob.ravager.roar", c, 1.2, 0.5);
         // 변마다 흰 돌 벽 (땅에서 솟음 — 한 변씩 그려지는 차례로)
         double apo = radius * Math.cos(Math.PI / 8);
-        double scale = 2 * radius * Math.sin(Math.PI / 8) / 3.0;
+        double scale = 0.72 * 2 * radius * Math.sin(Math.PI / 8) / 3.0; // 벽 폭 = 변의 72% (꼭짓점은 비움 — 안이 보이게)
         List<Vec3> tops = new ArrayList<>();
         for (int j = 0; j < 8; j++) {
             double a = Math.toRadians(45 + 45 * j);
             Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
             Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
             Vec3 m = VfxKit.ground(level, V.add(g, out, apo));
-            tops.add(V.up(m, 2.0 * scale));
+            tops.add(V.up(m, 1.2 * scale));
             if (PairKit.nearCam(sp, V.up(m, 1.2), 2.2)) continue;
             Quaternionf q = Vfx.basis(tan, V.UP, V.cross(tan, V.UP));
             final int jj = j;
             fx.on(1 + jj, () -> {
-                Vfx.Prop w = fx.prop("rpg:vfx/arena_wall", V.up(m, -2.2 * scale)).grip(8, 0, 8).size(scale, 0).bright().tint(GOLD);
-                w.turn(q, 0);
+                Vfx.Prop w = fx.prop("rpg:vfx/arena_wall", V.up(m, -1.3 * scale), pr -> pr.grip(8, 0, 8).size(scale, 0).turn(q, 0).bright().tint(GOLD));
                 w.move(V.up(m, 0.02), 5);
                 Px.dust(fx, m, 2, 1.2, 1.4, DUSTY, 1);
-                fx.on(end + 2, () -> w.move(V.up(m, -2.3 * scale), 8));
+                fx.on(end + 2, () -> w.move(V.up(m, -1.4 * scale), 8));
                 fx.on(end + 10, w::remove);
             });
         }

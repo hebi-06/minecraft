@@ -270,7 +270,7 @@ final class RuneHoly {
      * 0.49.0 심판의 도약 (천벌 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 조준한 곳 (range 칸) 으로 air 틱 동안 뛰어오름 — 머리 위로 든 금빛 망치 (3D),
      * 착지하며 망치로 내려찍음 (반지름 radius · 위력 × mult 신성 피해) → pillar 틱 뒤 그 자리에 빛기둥 (위력 × crush · 아군 회복 heal). 언데드 ×1.5 (holyHit).
      * 2026-11-12 픽셀 연출 (사용자 예시 사진 — "크루세이더 주변에 낙뢰": 바닥 균열 수십 개 · 금빛 불티 · 둘레의 낙뢰, vfx.Px): 날아가는 동안 착지할 곳에
-     * 금빛 점 고리 둘이 돌며 하늘의 번쩍임이 커짐 → 착지: 충격파 · 가운데부터 바깥으로 퍼지는 균열 스물둘 · 불티 · 둘레에 낙뢰 여섯 (차례로) →
+     * 금빛 점 고리 둘이 돎 → 착지: 충격파 · 가운데부터 바깥으로 퍼지는 균열 스물둘 · 불티 · 둘레에 낙뢰 여섯 (차례로) →
      * 빛기둥 (흰 심지 · 금빛 띠) · 다시 균열 · 떨어지는 불티
      */
     static boolean divineSmite(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -287,14 +287,10 @@ final class RuneHoly {
         double radius = k.num("radius");
         // 2026-11-12 3D 금빛 망치 (사용자 "망치 3d 연출"): 머리 위로 들고 뛰어 → 착지하며 앞으로 내려찍어 머리가 땅에 박힘
         RuneHammer.Held held = RuneHammer.overhead(sp, level, f, air, 2.4, gold, RuneKit.WHITE, 40);
-        double sky = 5; // 하늘의 번쩍임 높이
         Vfx.Fx fx = Vfx.at(level, land, air + pillar + 70);
-        // 착지할 곳: 금빛 점 고리 둘 (반대로 돎) · 하늘의 번쩍임이 커짐
+        // 착지할 곳: 금빛 점 고리 둘 (반대로 돎)
         Px.ring(fx, "dotring", V.up(land, 0.06), radius * 0.95, 2.5, glow, air + 6, 0);
         Px.ring(fx, "dotring", V.up(land, 0.07), radius * 0.55, -3.5, core, air + 6, 2);
-        Px.Duo sun = Px.duo(fx, "star", V.up(land, sky), glow, core).size(0.6).frame(1);
-        sun.to(null, 3.4, Math.max(1, air));
-        sun.until(air + 3);
         SkillFx.play(level, "beacon.power", land, 1.4, 0.8);
         RuneKit.leap(sp, land, 2.4 + V.hdist(land, start) * 0.12, air, glow, gold, () -> {
             Vec3 c = sp.position();

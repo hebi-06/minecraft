@@ -2,6 +2,7 @@ package mmorpg.fabric.vfx;
 
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.V;
+import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
@@ -40,12 +41,17 @@ public final class Px {
         public final Vfx.Sprite a;
         public final Vfx.Sprite b;
 
-        Duo(Vfx.Fx fx, String sheet, Vec3 at, double[] glow, double[] core) {
+        Duo(Vfx.Fx fx, String sheet, Vec3 at, double[] glow, double[] core, Consumer<Vfx.Sprite> init) {
             this.fx = fx;
             Vfx.Sheet sh = Vfx.sheet(name(sheet));
-            a = fx.sprite(name(sheet), at);
-            if (!sh.colored()) a.color(glow);
-            b = sh.b() != null ? fx.sprite(sh.b(), at).color(core != null ? core : WHITE) : null;
+            a = fx.sprite(name(sheet), at, s -> {
+                if (!sh.colored()) s.color(glow);
+                if (init != null) init.accept(s);
+            });
+            b = sh.b() != null ? fx.sprite(sh.b(), at, s -> {
+                s.color(core != null ? core : WHITE);
+                if (init != null) init.accept(s);
+            }) : null;
         }
 
         public Duo fixed(Quaternionf q) {
@@ -135,7 +141,19 @@ public final class Px {
     }
 
     public static Duo duo(Vfx.Fx fx, String sheet, Vec3 at, double[] glow, double[] core) {
-        return new Duo(fx, sheet, at, glow, core);
+        return new Duo(fx, sheet, at, glow, core, null);
+    }
+
+    /** 처음 모습 (init — 방향 · 크기 · 칸 · 늘림 …) 을 정한 뒤 띄움: 같은 틱에 준 움직임이 처음 모습에서부터 보간됨 */
+    public static Duo duo(Vfx.Fx fx, String sheet, Vec3 at, double[] glow, double[] core, Consumer<Vfx.Sprite> init) {
+        return new Duo(fx, sheet, at, glow, core, init);
+    }
+
+    /** 앞 f 를 위로 deg 도 들어 올린 방향 (눕힌 참격이 뒤 · 위의 카메라 · 1인칭 눈을 보게 — 수평이면 옆에서 선으로만 보임) */
+    public static Vec3 lifted(Vec3 f, double deg) {
+        double a = Math.toRadians(deg);
+        Vec3 h = V.flat(f);
+        return V.unit(V.add(V.scale(h, Math.cos(a)), V.UP, Math.sin(a)));
     }
 
     /** 그림 면의 방향: 그림 오른쪽 = x, 그림 위 = y (앞면 = x × y 쪽) */
@@ -172,7 +190,8 @@ public final class Px {
         int t0 = at(fx, delay);
         fx.on(t0, () -> {
             int base = leftToRight ? 8 : 0;
-            Duo d = duo(fx, "swing", pivot, glow, core).fixed(plane(right, fwd)).size(radius * 112.0 / 80.0).frame(base);
+            Quaternionf q = plane(right, fwd);
+            Duo d = duo(fx, "swing", pivot, glow, core, sp -> sp.fixed(q).size(radius * 112.0 / 80.0).frame(base));
             int e = Math.max(1, every);
             int t = fx.age();
             d.seq(t + e, e, false, base + 1, base + 2, base + 3);
@@ -191,17 +210,21 @@ public final class Px {
     }
 
     /**
-     * 날아가는 검기 (wave — 가로 초승달, 볼록한 앞이 dir 쪽): from 에서 dir 로 len 칸을 ticks 틱 동안, 폭 width 칸, 면이 dir 둘레로 tilt 도 기욺.
-     * 날아가는 동안 깜빡이고 (0 ~ 2) 닿으면 부서짐 (3 ~ 5)
+     * 날아가는 검기 (wave — 가로 초승달, 볼록한 앞이 dir 쪽): from 에서 dir 로 len 칸을 ticks 틱 동안, 폭 width 칸. 면은 dir 둘레로 tilt 도 기울고 앞이
+     * lift 도 들림 (앞면이 뒤 · 위를 봄 — 쓴 사람 · 3인칭 카메라에 넓게 보임). 날아가는 동안 깜빡이고 (0 ~ 2) 닿으면 부서짐 (3 ~ 5)
      */
-    public static void wave(Vfx.Fx fx, Vec3 from, Vec3 dir, double len, int ticks, double width, double tilt, double[] glow, double[] core, int delay) {
+    public static void wave(Vfx.Fx fx, Vec3 from, Vec3 dir, double len, int ticks, double width, double tilt, double lift, double[] glow, double[] core,
+            int delay) {
         fx.on(at(fx, delay), () -> {
             Vec3 f = V.unit(dir);
             Vec3 right = V.rightOf(V.flat(f));
             Vec3 up = V.unit(V.cross(right, f));
             double a = Math.toRadians(tilt);
             Vec3 r2 = V.add(V.scale(right, Math.cos(a)), up, Math.sin(a));
-            Duo d = duo(fx, "wave", from, glow, core).fixed(plane(r2, f)).size(width / 2.0).frame(0);
+            double b = Math.toRadians(lift);
+            Vec3 y2 = V.add(V.scale(f, Math.cos(b)), up, Math.sin(b));
+            Quaternionf q = plane(r2, y2);
+            Duo d = duo(fx, "wave", from, glow, core, sp -> sp.fixed(q).size(width / 2.0).frame(0));
             int t = fx.age();
             int n = Math.max(1, ticks);
             d.to(V.add(from, f, len), -1, n);
@@ -214,25 +237,28 @@ public final class Px {
     }
 
     /**
-     * 빛줄기 (streak — 땅과 나란히 눕힘): from 에서 dir 로 len 칸, 굵기 thick 칸. grow 틱 동안 늘어나고 (지나가는 검기를 따라) life 틱 뒤 끊어지며 사라짐
+     * 빛줄기 (streak): from 에서 dir 로 len 칸, 굵기 thick 칸 — 땅과 나란한 면 + (cross) 세운 면 (어느 쪽에서 봐도 선이 아니게). grow 틱 동안 늘어나고
+     * (지나가는 검기를 따라) life 틱 뒤 끊어지며 사라짐
      */
-    public static void streak(Vfx.Fx fx, Vec3 from, Vec3 dir, double len, double thick, double[] glow, double[] core, int grow, int life, int delay) {
+    public static void streak(Vfx.Fx fx, Vec3 from, Vec3 dir, double len, double thick, double[] glow, double[] core, int grow, int life, boolean cross,
+            int delay) {
         fx.on(at(fx, delay), () -> {
             Vec3 f = V.unit(dir);
             Vec3 y = V.unit(V.cross(V.UP, f));
             if (V.dot(y, y) < 1e-6) y = new Vec3(1, 0, 0);
-            Duo d = duo(fx, "streak", from, glow, core).fixed(plane(f, y)).size(thick);
             double full = len / (thick * 8.0);
             int t = fx.age();
-            if (grow > 0) {
-                d.stretch(full * 0.05, 1, 0);
-                d.stretch(full, 1, grow);
-            } else d.stretch(full, 1, 0);
-            for (int k = 2; k < life - 4; k += 2) {
-                final int fr = (k / 2) % 2;
-                fx.on(t + k, () -> d.frame(fr));
+            Vec3[] ups = cross ? new Vec3[] {y, V.unit(V.cross(f, y))} : new Vec3[] {y};
+            for (Vec3 yy : ups) {
+                Quaternionf q = plane(f, yy);
+                Duo d = duo(fx, "streak", from, glow, core, sp -> sp.fixed(q).size(thick).stretch(grow > 0 ? full * 0.04 : full, 1, 0));
+                if (grow > 0) d.stretch(full, 1, grow);
+                for (int k = 2; k < life - 4; k += 2) {
+                    final int fr = (k / 2) % 2;
+                    fx.on(t + k, () -> d.frame(fr));
+                }
+                d.seq(t + Math.max(grow + 1, life - 4), 2, true, 2, 3, 4);
             }
-            d.seq(t + Math.max(grow + 1, life - 4), 2, true, 2, 3, 4);
         });
     }
 
@@ -241,7 +267,10 @@ public final class Px {
         fx.on(at(fx, delay), () -> {
             for (int i = 0; i < n; i++) {
                 Vec3 d = V.unit(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.9 - 0.3, Kit.rand() - 0.5));
-                Duo s = duo(fx, "shard", at, glow, core).size(size * rnd(0.7, 1.2)).frame((int) (Kit.rand() * 4)).roll(Kit.rand() * 360, 0);
+                double sz = size * rnd(0.7, 1.2);
+                int fr = (int) (Kit.rand() * 4);
+                double rl = Kit.rand() * 360;
+                Duo s = duo(fx, "shard", at, glow, core, sp -> sp.size(sz).frame(fr).roll(rl, 0));
                 s.to(V.add(at, d, spread * rnd(0.6, 1.2)), -1, 4);
                 s.until(fx.age() + 4 + (int) (Kit.rand() * 3));
             }
@@ -251,7 +280,7 @@ public final class Px {
     /** 맞은 자리의 베인 자국 (cutmark — 카메라를 봄, 화면에서 rollDeg 도 기욺): 길이 len 칸 */
     public static void cut(Vfx.Fx fx, Vec3 at, double rollDeg, double len, double[] glow, double[] core, int delay) {
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "cutmark", at, glow, core).size(len / 4.0).roll(rollDeg, 0).frame(0);
+            Duo d = duo(fx, "cutmark", at, glow, core, sp -> sp.size(len / 4.0).roll(rollDeg, 0).frame(0));
             int t = fx.age();
             d.seq(t + 1, 1, false, 1);
             d.seq(t + 3, 2, true, 2, 3);
@@ -261,7 +290,8 @@ public final class Px {
     /** 번쩍임 (star — 카메라를 봄): 크기 size 칸, 4틱 동안 작아짐 */
     public static void star(Vfx.Fx fx, Vec3 at, double size, double[] glow, double[] core, int delay) {
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "star", at, glow, core).size(size).roll(Kit.rand() * 20 - 10, 0).frame(0);
+            double rl = Kit.rand() * 20 - 10;
+            Duo d = duo(fx, "star", at, glow, core, sp -> sp.size(size).roll(rl, 0).frame(0));
             d.seq(fx.age() + 1, 1, true, 1, 2, 3);
         });
     }
@@ -280,7 +310,8 @@ public final class Px {
                 double r = radius * Math.sqrt(Kit.rand());
                 Vec3 p = new Vec3(c.x + Math.cos(a) * r, c.y + rnd(0.15, 1.3), c.z + Math.sin(a) * r);
                 Vec3 out = new Vec3(Math.cos(a), rnd(0.4, 1.2), Math.sin(a));
-                Duo e = duo(fx, "ember", p, color, null).size(rnd(0.32, 0.55)).frame(0);
+                double sz = rnd(0.32, 0.55);
+                Duo e = duo(fx, "ember", p, color, null, sp -> sp.size(sz).frame(0));
                 int l = Math.max(8, life + (int) (Kit.rand() * 8) - 4);
                 Vec3 p1 = V.add(p, out, burst * rnd(0.5, 1.0));
                 e.to(p1, -1, 4);
@@ -299,7 +330,8 @@ public final class Px {
             for (int i = 0; i < n; i++) {
                 Vec3 p = V.add(from, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.3, Kit.rand() - 0.5), 0.6);
                 Vec3 mid = V.up(V.lerp(p, to, 0.5), rnd(0.5, 1.1));
-                Duo e = duo(fx, "ember", p, color, null).size(rnd(0.3, 0.45)).frame(0);
+                double sz = rnd(0.3, 0.45);
+                Duo e = duo(fx, "ember", p, color, null, sp -> sp.size(sz).frame(0));
                 int t0 = t + (int) (Kit.rand() * 3);
                 fx.on(t0, () -> e.to(mid, -1, half));
                 fx.on(t0 + half, () -> e.to(to, -1, ticks - half));
@@ -325,7 +357,8 @@ public final class Px {
                 int t0 = t + (int) Math.round(u * spread);
                 final int ii = i;
                 fx.on(t0, () -> {
-                    Duo d = duo(fx, "crack", at, color, null).fixed(Vfx.flat(Kit.rand() * 360)).frame(ii % 6).size(s * 0.55);
+                    Quaternionf q = Vfx.flat(Kit.rand() * 360);
+                    Duo d = duo(fx, "crack", at, color, null, sp -> sp.fixed(q).frame(ii % 6).size(s * 0.55));
                     d.to(null, s, 2);
                     d.fade(fx.age() + Math.max(4, life - 10), 10);
                 });
@@ -336,7 +369,8 @@ public final class Px {
     /** 땅의 충격파 고리 (shock — 땅에 눕힘): 반지름 radius 까지 ticks 틱 동안 커지며 가늘어짐 */
     public static void shock(Vfx.Fx fx, Vec3 ground, double radius, double[] glow, double[] core, int ticks, int delay) {
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "shock", V.up(ground, 0.06), glow, core).fixed(Vfx.flat(Kit.rand() * 360)).size(radius * 2 * 64 / 62.0).frame(0);
+            Quaternionf q = Vfx.flat(Kit.rand() * 360);
+            Duo d = duo(fx, "shock", V.up(ground, 0.06), glow, core, sp -> sp.fixed(q).size(radius * 2 * 64 / 62.0).frame(0));
             int e = Math.max(1, ticks / 6);
             d.seq(fx.age() + e, e, true, 1, 2, 3, 4, 5);
         });
@@ -350,7 +384,7 @@ public final class Px {
         fx.on(at(fx, delay), () -> {
             double k = sheet.equals("darkring") ? 128 / 53.0 : 128 / 58.0;
             double yaw0 = Kit.rand() * 360;
-            Duo d = duo(fx, sheet, at, color, null).fixed(Vfx.flat(yaw0)).size(radius * k * 0.6);
+            Duo d = duo(fx, sheet, at, color, null, sp -> sp.fixed(Vfx.flat(yaw0)).size(radius * k * 0.6));
             d.to(null, radius * k, 4);
             int t = fx.age();
             for (int s = 4; s < life; s += 8) {
@@ -373,7 +407,7 @@ public final class Px {
     public static Duo octagon(Vfx.Fx fx, Vec3 c, double radius, double yaw, double[] glow, double[] core, int life, int delay) {
         Duo[] out = new Duo[1];
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "octagon", V.up(c, 0.05), glow, core).fixed(Vfx.flat(yaw)).size(radius * 192 / 88.0).frame(0);
+            Duo d = duo(fx, "octagon", V.up(c, 0.05), glow, core, sp -> sp.fixed(Vfx.flat(yaw)).size(radius * 192 / 88.0).frame(0));
             int t = fx.age();
             d.seq(t + 1, 1, false, 1, 2, 3, 4, 5, 6, 7, 8);
             for (int s = 12; s < life - 6; s += 4) {
@@ -395,7 +429,7 @@ public final class Px {
     public static void bolt(Vfx.Fx fx, Vec3 ground, double height, double[] glow, double[] core, int life, boolean impact, int delay) {
         fx.on(at(fx, delay), () -> {
             int f0 = (int) (Kit.rand() * 4);
-            Duo d = duo(fx, "bolt", ground, glow, core).vertical().size(height).frame(f0);
+            Duo d = duo(fx, "bolt", ground, glow, core, sp -> sp.vertical().size(height).frame(f0));
             int t = fx.age();
             for (int k = 1; k < life; k++) {
                 final int fr = (f0 + k) % 4;
@@ -416,7 +450,7 @@ public final class Px {
      */
     public static void chain(Vfx.Fx fx, Vec3 bottom, double height, double[] glow, double[] core, int drop, int life, int delay) {
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "chain", V.up(bottom, height * 0.8), glow, core).vertical().size(height).frame(0);
+            Duo d = duo(fx, "chain", V.up(bottom, height * 0.8), glow, core, sp -> sp.vertical().size(height).frame(0));
             int t = fx.age();
             d.to(bottom, -1, Math.max(1, drop));
             for (int k = 1; k < life; k++) {
@@ -433,9 +467,8 @@ public final class Px {
     public static Duo pillar(Vfx.Fx fx, Vec3 ground, double height, double width, double[] glow, double[] core, int life, int delay) {
         Duo[] out = new Duo[1];
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "pillar", ground, glow, core).vertical().size(height).frame(0);
             double sx = width / (height / 3.0);
-            d.stretch(sx * 0.25, 1, 0);
+            Duo d = duo(fx, "pillar", ground, glow, core, sp -> sp.vertical().size(height).frame(0).stretch(sx * 0.25, 1, 0));
             d.stretch(sx, 1, 2);
             int t = fx.age();
             for (int k = 2; k < life; k += 2) {
@@ -461,8 +494,9 @@ public final class Px {
                 Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
                 Vec3 tan = new Vec3(Math.sin(a), 0, -Math.cos(a));
                 Vec3 p = V.add(c, out, radius * Math.cos(Math.PI / n));
-                Duo d = duo(fx, "panel", V.up(p, 0.02), glow, core).fixed(plane(tan, V.UP)).size(height).frame(i % 4);
-                d.stretch(sx, 0.04, 0);
+                Quaternionf q = plane(tan, V.UP);
+                final int f0 = i % 4;
+                Duo d = duo(fx, "panel", V.up(p, 0.02), glow, core, sp -> sp.fixed(q).size(height).frame(f0).stretch(sx, 0.04, 0));
                 final int ii = i;
                 fx.on(t + (i % 3), () -> d.stretch(sx, 1, 3));
                 for (int k = 2; k < life; k += 2) {
@@ -491,7 +525,8 @@ public final class Px {
                 double s = size * (i == 0 ? 1.25 : rnd(0.6, 1.05));
                 int t0 = t + (i == 0 ? 0 : (int) (Kit.rand() * 4));
                 fx.on(t0, () -> {
-                    Duo d = duo(fx, "firepuff", p, null, null).size(s).roll(Kit.rand() * 360, 0).frame(0);
+                    double rl = Kit.rand() * 360;
+                    Duo d = duo(fx, "firepuff", p, null, null, sp -> sp.size(s).roll(rl, 0).frame(0));
                     d.to(V.up(p, rnd(0.4, 0.9)), -1, 14);
                     int u = fx.age();
                     d.seq(u + 1, 1, false, 1, 2);
@@ -505,7 +540,8 @@ public final class Px {
     /** 연기 꼬리 한 덩이 (firepuff 의 식는 칸 — 날아가는 불덩이 뒤): 크기 size, 8틱 */
     public static void smoke(Vfx.Fx fx, Vec3 at, double size, int delay) {
         fx.on(at(fx, delay), () -> {
-            Duo d = duo(fx, "firepuff", at, null, null).size(size).roll(Kit.rand() * 360, 0).frame(3);
+            double rl = Kit.rand() * 360;
+            Duo d = duo(fx, "firepuff", at, null, null, sp -> sp.size(size).roll(rl, 0).frame(3));
             d.to(V.up(at, 0.3), -1, 8);
             d.seq(fx.age() + 2, 2, true, 5, 6, 7);
         });
@@ -518,8 +554,8 @@ public final class Px {
         fx.on(at(fx, delay), () -> {
             double tt = ticks / 20.0;
             Vec3 v = new Vec3((to.x - from.x) / tt, (to.y - from.y) / tt + gravity * tt / 2, (to.z - from.z) / tt);
-            Vfx.Prop rock = fx.prop("minecraft:magma_block", from).size(size * 0.45, 0).bright();
-            Duo glow = duo(fx, "firepuff", from, null, null).size(size).frame(1);
+            Vfx.Prop rock = fx.prop("minecraft:magma_block", from, pr -> pr.size(size * 0.45, 0).bright());
+            Duo glow = duo(fx, "firepuff", from, null, null, sp -> sp.size(size).frame(1));
             int t = fx.age();
             for (int i = 1; i <= ticks; i++) {
                 double s = i / 20.0;
@@ -547,7 +583,9 @@ public final class Px {
                 double a = Kit.rand() * Math.PI * 2;
                 double r = radius * Math.sqrt(Kit.rand());
                 Vec3 p = new Vec3(c.x + Math.cos(a) * r, c.y + rnd(0.2, 0.6), c.z + Math.sin(a) * r);
-                Duo d = duo(fx, "dust", p, color, null).size(size * rnd(0.7, 1.2)).roll(Kit.rand() * 360, 0).frame(0);
+                double sz = size * rnd(0.7, 1.2);
+                double rl = Kit.rand() * 360;
+                Duo d = duo(fx, "dust", p, color, null, sp -> sp.size(sz).roll(rl, 0).frame(0));
                 d.to(V.up(V.add(p, new Vec3(Math.cos(a), 0, Math.sin(a)), 0.5), 0.7), -1, 12);
                 d.seq(fx.age() + 2, 2, true, 1, 2, 3, 4, 5);
             }
@@ -577,8 +615,7 @@ public final class Px {
                 String b = blocks[i % blocks.length];
                 int t0 = t + (center ? 0 : (int) (r / Math.max(0.5, radius) * 3));
                 fx.on(t0, () -> {
-                    Vfx.Prop p = fx.prop(b, sunk).size(s, 0);
-                    p.turn(q, 0);
+                    Vfx.Prop p = fx.prop(b, sunk, pr -> pr.size(s, 0).turn(q, 0).bright());
                     p.to(up, null, -1, Math.max(1, rise));
                     fx.on(fx.age() + rise + hold, () -> p.to(V.up(g, -s * 0.95), null, s * 0.6, 7));
                     fx.on(fx.age() + rise + hold + 7, p::remove);

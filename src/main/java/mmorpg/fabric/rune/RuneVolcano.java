@@ -257,7 +257,7 @@ final class RuneVolcano {
             RuneKit.later(i * gap + fly, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 double big = last ? 1.3 : 1.0;
-                Px.fire(fx, land, last ? 7 : 5, radius * 0.45 * big, 2.5 * big, 0);
+                Px.fire(fx, land, last ? 9 : 6, radius * 0.5 * big, 3.0 * big, 0);
                 Px.embers(fx, land, last ? 18 : 12, radius * 0.3, 1.8, 1.0, CORE, 22, 0);
                 Px.cracks(fx, land, last ? 7 : 4, radius * 0.75, 2.3, LAVA, 3, 44, 0);
                 Px.shock(fx, land, radius * big, LAVA, CORE, 7, 0);

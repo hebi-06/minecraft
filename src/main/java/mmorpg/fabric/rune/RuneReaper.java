@@ -208,8 +208,8 @@ final class RuneReaper {
             boolean back = i % 2 == 1;
             Vec3 right = V.rightOf(f);
             // 허리 높이의 큰 초승달 (휘두르는 쪽이 조금 낮게) + 발목 높이의 짙은 초승달 (한 틱 뒤)
-            Px.sweep(fx, V.up(c, 1.05), V.unit(V.add(right, V.UP, back ? 0.2 : -0.2)), f, radius * 0.98, glow, core, back, 0, 1);
-            Px.sweep(fx, V.up(c, 0.3), right, f, radius * 0.72, BLOOD, glow, back, 1, 1);
+            Px.sweep(fx, V.up(c, 1.05), V.unit(V.add(right, V.UP, back ? 0.2 : -0.2)), Px.lifted(f, 24), radius * 0.98, glow, core, back, 0, 1);
+            Px.sweep(fx, V.up(c, 0.3), right, Px.lifted(f, 12), radius * 0.72, BLOOD, glow, back, 1, 1);
             Px.cracks(fx, V.add(c, f, radius * 0.55), 4, radius * 0.4, 2.0, glow, 3, 30, 1);
             if (i == hits - 1) Px.impact(fx, VfxKit.ground(level, V.add(c, f, 1.6)), radius * 0.6, glow, core, r.grade(), 1);
             SkillFx.play(level, "entity.player.attack.sweep", c, back ? 0.8 : 0.65, 1.0);
