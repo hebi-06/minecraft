@@ -1,0 +1,349 @@
+{
+ "_doc": "tools/vfx_pixel.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:px 의 픽셀 효과 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠했는지 · 축 (칸 안 0 ~ 1, 왼쪽 위에서) · 칸 높이 (블록, 1칸 = 16픽셀) · b (같이 띄우는 심지 층). 글자 높이 h 글꼴 단위",
+ "font": "rpg:px",
+ "h": 64,
+ "sprites": {
+  "swing": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.5714,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.8929
+   ],
+   "hb": 7.0,
+   "b": "swing.b"
+  },
+  "swing.b": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.5714,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.8929
+   ],
+   "hb": 7.0
+  },
+  "wave": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 2.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 3.0,
+   "b": "wave.b"
+  },
+  "wave.b": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 2.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 3.0
+  },
+  "streak": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 8.0,
+   "colored": false,
+   "pivot": [
+    0.0,
+    0.5
+   ],
+   "hb": 1.0,
+   "b": "streak.b"
+  },
+  "streak.b": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 8.0,
+   "colored": false,
+   "pivot": [
+    0.0,
+    0.5
+   ],
+   "hb": 1.0
+  },
+  "shard": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 1.5,
+   "b": "shard.b"
+  },
+  "shard.b": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 1.5
+  },
+  "cutmark": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 4.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 1.0,
+   "b": "cutmark.b"
+  },
+  "cutmark.b": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 4.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 1.0
+  },
+  "star": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0,
+   "b": "star.b"
+  },
+  "star.b": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0
+  },
+  "shock": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 8.0,
+   "b": "shock.b"
+  },
+  "shock.b": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 8.0
+  },
+  "octagon": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 12.0,
+   "b": "octagon.b"
+  },
+  "octagon.b": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 12.0
+  },
+  "bolt": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 0.2,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 10.0,
+   "b": "bolt.b"
+  },
+  "bolt.b": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 0.2,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 10.0
+  },
+  "chain": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 0.1,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 10.0,
+   "b": "chain.b"
+  },
+  "chain.b": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 0.1,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 10.0
+  },
+  "pillar": {
+   "chars": "",
+   "frames": 7,
+   "aspect": 0.3333,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 12.0,
+   "b": "pillar.b"
+  },
+  "pillar.b": {
+   "chars": "",
+   "frames": 7,
+   "aspect": 0.3333,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 12.0
+  },
+  "panel": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 0.6,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 5.0,
+   "b": "panel.b"
+  },
+  "panel.b": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 0.6,
+   "colored": false,
+   "pivot": [
+    0.5,
+    1.0
+   ],
+   "hb": 5.0
+  },
+  "ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 0.75
+  },
+  "dotring": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 8.0
+  },
+  "darkring": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 8.0
+  },
+  "crack": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 3.0
+  },
+  "dust": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0
+  },
+  "firepuff": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 3.0
+  }
+ }
+}

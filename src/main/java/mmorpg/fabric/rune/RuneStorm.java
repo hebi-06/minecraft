@@ -17,6 +17,9 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Px;
+import mmorpg.fabric.vfx.Vfx;
+import mmorpg.fabric.vfx.VfxKit;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -152,8 +155,10 @@ final class RuneStorm {
     }
 
     /**
-     * 뇌전 감옥: 조준한 곳 (range 칸) 테두리에 번개가 둘러친 뒤 (delay 틱) 안쪽 radius 칸의 적 피해 + 기절 (stun) — 테두리 기둥 넷에 번개 구슬이 모이고 →
-     * 하늘에서 번개 넷 (rpg:rfx_bolt) · 테두리를 따라 번개 창살 8개가 1.5초 동안 깜빡이며 섬, 바닥 · 위 (3칸) 의 고리 (갇힌 모양)
+     * 뇌전 감옥: 조준한 곳 (range 칸) 테두리에 번개가 둘러친 뒤 (delay 틱) 안쪽 radius 칸의 적 피해 + 기절 (stun).
+     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 보라 반투명 원통 · 번개 무늬 · 위의 짙은 고리, vfx.Px): 닫히기 전 테두리의 보라 점 고리가 돌고 작은 번개가
+     * 테두리를 따라 튐 → 닫힘: 반투명 보라 원통 벽 (판 열두 장 — 흰 번개 무늬가 바뀜) 이 땅에서 솟고 위에 짙은 고리 둘이 반대로 돎, 테두리에 큰 번개 넷 ·
+     * 충격파 · 등급 터짐, 갇힌 동안 벽 둘레에 작은 번개 → 기절이 끝나면 벽이 가라앉음
      */
     static boolean staticPrison(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -162,65 +167,38 @@ final class RuneStorm {
         double[] glow = cs[0];
         double[] core = cs[1];
         double radius = k.num("radius");
-        double delay = k.num("delay");
+        int delay = (int) k.num("delay");
         int stunTicks = (int) k.num("stun");
-        DoubleFunction<Vec3> rim = a -> new Vec3(g.x + Math.cos(a) * radius, g.y + 0.6, g.z + Math.sin(a) * radius);
-        Vec3[] posts = new Vec3[4];
-        for (int i = 0; i < 4; i++) posts[i] = rim.apply((i / 4.0) * Math.PI * 2 + 0.4);
-        SkillFx.rune(level, g, Opt.of("size", radius, "life", delay / 20 + 0.3, "color", glow, "alpha", 0.85, "rate", 120.0, "grow", 0.0));
-        for (int t = 0; t < delay; t += 3) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                double a = Kit.rand() * Math.PI * 2;
-                SkillFx.bolt(level, rim.apply(a), rim.apply(a + 0.8), glow, Opt.of("jag", 0.35, "thick", 0.08, "life", 0.18));
-                // 기둥 넷에 모이는 번개 구슬 (커짐)
-                for (Vec3 p : posts) RuneKit.plasmaOrb(level, V.up(p, 0.6), 0.3 + (0.3 * (tt + 3)) / delay, glow, Opt.of("life", 0.17, "fade", 0.0));
-            });
-        }
+        DoubleFunction<Vec3> rim = a -> VfxKit.ground(level, new Vec3(g.x + Math.cos(a) * radius, g.y + 0.5, g.z + Math.sin(a) * radius));
+        Vfx.Fx fx = Vfx.at(level, g, delay + stunTicks + 40);
+        Px.ring(fx, "dotring", V.up(g, 0.06), radius, 4.0, glow, delay + stunTicks, 0);
+        for (int t = 0; t < delay; t += 3) Px.bolt(fx, rim.apply(Kit.rand() * Math.PI * 2), 3.0, glow, RuneKit.WHITE, 3, false, t);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", g, 1.2, 0.8);
         SkillFx.play(level, "respawn_anchor.charge", g, 1.2, 0.8);
+        // 닫힘
+        Px.prison(fx, g, radius, 3.8, 12, glow, core, stunTicks, delay);
+        Px.ring(fx, "darkring", V.up(g, 3.95), radius * 1.02, 3.0, glow, stunTicks, delay);
+        Px.ring(fx, "darkring", V.up(g, 4.45), radius * 0.78, -4.5, glow, stunTicks, delay + 1);
+        double a0 = Kit.rand() * Math.PI * 2;
+        for (int i = 0; i < 4; i++) Px.bolt(fx, rim.apply(a0 + i * Math.PI / 2), 10.5, glow, RuneKit.WHITE, 5, true, delay + i);
+        Px.shock(fx, g, radius * 1.15, glow, core, 8, delay);
+        Px.impact(fx, g, radius, glow, core, r.grade(), delay);
+        for (int t = delay + 4; t < delay + stunTicks - 4; t += 4) Px.bolt(fx, rim.apply(Kit.rand() * Math.PI * 2), 3.9, glow, RuneKit.WHITE, 3, false, t);
         RuneKit.later(delay, () -> {
             if (sp.isRemoved()) return;
-            for (int i = 0; i < 8; i++) {
-                SkillFx.bolt(level, rim.apply((i / 8.0) * Math.PI * 2), rim.apply(((i + 1) / 8.0) * Math.PI * 2), glow, Opt.of("jag", 0.4, "thick", 0.2, "life", 0.45));
-            }
-            for (Vec3 p : posts) {
-                Vec3 gp = V.up(p, -0.6);
-                RuneKit.rfx2(level, "bolt", V.up(gp, 3.2), Opt.of("size", 3.2, "life", 0.26, "cell", Math.floor(Kit.rand() * 4)), glow, RuneKit.WHITE, BOLT, null);
-            }
-            SkillFx.burst(level, V.up(g, 1), glow, 2.2, 0.35);
-            RuneKit.zonePulse(level, g, glow, radius, 0.45);
-            RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 감옥이 닫히는 자리
             SkillFx.play(level, "ambient.weather.lightning.impact", g, 1.2, 0.5);
             SkillFx.play(level, "mob.ravager.stun", g, 1.0, 0.8);
-            List<LivingEntity> stunned = new ArrayList<>();
+            int shown = 0;
             for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
-                    RuneKit.stun(e, stunTicks, glow, stunned.size() < 16); // 머리 위 기절 표시는 16명까지 (파티클 예산 — 기절은 모두)
-                    stunned.add(e);
+                    RuneKit.stun(e, stunTicks, glow, shown < 16); // 머리 위 기절 표시는 16명까지 (기절은 모두)
+                    if (shown++ < 6) {
+                        Px.star(fx, Kit.bodyPoint(e), 1.8, glow, core, 1);
+                        Px.shards(fx, Kit.bodyPoint(e), 3, 1.0, 0.8, glow, core, 1);
+                    }
                 }
             }
-            // 감옥: 바닥 고리 + 위 (3칸) 의 뚜껑 고리 — 창살과 함께 갇힌 모양 (기절 동안)
-            SkillFx.rune(level, g, Opt.of("size", radius, "life", stunTicks / 20.0, "color", glow, "alpha", 0.85, "rate", -40.0));
-            SkillFx.rune(level, V.up(g, 3.0), Opt.of("size", radius * 0.95, "life", Math.min(stunTicks, 32) / 20.0, "color", core, "alpha", 0.8, "rate", 60.0));
-            // 가운데에서 갇힌 적에게 튀는 번개: 한 틱 뒤, 4명까지 (파티클 예산)
-            Tasks.later(1, () -> {
-                for (LivingEntity e : stunned.subList(0, Math.min(4, stunned.size()))) {
-                    if (!e.isRemoved()) RuneKit.zap(level, V.up(g, 0.6), Kit.bodyPoint(e), glow, core, 0.1, 0.25);
-                }
-            });
         });
-        // 번개 창살: 테두리 8곳에 1.5초 (3틱마다 다른 모양으로 다시 그림 — 깜빡임)
-        for (int t = (int) delay + 2; t < delay + 32; t += 3) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                for (int i = 0; i < 8; i++) {
-                    Vec3 p = rim.apply((i / 8.0) * Math.PI * 2 + 0.2);
-                    RuneKit.rfx2(level, "bolt", V.up(p, 0.95), Opt.of("size", 1.55, "life", 0.18, "cell", (double) ((i + tt) % 4), "alpha", 1.0), glow,
-                            RuneKit.WHITE, BOLT, 0.95);
-                }
-            });
-        }
         return true;
     }
 

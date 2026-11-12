@@ -62,8 +62,11 @@ public final class Vfx {
     /** 한 번에 떠 있는 효과 수 (넘으면 가장 오래된 것부터 지움 — 여럿이 한꺼번에 써도 버티게) */
     static final int MAX_FX = 400;
 
-    /** 그림판 하나 (vfx_sprites.json) */
-    public record Sheet(String name, String chars, int frames, double aspect, boolean colored) {
+    /**
+     * 그림판 하나 (vfx_sprites.json — 글꼴 rpg:vfx · 2026-11-12 px_sprites.json — 글꼴 rpg:px, 이름 앞에 "px/"): 축 (px · py — 칸 안 0 ~ 1, 왼쪽 위에서) 이
+     * 엔티티 자리에 옴, hb = 칸 높이 (블록 — 1칸 16픽셀 밀도), b = 같이 띄우는 심지 층 (없으면 null)
+     */
+    public record Sheet(String name, String chars, int frames, double aspect, boolean colored, FontDescription font, double px, double py, double hb, String b) {
         public char glyph(int frame) {
             return chars.charAt(Math.floorMod(frame, frames));
         }
@@ -82,11 +85,21 @@ public final class Vfx {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> clear());
     }
 
-    @SuppressWarnings("unchecked")
+    /** 2026-11-12 픽셀 효과 글꼴 (tools/vfx_pixel.py — vfx.Px) */
+    public static final Identifier PX_FONT_ID = Mmorpg.rpg("px");
+    static final FontDescription PX_FONT = new FontDescription.Resource(PX_FONT_ID);
+
     static void load() {
-        try (InputStream in = Vfx.class.getResourceAsStream("/mmorpg/vfx_sprites.json")) {
+        load("/mmorpg/vfx_sprites.json", "", FONT);
+        load("/mmorpg/px_sprites.json", "px/", PX_FONT);
+        Mmorpg.LOG.info("[vfx] sprites {}", SHEETS.size());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void load(String file, String prefix, FontDescription font) {
+        try (InputStream in = Vfx.class.getResourceAsStream(file)) {
             if (in == null) {
-                Mmorpg.LOG.warn("[vfx] no sprite index");
+                Mmorpg.LOG.warn("[vfx] no sprite index {}", file);
                 return;
             }
             Map<String, Object> root = Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
@@ -94,12 +107,19 @@ public final class Vfx {
             Map<String, Object> sprites = (Map<String, Object>) root.get("sprites");
             for (Map.Entry<String, Object> e : sprites.entrySet()) {
                 Map<String, Object> m = (Map<String, Object>) e.getValue();
-                SHEETS.put(e.getKey(), new Sheet(e.getKey(), (String) m.get("chars"), ((Number) m.get("frames")).intValue(),
-                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored"))));
+                double px = 0.5;
+                double py = 0.5;
+                if (m.get("pivot") instanceof List<?> pv && pv.size() == 2) {
+                    px = ((Number) pv.get(0)).doubleValue();
+                    py = ((Number) pv.get(1)).doubleValue();
+                }
+                double hb = m.get("hb") instanceof Number n ? n.doubleValue() : 1.6;
+                String b = m.get("b") instanceof String bs ? prefix + bs : null;
+                SHEETS.put(prefix + e.getKey(), new Sheet(prefix + e.getKey(), (String) m.get("chars"), ((Number) m.get("frames")).intValue(),
+                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored")), font, px, py, hb, b));
             }
-            Mmorpg.LOG.info("[vfx] sprites {}", SHEETS.size());
         } catch (IOException | RuntimeException e) {
-            Mmorpg.LOG.warn("[vfx] sprite index: {}", e.toString());
+            Mmorpg.LOG.warn("[vfx] sprite index {}: {}", file, e.toString());
         }
     }
 
@@ -433,6 +453,9 @@ public final class Vfx {
         double alpha = 1;
         int frame;
         double size = 1;
+        /** 2026-11-12 늘림 (그림 가로 · 세로 — 빛줄기 · 감옥 벽) */
+        double sx = 1;
+        double sy = 1;
         double roll;
         Quaternionf facing;
         boolean removed;
@@ -518,6 +541,33 @@ public final class Vfx {
             return this;
         }
 
+        /** 2026-11-12 늘림: 그림 가로 sx · 세로 sy 배 (ticks 틱 보간) — 축 (pivot) 은 그대로 */
+        public Sprite stretch(double sx, double sy, int ticks) {
+            if (removed) return this;
+            this.sx = sx;
+            this.sy = sy;
+            e.setInterpolationDuration(Math.max(0, ticks));
+            transform();
+            e.startInterpolationIfDirty();
+            return this;
+        }
+
+        /** 2026-11-12 세로축으로만 카메라를 봄 (번개 · 빛기둥 — 서 있는 그림) */
+        public Sprite vertical() {
+            facing = null;
+            e.setBillboardMode(Display.BillboardConstraints.VERTICAL);
+            transform();
+            return this;
+        }
+
+        public Vec3 pos() {
+            return pos;
+        }
+
+        public boolean removed() {
+            return removed;
+        }
+
         /** 카메라를 보는 그림의 기울임 (화면에서 도는 각 — 도) · 고정 그림이면 그 면 안에서 돎 */
         public Sprite roll(double deg, int ticks) {
             roll = deg;
@@ -592,7 +642,7 @@ public final class Vfx {
         private void text() {
             if (removed) return;
             String g = String.valueOf(sheet.glyph(frame));
-            e.setText(Component.literal(g).withStyle(Style.EMPTY.withFont(FONT).withColor(rgb)));
+            e.setText(Component.literal(g).withStyle(Style.EMPTY.withFont(sheet.font).withColor(rgb)));
         }
 
         private void opacity() {
@@ -609,9 +659,16 @@ public final class Vfx {
             float s = hidden ? 0F : (float) (size / (glyphHeight * TEXT_UNIT));
             Quaternionf q = facing != null ? new Quaternionf(facing) : new Quaternionf();
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
-            e.setTranslation(new Vector3f());
+            // 축 (pivot) 이 엔티티 자리에 오게: 그림 가운데 (글자 가운데 = 엔티티 자리) 를 축의 반대쪽으로 (회전한 면 안에서)
+            Vector3f t = new Vector3f();
+            if (!hidden && (sheet.px() != 0.5 || sheet.py() != 0.5)) {
+                double w = size * sheet.aspect() * sx;
+                double h = size * sy;
+                t = q.transform(new Vector3f((float) (-(sheet.px() - 0.5) * w), (float) (-(0.5 - sheet.py()) * h), 0F));
+            }
+            e.setTranslation(t);
             e.setLeftRotation(q);
-            e.setScale(new Vector3f(s, s, s));
+            e.setScale(new Vector3f((float) (s * sx), (float) (s * sy), s));
             e.setRightRotation(new Quaternionf());
         }
 

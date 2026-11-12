@@ -10,6 +10,9 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Px;
+import mmorpg.fabric.vfx.Vfx;
+import mmorpg.fabric.vfx.VfxKit;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +33,17 @@ final class RuneStr {
         RuneCast.register("heavenFall", RuneStr::heavenFall);
     }
 
-    /** 대지 강타: 앞쪽 땅을 내려쳐 충격파 — 땅이 갈라지고 둘레에 바위 가시가 솟으며 돌이 튐. 0.49.0 맞은 적 stun 틱 기절 (머리 위 룬) */
+    /** 2026-11-12 대지 강타의 솟는 바위 (진짜 블록 질감 — 예시 사진의 붉은 갈색 바위) · 튀는 돌 · 흙먼지 */
+    private static final String[] SLAM_ROCKS = {"minecraft:granite", "minecraft:terracotta", "minecraft:packed_mud", "minecraft:brown_terracotta",
+        "minecraft:mud_bricks", "minecraft:tuff"};
+    private static final String[] PEBBLES = {"minecraft:granite", "minecraft:tuff", "minecraft:terracotta"};
+    private static final double[] SLAM_DUST = {0.72, 0.6, 0.48};
+
+    /**
+     * 대지 강타: 앞쪽 땅을 내려쳐 충격파 (반지름 radius · 위력 × mult, 띄움 lift) · 0.49.0 맞은 적 stun 틱 기절 (머리 위 룬).
+     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 바위 덩어리 분출, vfx.Px): 머리 위에서 앞으로 내려치는 세운 초승달 (양면) → 땅에서 바위 덩어리 여덟 + 가운데 큰
+     * 바위가 솟고 (3D 블록 — 화강암 · 테라코타 · 진흙 벽돌 …) 16틱 뒤 가라앉음, 달아오른 균열 · 충격파 · 흙먼지 · 튀는 돌 · 불티
+     */
     static boolean groundSlam(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 f = V.flat(sp.getViewVector(1F));
@@ -38,26 +51,25 @@ final class RuneStr {
         double[][] cs = RuneKit.colorOf("str");
         double[] glow = cs[0];
         double[] core = cs[1];
-        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.2, "life", 0.26, "speed", 2.0,
-                "spin", -8.0, "color", glow, "aura", new double[] {1.0, 0.72, 0.3}));
+        double radius = k.num("radius");
+        Vec3 g = VfxKit.ground(level, c);
+        Vfx.Fx fx = Vfx.at(level, g, 70);
+        // 내려치기: 몸 위에서 앞으로 (뒤 → 위 → 앞, 양면)
+        Px.sweepBoth(fx, V.add(V.up(sp.position(), 1.2), f, 0.4), f, V.UP, 2.5, glow, core, true, 0, 1);
         SkillFx.play(level, "mace.smash_air", sp.position(), 0.8, 0.8);
         Tasks.later(2, () -> {
             if (sp.isRemoved()) return;
-            double radius = k.num("radius");
-            RuneKit.zonePulse(level, c, glow, radius, 0.45);
-            RuneKit.zonePulse(level, c, core, radius * 0.55, 0.3);
-            SkillFx.burst(level, V.up(c, 0.4), glow, 1.3, 0.3);
-            RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 내려친 자리
-            SkillFx.fx(level, "rpg:ground_crack", V.up(c, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.2, "color", CRACK,
-                    "alpha", 0.9));
-            RuneKit.rockRing(sp, level, c, radius * 0.7, 6, 0.55, glow, Opt.of("life", 0.8));
-            RuneKit.rockBurst(level, V.up(c, 0.4), 4, 5, 0.24);
-            SkillFx.fx(level, "rpg:dust", V.up(c, 0.5), Opt.of("size", 1.2, "life", 0.7, "color", DUST, "alpha", 0.55));
-            SkillFx.sparks(level, V.up(c, 0.3), core, 6, 4);
-            SkillFx.vanilla(level, "minecraft:critical_hit_emitter", V.up(c, 0.6));
+            Px.rocks(fx, g, 8, radius * 0.85, 0.85, SLAM_ROCKS, 3, 16, true, 0);
+            Px.cracks(fx, g, 9, radius * 1.05, 2.3, glow, 4, 46, 0);
+            Px.shock(fx, g, radius * 1.15, glow, core, 7, 0);
+            Px.star(fx, V.up(g, 0.8), 2.6, glow, core, 0);
+            Px.dust(fx, g, 6, radius * 0.85, 1.9, SLAM_DUST, 1);
+            Px.embers(fx, g, 8, radius * 0.4, 1.4, 0.5, glow, 16, 0);
+            Px.impact(fx, g, radius, glow, core, r.grade(), 1);
+            VfxKit.rocks(fx, V.up(g, 0.3), 6, 4.0, 0.32, PEBBLES, 0);
             SkillFx.play(level, "mace.smash_ground", c, 0.9, 1);
             SkillFx.play(level, "dig.stone", c, 0.6, 1);
-            SkillFx.shake(sp, 0.15, 0.15);
+            SkillFx.play(level, "block.basalt.break", c, 0.7, 0.8);
             int stun = (int) k.numOr("stun", 0); // 0.49.0 기절 0.5초
             int marks = 0;
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {

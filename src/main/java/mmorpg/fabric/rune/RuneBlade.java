@@ -16,6 +16,8 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Px;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -88,8 +90,9 @@ final class RuneBlade {
     }
 
     /**
-     * 검기 날리기: 초승달 검기가 speed 칸/초로 range 칸 (벽 앞까지) 날아가며 선 가까이 width 칸의 적 (적마다 한 번) —
-     * 날아가는 초승달 검기 그림 (rpg:rfx_wave, 손 앞 1.6칸부터) + 지나간 자리에 남는 빛줄기
+     * 검기 날리기: 초승달 검기가 speed 칸/초로 range 칸 (벽 앞까지) 날아가며 선 가까이 width 칸의 적 (적마다 한 번).
+     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 흰 · 파랑 거대 참격, vfx.Px): 몸 앞을 크게 휩쓰는 초승달 (반지름 3.2칸) → 폭 5칸 검기 (흰 심지 · 청백 띠 · 뒤로 뻗은
+     * 가시 · 흰 번개 조각) 가 날아가고 지나간 자리에 빛줄기, 맞은 적은 베인 자국 · 번쩍임 · 불티, 처음 맞은 적의 발밑은 등급 터짐
      */
     static boolean swordWave(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -102,36 +105,42 @@ final class RuneBlade {
         double[] glow = cs[0];
         double[] core = cs[1];
         double speed = k.num("speed");
-        double s0 = Math.min(1.6, len);
-        double life = Math.max(0.05, (len - s0) / speed);
-        RuneKit.rfx2(level, "wave", V.add(from, dir, s0), Opt.of("dir", dir, "speed", speed, "size", k.num("width") * 0.8, "life", life, "fade", 0.15, "spin", -8.0),
-                glow, RuneKit.WHITE);
-        RuneKit.arc(level, V.add(from, dir, 1.0), dir, Opt.of("shape", "heavy", "flip", false, "size", 1.7, "life", 0.16, "speed", 0.0, "spin", -90.0, "color",
-                glow, "aura", core)); // 휘두르는 순간
-        for (int s = 2; s < len; s += 2) {
-            double delay = (s / len) * (len / speed);
-            SkillFx.fx(level, "rpg:light_cut", V.add(from, dir, s), Opt.of("dir", dir, "size", 1.1, "thick", 0.16, "life", delay + 0.3, "delay", delay, "color",
-                    s % 4 != 0 ? glow : core, "alpha", 0.85));
+        double s0 = Math.min(1.4, len);
+        int fly = Math.max(1, (int) Math.round((len - s0) / speed * 20));
+        Vfx.Fx fx = Vfx.at(level, from, fly + 40);
+        Vec3 right = V.rightOf(f);
+        // 휘두름: 몸 둘레의 큰 초승달 (오른쪽 → 왼쪽, 오른쪽이 조금 낮게 기욺)
+        Vec3 tiltR = V.unit(V.add(right, V.UP, -0.25));
+        Px.sweep(fx, V.up(sp.position(), 1.05), tiltR, f, 3.2, glow, core, false, 0, 1);
+        // 검기 + 빛줄기 (손 앞 s0 칸부터) · 지나가며 흩어지는 흰 번개 조각
+        Px.wave(fx, V.add(from, dir, s0), dir, len - s0, fly, 5.0, -10, glow, core, 1);
+        Px.streak(fx, V.add(from, dir, s0 * 0.6), dir, len - s0 * 0.6, 0.85, glow, core, fly + 1, fly + 12, 1);
+        for (double s = s0 + 2; s < len; s += 2.5) {
+            int when = 1 + (int) Math.round((s - s0) / speed * 20);
+            Px.shards(fx, V.add(V.add(from, dir, s), V.UP, -0.2), 2, 1.1, 0.8, glow, core, when);
         }
         SkillFx.play(level, "item.trident.throw", from, 1.3, 0.9);
         SkillFx.play(level, "item.spear.attack_miss", from, 1.6, 0.7);
-        Map<Long, Integer> perTick = new HashMap<>(); // 틱 → 그 틱에 벤 적 수 (파티클 예산: 자국 6명 · 불꽃 3명까지)
-        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 검기에 처음 베인 적에 한 번
+        Map<Long, Integer> perTick = new HashMap<>(); // 틱 → 그 틱에 벤 적 수 (자국 6명 · 번쩍임 3명까지)
+        boolean[] boomed = {false}; // 등급 터짐은 검기에 처음 베인 적에 한 번
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, dir, len, k.num("width"))) {
             LivingEntity e = h.e();
-            RuneKit.later(Math.max(0, Math.round((h.t() / speed) * 20)), () -> {
+            RuneKit.later(Math.max(1, Math.round((h.t() / speed) * 20) + 1), () -> {
                 if (sp.isRemoved() || e.isRemoved()) return;
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     Vec3 at = Kit.bodyPoint(e);
                     long now = Tasks.now();
                     int n = perTick.getOrDefault(now, 0);
                     perTick.put(now, n + 1);
-                    if (n < 6) SkillFx.cutMark(level, at, dir, 70, 0.08, glow, core, 1.1);
-                    if (n < 3) SkillFx.sparks(level, at, core, 5, 4);
-                    if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 검기에 처음 베인 적의 발밑
+                    if (n < 6) Px.cut(fx, at, -20 + Kit.rand() * 40, 2.6, glow, core, 0);
+                    if (n < 3) {
+                        Px.star(fx, at, 1.8, glow, core, 0);
+                        Px.embers(fx, V.up(e.position(), 0.2), 6, 0.5, 1.2, 0.8, glow, 16, 0);
+                    }
+                    if (!boomed[0]) {
                         boomed[0] = true;
                         Vec3 feet = e.position();
-                        RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+                        Px.impact(fx, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), 2.4, glow, core, r.grade(), 0);
                     }
                     RuneKit.knock(e, dir, 0.4, 0.15);
                 }
