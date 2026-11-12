@@ -1274,8 +1274,132 @@ def water_column():
     return m
 
 
+# ------------------------------------------------------------------ 2026-11-12 직업 스킬: 하늘의 단두대 (엑시큐셔너 길로틴 오브 헤븐)
+
+def lunette_paint():
+    """목판 (단두대 아래 — 짙은 나무 · 가운데 둥근 목 구멍): 구멍 안은 검게, 테두리는 빛 겹 (물들임 1 — 해 질 녘 빛)"""
+    wood = bevel("#3A2620", "#5A3E32", "#1C120E", grain="h", speck=0.05)
+
+    def paint(w, h, face, rng, frame):
+        base, _ = wood(w, h, face, rng, frame)
+        if face not in ("north", "south") or w < 6 or h < 4:
+            return base, None
+        pl = pulse(frame)
+        ys, xs = np.mgrid[0:h, 0:w]
+        cx, cy = (w - 1) / 2, (h - 1) / 2
+        r = np.sqrt((xs - cx) ** 2 + ((ys - cy) * 1.0) ** 2)
+        R = min(w, h) * 0.36
+        hole = r <= R
+        rim = (r > R) & (r <= R + 1.2)
+        base[hole, :3] = C("#0A0608")
+        ov = np.zeros((h, w, 4))
+        ov[rim] = (1.0, 1.0, 1.0, 0.85 + 0.15 * pl)
+        return base, ov
+    return paint
+
+
+def groove_paint():
+    """칼날이 미끄러지는 홈 (회색 — 물들임 1): 위아래로 흐르는 빛 띠 (맥동)"""
+    def paint(w, h, face, rng, frame):
+        ys = np.arange(h)[:, None] * np.ones((1, w))
+        band = ((ys - frame * max(1, h // FRAMES)) % max(5, h // 3)) < max(2, h // 8)
+        v = np.where(band, 1.0, 0.7)
+        img = np.repeat(v[..., None], 3, -1)
+        return np.concatenate([img, np.ones((h, w, 1))], -1), None
+    return paint
+
+
+def steel_paint():
+    """단두대 칼날 (짙은 강철): 위 밝은 띠 · 아래로 짙어짐 · 사선 반짝임"""
+    def paint(w, h, face, rng, frame):
+        ys, xs = np.mgrid[0:h, 0:w]
+        t = ys / max(1, h - 1)
+        base = C("#8E99AA") * (1.08 - 0.32 * t)[..., None]
+        glint = ((xs + ys + int(rng.integers(0, 7))) % 11) == 0
+        base[glint] = np.minimum(1.0, base[glint] * 1.35)
+        if h >= 3:
+            base[0, :] = C("#D6E0EC")
+        if w >= 3:
+            base[:, 0] = base[:, 0] * 0.6 + C("#C4CEDB") * 0.4
+            base[:, -1] = base[:, -1] * 0.6 + C("#4A5260") * 0.4
+        return np.concatenate([np.clip(base, 0, 1), np.ones((h, w, 1))], -1), None
+    return paint
+
+
+def guillotine():
+    """하늘의 단두대 틀 (밑 가운데 (8, −16, 8) · 높이 48): 짙은 나무 기둥 둘 (앞뒤에 빛나는 룬 판 · 안쪽 홈) · 금 테를 두른 위 들보 · 해 무늬 · 목판 (둥근 목 구멍) ·
+    밑 받침. 칼날 (guillotine_blade) 은 따로 — 같은 자리 · 크기에 두고 아래로 GUILLOTINE_DROP 만큼 옮기면 목판에 닿음.
+    물들임 0 = 룬 · 해 (해 질 녘 빛), 1 = 홈 · 목 구멍 테 (보랏빛)"""
+    m = BModel("guillotine", "하늘의 단두대 틀 (2026-11-12 — 짙은 나무 · 금 테 · 해 질 녘 룬, 칼날은 guillotine_blade)", d=1.5)
+    m.mat("wood", Mat(bevel("#3A2620", "#5A3E32", "#1C120E", grain="v", speck=0.05)))
+    m.mat("beam", Mat(bevel("#33211B", "#54392D", "#180F0C", grain="h", speck=0.05)))
+    m.mat("gold", Mat(gold_paint()))
+    m.mat("iron", Mat(bevel("#2C2C35", "#4E4E5E", "#16161C", speck=0.07)))
+    m.mat("rune", Mat(rune_plate(), tint=0, glow=True, animated=True))
+    m.mat("sun", Mat(gem_paint(0.62), tint=0, glow=True, animated=True))
+    m.mat("groove", Mat(groove_paint(), tint=1, glow=True, animated=True))
+    m.mat("lunette", Mat(lunette_paint(), animated=True, overlay_tint=1))
+    # 밑 받침 (계단 둘) · 금 띠
+    m.box("beam", (-6, -16, 2.5), (22, -14, 13.5))
+    m.box("beam", (-4, -14, 4), (20, -13, 12))
+    m.box("gold", (-6.2, -14.4, 2.3), (22.2, -13.9, 2.8))
+    m.box("gold", (-6.2, -14.4, 13.2), (22.2, -13.9, 13.7))
+    # 기둥 둘 (안쪽 x 1 ~ 15 — 칼날이 지나는 틈) · 쇠 받침 · 앞뒤 룬 판 · 안쪽 빛 홈
+    for x0, x1 in ((-3.0, 1.0), (15.0, 19.0)):
+        m.box("wood", (x0, -13, 6), (x1, 26, 10))
+        m.box("iron", (x0 - 0.5, -13, 5.5), (x1 + 0.5, -10, 10.5))
+        m.box("iron", (x0 - 0.3, 12, 5.7), (x1 + 0.3, 13.2, 10.3))
+        m.box("rune", (x0 + 0.6, -8, 5.7), (x1 - 0.6, 11, 6.0))
+        m.box("rune", (x0 + 0.6, 14, 5.7), (x1 - 0.6, 24, 6.0))
+        m.box("rune", (x0 + 0.6, -8, 10.0), (x1 - 0.6, 11, 10.3))
+        m.box("rune", (x0 + 0.6, 14, 10.0), (x1 - 0.6, 24, 10.3))
+    m.box("groove", (0.95, -9, 7.4), (1.3, 25.5, 8.6))
+    m.box("groove", (14.7, -9, 7.4), (15.05, 25.5, 8.6))
+    # 위 들보 · 금 끝 · 가운데 해 무늬 (위로 솟은 빛살)
+    m.box("beam", (-5, 26, 5), (21, 29.5, 11))
+    m.box("gold", (-5.6, 25.6, 4.6), (-3.4, 29.9, 11.4))
+    m.box("gold", (19.4, 25.6, 4.6), (21.6, 29.9, 11.4))
+    m.box("gold", (-5, 29.5, 7.2), (21, 30.0, 8.8))
+    m.box("sun", (5.5, 29.6, 7.4), (10.5, 32.0, 8.6))
+    m.box("sun", (3.0, 29.8, 7.7), (4.6, 31.2, 8.3))
+    m.box("sun", (11.4, 29.8, 7.7), (13.0, 31.2, 8.3))
+    # 목판 (아래 판 — 둥근 목 구멍 · 위 판) · 쇠 띠
+    m.box("lunette", (1, -9, 6.8), (15, -1, 9.2))
+    m.box("iron", (1, -1, 6.6), (15, -0.2, 9.4))
+    m.box("iron", (1, -9.8, 6.6), (15, -9, 9.4))
+    return m
+
+
+def guillotine_blade():
+    """단두대 칼날 (틀과 같은 자리 · 크기 — 올라간 자리): 쇠 추 (금 리벳) · 강철 날 (오른쪽이 높은 비스듬한 날 — 계단 넷 위에 22.5° 빛나는 날 끝) ·
+    날 끝 = 물들임 0 (해 질 녘 빛), 추의 룬 = 물들임 1"""
+    m = BModel("guillotine_blade", "단두대 칼날 (2026-11-12 — 쇠 추 · 강철 날 · 빛나는 비스듬한 날 끝)", d=1.5)
+    m.mat("iron", Mat(bevel("#2C2C35", "#4E4E5E", "#16161C", speck=0.07)))
+    m.mat("gold", Mat(gold_paint()))
+    m.mat("steel", Mat(steel_paint()))
+    m.mat("edge", Mat(glow_blade(), tint=0, glow=True, animated=True))
+    m.mat("rune", Mat(rune_plate(), tint=1, glow=True, animated=True))
+    # 쇠 추 (홈 사이 — 틀 기둥 안쪽 1 ~ 15)
+    m.box("iron", (1.4, 20.5, 6.9), (14.6, 25.0, 9.1))
+    m.box("gold", (1.2, 24.6, 6.7), (14.8, 25.2, 9.3))
+    m.box("rune", (4.0, 21.3, 6.6), (12.0, 24.2, 6.9))
+    m.box("rune", (4.0, 21.3, 9.1), (12.0, 24.2, 9.4))
+    for x in (2.2, 13.0):
+        m.box("gold", (x, 22.0, 6.6), (x + 0.8, 22.8, 9.4))
+    # 날 (계단 여덟 — 오른쪽으로 갈수록 날 끝이 높음: 계단 밑 = 날 끝 줄의 그 칸 오른쪽 높이 − 0.2 → 날 끝 막대가 덮음)
+    k = math.tan(math.radians(22.5))
+    for i in range(8):
+        x0 = 1.6 + i * 1.6
+        x1 = x0 + 1.6
+        m.box("steel", (x0, 10.1 + (x1 - 1.6) * k - 0.2, 7.6), (x1, 20.5, 8.4))
+    # 비스듬한 날 끝 (22.5° — 왼쪽 아래 (1.6, 10.1) 에서 오른쪽 위로): 길이 12.8 / cos 22.5° · 두께 1.4
+    L = 12.8 / math.cos(math.radians(22.5))
+    m.box("edge", (1.6, 9.4, 7.45), (1.6 + L, 10.8, 8.55), rot=("z", 22.5, (1.6, 10.1, 8.0)))
+    return m
+
+
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
-         "ice_blade": ice_blade, "fist": fist}
+         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
 # 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
@@ -1420,7 +1544,7 @@ def load_current(name):
 TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
          "cloud": [(0.42, 0.36, 0.62), (0.78, 0.62, 1.0)], "rune_sword": [(0.45, 0.62, 1.0), (0.86, 0.92, 1.0)],
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
-         "net": [(0.5, 1.0, 0.5)]}
+         "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
 VIEWS_OF = {"fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
@@ -1439,7 +1563,10 @@ def main():
         os.makedirs(a.preview, exist_ok=True)
         for n, (files, js, img, T) in built.items():
             tints = TINTS.get(n, [(1, 1, 1)])
-            old_els, old_tex = load_current(n)
+            try:
+                old_els, old_tex = load_current(n)
+            except FileNotFoundError:
+                old_els, old_tex = [], None
             frame = img[:T]
             row = []
             for vi, vw in enumerate(VIEWS_OF.get(n, VIEWS)):
@@ -1451,7 +1578,7 @@ def main():
                 upv = np.cross(rt, D)
                 rel = pts - ctr
                 half = max(np.abs(rel @ rt).max(), np.abs(rel @ upv).max()) * 1.1
-                if vi == 0:
+                if vi == 0 and old_els:
                     row.append(render(old_els, old_tex, tints, vw, half=half, center=ctr))
                 row.append(render(js["elements"], frame, tints, vw, half=half, center=ctr))
             sheet = Image.new("RGB", (sum(i.size[0] for i in row) + 8 * (len(row) - 1), row[0].size[1]), (30, 32, 38))

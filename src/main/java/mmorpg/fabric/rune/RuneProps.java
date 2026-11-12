@@ -62,6 +62,18 @@ public final class RuneProps {
     /** 물기둥: 밑 가운데 (8, 0, 7.5) · 높이 28 */
     public static final double WATER_H = 28;
 
+    /**
+     * 2026-11-12 직업 스킬: 하늘의 단두대 (엑시큐셔너 길로틴 오브 헤븐 — tools/vfx_blocky.py guillotine · guillotine_blade): 틀과 칼날이 같은 자리 · 크기 ·
+     * 쥔 곳 (밑 가운데 (8, −16, 8)) — 높이 48, 칼날을 GUILLOTINE_DROP 만큼 내리면 날 끝이 목판의 목 구멍에 닿음. 앞 (+Z) · 뒤 모두 룬 판
+     */
+    public static final String GUILLOTINE = "rpg:vfx/guillotine";
+    public static final String GUILLOTINE_BLADE = "rpg:vfx/guillotine_blade";
+    public static final double[] GUILLOTINE_BASE = {8, -16, 8};
+    public static final double GUILLOTINE_H = 48;
+    public static final double GUILLOTINE_DROP = 14;
+    /** 룬 전용 망치의 머리 가운데 → 머리 끝 (때리는 쪽 반대 — 가시 뿌리, 모델 +Y) 픽셀: 머리를 아래로 세워 박을 때 땅에 닿는 면 */
+    public static final double HAMMER_HEAD_END = 4.5;
+
     /** 모델 +Y 가 up, +X 가 side 쪽 (side 를 up 에 수직으로 맞춤) 인 회전 */
     public static Quaternionf along(Vec3 up, Vec3 side) {
         Vec3 y = V.unit(up);

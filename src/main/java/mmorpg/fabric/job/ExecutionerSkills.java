@@ -6,12 +6,14 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -19,6 +21,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 /**
  * 0.51.0 사신 반전 엑시큐셔너 (재설계안 2판 — 2026-11-06 · 3판 2026-11-07 직업 스킬 도감 표시 고침 — 사용자 "컨셉은 좋은데 스킬들이 간지가 안남": 컨셉 · 특성 「처형」 ·
@@ -513,10 +516,9 @@ final class ExecutionerSkills {
         }
         Ult.sky(level0, start, "rpg:ult_sunset", lastAt + 30);
         RpgCombat.setSteadfast(sp, lastAt + 4);
-        double solo = GALLOWS_SOLO + stage;
-        // 내려옴: 하늘 drop 칸 위에서 단두대가 생겨나 (0 ~ 1 장) landAt 틱에 땅에 닿음 · 땅에 처형 표식 X · 위에서 내리비추는 해 질 녘 빛 · 종소리
-        JobFx.gallows(level0, V.up(mark, drop), H, 0, 2, (landAt + 1) / 20.0, false, Opt.of("vel", new Vec3(0, -drop / (landAt / 20.0), 0), "solo", solo, "owner",
-                (double) sp.getId(), "fade", 0.0), DARK, BLADE);
+        // 2026-11-12 3D 단두대 (사용자 직업 도감 "단두대를 3d 모델로 하고 싶음" — rpg:vfx/guillotine 틀 · guillotine_blade 칼날, 예전 2D rfx_jgallows 대신):
+        // 내려옴 — 하늘 drop 칸 위에서 작게 생겨나 커지며 (3틱) landAt 틱에 땅에 박힘 · 땅에 처형 표식 X · 위에서 내리비추는 해 질 녘 빛 · 종소리
+        Gallows g3 = new Gallows(level0, mark, f, H, drop, landAt, lastAt + 40);
         JobFx.xmark(level0, mark, R, 0, 3, landAt / 20.0, false, Opt.empty(), DUSK, DUSK_CORE);
         JobFx.spotlight(level0, mark, H + drop, (lastAt + 6) / 20.0, Opt.of("alpha", 0.5), DUSK, DUSK_CORE);
         JobFx.charge(sp, j, new Vec3(0.2, 2.5, 0.3), landAt, 0.8);
@@ -535,21 +537,19 @@ final class ExecutionerSkills {
             SkillFx.play(lv, "entity.iron_golem.attack", mark, 0.5, 0.8);
             for (LivingEntity e : Kit.around(sp, mark, R, 3)) RuneKit.effect(e, "slowness", trap, JobKit.isBoss(e) ? 2 : 10);
         });
-        // 매달림 (landAt ~ first − 3): 칼날이 위에서 번득임 (이어 돌림)
-        JobFx.gallowsLater(sp, life, solo, mark, H, landAt, 2, 2, first - 3 - landAt, true, DARK, BLADE);
+        // 매달림 (landAt ~ first − 3): 칼날이 위에서 번득임 (빛나는 날 끝 · 홈 — 그림이 맥동)
         boolean[] opened = {false};
         for (int i = 0; i < strokes; i++) {
             int at = first + i * every;
             boolean big = i == strokes - 1;
-            // 떨어짐 (at − 3 ~ at) → 내리침 (at — 섬광 장) → 끌어올려짐 (at + 4 ~ 다음 떨어짐) · 끝은 빛 조각으로 흩어짐
-            JobFx.gallowsLater(sp, life, solo, mark, H, at - 3, 4, 1, 3, false, DARK, BLADE);
+            // 떨어짐 (at − 3 ~ at) → 내리침 (at — 섬광) → 끌어올려짐 (at + 4 ~ 다음 떨어짐) · 끝은 빛 조각으로 흩어짐
+            g3.drop(at - 3, 3);
+            if (!big) g3.raise(at + 4, every - 7);
+            else g3.vanish(at + 8);
             RuneKit.later(at - 3, () -> {
                 if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "item.trident.riptide_1", mark, 0.6, 0.8);
             });
             JobKit.motionLater(sp, "executioner_ult:drop", at - 4, life);
-            JobFx.gallowsLater(sp, life, solo, mark, H, at, 5, 1, 4, false, DARK, BLADE);
-            if (i < strokes - 1) JobFx.gallowsLater(sp, life, solo, mark, H, at + 4, 6, 1, every - 7, false, DARK, BLADE);
-            else JobFx.gallowsLater(sp, life, solo, mark, H, at + 4, 7, 1, 12, false, DARK, BLADE);
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
@@ -596,5 +596,72 @@ final class ExecutionerSkills {
             SkillFx.play(sp.level(), "block.bell.use", sp.position(), 1.0, 0.6);
             JobSystem.note(sp, "§6처형 §7— " + k.name() + " 다시 쓸 수 있음 (" + window / 20 + "초 · " + (casts - stage - 1) + "번 남음)");
         });
+    }
+
+    /**
+     * 2026-11-12 하늘의 단두대 (3D — rune.RuneProps GUILLOTINE · GUILLOTINE_BLADE, 모드 · 모드 없는 클라이언트가 같은 아이템 표시): 틀 (짙은 나무 기둥 · 금 테 ·
+     * 해 질 녘 룬 · 보랏빛 홈 · 둥근 목 구멍) 과 칼날 (쇠 추 · 강철 날 · 빛나는 비스듬한 날 끝) 이 같은 자리 · 크기 — 앞 (+Z) 이 나를 봄. 하늘 drop 칸 위에서
+     * 작게 생겨나 커지며 (3틱) landAt 틱에 땅으로 · 칼날만 내려가고 (drop) 올라감 (raise) · 끝에 빛 조각으로 흩어지며 작아짐 (vanish)
+     */
+    static final class Gallows {
+        final ServerLevel level;
+        final Vfx.Fx fx;
+        final Vfx.Prop frame;
+        final Vfx.Prop blade;
+        final Vec3 mark;
+        final double s;
+        final double H;
+
+        Gallows(ServerLevel level, Vec3 mark, Vec3 f, double H, double drop, int landAt, int life) {
+            this.level = level;
+            this.mark = mark;
+            this.H = H;
+            this.s = RuneProps.scaleFor(H, RuneProps.GUILLOTINE_H);
+            this.fx = RuneProps.fx(level, mark, life);
+            Quaternionf q = RuneProps.facing(V.scale(f, -1), V.UP);
+            Vec3 high = V.up(mark, drop);
+            frame = RuneProps.prop(fx, RuneProps.GUILLOTINE, high, RuneProps.GUILLOTINE_BASE, q, s * 0.2, DUSK, VIOLET);
+            blade = RuneProps.prop(fx, RuneProps.GUILLOTINE_BLADE, high, RuneProps.GUILLOTINE_BASE, q, s * 0.2, BLADE, VIOLET);
+            fx.on(1, () -> {
+                frame.size(s, 3);
+                blade.size(s, 3);
+            });
+            int fall = Math.max(2, landAt - 4);
+            fx.on(4, () -> {
+                frame.to(mark, null, s, fall);
+                blade.to(mark, null, s, fall);
+            });
+            // 생겨남: 빛 조각이 모임 (하늘)
+            JobFx.burst(level, V.up(high, H * 0.5), H * 0.35, DUSK, DUSK_CORE, 0.35, Opt.empty());
+            SkillFx.sparks(level, V.up(high, H * 0.5), DUSK, 16, 5.0);
+        }
+
+        /** at 틱부터 ticks 틱에 칼날이 목판까지 떨어짐 */
+        void drop(int at, int ticks) {
+            fx.on(at, () -> blade.to(V.up(mark, -RuneProps.GUILLOTINE_DROP / 16.0 * s), null, s, ticks));
+        }
+
+        /** at 틱부터 ticks 틱에 칼날이 위로 끌어올려짐 */
+        void raise(int at, int ticks) {
+            fx.on(at, () -> blade.to(mark, null, s, Math.max(2, ticks)));
+        }
+
+        /** at 틱에 빛 조각으로 흩어지며 작아짐 (8틱) → 지움 */
+        void vanish(int at) {
+            fx.on(at, () -> {
+                for (int i = 0; i < 4; i++) {
+                    Vec3 p = V.up(mark, H * (0.15 + 0.25 * i));
+                    JobFx.burst(level, p, 1.2, DUSK, DUSK_CORE, 0.3, Opt.empty());
+                    SkillFx.sparks(level, p, i % 2 == 0 ? DUSK : VIOLET, 8, 4.0);
+                }
+                frame.to(V.up(mark, H * 0.35), null, s * 0.05, 8);
+                blade.to(V.up(mark, H * 0.35), null, s * 0.05, 8);
+                SkillFx.play(level, "block.amethyst_block.break", mark, 0.8, 0.8);
+            });
+            fx.on(at + 9, () -> {
+                frame.remove();
+                blade.remove();
+            });
+        }
     }
 }
