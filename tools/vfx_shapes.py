@@ -240,10 +240,10 @@ def tex_ki(alpha=0.55, rim=0.92, seed=5, bright=1.0):
 SHARDS = {
     "water": (tex_water("#1E62C8", "#5DB4FA", 0.8, s_alpha=0.45, n_streak=3, seed=11, flat=True), None, True),
     "deep": (tex_water("#0A3488", "#1C5DC0", 0.88, s_alpha=0.3, n_streak=2, seed=12, flat=True), None, True),
-    "light": (tex_water("#5DB6FA", "#C4E9FF", 0.62, streak="#FFFFFF", s_alpha=0.5, n_streak=3, seed=13, flat=True), None, True),
+    "light": (tex_water("#7CCBFF", "#D6F2FF", 0.72, streak="#FFFFFF", s_alpha=0.5, n_streak=3, seed=13, flat=True), None, True),
     "glass": (tex_water("#2A7FE6", "#9AD6FF", 0.42, streak="#FFFFFF", s_alpha=0.8, n_streak=4, seed=14), None, True),
     "foam": (tex_foam(0.86), None, True),
-    "ki": (tex_ki(0.52, 0.62, seed=21), 0, True),
+    "ki": (tex_ki(0.8, 0.9, seed=21), 0, True),
     "ki_core": (tex_ki(0.85, 1.0, seed=23, bright=1.0), 1, True),
 }
 
@@ -278,62 +278,56 @@ def shard_files():
 # ------------------------------------------------------------------ 물체
 
 def wave():
-    """파도: 쥔 곳 (8, 0, 1.5) · 너비 x −7 ~ 23 · 높이 18 · 앞 (말린 물마루) = +Z. 쓴 사람은 뒤에서 봄 — 뒤 비탈 · 물마루 · 앞으로 말려 내려오는 입술 ·
-    거품 · 뾰족한 물보라. 너비를 세 토막으로 나눠 토막마다 높이 · 앞뒤를 조금씩 다르게 (고르지 않은 물마루)"""
-    sh = Shape("wave", (8, 0, 1.5), "파도 (2026-11-12 만년빙하처럼 — 반투명 물 조각을 곡선을 따라 기울여 이음 · 거품 · 물보라)")
+    """파도: 쥔 곳 (8, 0, 1.5) · 너비 x −7 ~ 23 · 높이 18 · 앞 (말린 물마루) = +Z. 쓴 사람은 뒤에서 봄 — 곡선을 따라 기울인 물 판 (온 너비 한 장 + 엇갈린 좁은 판
+    하나 — 칸 무늬 없이 깎은 면처럼), 아래는 짙고 위로 갈수록 밝고 옅게, 물마루 · 입술에 뾰족한 거품 결정 (만년빙하처럼), 밑의 거품"""
+    sh = Shape("wave", (8, 0, 1.5), "파도 (2026-11-12 만년빙하처럼 2판 — 곡선을 따라 기울인 물 판 · 엇갈린 면 · 뾰족한 거품 결정)")
     curve = [(-14.0, 0.0), (-8.5, 2.6), (-3.5, 6.6), (0.5, 11.0), (3.8, 14.8), (7.4, 17.2), (10.8, 17.4), (13.6, 15.4), (15.0, 12.2), (14.4, 8.8), (12.6, 6.6)]
-    segs = [(-7.0, 3.2, 0.95, -0.5), (2.8, 13.2, 1.0, 0.4), (12.8, 23.0, 0.97, -0.2)]
-    rng = np.random.default_rng(7)
-    for (x0, x1, hk, dz) in segs:
-        w = x1 - x0
-        xc = (x0 + x1) / 2
-        pts = [np.array([0.0, y * hk, z + dz]) for (z, y) in curve]
-        n = len(pts)
-        for i in range(n - 1):
-            a, b = pts[i], pts[i + 1]
-            t = b - a
-            L = float(np.linalg.norm(t)) + 1.4
-            mid = (a + b) / 2
-            zt = unit(t)
-            xa = np.array([1.0, 0, 0])
-            ya = np.cross(zt, xa)  # 바깥 (위 · 뒤) 쪽
-            # 조각마다 조금씩 비틈 (구르기 ±6° · 기울기 ±4°) — 타일처럼 반듯하게 이어지지 않게
-            rl, tl = math.radians(rng.uniform(-6, 6)), math.radians(rng.uniform(-4, 4))
-            xa2 = unit(xa * math.cos(rl) + ya * math.sin(rl))
-            ya2 = unit(np.cross(zt, xa2))
-            zt2 = unit(zt * math.cos(tl) + ya2 * math.sin(tl))
-            ya2 = unit(np.cross(zt2, xa2))
-            xa2 = unit(np.cross(ya2, zt2))
-            q = q_from_basis(xa2, ya2, zt2)
-            thick = 2.6 if i < 5 else 2.2
-            m = "water" if i < 6 else ("light" if i < 8 else "foam")
-            sh.box(m, (xc + rng.uniform(-0.6, 0.6), mid[1], mid[2]), q, (w + rng.uniform(1.0, 2.4), thick, L))
-            # 속 (짙은 물 — 비탈 아래를 채움)
-            if i < 5:
-                inner = mid - ya * (thick * 0.5 + 2.2)
-                sh.box("deep", (xc, max(1.6, inner[1]), inner[2]), q, (w - 0.6, 4.4, L * 0.92))
-        # 물마루 거품 (꼭대기 · 앞)
-        for i in (4, 5, 6):
-            a, b = pts[i], pts[i + 1]
-            t = b - a
-            zt = unit(t)
-            ya = np.cross(zt, [1.0, 0, 0])
-            mid = (a + b) / 2 + ya * 1.5
-            q = q_from_basis(np.array([1.0, 0, 0]), ya, zt)
-            sh.box("foam", (xc, mid[1] - 0.4, mid[2]), q, (w + 0.6, 0.9, float(np.linalg.norm(t)) * 0.95))
-        # 뾰족한 물보라 (물마루에서 위 · 앞으로)
-        for k in range(3):
-            px = x0 + w * (k + 0.5) / 3 + rng.uniform(-1.2, 1.2)
-            i = int(rng.integers(5, 8))
-            base = pts[i]
-            ax = unit([rng.uniform(-0.25, 0.25), 1.0, rng.uniform(0.3, 0.9)])
-            sh.tip("foam" if k % 2 == 0 else "light", (px, base[1] + 0.5, base[2]), ax, rng.uniform(4.5, 7.0), rng.uniform(1.6, 2.4),
-                   spin=rng.uniform(0, 90), bury=0.25)
-    # 밑의 물 · 거품 (앞으로 퍼짐)
+    mats = ["deep", "deep", "water", "water", "water", "light", "light", "light", "light", "foam"]
+    rng = np.random.default_rng(11)
+    pts = [np.array([0.0, y, z]) for (z, y) in curve]
+    X0, X1 = -7.0, 23.0
+
+    def slab(m, xc, w, a, b, thick, roll, tilt, lift=0.0):
+        t = b - a
+        zt = unit(t)
+        xa = np.array([1.0, 0, 0])
+        ya = np.cross(zt, xa)
+        rl, tl = math.radians(roll), math.radians(tilt)
+        xa2 = unit(xa * math.cos(rl) + ya * math.sin(rl))
+        ya2 = unit(np.cross(zt, xa2))
+        zt2 = unit(zt * math.cos(tl) + ya2 * math.sin(tl))
+        ya2 = unit(np.cross(zt2, xa2))
+        xa2 = unit(np.cross(ya2, zt2))
+        mid = (a + b) / 2 + ya2 * lift
+        sh.box(m, (xc, mid[1], mid[2]), q_from_basis(xa2, ya2, zt2), (w, thick, float(np.linalg.norm(t)) + 1.6))
+    for i in range(len(pts) - 1):
+        a, b = pts[i], pts[i + 1]
+        thick = 2.6 if i < 5 else 2.2
+        slab(mats[i], 8.0, X1 - X0 + 1.0, a, b, thick, rng.uniform(-2, 2), rng.uniform(-2, 2))
+        # 엇갈린 좁은 면 (조금 바깥 — 깎은 면처럼)
+        if i < 8:
+            w = rng.uniform(8, 14)
+            xc = rng.uniform(X0 + w / 2, X1 - w / 2)
+            slab(mats[i] if i > 1 else "water", xc, w, a, b, thick * 0.7, rng.uniform(-7, 7), rng.uniform(-5, 5), lift=0.7)
+        if i < 5:
+            ya = np.cross(unit(b - a), [1.0, 0, 0])
+            inner = (a + b) / 2 - ya * (thick * 0.5 + 2.2)
+            sh.box("deep", (8.0, max(1.6, inner[1]), inner[2]), q_from_basis(np.array([1.0, 0, 0]), ya, unit(b - a)), (X1 - X0 - 0.6, 4.4,
+                   float(np.linalg.norm(b - a)) * 0.92))
+    # 물마루 · 입술의 뾰족한 거품 결정 (위 · 앞으로, 크고 작게)
+    for k in range(14):
+        px = X0 + 1.0 + (X1 - X0 - 2.0) * (k + rng.uniform(0.1, 0.9)) / 14
+        i = int(rng.integers(4, 8))
+        u = rng.uniform(0, 1)
+        base = pts[i] * (1 - u) + pts[i + 1] * u
+        nrm = unit(np.cross(unit(pts[i + 1] - pts[i]), [1.0, 0, 0]))
+        ax = unit(nrm * 0.8 + np.array([0, 0.5, 0.5]) + np.array([rng.uniform(-0.25, 0.25), 0, 0]))
+        sh.tip("foam" if k % 3 else "light", (px, base[1], base[2]), ax, rng.uniform(3.5, 7.0), rng.uniform(1.4, 2.4), spin=rng.uniform(0, 90), bury=0.3)
+    # 밑의 물 · 거품 (앞으로 퍼짐) · 작은 물보라
     sh.box("water", (8.0, 0.9, 11.0), np.array([0, 0, 0, 1.0]), (30.0, 1.8, 10.0))
     sh.box("foam", (8.0, 1.9, 13.0), np.array([0, 0, 0, 1.0]), (28.5, 0.6, 9.0))
-    for k in range(5):
-        px = -5 + k * 6.5 + rng.uniform(-1, 1)
+    for k in range(6):
+        px = -5 + k * 5.4 + rng.uniform(-1, 1)
         sh.tip("foam", (px, 1.6, 16.5 + rng.uniform(-1, 1)), unit([rng.uniform(-0.3, 0.3), 1.0, rng.uniform(0.4, 1.0)]), rng.uniform(2.5, 4.0), 1.4,
                spin=rng.uniform(0, 90), bury=0.3)
     return sh
