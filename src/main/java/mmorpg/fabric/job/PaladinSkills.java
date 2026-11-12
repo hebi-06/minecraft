@@ -412,10 +412,10 @@ final class PaladinSkills {
      */
     static final class Maul {
         /** 망치 길이 (칸): 내려침 · 마지막 */
-        static final double LEN = 6.4;
-        static final double LEN_LAST = 7.6;
+        static final double LEN = 8.0;
+        static final double LEN_LAST = 9.6;
         /** 하늘 (박힌 자리에서 위로 칸 — 머리 가운데) */
-        static final double SKY = 12;
+        static final double SKY = 13;
         final Vfx.Fx fx;
         final Quaternionf q;
         final Vec3 lean;

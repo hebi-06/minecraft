@@ -1179,6 +1179,8 @@ final class VanillaProbe {
             case "dragoon_impale" -> new double[] {7.5, 2.6, 2.0, 1.0};
             case "dragoon_breath" -> new double[] {7.5, 2.4, 1.6, 1.0};
             case "dragoon_ult" -> new double[] {13.0, 4.0, 6.0, 0.5};
+            // 디바인 썬더의 3D 대망치 (구름 속 13칸 위에서 떨어짐): 멀리서 올려다봄
+            case "paladin_ult" -> new double[] {11.5, 3.2, 4.6, 0.5};
             default -> new double[] {6.0, 2.1, 1.0, 1.0};
         };
     }
