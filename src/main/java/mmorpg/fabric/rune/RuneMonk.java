@@ -225,8 +225,9 @@ final class RuneMonk {
         // 2026-11-12 3D 기의 손바닥 (사용자 "손 모양 3d로 연출" — tools/vfx_props.py palm, 빛 = 무투 계열 색): 몸 앞에서 커지며 따라옴 → 앞으로 밀려 나가며 커짐 → 사라짐
         Vec3 f0 = V.flat(sp.getViewVector(1F));
         mmorpg.fabric.vfx.Vfx.Fx palmFx = RuneProps.fx(level, sp.position(), delay + 20);
-        mmorpg.fabric.vfx.Vfx.Prop hand3d = RuneProps.prop(palmFx, RuneProps.PALM, V.add(V.up(sp.position(), 1.15), f0, 1.5), RuneProps.PALM_MID,
-                RuneProps.facing(f0, V.UP), palmScale(0.25), GOLD, CORE);
+        // 2026-11-12 조각 물체 (사용자 "만년빙하처럼" — tools/vfx_shapes.py palm: 기울인 반투명 기운 조각 · 손바닥 가운데 빛)
+        mmorpg.fabric.vfx.Vfx.Group hand3d = RuneProps.shape(palmFx, RuneProps.PALM, V.add(V.up(sp.position(), 1.15), f0, 1.5), RuneProps.facing(f0, V.UP),
+                palmScale(0.25), GOLD, CORE);
         for (int t = 0; t < delay; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {

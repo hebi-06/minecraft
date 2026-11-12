@@ -898,7 +898,8 @@ BUILD = {"rune_sword": rune_sword, "rune_hammer": rune_hammer, "ice_spike": ice_
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import vfx_blocky  # noqa: E402
 
-BUILD = {k: v for k, v in BUILD.items() if k not in vfx_blocky.BUILD}
+# 2026-11-12: 핏빛 달 없음 (적월 강림은 2D 달) · 손바닥 · 파도 · 물기둥은 tools/vfx_shapes.py (조각 물체) — 여기서는 그물만
+BUILD = {k: v for k, v in BUILD.items() if k == "net"}
 
 
 def outputs(names=None):

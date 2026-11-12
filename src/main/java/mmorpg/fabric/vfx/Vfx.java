@@ -232,6 +232,13 @@ public final class Vfx {
             return p;
         }
 
+        /** 조각 물체 (mmorpg/vfx_shapes.json 의 이름 — tools/vfx_shapes.py: 파도 · 물기둥 · 기의 손바닥) */
+        public Group group(String shape, Vec3 at) {
+            Group g = new Group(this, shape(shape), at);
+            propsMade++;
+            return g;
+        }
+
         /** 2D 그림 (글꼴 rpg:vfx 의 그림판 이름) — 카메라를 봄 */
         public Sprite sprite(String sheet, Vec3 at) {
             Sprite s = new Sprite(this, sheet(sheet), at);
@@ -418,6 +425,177 @@ public final class Vfx {
             if (removed) return;
             removed = true;
             fx.removeElement(e);
+        }
+    }
+
+    // ------------------------------------------------------------ 조각 물체
+
+    /** 조각 하나: 모델 (rpg:vfx/shard_<m>) · 가운데 c · 회전 q · 크기 s (모델 픽셀 — tip 이면 지름 · 끝에서 끝 · 지름) · 꼭짓점으로 세움 */
+    record ShapePart(String model, Vector3f c, Quaternionf q, Vector3f s, boolean tip) {}
+
+    record ShapeDef(String name, Vector3f grip, List<ShapePart> parts) {}
+
+    static final Map<String, ShapeDef> SHAPES = new HashMap<>();
+    /** 정육면체를 꼭짓점으로 세움 (대각선 (1, 1, 1) → +Y — 만년빙하 결정과 같음) */
+    static final Quaternionf TIP_UP = new Quaternionf().rotationTo(new Vector3f(1, 1, 1).normalize(), new Vector3f(0, 1, 0));
+    static final float DIAG = (float) Math.sqrt(3);
+    static final float WIDE = (float) Math.sqrt(2.0 / 3.0);
+
+    @SuppressWarnings("unchecked")
+    static synchronized ShapeDef shape(String name) {
+        if (SHAPES.isEmpty()) {
+            try (InputStream in = Vfx.class.getResourceAsStream("/mmorpg/vfx_shapes.json")) {
+                if (in == null) throw new IllegalStateException("no vfx_shapes.json");
+                Map<String, Object> root = Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+                for (Map.Entry<String, Object> e : root.entrySet()) {
+                    Map<String, Object> m = (Map<String, Object>) e.getValue();
+                    List<Object> g = (List<Object>) m.get("grip");
+                    List<ShapePart> parts = new ArrayList<>();
+                    for (Object o : (List<Object>) m.get("parts")) {
+                        Map<String, Object> pm = (Map<String, Object>) o;
+                        List<Object> c = (List<Object>) pm.get("c");
+                        List<Object> q = (List<Object>) pm.get("q");
+                        List<Object> sz = (List<Object>) pm.get("s");
+                        parts.add(new ShapePart("rpg:vfx/shard_" + pm.get("m"), vec(c), new Quaternionf(num(q, 0), num(q, 1), num(q, 2), num(q, 3)), vec(sz),
+                                Boolean.TRUE.equals(pm.get("tip"))));
+                    }
+                    SHAPES.put(e.getKey(), new ShapeDef(e.getKey(), vec(g), parts));
+                }
+                Mmorpg.LOG.info("[vfx] shapes {}", SHAPES.size());
+            } catch (IOException | RuntimeException ex) {
+                Mmorpg.LOG.warn("[vfx] shapes: {}", ex.toString());
+            }
+        }
+        ShapeDef d = SHAPES.get(name);
+        if (d == null) throw new IllegalArgumentException("vfx shape " + name);
+        return d;
+    }
+
+    private static float num(List<Object> l, int i) {
+        return ((Number) l.get(i)).floatValue();
+    }
+
+    private static Vector3f vec(List<Object> l) {
+        return new Vector3f(num(l, 0), num(l, 1), num(l, 2));
+    }
+
+    /**
+     * 2026-11-12 조각 물체 (사용자 "만년빙하처럼 파도 같은거 만들어도 됨" — tools/vfx_shapes.py): 조각마다 아이템 표시 하나 (반투명 정육면체 모델 rpg:vfx/shard_*)
+     * 를 비스듬히 · 아무 비율로 (변환 = 옮김 · 왼쪽 회전 · 크기 · 오른쪽 회전 — 자바 모델의 22.5° 계단 없이) 겹침. 물체 전체는 {@link Prop} 처럼 옮김 · 돌림 · 키움
+     * (쥔 곳 · 크기 단위 = 모델 픽셀, 16 = 1칸). 조각의 모델 점 u (정육면체 −½ ~ ½) → 세계: 자리 + R · 크기 · ((c − 쥔 곳) / 16 + q · s · (tip ? 꼭짓점 세움 : 1) · u)
+     */
+    public static final class Group {
+        final Fx fx;
+        final ShapeDef def;
+        final List<ItemDisplayElement> els = new ArrayList<>();
+        Vec3 pos;
+        Quaternionf rot = new Quaternionf();
+        float scale = 1F;
+        boolean removed;
+
+        Group(Fx fx, ShapeDef def, Vec3 at) {
+            this.fx = fx;
+            this.def = def;
+            this.pos = at;
+            for (ShapePart p : def.parts()) {
+                ItemStack stack = new ItemStack(Items.PAPER);
+                stack.set(DataComponents.ITEM_MODEL, Identifier.parse(p.model()));
+                ItemDisplayElement e = new ItemDisplayElement(stack);
+                e.setItemDisplayContext(ItemDisplayContext.NONE);
+                e.setViewRange(1.5F);
+                e.setShadowRadius(0F);
+                e.setOffset(at.subtract(fx.origin));
+                els.add(e);
+            }
+            apply();
+            for (ItemDisplayElement e : els) fx.addElement(e);
+        }
+
+        /** 물들임 (기운 조각 — 0 = 빛, 1 = 속빛) */
+        public Group tint(double[]... colors) {
+            List<Integer> c = new ArrayList<>();
+            for (double[] col : colors) c.add(rgb(col));
+            for (ItemDisplayElement e : els) {
+                ItemStack stack = e.getItem().copy();
+                stack.set(DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(List.of(), List.of(), List.of(), c));
+                e.setItem(stack);
+            }
+            return this;
+        }
+
+        public Group bright() {
+            for (ItemDisplayElement e : els) e.setBrightness(Brightness.FULL_BRIGHT);
+            return this;
+        }
+
+        public Vec3 pos() {
+            return pos;
+        }
+
+        public Quaternionf rot() {
+            return new Quaternionf(rot);
+        }
+
+        /** 다음 모습: ticks 틱 동안 at · r · s 로 (자리 보간은 59틱까지 — 긴 옮김은 곧은 길을 40틱씩 나눔, {@link Prop#to} 와 같음) */
+        public Group to(Vec3 at, Quaternionf r, double s, int ticks) {
+            if (removed) return this;
+            int t = Math.max(0, ticks);
+            if (at != null && t > MAX_TELEPORT) {
+                Vec3 from = pos;
+                int n = (int) Math.ceil(t / 40.0);
+                for (int i = 1; i <= n; i++) {
+                    Vec3 mid = from.add(at.subtract(from).scale(i / (double) n));
+                    int step = i * t / n - (i - 1) * t / n;
+                    fx.on(fx.age + (i - 1) * t / n, () -> move(mid, step));
+                }
+                if (r != null || s > 0) to(null, r, s, t);
+                return this;
+            }
+            if (at != null) {
+                pos = at;
+                for (ItemDisplayElement e : els) {
+                    e.setTeleportDuration(Math.min(MAX_TELEPORT, t));
+                    e.setOffset(at.subtract(fx.origin));
+                }
+            }
+            if (r != null) rot = new Quaternionf(r);
+            if (s > 0) scale = (float) s;
+            for (ItemDisplayElement e : els) e.setInterpolationDuration(t);
+            apply();
+            for (ItemDisplayElement e : els) e.startInterpolationIfDirty();
+            return this;
+        }
+
+        public Group move(Vec3 at, int ticks) {
+            return to(at, null, -1, ticks);
+        }
+
+        public Group turn(Quaternionf r, int ticks) {
+            return to(null, r, -1, ticks);
+        }
+
+        public Group size(double s, int ticks) {
+            return to(null, null, s, ticks);
+        }
+
+        private void apply() {
+            Quaternionf flip = ITEM_Y_FLIP ? new Quaternionf().rotateY((float) Math.PI) : new Quaternionf();
+            for (int i = 0; i < els.size(); i++) {
+                ShapePart p = def.parts().get(i);
+                ItemDisplayElement e = els.get(i);
+                Vector3f o = new Vector3f(p.c()).sub(def.grip()).div(16F).mul(scale);
+                e.setTranslation(rot.transform(o, new Vector3f()));
+                e.setLeftRotation(new Quaternionf(rot).mul(p.q()));
+                Vector3f sz = p.tip() ? new Vector3f(p.s().x / 2F / WIDE, p.s().y / DIAG, p.s().z / 2F / WIDE) : new Vector3f(p.s());
+                e.setScale(sz.div(16F).mul(scale));
+                e.setRightRotation(p.tip() ? new Quaternionf(TIP_UP).mul(flip) : new Quaternionf(flip));
+            }
+        }
+
+        public void remove() {
+            if (removed) return;
+            removed = true;
+            for (ItemDisplayElement e : els) fx.removeElement(e);
         }
     }
 

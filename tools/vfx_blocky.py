@@ -909,6 +909,88 @@ def foam_paint():
     return paint
 
 
+def glass(c_lo, c_hi, alpha=0.55, edge="all", edge_col="#EAF8FF", edge_alpha=0.95, streak="h", streak_col="#FFFFFF", streak_alpha=0.9,
+          density=1.0, speed=1.0, gray=False, up_t=1.0, down_t=0.15):
+    """반투명 기운 · 물 (사진 6 의 반투명 원통처럼): 아래 짙은 색 → 위 밝은 색 · 흐르는 흰 줄 (h 가로 물결 · d 사선 · v 세로 — 프레임마다 흐름) ·
+    테두리 한 픽셀 (edge: all · top · None) · 반짝임. gray 면 색이 회색 값 (계열 색 물들임)"""
+    lo = np.full(3, c_lo) if gray else C(c_lo)
+    hi = np.full(3, c_hi) if gray else C(c_hi)
+    E = np.full(3, 1.0) if gray else C(edge_col)
+    S = np.full(3, 1.0) if gray else C(streak_col)
+
+    def paint(w, h, face, rng, frame):
+        ys, xs = np.mgrid[0:h, 0:w]
+        if face in SIDES:
+            t = 1.0 - ys / max(1, h - 1)
+        elif face == "up":
+            t = np.full((h, w), up_t)
+        else:
+            t = np.full((h, w), down_t)
+        img = lo * (1 - t[..., None]) + hi * t[..., None]
+        a = np.full((h, w), alpha)
+        ph = frame / FRAMES * math.pi * 2
+        if streak and face in SIDES:
+            n = max(1, int(round(density * (w * h) ** 0.5 / 5)))
+            for k in range(n):
+                y0 = rng.uniform(0, h)
+                amp = rng.uniform(0.6, 1.8)
+                fq = rng.uniform(0.25, 0.6)
+                p0 = rng.uniform(0, 6.3)
+                x0 = int(rng.integers(0, w))
+                L = int(rng.integers(max(2, w // 3), max(3, w + 1)))
+                for i in range(L):
+                    x = (x0 + i) % w
+                    if streak == "h":
+                        y = y0 + amp * math.sin(x * fq + p0 + ph) - frame * speed * h / FRAMES / 3
+                    elif streak == "d":
+                        y = y0 - x * 0.8 - frame * speed * h / FRAMES / 2
+                    else:  # v — 세로로 오르는 줄 (짧게)
+                        if i > max(2, h // 4):
+                            break
+                        x = x0
+                        y = y0 - i - frame * speed * h / FRAMES / 2
+                    yi = int(math.floor(y)) % h
+                    img[yi, x] = img[yi, x] * (1 - streak_alpha) + S * streak_alpha
+                    a[yi, x] = max(a[yi, x], min(1.0, alpha + 0.35))
+        # 반짝임
+        r2 = np.random.default_rng(int(rng.integers(1 << 30)))
+        for i in range(max(1, int(round(w * h / 160)))):
+            x, y = int(r2.integers(0, w)), int(r2.integers(0, h))
+            if pulse(frame + i * 1.3) > 0.75:
+                img[y, x] = S
+                a[y, x] = 1.0
+        if edge == "all" and w >= 2 and h >= 2:
+            e = (xs == 0) | (ys == 0) | (xs == w - 1) | (ys == h - 1)
+            img[e] = img[e] * 0.3 + E * 0.7
+            a[e] = edge_alpha
+        elif edge == "top" and face in SIDES:
+            img[0, :] = E
+            a[0, :] = edge_alpha
+        return np.concatenate([np.clip(img, 0, 1), a[..., None]], -1), None
+    return paint
+
+
+def foam2(alpha=0.96):
+    """거품: 흰 바탕 · 옅은 하늘빛 거품 고리 (작은 원) · 옆면 아랫줄은 하늘빛 그늘 (프레임마다 조금 움직임)"""
+    W_, B_, S_ = C("#F6FCFF"), C("#BFE3FA"), C("#8CC6EE")
+
+    def paint(w, h, face, rng, frame):
+        ys, xs = np.mgrid[0:h, 0:w]
+        img = np.tile(W_, (h, w, 1)).astype(float)
+        for i in range(max(1, int(round(w * h / 22)))):
+            cx = rng.uniform(0, w) + (frame % 3) * 0.3
+            cy = rng.uniform(0, h)
+            r = rng.uniform(0.9, 2.0)
+            d = np.sqrt((xs + 0.5 - cx) ** 2 + (ys + 0.5 - cy) ** 2)
+            ring = np.abs(d - r) < 0.5
+            img[ring] = B_
+        if face in SIDES and h >= 3:
+            img[-1, :] = S_
+            img[-2, :] = img[-2, :] * 0.5 + B_ * 0.5
+        return np.concatenate([img, np.full((h, w, 1), alpha)], -1), None
+    return paint
+
+
 # ------------------------------------------------------------------ 무기 (치수는 tools/vfx_props.py 그대로 — RuneProps 의 길이 · 쥔 곳)
 
 def weapon_mats(m, glow_tint=0, core_tint=1):
@@ -1044,22 +1126,41 @@ def moon():
 
 
 def palm():
-    m = BModel("palm", "기의 손바닥 (2026-11-12 사진 방식 — 반투명 기 · 밝은 테 · 흐르는 결 · 손바닥의 인, 빛 = 계열 색)", d=2.0)
-    m.mat("ki", Mat(ki_paint(), tint=0, glow=True, animated=True))
+    """기의 손바닥 (붕권): 손바닥 가운데 (8, 5, 8) · 손목 ~ 손끝 약 26 · 앞 (장풍을 미는 면) = +Z — 빛나는 속 (기) + 반투명 겉 (기운 껍질 — 밝은 테),
+    마디마다 빛 띠, 앞 · 뒤 (쓴 사람이 보는 손등) 모두 인"""
+    m = BModel("palm", "기의 손바닥 (2026-11-12 사진 방식 2판 — 빛나는 속 · 반투명 기운 껍질 · 밝은 테 · 마디 빛 띠 · 앞뒤 인, 빛 = 계열 색)", d=2.0)
+    m.mat("ki", Mat(glass(0.62, 0.98, alpha=0.9, edge="all", edge_alpha=1.0, streak="v", streak_alpha=0.8, density=0.8, gray=True, up_t=0.95, down_t=0.6),
+                    tint=0, glow=True, animated=True))
+    m.mat("aura", Mat(glass(0.7, 1.0, alpha=0.22, edge="all", edge_alpha=0.75, streak="v", streak_alpha=0.5, density=0.5, gray=True, up_t=0.9, down_t=0.7),
+                      tint=0, glow=True, animated=True))
     m.mat("line", Mat(gem_paint(0.8), tint=1, glow=True, animated=True))
     m.mat("seal", Mat(seal_paint(), tint=1, glow=True, animated=True))
-    m.box("ki", (3.0, 0, 6.6), (13.0, 10.0, 9.4))
-    m.box("seal", (4.6, 1.6, 9.4), (11.4, 8.4, 9.7), faces=["south"])
-    m.box("ki", (4.4, -5.0, 6.9), (11.6, 0, 9.1))
-    m.box("line", (4.2, -1.2, 6.7), (11.8, -0.4, 9.3))
-    for x0, h1, h2, tilt in ((3.2, 5.5, 4.0, 22.5), (5.8, 6.8, 4.6, 0.0), (8.4, 6.5, 4.4, 0.0), (11.0, 5.0, 3.6, -22.5)):
+
+    def part(f, t, rot=None, shell=0.55):
+        m.box("ki", f, t, rot=rot)
+        m.box("aura", tuple(v - shell for v in f), tuple(v + shell for v in t), rot=rot)
+    # 손바닥 (모서리를 한 단 깎음) · 손목 · 손목 빛 띠
+    part((3.0, 0.4, 6.6), (13.0, 10.0, 9.4))
+    m.box("ki", (3.6, -0.3, 6.9), (12.4, 10.6, 9.1))
+    part((4.6, -5.0, 6.9), (11.4, 0.4, 9.1))
+    m.box("line", (4.2, -1.4, 6.6), (11.8, -0.5, 9.4))
+    # 손가락 넷 (세 마디 · 조금 벌림) — 마디마다 빛 띠
+    for x0, hs, tilt in ((3.2, (3.0, 2.6, 2.0), 22.5), (5.8, (3.6, 3.0, 2.3), 0.0), (8.4, (3.5, 2.9, 2.2), 0.0), (11.0, (2.8, 2.3, 1.8), -22.5)):
         org = (x0 + 1.1, 10.0, 8.0)
         rot = ("z", tilt, org) if tilt else None
-        m.box("ki", (x0, 10.0, 6.8), (x0 + 2.2, 10.0 + h1, 9.2), rot=rot)
-        m.box("ki", (x0 + 0.15, 10.0 + h1, 6.95), (x0 + 2.05, 10.0 + h1 + h2, 9.05), rot=rot)
-        m.box("line", (x0 + 0.1, 10.0 + h1 - 0.35, 6.75), (x0 + 2.1, 10.0 + h1 + 0.25, 9.25), rot=rot)
-    m.box("ki", (-1.5, 2.0, 6.9), (3.0, 4.4, 9.1), rot=("z", 45.0, (3.0, 3.0, 8.0)))
-    m.box("ki", (-5.0, 2.2, 7.05), (-1.5, 4.2, 8.95), rot=("z", 45.0, (3.0, 3.0, 8.0)))
+        y = 10.0
+        for j, hh in enumerate(hs):
+            inset = 0.12 * j
+            part((x0 + inset, y, 6.8 + inset), (x0 + 2.2 - inset, y + hh, 9.2 - inset), rot=rot, shell=0.45)
+            if j < 2:
+                m.box("line", (x0 + inset - 0.1, y + hh - 0.3, 6.7 + inset), (x0 + 2.3 - inset, y + hh + 0.3, 9.3 - inset), rot=rot)
+            y += hh
+    # 엄지 (옆으로 45°)
+    part((-1.5, 2.0, 6.9), (3.0, 4.4, 9.1), rot=("z", 45.0, (3.0, 3.0, 8.0)), shell=0.45)
+    part((-5.0, 2.2, 7.05), (-1.5, 4.2, 8.95), rot=("z", 45.0, (3.0, 3.0, 8.0)), shell=0.45)
+    # 인: 앞 (밀어내는 면) · 뒤 (쓴 사람이 보는 손등)
+    m.box("seal", (3.9, 0.9, 9.95), (12.1, 9.1, 10.05), faces=["south"])
+    m.box("seal", (4.6, 1.6, 5.95), (11.4, 8.4, 6.05), faces=["north"])
     return m
 
 
@@ -1112,49 +1213,72 @@ def net():
 
 
 def wave():
-    """파도: 밑 가운데 (8, 0, 1.5) · 너비 (x) 30 · 높이 18 · 앞 (말린 물마루) = +Z — 계단 비탈 · 물마루 · 앞으로 말려 내려오는 입술 · 거품"""
-    m = BModel("wave", "파도 (2026-11-12 사진 방식 — 계단 비탈 · 말린 물마루 · 거품 · 흐르는 물결)", d=1.5)
-    m.mat("deep", Mat(water_paint("#062E6A", "#145AA8", 0.9), glow=True, animated=True))
-    m.mat("water", Mat(water_paint("#0C5CC4", "#3A9AF0", 0.86), glow=True, animated=True))
-    m.mat("crest", Mat(water_paint("#1F7FE0", "#7CC4FF", 0.9, foam_top=True), glow=True, animated=True))
-    m.mat("foam", Mat(foam_paint(), glow=True, animated=True))
+    """파도 (해일 · 심해의 군주): 밑 가운데 (8, 0, 1.5) · 너비 (x) 30 · 높이 18 · 앞 (말린 물마루) = +Z. 쓴 사람은 뒤 (-Z) 에서 봄 —
+    뒤 비탈은 기울인 판 둘 (22.5° · 45°) 로 매끄럽게, 물마루 거품 · 앞으로 말려 내려오는 입술 (22.5° 씩 넷) · 밑의 거품. 반투명 물 + 흐르는 흰 물결 줄"""
+    m = BModel("wave", "파도 (2026-11-12 사진 방식 2판 — 반투명 물 · 흐르는 물결 줄 · 기울인 뒤 비탈 · 말린 물마루 · 거품)", d=1.5)
+    m.mat("deep", Mat(glass("#05306E", "#1663C4", alpha=0.82, edge=None, streak="h", streak_col="#9FD4FF", streak_alpha=0.7, density=1.0),
+                      glow=True, animated=True))
+    m.mat("water", Mat(glass("#0D5BC2", "#47A8F5", alpha=0.72, edge="top", edge_col="#D8F1FF", streak="h", streak_alpha=0.85, density=1.2),
+                       glow=True, animated=True))
+    m.mat("foam", Mat(foam2(), glow=True, animated=True))
     X0, X1 = -7.0, 23.0
-    m.box("deep", (X0, 0, -14), (X1, 5.5, -4))
-    m.box("deep", (X0 + 0.5, 0, -8), (X1 - 0.5, 10.5, 1))
-    m.box("water", (X0, 0, -3), (X1, 15.0, 6.0))
-    m.box("crest", (X0 + 0.5, 12.5, -1.0), (X1 - 0.5, 17.6, 7.5))
-    m.box("crest", (X0 + 1.0, 13.0, 6.0), (X1 - 1.0, 17.0, 11.0), rot=("x", 22.5, (8, 15.0, 8.5)))
-    m.box("water", (X0 + 1.5, 9.5, 10.0), (X1 - 1.5, 14.0, 14.0), rot=("x", 45.0, (8, 11.75, 12.0)))
-    m.box("foam", (X0 + 2.0, 6.0, 12.8), (X1 - 2.0, 10.0, 16.0), rot=("x", 45.0, (8, 8.0, 14.4)))
-    m.box("foam", (X0 + 0.5, 17.6, 0.0), (X1 - 0.5, 18.0, 7.0))
-    m.box("water", (X0, 0, 6.0), (X1, 2.0, 16.0))
-    m.box("foam", (X0 + 1.0, 2.0, 9.0), (X1 - 1.0, 2.6, 17.5))
+    # 몸 (속 — 뒤에서 앞으로 높아짐)
+    m.box("deep", (X0 + 0.4, 0, -12.5), (X1 - 0.4, 4.5, -3.0))
+    m.box("deep", (X0 + 0.4, 0, -6.0), (X1 - 0.4, 9.5, 2.0))
+    m.box("water", (X0, 0, -1.0), (X1, 14.5, 6.5))
+    # 뒤 비탈: 기울인 판 (아래 22.5° · 위 45°) — 쓴 사람이 보는 면
+    m.box("water", (X0, 0.0, -14.0), (X1, 2.4, 0.0), rot=("x", -22.5, (8, 1.2, -7.0)))
+    m.box("water", (X0 + 0.2, 4.6, -4.6), (X1 - 0.2, 7.0, 6.6), rot=("x", -45.0, (8, 5.8, 1.0)))
+    # 물마루 · 거품 꼭대기
+    m.box("water", (X0 + 0.3, 12.4, 0.0), (X1 - 0.3, 17.4, 8.0))
+    m.box("foam", (X0 + 0.5, 17.0, 0.6), (X1 - 0.5, 18.0, 7.6))
+    # 앞으로 말려 내려오는 입술 (22.5° 씩)
+    m.box("water", (X0 + 0.8, 13.6, 6.8), (X1 - 0.8, 17.0, 11.4), rot=("x", 22.5, (8, 15.3, 9.1)))
+    m.box("water", (X0 + 1.2, 10.6, 10.0), (X1 - 1.2, 14.4, 13.6), rot=("x", 45.0, (8, 12.5, 11.8)))
+    m.box("foam", (X0 + 1.6, 7.0, 12.4), (X1 - 1.6, 11.0, 15.4), rot=("x", -22.5, (8, 9.0, 13.9)))
+    m.box("foam", (X0 + 2.0, 4.6, 12.0), (X1 - 2.0, 7.2, 14.6))
+    # 밑의 물 · 거품 (앞으로 퍼짐)
+    m.box("water", (X0, 0, 6.5), (X1, 1.8, 15.5))
+    m.box("foam", (X0 + 0.8, 1.6, 8.5), (X1 - 0.8, 2.3, 17.5))
     return m
 
 
 def water_column():
-    """물기둥: 밑 가운데 (8, 0, 7.5) · 높이 28 — 팔각 기둥 마디 (넓은 밑 → 허리 → 벌어진 꼭대기) · 거품 왕관 · 물보라 가시"""
-    m = BModel("water_column", "물기둥 (2026-11-12 사진 방식 — 팔각 마디 · 흐르는 물결 · 거품 왕관)", d=1.5)
-    m.mat("deep", Mat(water_paint("#0A3C86", "#1E6CC8", 0.88), glow=True, animated=True))
-    m.mat("water", Mat(water_paint("#1460C8", "#52AEF6", 0.84), glow=True, animated=True))
-    m.mat("foam", Mat(foam_paint(), glow=True, animated=True))
+    """물기둥 (소용돌이 감옥 · 심해의 군주): 밑 가운데 (8, 0, 7.5) · 높이 28 — 마디마다 22.5° 씩 비튼 반투명 물 (사선으로 오르는 흰 줄) ·
+    가운데 밝은 물줄기 · 밑 거품 고리 · 꼭대기 거품 왕관 · 밖으로 튀는 물보라"""
+    m = BModel("water_column", "물기둥 (2026-11-12 사진 방식 2판 — 비튼 반투명 물 · 오르는 흰 줄 · 밝은 속 물줄기 · 거품 왕관)", d=1.5)
+    m.mat("water", Mat(glass("#0B4FAE", "#4FB0F6", alpha=0.6, edge=None, streak="d", streak_alpha=0.9, density=1.4, speed=1.5),
+                       glow=True, animated=True))
+    m.mat("core", Mat(glass("#5CC0FF", "#D6F1FF", alpha=0.85, edge=None, streak="v", streak_alpha=0.9, density=1.0, speed=2.0),
+                      glow=True, animated=True))
+    m.mat("foam", Mat(foam2(), glow=True, animated=True))
     cx, cz = 8.0, 7.5
-    segs = (("deep", 0.0, 4.0, 5.8), ("water", 4.0, 10.0, 4.8), ("water", 10.0, 16.0, 4.2), ("water", 16.0, 21.0, 4.6), ("water", 21.0, 24.0, 5.8),
-            ("foam", 24.0, 25.6, 6.8))
-    for (mat, y0, y1, r) in segs:
-        m.box(mat, (cx - r, y0, cz - r), (cx + r, y1, cz + r))
-        m.box(mat, (cx - r * 0.95, y0, cz - r * 0.95), (cx + r * 0.95, y1, cz + r * 0.95), rot=("y", 45.0, (cx, (y0 + y1) / 2, cz)))
-    for i in range(8):
-        a = i / 8 * math.pi * 2 + math.pi / 8
-        px, pz = cx + math.cos(a) * 5.6, cz + math.sin(a) * 5.6
-        hgt = 27.0 + (1.6 if i % 2 == 0 else 0.4)
-        m.box("foam", (px - 0.9, 25.0, pz - 0.9), (px + 0.9, hgt, pz + 0.9), rot=("y", 45.0, (px, 26, pz)))
+    segs = ((0.0, 3.2, 6.2), (3.0, 6.6, 5.2), (6.4, 10.0, 4.5), (9.8, 13.4, 4.1), (13.2, 16.8, 4.1), (16.6, 20.2, 4.5), (20.0, 23.4, 5.3), (23.2, 25.4, 6.3))
+    for i, (y0, y1, r) in enumerate(segs):
+        ang = (0.0, 22.5, 45.0, -22.5)[i % 4]
+        rot = ("y", ang, (cx, (y0 + y1) / 2, cz)) if ang else None
+        m.box("water", (cx - r, y0, cz - r), (cx + r, y1, cz + r), rot=rot)
+    m.box("core", (cx - 1.8, 0.0, cz - 1.8), (cx + 1.8, 26.0, cz + 1.8), rot=("y", 45.0, (cx, 13.0, cz)))
+    # 밑 거품 고리 (낮은 판 넷 — 엇갈려 돌림)
+    for ang in (0.0, 22.5, 45.0, -22.5):
+        rot = ("y", ang, (cx, 0.5, cz)) if ang else None
+        m.box("foam", (cx - 7.2, 0.0, cz - 2.2), (cx + 7.2, 1.0, cz + 2.2), rot=rot)
+    # 꼭대기 거품 왕관 · 밖으로 튀는 물보라
+    m.box("foam", (cx - 5.6, 25.2, cz - 5.6), (cx + 5.6, 26.4, cz + 5.6), rot=("y", 22.5, (cx, 25.8, cz)))
+    for (dx, dz, ax, sg) in ((1, 0, "z", -1), (-1, 0, "z", 1), (0, 1, "x", 1), (0, -1, "x", -1)):
+        px, pz = cx + dx * 5.4, cz + dz * 5.4
+        m.box("foam", (px - 1.0, 25.0, pz - 1.0), (px + 1.0, 29.5, pz + 1.0), rot=(ax, 22.5 * sg, (px, 25.0, pz)))
+    for (dx, dz) in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+        px, pz = cx + dx * 3.9, cz + dz * 3.9
+        m.box("foam", (px - 0.9, 25.4, pz - 0.9), (px + 0.9, 28.0, pz + 0.9), rot=("y", 45.0, (px, 26.7, pz)))
     return m
 
 
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
-         "ice_blade": ice_blade, "moon": moon, "palm": palm, "fist": fist, "wave": wave, "water_column": water_column}
+         "ice_blade": ice_blade, "fist": fist}
+# 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
+# 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
 
 
 # ------------------------------------------------------------------ 미리보기 (정사영 광선 추적 — 자바 면 UV · 마인크래프트 빛 두 방향)
@@ -1298,7 +1422,7 @@ TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "met
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
          "net": [(0.5, 1.0, 0.5)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
-VIEWS_OF = {"fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(1.0, 0.12, 0.0), (0.7, 0.3, 1.0)], "palm": [(0.3, 0.2, 1.0), (1.0, 0.3, -0.4)]}
+VIEWS_OF = {"fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
 
 def main():

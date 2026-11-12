@@ -366,12 +366,13 @@ final class RuneTide {
     static void waterColumn(ServerLevel level, Vec3 at, double h, int life) {
         double s = RuneProps.scaleFor(h, RuneProps.WATER_H);
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, life + 10);
-        double[] base = {8, 0, 7.5};
-        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.WATER_COLUMN, V.up(at, -h * 0.5), base, RuneProps.along(V.UP, new Vec3(1, 0, 0)), s * 0.4);
-        fx.on(1, () -> p.to(at, RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), 60)), s, 3));
-        for (int t = 4; t < life; t += 4) {
-            final double a = 60 + t * 18.0;
-            fx.on(t, () -> p.turn(RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), a)), 4)); // 소용돌이 홈이 돎
+        // 2026-11-12 조각 물체 (사용자 "만년빙하처럼" — tools/vfx_shapes.py water_column: 물 결정 기둥 · 나선 물 띠 · 물보라). 조각은 회전 보간 동안 곧은 길로
+        // 옮겨지므로 2틱마다 24° 씩 (한 번에 크게 돌리면 가운데로 오그라들어 보임)
+        mmorpg.fabric.vfx.Vfx.Group p = RuneProps.shape(fx, RuneProps.WATER_COLUMN, V.up(at, -h * 0.5), RuneProps.along(V.UP, new Vec3(1, 0, 0)), s * 0.4);
+        fx.on(1, () -> p.to(at, RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), 24)), s, 3));
+        for (int t = 4; t < life; t += 2) {
+            final double a = 24 + (t - 2) * 12.0;
+            fx.on(t, () -> p.turn(RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), a)), 2)); // 소용돌이가 돎
         }
         fx.on(life, () -> p.to(V.up(at, -h * 0.6), null, s * 0.5, 6));
         fx.on(life + 6, p::remove);
@@ -382,7 +383,7 @@ final class RuneTide {
         double s = RuneProps.scaleFor(h, 18.0);
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, ticks + 8);
         Vec3 d = V.unit(dir);
-        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.WAVE, at, RuneProps.WAVE_BASE, RuneProps.facing(d, V.UP), s * 0.4);
+        mmorpg.fabric.vfx.Vfx.Group p = RuneProps.shape(fx, RuneProps.WAVE, at, RuneProps.facing(d, V.UP), s * 0.4);
         Vec3 end = V.add(at, d, dist);
         fx.on(1, () -> {
             p.move(end, Math.max(1, ticks - 1));
@@ -405,7 +406,7 @@ final class RuneTide {
             double l = n == 1 ? 0 : -span / 2 + w / 2 + (span - w) * i / (n - 1);
             Vec3 at = V.add(start, side, l);
             Vec3 end = V.add(at, f, dist);
-            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.WAVE, at, RuneProps.WAVE_BASE, RuneProps.facing(f, V.UP), s * 0.45);
+            mmorpg.fabric.vfx.Vfx.Group p = RuneProps.shape(fx, RuneProps.WAVE, at, RuneProps.facing(f, V.UP), s * 0.45);
             // 자리 (옮김 보간) 와 크기 (변환 보간) 는 따로 — 밀려가며 솟음 (맞는 틱과 같은 빠르기)
             fx.on(1, () -> {
                 p.move(end, Math.max(1, ticks - 1));

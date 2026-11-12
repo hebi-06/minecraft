@@ -25,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 사신 룬 (0.12.6 — 자바 전용, 낫을 든 동안만 씀 · 민첩 1.0 + 마력 0.5): 피의 초승달 컨셉 — 핏빛 초승달 · 출혈 · 흡혈.
  * 피의 초승달 (날아가는 초승달 · 관통 · 출혈) · 핏빛 수확 (두 번 크게 휘두름 · 흡혈) · 피의 회오리 (초승달을 두르고 돎 · 출혈) ·
- * 피의 낙인 (초승달 낙인 → 폭발 · 출혈 · 흡혈) · 적월 강림 (핏빛 달이 떠올라 칼날을 퍼붓고 떨어짐 — 핏빛 하늘).
+ * 피의 낙인 (초승달 낙인 → 폭발 · 출혈 · 흡혈) · 적월 강림 (핏빛 달이 떠올라 칼날을 퍼붓고 맥동하며 땅을 가름 — 핏빛 하늘).
  * 출혈은 맞은 뒤 dotGap 틱마다 dots 번 위력 × dot (몹 무적 시간을 피해 잡아 둠 — 룬의 마지막 타격 뒤부터), 흡혈은 한 번에 적마다 최대 체력 × heal (healMax 명까지).
  */
 final class RuneReaper {
@@ -376,7 +376,8 @@ final class RuneReaper {
 
     /**
      * 적월 강림: 조준한 곳 (range 칸) 위 하늘에 거대한 핏빛 초승달 (rpg:rfx_moon) 이 떠오름 (delay 틱 — 핏빛 하늘 · 검붉은 번쩍임 · 땅의 칼날 문양) →
-     * gap 틱마다 hits 번 달에서 핏빛 칼날 (초승달) 이 radius 칸 안의 적마다 쏟아짐 (위력 × mult) → 달이 떨어져 땅을 거대한 초승달로 가름 (위력 × crush) ·
+     * gap 틱마다 hits 번 달에서 핏빛 칼날 (초승달) 이 radius 칸 안의 적마다 쏟아짐 (위력 × mult) → 달이 맥동하며 빛나고 땅이 거대한 초승달 문양으로 갈라짐
+     * (위력 × crush — 2026-11-12 떨어지는 달 · 초승달 없음) ·
      * 피가 나에게로 (흡혈). 3돌부터 추락 뒤 출혈 (dot × dots). 대상이 없어도 씀
      */
     static boolean crimsonMoon(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -404,29 +405,24 @@ final class RuneReaper {
         SkillFx.play(level0, "mob.enderdragon.growl", g, 0.6, 0.8);
         SkillFx.shake(sp, 0.15, 0.4);
         Vec3 moonAt = RuneKit.skyPoint(sp, g, 6, 24, 9, 20);
-        // 2026-11-12 3D 핏빛 달 (사용자 "달이 떨어지는 연출 삭제 달 3d로 수정" — tools/vfx_props.py moon): 아래에서 솟으며 커짐 (delay) → 천천히 돌며 떠 있음 (달무리 2D) →
-        // 추락 대신 달이 맥동하며 거대한 초승달 검기를 땅으로 내림 → 끝나면 위로 물러나며 작아져 사라짐
-        mmorpg.fabric.vfx.Vfx.Fx moonFx = RuneProps.fx(level0, moonAt, total + 24);
-        double moonS = RuneProps.scaleFor(9.0, RuneProps.MOON_D);
-        double[] moonMid = {8, 8, 8.5};
-        mmorpg.fabric.vfx.Vfx.Prop moon = RuneProps.prop(moonFx, RuneProps.MOON, V.up(moonAt, -4), moonMid, RuneProps.along(V.UP, new Vec3(1, 0, 0)), moonS * 0.25);
-        moonFx.on(1, () -> moon.to(moonAt, RuneProps.along(V.unit(new Vec3(0.25, 1, 0.1)), new Vec3(1, 0, 0)), moonS, Math.max(2, delay - 1)));
-        for (int t = delay; t < total + 6; t += 20) {
-            final double a = (t - delay) / 20.0 * 30.0;
-            moonFx.on(t, () -> moon.turn(RuneProps.along(V.unit(new Vec3(0.25, 1, 0.1)), RuneKit.turn(new Vec3(1, 0, 0), a + 30)), 20));
-        }
-        for (int t = 0; t < delay; t += 4) {
+        // 2026-11-12 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자": 2D 핏빛 달 (rpg:rfx_moon) 이 떠올라 끝까지 떠 있음 —
+        // 달이 떨어지는 것 (판 1) · 달에서 거대한 초승달 검기가 내려오는 것 (판 5 의 3D 달) 은 없음. 마지막 일격 (crush) 은 달이 맥동하며 빛난 뒤 땅에서 (피해 시점 그대로)
+        // 달이 떠오름 (아래에서 솟으며 커짐 — 2틱마다 한 장)
+        for (int t = 0; t < delay; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 double q = tt / (double) delay;
-                RuneBoost.aura(level0, "moon", V.up(moonAt, -4 * (1 - q)), Opt.of("size", (2.2 + 3.0 * q) * 1.15, "life", 0.22, "spin", -20.0, "alpha", 0.6 + 0.4 * q),
-                        glow, 1.35, 0.42);
+                RuneBoost.rfx2a(level0, "moon", V.up(moonAt, -4 * (1 - q)), Opt.of("size", (2.2 + 3.0 * q) * 1.15, "life", 0.16, "spin", -20.0, "alpha",
+                        0.6 + 0.4 * q), glow, core);
             });
         }
-        // 떠 있는 달 (비가 끝날 때까지) 의 달무리
+        // 떠 있는 달 (끝까지 — 마지막 일격 뒤 옅어짐) + 달무리
+        int moonEnd = total + 10;
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            RuneKit.skyFlare(level0, moonAt, 4.2, BLOOD, glow, Opt.of("life", (fallAt - delay) / 20.0));
+            RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("size", 6.0, "life", (moonEnd - delay) / 20.0, "spin", -20.0, "spinRate", 4.0, "alpha", 1.0, "fade",
+                    0.15), glow, core);
+            RuneKit.skyFlare(level0, moonAt, 4.2, BLOOD, glow, Opt.of("life", (moonEnd - delay) / 20.0));
             SkillFx.play(level0, "mob.warden.heartbeat", g, 0.7, 1.0);
         });
         // 핏빛 칼날이 쏟아짐: 적마다 달에서 초승달이 4틱 만에 날아와 꽂힘 (+ 둘레 빈 땅에도 둘)
@@ -468,28 +464,22 @@ final class RuneReaper {
                 });
             });
         }
-        // 달이 맥동하며 거대한 초승달 검기를 땅으로 내림 (2026-11-12 — 달이 떨어지는 대신) → 땅을 가름 · 흡혈 · (3돌부터) 출혈
+        // 달이 맥동하며 빛남 (떨어지는 초승달 없이 — 같은 자리에서 커지며 옅어지는 달 한 장 · 하늘 번쩍임) → total 에 땅이 갈라짐 · 흡혈 · (3돌부터) 출혈
         RuneKit.later(fallAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 d = V.sub(V.up(g, 1.0), moonAt);
-            moon.size(moonS * 1.18, 3);
-            moonFx.on(moonFx.age() + 4, () -> moon.size(moonS, 6));
+            double s0 = -20.0 + 4.0 * (fallAt - delay) / 20.0;
+            RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("size", 6.0, "grow", 0.45, "life", 0.4, "spin", s0, "spinRate", 4.0, "alpha", 0.85, "fade", 0.7),
+                    glow, core);
             RuneKit.skyFlare(level0, moonAt, 6.0, glow, core, Opt.of("life", 0.45));
-            RuneKit.rfx2(level0, "wave", V.add(moonAt, V.unit(d), 2.5), Opt.of("dir", V.unit(d), "speed", (V.len(d) - 2.5) / (FALL / 20.0), "size", 5.0, "life",
-                    FALL / 20.0, "grow", 0.4, "spin", 90.0), glow, core);
             SkillFx.play(level0, "mob.enderdragon.flap", moonAt, 0.5, 1.0);
             SkillFx.play(level0, "mob.wither.shoot", g, 0.5, 1.0);
-        });
-        RuneKit.later(total + 6, () -> {
-            moon.to(V.up(moonAt, 6), null, moonS * 0.2, 14);
-            moonFx.on(moonFx.age() + 14, moon::remove);
         });
         RuneKit.later(total, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             if (level != level0) return;
             RuneKit.ultFlashFor(sp, level, g, "crimsonMoon", "flash", Opt.empty());
-            RuneBoost.impact(level, g, glow, core, radius * 1.1); // 0.48.2 2D 강화: 달이 떨어진 자리의 터짐
+            RuneBoost.impact(level, g, glow, core, radius * 1.1); // 0.48.2 2D 강화: 마지막 일격의 터짐
             RuneKit.groundCrescent(level, V.up(g, 0.1), radius * 1.25, glow, core, Kit.rand() * 360, 0.7);
             RuneKit.novaRing(level, g, 1.5, radius * 0.9, glow, BLOOD, Opt.of("life", 0.6));
             RuneKit.glowCrack(level, g, radius, glow, BLOOD, Opt.of("life", 1.4));

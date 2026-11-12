@@ -8,7 +8,7 @@ import org.joml.Quaternionf;
 
 /**
  * 2026-11-12 룬의 3D 물체 (사용자 룬 도감 메모 — "검 3d" · "망치 3d" · "얼음 가시 3d" · "바위 가시 3d" · "구름 3d" · "파도 · 물 연출 3d" · "운석" ·
- * "달 3d" · "손 모양 3d" · "거대한 주먹 고퀄" · "그물 3d"): 아이템 모델 (rpg:vfx/&lt;이름&gt;) 을 서버가 아이템 표시로 띄움 (vfx.Vfx —
+ * "손 모양 3d" · "거대한 주먹 고퀄" · "그물 3d"): 아이템 모델 (rpg:vfx/&lt;이름&gt;) 을 서버가 아이템 표시로 띄움 (vfx.Vfx —
  * 모드 · 모드 없는 클라이언트 모두 같은 모습). 계열 색이 드는 재질 (빛 · 속빛) 은 아이템의 custom_model_data 색 (Prop.tint).
  * 모델 치수 (픽셀) 는 tools/vfx_blocky.py (2026-11-12 사진 방식 — 큰 상자 + 면마다 그린 픽셀 그림, 사용자 "그냥 3d모델링만 내가 보낸 저 사진처럼") ·
  * tools/vfx_props.py (그물) 와 같음 — 길이 · 쥔 곳.
@@ -23,12 +23,12 @@ public final class RuneProps {
     public static final String ROCK_SPIKE = "rpg:vfx/rock_spike";
     public static final String CLOUD = "rpg:vfx/cloud";
     public static final String METEOR = "rpg:vfx/meteor";
-    public static final String MOON = "rpg:vfx/moon";
-    public static final String PALM = "rpg:vfx/palm";
+    /** 조각 물체 (tools/vfx_shapes.py · mmorpg/vfx_shapes.json — 2026-11-12 사용자 "만년빙하처럼 파도 같은거 만들어도 됨"): 이름 */
+    public static final String PALM = "palm";
     public static final String FIST = "rpg:vfx/fist";
     public static final String NET = "rpg:vfx/net";
-    public static final String WAVE = "rpg:vfx/wave";
-    public static final String WATER_COLUMN = "rpg:vfx/water_column";
+    public static final String WAVE = "wave";
+    public static final String WATER_COLUMN = "water_column";
 
     /** 룬 전용 검: 칼끝 y 31 · 자루 끝 y −10.2 (길이 41.2 픽셀) · 날 가운데 (8, 17.5, 8) · 손잡이 가운데 (8, −3.5, 8) */
     public static final double SWORD_LEN = 41.2;
@@ -47,9 +47,8 @@ public final class RuneProps {
     public static final double[] ICE_BLADE_HILT = {8, -3, 8};
     /** 구름: 가운데 (8, 8.6, 8) · 너비 28 픽셀 · 높이 14 */
     public static final double CLOUD_W = 28;
-    /** 운석 · 달: 가운데 (8, 8, 8) · 지름 약 19 · 24 픽셀 */
+    /** 운석: 가운데 (8, 8, 8) · 지름 약 19 픽셀 (핏빛 달은 2026-11-12 사용자 "적월 그냥 다시 2d로" — 3D 달 없음) */
     public static final double METEOR_D = 19;
-    public static final double MOON_D = 24;
     /** 손바닥: 손바닥 가운데 (8, 5, 8) · 높이 (손목 ~ 손끝) 약 26 · 앞 (장풍을 미는 면) = +Z */
     public static final double[] PALM_MID = {8, 5, 8};
     /** 주먹: 치는 면 (아래) 가운데 (8, 0.5, 0.6) · 팔 위 끝 y 24.5 · 손등 = +Z */
@@ -175,6 +174,14 @@ public final class RuneProps {
         }
         fx.on(life, () -> b.end(8));
         return b;
+    }
+
+    /** 조각 물체 하나 (손바닥 · 파도 · 물기둥 — 쥔 곳은 모양마다 vfx_shapes.json): at · 회전 · 크기 · 늘 밝게 · 물들임 */
+    public static Vfx.Group shape(Vfx.Fx fx, String shape, Vec3 at, Quaternionf rot, double scale, double[]... tints) {
+        Vfx.Group g = fx.group(shape, at).bright();
+        if (tints.length > 0) g.tint(tints);
+        g.to(at, rot, scale, 0);
+        return g;
     }
 
     /** 길이 (칸) → 크기 (모델 길이 px) */
