@@ -1174,6 +1174,11 @@ final class VanillaProbe {
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
             case "phoenix_wing", "darkknight_lunge" -> new double[] {7.0, 2.6, 1.3, 0.7};
+            // 2026-11-12 드라군의 3D 용 (곁 · 오른쪽 뒤 · 하늘): 조금 멀리 · 드래곤폴은 하늘에 탄 모습과 땅이 다 보이게 올려다봄 (영상 1: 하늘에 있는 동안 화면 밖)
+            case "dragoon_jump" -> new double[] {7.5, 2.4, 2.2, 0.9};
+            case "dragoon_impale" -> new double[] {7.5, 2.6, 2.0, 1.0};
+            case "dragoon_breath" -> new double[] {7.5, 2.4, 1.6, 1.0};
+            case "dragoon_ult" -> new double[] {13.0, 4.0, 6.0, 0.5};
             default -> new double[] {6.0, 2.1, 1.0, 1.0};
         };
     }
