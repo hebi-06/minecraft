@@ -186,12 +186,27 @@ public final class Px {
      */
     public static Duo sweep(Vfx.Fx fx, Vec3 pivot, Vec3 right, Vec3 fwd, double radius, double[] glow, double[] core, boolean leftToRight, int delay,
             int every) {
+        return swing(fx, pivot, plane(right, fwd), radius, 1, glow, core, leftToRight, delay, every);
+    }
+
+    /**
+     * 2026-11-12 앞을 보는 초승달 (사용자 "앞을 보게 세움" — 눕힌 초승달이 위를 보던 것): 몸 앞의 세운 면 (쓴 사람 · 뒤 카메라 쪽을 봄 — 글자는 양면으로 보임)에
+     * 반원을 납작하게 (폭 width 칸 = 지름 · 높이 height 칸) — 뒤에서 보면 앞을 가로로 휩쓰는 참격. base = 반원의 축 (가운데 아래), f = 앞,
+     * leftToRight = 왼쪽 → 오른쪽 (아니면 오른쪽 → 왼쪽)
+     */
+    public static Duo sweepFront(Vfx.Fx fx, Vec3 base, Vec3 f, double width, double height, double[] glow, double[] core, boolean leftToRight, int delay,
+            int every) {
+        double radius = width / 2;
+        return swing(fx, base, plane(V.rightOf(V.flat(f)), V.UP), radius, height / radius, glow, core, leftToRight, delay, every);
+    }
+
+    private static Duo swing(Vfx.Fx fx, Vec3 pivot, Quaternionf q, double radius, double sy, double[] glow, double[] core, boolean leftToRight, int delay,
+            int every) {
         Duo[] out = new Duo[1];
         int t0 = at(fx, delay);
         fx.on(t0, () -> {
             int base = leftToRight ? 8 : 0;
-            Quaternionf q = plane(right, fwd);
-            Duo d = duo(fx, "swing", pivot, glow, core, sp -> sp.fixed(q).size(radius * 112.0 / 80.0).frame(base));
+            Duo d = duo(fx, "swing", pivot, glow, core, sp -> sp.fixed(q).size(radius * 112.0 / 80.0).stretch(1, sy, 0).frame(base));
             int e = Math.max(1, every);
             int t = fx.age();
             d.seq(t + e, e, false, base + 1, base + 2, base + 3);
@@ -293,6 +308,94 @@ public final class Px {
             double rl = Kit.rand() * 20 - 10;
             Duo d = duo(fx, "star", at, glow, core, sp -> sp.size(size).roll(rl, 0).frame(0));
             d.seq(fx.age() + 1, 1, true, 1, 2, 3);
+        });
+    }
+
+    // ------------------------------------------------------------ 마법진 · 사슬 · 번개 줄 · 구슬 (2026-11-12 예전 구성 + 픽셀 그림 — 사용자 "수정 전 상태에 지금 그라데이션만")
+
+    /**
+     * 마법진 (sigil — 땅에 눕힘, 0 = 육각별 · 1 = 칼 여덟): 바깥 고리 반지름 radius, 4틱에 커지며 나타나 spin 도/틱으로 돌고 life 틱 뒤 옅어짐
+     */
+    public static Duo sigil(Vfx.Fx fx, Vec3 at, double radius, int frame, double spin, double[] glow, double[] core, int life, int delay) {
+        Duo[] out = new Duo[1];
+        fx.on(at(fx, delay), () -> {
+            double k = 192 / 90.0;
+            double yaw0 = Kit.rand() * 360;
+            Duo d = duo(fx, "sigil", at, glow, core, sp -> sp.fixed(Vfx.flat(yaw0)).size(radius * k * 0.7).frame(frame));
+            d.to(null, radius * k, 4);
+            int t = fx.age();
+            for (int s = 4; s < life; s += 8) {
+                final double yaw = yaw0 + spin * (s + 8);
+                fx.on(t + s, () -> d.face(Vfx.flat(yaw), 8));
+            }
+            d.fade(t + Math.max(4, life - 6), 6);
+            out[0] = d;
+        });
+        return out[0];
+    }
+
+    /**
+     * 사슬 줄 (chainh — a 에서 b 까지 눕혀 늘림, 3칸마다 한 마디 판): life 틱 동안, flow 틱마다 고리 차례가 바뀜 (0 = 그대로). 세운 면 (양면으로 보임)
+     */
+    public static void chainLine(Vfx.Fx fx, Vec3 a, Vec3 b, double[] glow, double[] core, int life, int flow, int delay) {
+        fx.on(at(fx, delay), () -> {
+            Vec3 d = V.sub(b, a);
+            double len = V.len(d);
+            if (len < 0.2) return;
+            Vec3 dir = V.scale(d, 1 / len);
+            Vec3 x = V.sub(V.UP, V.scale(dir, V.dot(V.UP, dir)));
+            if (V.len(x) < 1e-3) x = new Vec3(1, 0, 0);
+            Quaternionf q = plane(V.unit(x), dir);
+            int n = Math.max(1, (int) Math.ceil(len / 3.2));
+            double seg = len / n;
+            int t = fx.age();
+            for (int i = 0; i < n; i++) {
+                Vec3 mid = V.add(a, dir, seg * (i + 0.5));
+                final int f0 = i % 2;
+                Duo c = duo(fx, "chainh", mid, glow, core, sp -> sp.fixed(q).size(seg * 1.02).frame(f0));
+                if (flow > 0) {
+                    for (int k = flow; k < life; k += flow) {
+                        final int fr = (f0 + k / flow) % 2;
+                        fx.on(t + k, () -> c.frame(fr));
+                    }
+                }
+                c.until(t + life);
+            }
+        });
+    }
+
+    /** 번개 줄 (bolt — b 에서 a 까지 눕혀 늘림, 세운 면): life 틱 동안 모양이 바뀌며 번쩍 → 사라짐 (테두리 번개 · 가운데에서 갇힌 적에게 튀는 번개) */
+    public static void boltLine(Vfx.Fx fx, Vec3 a, Vec3 b, double[] glow, double[] core, int life, int delay) {
+        fx.on(at(fx, delay), () -> {
+            Vec3 d = V.sub(a, b);
+            double len = V.len(d);
+            if (len < 0.2) return;
+            Vec3 y = V.scale(d, 1 / len);
+            Vec3 x = V.sub(V.UP, V.scale(y, V.dot(V.UP, y)));
+            if (V.len(x) < 1e-3) x = new Vec3(1, 0, 0);
+            Quaternionf q = plane(V.unit(x), y);
+            int f0 = (int) (Kit.rand() * 4);
+            Duo bolt = duo(fx, "bolt", b, glow, core, sp -> sp.fixed(q).size(len).frame(f0));
+            int t = fx.age();
+            for (int k = 1; k < life; k++) {
+                final int fr = (f0 + k) % 4;
+                fx.on(t + k, () -> bolt.frame(fr));
+            }
+            bolt.until(t + Math.max(2, life));
+        });
+    }
+
+    /** 번개 구슬 (orb — 카메라를 봄): 크기 s0 에서 s1 까지 grow 틱에 커지며 life 틱 동안 튀는 번개가 바뀜 */
+    public static void orb(Vfx.Fx fx, Vec3 at, double s0, double s1, int grow, double[] glow, double[] core, int life, int delay) {
+        fx.on(at(fx, delay), () -> {
+            Duo o = duo(fx, "orb", at, glow, core, sp -> sp.size(s0).frame(0));
+            o.to(null, s1, Math.max(1, grow));
+            int t = fx.age();
+            for (int k = 1; k < life; k++) {
+                final int fr = k % 4;
+                fx.on(t + k, () -> o.frame(fr));
+            }
+            o.until(t + life);
         });
     }
 

@@ -91,7 +91,7 @@ final class RuneBlade {
 
     /**
      * 검기 날리기: 초승달 검기가 speed 칸/초로 range 칸 (벽 앞까지) 날아가며 선 가까이 width 칸의 적 (적마다 한 번).
-     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 흰 · 파랑 거대 참격, vfx.Px): 몸 앞을 크게 휩쓰는 초승달 (반지름 3.2칸) → 폭 5칸 검기 (흰 심지 · 청백 띠 · 뒤로 뻗은
+     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 흰 · 파랑 거대 참격, vfx.Px): 몸 앞에 세운 큰 초승달 (폭 6.6칸 — 앞을 봄) → 폭 5.6칸 검기 (흰 심지 · 청백 띠 · 뒤로 뻗은
      * 가시 · 흰 번개 조각) 가 날아가고 지나간 자리에 빛줄기, 맞은 적은 베인 자국 · 번쩍임 · 불티, 처음 맞은 적의 발밑은 등급 터짐
      */
     static boolean swordWave(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -108,10 +108,8 @@ final class RuneBlade {
         double s0 = Math.min(1.4, len);
         int fly = Math.max(1, (int) Math.round((len - s0) / speed * 20));
         Vfx.Fx fx = Vfx.at(level, from, fly + 40);
-        Vec3 right = V.rightOf(f);
-        // 휘두름: 몸 둘레의 큰 초승달 (오른쪽 → 왼쪽, 오른쪽이 조금 낮게 기욺)
-        Vec3 tiltR = V.unit(V.add(right, V.UP, -0.25));
-        Px.sweep(fx, V.up(sp.position(), 1.05), tiltR, Px.lifted(f, 28), 3.4, glow, core, false, 0, 1);
+        // 휘두름: 몸 앞에 세운 큰 초승달 (사용자 "앞을 보게 세움" — 오른쪽 → 왼쪽, 폭 6.6칸 · 높이 1.1칸, 꼭대기가 가슴 높이)
+        Px.sweepFront(fx, V.add(V.up(sp.position(), 0.25), f, 1.3), f, 6.6, 1.1, glow, core, false, 0, 1);
         // 검기 + 빛줄기 (손 앞 s0 칸부터 — 앞이 들려 뒤 · 위를 봄, 빛줄기는 눕힌 면 + 세운 면) · 지나가며 흩어지는 흰 번개 조각
         Px.wave(fx, V.add(from, dir, s0), dir, len - s0, fly, 5.6, -10, 32, glow, core, 1);
         Px.streak(fx, V.add(from, dir, s0 * 0.6), dir, len - s0 * 0.6, 0.85, glow, core, fly + 1, fly + 12, true, 1);

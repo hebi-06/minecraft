@@ -610,6 +610,135 @@ def chain():
     return frames
 
 
+def chain_links(c, x, y, W, Hc, off, top=0, bottom=None):
+    """사슬 고리 (앞을 보는 타원 테 · 옆을 보는 막대가 번갈아) 를 세로로 — off 픽셀 어긋남"""
+    bottom = Hc if bottom is None else bottom
+    cx = W / 2
+    for k in range(-2, Hc // 14 + 3):
+        cy = k * 14 + off
+        if cy < top - 9 or cy > bottom + 9:
+            continue
+        if k % 2 == 0:
+            d = np.hypot((x - cx) / 5.5, (y - cy) / 8.0)
+            ring = (d < 1.0) & (d > 0.55) & (y >= top) & (y < bottom)
+            c.A(dilate8(ring) & ~ring & (c.a == 0) & (c.b == 0), OUT)
+            c.A(ring, BASE)
+            c.A(ring & (x > cx + 1.5), MID)
+            c.B(ring & (x < cx - 2.5) & (y < cy))
+        else:
+            bar = (np.abs(x - cx) < 1.6) & (np.abs(y - cy) < 8.5) & (y >= top) & (y < bottom)
+            c.A(dilate8(bar) & ~bar & (c.a == 0) & (c.b == 0), OUT)
+            c.A(bar, BASE)
+            c.B(bar & (x < cx) & (np.abs(y - cy) < 5))
+
+
+def chainh():
+    """사슬 마디 (끝 추 없음 — 기둥 사이 울타리 · 모여 내리치는 사슬, 서버가 두 점 사이에 눕혀 늘림): 두 모양 (고리 차례가 반 칸 어긋남)"""
+    W, Hc = 16, 64
+    x, y = grid(W, Hc)
+    frames = []
+    for f in range(2):
+        c = Cv(W, Hc)
+        chain_links(c, x, y, W, Hc, f * 7)
+        frames.append(c.images())
+    return frames
+
+
+def sigil():
+    """마법진 (땅에 눕힘): 바깥 겹 고리 · 룬 글자 띠 · 안쪽 고리 + 0 = 육각별 (번개 · 감옥), 1 = 칼 여덟 (투기장 — 예전 domainSigil 'blade').
+    선 = 계열 색 (짙은 테) + 흰 심지. 서버가 돌림"""
+    S = 192
+    x, y = grid(S, S)
+    cx = cy = S / 2
+    r = np.hypot(x - cx, y - cy)
+    ang = np.arctan2(y - cy, x - cx)
+    frames = []
+    rng = np.random.default_rng(1200)
+    glyphs = [rng.integers(0, 2, (7, 5)).astype(bool) for _ in range(12)]
+    for f in range(2):
+        c = Cv(S, S)
+        lines = np.zeros((S, S), bool)
+        core = np.zeros((S, S), bool)
+        # 바깥 겹 고리
+        lines |= (np.abs(r - 90) < 1.6)
+        core |= (np.abs(r - 90) < 0.6)
+        lines |= (np.abs(r - 75) < 1.1)
+        lines |= (np.abs(r - 69) < 1.6)
+        core |= (np.abs(r - 69) < 0.6)
+        # 룬 글자 띠 (75 ~ 88 사이 — 글자 24, 축에 맞춘 5×7 픽셀)
+        for i in range(24):
+            a = i / 24 * math.pi * 2 + 0.13
+            gx, gy = cx + math.cos(a) * 81.5, cy + math.sin(a) * 81.5
+            g = glyphs[i % len(glyphs)]
+            for yy in range(7):
+                for xx in range(5):
+                    if g[yy, xx] and (xx in (0, 4) or yy in (0, 3, 6) or (xx + yy) % 3 == 0):
+                        px, py = int(gx - 2 + xx), int(gy - 3 + yy)
+                        if 0 <= px < S and 0 <= py < S:
+                            lines[py, px] = True
+        if f == 0:
+            # 육각별: 두 삼각형 (꼭짓점 반지름 68)
+            for k in range(2):
+                pts = [(cx + 68 * math.cos(math.radians(-90 + k * 60 + 120 * i)), cy + 68 * math.sin(math.radians(-90 + k * 60 + 120 * i))) for i in range(4)]
+                m = c.line(pts, lambda mm: None, width=2)
+                lines |= m
+                core |= c.line(pts, lambda mm: None, width=1)
+            lines |= (np.abs(r - 30) < 1.6)
+            core |= (np.abs(r - 30) < 0.6)
+            lines |= (r < 5)
+            core |= (r < 2.5)
+        else:
+            # 칼 여덟 (가운데에서 바깥으로 — 날 · 코등이 · 자루)
+            for i in range(8):
+                a = i / 8 * math.pi * 2
+                ux, uy = math.cos(a), math.sin(a)
+                vx, vy = -uy, ux
+                s_ = (x - cx) * ux + (y - cy) * uy
+                t_ = (x - cx) * vx + (y - cy) * vy
+                blade = (s_ > 26) & (s_ < 64) & (np.abs(t_) < 3.2 * np.clip((64 - s_) / 10, 0, 1) + 0.6)
+                guard = (np.abs(s_ - 25) < 1.6) & (np.abs(t_) < 6.5)
+                grip = (s_ > 18) & (s_ < 24) & (np.abs(t_) < 1.2)
+                lines |= blade | guard | grip
+                core |= blade & (np.abs(t_) < 0.7) & (s_ > 30)
+            lines |= (np.abs(r - 15) < 1.6)
+            core |= (np.abs(r - 15) < 0.6)
+        c.A(dilate8(lines) & ~lines, OUT)
+        c.A(lines, BASE)
+        c.A(lines & ~core & (((x.astype(int) + y.astype(int)) % 7) == 0), MID)
+        c.B(core)
+        frames.append(c.images())
+    return frames
+
+
+def orb():
+    """번개 구슬 (카메라를 봄): 테 · 짙은 띠 · 계열 색 · 흰 심지 + 튀는 1픽셀 번개 (네 모양)"""
+    S = 32
+    x, y = grid(S, S)
+    r = np.hypot(x - S / 2, y - S / 2)
+    frames = []
+    for f in range(4):
+        rng = np.random.default_rng(1300 + f)
+        c = Cv(S, S)
+        c.A(r < 9.5, OUT)
+        c.A(r < 8.5, DARK)
+        c.A(r < 7.2, MID)
+        c.A(r < 5.6, BASE)
+        c.B(r < 3.2 + (f % 2) * 0.6)
+        c.B((np.abs(x - S / 2 + 2.5) < 1) & (np.abs(y - S / 2 + 2.5) < 1))
+        for _ in range(3):
+            a = rng.uniform(0, math.pi * 2)
+            pts = [(S / 2 + math.cos(a) * 8, S / 2 + math.sin(a) * 8)]
+            for k in range(3):
+                a2 = a + rng.uniform(-0.6, 0.6)
+                rr = 8 + (k + 1) * rng.uniform(2, 3)
+                pts.append((S / 2 + math.cos(a2) * rr, S / 2 + math.sin(a2) * rr))
+            m = c.line(pts, lambda mm: None)
+            c.B(m & (r >= 9.5))
+            c.A(dilate(m) & ~m & (r >= 9.5) & (c.b == 0), BASE)
+        frames.append(c.images())
+    return frames
+
+
 def pillar():
     """빛기둥 (세로 — 하늘에서 내리꽂힘, 세로축으로 카메라를 봄): 흰 심지 · 계열 색 · 짙은 가장자리 (세로 결), 가로 고리가 아래로 흐름 (0 ~ 3),
     4 ~ 6 가늘어지며 끊어짐. 위는 성기게 (하늘로 사라짐). 축 = 아래 가운데"""
@@ -905,6 +1034,9 @@ SHEETS = [
     ("octagon", octagon, 2, (0.5, 0.5)),
     ("bolt", bolt, 2, (0.5, 1.0)),
     ("chain", chain, 2, (0.5, 1.0)),
+    ("chainh", chainh, 2, (0.5, 0.5)),
+    ("sigil", sigil, 2, (0.5, 0.5)),
+    ("orb", orb, 2, (0.5, 0.5)),
     ("pillar", pillar, 2, (0.5, 1.0)),
     ("panel", panel, 2, (0.5, 1.0)),
     ("ember", ember, 1, (0.5, 0.5)),

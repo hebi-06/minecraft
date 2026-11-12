@@ -43,10 +43,6 @@ final class RuneGladiator {
     static final double[] CORE = C[1];
     static final double[] SAND = {0.78, 0.66, 0.46};
     static final double[] DARK = {0.25, 0.28, 0.34};
-    /** 2026-11-12 투기장의 금빛 (예시 사진의 팔각형 — 픽셀 연출) · 흙먼지 */
-    static final double[] GOLD = {1.0, 0.76, 0.26};
-    static final double[] GOLD_CORE = {1.0, 0.96, 0.78};
-    static final double[] DUSTY = {0.74, 0.68, 0.6};
 
     static final BlockState IRON = Blocks.IRON_BLOCK.defaultBlockState();
     static final BlockState CHAIN = Blocks.IRON_CHAIN.defaultBlockState();
@@ -329,11 +325,11 @@ final class RuneGladiator {
     // ------------------------------------------------------------ 영웅: 투기장
 
     /**
-     * 투기장: 받는 피해 감소 (reduce, ticks 틱) · 내 자리를 가운데로 반지름 radius 칸의 투기장 ticks 틱 — 안에 들어온 적은 울타리 밖으로 나가지 못함
-     * (보스 제외 — 밀어 넣음). gap 틱마다 hits 번 안의 적에게 하늘에서 사슬이 내리침 (위력 × mult) → 끝에 사슬이 모두 모여 내리침 (위력 × crush).
-     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 금빛 팔각형 · 흰 돌 지그재그 벽 · 금빛 점 고리, vfx.Px): 바닥에 한 변씩 그려지는 금빛 팔각형 (꼭짓점 반지름
-     * radius), 변마다 흰 돌 벽 (3D — 석영 벽돌 · 계단 이빨 · 금빛 빛 띠) 이 땅에서 솟음, 안쪽의 금빛 점 고리 둘이 반대로 돌고 금빛 불티가 피어오름.
-     * 내리치는 사슬 = 픽셀 사슬 (하늘에서 떨어져 박힘) · 번쩍임 · 베인 자국, 마무리는 벽마다 사슬 · 충격파 · 균열 → 벽이 가라앉음
+     * 투기장: 받는 피해 감소 (reduce, ticks 틱) · 내 자리를 가운데로 반지름 radius 칸의 투기장 (사슬 울타리 — 기둥 (블록 표시) 사이의 사슬 두 줄 · 모래빛 칼날
+     * 마법진) 이 ticks 틱 — 안에 들어온 적은 울타리 밖으로 나가지 못함 (보스 제외 — 밀어 넣음). gap 틱마다 hits 번 안의 적에게 하늘에서 사슬이 내리침
+     * (위력 × mult) → 끝에 사슬이 모두 모여 내리침 (위력 × crush).
+     * 2026-11-12 사용자 "방식은 기존이 좋은데 디자인만 지금 형태로" · "수정 전 상태를 지금과 같은 그라데이션으로만": 예전 구성 그대로 (기둥 열둘 · 사슬 울타리 두 줄 ·
+     * 칼날 마법진 · 하늘에서 내리치는 사슬 · 모여 내리치는 마무리) — 그림만 픽셀 (vfx.Px — 어두운 외곽선 → 계열 색 → 흰 심지)
      */
     static boolean arenaDomain(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -348,35 +344,36 @@ final class RuneGladiator {
         int end = crushAt + 6;
         Guards.set(sp, ticks, k.num("reduce"), null, null);
         Vec3 g = VfxKit.ground(level, c);
-        Vfx.Fx fx = Vfx.at(level, g, end + 40);
-        // 팔각형 (꼭짓점 = 22.5° + 45° × i, 동쪽에서 남쪽으로) · 점 고리 둘 · 불티
-        Px.octagon(fx, g, radius, 0, GOLD, GOLD_CORE, end + 6, 0);
-        Px.ring(fx, "dotring", V.up(g, 0.07), radius * 0.62, 2.0, GOLD, end, 6);
-        Px.ring(fx, "dotring", V.up(g, 0.08), radius * 0.32, -3.0, GOLD_CORE, end, 9);
-        for (int t = 8; t < end - 6; t += 6) Px.embers(fx, g, 4, radius * 0.8, 0.3, 1.8, GOLD, 26, t);
+        Vfx.Fx fx = Vfx.at(level, g, end + 30);
+        // 모래빛 칼날 마법진 (천천히 돎)
+        Px.sigil(fx, V.up(g, 0.05), radius, 1, 0.35, SAND, CORE, end, 0);
         SkillFx.play(level, "block.chain.place", c, 0.6, 1.0);
         SkillFx.play(level, "block.bell.hit", c, 0.7, 1.0);
         SkillFx.play(level, "mob.ravager.roar", c, 1.2, 0.5);
-        // 변마다 흰 돌 벽 (땅에서 솟음 — 한 변씩 그려지는 차례로)
-        double apo = radius * Math.cos(Math.PI / 8);
-        double scale = 0.72 * 2 * radius * Math.sin(Math.PI / 8) / 3.0; // 벽 폭 = 변의 72% (꼭짓점은 비움 — 안이 보이게)
+        // 울타리 기둥 (솟아오름)
+        int posts = 12;
         List<Vec3> tops = new ArrayList<>();
-        for (int j = 0; j < 8; j++) {
-            double a = Math.toRadians(45 + 45 * j);
-            Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
-            Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
-            Vec3 m = VfxKit.ground(level, V.add(g, out, apo));
-            tops.add(V.up(m, 1.2 * scale));
-            if (PairKit.nearCam(sp, V.up(m, 1.2), 2.2)) continue;
-            Quaternionf q = Vfx.basis(tan, V.UP, V.cross(tan, V.UP));
+        for (int j = 0; j < posts; j++) {
+            double a = j / (double) posts * Math.PI * 2;
+            Vec3 p = PairKit.onGround(level, PairKit.ring(c, radius, a));
+            tops.add(V.up(p, 2.2));
+            if (PairKit.nearCam(sp, V.up(p, 1.2), 2.4)) continue;
+            PairKit.Rig post = new PairKit.Rig(level, p, end + 4);
+            post.offset = new Vec3(0, -2.6, 0);
+            post.add(POST, new Vec3(0, 1.2, 0), 0.42, 2.4, 0.42, PairKit.LIT);
+            post.add(IRON, new Vec3(0, 2.45, 0), 0.6, 0.28, 0.6, PairKit.LIT);
+            post.add(LANTERN, new Vec3(0, 2.72, 0), 0.3, 0.3, 0.3, PairKit.GLOW);
             final int jj = j;
-            fx.on(1 + jj, () -> {
-                Vfx.Prop w = fx.prop("rpg:vfx/arena_wall", V.up(m, -1.3 * scale), pr -> pr.grip(8, 0, 8).size(scale, 0).turn(q, 0).bright().tint(GOLD));
-                w.move(V.up(m, 0.02), 5);
-                Px.dust(fx, m, 2, 1.2, 1.4, DUSTY, 1);
-                fx.on(end + 2, () -> w.move(V.up(m, -1.4 * scale), 8));
-                fx.on(end + 10, w::remove);
-            });
+            RuneKit.later(2 + jj % 3, () -> post.pose(Vec3.ZERO, new Quaternionf(), 1.0, 3));
+            RuneKit.later(end - 2, () -> post.crumble(5, 0.1, 1.6, 0.4));
+        }
+        // 사슬 두 줄 (기둥 사이 — 기둥이 솟은 뒤 끝까지, 10틱마다 고리가 흐름)
+        for (int j = 0; j < posts; j++) {
+            Vec3 a = tops.get(j);
+            Vec3 b = tops.get((j + 1) % posts);
+            if (PairKit.nearCam(sp, V.lerp(a, b, 0.5), 2.0)) continue;
+            Px.chainLine(fx, V.up(a, -0.4), V.up(b, -0.4), STEEL, CORE, end - 8, 10, 6);
+            Px.chainLine(fx, V.up(a, -1.3), V.up(b, -1.3), STEEL, CORE, end - 8, 10, 6);
         }
         // 가두기 (2틱마다): 안에 있던 적이 울타리에 닿으면 안으로 밀어 넣음
         Map<UUID, LivingEntity> inside = new LinkedHashMap<>();
@@ -390,44 +387,47 @@ final class RuneGladiator {
                     Vec3 in = V.flat(V.sub(c, e.position()));
                     Kit.knockback(e, in.x * 0.55, in.z * 0.55, 0.12);
                     if (RuneKit.fxQuota("arenaWall", 3)) {
-                        Px.star(fx, V.up(e.position(), 1.0), 1.3, STEEL, CORE, 0);
+                        Vec3 at = V.up(e.position(), 1.0);
+                        Px.star(fx, at, 1.4, STEEL, CORE, 0);
+                        Px.shards(fx, at, 3, 0.9, 0.7, STEEL, CORE, 0);
                         SkillFx.play(level, "block.chain.hit", e.position(), 0.6, 1.2);
                     }
                 }
             });
         }
-        // 사슬이 내리침
+        // 사슬이 내리침 (하늘에서 대상으로 비스듬히)
         for (int i = 0; i < hits; i++) {
             final int ii = i;
             RuneKit.later(first + i * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 List<LivingEntity> ts = Kit.around(sp, c, radius, 3);
                 for (int j = 0; j < Math.min(6, ts.size()); j++) {
-                    LivingEntity t = ts.get(j);
-                    Px.chain(fx, V.up(t.position(), 0.3), 7.0, STEEL, CORE, 2, 6, j % 3);
-                    Px.star(fx, Kit.bodyPoint(t), 1.8, GOLD, GOLD_CORE, 2 + j % 3);
-                    Px.cut(fx, Kit.bodyPoint(t), ii % 2 == 0 ? 60 : -60, 2.2, STEEL, CORE, 2 + j % 3);
+                    Vec3 b = Kit.bodyPoint(ts.get(j));
+                    Vec3 top = V.add(V.up(b, 6.0), V.flat(V.sub(b, c)), 1.5);
+                    Px.chainLine(fx, top, b, STEEL, CORE, 7, 2, 0);
                 }
-                Px.shock(fx, g, radius * 0.9, ii % 2 == 0 ? GOLD : STEEL, GOLD_CORE, 8, 2);
+                Px.shock(fx, g, radius, ii % 2 == 0 ? STEEL : SAND, CORE, 8, 0);
                 SkillFx.play(level, "block.chain.hit", c, 0.6 + ii * 0.1, 1.0);
                 SkillFx.play(level, "mace.smash_ground", c, 1.2, 0.6);
                 for (LivingEntity e : ts) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
-                        if (RuneKit.fxQuota("arenaHit", 6)) Px.embers(fx, V.up(e.position(), 0.3), 4, 0.4, 1.0, 0.6, GOLD, 14, 2);
+                        if (RuneKit.fxQuota("arenaHit", 6)) {
+                            Px.star(fx, Kit.bodyPoint(e), 1.6, STEEL, CORE, 0);
+                            Px.cut(fx, Kit.bodyPoint(e), ii % 2 == 0 ? 55 : -55, 2.0, STEEL, CORE, 0);
+                            Px.shock(fx, e.position(), 0.9, STEEL, CORE, 6, 0);
+                        }
                     });
                 }
             });
         }
-        // 마무리: 벽마다 사슬이 가운데로 모여 내리침
+        // 마무리: 기둥마다 사슬이 가운데로 모여 내리침
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            for (int j = 0; j < 8; j++) Px.chain(fx, V.lerp(tops.get(j), V.up(g, 2.0), 0.45), 7.5, STEEL, CORE, 2, 5, j % 2);
-            Px.chain(fx, V.up(g, 0.2), 9.0, GOLD, GOLD_CORE, 2, 7, 1);
-            Px.shock(fx, g, radius * 1.05, GOLD, GOLD_CORE, 9, 2);
-            Px.star(fx, V.up(g, 1.2), 4.2, GOLD, GOLD_CORE, 2);
-            Px.cracks(fx, g, 16, radius * 0.85, 2.4, GOLD, 6, 46, 2);
-            Px.embers(fx, g, 22, radius * 0.6, 1.8, 1.4, GOLD, 30, 2);
-            Px.impact(fx, g, radius, GOLD, GOLD_CORE, r.grade(), 3);
+            for (int j = 0; j < posts; j += 2) Px.chainLine(fx, tops.get(j), V.up(g, 0.8), STEEL, CORE, 9, 2, 0);
+            Px.shock(fx, g, radius * 0.95, STEEL, CORE, 9, 0);
+            Px.star(fx, V.up(g, 1.0), 3.6, SAND, CORE, 0);
+            Px.impact(fx, g, radius, STEEL, CORE, r.grade(), 1);
+            Px.cracks(fx, g, 10, radius * 0.7, 2.4, STEEL, 5, 30, 1);
             SkillFx.play(level, "block.anvil.land", c, 0.6, 0.8);
             SkillFx.play(level, "block.chain.break", c, 0.5, 1.0);
             SkillFx.play(level, "random.explode", c, 1.1, 0.5);

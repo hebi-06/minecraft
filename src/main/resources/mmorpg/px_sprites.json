@@ -233,8 +233,77 @@
    ],
    "hb": 10.0
   },
+  "chainh": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 0.25,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 4.0,
+   "b": "chainh.b"
+  },
+  "chainh.b": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 0.25,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 4.0
+  },
+  "sigil": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 12.0,
+   "b": "sigil.b"
+  },
+  "sigil.b": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 12.0
+  },
+  "orb": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0,
+   "b": "orb.b"
+  },
+  "orb.b": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0
+  },
   "pillar": {
-   "chars": "",
+   "chars": "",
    "frames": 7,
    "aspect": 0.3333,
    "colored": false,
@@ -246,7 +315,7 @@
    "b": "pillar.b"
   },
   "pillar.b": {
-   "chars": "",
+   "chars": "",
    "frames": 7,
    "aspect": 0.3333,
    "colored": false,
@@ -257,7 +326,7 @@
    "hb": 12.0
   },
   "panel": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 0.6,
    "colored": false,
@@ -269,7 +338,7 @@
    "b": "panel.b"
   },
   "panel.b": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 0.6,
    "colored": false,
@@ -280,7 +349,7 @@
    "hb": 5.0
   },
   "ember": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 1.0,
    "colored": false,
@@ -291,7 +360,7 @@
    "hb": 0.75
   },
   "dotring": {
-   "chars": "",
+   "chars": "",
    "frames": 2,
    "aspect": 1.0,
    "colored": false,
@@ -302,7 +371,7 @@
    "hb": 8.0
   },
   "darkring": {
-   "chars": "",
+   "chars": "",
    "frames": 2,
    "aspect": 1.0,
    "colored": false,
@@ -313,7 +382,7 @@
    "hb": 8.0
   },
   "crack": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
    "colored": false,
@@ -324,7 +393,7 @@
    "hb": 3.0
   },
   "dust": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
    "colored": false,
@@ -335,7 +404,7 @@
    "hb": 2.0
   },
   "firepuff": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
    "colored": true,

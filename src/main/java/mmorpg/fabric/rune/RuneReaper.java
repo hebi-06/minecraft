@@ -187,7 +187,7 @@ final class RuneReaper {
     /**
      * 핏빛 수확: 낫을 앞으로 크게 두 번 휘두름 (hits 번, gap 틱 간격 — 오른쪽 → 왼쪽, 왼쪽 → 오른쪽), 앞 radius 칸 · cone 도의 적 (위력 × mult),
      * 벤 적의 피가 나에게로 (흡혈).
-     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 어두운 초승달 휩쓸기, vfx.Px): 휘두를 때마다 거대한 핏빛 초승달 두 겹 (허리 · 발목 높이, 검붉은 외곽선 →
+     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 어두운 초승달 휩쓸기, vfx.Px): 휘두를 때마다 몸 앞에 세운 거대한 핏빛 초승달 두 겹 (앞을 봄, 검붉은 외곽선 →
      * 핏빛 → 흰 분홍 날) · 앞 바닥의 핏빛 균열, 벤 적은 베인 자국 · 핏방울 불티, 피가 휘며 나에게로. 마지막 낫질의 앞 땅은 등급 터짐
      */
     static boolean bloodHarvest(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -206,10 +206,9 @@ final class RuneReaper {
             Vec3 c = sp.position();
             Vec3 f = V.flat(sp.getViewVector(1F));
             boolean back = i % 2 == 1;
-            Vec3 right = V.rightOf(f);
-            // 허리 높이의 큰 초승달 (휘두르는 쪽이 조금 낮게) + 발목 높이의 짙은 초승달 (한 틱 뒤)
-            Px.sweep(fx, V.up(c, 1.05), V.unit(V.add(right, V.UP, back ? 0.2 : -0.2)), Px.lifted(f, 24), radius * 0.98, glow, core, back, 0, 1);
-            Px.sweep(fx, V.up(c, 0.3), right, Px.lifted(f, 12), radius * 0.72, BLOOD, glow, back, 1, 1);
+            // 몸 앞에 세운 거대한 초승달 (사용자 "앞을 보게 세움") + 그 앞 아래의 짙은 초승달 (한 틱 뒤)
+            Px.sweepFront(fx, V.add(V.up(c, 0.2), f, 1.6), f, radius * 1.9, 1.5, glow, core, back, 0, 1);
+            Px.sweepFront(fx, V.add(V.up(c, 0.05), f, 2.2), f, radius * 1.4, 0.8, BLOOD, glow, back, 1, 1);
             Px.cracks(fx, V.add(c, f, radius * 0.55), 4, radius * 0.4, 2.0, glow, 3, 30, 1);
             if (i == hits - 1) Px.impact(fx, VfxKit.ground(level, V.add(c, f, 1.6)), radius * 0.6, glow, core, r.grade(), 1);
             SkillFx.play(level, "entity.player.attack.sweep", c, back ? 0.8 : 0.65, 1.0);
