@@ -190,7 +190,7 @@ public final class Px {
     }
 
     /**
-     * 2026-11-12 앞을 보는 초승달 (사용자 "앞을 보게 세움" — 눕힌 초승달이 위를 보던 것): 몸 앞의 세운 면 (쓴 사람 · 뒤 카메라 쪽을 봄 — 글자는 양면으로 보임)에
+     * 2026-11-12 앞을 보는 초승달 (사용자 "앞을 보게 세움" — 눕힌 초승달이 위를 보던 것): 몸 앞의 세운 면 (쓴 사람 · 뒤 카메라 쪽을 봄 — 글자 표시는 한쪽 면만)에
      * 반원을 납작하게 (폭 width 칸 = 지름 · 높이 height 칸) — 뒤에서 보면 앞을 가로로 휩쓰는 참격. base = 반원의 축 (가운데 아래), f = 앞,
      * leftToRight = 왼쪽 → 오른쪽 (아니면 오른쪽 → 왼쪽)
      */
@@ -263,7 +263,9 @@ public final class Px {
             if (V.dot(y, y) < 1e-6) y = new Vec3(1, 0, 0);
             double full = len / (thick * 8.0);
             int t = fx.age();
-            Vec3[] ups = cross ? new Vec3[] {y, V.unit(V.cross(f, y))} : new Vec3[] {y};
+            // 눕힌 면 (위에서 봄) + 세운 면 앞 · 뒤 (글자 표시는 한쪽 면만)
+            Vec3 v = V.unit(V.cross(f, y));
+            Vec3[] ups = cross ? new Vec3[] {y, v, V.scale(v, -1)} : new Vec3[] {y};
             for (Vec3 yy : ups) {
                 Quaternionf q = plane(f, yy);
                 Duo d = duo(fx, "streak", from, glow, core, sp -> sp.fixed(q).size(thick).stretch(grow > 0 ? full * 0.04 : full, 1, 0));
@@ -335,7 +337,7 @@ public final class Px {
     }
 
     /**
-     * 사슬 줄 (chainh — a 에서 b 까지 눕혀 늘림, 3칸마다 한 마디 판): life 틱 동안, flow 틱마다 고리 차례가 바뀜 (0 = 그대로). 세운 면 (양면으로 보임)
+     * 사슬 줄 (chainh — a 에서 b 까지 눕혀 늘림, 3칸마다 한 마디 판): life 틱 동안, flow 틱마다 고리 차례가 바뀜 (0 = 그대로). 세운 면 앞 · 뒤 두 장
      */
     public static void chainLine(Vfx.Fx fx, Vec3 a, Vec3 b, double[] glow, double[] core, int life, int flow, int delay) {
         fx.on(at(fx, delay), () -> {
@@ -345,21 +347,25 @@ public final class Px {
             Vec3 dir = V.scale(d, 1 / len);
             Vec3 x = V.sub(V.UP, V.scale(dir, V.dot(V.UP, dir)));
             if (V.len(x) < 1e-3) x = new Vec3(1, 0, 0);
-            Quaternionf q = plane(V.unit(x), dir);
+            // 글자 표시는 한쪽 면만 그려짐 → 앞 · 뒤 두 장 (뒷면은 거울 — 고리는 좌우가 같음)
+            Vec3 ux = V.unit(x);
+            Quaternionf[] faces = {plane(ux, dir), plane(V.scale(ux, -1), dir)};
             int n = Math.max(1, (int) Math.ceil(len / 3.2));
             double seg = len / n;
             int t = fx.age();
             for (int i = 0; i < n; i++) {
                 Vec3 mid = V.add(a, dir, seg * (i + 0.5));
                 final int f0 = i % 2;
-                Duo c = duo(fx, "chainh", mid, glow, core, sp -> sp.fixed(q).size(seg * 1.02).frame(f0));
-                if (flow > 0) {
-                    for (int k = flow; k < life; k += flow) {
-                        final int fr = (f0 + k / flow) % 2;
-                        fx.on(t + k, () -> c.frame(fr));
+                for (Quaternionf q : faces) {
+                    Duo c = duo(fx, "chainh", mid, glow, core, sp -> sp.fixed(q).size(seg * 1.02).frame(f0));
+                    if (flow > 0) {
+                        for (int k = flow; k < life; k += flow) {
+                            final int fr = (f0 + k / flow) % 2;
+                            fx.on(t + k, () -> c.frame(fr));
+                        }
                     }
+                    c.until(t + life);
                 }
-                c.until(t + life);
             }
         });
     }
@@ -373,15 +379,18 @@ public final class Px {
             Vec3 y = V.scale(d, 1 / len);
             Vec3 x = V.sub(V.UP, V.scale(y, V.dot(V.UP, y)));
             if (V.len(x) < 1e-3) x = new Vec3(1, 0, 0);
-            Quaternionf q = plane(V.unit(x), y);
+            // 앞 · 뒤 두 장 (글자 표시는 한쪽 면만)
+            Vec3 ux = V.unit(x);
             int f0 = (int) (Kit.rand() * 4);
-            Duo bolt = duo(fx, "bolt", b, glow, core, sp -> sp.fixed(q).size(len).frame(f0));
             int t = fx.age();
-            for (int k = 1; k < life; k++) {
-                final int fr = (f0 + k) % 4;
-                fx.on(t + k, () -> bolt.frame(fr));
+            for (Quaternionf q : new Quaternionf[] {plane(ux, y), plane(V.scale(ux, -1), y)}) {
+                Duo bolt = duo(fx, "bolt", b, glow, core, sp -> sp.fixed(q).size(len).frame(f0));
+                for (int k = 1; k < life; k++) {
+                    final int fr = (f0 + k) % 4;
+                    fx.on(t + k, () -> bolt.frame(fr));
+                }
+                bolt.until(t + Math.max(2, life));
             }
-            bolt.until(t + Math.max(2, life));
         });
     }
 
