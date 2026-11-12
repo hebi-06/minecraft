@@ -397,7 +397,7 @@ final class RuneMonk {
         int hits = (int) k.num("hits");
         int gap = (int) k.num("gap");
         int lastHit = delay + (hits - 1) * gap;
-        int slamAt = lastHit + 12;
+        int slamAt = lastHit + 16 - SLAM; // 내리꽂힘 = 마지막 주먹 비 + 16틱 (표의 t 그대로 — 떨어지는 틱이 늘어난 만큼 일찍 떨어지기 시작)
         int crushAt = slamAt + SLAM;
         int end = crushAt + 14;
         Vec3 f = V.flat(V.sub(aim, sp.position()));

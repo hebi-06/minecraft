@@ -58,6 +58,17 @@ public class TyrfingWarrior extends BedrockMob {
     public static final String SALAMANDER_VANISH = "animation.rpg.monster.spirit_salamander.vanish";
     /** 뱉기 동작을 시작해 턱이 가장 크게 벌어지는 틱 (동작 0.2초) — 공격 틱보다 이만큼 먼저 동작을 틂 */
     public static final int SALAMANDER_SPIT_AT = 4;
+    /**
+     * 2026-11-12 룬 스킬의 3D 몹 (tools/rune_mobs_art.py — 움직임은 rune.RuneMob 을 쓰는 스킬): 매 (매의 습격) · 야수왕 (야수왕 강림) · 운디네 · 실프 · 노움
+     * (정령 룬) · 정령왕 (정령왕 강림)
+     */
+    public static final java.util.Set<String> RUNE_MOBS = java.util.Set.of("rpg:rune_hawk", "rpg:rune_beast_king", "rpg:rune_undine", "rpg:rune_sylph",
+            "rpg:rune_gnome", "rpg:rune_spirit_king");
+
+    /** 이 몹 (스스로 생각하지 않고 스킬이 움직이는 아군 몹) 꼴로 등록할 엔티티 id 인지 */
+    public static boolean isAllyId(String id) {
+        return ID.equals(id) || CREW_ID.equals(id) || WOLF_ID.equals(id) || SALAMANDER_ID.equals(id) || RUNE_MOBS.contains(id);
+    }
 
     /** 전사 하나를 at (발) 에 yaw (자바 각도) 로 세움 — maxAge 틱 뒤 스스로 사라짐. 못 세우면 null */
     public static TyrfingWarrior spawn(ServerLevel level, Vec3 at, float yaw, int maxAge) {

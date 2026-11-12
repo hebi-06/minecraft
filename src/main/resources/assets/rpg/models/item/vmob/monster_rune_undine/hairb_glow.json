@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_rune_undine_emissive","particle":"rpg:item/vmob/allies_rune_undine_emissive"},"elements":[{"from":[4.98,3.48,6.98],"to":[11.02,12.52,9.02],"faces":{"north":{"uv":[0.25,3.5,1.0,5.75],"texture":"#0"},"south":{"uv":[1.25,3.5,2.0,5.75],"texture":"#0"}},"light_emission":15}]}

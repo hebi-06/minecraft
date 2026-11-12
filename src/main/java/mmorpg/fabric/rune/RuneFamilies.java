@@ -5,6 +5,7 @@ final class RuneFamilies {
     private RuneFamilies() {}
 
     static void registerAll() {
+        RuneMob.init(); // 2026-11-12 룬 스킬의 3D 몹 (스킬이 틱마다 옮김)
         RuneStr.register();
         RuneDex.register();
         RuneVit.register();

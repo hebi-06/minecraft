@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_rune_sylph_emissive","particle":"rpg:item/vmob/allies_rune_sylph_emissive"},"elements":[{"from":[4.48,5.98,7.98],"to":[11.52,10.02,8.02],"faces":{"north":{"uv":[6.5,2.5,7.375,3.5],"texture":"#0"},"south":{"uv":[7.375,2.5,8.25,3.5],"texture":"#0"}},"light_emission":15}]}

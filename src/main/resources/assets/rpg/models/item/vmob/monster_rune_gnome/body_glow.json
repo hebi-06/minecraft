@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_rune_gnome_emissive","particle":"rpg:item/vmob/allies_rune_gnome_emissive"},"elements":[{"from":[3.78,5.28,4.78],"to":[12.22,6.72,11.22],"faces":{"north":{"uv":[12.0,4.75,13.0,5.0],"texture":"#0"}},"light_emission":15}]}

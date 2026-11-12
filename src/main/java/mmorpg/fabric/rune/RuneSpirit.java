@@ -29,6 +29,7 @@ import mmorpg.fabric.vfx.VfxKit;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -89,11 +90,17 @@ final class RuneSpirit {
         Dash dash;
         /** 0.50.0 2D 강화 (아래 등급 터짐): 처음 공격이 닿을 때 낼 터짐의 룬 등급 (낸 뒤 · 초월 · 정령왕 강림의 정령은 null) */
         String boom;
-        /** 2026-11-11 3D 몹 정령 (불의 정령 샐러맨더 — 빛 대신 진짜 몹이 곁을 걸으며 불덩이를 뱉음, 없으면 null) */
+        /**
+         * 2026-11-11 3D 몹 정령 (불의 정령 샐러맨더 — 빛 대신 진짜 몹이 곁을 걸으며 불덩이를 뱉음, 없으면 null).
+         * 2026-11-12 네 정령 모두 (운디네 · 실프 · 노움 — tools/rune_mobs_art.py, 정령왕 강림의 네 정령도): mob = 몸 (RuneMob), body = 그 엔티티
+         */
         TyrfingWarrior body;
+        RuneMob mob;
         long pathAt = -99;
-        /** 뱉기 동작을 시작한 대상 (불덩이가 나가면 null) */
+        /** 공격 동작을 시작한 대상 (공격이 나가면 null) */
         LivingEntity windupFoe;
+        /** 실프 돌진 중 (몸을 스킬이 옮김 — 이 틱까지 곁으로 따라가지 않음) */
+        long dashUntil;
 
         Spirit(String kind, ServerLevel level, double P, Obj k, long now, int left, long nextAt, int slot, Vec3 pos, Vec3 eye, String token) {
             this.kind = kind;
@@ -283,8 +290,9 @@ final class RuneSpirit {
             list.add(s);
             made.add(s);
             // 2026-11-11 불의 정령 (정령 룬 일반 — 샐러맨더 하나만 부를 때): 3D 몹이 땅의 불길에서 솟음
-            if ("salamander".equals(s.kind) && kinds.size() == 1 && king == null) {
-                s.body = summonSalamander(sp, s);
+            // 2026-11-12 네 정령 모두 3D 몹 (정령 룬 다섯 등급 · 정령왕 강림의 네 정령 — 하늘의 정령왕이 부르는 예전 정령왕의 부름만 빛 정령)
+            if (king == null && BODIES.containsKey(s.kind)) {
+                summonBody(sp, s);
                 if (s.body != null) continue;
             }
             SkillFx.burst(level, s.pos, s.glow, 0.55, 0.3); // 눈앞 2칸이므로 작게
@@ -297,13 +305,31 @@ final class RuneSpirit {
 
     /** 정령을 거둠 (정령왕 강림의 합체 — 흩어지는 그림 없이). 거둔 정령의 마지막 자리 */
     static List<Vec3> recallSpirits(ServerPlayer sp, List<Spirit> which) {
+        return recallSpirits(sp, which, null, 0);
+    }
+
+    /**
+     * 정령을 거둠: 3D 몹 정령은 into 쪽으로 ticks 틱 동안 날아가며 작아져 사라짐 (into = null 이면 바로 지움). 거둔 정령의 마지막 자리 (몸이면 가슴)
+     */
+    static List<Vec3> recallSpirits(ServerPlayer sp, List<Spirit> which, Vec3 into, int ticks) {
         List<Vec3> at = new ArrayList<>();
         List<Spirit> list = SPIRITS.get(sp.getUUID());
         if (list == null) return at;
         for (Spirit s : which) {
             if (!list.remove(s)) continue;
-            at.add(s.pos);
-            if (s.body != null) s.body.discard();
+            if (s.mob != null && s.mob.alive()) {
+                RuneMob m = s.mob;
+                at.add(V.up(m.pos(), BODIES.get(s.kind).chest()));
+                if (into == null || ticks <= 0) m.discard();
+                else {
+                    m.scripted(true);
+                    m.moveTo(V.up(into, -BODIES.get(s.kind).chest()), ticks, 0.8, RuneMob.IN, true);
+                    m.leave("vanish", ticks);
+                }
+            } else {
+                at.add(s.pos);
+                if (s.body != null) s.body.discard();
+            }
         }
         if (list.isEmpty()) SPIRITS.remove(sp.getUUID());
         return at;
@@ -328,20 +354,31 @@ final class RuneSpirit {
         return at;
     }
 
-    // ------------------------------------------------------------ 2026-11-11 불의 정령 샐러맨더 (3D 몹 + Vfx — 모드 없는 클라이언트도 봄)
+    // ------------------------------------------------------------ 3D 몹 정령 (2026-11-11 샐러맨더 · 2026-11-12 운디네 · 실프 · 노움 — 몹 · Vfx: 모드 없는 클라이언트도 봄)
 
-    /** 곁의 자리 (앞 1.6칸 · 오른쪽 1.4칸 — 1인칭 화면 오른쪽 아래에 보이게) */
-    private static Vec3 salamanderSpot(ServerPlayer sp) {
+    /**
+     * 정령의 몸: 엔티티 · 곁의 자리 (내 앞 fwd · 오른쪽 right 칸, 땅 위 up 칸 — 1인칭 화면 아래 양옆) · 걷는지 (false = 떠서 따라옴) · 공격 동작을 먼저 트는 틱
+     * (동작의 한가운데가 공격이 나가는 틱 — 빛 정령과 같은 시간표 RUNE_SPREAD) · 가슴 높이 (칸) · 공격이 나가는 곳 (몸 앞 칸 · 위 칸 — 입 · 두 손 · 망치)
+     */
+    record BodyDef(String id, double fwd, double right, double up, boolean walks, int lead, double chest, double mouthFwd, double mouthUp) {}
+
+    static final Map<String, BodyDef> BODIES = Map.of(
+            "salamander", new BodyDef(TyrfingWarrior.SALAMANDER_ID, 1.6, 1.4, 0, true, TyrfingWarrior.SALAMANDER_SPIT_AT, 0.45, 0.95, 0.42),
+            "undine", new BodyDef(RuneMob.UNDINE, 1.7, -1.5, 0.3, false, 4, 1.1, 0.65, 1.25),
+            "sylph", new BodyDef(RuneMob.SYLPH, 2.0, 0.7, 1.6, false, 1, 0.75, 0.3, 0.75),
+            "gnome", new BodyDef(RuneMob.GNOME, 2.1, -2.4, 0, true, 5, 0.5, 1.15, 0.1));
+
+    /** 곁의 자리 (땅 높이 + up) */
+    private static Vec3 bodySpot(ServerPlayer sp, BodyDef d) {
         Vec3 f = Kit.facingOf(sp);
-        Vec3 p = V.add(V.add(sp.position(), f, 1.6), V.rightOf(f), 1.4);
-        return new Vec3(p.x, RuneKit.groundAt(sp.level(), V.up(p, 1.5), sp.getY()), p.z);
+        Vec3 p = V.add(V.add(sp.position(), f, d.fwd()), V.rightOf(f), d.right());
+        return new Vec3(p.x, RuneKit.groundAt(sp.level(), V.up(p, 1.5), sp.getY()) + d.up(), p.z);
     }
 
-    /** 입 (뱉는 곳 — 몸 앞 0.95칸 · 위 0.4칸, 몹이 보는 쪽) */
-    private static Vec3 salamanderMouth(TyrfingWarrior b) {
-        double yaw = Math.toRadians(b.getYRot());
-        Vec3 f = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
-        return V.up(V.add(b.position(), f, 0.95), 0.42);
+    /** 공격이 나가는 곳 (몸 앞 · 위 — 몹이 보는 쪽) */
+    private static Vec3 bodyMouth(Spirit s) {
+        BodyDef d = BODIES.get(s.kind);
+        return V.up(V.add(s.mob.pos(), s.mob.forward(), d.mouthFwd()), d.mouthUp());
     }
 
     /** 몹이 to 쪽을 봄 */
@@ -354,50 +391,99 @@ final class RuneSpirit {
         b.setYBodyRot(yaw);
     }
 
-    /** 부르기: 곁의 땅에서 불길이 솟고 샐러맨더가 솟아오름 (summon 동작) */
-    private static TyrfingWarrior summonSalamander(ServerPlayer sp, Spirit s) {
-        ServerLevel level = sp.level();
-        Vec3 at = salamanderSpot(sp);
-        float yaw = sp.getYRot();
-        TyrfingWarrior b = TyrfingWarrior.spawnAs(TyrfingWarrior.SALAMANDER_ID, level, at, yaw, (int) (s.until - s.born) + 40);
-        if (b == null) return null;
-        b.playAnimation(TyrfingWarrior.SALAMANDER_SUMMON);
-        s.pos = salamanderMouth(b);
-        Vfx.Fx fx = Vfx.at(level, at, 40);
-        VfxKit.ring(fx, at, 1.6, s.glow, 0, 8);
-        VfxKit.crack(fx, at, 2.4, new double[] {1.0, 0.36, 0.08}, 0, 30);
-        fx.sprite("cinder", V.up(at, 1.15)).color(s.glow).size(2.4).alpha(0.95).play(0, 0, 8, 1, false);
-        fx.sprite("cinder", V.up(at, 0.9)).color(s.core).size(1.6).alpha(0.9).play(1, 8, 8, 1, false);
-        VfxKit.burst(fx, V.up(at, 0.5), 1.8, s.glow, 2);
-        VfxKit.sparks(fx, V.up(at, 0.6), s.core, 6, 1.2, 2);
-        SkillFx.play(level, "mob.blaze.shoot", at, 0.8, 0.6);
-        SkillFx.play(level, "fire.ignite", at, 1.0, 0.9);
-        return b;
+    /** 정령 몸이 to 쪽을 봄 (떠 있는 몸은 RuneMob 이 그 쪽을 지킴) */
+    private static void faceBody(Spirit s, Vec3 to) {
+        if (s.mob == null) return;
+        if (BODIES.get(s.kind).walks()) faceTo(s.body, to);
+        else s.mob.face(V.sub(to, s.mob.pos()));
     }
 
-    /** 곁을 걸음 (2틱마다): 멀면 걸어 감 · 아주 멀면 (순간 이동 · 다른 차원) 곁으로 옮김 · 쉬는 동안 내가 보는 쪽을 봄 */
-    private static void walkSalamander(ServerPlayer sp, Spirit s, long now) {
-        TyrfingWarrior b = s.body;
-        Vec3 spot = salamanderSpot(sp);
-        if (b.level() != sp.level() || V.len(V.sub(spot, b.position())) > 12) {
-            b.discard();
-            s.body = summonSalamander(sp, s); // 못 세우면 빛 정령으로 이어감
+    /** 부르기: 곁의 자리에 정령이 솟음 (summon 동작 — 정령마다 불길 · 물보라 · 회오리 · 흙더미). 못 세우면 body = null (빛 정령) */
+    private static void summonBody(ServerPlayer sp, Spirit s) {
+        BodyDef d = BODIES.get(s.kind);
+        ServerLevel level = sp.level();
+        Vec3 at = bodySpot(sp, d);
+        RuneMob m = RuneMob.spawn(d.id(), level, at, Kit.facingOf(sp), (int) (s.until - s.born) + 40, 1.0, !d.walks());
+        s.mob = m;
+        s.body = m == null ? null : m.x;
+        if (m == null) return;
+        m.anim("summon");
+        s.pos = bodyMouth(s);
+        Vec3 g = new Vec3(at.x, at.y - d.up(), at.z);
+        Vfx.Fx fx = Vfx.at(level, at, 40);
+        switch (s.kind) {
+            case "salamander" -> {
+                VfxKit.ring(fx, g, 1.6, s.glow, 0, 8);
+                VfxKit.crack(fx, g, 2.4, new double[] {1.0, 0.36, 0.08}, 0, 30);
+                fx.sprite("cinder", V.up(g, 1.15)).color(s.glow).size(2.4).alpha(0.95).play(0, 0, 8, 1, false);
+                fx.sprite("cinder", V.up(g, 0.9)).color(s.core).size(1.6).alpha(0.9).play(1, 8, 8, 1, false);
+                VfxKit.burst(fx, V.up(g, 0.5), 1.8, s.glow, 2);
+                VfxKit.sparks(fx, V.up(g, 0.6), s.core, 6, 1.2, 2);
+                SkillFx.play(level, "mob.blaze.shoot", g, 0.8, 0.6);
+                SkillFx.play(level, "fire.ignite", g, 1.0, 0.9);
+            }
+            case "undine" -> {
+                // 땅의 물웅덩이에서 솟음: 물결 고리 · 물보라 기둥 · 물방울
+                VfxKit.ring(fx, g, 1.5, s.glow, 0, 8);
+                VfxKit.ring(fx, g, 1.0, s.core, 3, 8);
+                VfxKit.burst(fx, V.up(g, 0.8), 1.8, s.glow, 1);
+                VfxKit.sparks(fx, V.up(g, 0.8), s.core, 8, 1.4, 2);
+                SkillFx.fx(level, "rpg:splash", V.up(g, 0.9), Opt.of("size", 1.4, "life", 0.6, "color", s.glow, "alpha", 0.95));
+                SkillFx.play(level, "random.splash", g, 1.2, 0.8);
+                SkillFx.play(level, "bucket.empty_water", g, 1.4, 0.7);
+            }
+            case "sylph" -> {
+                // 바람이 감겨 맺힘: 회오리 · 잎 같은 알갱이 · 빛 고리
+                RuneKit.vortexAt(level, V.up(at, -0.6), 0.9, s.glow, Opt.of("life", 0.5, "alpha", 0.85));
+                VfxKit.burst(fx, V.up(at, 0.7), 1.4, s.glow, 0);
+                VfxKit.sparks(fx, V.up(at, 0.7), s.core, 8, 1.6, 1);
+                SkillFx.play(level, "mob.breeze.whirl", at, 1.5, 0.7);
+                SkillFx.play(level, "mob.allay.idle", at, 1.4, 0.7);
+            }
+            case "gnome" -> {
+                // 땅이 갈라지며 솟음: 호박빛 금 · 흙먼지 · 튀는 돌
+                VfxKit.crack(fx, g, 2.2, new double[] {1.0, 0.68, 0.25}, 0, 30);
+                VfxKit.dust(fx, g, 1.2, 6, new double[] {0.62, 0.5, 0.38}, 0);
+                VfxKit.ring(fx, g, 1.3, s.glow, 0, 8);
+                RuneKit.rockBurst(level, V.up(g, 0.3), 5, 4, 0.2);
+                SkillFx.play(level, "dig.stone", g, 0.7, 1.0);
+                SkillFx.play(level, "mace.smash_ground", g, 0.9, 0.7);
+            }
+            default -> {
+            }
+        }
+    }
+
+    /** 곁을 따라감: 걷는 정령은 길 찾기 (멀면 빠르게), 떠 있는 정령은 2틱마다 자리 쪽으로 반씩 (실프 돌진 중은 그대로). 너무 멀거나 차원이 다르면 다시 솟음 */
+    private static void walkBody(ServerPlayer sp, Spirit s, long now) {
+        BodyDef d = BODIES.get(s.kind);
+        RuneMob m = s.mob;
+        Vec3 spot = bodySpot(sp, d);
+        if (m.x.level() != sp.level() || V.len(V.sub(spot, m.pos())) > 12) {
+            m.discard();
+            summonBody(sp, s); // 못 세우면 빛 정령으로 이어감
             return;
         }
-        double d = V.hdist(spot, b.position());
-        if (now < s.busyUntil) b.getNavigation().stop();
-        else if (d > 0.8) {
-            if (now - s.pathAt >= 4) s.pathAt = b.getNavigation().moveTo(spot.x, spot.y, spot.z, d > 4 ? 1.6 : 1.15) ? now : now - 2;
-        } else {
-            b.getNavigation().stop();
-            faceTo(b, V.add(b.position(), Kit.facingOf(sp), 3));
+        if (d.walks()) {
+            TyrfingWarrior b = m.x;
+            double dist = V.hdist(spot, b.position());
+            if (now < s.busyUntil || s.windupFoe != null) b.getNavigation().stop();
+            else if (dist > 0.8) {
+                if (now - s.pathAt >= 4) s.pathAt = b.getNavigation().moveTo(spot.x, spot.y, spot.z, dist > 4 ? 1.6 : 1.15) ? now : now - 2;
+            } else {
+                b.getNavigation().stop();
+                faceTo(b, V.add(b.position(), Kit.facingOf(sp), 3));
+            }
+        } else if (now >= s.dashUntil) {
+            m.moveTo(V.lerp(m.pos(), spot, 0.5), 2, 0, RuneMob.LINEAR, false);
+            if (now >= s.busyUntil && s.windupFoe == null) m.face(Kit.facingOf(sp));
         }
-        s.pos = salamanderMouth(b);
+        s.pos = bodyMouth(s);
     }
 
     /**
-     * 불덩이: 대상 쪽을 보고 뱉는 동작 (공격 틱보다 SALAMANDER_SPIT_AT 틱 먼저 시작 — 이 틱에 턱을 크게 벌림) → 입에서 불덩이 (빛 무리 · 지나간 불티) 가 대상을 쫓아 날아감 →
-     * 터짐 (불 폭발 · 불기둥 · 고리 · 그을린 땅 · 불꽃) + 피해 · 불붙음 (반지름 radius)
+     * 불덩이 (샐러맨더): 대상 쪽을 보고 뱉는 동작 (공격 틱보다 SALAMANDER_SPIT_AT 틱 먼저 시작 — 이 틱에 턱을 크게 벌림) → 입에서 불덩이 (빛 무리 · 지나간 불티) 가 대상을 쫓아
+     * 날아감 → 터짐 (불 폭발 · 불기둥 · 고리 · 그을린 땅 · 불꽃) + 피해 · 불붙음 (반지름 radius)
      */
     private static void salamanderSpit(ServerPlayer sp, Spirit s, LivingEntity tgt) {
         ServerLevel level = sp.level();
@@ -410,69 +496,86 @@ final class RuneSpirit {
         long now = Tasks.now();
         b.getNavigation().stop();
         faceTo(b, tgt.position());
-        if (s.windupFoe == null) b.playAnimation(TyrfingWarrior.SALAMANDER_SPIT); // 앞서 시작하지 못했으면 지금 (늦은 동작)
+        if (s.windupFoe == null) s.mob.anim("attack"); // 앞서 시작하지 못했으면 지금 (늦은 동작)
         Vec3 aim0 = Kit.bodyPoint(tgt);
-        double len0 = V.len(V.sub(aim0, salamanderMouth(b)));
+        double len0 = V.len(V.sub(aim0, bodyMouth(s)));
         int fly = Math.max(2, (int) Math.round(len0 / d.num("speed") * 20));
         s.busyUntil = now + fly;
         SkillFx.play(level, "mob.blaze.shoot", b.position(), 1.5, 0.5);
-        {
-            Vec3 mouth = salamanderMouth(b);
-            Vfx.Fx fx = Vfx.at(level, mouth, fly + 40);
-            VfxKit.burst(fx, mouth, 1.0, s.glow, 0);
-            Vfx.Sprite ball = fx.sprite("fireball", mouth).size(0.95);
-            ball.play(0, 0, 4, 1, true);
-            Vfx.Sprite halo = fx.sprite("glow", mouth).color(s.glow).size(1.6).alpha(0.7);
-            Vec3[] last = {aim0};
-            fx.each(1, fly, 1, t -> {
-                Vec3 aim = !tgt.isRemoved() ? Kit.bodyPoint(tgt) : last[0];
-                last[0] = aim;
-                double u = t / (double) fly;
-                Vec3 p = V.up(V.lerp(mouth, aim, u), Math.sin(u * Math.PI) * 0.45);
-                ball.to(p, -1, 1);
-                halo.to(p, -1, 1);
-                if (t % 2 == 0) VfxKit.glow(fx, p, 0.7, s.glow, 0.5, 6);
-            });
-            fx.on(fly, () -> {
-                ball.remove();
-                halo.remove();
-                Vec3 at = last[0];
-                Vec3 feet = new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1), at.z);
-                fx.sprite("boom", at).size(radius * 2.0).play(fx.age(), 0, 8, 1, false);
-                fx.sprite("cinder", V.up(feet, radius * 0.8)).color(s.glow).size(radius * 1.7).alpha(0.9).play(fx.age(), 0, 8, 1, false);
-                VfxKit.ring(fx, feet, radius * 1.1, s.glow, 0, 8);
-                VfxKit.crack(fx, feet, radius * 1.9, new double[] {1.0, 0.36, 0.08}, 0, 26);
-                VfxKit.sparks(fx, at, s.core, 6, 1.4, 0);
-                if (s.boom != null) { // 0.50.0 아래 등급 터짐 (정령마다 처음 한 번) — 더 큰 터짐
-                    VfxKit.burst(fx, V.up(feet, 0.6), radius * 2.4, s.glow, 0);
-                    s.boom = null;
-                }
-            });
-            RuneKit.later(fly, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 at = last[0];
-                SkillFx.play(level, "fire.ignite", at, 1.2, 0.8);
-                SkillFx.play(level, "random.explode", at, 0.5, 1.4);
-                for (LivingEntity e : spiritFoesAround(sp, at, radius)) spiritDamage(sp, e, P, mult, x -> RuneKit.burn(x, d.num("fire")), s);
-            });
-        }
+        Vec3 mouth = bodyMouth(s);
+        Vfx.Fx fx = Vfx.at(level, mouth, fly + 40);
+        VfxKit.burst(fx, mouth, 1.0, s.glow, 0);
+        Vfx.Sprite ball = fx.sprite("fireball", mouth).size(0.95);
+        ball.play(0, 0, 4, 1, true);
+        Vfx.Sprite halo = fx.sprite("glow", mouth).color(s.glow).size(1.6).alpha(0.7);
+        Vec3[] last = {aim0};
+        fx.each(1, fly, 1, t -> {
+            Vec3 aim = !tgt.isRemoved() ? Kit.bodyPoint(tgt) : last[0];
+            last[0] = aim;
+            double u = t / (double) fly;
+            Vec3 p = V.up(V.lerp(mouth, aim, u), Math.sin(u * Math.PI) * 0.45);
+            ball.to(p, -1, 1);
+            halo.to(p, -1, 1);
+            if (t % 2 == 0) VfxKit.glow(fx, p, 0.7, s.glow, 0.5, 6);
+        });
+        fx.on(fly, () -> {
+            ball.remove();
+            halo.remove();
+            Vec3 at = last[0];
+            Vec3 feet = new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1), at.z);
+            fx.sprite("boom", at).size(radius * 2.0).play(fx.age(), 0, 8, 1, false);
+            fx.sprite("cinder", V.up(feet, radius * 0.8)).color(s.glow).size(radius * 1.7).alpha(0.9).play(fx.age(), 0, 8, 1, false);
+            VfxKit.ring(fx, feet, radius * 1.1, s.glow, 0, 8);
+            VfxKit.crack(fx, feet, radius * 1.9, new double[] {1.0, 0.36, 0.08}, 0, 26);
+            VfxKit.sparks(fx, at, s.core, 6, 1.4, 0);
+            if (s.boom != null) { // 0.50.0 아래 등급 터짐 (정령마다 처음 한 번) — 더 큰 터짐
+                VfxKit.burst(fx, V.up(feet, 0.6), radius * 2.4, s.glow, 0);
+                s.boom = null;
+            }
+        });
+        RuneKit.later(fly, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 at = last[0];
+            SkillFx.play(level, "fire.ignite", at, 1.2, 0.8);
+            SkillFx.play(level, "random.explode", at, 0.5, 1.4);
+            for (LivingEntity e : spiritFoesAround(sp, at, radius)) spiritDamage(sp, e, P, mult, x -> RuneKit.burn(x, d.num("fire")), s);
+        });
     }
 
-    /** 떠남: 작아지며 불꽃으로 흩어짐 (vanish 동작 8틱 뒤 지움) */
-    private static void salamanderLeave(ServerLevel level, Spirit s) {
-        TyrfingWarrior b = s.body;
+    /** 떠남: 정령마다 흩어지는 동작 (vanish) · 불꽃 / 물보라 / 바람 / 흙먼지 — 동작 8틱 뒤 지움 */
+    private static void bodyLeave(ServerLevel level, Spirit s) {
+        RuneMob m = s.mob;
         s.body = null;
-        if (b == null || b.isRemoved()) return;
-        b.getNavigation().stop();
-        b.playAnimation(TyrfingWarrior.SALAMANDER_VANISH);
-        Vec3 at = b.position();
+        s.mob = null;
+        if (m == null || !m.alive()) return;
+        m.x.getNavigation().stop();
+        Vec3 at = m.pos();
+        Vec3 c = V.up(at, BODIES.get(s.kind).chest());
         Vfx.Fx fx = Vfx.at(level, at, 30);
-        fx.sprite("cinder", V.up(at, 1.0)).color(s.glow).size(2.0).alpha(0.9).play(0, 0, 8, 1, false);
-        VfxKit.sparks(fx, V.up(at, 0.5), s.core, 6, 1.2, 2);
-        VfxKit.ring(fx, at, 1.2, s.glow, 2, 8);
+        switch (s.kind) {
+            case "salamander" -> {
+                fx.sprite("cinder", V.up(at, 1.0)).color(s.glow).size(2.0).alpha(0.9).play(0, 0, 8, 1, false);
+                SkillFx.play(level, "fire.extinguish", at, 0.6, 1.0);
+            }
+            case "undine" -> {
+                SkillFx.fx(level, "rpg:splash", c, Opt.of("size", 1.2, "life", 0.5, "color", s.glow, "alpha", 0.9));
+                SkillFx.play(level, "random.splash", at, 1.4, 0.6);
+            }
+            case "sylph" -> {
+                RuneKit.vortexAt(level, V.up(at, -0.4), 0.7, s.glow, Opt.of("life", 0.4, "alpha", 0.8));
+                SkillFx.play(level, "mob.breeze.idle_air", at, 1.6, 0.6);
+            }
+            case "gnome" -> {
+                VfxKit.dust(fx, at, 1.0, 5, new double[] {0.62, 0.5, 0.38}, 0);
+                SkillFx.play(level, "dig.gravel", at, 0.8, 0.8);
+            }
+            default -> {
+            }
+        }
+        VfxKit.sparks(fx, c, s.core, 6, 1.2, 2);
+        VfxKit.ring(fx, new Vec3(at.x, at.y - BODIES.get(s.kind).up(), at.z), 1.2, s.glow, 2, 8);
         SkillFx.play(level, "mob.allay.item_given", at, 1.3, 0.5);
-        SkillFx.play(level, "fire.extinguish", at, 0.6, 1.0);
-        Tasks.later(8, b::discard);
+        m.leave("vanish", 8);
     }
 
     // ------------------------------------------------------------ 공격
@@ -585,7 +688,7 @@ final class RuneSpirit {
         s.lastHit.put(tgt.getUUID(), now);
         switch (s.kind) {
             case "salamander" -> {
-                if (s.body != null) {
+                if (s.mob != null) {
                     salamanderSpit(sp, s, tgt);
                     return;
                 }
@@ -612,7 +715,17 @@ final class RuneSpirit {
                 });
             }
             case "undine" -> {
-                // 물줄기: 대상 둘레 반지름 radius 물보라 + 밀침 + 구속 I
+                // 물줄기: 대상 둘레 반지름 radius 물보라 + 밀침 + 구속 I (3D 운디네는 두 손을 내밀어 — 손에서 물이 터져 나감)
+                if (s.mob != null) {
+                    faceBody(s, tgt.position());
+                    if (s.windupFoe == null) s.mob.anim("attack");
+                    from = bodyMouth(s);
+                    s.pos = from;
+                    Vfx.Fx hx = Vfx.at(level, from, 20);
+                    VfxKit.burst(hx, from, 1.1, glow, 0);
+                    VfxKit.sparks(hx, from, core, 6, 1.2, 0);
+                    VfxKit.ring(hx, V.up(from, -0.3), 0.6, core, 0, 6);
+                }
                 Vec3 to = Kit.bodyPoint(tgt);
                 double len = V.len(V.sub(to, from));
                 Vec3 u = V.unit(V.sub(to, from));
@@ -649,13 +762,21 @@ final class RuneSpirit {
                 });
             }
             case "sylph" -> {
-                // 돌진: 정령이 대상을 꿰뚫고 pierce 칸 너머까지 날아감 (폭 width 의 적 모두) + 띄움, 끝나면 자리로 돌아옴
+                // 돌진: 정령이 대상을 꿰뚫고 pierce 칸 너머까지 날아감 (폭 width 의 적 모두) + 띄움, 끝나면 자리로 돌아옴 (3D 실프는 몸이 머리부터 날아감)
+                if (s.mob != null) from = V.up(s.mob.pos(), BODIES.get("sylph").chest());
                 Vec3 to = Kit.bodyPoint(tgt);
                 Vec3 u = V.unit(V.sub(to, from));
                 double len = V.len(V.sub(to, from)) + RuneKit.rayLength(level, to, u, d.num("pierce"));
                 double speed = d.num("speed");
                 int ticks = Math.max(2, (int) Math.round(len / speed * 20));
-                s.dash = new Dash(from, u, len, now, ticks);
+                if (s.mob != null) {
+                    if (s.windupFoe == null) s.mob.anim("attack");
+                    s.dashUntil = now + ticks + 4;
+                    s.mob.moveTo(V.up(V.add(from, u, len), -BODIES.get("sylph").chest()), ticks, 0, RuneMob.LINEAR, true);
+                    Vfx.Fx hx = Vfx.at(level, from, 20);
+                    VfxKit.burst(hx, from, 1.0, glow, 0);
+                    VfxKit.ring(hx, from, 0.8, core, 0, 6);
+                } else s.dash = new Dash(from, u, len, now, ticks);
                 s.busyUntil = now + ticks + 6;
                 RuneKit.flyStreak(level, from, V.add(from, u, len), speed, glow, core, 0.8, 0.3);
                 SkillFx.play(level, "mob.breeze.shoot", from, 1.3, 0.7);
@@ -680,6 +801,7 @@ final class RuneSpirit {
             }
             case "gnome" -> {
                 // 바위 가시: 대상 발밑에 warn 틱 예고 → 반지름 radius 가시 + 구속 II
+                // (3D 노움은 망치로 앞의 땅을 내리침 — 내리친 자리에서 대상 발밑까지 호박빛 금이 달려감 · 가시는 3D 바위 가시)
                 Vec3 g = tgt.position();
                 double warn = d.num("warn");
                 double radius = d.num("radius");
@@ -687,16 +809,45 @@ final class RuneSpirit {
                 RuneKit.zonePulse(level, g, glow, radius, warn / 20);
                 SkillFx.rune(level, g, Opt.of("size", radius * 0.8, "life", warn / 20 + 0.1, "color", glow, "alpha", 0.85, "rate", 200.0, "progress", 1.0,
                         "grow", 0.0));
-                SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", V.unit(V.sub(g, from)), "speed", V.len(V.sub(g, from)) / Math.max(0.05, warn / 20),
-                        "size", 0.4, "thick", 0.4, "life", warn / 20, "color", glow, "alpha", 1.0)); // 정령이 던지는 흙덩이
+                if (s.mob != null) {
+                    faceBody(s, g);
+                    if (s.windupFoe == null) s.mob.anim("attack");
+                    Vec3 hit = bodyMouth(s);
+                    Vec3 g0 = new Vec3(hit.x, RuneKit.groundAt(level, hit, s.mob.pos().y), hit.z);
+                    Vfx.Fx hx = Vfx.at(level, g0, 40);
+                    VfxKit.crack(hx, g0, 1.6, new double[] {1.0, 0.68, 0.25}, 0, 24);
+                    VfxKit.dust(hx, g0, 0.8, 4, new double[] {0.62, 0.5, 0.38}, 0);
+                    VfxKit.ring(hx, g0, 0.9, glow, 0, 6);
+                    double run = V.hdist(g0, g);
+                    Vec3 ru = V.flat(V.sub(g, g0));
+                    for (double st = 0.9; st < run; st += 1.0) {
+                        final double stt = st;
+                        Vec3 p0 = V.add(g0, ru, st);
+                        RuneKit.later(Math.max(0, Math.round(stt / Math.max(0.5, run) * (warn - 2))), () -> {
+                            if (!RuneKit.sameLife(sp, life)) return;
+                            Vec3 q = new Vec3(p0.x, RuneKit.groundAt(level, p0, p0.y), p0.z);
+                            SkillFx.fx(level, "rpg:ground_crack", V.up(q, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 0.9, "life", 0.8,
+                                    "color", new double[] {1.0, 0.68, 0.25}, "alpha", 0.9));
+                            SkillFx.particle(level, ParticleTypes.CRIT, V.up(q, 0.2), 2, 0.2, 0.1);
+                        });
+                    }
+                    SkillFx.play(level, "mace.smash_ground", g0, 1.1, 0.7);
+                } else {
+                    SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", V.unit(V.sub(g, from)), "speed", V.len(V.sub(g, from)) / Math.max(0.05, warn / 20),
+                            "size", 0.4, "thick", 0.4, "life", warn / 20, "color", glow, "alpha", 1.0)); // 정령이 던지는 흙덩이
+                }
                 SkillFx.play(level, "dig.stone", g, 0.8, 0.8);
+                boolean body3d = s.mob != null;
                 RuneKit.later(warn, () -> {
                     if (!RuneKit.sameLife(sp, life)) return;
                     for (int i = 0; i < 6; i++) {
                         double a = (i / 6.0) * Math.PI * 2;
                         double rr = i == 0 ? 0 : radius * 0.55;
-                        SkillFx.fx(level, "rpg:ice_spike", new Vec3(g.x + Math.cos(a) * rr, g.y, g.z + Math.sin(a) * rr), Opt.of("size", 1.5 + (i % 2) * 0.4,
-                                "life", 0.8, "spin", Kit.rand() * 30 - 15, "color", new double[] {0.66, 0.58, 0.5}, "alpha", 1.0)); // 돌 가시 (얼음 가시 그림을 돌 색으로)
+                        Vec3 at = new Vec3(g.x + Math.cos(a) * rr, g.y, g.z + Math.sin(a) * rr);
+                        // 2026-11-12 3D 바위 가시 (사용자 "가시 3d" — 금 사이 호박빛)
+                        if (body3d) RuneKit.rockSpike(sp, level, at, 1.05 + (i % 2) * 0.3 + (i == 0 ? 0.25 : 0), glow, Opt.of("life", 0.9));
+                        else SkillFx.fx(level, "rpg:ice_spike", at, Opt.of("size", 1.5 + (i % 2) * 0.4, "life", 0.8, "spin", Kit.rand() * 30 - 15, "color",
+                                new double[] {0.66, 0.58, 0.5}, "alpha", 1.0)); // 돌 가시 (얼음 가시 그림을 돌 색으로)
                     }
                     SkillFx.fx(level, "rpg:ground_crack", V.up(g, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.6, "life", 1.2,
                             "color", new double[] {0.3, 0.2, 0.1}, "alpha", 0.9));
@@ -716,8 +867,11 @@ final class RuneSpirit {
                             // 0.49.0 땅의 정령: 바위 가시가 root 틱 묶음 (보스는 느려짐 — PairKit.root), 정령왕의 노움은 그대로 느려짐
                             if (s.k.numOr("root", 0) > 0) {
                                 PairKit.root(x, (int) s.k.num("root"));
-                                if (RuneKit.fxQuota("gnomeRoot", 6)) SkillFx.fx(level, "rpg:ice_spike", x.position(), Opt.of("size", 0.9, "life", s.k.num("root") / 20.0,
-                                        "spin", Kit.rand() * 30 - 15, "color", new double[] {0.66, 0.58, 0.5}, "alpha", 1.0));
+                                if (RuneKit.fxQuota("gnomeRoot", 6)) {
+                                    if (body3d) RuneKit.rockSpike(sp, level, x.position(), 0.55, glow, Opt.of("life", s.k.num("root") / 20.0));
+                                    else SkillFx.fx(level, "rpg:ice_spike", x.position(), Opt.of("size", 0.9, "life", s.k.num("root") / 20.0, "spin", Kit.rand() * 30 - 15,
+                                            "color", new double[] {0.66, 0.58, 0.5}, "alpha", 1.0));
+                                }
                             } else RuneKit.effect(x, "slowness", (int) d.num("slowTicks"), 1);
                             RuneKit.knock(x, V.UP, 0, 0.3);
                         }, s);
@@ -746,8 +900,8 @@ final class RuneSpirit {
 
     /** 정령이 떠남 (시간이 다 됨 · 공격을 다 함): 빛이 흩어짐 (3D 몹 정령은 작아지며 불꽃으로 흩어짐) */
     private static void spiritLeave(ServerLevel level, Spirit s) {
-        if (s.body != null) {
-            salamanderLeave(level, s);
+        if (s.mob != null) {
+            bodyLeave(level, s);
             return;
         }
         SkillFx.burst(level, s.pos, s.glow, 0.5, 0.3);
@@ -789,21 +943,22 @@ final class RuneSpirit {
                     list.remove(i);
                     continue;
                 }
-                if (s.body != null) {
-                    // 3D 몹 정령: 곁을 걸음 (앞 오른쪽 — 1인칭 화면 오른쪽 아래), 공격은 입에서
+                if (s.mob != null) {
+                    // 3D 몹 정령: 곁을 따라감 (1인칭 화면 아래 양옆 — BODIES), 공격은 입 · 두 손 · 망치에서
                     if (s.body.isRemoved()) {
                         list.remove(i);
                         continue;
                     }
-                    walkSalamander(player, s, now);
-                    // 뱉기 동작은 SALAMANDER_SPIT_AT 틱 먼저 (불덩이가 나가는 틱 = 빛 정령과 같음 — 룬의 시간표 RUNE_SPREAD 그대로)
-                    if (s.left > 0 && s.windupFoe == null && now >= s.nextAt - TyrfingWarrior.SALAMANDER_SPIT_AT && now >= s.busyUntil) {
+                    walkBody(player, s, now);
+                    if (s.mob == null) continue; // 다시 솟지 못함 — 다음 번부터 빛 정령
+                    // 공격 동작은 BODIES.lead 틱 먼저 (공격이 나가는 틱 = 빛 정령과 같음 — 룬의 시간표 RUNE_SPREAD 그대로)
+                    if (s.left > 0 && s.windupFoe == null && now >= s.nextAt - BODIES.get(s.kind).lead() && now >= s.busyUntil) {
                         LivingEntity tgt = spiritTarget(player, s);
                         if (tgt != null) {
                             s.windupFoe = tgt;
                             s.body.getNavigation().stop();
-                            faceTo(s.body, tgt.position());
-                            s.body.playAnimation(TyrfingWarrior.SALAMANDER_SPIT);
+                            faceBody(s, tgt.position());
+                            s.mob.anim("attack");
                         }
                     }
                     if (s.left > 0 && now >= s.nextAt && now >= s.busyUntil) {

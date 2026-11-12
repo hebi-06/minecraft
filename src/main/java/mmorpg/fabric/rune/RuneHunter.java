@@ -143,9 +143,14 @@ final class RuneHunter {
 
     // ------------------------------------------------------------ 희귀: 매의 습격
 
+    /** 매 (3D 몹 rpg:rune_hawk): 덮치기 동작 (dive) 을 틀고 발톱이 닿기까지 (0.25초) */
+    static final int HAWK_STRIKE_AT = 5;
+
     /**
-     * 매의 습격: 앞 range 칸 · cone 도의 가장 가까운 적에게 영혼의 매 (rpg:rfx_beast 매) 를 날림 — gap 틱마다 hits 번 하늘에서 급강하해 대상 둘레 radius 칸의 적을
-     * 할큄 (위력 × mult) 하고 다시 날아오름. 대상이 쓰러지면 둘레의 다른 적에게. 대상이 없으면 쓰지 않음
+     * 매의 습격: 앞 range 칸 · cone 도의 가장 가까운 적에게 영혼의 매를 날림 — gap 틱마다 hits 번 하늘에서 급강하해 대상 둘레 radius 칸의 적을
+     * 할큄 (위력 × mult) 하고 다시 날아오름. 대상이 쓰러지면 둘레의 다른 적에게. 대상이 없으면 쓰지 않음.
+     * 2026-11-12 매는 3D 몹 (사용자 "매 3d" — rpg:rune_hawk, tools/rune_mobs_art.py): 손에서 날아올라 대상 둘레 하늘을 돌다 발톱을 내밀고 내리꽂힘 (dive 동작 —
+     * 발톱이 닿는 틱 = 피해 틱) → 다음 급강하 자리로 솟음 → 마지막에 날아가며 흩어짐. 몹을 못 세우면 예전 그림 (rpg:rfx_beast 매)
      */
     static boolean falconStrike(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         List<LivingEntity> ts = RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 1);
@@ -157,17 +162,29 @@ final class RuneHunter {
         LivingEntity[] cur = {ts.get(0)};
         Vec3[] last = {cur[0].position()};
         ServerLevel level0 = sp.level();
+        Vec3 f0 = Kit.facingOf(sp);
         // 손에서 날아오름
-        Vec3 hand = V.add(V.up(sp.position(), 1.6), Kit.facingOf(sp), 0.8);
-        Vec3 up0 = V.up(V.add(hand, Kit.facingOf(sp), 1.5), 2.5);
-        beast(level0, hand, FALCON, Opt.of("dir", V.unit(V.sub(up0, hand)), "speed", V.len(V.sub(up0, hand)) / 0.2, "size", 0.6, "life", 0.2, "fade", 0.2));
+        Vec3 hand = V.add(V.up(sp.position(), 1.4), f0, 0.8);
+        RuneMob hawk = RuneMob.spawn(RuneMob.HAWK, level0, hand, f0, 4 + hits * gap + 40, 1.0, true);
+        if (hawk == null) {
+            Vec3 h2 = V.add(V.up(sp.position(), 1.6), f0, 0.8);
+            Vec3 up0 = V.up(V.add(h2, f0, 1.5), 2.5);
+            beast(level0, h2, FALCON, Opt.of("dir", V.unit(V.sub(up0, h2)), "speed", V.len(V.sub(up0, h2)) / 0.2, "size", 0.6, "life", 0.2, "fade", 0.2));
+        } else {
+            SkillFx.sparks(level0, hand, WILD, 6, 2.5);
+            SkillFx.burst(level0, hand, WILD, 0.6, 0.25);
+        }
         SkillFx.play(level0, "entity.parrot.fly", sp.position(), 0.8, 1.0);
         SkillFx.play(level0, "mob.phantom.flap", sp.position(), 1.5, 0.6);
         boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 매가 처음 할퀸 적에 한 번
         for (int i = 0; i < hits; i++) {
             final int ii = i;
             final int at = 4 + i * gap;
-            // 급강하 (4틱 전에 하늘에서)
+            // 발톱을 내미는 동작 (닿는 틱 = at)
+            RuneKit.later(Math.max(0, at - HAWK_STRIKE_AT), () -> {
+                if (hawk != null && hawk.alive() && RuneKit.sameLife(sp, life)) hawk.anim("dive");
+            });
+            // 급강하 (4틱 전에 하늘에서 — 매는 대상의 몸을 따라감)
             RuneKit.later(at - 4, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 if (cur[0] == null || cur[0].isRemoved() || !cur[0].isAlive()) {
@@ -176,6 +193,15 @@ final class RuneHunter {
                 }
                 Vec3 tgt = cur[0] != null ? Kit.bodyPoint(cur[0]) : V.up(last[0], 0.8);
                 last[0] = cur[0] != null ? cur[0].position() : last[0];
+                if (hawk != null && hawk.alive()) {
+                    LivingEntity e = cur[0];
+                    Vec3 from = V.up(hawk.pos(), 0.5);
+                    hawk.moveTo(() -> e != null && !e.isRemoved() ? V.up(Kit.bodyPoint(e), -0.4) : V.up(tgt, -0.4), 4, ii == 0 ? 1.2 : 0, ii == 0 ? RuneMob.SMOOTH
+                            : RuneMob.IN, true);
+                    RuneKit.streak(level0, from, tgt, WILD, 0.2, 0.25, 0.8, 0.0);
+                    SkillFx.play(level0, "mob.phantom.flap", from, 1.3, 0.7);
+                    return;
+                }
                 double a = Kit.rand() * Math.PI * 2;
                 Vec3 from = new Vec3(tgt.x + Math.cos(a) * 3.2, tgt.y + 4.5, tgt.z + Math.sin(a) * 3.2);
                 Vec3 d = V.sub(tgt, from);
@@ -208,10 +234,22 @@ final class RuneHunter {
                         if (ii == hits - 1) RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("falconMark", 6)); // 마지막 급강하에
                     });
                 }
-                // 다시 날아오름
+                // 다시 날아오름 (다음 급강하 자리 — 대상 둘레 하늘) · 마지막이면 날아가며 흩어짐
                 double a = Kit.rand() * Math.PI * 2;
                 Vec3 from = V.up(c, 1.0);
                 Vec3 to = new Vec3(c.x + Math.cos(a) * 3.0, c.y + 4.5, c.z + Math.sin(a) * 3.0);
+                if (hawk != null && hawk.alive()) {
+                    if (ii < hits - 1) hawk.moveTo(to, Math.max(2, gap - HAWK_STRIKE_AT), 0, RuneMob.OUT, true);
+                    else {
+                        hawk.moveTo(V.up(to, 3.0), 12, 0, RuneMob.OUT, true);
+                        RuneKit.later(6, () -> {
+                            if (!hawk.alive()) return;
+                            SkillFx.sparks(level, V.up(hawk.pos(), 0.5), WILD, 8, 3.0);
+                            hawk.leave("vanish", 8);
+                        });
+                    }
+                    return;
+                }
                 beast(level, from, FALCON, Opt.of("dir", V.unit(V.sub(to, from)), "speed", V.len(V.sub(to, from)) / 0.3, "size", 0.75, "life", 0.3, "fade", 0.4));
             });
         }
@@ -327,9 +365,14 @@ final class RuneHunter {
 
     // ------------------------------------------------------------ 영웅: 늑대 무리
 
+    /** 늑대 정령 (3D 몹 rpg:spirit_wolf) 의 덮치기 (spirit_wolf.pounce): 뛰어오른 뒤 콱 무는 틱 (0.15초) = 물기 피해 틱 */
+    static final int WOLF_POUNCE_AT = 3;
+
     /**
-     * 늑대 무리: 앞 range 칸 · cone 도의 적 (가까운 순 8) 에게 영혼의 늑대 다섯 (rpg:rfx_beast 늑대 머리) 이 내 둘레에서 달려들어 gap 틱마다 hits 번 물어뜯음
-     * (위력 × mult — 발톱 자국) → 무리가 울부짖음: 물린 적 · 첫 대상 둘레 radius 칸의 적 (위력 × crush, 밀쳐냄). 대상이 없으면 쓰지 않음
+     * 늑대 무리: 앞 range 칸 · cone 도의 적 (가까운 순 8) 에게 영혼의 늑대 다섯이 내 둘레에서 달려들어 gap 틱마다 hits 번 물어뜯음
+     * (위력 × mult — 발톱 자국) → 무리가 울부짖음: 물린 적 · 첫 대상 둘레 radius 칸의 적 (위력 × crush, 밀쳐냄). 대상이 없으면 쓰지 않음.
+     * 2026-11-12 늑대는 3D 몹 (사용자 "늑대 3d" — 늑대 정령 rpg:spirit_wolf): 내 앞 둘레에서 깨어나 물 때마다 대상 앞으로 뛰어올라 덮침 (pounce — 콱 = 피해 틱,
+     * 같은 대상의 늑대끼리 옆으로 비켜 섬) → 울부짖음 (howl) → 정령빛으로 흩어짐. 몹을 못 세우면 그 늑대는 예전 그림 (rpg:rfx_beast 늑대 머리)
      */
     static boolean wolfPack(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         List<LivingEntity> ts = RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 8);
@@ -339,12 +382,19 @@ final class RuneHunter {
         int gap = (int) k.num("gap");
         ServerLevel level0 = sp.level();
         Vec3 f0 = Kit.facingOf(sp);
-        // 내 둘레에서 늑대 다섯이 나타남
+        int howlAt = hits * gap + 2;
+        // 내 둘레에서 늑대 다섯이 깨어남 (앞쪽 부채꼴)
+        RuneMob[] wolves = new RuneMob[5];
         for (int j = 0; j < 5; j++) {
             Vec3 d = RuneKit.turn(f0, -56 + j * 28);
-            Vec3 p = V.up(V.add(sp.position(), d, 2.7), 0.8);
-            beast(level0, p, WOLF, Opt.of("size", 0.4, "life", 0.3, "grow", 0.4, "fade", 0.5));
-            SkillFx.particle(level0, ParticleTypes.POOF, p, 2, 0.15, 0.02);
+            Vec3 p = V.add(sp.position(), d, 1.7);
+            Vec3 g = new Vec3(p.x, RuneKit.groundAt(level0, p, sp.getY()), p.z);
+            wolves[j] = RuneMob.spawn(RuneMob.WOLF, level0, g, f0, howlAt + 60, 1.0, true);
+            if (wolves[j] != null) {
+                SkillFx.sparks(level0, V.up(g, 0.6), WILD, 6, 2.5);
+                SkillFx.fx(level0, "rpg:shock_ring", V.up(g, 0.06), Opt.of("dir", V.ZERO, "size", 0.7, "life", 0.35, "color", WILD, "alpha", 0.85));
+            } else beast(level0, V.up(p, 0.8), WOLF, Opt.of("size", 0.4, "life", 0.3, "grow", 0.4, "fade", 0.5));
+            SkillFx.particle(level0, ParticleTypes.POOF, V.up(p, 0.6), 2, 0.15, 0.02);
         }
         SkillFx.play(level0, "entity.polar_bear.warning", sp.position(), 1.4, 0.7);
         SkillFx.play(level0, "mob.wolf.shake", sp.position(), 0.8, 1.0);
@@ -362,8 +412,24 @@ final class RuneHunter {
                 for (int j = 0; j < 5; j++) {
                     LivingEntity e = alive.get((ii + j) % alive.size());
                     Vec3 tgt = Kit.bodyPoint(e);
-                    Vec3 side = V.rightOf(V.flat(V.sub(tgt, c)));
-                    Vec3 from = V.up(V.add(V.lerp(c, e.position(), 0.35), side, (j - 2) * 0.9), 0.8);
+                    RuneMob w = wolves[j];
+                    if (w != null && w.alive()) {
+                        Vec3 from = w.pos();
+                        double side = (j - 2) * 0.4;
+                        w.moveTo(() -> {
+                            Vec3 ep = e.position();
+                            Vec3 away = Math.hypot(from.x - ep.x, from.z - ep.z) > 1e-3 ? V.flat(V.sub(from, ep)) : V.scale(f0, -1);
+                            return V.add(V.add(ep, away, Kit.bodyPad(e) + 0.45), V.rightOf(away), side);
+                        }, WOLF_POUNCE_AT, 0.9, RuneMob.LINEAR, true);
+                        w.anim("pounce");
+                        RuneKit.streak(level, V.up(from, 0.6), tgt, WILD, 0.14, 0.2, 0.7, 0.0);
+                        RuneKit.later(WOLF_POUNCE_AT, () -> {
+                            if (w.alive() && !e.isRemoved()) w.face(V.sub(e.position(), w.pos()));
+                        });
+                        continue;
+                    }
+                    Vec3 sideV = V.rightOf(V.flat(V.sub(tgt, c)));
+                    Vec3 from = V.up(V.add(V.lerp(c, e.position(), 0.35), sideV, (j - 2) * 0.9), 0.8);
                     Vec3 d = V.sub(tgt, from);
                     beast(level, from, WOLF, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.18, "size", 0.6, "life", 0.18, "fade", 0.15));
                     RuneKit.streak(level, from, tgt, WILD, 0.14, 0.2, 0.7, 0.0);
@@ -383,13 +449,21 @@ final class RuneHunter {
                 });
             });
         }
-        // 울부짖음
-        RuneKit.later(hits * gap + 2, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
+        // 울부짖음 (늑대들이 고개를 듦) → 정령빛으로 흩어짐
+        RuneKit.later(howlAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) {
+                for (RuneMob w : wolves) if (w != null) w.discard();
+                return;
+            }
             ServerLevel level = sp.level();
             List<LivingEntity> alive = PairKit.alive(new ArrayList<>(bitten.values()));
             Vec3 c = alive.isEmpty() ? ts.get(0).position() : alive.get(0).position();
             double radius = k.num("radius");
+            for (RuneMob w : wolves) {
+                if (w == null || !w.alive()) continue;
+                w.face(V.sub(c, w.pos()));
+                w.play(mmorpg.fabric.mob.TyrfingWarrior.WOLF_HOWL);
+            }
             double sc = RuneKit.nearK(sp, V.up(c, 2.5), 6, 0.5);
             beast(level, V.up(c, 2.6 * sc), WOLF, Opt.of("size", 1.6 * sc, "life", 0.6, "grow", 0.4, "fade", 0.5));
             for (int j = 0; j < 3; j++) {
@@ -402,6 +476,7 @@ final class RuneHunter {
             RuneKit.shakeAround(level, c, 10, 0.25, 0.35);
             SkillFx.play(level, "entity.ravager.roar", c, 1.3, 0.8);
             SkillFx.play(level, "entity.polar_bear.warning", c, 0.8, 1.0);
+            SkillFx.play(level, "item.goat_horn.sound.1", c, 1.6, 0.5);
             Map<UUID, LivingEntity> got = new LinkedHashMap<>();
             for (LivingEntity e : alive) got.put(e.getUUID(), e);
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) got.putIfAbsent(e.getUUID(), e);
@@ -411,16 +486,39 @@ final class RuneHunter {
                     if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), c), 0.45, 0.3);
                 });
             }
+            RuneKit.later(22, () -> {
+                for (RuneMob w : wolves) {
+                    if (w == null || !w.alive()) continue;
+                    Vec3 at = V.up(w.pos(), 0.6);
+                    SkillFx.sparks(level, at, WILD, 10, 3.5);
+                    SkillFx.sparks(level, at, CORE, 4, 2.5);
+                    SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 2.0, "size", 0.2, "grow", 0.5, "life", 0.5, "color", WILD, "alpha", 0.9));
+                    w.discard();
+                }
+                SkillFx.play(level, "block.amethyst_block.break", c, 1.6, 0.5);
+            });
         });
         return true;
     }
 
     // ------------------------------------------------------------ 초월: 야수왕 강림
 
+    /** 야수왕 (3D 몹 rpg:rune_beast_king): 크기 (모델 키 약 2.6칸 × 1.5) · 하늘에서 내려앉는 틱 · 할퀴기 동작에서 발톱이 닿는 틱 (0.1초) · 짓밟기에서 앞발이 땅에 닿는 틱 (0.45초) */
+    static final double BEAST_SCALE = 1.5;
+    static final int BEAST_LAND = 10;
+    static final int BEAST_STRIKE_AT = 2;
+    static final int BEAST_STOMP_AT = 9;
+    /** 야수왕이 서는 자리: 조준한 곳 너머 (쓴 사람에게서 멀어지는 쪽) 이만큼 — 쓴 사람 쪽을 보고 할큄 */
+    static final double BEAST_BACK = 2.6;
+
     /**
-     * 야수왕 강림: 조준한 곳 (range 칸) 에 짙은 숲빛 하늘 (3돌부터) · 연둣빛 영역 문양 · 빛기둥 → 하늘에서 거대한 영혼의 늑대왕 (rpg:rfx_beast 늑대 머리 —
-     * 눈부신 연둣빛 무리) 이 delay 틱 동안 내려옴 → gap 틱마다 hits 번 거대한 발톱이 반지름 radius 칸을 할큄 (위력 × mult) → 늑대왕이 땅을 짓밟음
-     * (위력 × crush — 거대한 발자국 충격 · 갈라짐, 띄움). 대상이 없어도 씀
+     * 야수왕 강림: 조준한 곳 (range 칸) 에 짙은 숲빛 하늘 (3돌부터) · 연둣빛 영역 문양 · 빛기둥 → 하늘에서 거대한 영혼의 늑대왕이 내려옴 (delay 틱) →
+     * gap 틱마다 hits 번 거대한 발톱이 반지름 radius 칸을 할큄 (위력 × mult) → 늑대왕이 땅을 짓밟음 (위력 × crush — 거대한 발자국 충격 · 갈라짐, 띄움).
+     * 대상이 없어도 씀.
+     * 2026-11-12 야수왕은 3D 몹 (사용자 "야수왕 네크로맨서 몹 처럼 3d몹으로 활퀴는 모샨으로" — rpg:rune_beast_king, 왕관 · 정령빛 뿔 · 갈기): 조준한 곳 너머 하늘에서
+     * 떨어져 내려앉고 (BEAST_LAND) 울부짖으며 일어섬 (rear) → 할퀼 때마다 오른발 · 왼발을 번갈아 휘두름 (claw_r · claw_l — 발톱이 닿는 틱 = 피해 틱) →
+     * 더 높이 일어섰다 두 앞발로 짓밟음 (stomp — 땅에 닿는 틱 = 짓밟기 피해 틱) → 빛으로 흩어짐. 발톱 자국 · 빛줄기 · 발자국 충격은 2D 그대로.
+     * 몹을 못 세우면 예전 그림 (하늘에 떠 있는 늑대왕 rpg:rfx_beast)
      */
     static boolean beastKing(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -441,34 +539,63 @@ final class RuneHunter {
         RuneKit.godRays(sp, level, aim, radius * 0.95, 6, WILD, CORE, Opt.of("life", delay / 20.0 + 0.4, "h", 14.0, "alpha", 0.65));
         SkillFx.play(level, "entity.ravager.roar", sp.position(), 0.7, 0.8);
         SkillFx.play(level, "mob.wither.spawn", aim, 1.6, 0.4);
-        // 늑대왕: 하늘 높이에서 내려와 (delay) 할퀴는 동안 떠 있음 · 숨결 (2틱마다 다시 그림)
-        // 늑대왕은 조준한 곳 너머 위 (1인칭에서도 보이게 — 눈에서 20° 남짓)
-        Vec3 high = V.add(V.up(aim, 9.5), f, 5.0);
-        Vec3 hover = V.add(V.up(aim, 4.4), f, 3.6);
-        for (int t = 0; t < crushAt; t += 2) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                double u = Math.min(1, tt / (double) delay);
-                double e = 1 - (1 - u) * (1 - u);
-                Vec3 at = V.add(V.lerp(high, hover, e), V.UP, Math.sin(tt * 0.25) * 0.25);
-                double s = 2.0 + 2.6 * e;
-                Opt wo = Opt.of("size", s, "life", 0.14, "alpha", 0.55 + 0.45 * e, "fade", 0.0);
-                RuneBoost.auraCell(level, "beast", at, wo, WILD, WOLF[0], 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 늑대왕 후광
-                beast(level, at, WOLF, wo);
-                if (tt % 6 == 0) RuneKit.skyFlare(level, V.add(at, f, 0.4), s * 0.7, WILD, CORE, Opt.of("life", 0.3, "alpha", 0.6));
-                if (tt % 4 == 0) SkillFx.particle(level, ParticleTypes.GLOW, at, 6, s * 0.4, 0.02);
+        // 야수왕: 조준한 곳 너머 하늘에서 떨어져 내려앉음 → 울부짖으며 일어섬
+        Vec3 spot = V.add(aim, f, BEAST_BACK);
+        Double gy = RuneKit.solidGround(level, V.up(spot, 4), 10);
+        Vec3 base = new Vec3(spot.x, gy != null ? gy : aim.y, spot.z);
+        int land = Math.max(4, Math.min(BEAST_LAND, delay - 8));
+        RuneMob king = RuneMob.spawn(RuneMob.BEAST_KING, level, V.add(V.up(base, 11), f, 3.0), V.scale(f, -1), end + 40, BEAST_SCALE, true);
+        if (king != null) {
+            king.anim("summon");
+            king.moveTo(base, land, 0, RuneMob.IN, false);
+            for (int t = 0; t < land; t += 2) {
+                final int tt = t;
+                RuneKit.later(t, () -> {
+                    if (!king.alive()) return;
+                    Vec3 p = V.up(king.pos(), 2.0);
+                    SkillFx.particle(level, ParticleTypes.GLOW, p, 6, 1.2, 0.02);
+                    if (tt % 4 == 0) RuneKit.streak(level, V.up(p, 3.0), p, WILD, 0.5, 0.25, 0.7, 0.0);
+                });
+            }
+            RuneKit.later(land, () -> {
+                if (!king.alive()) return;
+                king.hold("rear");
+                SkillFx.fx(level, "rpg:shock_ring", V.up(base, 0.08), Opt.of("dir", V.ZERO, "size", 3.2, "life", 0.5, "color", WILD, "alpha", 0.95));
+                SkillFx.fx(level, "rpg:dust", V.up(base, 0.6), Opt.of("size", 3.0, "life", 0.7, "color", new double[] {0.55, 0.5, 0.4}, "alpha", 0.7));
+                RuneKit.rockBurst(level, V.up(base, 0.3), 8, 5, 0.25);
+                SkillFx.particle(level, ParticleTypes.POOF, V.up(base, 0.4), 24, 1.6, 0.08);
+                SkillFx.play(level, "mace.heavy_smash_ground", base, 0.6, 1.0);
+                SkillFx.play(level, "entity.ravager.roar", base, 0.5, 1.0);
+                SkillFx.play(level, "entity.polar_bear.warning", base, 0.6, 1.0);
             });
+        } else {
+            // 예전 그림: 하늘 높이에서 내려와 (delay) 할퀴는 동안 떠 있음 · 숨결 (2틱마다 다시 그림)
+            Vec3 high = V.add(V.up(aim, 9.5), f, 5.0);
+            Vec3 hover = V.add(V.up(aim, 4.4), f, 3.6);
+            for (int t = 0; t < crushAt; t += 2) {
+                final int tt = t;
+                RuneKit.later(t, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    double u = Math.min(1, tt / (double) delay);
+                    double e = 1 - (1 - u) * (1 - u);
+                    Vec3 at = V.add(V.lerp(high, hover, e), V.UP, Math.sin(tt * 0.25) * 0.25);
+                    double s = 2.0 + 2.6 * e;
+                    beast(level, at, WOLF, Opt.of("size", s, "life", 0.14, "alpha", 0.55 + 0.45 * e, "fade", 0.0));
+                });
+            }
         }
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             SkillFx.play(level, "entity.ravager.roar", aim, 0.5, 1.0);
-            SkillFx.play(level, "entity.polar_bear.warning", aim, 0.6, 1.0);
-            RuneKit.shakeAround(level, aim, 18, 0.3, 0.5);
         });
-        // 거대한 발톱 (반지름 안을 가로지르는 발톱 자국 · 할퀸 적)
+        // 거대한 발톱 (반지름 안을 가로지르는 발톱 자국 · 할퀸 적) — 야수왕이 오른발 · 왼발을 번갈아 휘두름
         for (int i = 0; i < hits; i++) {
             final int ii = i;
+            if (king != null) {
+                RuneKit.later(delay + i * gap - BEAST_STRIKE_AT, () -> {
+                    if (king.alive() && RuneKit.sameLife(sp, life)) king.hold(ii % 2 == 0 ? "claw_r" : "claw_l");
+                });
+            }
             RuneKit.later(delay + i * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 List<LivingEntity> ts = Kit.around(sp, aim, radius, 5);
@@ -492,14 +619,21 @@ final class RuneHunter {
                 }
             });
         }
-        // 짓밟기: 늑대왕이 내리꽂힘 → 거대한 발자국 충격
+        // 짓밟기: 야수왕이 더 높이 일어섰다 두 앞발로 내리찍음 → 거대한 발자국 충격
+        if (king != null) {
+            RuneKit.later(crushAt - BEAST_STOMP_AT, () -> {
+                if (king.alive() && RuneKit.sameLife(sp, life)) king.anim("stomp");
+            });
+        } else {
+            Vec3 hover = V.add(V.up(aim, 4.4), f, 3.6);
+            RuneKit.later(crushAt - 4, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 d = V.sub(V.up(aim, 1.5), hover);
+                beast(level, hover, WOLF, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.2, "size", 4.6, "life", 0.2, "grow", 0.2, "fade", 0.1));
+            });
+        }
         RuneKit.later(crushAt - 4, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 d = V.sub(V.up(aim, 1.5), hover);
-            Opt wo = Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.2, "size", 4.6, "life", 0.2, "grow", 0.2, "fade", 0.1);
-            RuneBoost.auraCell(level, "beast", hover, wo, WILD, WOLF[0], 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 내리꽂히는 늑대왕 후광
-            beast(level, hover, WOLF, wo);
-            SkillFx.play(level, "mob.enderdragon.flap", hover, 0.5, 1.0);
+            if (RuneKit.sameLife(sp, life)) SkillFx.play(level, "mob.enderdragon.flap", aim, 0.5, 1.0);
         });
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -531,6 +665,19 @@ final class RuneHunter {
                 });
             }
         });
+        // 끝: 야수왕이 빛으로 흩어짐
+        if (king != null) {
+            RuneKit.later(end, () -> {
+                if (!king.alive()) return;
+                Vec3 p = V.up(king.pos(), 2.2);
+                SkillFx.sparks(level, p, WILD, 16, 5.0);
+                SkillFx.sparks(level, p, CORE, 8, 4.0);
+                SkillFx.burst(level, p, WILD, 2.4, 0.4);
+                SkillFx.particle(level, ParticleTypes.GLOW, p, 30, 1.6, 0.1);
+                SkillFx.play(level, "block.amethyst_block.break", p, 0.8, 1.0);
+                king.leave("vanish", 10);
+            });
+        }
         return true;
     }
 }

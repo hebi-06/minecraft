@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_rune_spirit_king_emissive","particle":"rpg:item/vmob/allies_rune_spirit_king_emissive"},"elements":[{"from":[4.48,7.98,4.83],"to":[11.52,15.02,11.87],"faces":{"north":{"uv":[12.1875,1.75,12.625,3.5],"texture":"#0"}},"light_emission":15}]}

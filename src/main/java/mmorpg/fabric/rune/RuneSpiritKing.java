@@ -9,6 +9,8 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
+import mmorpg.fabric.vfx.VfxKit;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -41,6 +43,12 @@ final class RuneSpiritKing {
     static final int PULSE = 3;
     /** 정령왕 키 (칸) */
     static final double KING_SIZE = 7.4;
+    /** 2026-11-12 3D 정령왕 (rpg:rune_spirit_king — 모델 키 약 2.9칸 (후광 위까지) × KING_SCALE) · 원소를 내리는 동작 (cast) 에서 팔이 내리꽂히는 틱 (0.15초) */
+    static final double KING_SCALE = 2.5;
+    static final int KING_CAST_AT = 3;
+    /** 합체에서 정령이 날아드는 틱 · 정령왕이 나타나 내려앉기까지 */
+    static final int GATHER = 6;
+    static final int DESCEND = 6;
 
     static void register() {
         RuneCast.register("spiritKing", RuneSpiritKing::cast);
@@ -84,13 +92,15 @@ final class RuneSpiritKing {
         Vec3 base = kingBase(sp, z, r);
         Vec3 center = V.up(base, KING_SIZE * 0.5);
         Vec3 heart = V.up(base, KING_SIZE * 0.6); // 가슴의 원소 결정 (합체하는 점)
-        // 1) 네 정령이 빛줄기를 그리며 한 점으로 모임
-        List<Vec3> from = RuneSpirit.recallSpirits(sp, spirits);
+        // 1) 네 정령이 빛줄기를 그리며 한 점으로 모임 (2026-11-12 3D 몹 정령은 몸이 날아들며 작아져 사라짐)
+        List<RuneSpirit.Spirit> live = new ArrayList<>(spirits);
+        List<Vec3> from = RuneSpirit.recallSpirits(sp, spirits, heart, GATHER);
         String[] kinds = {"salamander", "undine", "sylph", "gnome"};
-        for (int i = 0; i < from.size() && i < spirits.size(); i++) {
-            double[][] c = RuneSpirit.spiritColor(spirits.get(i).kind);
+        for (int i = 0; i < from.size() && i < live.size(); i++) {
+            double[][] c = RuneSpirit.spiritColor(live.get(i).kind);
             RuneKit.flyStreak(level, from.get(i), heart, 24, c[0], c[1], 0.5, 0.35);
-            RuneKit.rfx(level, "spirit", from.get(i), Opt.of("size", 0.4, "life", 0.4, "cell", (double) RuneKit.SPIRIT_CELL.getOrDefault(spirits.get(i).kind, 0),
+            if (live.get(i).mob != null) continue;
+            RuneKit.rfx(level, "spirit", from.get(i), Opt.of("size", 0.4, "life", 0.4, "cell", (double) RuneKit.SPIRIT_CELL.getOrDefault(live.get(i).kind, 0),
                     "frames", 4.0, "fps", 10.0, "loop", true, "dir", V.unit(V.sub(heart, from.get(i))), "speed", V.len(V.sub(heart, from.get(i))) / 0.4, "fade", 0.3));
         }
         if (from.isEmpty()) {
@@ -115,8 +125,48 @@ final class RuneSpiritKing {
         int elemGap = (int) k.num("elemGap");
         int burstAt = 14 + elemGap * 3 + (int) k.num("burstDelay");
         double kingLife = (burstAt - 8 + 14) / 20.0;
-        RuneKit.later(8, () -> {
+        // 2026-11-12 3D 정령왕 (사용자 "정령왕 3d 몹" — rpg:rune_spirit_king: 왕관 · 흰 옷 · 금빛 후광의 네 원소 구슬 · 둘레를 도는 구슬): 빛의 고치에서 나타나
+        // 내려앉으며 두 팔을 듦 (summon) → 원소마다 팔을 내리꽂음 (cast — 원소가 내리는 틱) → 붕괴 뒤 빛으로 흩어짐. 못 세우면 예전 그림 (rpg:rfx_spiritking)
+        Vec3 toMe = V.flat(V.sub(sp.position(), base));
+        boolean[] king3d = {false};
+        KINGS.remove(sp.getUUID());
+        RuneKit.later(GATHER, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
+            RuneMob king = RuneMob.spawn(RuneMob.SPIRIT_KING, level, V.up(base, 3.0), toMe, burstAt + 60, KING_SCALE, true);
+            if (king == null) return; // 예전 그림 (8틱)
+            king3d[0] = true;
+            KINGS.put(sp.getUUID(), king);
+            king.hold("summon");
+            king.moveTo(base, DESCEND, 0, RuneMob.OUT, false);
+            RuneKit.domainSigil(level, base, 3.4, "spirit", new double[] {0.42, 1, 0.76}, WHITE, Opt.of("life", kingLife, "spinRate", 25.0, "alpha", 0.8));
+            RuneKit.godRays(sp, level, base, 2.2, 4, WHITE, WHITE, Opt.of("h", 14.0, "life", 1.0, "colors",
+                    new double[][][] {{FIRE, WHITE}, {WATER, WHITE}, {WIND, WHITE}, {EARTH, WHITE}}, "skipNear", true));
+            SkillFx.play(level, "mob.evocation_illager.cast_spell", base, 0.7, 1.0);
+            RuneKit.later(DESCEND, () -> {
+                if (!king.alive()) return;
+                Vfx.Fx fx = Vfx.at(level, base, 30);
+                VfxKit.ring(fx, base, 3.0, new double[] {0.42, 1, 0.76}, 0, 10);
+                VfxKit.ring(fx, base, 2.0, WHITE, 2, 8);
+                VfxKit.sparks(fx, V.up(base, 1.0), WHITE, 10, 2.5, 0);
+                RuneKit.domainSigil(level, z, r, "spirit", new double[] {0.42, 1, 0.76}, WHITE, Opt.of("life", kingLife - 0.5, "spinRate", -20.0, "alpha", 0.7));
+            });
+            // 원소마다 팔을 내리꽂음 (팔이 닿는 틱 = 원소가 내리는 틱) · 붕괴 (구슬의 빛줄기가 모이는 틱 — 폭발은 3틱 뒤)
+            for (int t : new int[] {14, 14 + elemGap, 14 + elemGap * 2, 14 + elemGap * 3, burstAt + KING_CAST_AT}) {
+                RuneKit.later(Math.max(1, t - KING_CAST_AT - GATHER), () -> {
+                    if (king.alive() && RuneKit.sameLife(sp, life)) king.hold("cast");
+                });
+            }
+            RuneKit.later(burstAt + 3 + 8 - GATHER, () -> {
+                KINGS.remove(sp.getUUID(), king);
+                if (!king.alive()) return;
+                Vec3 c = V.up(king.pos(), KING_SIZE * 0.55);
+                SkillFx.burst(level, c, WHITE, 2.2, 0.4);
+                SkillFx.sparks(level, c, new double[] {0.42, 1, 0.76}, 16, 5.0);
+                king.leave("vanish", 12);
+            });
+        });
+        RuneKit.later(8, () -> {
+            if (king3d[0] || !RuneKit.sameLife(sp, life)) return;
             // 내려옴 (위에서 0.4초) → 그 자리에서 팔을 들고 머묾
             double drop = 3.0;
             Opt fallO = Opt.of("size", KING_SIZE, "life", 0.4, "cell", 0.0, "frames", 2.0, "fps", 5.0, "alpha", 0.95, "vel", new Vec3(0, -drop / 0.4, 0), "fade",
@@ -162,8 +212,17 @@ final class RuneSpiritKing {
         });
     }
 
-    /** 정령왕이 빛남 (든 채 빛나는 그림을 잠깐 겹침) */
+    /** 지금 정령왕 (3D 몹 — 쓴 사람마다, 없으면 2D 그림) */
+    private static final java.util.Map<java.util.UUID, RuneMob> KINGS = new java.util.HashMap<>();
+
+    /** 정령왕이 빛남 (든 채 빛나는 그림을 잠깐 겹침 — 3D 정령왕은 팔을 내리꽂는 동작이 대신함) */
     private static void pulse(ServerPlayer sp, Vec3 center) {
+        RuneMob king = KINGS.get(sp.getUUID());
+        if (king != null && king.alive()) {
+            Vec3 c = V.up(king.pos(), KING_SIZE * 0.62);
+            SkillFx.burst(sp.level(), c, WHITE, 1.4, 0.25);
+            return;
+        }
         RuneKit.rfx(sp.level(), "spiritking", center, Opt.of("size", KING_SIZE * 1.01, "life", 0.3, "cell", (double) PULSE, "alpha", 0.7, "fade", 0.6));
     }
 
