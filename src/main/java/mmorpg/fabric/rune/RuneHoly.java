@@ -184,7 +184,7 @@ final class RuneHoly {
         ServerLevel level = sp.level();
         double[][] cs = RuneKit.colorOf("holy");
         Hammer h = new Hammer(sp, level, P, k, cs[0], cs[1]);
-        h.thrown = new RuneHammer.Thrown(level, 1.5, cs[0], cs[1]); // 2026-11-12 3D 망치 (사용자 "망치 3d 연출")
+        h.thrown = new RuneHammer.Thrown(level, 2.1, cs[0], cs[1]); // 2026-11-12 3D 망치 (사용자 "망치 3d 연출" — 1.5칸은 멀리서 작아 2.1칸)
         h.done.add(first.getUUID());
         h.boom = r.grade(); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게 터짐 한 번
         h.fly(RuneKit.bowHand(sp), first, 0);
