@@ -115,6 +115,10 @@ final class RuneEndless {
         SkillFx.play(level, "block.bell.use", c, 0.5, 1.0);
         SkillFx.play(level, "entity.warden.sonic_charge", c, 1.4, 0.6);
         SkillFx.play(level, "item.trident.riptide_3", c, 0.6, 0.8);
+        // 2026-11-12 3D 경계 검 (사용자 "주위에 있는 검 2d에서 3d로" — 룬 전용 검, 핏빛 날 · 흰 홈): 떨어져 꽂혔다가 마무리에 한가운데로 모임 (후광은 2D)
+        mmorpg.fabric.vfx.Vfx.Fx swordFx = RuneProps.fx(level, c, cutAt + 12);
+        mmorpg.fabric.vfx.Vfx.Prop[] blades = new mmorpg.fabric.vfx.Vfx.Prop[swords];
+        double bladeScale = RuneProps.scaleFor(SWORD_SIZE * 2, RuneProps.SWORD_LEN);
         for (int i = 0; i < swords; i++) {
             final int ii = i;
             final int drop = i * charge / swords;
@@ -123,13 +127,17 @@ final class RuneEndless {
                 Vec3 top = swordAt(c, R, ii, swords, SWORD_TOP);
                 Vec3 planted = swordAt(c, R, ii, swords, SWORD_Y);
                 Vec3 ground = swordAt(c, R, ii, swords, 0.1);
+                Vec3 out = V.unit(V.sub(new Vec3(planted.x, c.y, planted.z), c));
                 // 하늘에서 떨어짐 (0.15초) → 땅에 꽂힘 (칼끝이 아래 · 바깥으로 조금 기욺 — 모일 때까지)
-                swordAura(level, top, Opt.of("dir", V.DOWN, "speed", (SWORD_TOP - SWORD_Y) / 0.15, "size", SWORD_SIZE, "life", 0.15)); // 0.50.0 2D 강화 (초월 나머지): 경계 검 후광
+                blades[ii] = RuneProps.prop(swordFx, RuneProps.SWORD, top, RuneProps.SWORD_MID, RuneProps.along(V.DOWN, out), bladeScale, CRIMSON, EDGE);
+                blades[ii].move(planted, 3);
+                RuneBoost.aura(level, "sword", top, Opt.of("dir", V.DOWN, "speed", (SWORD_TOP - SWORD_Y) / 0.15, "size", SWORD_SIZE, "life", 0.15), CRIMSON, 1.35, 0.42);
                 RuneKit.later(3, () -> {
                     if (!RuneKit.sameLife(sp, life)) return;
-                    Vec3 out = V.unit(V.sub(new Vec3(planted.x, c.y, planted.z), c));
                     Vec3 tilt = V.unit(V.add(V.DOWN, out, 0.14));
-                    swordAura(level, planted, Opt.of("dir", tilt, "size", SWORD_SIZE, "life", Math.max(0.2, (converge - drop - 3) / 20.0), "fade", 0.04)); // 0.50.0 2D 강화 (초월 나머지): 꽂힌 경계 검 후광
+                    if (blades[ii] != null) blades[ii].turn(RuneProps.along(tilt, out), 2);
+                    RuneBoost.aura(level, "sword", planted, Opt.of("dir", tilt, "size", SWORD_SIZE, "life", Math.max(0.2, (converge - drop - 3) / 20.0), "fade", 0.04),
+                            CRIMSON, 1.35, 0.42); // 꽂힌 경계 검 후광
                     SkillFx.sparks(level, ground, EDGE, 5, 3);
                     RuneKit.novaRing(level, ground, 0.3, 1.3, CRIMSON, EDGE, Opt.of("life", 0.3));
                     if (ii % 2 == 0) SkillFx.play(level, "item.trident.hit_ground", ground, 1.1 + Kit.rand() * 0.3, 0.7);
@@ -184,7 +192,15 @@ final class RuneEndless {
                 Vec3 out = V.unit(V.sub(new Vec3(p.x, c.y, p.z), c));
                 Vec3 to = V.up(V.add(c, out, GATHER_R), 1.0); // 한가운데 둘레 (시전자 눈 앞을 덮지 않게 GATHER_R 칸 밖에서 멈춤)
                 Vec3 d = V.sub(to, p);
-                swordAura(level, p, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.3, "size", SWORD_SIZE, "life", 0.4, "fade", 0.25)); // 0.50.0 2D 강화 (초월 나머지): 모이는 검 후광
+                RuneBoost.aura(level, "sword", p, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.3, "size", SWORD_SIZE, "life", 0.4, "fade", 0.25), CRIMSON, 1.35,
+                        0.42); // 모이는 검 후광
+                // 3D 검: 뽑혀 (칼끝이 가운데 쪽) 0.3초에 날아감 → 작아지며 사라짐
+                mmorpg.fabric.vfx.Vfx.Prop b = blades[i];
+                if (b == null) continue;
+                b.to(V.up(p, 0.4), RuneProps.along(V.unit(d), V.UP), -1, 2);
+                RuneKit.later(2, () -> b.move(to, 5));
+                RuneKit.later(7, () -> b.size(bladeScale * 0.3, 2));
+                RuneKit.later(9, b::remove);
             }
             SkillFx.play(level, "item.trident.riptide_1", c, 0.7, 1.0);
             SkillFx.play(level, "mob.breeze.charge", c, 0.8, 0.8);
@@ -295,9 +311,4 @@ final class RuneEndless {
         }
     }
 
-    /** 0.50.0 2D 강화 (초월 나머지): 먹빛 경계 검 + 붉은 후광 (검의 빛깔 겹이 먹빛이라 같은 빛깔 후광은 그림자처럼 보임 → 핏빛 후광) */
-    private static void swordAura(ServerLevel level, Vec3 at, Opt o) {
-        RuneBoost.aura(level, "sword", at, o, CRIMSON, 1.35, 0.42);
-        RuneKit.rfx2(level, "sword", at, o, INK, EDGE);
-    }
 }

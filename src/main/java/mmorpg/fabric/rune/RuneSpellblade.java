@@ -383,7 +383,14 @@ final class RuneSpellblade {
         Vec3 skyAt = RuneKit.skyPoint(sp, c0, 12, 21, 6, 22);
         RuneKit.skyPlate(sp, level0, "sigil", skyAt, 5.6, glow, core, Opt.of("cell", (double) RuneKit.SIGIL.get("arcane"), "life", (charge + gap + 8) / 20.0,
                 "spinRate", -30.0, "grow", 0.15, "alpha", 0.78, "fade", 0.3));
-        // 솟아오르는 검 (눈앞 2.6칸, 칼끝 위 — 1인칭에서 보이게) + 빨려 드는 빛
+        // 솟아오르는 검 (눈앞 2.6칸, 칼끝 위 — 1인칭에서 보이게) + 빨려 드는 빛.
+        // 2026-11-12 3D 검 (사용자 "검 3d로 연출" — 룬 전용 검 · 마검 계열 색): 땅에서 솟아 커지며 몸 앞을 따라옴 → 가로 베기 → 앞으로 쓰러지며 내려찍음 (bladeOf)
+        mmorpg.fabric.vfx.Vfx.Fx swordFx = RuneProps.fx(level0, sp.position(), charge + gap + 30);
+        Vec3 f0 = V.flat(sp.getViewVector(1F));
+        Vec3 hilt0 = V.up(V.add(sp.position(), f0, 2.6), 0.4);
+        double[] pommel = {8, -10.2, 8};
+        mmorpg.fabric.vfx.Vfx.Prop blade = RuneProps.prop(swordFx, RuneProps.SWORD, V.up(hilt0, -1.2), pommel, RuneProps.along(V.UP, V.rightOf(f0)),
+                RuneProps.scaleFor(1.5, RuneProps.SWORD_LEN), glow, core);
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -393,7 +400,8 @@ final class RuneSpellblade {
                 double q = (tt + 2.0) / charge;
                 Vec3 hilt = V.up(V.add(sp.position(), f, 2.6), 0.4);
                 double ls = 1.5 + q * 4.5;
-                RuneBoost.rfx2a(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), glow, core); // 0.50.0 2D 강화 (초월 나머지)
+                if (tt > 0) blade.to(hilt, RuneProps.along(V.UP, V.rightOf(f)), RuneProps.scaleFor(ls, RuneProps.SWORD_LEN), 2);
+                RuneBoost.aura(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), glow, 1.35, 0.42); // 칼빛 (후광)
                 for (int sd : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.up(hilt, 1 + q * 2.5), V.rightOf(f), sd * (2.6 - q * 1.6));
                     SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.scale(V.rightOf(f), -sd), "speed", 3.0, "size", 0.16, "grow", 0.5, "life", 0.25,
@@ -435,19 +443,27 @@ final class RuneSpellblade {
             double length = k.num("length");
             double cross = k.num("cross");
             double len = Math.max(1, RuneKit.rayLength(level, from, f, length));
-            // 앞으로 쓰러지며 내려찍는 거대한 검 (세운 검 → 앞으로 눕힘, 4장) + 세로 참격
+            // 앞으로 쓰러지며 내려찍는 거대한 검 (세운 검 → 앞으로 눕힘) + 세로 참격. 2026-11-12 3D 검: 자루 끝을 축으로 길이 len 까지 커지며 앞으로 쓰러짐 (3틱) →
+            // 0.55초 누워 있다가 땅으로 가라앉으며 사라짐 (후광은 2D)
             Vec3 hilt = V.up(V.add(start, f, 1.8), 0.5); // 손잡이가 눈앞 1.8칸 (가까운 칼밑이 1인칭 화면을 덮지 않게)
             double[] tilt = {25, 55, 80};
+            double sl = RuneProps.scaleFor(len, RuneProps.SWORD_LEN);
+            blade.to(hilt, RuneProps.along(V.UP, V.rightOf(f)), -1, 1);
             for (int i = 0; i < tilt.length; i++) {
                 double deg = tilt[i];
                 RuneKit.later(i, () -> {
                     double a = deg * Math.PI / 180;
                     Vec3 dir = V.unit(V.add(V.scale(V.UP, Math.cos(a)), f, Math.sin(a)));
-                    RuneBoost.rfx2a(level, "sword", V.add(hilt, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "life", 0.08), glow, core); // 0.50.0 2D 강화 (초월 나머지)
+                    blade.to(hilt, RuneProps.along(dir, V.rightOf(f)), sl * (0.45 + 0.5 * deg / 80), 1);
+                    RuneBoost.aura(level, "sword", V.add(hilt, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "life", 0.08), glow, 1.35, 0.42);
                 });
             }
-            // 0.50.0 2D 강화 (초월 나머지): 눕힌 검에도 후광
-            RuneKit.later(3, () -> RuneBoost.rfx2a(level, "sword", V.add(hilt, f, len / 2), Opt.of("dir", f, "size", len / 2, "life", 0.55, "fade", 0.5), glow, core));
+            RuneKit.later(3, () -> {
+                blade.to(V.up(hilt, -0.35), RuneProps.along(f, V.rightOf(f)), sl, 1); // 날이 땅에 박힘 (넓은 면은 옆)
+                RuneBoost.aura(level, "sword", V.add(hilt, f, len / 2), Opt.of("dir", f, "size", len / 2, "life", 0.55, "fade", 0.5), glow, 1.35, 0.42);
+            });
+            RuneKit.later(14, () -> blade.to(V.up(hilt, -1.6), null, sl * 0.6, 10));
+            RuneKit.later(24, blade::remove);
             SkillFx.fx(level, "rpg:light_cut", V.up(V.add(start, f, 3), 2.2), Opt.of("dir", V.UP, "size", 2.6, "thick", 0.35, "life", 0.3, "color", core, "alpha", 1.0));
             Vec3 mid = V.add(start, f, Math.min(len, length) * 0.55);
             double wk = k.num("width") / 2.4; // 폭을 따라 (기본 2.4칸 — 8단계 6돌은 넓음)

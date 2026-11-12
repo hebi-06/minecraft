@@ -103,6 +103,17 @@ final class RpgFilm {
     }
 
     /** only 에 이 열쇠가 적혀 있는지 (비었을 때 모두 도는 규칙은 빼고 — 영상은 고를 때만) */
+    /** 2026-11-12 값이 있는 열쇠 (only 의 key=값 — 예: filmids=str_transcend+endless_transcend) 의 값 (없으면 null) */
+    static String valueOf(String key) {
+        String v = System.getProperty("mmorpg.only", "");
+        if (v.isBlank()) v = System.getenv().getOrDefault("MMORPG_ONLY", "");
+        for (String s : v.split(",")) {
+            s = s.trim();
+            if (s.toLowerCase(java.util.Locale.ROOT).startsWith(key.toLowerCase(java.util.Locale.ROOT) + "=")) return s.substring(key.length() + 1);
+        }
+        return null;
+    }
+
     static boolean listed(String key) {
         String v = System.getProperty("mmorpg.only", "");
         if (v.isBlank()) v = System.getenv().getOrDefault("MMORPG_ONLY", "");

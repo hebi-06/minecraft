@@ -245,6 +245,41 @@ final class RuneStr {
      * 마지막 8틱에 떨어져 꽂힘 (칼끝이 땅속 1.5칸) → 땅이 갈라지고 바위가 튐 (반지름 radius, 위로 띄우고 둔화). 꽂힌 검은 1.6초 남았다 사라짐.
      * 초월 2차 강화: 금빛 하늘 · 성광 문양 · 갈라지는 하늘 · 빛기둥 넷 · 화면 번쩍임 · 빛나는 금
      */
+    /**
+     * 2026-11-12 천붕의 3D 검 (룬 전용 검 — tools/vfx_props.py rune_sword, 빛 · 속빛 = 계열 색): 길이 len 칸, 가운데가 g 위 sky + 1.5 → sky (떠 있는 동안 칼끝 아래 ·
+     * 반 바퀴 돎) → delay − drop 틱부터 drop 틱 동안 빨라지며 떨어져 칼끝이 땅속 1.5칸 → 1.65초 꽂혀 있다가 마지막 0.5초 동안 땅으로 가라앉으며 작아져 사라짐
+     */
+    static void heavenSword(ServerPlayer sp, ServerLevel level, Vec3 g, double sky, double len, int delay, int drop, double[] glow, double[] core) {
+        double rest = len / 2 - 1.5;
+        int hoverT = Math.max(1, delay - drop);
+        int stuck = 33;
+        int sink = 10;
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, delay + stuck + 4);
+        double s = RuneProps.scaleFor(len, RuneProps.SWORD_LEN);
+        Vec3 toMe = V.flat(V.sub(sp.position(), g));
+        Vec3 side0 = V.len(toMe) > 1e-3 ? V.unit(toMe) : new Vec3(0, 0, 1);
+        Vec3 start = V.up(g, sky + 1.5);
+        mmorpg.fabric.vfx.Vfx.Prop sword = RuneProps.prop(fx, RuneProps.SWORD, start, RuneProps.SWORD_MID, RuneProps.along(V.DOWN, RuneKit.turn(side0, 90)),
+                s * 0.2, glow, core);
+        // 나타남 (커짐 — 다음 틱부터: 처음 모습이 보내진 뒤에 보간) · 떠 있으며 내려오고 반 바퀴
+        fx.on(1, () -> sword.size(s, 4));
+        for (int t = 4; t <= hoverT; t += 4) {
+            double u = Math.min(1, t / (double) hoverT);
+            final Vec3 at = V.up(g, sky + 1.5 - 1.5 * u);
+            final org.joml.Quaternionf q = RuneProps.along(V.DOWN, RuneKit.turn(side0, 90 - 90 * u));
+            fx.on(t, () -> sword.to(at, q, -1, 4));
+        }
+        // 떨어짐 (빨라짐 — 2틱마다)
+        for (int i = 1; i <= drop / 2; i++) {
+            double u = i * 2.0 / drop;
+            final Vec3 at = V.up(g, sky - (sky - rest) * u * u);
+            fx.on(hoverT + i * 2 - 2, () -> sword.move(at, 2));
+        }
+        // 꽂힘 → 가라앉음
+        fx.on(delay + stuck - sink, () -> sword.to(V.up(g, rest - 2.2), null, s * 0.7, sink));
+        fx.on(delay + stuck, sword::remove);
+    }
+
     static boolean heavenFall(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 g = RuneKit.groundAim(sp, k.num("range"));
@@ -275,8 +310,10 @@ final class RuneStr {
         SkillFx.fx(level, "rpg:arrow_shot", V.up(g, 14), Opt.of("dir", V.UP, "speed", 0.0, "size", 14.0, "thick", 0.12, "life", delay / 20.0, "color", gold,
                 "alpha", 0.6));
         double hover = (delay - drop) / 20.0;
-        // + 1틱: 떨어지는 검이 나타나는 동안 겹침 (깜빡임 없게)
-        RuneBoost.rfx2a(level, "sword", V.up(g, sky + 1.5), Opt.of("dir", V.DOWN, "size", len / 2, "life", hover + 0.05, "speed", 1.5 / hover), glow, white);
+        // 2026-11-12 3D 검 (사용자 "검 3d" — 룬 전용 검, 빛 = 힘 계열 색): 하늘에서 칼끝을 아래로 내려옴 (넓은 면이 쓴 사람 쪽 · 천천히 반 바퀴) → 떨어짐 →
+        // 꽂힘 → 가라앉으며 사라짐. 2D 검 그림 대신 (후광은 그대로 — 빛나는 칼빛)
+        heavenSword(sp, level, g, sky, len, delay, drop, glow, core);
+        RuneBoost.aura(level, "sword", V.up(g, sky + 0.75), Opt.of("dir", V.DOWN, "size", len / 2, "life", hover + 0.05, "speed", 0.75 / hover), glow, 1.35, 0.42);
         SkillFx.fx(level, "rpg:magic_circle_flash", V.up(g, sky + len / 2 + 1.6), Opt.of("size", 2.2, "life", 0.6, "spin", Kit.rand() * 360, "progress", 1.0,
                 "color", gold, "alpha", 0.9));
         SkillFx.play(level, "beacon.power", g, 0.6, 1);
@@ -291,7 +328,8 @@ final class RuneStr {
         // 떨어짐: 하늘 자리 → 칼끝이 땅속 1.5칸 (가운데 = 땅 + L/2 - 1.5)
         double rest = len / 2 - 1.5;
         Tasks.later(delay - drop, () -> {
-            RuneBoost.rfx2a(level, "sword", V.up(g, sky), Opt.of("dir", V.DOWN, "size", len / 2, "life", drop / 20.0, "speed", (sky - rest) / (drop / 20.0)), glow, white);
+            RuneBoost.aura(level, "sword", V.up(g, sky), Opt.of("dir", V.DOWN, "size", len / 2, "life", drop / 20.0, "speed", (sky - rest) / (drop / 20.0)), glow,
+                    1.35, 0.42);
             for (double s = 2; s < sky - rest; s += 3) {
                 double d = (s / (sky - rest)) * (drop / 20.0);
                 SkillFx.fx(level, "rpg:arrow_trail", V.up(g, sky - s + len / 2), Opt.of("dir", V.DOWN, "size", 1.6, "thick", 0.9, "life", d + 0.3, "delay", d,
@@ -299,8 +337,8 @@ final class RuneStr {
             }
             SkillFx.play(level, "item.trident.riptide_3", g, 0.6, 1);
         });
-        // 꽂힌 검 (1.65초, 마지막 40% 동안 사라짐): 떨어지는 검이 끝나기 1틱 전에 나타남 (깜빡임 없게)
-        Tasks.later(delay - 1, () -> RuneBoost.rfx2a(level, "sword", V.up(g, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.65, "fade", 0.4), glow, white));
+        // 꽂힌 검의 후광 (1.65초 — 3D 검은 heavenSword)
+        Tasks.later(delay - 1, () -> RuneBoost.aura(level, "sword", V.up(g, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.2, "fade", 0.6), glow, 1.3, 0.36));
         Tasks.later(delay, () -> {
             if (sp.isRemoved()) return;
             Vec3 mid = V.up(g, 1.0);

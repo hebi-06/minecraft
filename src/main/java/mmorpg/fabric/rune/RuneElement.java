@@ -374,6 +374,22 @@ final class RuneElement {
      * 적마다 한 번 (먼저 닿은 검기 · 튄 번개): 위력 × mult (마법) + 그 원소 (불붙음 · 구속 · chain 칸 안 한 명에게 위력 × chainMult).
      * 초월 2차 강화: 모으는 동안 하늘빛이 불 → 얼음 → 번개로 바뀜 · 발밑과 앞쪽 하늘의 비전 문양도 그 원소 색으로 → 발동 때 하늘의 섬광
      */
+    /**
+     * 2026-11-12 3D 얼음 가시 (사용자 "얼음 가시 3d" — tools/vfx_props.py ice_spike): at (땅) 에서 높이 h 칸으로 솟고 (3틱 · 조금 기울어짐) hold 틱 머문 뒤
+     * 땅으로 가라앉으며 작아짐 (4틱). yaw = 수평 돌림 (도)
+     */
+    static void iceSpike(ServerLevel level, Vec3 at, double h, int hold, double yaw) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, hold + 10);
+        double s = RuneProps.scaleFor(h, RuneProps.ICE_SPIKE_H);
+        Vec3 side = RuneKit.turn(new Vec3(1, 0, 0), yaw);
+        Vec3 lean = V.unit(V.add(V.UP, V.unit(new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5)), 0.18));
+        double[] base = {8, 0, 8};
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.ICE_SPIKE, V.up(at, -h * 0.7), base, RuneProps.along(lean, side), s * 0.6);
+        fx.on(1, () -> p.to(V.up(at, -0.15), null, s, 3));
+        fx.on(hold + 4, () -> p.to(V.up(at, -h * 0.8), null, s * 0.5, 5));
+        fx.on(hold + 9, p::remove);
+    }
+
     static boolean elementRelease(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         String life = RuneKit.lifeToken(sp);
         ServerLevel level0 = sp.level();
@@ -399,6 +415,14 @@ final class RuneElement {
                         (double) RuneKit.SIGIL.get("arcane"), "life", (last ? charge - jj * third + 4 : third + 1) / 20.0, "spinRate", 50.0, "alpha", 0.75, "fade", 0.15));
             });
         }
+        // 2026-11-12 3D 검 (사용자 "검 + 얼음 연출 3d로 연출" — 룬 전용 검): 눈앞에서 솟아 커지며 원소마다 빛이 바뀜 (불 → 얼음 → 번개) → 검기를 날리며 가로로 휘두름
+        Vec3 f0 = V.flat(sp.getViewVector(1F));
+        mmorpg.fabric.vfx.Vfx.Fx swordFx = RuneProps.fx(level0, sp.position(), charge + 16);
+        double[] pommel = {8, -10.2, 8};
+        double[][] c0 = colorOf(ORDER[0]);
+        mmorpg.fabric.vfx.Vfx.Prop blade = RuneProps.prop(swordFx, RuneProps.SWORD, V.up(V.add(sp.position(), f0, 2.4), -0.6), pommel, RuneProps.along(V.UP,
+                V.rightOf(f0)), RuneProps.scaleFor(1.6, RuneProps.SWORD_LEN), c0[0], c0[1]);
+        String[] tinted = {ORDER[0]};
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -410,7 +434,12 @@ final class RuneElement {
                 double[][] cs = colorOf(el);
                 Vec3 hilt = V.up(V.add(sp.position(), f, 2.4), 0.5);
                 double ls = 1.6 + q * 2.6;
-                RuneBoost.rfx2a(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), cs[0], cs[1]); // 0.50.0 2D 강화 (초월 나머지)
+                if (!el.equals(tinted[0])) {
+                    tinted[0] = el;
+                    blade.tint(cs[0], cs[1]);
+                }
+                if (tt > 0) blade.to(hilt, RuneProps.along(V.UP, V.rightOf(f)), RuneProps.scaleFor(ls, RuneProps.SWORD_LEN), 2);
+                RuneBoost.aura(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), cs[0], 1.35, 0.42); // 칼빛 (후광)
                 // 검 둘레를 돌며 감기는 세 원소
                 for (int j = 0; j < 3; j++) {
                     double a = tt * 0.5 + j * Math.PI * 2 / 3;
@@ -422,10 +451,25 @@ final class RuneElement {
             });
         }
         RuneKit.later(charge, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                blade.remove();
+                return;
+            }
             ServerLevel level = sp.level();
             Vec3 f = V.flat(sp.getViewVector(1F));
             Vec3 from = V.up(V.add(sp.position(), f, 0.6), 1.1);
+            // 3D 검: 오른쪽에서 왼쪽으로 가로 휘두름 (자루 끝 = 몸 앞, 3틱) → 작아지며 사라짐
+            Vec3 pivot = V.up(V.add(sp.position(), f, 0.9), 1.2);
+            double sw = RuneProps.scaleFor(4.2, RuneProps.SWORD_LEN);
+            double[][] cl = colorOf(ORDER[ORDER.length - 1]);
+            blade.tint(cl[0], cl[1]);
+            for (int i = 0; i <= 3; i++) {
+                double deg = 60 - i * 40;
+                final Vec3 dir = RuneKit.turn(f, deg);
+                RuneKit.later(i, () -> blade.to(pivot, RuneProps.along(dir, V.UP), sw, 1));
+            }
+            RuneKit.later(5, () -> blade.size(sw * 0.2, 3));
+            RuneKit.later(8, blade::remove);
             double speed = k.num("speed");
             double spread = k.num("spread");
             double width = k.num("width");
@@ -450,7 +494,8 @@ final class RuneElement {
                         if (el.equals("fire")) {
                             SkillFx.fx(level, "rpg:fire_wall", at, Opt.of("size", 1.5, "life", 0.7, "color", glow, "alpha", 0.9, "spin", Kit.rand() * 360));
                         } else if (el.equals("ice")) {
-                            SkillFx.fx(level, "rpg:ice_spike", at, Opt.of("size", 1.2, "life", 0.8, "spin", Kit.rand() * 30 - 15, "color", glow, "alpha", 1.0));
+                            iceSpike(level, at, 1.5 + Kit.rand() * 0.6, 16, Kit.rand() * 360);
+                            SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.SNOWFLAKE, V.up(at, 0.8), 8, 0.5, 0.05);
                         } else {
                             RuneKit.zap(level, V.up(at, 0.2), V.up(V.add(at, d, 2.4), 0.2), glow, core, 0.12, 0.25);
                         }

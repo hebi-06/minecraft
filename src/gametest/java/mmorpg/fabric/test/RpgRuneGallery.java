@@ -72,7 +72,9 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         boolean trOnly = RpgFilm.on() && RpgFilm.listed("filmtr");
         // 2026-11-11 3D 효과 엔진 시범 (only=film,filmpilot): 도끼 넷 · 불의 정령 — 모드 클라이언트 모습 (모드 없는 클라이언트는 vfilm)
         boolean pilot = RpgFilm.on() && RpgFilm.listed("filmpilot");
-        int filmPart = RpgFilm.on() ? (pilot ? 10 : trOnly ? 9 : RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2
+        // 2026-11-12 고른 룬만 (only=film,filmids=str_transcend+endless_transcend — 계열_등급, + 로 이음): 3D 물체 묶음마다 모드 모습
+        String ids = RpgFilm.on() ? RpgFilm.valueOf("filmids") : null;
+        int filmPart = RpgFilm.on() ? (ids != null ? 11 : pilot ? 10 : trOnly ? 9 : RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2
                 : RpgFilm.listed("filmrune3") ? 3 : 0) : 0;
         if (filmPart == 0 && (RpgFilm.on() || !RpgProdSmoke.only("rune"))) return; // 고른 시험만 (MMORPG_ONLY)
         ctx.getInput().resizeWindow(1280, 720);
@@ -93,6 +95,17 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (filmPart > 0) {
                 RpgFilm f = new RpgFilm(ctx).angle(105).follow(0.6);
+                if (ids != null) {
+                    for (String key : ids.split("\\+")) {
+                        int cut = key.lastIndexOf('_');
+                        Runes.Rune r = cut > 0 ? Runes.parseRune(Runes.runeId(key.substring(0, cut), key.substring(cut + 1))) : null;
+                        if (r == null) failures.add("film id " + key);
+                        else film(ctx, server, r, f);
+                    }
+                    LOG.info("[rune-gallery] film done, {} failed", failures.size());
+                    if (!failures.isEmpty()) throw new AssertionError("rune film: " + String.join(" / ", failures));
+                    return;
+                }
                 if (pilot) {
                     for (String id : PILOT) film(ctx, server, Runes.parseRune(id), f);
                     LOG.info("[rune-gallery] film done, {} failed", failures.size());

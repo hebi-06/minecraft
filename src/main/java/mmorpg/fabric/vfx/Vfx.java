@@ -308,6 +308,19 @@ public final class Vfx {
             fx.addElement(e);
         }
 
+        /**
+         * 2026-11-12 물들임 (아이템 정의 tints — custom_model_data 색: 0 = 빛, 1 = 속빛 · tools/vfx_props.py 의 tintindex 재질) — 계열 색 (룬 전용 검 · 망치 ·
+         * 구름 · 손 · 주먹 · 그물 · 바위 가시의 빛)
+         */
+        public Prop tint(double[]... colors) {
+            List<Integer> c = new ArrayList<>();
+            for (double[] col : colors) c.add(rgb(col));
+            ItemStack stack = e.getItem().copy();
+            stack.set(DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(List.of(), List.of(), List.of(), c));
+            e.setItem(stack);
+            return this;
+        }
+
         /** 쥔 곳 (모델 픽셀) */
         public Prop grip(double x, double y, double z) {
             grip = new Vector3f((float) x, (float) y, (float) z);

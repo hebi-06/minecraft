@@ -39,7 +39,10 @@ SPACE_FIRST = 0xF800  # 뒤로 옮김 글자 (−1 · −2 · −4 … −1024)
 COLS = 8  # 판 한 줄의 칸 수
 
 # 룬이 쓰는 직업 그림 (rfx_j*) — 나머지 직업 그림은 직업 단계에서
-RUNE_J = {"rpg:rfx_jbreak"}
+# (2026-11-12 census — VanillaProbe vcensus: 룬 120 이 보낸 파티클 가운데 직업 그림 — 원소 표식 · 터짐 · 타격 · 웅덩이 · 연기 · 깨짐 표식)
+RUNE_J = {"rpg:rfx_jbreak", "rpg:rfx_jelem", "rpg:rfx_jburst2", "rpg:rfx_jhits", "rpg:rfx_jpool", "rpg:rfx_jsmoke2"}
+# 칸이 많은 작은 그림은 더 줄임 (타격 그림 132칸 — 화면에서 한 칸 남짓)
+CAP_OF = {"rpg:rfx_jhits": 64}
 # Fx3d 카드 (룬 휘두름 판 — RuneKit.arc · waveCard · groundCrescent)
 CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heavy_soft", "slash_thin", "slash_thin_soft"]
 
@@ -95,7 +98,7 @@ def particle_sheets(defs):
             for c in range(cols):
                 x0, y0 = round(c * uw * sx), round(r * vh * sy)
                 x1, y1 = round((c + 1) * uw * sx), round((r + 1) * vh * sy)
-                cells.append(shrink(im.crop((x0, y0, x1, y1)), CAP))
+                cells.append(shrink(im.crop((x0, y0, x1, y1)), CAP_OF.get(pid, CAP)))
         sheets[key] = (cells, [uw, vh], [cols, rows])
     return of, sheets
 
