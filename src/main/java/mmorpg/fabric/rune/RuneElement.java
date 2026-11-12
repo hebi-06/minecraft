@@ -151,6 +151,28 @@ final class RuneElement {
                 glow, core));
     }
 
+    /**
+     * 2026-11-12 3D 얼음 칼 찌르기 (tools/vfx_props.py ice_blade — 길이 1.9칸): 손 앞에서 끝 (reach 칸) 까지 0.15초에 뻗음 → 0.25초 머묾 → 작아지며 사라짐.
+     * 둘레의 서리 (가루) 는 2D
+     */
+    static void iceBladeThrust(ServerLevel level, Vec3 from, Vec3 f, double reach) {
+        double blade = 1.9;
+        Vec3 hand = V.up(V.add(from, V.rightOf(f), 0.3), 0.15);
+        Vec3 end = V.add(from, f, reach);
+        Vec3 dv = V.unit(V.sub(end, hand));
+        double lv = V.len(V.sub(end, hand));
+        double s = RuneProps.scaleFor(blade, RuneProps.ICE_BLADE_LEN);
+        double[] mid = {8, 10.5, 8};
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, hand, 16);
+        Vec3 a = V.add(hand, dv, Math.min(0.6 + blade / 2, lv));
+        Vec3 b = V.add(hand, dv, Math.max(Math.min(0.6 + blade / 2, lv), lv - blade / 2));
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.ICE_BLADE, a, mid, RuneProps.along(dv, V.UP), s);
+        fx.on(1, () -> p.move(b, 3));
+        fx.on(9, () -> p.size(s * 0.25, 4));
+        fx.on(13, p::remove);
+        SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.SNOWFLAKE, V.add(hand, dv, lv * 0.5), 10, 0.3, 0.05);
+    }
+
     /** 화염 베기: 앞 cone 도 · range 칸을 불꽃 검으로 벰 (검, 공격 피해) + 불붙음 fire 초. 앞 땅에 불꽃이 번짐 — 불꽃 초승달 검기 */
     static boolean flameSlash(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -196,7 +218,7 @@ final class RuneElement {
         double[] core = cs[1];
         double gap = k.num("gap");
         double width = k.num("width");
-        elementThrust(level, from, f, len, glow, RuneKit.WHITE);
+        iceBladeThrust(level, from, f, len); // 2026-11-12 3D 얼음 칼 (사용자 "얼음 칼 · 얼음 가시 3d로 연출")
         for (int sd : new int[] {-1, 1}) {
             Vec3 o = V.add(from, V.rightOf(f), sd * 0.45);
             double s0 = Math.min(1.4, len);
@@ -374,22 +396,6 @@ final class RuneElement {
      * 적마다 한 번 (먼저 닿은 검기 · 튄 번개): 위력 × mult (마법) + 그 원소 (불붙음 · 구속 · chain 칸 안 한 명에게 위력 × chainMult).
      * 초월 2차 강화: 모으는 동안 하늘빛이 불 → 얼음 → 번개로 바뀜 · 발밑과 앞쪽 하늘의 비전 문양도 그 원소 색으로 → 발동 때 하늘의 섬광
      */
-    /**
-     * 2026-11-12 3D 얼음 가시 (사용자 "얼음 가시 3d" — tools/vfx_props.py ice_spike): at (땅) 에서 높이 h 칸으로 솟고 (3틱 · 조금 기울어짐) hold 틱 머문 뒤
-     * 땅으로 가라앉으며 작아짐 (4틱). yaw = 수평 돌림 (도)
-     */
-    static void iceSpike(ServerLevel level, Vec3 at, double h, int hold, double yaw) {
-        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, hold + 10);
-        double s = RuneProps.scaleFor(h, RuneProps.ICE_SPIKE_H);
-        Vec3 side = RuneKit.turn(new Vec3(1, 0, 0), yaw);
-        Vec3 lean = V.unit(V.add(V.UP, V.unit(new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5)), 0.18));
-        double[] base = {8, 0, 8};
-        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.ICE_SPIKE, V.up(at, -h * 0.7), base, RuneProps.along(lean, side), s * 0.6);
-        fx.on(1, () -> p.to(V.up(at, -0.15), null, s, 3));
-        fx.on(hold + 4, () -> p.to(V.up(at, -h * 0.8), null, s * 0.5, 5));
-        fx.on(hold + 9, p::remove);
-    }
-
     static boolean elementRelease(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         String life = RuneKit.lifeToken(sp);
         ServerLevel level0 = sp.level();
@@ -494,7 +500,7 @@ final class RuneElement {
                         if (el.equals("fire")) {
                             SkillFx.fx(level, "rpg:fire_wall", at, Opt.of("size", 1.5, "life", 0.7, "color", glow, "alpha", 0.9, "spin", Kit.rand() * 360));
                         } else if (el.equals("ice")) {
-                            iceSpike(level, at, 1.5 + Kit.rand() * 0.6, 16, Kit.rand() * 360);
+                            RuneProps.iceSpike(level, at, 1.5 + Kit.rand() * 0.6, 16, Kit.rand() * 360);
                             SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.SNOWFLAKE, V.up(at, 0.8), 8, 0.5, 0.05);
                         } else {
                             RuneKit.zap(level, V.up(at, 0.2), V.up(V.add(at, d, 2.4), 0.2), glow, core, 0.12, 0.25);

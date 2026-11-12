@@ -57,6 +57,8 @@ public final class Vfx {
     static final int MIN_OPACITY = 26;
     /** 아이템 표시는 아이템을 Y 둘레로 180° 돌려 그림 (DisplayRenderer.ItemDisplayRenderer) — 오른쪽 회전으로 되돌려 모델 축 = 우리 축 */
     static final boolean ITEM_Y_FLIP = true;
+    /** 표시 엔티티의 자리 보간 (teleport_duration) 최대 틱 */
+    static final int MAX_TELEPORT = 59;
     /** 한 번에 떠 있는 효과 수 (넘으면 가장 오래된 것부터 지움 — 여럿이 한꺼번에 써도 버티게) */
     static final int MAX_FX = 400;
 
@@ -357,6 +359,26 @@ public final class Vfx {
         /** 다음 모습: ticks 틱 동안 at · r · s 로 (0 이면 바로) */
         public Prop to(Vec3 at, Quaternionf r, double s, int ticks) {
             if (removed) return this;
+            if (at != null && ticks > MAX_TELEPORT) {
+                // 2026-11-12 자리 보간은 59틱까지 (표시 엔티티 teleport_duration) — 긴 옮김은 곧은 길을 40틱씩 나눔 (회전 · 크기는 한 번에)
+                Vec3 from = pos;
+                int n = (int) Math.ceil(ticks / 40.0);
+                for (int i = 1; i < n; i++) {
+                    Vec3 mid = from.add(at.subtract(from).scale(i / (double) n));
+                    int step = i * ticks / n - (i - 1) * ticks / n;
+                    fx.on(fx.age + (i - 1) * ticks / n, () -> move(mid, step));
+                }
+                int last = ticks - (n - 1) * ticks / n;
+                fx.on(fx.age + (n - 1) * ticks / n, () -> move(at, last));
+                if (r != null || s > 0) {
+                    if (r != null) rot = new Quaternionf(r);
+                    if (s > 0) scale = (float) s;
+                    e.setInterpolationDuration(ticks);
+                    apply();
+                    e.startInterpolationIfDirty();
+                }
+                return this;
+            }
             if (at != null) {
                 pos = at;
                 e.setTeleportDuration(Math.max(0, ticks));

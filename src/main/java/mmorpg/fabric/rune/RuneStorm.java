@@ -252,13 +252,18 @@ final class RuneStorm {
             double rr = i == 0 ? 0 : radius * 0.62;
             puffs.add(new Puff(Math.cos(a) * rr, Math.sin(a) * rr, i == 0 ? 2.8 : 2.0, i % 4));
         }
+        // 2026-11-12 3D 먹구름 (사용자 "구름 3d"): 덩이 여섯 (밑의 빛 = 번개 빛) — 끝에 작아지며 사라짐
+        Vec3[] at0 = new Vec3[puffs.size()];
+        double[] half = new double[puffs.size()];
+        for (int i = 0; i < puffs.size(); i++) {
+            Puff p = puffs.get(i);
+            at0[i] = new Vec3(sky.x + p.x(), sky.y + (p.s() > 2.5 ? 0.6 : 0.1), sky.z + p.z());
+            half[i] = p.s();
+        }
+        RuneProps.clouds(level, at0, half, dark, glow, total);
         for (int t = 0; t < total; t += 8) {
             final int tt = t;
             RuneKit.later(t, () -> {
-                for (Puff p : puffs) {
-                    RuneKit.rfx(level, "cloud", new Vec3(sky.x + p.x(), sky.y + (p.s() > 2.5 ? 0.6 : 0.1), sky.z + p.z()), Opt.of("size", p.s(), "life", 0.48, "cell",
-                            (double) p.cell(), "color", dark, "alpha", 0.92, "fade", tt + 8 >= total ? 0.5 : 0.0));
-                }
                 // 구름 속 번쩍임
                 if (tt % 16 == 0) {
                     Vec3 flash = V.add(sky, new Vec3((Kit.rand() - 0.5) * radius, 0.2, (Kit.rand() - 0.5) * radius));
@@ -342,9 +347,14 @@ final class RuneStorm {
         Vec3 f0 = V.flat(sp.getViewVector(1F));
         RuneKit.ultSkyFor(sp, level, c0, "thunderSpear", (int) charge + 44, null);
         Vec3 storm = RuneKit.skyPoint(sp, V.add(c0, f0, 10), 6, 20, 6, 22);
-        for (int sd : new int[] {-1, 1}) {
-            RuneKit.rfx(level, "cloud", V.add(storm, V.rightOf(f0), sd * 5.2), Opt.of("size", 6.4, "life", (charge + 24) / 20, "grow", 0.2, "cell", sd > 0 ? 1.0 : 2.0,
-                    "color", new double[] {0.3, 0.24, 0.46}, "alpha", 0.85, "fade", 0.35));
+        // 2026-11-12 3D 먹구름 둘 (사용자 "구름 3d") — 처음 크기 6.4 → 조금 커짐 (2D 그림의 grow 0.2)
+        {
+            Vec3[] at0 = {V.add(storm, V.rightOf(f0), -5.2), V.add(storm, V.rightOf(f0), 5.2)};
+            double[] half = {6.4, 6.4};
+            RuneProps.CloudBank bank = RuneProps.clouds(level, at0, half, new double[] {0.3, 0.24, 0.46}, glow, (int) (charge + 24));
+            RuneKit.later(8, () -> {
+                for (int i = 0; i < 2; i++) bank.place(i, at0[i], 7.5, (int) charge + 10);
+            });
         }
         RuneKit.domainSigil(level, c0, 5, "blade", glow, white, Opt.of("life", (charge + 2) / 20, "spinRate", 120.0, "grow", 0.3, "alpha", 0.8, "fade", 0.15));
         for (int i = 0; i < 3; i++) {

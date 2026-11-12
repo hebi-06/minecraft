@@ -404,20 +404,28 @@ final class RuneReaper {
         SkillFx.play(level0, "mob.enderdragon.growl", g, 0.6, 0.8);
         SkillFx.shake(sp, 0.15, 0.4);
         Vec3 moonAt = RuneKit.skyPoint(sp, g, 6, 24, 9, 20);
-        // 달이 떠오름 (아래에서 솟으며 커짐 — 2틱마다 한 장)
-        for (int t = 0; t < delay; t += 2) {
+        // 2026-11-12 3D 핏빛 달 (사용자 "달이 떨어지는 연출 삭제 달 3d로 수정" — tools/vfx_props.py moon): 아래에서 솟으며 커짐 (delay) → 천천히 돌며 떠 있음 (달무리 2D) →
+        // 추락 대신 달이 맥동하며 거대한 초승달 검기를 땅으로 내림 → 끝나면 위로 물러나며 작아져 사라짐
+        mmorpg.fabric.vfx.Vfx.Fx moonFx = RuneProps.fx(level0, moonAt, total + 24);
+        double moonS = RuneProps.scaleFor(9.0, RuneProps.MOON_D);
+        double[] moonMid = {8, 8, 8.5};
+        mmorpg.fabric.vfx.Vfx.Prop moon = RuneProps.prop(moonFx, RuneProps.MOON, V.up(moonAt, -4), moonMid, RuneProps.along(V.UP, new Vec3(1, 0, 0)), moonS * 0.25);
+        moonFx.on(1, () -> moon.to(moonAt, RuneProps.along(V.unit(new Vec3(0.25, 1, 0.1)), new Vec3(1, 0, 0)), moonS, Math.max(2, delay - 1)));
+        for (int t = delay; t < total + 6; t += 20) {
+            final double a = (t - delay) / 20.0 * 30.0;
+            moonFx.on(t, () -> moon.turn(RuneProps.along(V.unit(new Vec3(0.25, 1, 0.1)), RuneKit.turn(new Vec3(1, 0, 0), a + 30)), 20));
+        }
+        for (int t = 0; t < delay; t += 4) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 double q = tt / (double) delay;
-                RuneBoost.rfx2a(level0, "moon", V.up(moonAt, -4 * (1 - q)), Opt.of("size", (2.2 + 3.0 * q) * 1.15, "life", 0.16, "spin", -20.0, "alpha",
-                        0.6 + 0.4 * q), glow, core);
+                RuneBoost.aura(level0, "moon", V.up(moonAt, -4 * (1 - q)), Opt.of("size", (2.2 + 3.0 * q) * 1.15, "life", 0.22, "spin", -20.0, "alpha", 0.6 + 0.4 * q),
+                        glow, 1.35, 0.42);
             });
         }
-        // 떠 있는 달 (비가 끝날 때까지) + 달무리
+        // 떠 있는 달 (비가 끝날 때까지) 의 달무리
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("size", 6.0, "life", (fallAt - delay) / 20.0, "spin", -20.0, "spinRate", 4.0, "alpha", 1.0, "fade",
-                    0.1), glow, core);
             RuneKit.skyFlare(level0, moonAt, 4.2, BLOOD, glow, Opt.of("life", (fallAt - delay) / 20.0));
             SkillFx.play(level0, "mob.warden.heartbeat", g, 0.7, 1.0);
         });
@@ -460,16 +468,21 @@ final class RuneReaper {
                 });
             });
         }
-        // 달이 떨어짐 → 땅을 거대한 초승달로 가름 (추락) · 흡혈 · (3돌부터) 출혈
+        // 달이 맥동하며 거대한 초승달 검기를 땅으로 내림 (2026-11-12 — 달이 떨어지는 대신) → 땅을 가름 · 흡혈 · (3돌부터) 출혈
         RuneKit.later(fallAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 d = V.sub(V.up(g, 1.0), moonAt);
-            // 0.48.2 (사용자 "적월 … 참격이 정면을 안보고 있음"): 떠 있던 기울기 (-20° + 4°/초) 에서 떨어지는 동안 불룩한 날을 아래 (90°) 로 돌림 — 날이 땅을 보며 박힘
-            double s0 = -20.0 + 4.0 * (fallAt - delay) / 20.0;
-            RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("dir", V.unit(d), "speed", V.len(d) / (FALL / 20.0), "size", 6.0, "life", FALL / 20.0, "grow",
-                    0.3, "spin", s0, "spinRate", (90.0 - s0) / (FALL / 20.0)), glow, core);
+            moon.size(moonS * 1.18, 3);
+            moonFx.on(moonFx.age() + 4, () -> moon.size(moonS, 6));
+            RuneKit.skyFlare(level0, moonAt, 6.0, glow, core, Opt.of("life", 0.45));
+            RuneKit.rfx2(level0, "wave", V.add(moonAt, V.unit(d), 2.5), Opt.of("dir", V.unit(d), "speed", (V.len(d) - 2.5) / (FALL / 20.0), "size", 5.0, "life",
+                    FALL / 20.0, "grow", 0.4, "spin", 90.0), glow, core);
             SkillFx.play(level0, "mob.enderdragon.flap", moonAt, 0.5, 1.0);
             SkillFx.play(level0, "mob.wither.shoot", g, 0.5, 1.0);
+        });
+        RuneKit.later(total + 6, () -> {
+            moon.to(V.up(moonAt, 6), null, moonS * 0.2, 14);
+            moonFx.on(moonFx.age() + 14, moon::remove);
         });
         RuneKit.later(total, () -> {
             if (!RuneKit.sameLife(sp, life)) return;

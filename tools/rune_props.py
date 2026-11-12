@@ -15,6 +15,7 @@ import math
 import os
 import random
 import sys
+import zlib
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -132,7 +133,7 @@ def swatch(kind, frame):
     pulse = 0.5 + 0.5 * math.sin(frame / FRAMES * math.pi * 2)
     im = Image.new("RGBA", (8, 8))
     px = im.load()
-    rnd = random.Random(hash(kind) & 0xFFFF)
+    rnd = random.Random(zlib.crc32(kind.encode()) & 0xFFFF)
     for y in range(8):
         for x in range(8):
             n = rnd.uniform(-0.05, 0.05)

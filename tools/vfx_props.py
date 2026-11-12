@@ -20,6 +20,7 @@ import math
 import os
 import random
 import sys
+import zlib
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -244,7 +245,7 @@ class Model:
             im = Image.new("RGBA", (self.tex, self.tex), (0, 0, 0, 0))
             for name in self.order:
                 m = self.mats[name]
-                cell = m.gen(fi if m.animated else 0, random.Random(hash(name) & 0xFFFF))
+                cell = m.gen(fi if m.animated else 0, random.Random(zlib.crc32(name.encode()) & 0xFFFF))
                 im.paste(cell, self.slot(name))
             frames.append(im)
         sheet = Image.new("RGBA", (self.tex, self.tex * nf))

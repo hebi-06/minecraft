@@ -175,13 +175,23 @@ final class RuneTide {
             double rr = i == 0 ? 0 : radius * (0.45 + 0.25 * (i % 2));
             puffs.add(new Puff(Math.cos(a) * rr, Math.sin(a) * rr, i == 0 ? 2.8 : 2.0, i % 4));
         }
-        for (int t = 0; t < total; t += 10) {
+        // 2026-11-12 3D 비구름 (사용자 "구름 3d"): 덩이 일곱이 가운데로 모였다가 (delay) 퍼짐 → 끝에 작아지며 사라짐 (밑의 빛 = 물빛)
+        Vec3[] at0 = new Vec3[puffs.size()];
+        double[] half = new double[puffs.size()];
+        double q0 = Math.min(1, 6 / (double) Math.max(1, delay));
+        for (int i = 0; i < puffs.size(); i++) {
+            Puff p = puffs.get(i);
+            at0[i] = new Vec3(sky.x + p.x() * q0, sky.y + (p.s() > 2.4 ? 0.5 : 0), sky.z + p.z() * q0);
+            half[i] = p.s() * (0.6 + 0.4 * q0);
+        }
+        RuneProps.CloudBank bank = RuneProps.clouds(level, at0, half, CLOUD, WATER, total);
+        for (int t = 10; t < total; t += 10) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 double q = Math.min(1, (tt + 6) / (double) Math.max(1, delay));
-                for (Puff p : puffs) {
-                    RuneKit.rfx(level, "cloud", new Vec3(sky.x + p.x() * q, sky.y + (p.s() > 2.4 ? 0.5 : 0), sky.z + p.z() * q), Opt.of("size", p.s() * (0.6 + 0.4 * q),
-                            "life", 0.6, "cell", (double) p.cell(), "color", CLOUD, "alpha", 0.92, "fade", tt + 10 >= total ? 0.5 : 0.0, "grow", tt == 0 ? 0.4 : 0.0));
+                for (int i = 0; i < puffs.size(); i++) {
+                    Puff p = puffs.get(i);
+                    bank.place(i, new Vec3(sky.x + p.x() * q, sky.y + (p.s() > 2.4 ? 0.5 : 0), sky.z + p.z() * q), p.s() * (0.6 + 0.4 * q), 10);
                 }
             });
         }
@@ -317,10 +327,7 @@ final class RuneTide {
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             double sc = RuneKit.nearK(sp, V.up(g, 2), 6, 0.45);
-            RuneKit.rfx(level, "fountain", V.up(g, 2.6 * sc), Opt.of("size", 2.8 * sc, "life", 0.7, "fade", 0.5, "color", WATER, "alpha", 0.95, "frames", 4.0, "fps",
-                    8.0));
-            RuneKit.rfx(level, "fountain", V.up(g, 2.2 * sc), Opt.of("size", 2.2 * sc, "life", 0.6, "fade", 0.5, "color", FOAM, "alpha", 0.9, "frames", 4.0, "fps",
-                    10.0));
+            waterColumn(level, g, 5.6 * sc, 12); // 2026-11-12 3D 물기둥 (사용자 "파도 연출 3d" — 2D 물기둥 그림 대신)
             crown(level, g, 2.4 * sc, 0.7, 1.0);
             for (int j = 0; j < 8; j++) {
                 double a = a0 + j * Math.PI / 4;
@@ -352,6 +359,63 @@ final class RuneTide {
      * 해일: 앞으로 거대한 파도 (rpg:tide_wave 여러 겹 · 물보라 왕관 · 물보라) 가 폭 span 칸으로 speed 칸/초로 length 칸 밀려감 — 파도가 닿은 적 (위력 × mult) 은
      * 파도에 휩쓸려 함께 밀려가고 (보스 제외), 끝에서 파도가 부서지며 휩쓸린 적 · 부서진 자리 둘레 radius 칸의 적을 한 번 더 (위력 × crush)
      */
+    /**
+     * 2026-11-12 3D 물기둥 (사용자 "파도 · 물 연출 3d" — tools/vfx_props.py water_column: 소용돌이 홈 · 꼭대기 물보라): at (땅) 에서 높이 h 칸으로 솟고 (3틱)
+     * life 틱 뒤 무너져 내림 (작아지며 가라앉음 6틱)
+     */
+    static void waterColumn(ServerLevel level, Vec3 at, double h, int life) {
+        double s = RuneProps.scaleFor(h, RuneProps.WATER_H);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, life + 10);
+        double[] base = {8, 0, 7.5};
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.WATER_COLUMN, V.up(at, -h * 0.5), base, RuneProps.along(V.UP, new Vec3(1, 0, 0)), s * 0.4);
+        fx.on(1, () -> p.to(at, RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), 60)), s, 3));
+        for (int t = 4; t < life; t += 4) {
+            final double a = 60 + t * 18.0;
+            fx.on(t, () -> p.turn(RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), a)), 4)); // 소용돌이 홈이 돎
+        }
+        fx.on(life, () -> p.to(V.up(at, -h * 0.6), null, s * 0.5, 6));
+        fx.on(life + 6, p::remove);
+    }
+
+    /** 작은 3D 파도 하나 (높이 h): at (땅) 에서 dir 로 dist 칸을 ticks 틱에 밀려가며 솟았다 끝에 부서짐 */
+    static void waveRun(ServerLevel level, Vec3 at, Vec3 dir, double dist, int ticks, double h) {
+        double s = RuneProps.scaleFor(h, 18.0);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, ticks + 8);
+        Vec3 d = V.unit(dir);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.WAVE, at, RuneProps.WAVE_BASE, RuneProps.facing(d, V.UP), s * 0.4);
+        Vec3 end = V.add(at, d, dist);
+        fx.on(1, () -> {
+            p.move(end, Math.max(1, ticks - 1));
+            p.size(s, Math.max(2, ticks / 3));
+        });
+        fx.on(ticks, () -> p.to(V.up(V.add(end, d, 0.6), -h * 0.5), null, s * 0.5, 5));
+        fx.on(ticks + 5, p::remove);
+    }
+
+    /**
+     * 3D 파도 벽: start (땅) 에서 앞 (f) 으로 dist 칸을 ticks 틱에 밀려가는 물마루 (높이 h 칸) 를 폭 span 에 나란히. 처음 4틱에 솟고 끝에서 5틱 동안 부서지며 사라짐
+     */
+    static void waveWall(ServerLevel level, Vec3 start, Vec3 f, double span, double h, double dist, int ticks) {
+        double s = RuneProps.scaleFor(h, 18.0);
+        double w = RuneProps.WAVE_W / 16.0 * s * 0.92;
+        int n = Math.max(1, (int) Math.ceil(span / w));
+        Vec3 side = V.rightOf(f);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, start, ticks + 12);
+        for (int i = 0; i < n; i++) {
+            double l = n == 1 ? 0 : -span / 2 + w / 2 + (span - w) * i / (n - 1);
+            Vec3 at = V.add(start, side, l);
+            Vec3 end = V.add(at, f, dist);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.WAVE, at, RuneProps.WAVE_BASE, RuneProps.facing(f, V.UP), s * 0.45);
+            // 자리 (옮김 보간) 와 크기 (변환 보간) 는 따로 — 밀려가며 솟음 (맞는 틱과 같은 빠르기)
+            fx.on(1, () -> {
+                p.move(end, Math.max(1, ticks - 1));
+                p.size(s, 4);
+            });
+            fx.on(ticks + 1, () -> p.to(V.up(V.add(end, f, 1.2), -h * 0.5), null, s * 0.55, 5));
+            fx.on(ticks + 6, p::remove);
+        }
+    }
+
     static boolean tidalWave(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
@@ -366,15 +430,9 @@ final class RuneTide {
         int dur = Math.max(2, (int) Math.round((length - s0) / speed * 20));
         double lifeS = dur / 20.0;
         Vec3 start = V.add(c0, f, s0);
-        // 파도 (세 겹 — 앞의 큰 물마루 · 뒤의 낮은 물결 · 앞의 흰 거품): 옆으로 2.5칸마다
-        for (double l = -span / 2; l <= span / 2 + 0.01; l += 2.5) {
-            Vec3 at = V.add(start, side, l);
-            SkillFx.fx(level, "rpg:tide_wave", V.up(at, 1.7), Opt.of("dir", f, "speed", speed, "size", 2.0, "thick", 1.7, "life", lifeS, "color", SEA, "alpha", 0.92));
-            SkillFx.fx(level, "rpg:tide_wave", V.add(V.up(at, 0.9), f, -0.8), Opt.of("dir", f, "speed", speed, "size", 2.3, "thick", 1.2, "life", lifeS, "color", WATER,
-                    "alpha", 0.9));
-            SkillFx.fx(level, "rpg:tide_wave", V.add(V.up(at, 2.8), f, 0.3), Opt.of("dir", f, "speed", speed, "size", 1.6, "thick", 0.6, "life", lifeS, "color",
-                    FOAM, "alpha", 0.85));
-        }
+        // 2026-11-12 3D 파도 (사용자 "파도 연출 3d" — tools/vfx_props.py wave: 말려 넘어오는 물마루 · 흰 거품): 폭 span 을 덮게 나란히 (한 덩이 너비 약 6칸) — 솟아오르며
+        // speed 칸/초로 밀려감 → 끝에서 부서지며 (작아지며 가라앉음) 사라짐
+        waveWall(level, start, f, span, 3.6, length - s0, dur);
         SkillFx.play(level, "ambient.weather.thunder", c0, 0.6, 0.4);
         SkillFx.play(level, "entity.generic.splash", c0, 0.5, 1.0);
         SkillFx.play(level, "item.trident.riptide_3", c0, 0.7, 0.9);
@@ -618,8 +676,7 @@ final class RuneTide {
                     Vec3 dir = new Vec3(-Math.sin(a), 0, Math.cos(a));
                     Vec3 p = PairKit.ring(aim, radius * 0.55, a);
                     if (PairKit.nearCam(sp, V.up(p, 1), 2.5)) continue;
-                    SkillFx.fx(level, "rpg:tide_wave", V.up(p, 1.0), Opt.of("dir", dir, "speed", 9.0, "size", 1.6, "thick", 1.0, "life", 0.35, "color", SEA, "alpha",
-                            0.9));
+                    waveRun(level, PairKit.onGround(level, p), dir, 9.0 * 0.35, 7, 1.7); // 2026-11-12 3D 물결 (사용자 "물 연출 3d")
                 }
                 RuneKit.zonePulse(level, aim, ii % 2 == 0 ? WATER : FOAM, radius, 0.45);
                 SkillFx.play(level, "entity.guardian.attack", top, 0.6 + ii * 0.05, 0.9);
@@ -662,14 +719,13 @@ final class RuneTide {
             RuneBoost.impact(level, aim, WATER, FOAM, radius); // 0.50.0 2D 강화 (초월 나머지): 바다뱀이 내리꽂힌 대해일의 터짐
             double sc = RuneKit.nearK(sp, V.up(aim, 2), 8, 0.4);
             crown(level, aim, 4.2 * sc, 0.9, 1.0);
-            RuneKit.rfx(level, "fountain", V.up(aim, 4.2 * sc), Opt.of("size", 4.4 * sc, "life", 0.9, "fade", 0.5, "color", WATER, "alpha", 0.95, "frames", 4.0,
-                    "fps", 7.0));
-            // 사방으로 퍼지는 파도 고리
-            for (int j = 0; j < 12; j++) {
-                double a = j / 12.0 * Math.PI * 2;
+            // 2026-11-12 3D 물기둥 · 사방으로 퍼지는 3D 파도 고리 (사용자 "물 연출 3d")
+            waterColumn(level, aim, 8.6 * sc, 16);
+            for (int j = 0; j < 10; j++) {
+                double a = j / 10.0 * Math.PI * 2;
                 Vec3 dir = new Vec3(Math.cos(a), 0, Math.sin(a));
-                Vec3 p = V.add(V.up(aim, 1.2), dir, 1.5);
-                SkillFx.fx(level, "rpg:tide_wave", p, Opt.of("dir", dir, "speed", radius * 1.6, "size", 1.6, "thick", 1.5, "life", 0.55, "color", SEA, "alpha", 0.95));
+                Vec3 p = PairKit.onGround(level, V.add(aim, dir, 1.5));
+                waveRun(level, p, dir, radius * 1.6 * 0.55, 11, 2.4);
             }
             for (int j = 0; j < 10; j++) {
                 double a = j / 10.0 * Math.PI * 2 + 0.3;

@@ -258,13 +258,19 @@ final class RuneInt {
             double rr = i == 0 ? 0 : radius * 0.6;
             puffs.add(new Puff(Math.cos(a) * rr, Math.sin(a) * rr, i == 0 ? 2.6 : 1.9, i % 4));
         }
-        for (int t = 0; t < total; t += 10) {
+        // 2026-11-12 3D 눈구름 (사용자 "구름 3d"): 덩이 다섯이 조금씩 흘러감 → 끝에 작아지며 사라짐
+        Vec3[] at0 = new Vec3[puffs.size()];
+        double[] half = new double[puffs.size()];
+        for (int i = 0; i < puffs.size(); i++) {
+            Puff p = puffs.get(i);
+            at0[i] = new Vec3(sky.x + p.x(), sky.y + (p.s() > 2 ? 0.5 : 0), sky.z + p.z());
+            half[i] = p.s();
+        }
+        RuneProps.CloudBank bank = RuneProps.clouds(level, at0, half, snow, glow, total);
+        for (int t = 10; t < total; t += 10) {
             final int tt = t;
             RuneKit.later(t, () -> {
-                for (Puff p : puffs) {
-                    RuneKit.rfx(level, "cloud", new Vec3(sky.x + p.x() + tt * 0.02, sky.y + (p.s() > 2 ? 0.5 : 0), sky.z + p.z()), Opt.of("size", p.s(), "life",
-                            tt == 0 ? 0.62 : 0.56, "cell", (double) p.cell(), "color", snow, "alpha", 0.9, "fade", tt + 10 >= total ? 0.5 : 0.0));
-                }
+                for (int i = 0; i < at0.length; i++) bank.place(i, V.add(at0[i], new Vec3(tt * 0.02, 0, 0), 1), half[i], 10);
             });
         }
         for (int t = 0; t < total; t += 3) {
@@ -304,6 +310,26 @@ final class RuneInt {
      * 메테오: 조준한 곳에 불의 룬이 그려지고 (delay) 뒤쪽 하늘에서 불타는 운석 (rpg:rfx_meteor) 이 연기 꼬리를 끌며 떨어져 폭발 (rpg:rfx_boom).
      * 초월 2차 강화: 불타는 하늘 · 비전 문양 · 불타며 갈라지는 하늘 · 주황 번쩍임 · 충격 고리 · 용암처럼 빛나는 금 · 솟는 버섯구름
      */
+    /** 3D 운석 (지름 dia 칸): from → to 를 ticks 틱에 (틱마다 구름 — 앞으로 구르듯 돎) → 박혀 4틱 뒤 작아지며 사라짐 */
+    static void meteorRock(ServerLevel level, Vec3 from, Vec3 to, Vec3 d, int ticks, double dia) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, from, ticks + 12);
+        double s = RuneProps.scaleFor(dia, RuneProps.METEOR_D);
+        double[] mid = {8, 8, 8};
+        Vec3 axis = V.len(V.cross(d, V.UP)) > 1e-3 ? V.unit(V.cross(d, V.UP)) : new Vec3(1, 0, 0);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.METEOR, from, mid, RuneProps.facing(d, V.UP), s * 0.6);
+        fx.on(1, () -> p.size(s, 3));
+        for (int t = 1; t <= ticks; t++) {
+            double k = t / (double) ticks;
+            Vec3 at = V.add(from, V.sub(to, from), k);
+            double a = t * 25.0;
+            Vec3 up = V.add(V.scale(V.UP, Math.cos(Math.toRadians(a))), d, Math.sin(Math.toRadians(a)));
+            final org.joml.Quaternionf q = RuneProps.along(V.unit(up), axis);
+            fx.on(t, () -> p.to(at, q, -1, 1));
+        }
+        fx.on(ticks + 4, () -> p.to(V.up(to, -dia * 0.4), null, s * 0.4, 6));
+        fx.on(ticks + 10, p::remove);
+    }
+
     static boolean meteor(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 g = RuneKit.groundAim(sp, k.num("range"));
@@ -337,10 +363,10 @@ final class RuneInt {
         double len = V.len(V.sub(g, start));
         Tasks.later(delay - fall, () -> {
             Opt mo = Opt.of("dir", d, "speed", len / (fall / 20.0), "size", 3.2, "life", fall / 20.0, "frames", 4.0, "fps", 12.0, "loop", true);
-            // 0.50.0 2D 강화 (초월 나머지): 운석 후광 (불빛 · 1.35배 · 옅게, 같은 길). 그림의 바위가 앞 끝 (가운데에서 너비 6.4 의 0.3) 이라
-            // 1.35배 겹은 그만큼 (0.3 × 6.4 × 0.35 칸) 뒤에서 내보내 바위를 겹침 — 같은 자리면 커진 바위가 운석 앞에 비침
+            // 0.50.0 2D 강화 (초월 나머지): 운석 후광 (불빛 · 1.35배 · 옅게, 같은 길) — 불꼬리
             RuneBoost.aura(level, "meteor", V.add(start, d, -0.3 * 6.4 * 0.35), mo, glow, 1.35, 0.42);
-            RuneKit.rfx(level, "meteor", start, mo);
+            // 2026-11-12 3D 운석 (사용자 "메테오 3d 모델 운석으로 수정" — tools/vfx_props.py meteor): 2D 운석 그림 대신 바위가 구르며 떨어짐 (불꼬리는 2D) → 땅에 박혀 작아짐
+            meteorRock(level, V.add(start, d, 0.3 * 6.4), g, d, fall, 2.6);
             for (int t = 0; t < fall; t += 2) {
                 final int tt = t;
                 Tasks.later(t, () -> {

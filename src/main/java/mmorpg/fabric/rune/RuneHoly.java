@@ -184,6 +184,7 @@ final class RuneHoly {
         ServerLevel level = sp.level();
         double[][] cs = RuneKit.colorOf("holy");
         Hammer h = new Hammer(sp, level, P, k, cs[0], cs[1]);
+        h.thrown = new RuneHammer.Thrown(level, 1.5, cs[0], cs[1]); // 2026-11-12 3D 망치 (사용자 "망치 3d 연출")
         h.done.add(first.getUUID());
         h.boom = r.grade(); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게 터짐 한 번
         h.fly(RuneKit.bowHand(sp), first, 0);
@@ -202,6 +203,8 @@ final class RuneHoly {
         final Set<UUID> done = new HashSet<>();
         /** 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게 낼 터짐의 룬 등급 (낸 뒤 null — 한 번 던지기에 한 번) */
         String boom;
+        /** 2026-11-12 3D 망치 (튈 때마다 같은 망치가 다음 적으로) */
+        RuneHammer.Thrown thrown;
 
         Hammer(ServerPlayer sp, ServerLevel level, double P, Obj k, double[] glow, double[] core) {
             this.sp = sp;
@@ -218,18 +221,14 @@ final class RuneHoly {
             Vec3 d = V.unit(V.sub(to, from));
             double len = V.len(V.sub(to, from));
             int ticks = (int) Math.max(1, Math.round(len / k.num("speed") * 20));
-            int[] hammer = RuneKit.RFX.get("hammer");
-            for (int t = 0; t <= ticks; t += 2) {
-                final int tt = t;
-                RuneKit.later(tt, () -> {
-                    Vec3 at = V.add(from, d, len * Math.min(tt, ticks) / ticks);
-                    if (n == 0 && V.len(V.sub(at, sp.getEyePosition())) < 1.3) return; // 손 바로 앞 (1인칭 화면)
-                    RuneKit.rfx2(level, "prop", at, Opt.of("size", 0.62, "life", 0.16, "spin", tt * 80.0), glow, core, hammer, null);
-                });
-            }
+            // 2026-11-12 3D 망치가 세로로 돌며 날아감 (2D 망치 그림 대신 — 날아간 빛줄기는 그대로)
+            if (thrown != null) thrown.fly(n == 0 ? V.add(from, d, Math.min(1.2, len * 0.3)) : from, to, ticks);
             RuneKit.streak(level, from, to, glow, 0.12, 0.3, 0.6, ticks / 40.0);
             RuneKit.later(ticks, () -> {
-                if (sp.isRemoved() || e.isRemoved()) return;
+                if (sp.isRemoved() || e.isRemoved()) {
+                    if (thrown != null) thrown.end(1);
+                    return;
+                }
                 Vec3 at = Kit.bodyPoint(e);
                 if (RuneKit.holyHit(sp, e, P, k.num("mult")) > 0) {
                     RuneKit.stun(e, (int) k.num("stun"), glow, true);
@@ -246,11 +245,17 @@ final class RuneHoly {
                     SkillFx.play(level, "random.anvil_land", at, 1.4, 0.5);
                     SkillFx.play(level, "block.bell.hit", at, 1.2, 0.7);
                 }
-                if (n >= k.num("bounces")) return;
+                if (n >= k.num("bounces")) {
+                    if (thrown != null) thrown.end(2);
+                    return;
+                }
                 Vec3 ep = e.position();
                 List<LivingEntity> fresh = new ArrayList<>();
                 for (LivingEntity x : Kit.around(sp, ep, k.num("bounceRange"), 3)) if (!done.contains(x.getUUID())) fresh.add(x);
-                if (fresh.isEmpty()) return;
+                if (fresh.isEmpty()) {
+                    if (thrown != null) thrown.end(2);
+                    return;
+                }
                 LivingEntity next = RuneKit.nearestTo(fresh, ep).get(0);
                 done.add(next.getUUID());
                 fly(at, next, n + 1);
@@ -269,13 +274,14 @@ final class RuneHoly {
         double[] glow = cs[0];
         double[] core = cs[1];
         double[] gold = {1.0, 0.86, 0.45};
-        int[] hammer = RuneKit.RFX.get("hammer");
         Vec3 start = sp.position();
         Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.0);
         Vec3 f = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : V.flat(sp.getViewVector(1F));
         int air = (int) k.num("air");
         int pillar = (int) k.num("pillar");
         double radius = k.num("radius");
+        // 2026-11-12 3D 금빛 망치 (사용자 "망치 3d 연출"): 머리 위로 들고 뛰어 → 착지하며 앞으로 내려찍어 머리가 땅에 박힘
+        RuneHammer.Held held = RuneHammer.overhead(sp, level, f, air, 2.4, gold, RuneKit.WHITE, 40);
         double sky = 5; // 문장 높이
         double sk = RuneKit.nearK(sp, V.up(land, sky), 5, 0.4);
         // 하늘의 문장 (착지할 곳 위 — 날아가는 동안 커짐) · 땅의 문양
@@ -286,21 +292,18 @@ final class RuneHoly {
                         "spin", tt * 6.0));
                 RuneKit.rfx2(level, "sun", V.up(land, sky), Opt.of("size", (0.8 + 2.0 * (tt + 2.0) / air) * sk, "life", 0.14, "spin", tt * 8.0, "alpha",
                         0.55 + 0.4 * tt / air), glow, RuneKit.WHITE);
-                // 머리 위로 든 금빛 망치 (몸을 따라감 — 날이 뒤로 젖혀짐)
-                if (!sp.isRemoved()) {
-                    Vec3 at = V.add(V.up(sp.position(), 2.9), f, -0.3);
-                    RuneKit.rfx2(level, "prop", at, Opt.of("size", 0.85, "life", 0.12, "spin", 30.0 + tt * 6, "alpha", 0.95, "vel", RuneKit.bodyVel(sp)), gold,
-                            RuneKit.WHITE, hammer, null);
+                // 머리 위로 든 금빛 망치 (3D — RuneHammer.overhead) 둘레의 빛
+                if (!sp.isRemoved() && tt % 4 == 0) {
+                    Vec3 at = V.add(V.up(sp.position(), 3.2), f, -0.3);
+                    SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 1.2, "size", 0.4, "grow", 0.8, "life", 0.3, "color", gold, "alpha", 0.9));
                 }
             });
         }
         SkillFx.play(level, "beacon.power", land, 1.4, 0.8);
         RuneKit.leap(sp, land, 2.4 + V.hdist(land, start) * 0.12, air, glow, gold, () -> {
             Vec3 c = sp.position();
-            // 내려찍은 망치: 앞에 머리가 박힘 · 금빛 충격파 · 빛의 금
-            Vec3 at = V.up(V.add(c, f, 1.5), 0.8);
-            RuneKit.rfx2(level, "prop", at, Opt.of("size", 1.2 * RuneKit.nearK(sp, at, 3, 0.55), "life", 0.45, "spin", 180.0, "fade", 0.5, "alpha", 0.95), gold,
-                    RuneKit.WHITE, hammer, null);
+            // 내려찍은 망치 (3D): 앞에 머리가 박힘 · 금빛 충격파 · 빛의 금
+            RuneHammer.smash(held, V.add(c, f, 1.6), f, 3.0, 0.35, 9);
             RuneKit.arc(level, V.up(V.add(c, f, 1.4), 1.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.22, "speed", 1.0, "spin", -90.0,
                     "color", gold, "aura", glow));
             SkillFx.burst(level, V.up(c, 0.6), gold, 2.2, 0.35);

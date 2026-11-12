@@ -192,26 +192,26 @@ final class RuneStr {
         int air = (int) k.num("air");
         double radius = k.num("radius");
         int stun = (int) k.numOr("stun", 0);
-        int[] hammer = RuneKit.RFX.get("hammer");
         Vec3 aim = V.add(land, f, 1.6); // 망치가 박히는 자리 (착지한 몸 앞)
+        // 2026-11-12 3D 거대한 망치 (사용자 "망치 3d" — 룬 전용 망치 · 힘 계열 색): 머리 위로 들고 뛰어 → 착지하며 커지며 앞으로 내려찍음
+        RuneHammer.Held held = RuneHammer.overhead(sp, level, f, air, 2.8, glow, core, 40);
         for (int t = 0; t < air; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 SkillFx.rune(level, aim, Opt.of("size", radius * 0.9, "life", 0.14, "color", glow, "alpha", 0.9, "progress", (tt + 2.0) / air, "rate", 0.0,
                         "spin", tt * 4.0));
                 if (sp.isRemoved()) return;
-                // 머리 위로 든 거대한 망치 (몸을 따라감 — 뒤로 젖혀졌다 내려올 때 앞으로)
-                Vec3 at = V.add(V.up(sp.position(), 3.1), f, -0.4 + 0.3 * tt / air);
-                RuneKit.rfx2(level, "prop", at, Opt.of("size", 1.1, "life", 0.12, "spin", 20.0 + tt * 6, "alpha", 0.95, "vel", RuneKit.bodyVel(sp)), glow, core,
-                        hammer, null);
+                // 머리 위로 든 거대한 망치 (3D — RuneHammer.overhead) 의 빛
+                if (tt % 4 == 0) {
+                    Vec3 at = V.add(V.up(sp.position(), 3.4), f, -0.5);
+                    SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 1.2, "size", 0.45, "grow", 0.8, "life", 0.3, "color", glow, "alpha", 0.9));
+                }
             });
         }
         SkillFx.play(level, "mob.ravager.roar", start, 1.2, 0.8);
         RuneKit.leap(sp, land, 2.6 + V.hdist(land, start) * 0.15, air, glow, core, () -> {
             Vec3 c = V.add(sp.position(), f, 1.6);
-            double size = 2.0 * RuneKit.nearK(sp, V.up(c, 2), 5, 0.5);
-            double rest = size * 0.72; // 망치 가운데 높이 (머리가 땅에 닿음)
-            RuneKit.rfx2(level, "prop", V.up(c, rest), Opt.of("size", size, "life", 0.75, "spin", 180.0, "fade", 0.5), glow, core, hammer, null);
+            RuneHammer.smash(held, V.add(c, f, 0.4), f, 4.6, 0.5, 15); // 3D 망치가 커지며 내려찍혀 머리가 땅에 박힘 (0.75초)
             SkillFx.burst(level, V.up(c, 0.6), glow, 3.0, 0.4);
             SkillFx.burst(level, V.up(c, 0.6), core, 1.6, 0.3);
             SkillFx.shock(level, c, glow, 2.0, 0.35);

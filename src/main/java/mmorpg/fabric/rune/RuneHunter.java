@@ -221,6 +221,11 @@ final class RuneHunter {
     // ------------------------------------------------------------ 고귀: 사냥 그물
 
     /** 그물 (rpg:rfx_net — dir 쪽을 보는 판, 땅에 덮을 때는 위): at 에 size, vel 로 움직임 */
+    /** 3D 그물 크기: 반지름 (칸) → 모델 크기 (지름 30 픽셀) */
+    static double netScale(double radius) {
+        return radius * 2 / (RuneProps.NET_D / 16.0);
+    }
+
     static void net(ServerLevel level, Vec3 at, Vec3 dir, double size, double life, Vec3 vel, double spin, double alpha) {
         RuneKit.rfx2(level, "net", at, Opt.of("dir", dir, "size", size, "life", life, "vel", vel, "spin", spin, "alpha", alpha, "fade", 0.2), WILD, CORE,
                 new int[] {0, 1}, null);
@@ -242,28 +247,34 @@ final class RuneHunter {
         int fly = 6;
         Vec3 hand = V.add(V.up(sp.position(), 1.4), f, 1.0);
         Vec3 land = V.up(g, 0.12);
-        // 날아가는 그물 (펼쳐지며 커짐 — 포물선)
+        int holdEnd = fly + (hits - 1) * gap + 8;
+        // 2026-11-12 3D 그물 (사용자 "그물 3d" — tools/vfx_props.py net: 덮개 모양 그물 · 매듭 · 추, 빛 줄 = 사냥꾼 계열 색): 손에서 포물선으로 날며 펼쳐짐
+        // (돌며 앞으로 기욺) → 땅을 덮음 → 조일 때마다 오그라듦 → 끝에 작아지며 사라짐
+        mmorpg.fabric.vfx.Vfx.Fx netFx = RuneProps.fx(level, land, holdEnd + 12);
+        double ns = netScale(radius);
+        double[] base = {8, 0, 8};
+        mmorpg.fabric.vfx.Vfx.Prop net3d = RuneProps.prop(netFx, RuneProps.NET, hand, base, RuneProps.along(V.unit(V.add(V.UP, f, -0.6)), V.rightOf(f)), ns * 0.25,
+                WILD);
         for (int t = 0; t < fly; t++) {
             final int tt = t;
-            RuneKit.later(t, () -> {
+            netFx.on(t + 1, () -> {
                 double u = (tt + 1) / (double) fly;
-                Vec3 p = PairKit.arcAt(hand, V.up(land, 0.3), 2.0, u);
-                // 날아가는 동안은 시전자 쪽을 보며 펼쳐짐 (눕혀 두면 옆에서 안 보임) → 떨어지며 눕음
-                Vec3 face = V.unit(V.lerp(RuneKit.towardEye(sp, p), V.UP, u * u));
-                net(level, p, face, radius * (0.25 + 0.7 * u), 0.08, Vec3.ZERO, tt * 25.0, 0.9);
+                Vec3 p = PairKit.arcAt(hand, land, 2.0, u);
+                Vec3 up = V.unit(V.add(V.UP, f, -0.6 * (1 - u)));
+                net3d.to(p, RuneProps.along(up, RuneKit.turn(V.rightOf(f), tt * 25.0)), ns * (0.25 + 0.75 * u), 1);
             });
         }
         SkillFx.play(level, "entity.fishing_bobber.throw", sp.position(), 0.6, 1.0);
         SkillFx.play(level, "mob.breeze.whirl", sp.position(), 1.4, 0.6);
-        int holdEnd = fly + (hits - 1) * gap + 8;
-        // 덮은 그물 (조일수록 작아짐) · 둘레의 추
+        netFx.on(holdEnd, () -> net3d.to(V.up(land, -0.3), null, ns * 0.3, 8));
+        netFx.on(holdEnd + 8, net3d::remove);
+        // 덮은 그물 둘레의 빛 (2D)
         for (int t = fly; t < holdEnd; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 int step = Math.min(hits - 1, (tt - fly) / gap);
                 double s = radius * (1.0 - 0.1 * step);
-                net(level, land, V.UP, s, 0.14, Vec3.ZERO, 0, 0.95);
                 if (tt % 6 == 0) {
                     for (int j = 0; j < 6; j++) {
                         Vec3 p = PairKit.ring(land, s * 0.95, j / 6.0 * Math.PI * 2);
@@ -294,7 +305,9 @@ final class RuneHunter {
                     SkillFx.fx(level, "rpg:light_cut", V.lerp(p, land, 0.5), Opt.of("dir", V.unit(V.sub(land, p)), "size", s * 0.5, "thick", 0.18, "life", 0.35,
                             "delay", 0.2, "color", WILD, "alpha", 0.9));
                 }
-                net(level, V.up(land, 0.02), V.UP, s * 1.05, 0.25, Vec3.ZERO, 0, 1.0);
+                // 그물이 조이며 오그라듦 (3D — 번쩍 커졌다 작아짐)
+                net3d.size(netScale(s) * 1.06, 1);
+                netFx.on(netFx.age() + 2, () -> net3d.size(netScale(s * 0.98), 3));
                 if (ii == hits - 1) RuneBoost.impact(level, g, WILD, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 조이기
                 SkillFx.play(level, "block.chain.hit", g, 0.8 + ii * 0.1, 1.0);
                 SkillFx.play(level, "entity.player.attack.sweep", g, 1.2, 0.5);

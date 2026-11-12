@@ -919,8 +919,10 @@ public final class RuneKit {
     public static void rockSpike(ServerPlayer sp, ServerLevel level, Vec3 at, double size, double[] glow, Opt o) {
         double v = o.has("v") ? o.num("v", 0) : Math.floor(Kit.rand() * 3);
         double s = size * nearK(sp, V.up(at, size), o.num("full", 4), 0.35);
-        rfx2(level, "rock", at, Opt.of("size", s, "life", o.num("life", 0.9), "grow", o.num("grow", 0.2), "fade", o.num("fade", 0.35), "cell", v, "alpha",
-                o.num("alpha", 1)), o.color("rock", ROCK), glow, new int[] {0, ROCK_CORE}, null);
+        // 2026-11-12 3D 바위 가시 (사용자 "바위 가시 3d" — 2D 바위 그림 대신, 높이 = 그림 높이 쯤 · 금 사이 빛 = glow) + 밑동 흙먼지
+        int hold = Math.max(2, (int) Math.round(o.num("life", 0.9) * 20) - 9);
+        RuneProps.rockSpike(level, at, s * 2.1, hold, v * 120 + Kit.rand() * 40, glow);
+        SkillFx.fx(level, "rpg:dust", V.up(at, 0.3), Opt.of("size", s * 0.9, "life", 0.5, "color", o.color("rock", ROCK), "alpha", 0.55));
     }
 
     /** 바위 가시 고리: c 둘레 반지름 R 에 n 개 (쓴 사람 몸에서 o.minDist (1.6) 칸 안은 빼고) */
@@ -965,8 +967,12 @@ public final class RuneKit {
     /** 얼음 결정 (rpg:rfx_crystal — 밑동 고정, 모양 3가지). 카메라에 가까우면 작게. o: full · life · grow · fade · v · alpha */
     public static void iceCrystal(ServerPlayer sp, ServerLevel level, Vec3 at, double size, double[] glow, Opt o) {
         double s = size * nearK(sp, V.up(at, size), o.num("full", 4), 0.35);
-        rfx2(level, "crystal", at, Opt.of("size", s, "life", o.num("life", 1.0), "grow", o.num("grow", 0.15), "fade", o.num("fade", 0.3), "cell",
-                o.has("v") ? o.num("v", 0) : Math.floor(Kit.rand() * 3), "alpha", o.num("alpha", 0.95)), glow, WHITE, new int[] {0, CRYSTAL_CORE}, null);
+        // 2026-11-12 3D 얼음 가시 (사용자 "얼음 가시 3d" · "얼음 3d" — 2D 결정 그림 대신, 높이 = 그림 높이 쯤) + 밑동의 옅은 빛
+        int hold = Math.max(2, (int) Math.round(o.num("life", 1.0) * 20) - 8);
+        double yaw = o.has("v") ? o.num("v", 0) * 120 + 15 : Kit.rand() * 360;
+        RuneProps.iceSpike(level, at, s * 2.2, hold, yaw);
+        rfx(level, "prop", V.up(at, 0.25), Opt.of("size", s * 1.1, "life", 0.45, "cell", (double) RFX.get("glint")[0], "color", glow, "alpha", 0.6 * o.num("alpha", 0.95),
+                "grow", 0.6, "fade", 0.6));
     }
 
     /** 회오리 (rpg:rfx_vortex — 밑동 고정, 8장이 돎). o: life · alpha · fps · phase · fade · grow · vel */
