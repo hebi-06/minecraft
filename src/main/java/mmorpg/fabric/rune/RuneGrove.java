@@ -122,7 +122,7 @@ public final class RuneGrove {
             dealt(a, v, d);
         };
         Notify.addHudSuffix(RuneGrove::hud);
-        ServerTickEvents.END_SERVER_TICK.register(server -> mmorpg.fabric.vfx.PBridge.pixel(() -> tick(server))); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
+        ServerTickEvents.END_SERVER_TICK.register(RuneGrove::tick);
         RuneSystem.onForget(RuneGrove::forget);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             GRACE.clear();

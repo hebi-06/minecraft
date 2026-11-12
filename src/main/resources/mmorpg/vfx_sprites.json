@@ -1,160 +1,121 @@
 {
- "_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠한 그림인지 · bchars (칸마다 흰 심지 글자 — 빈칸이면 없음) · adv (글자 너비). 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸), 뒤로 옮김 space 글자 space+b 가 −2^b",
+ "_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠한 그림인지. 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
  "font": "rpg:vfx",
  "h": 64,
- "space": 63488,
  "sprites": {
   "burst": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "        ",
-   "adv": 65
+   "colored": false
   },
   "burst2": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": false
+  },
+  "bladering": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "        ",
-   "adv": 65
-  },
-  "bladering": {
-   "chars": "",
-   "frames": 16,
-   "aspect": 1.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 65
+   "colored": false
   },
   "blood": {
-   "chars": "",
+   "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "    ",
-   "adv": 65
+   "colored": false
   },
   "cinder": {
-   "chars": "",
+   "chars": "",
    "frames": 16,
    "aspect": 0.5,
-   "colored": false,
-   "bchars": "    ",
-   "adv": 33
+   "colored": false
   },
   "crack": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 65
+   "colored": false
   },
   "fissure": {
-   "chars": "",
+   "chars": "",
    "frames": 3,
    "aspect": 4.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 257
+   "colored": false
   },
   "aura": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 0.5,
-   "colored": false,
-   "bchars": "",
-   "adv": 33
+   "colored": false
   },
   "flare": {
-   "chars": "",
+   "chars": "",
    "frames": 2,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 65
+   "colored": false
   },
   "wave": {
-   "chars": "",
+   "chars": "",
    "frames": 2,
    "aspect": 2.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 129
+   "colored": false
   },
   "fireball": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true,
-   "bchars": "",
-   "adv": 65
+   "colored": true
   },
   "boom": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "bchars": "     ",
-   "adv": 65
+   "colored": true
   },
   "slash": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": " ",
-   "adv": 65
+   "colored": false
   },
   "spin": {
-   "chars": "",
+   "chars": "",
    "frames": 1,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 65
+   "colored": false
   },
   "streak": {
-   "chars": "",
+   "chars": "",
    "frames": 1,
    "aspect": 8.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 513
+   "colored": false
   },
   "glow": {
-   "chars": "",
+   "chars": "",
    "frames": 1,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "",
-   "adv": 65
+   "colored": false
   },
   "dust": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "     ",
-   "adv": 65
+   "colored": false
   },
   "xcut": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": " ",
-   "adv": 65
+   "colored": false
   },
   "shock": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": false,
-   "bchars": "   ",
-   "adv": 65
+   "colored": false
   }
  }
 }

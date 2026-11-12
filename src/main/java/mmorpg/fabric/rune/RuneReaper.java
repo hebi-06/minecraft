@@ -16,9 +16,6 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
-import mmorpg.fabric.vfx.Px;
-import mmorpg.fabric.vfx.Vfx;
-import mmorpg.fabric.vfx.VfxKit;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -79,11 +76,6 @@ final class RuneReaper {
 
     /** 흡혈: 적 n 명 (healMax 까지) × 최대 체력 × heal × 회복 배율, 피가 적들에게서 나에게로 흘러듦 */
     private static void lifesteal(ServerPlayer sp, Runes.Rune r, Obj k, List<LivingEntity> from) {
-        lifesteal(sp, r, k, from, null);
-    }
-
-    /** 2026-11-12 fx 가 있으면 픽셀 연출 (vfx.Px — 핏빛 불티가 휘며 나에게로) */
-    private static void lifesteal(ServerPlayer sp, Runes.Rune r, Obj k, List<LivingEntity> from, Vfx.Fx fx) {
         if (from.isEmpty() || !k.truthy("heal")) return;
         ServerLevel level = sp.level();
         double[] glow = RuneKit.colorOf("reaper")[0];
@@ -91,10 +83,6 @@ final class RuneReaper {
         Vec3 to = V.up(sp.position(), 1.0);
         for (int i = 0; i < Math.min(n, 6); i++) {
             Vec3 at = Kit.bodyPoint(from.get(i));
-            if (fx != null) {
-                Px.drain(fx, at, to, 4, glow, 9, 1);
-                continue;
-            }
             for (int j = 0; j < 3; j++) {
                 Vec3 p = V.add(at, new Vec3((Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.3) * 0.6, (Kit.rand() - 0.5) * 0.6));
                 Vec3 d = V.sub(to, p);
@@ -105,8 +93,7 @@ final class RuneReaper {
         double healed = RpgHealth.healBy(sp, RpgHealth.maxOf(sp) * k.num("heal") * n * Runes.supportScale(RpgStats.effective(sp), r.family()));
         if (healed > 0) {
             DamageNumbers.show(sp, healed, DamageNumbers.Style.HEAL, "", 0);
-            if (fx != null) Px.embers(fx, sp.position(), 6, 0.45, 0.5, 1.1, glow, 14, 9);
-            else RuneKit.later(8, () -> {
+            RuneKit.later(8, () -> {
                 if (!sp.isRemoved()) RuneKit.selfCue(sp, glow, BLOOD, false);
             });
             SkillFx.play(level, "mob.warden.heartbeat", sp.position(), 1.3, 0.8);
@@ -185,10 +172,8 @@ final class RuneReaper {
     // ------------------------------------------------------------ 희귀: 핏빛 수확
 
     /**
-     * 핏빛 수확: 낫을 앞으로 크게 두 번 휘두름 (hits 번, gap 틱 간격 — 오른쪽 → 왼쪽, 왼쪽 → 오른쪽), 앞 radius 칸 · cone 도의 적 (위력 × mult),
-     * 벤 적의 피가 나에게로 (흡혈).
-     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 어두운 초승달 휩쓸기, vfx.Px): 휘두를 때마다 몸 앞에 세운 거대한 핏빛 초승달 두 겹 (앞을 봄, 검붉은 외곽선 →
-     * 핏빛 → 흰 분홍 날) · 앞 바닥의 핏빛 균열, 벤 적은 베인 자국 · 핏방울 불티, 피가 휘며 나에게로. 마지막 낫질의 앞 땅은 등급 터짐
+     * 핏빛 수확: 낫을 앞으로 크게 두 번 휘두름 (hits 번, gap 틱 간격 — 오른쪽 → 왼쪽, 왼쪽 → 오른쪽) — 휘두를 때마다 거대한 핏빛 초승달 (rpg:rfx_wave) ·
+     * 바닥의 베인 자국, 앞 radius 칸 · cone 도의 적 (위력 × mult), 벤 적의 피가 나에게로 (흡혈)
      */
     static boolean bloodHarvest(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("reaper");
@@ -199,32 +184,41 @@ final class RuneReaper {
         int gap = (int) k.num("gap");
         double radius = k.num("radius");
         double cone = k.num("cone");
-        Vfx.Fx fx = Vfx.at(sp.level(), sp.position(), hits * gap + 40);
         SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 c = sp.position();
             Vec3 f = V.flat(sp.getViewVector(1F));
             boolean back = i % 2 == 1;
-            // 몸 앞에 세운 거대한 초승달 (사용자 "앞을 보게 세움") + 그 앞 아래의 짙은 초승달 (한 틱 뒤)
-            Px.sweepFront(fx, V.add(V.up(c, 0.2), f, 1.6), f, radius * 1.9, 1.5, glow, core, back, 0, 1);
-            Px.sweepFront(fx, V.add(V.up(c, 0.05), f, 2.2), f, radius * 1.4, 0.8, BLOOD, glow, back, 1, 1);
-            Px.cracks(fx, V.add(c, f, radius * 0.55), 4, radius * 0.4, 2.0, glow, 3, 30, 1);
-            if (i == hits - 1) Px.impact(fx, VfxKit.ground(level, V.add(c, f, 1.6)), radius * 0.6, glow, core, r.grade(), 1);
+            // 거대한 낫질 (두 겹) + 앞의 핏빛 초승달이 휩쓸며 커짐
+            RuneKit.arc(level, V.up(V.add(c, f, 1.7), 1.15), f, Opt.of("shape", "heavy", "flip", back, "size", 3.8, "life", 0.3, "speed", 1.5, "spin",
+                    back ? 70.0 : -70.0, "color", glow, "aura", BLOOD));
+            RuneKit.later(1, () -> RuneKit.arc(level, V.up(V.add(c, f, 2.2), 0.9), f, Opt.of("shape", "arc", "flip", back, "size", 3.0, "life", 0.24, "speed",
+                    2.0, "spin", back ? 90.0 : -90.0, "color", BLOOD, "core", false, "alpha", 0.75)));
+            Vec3 wv = V.up(V.add(c, f, 2.6), 1.0);
+            RuneKit.rfx2(level, "wave", wv, Opt.of("dir", f, "speed", 5.0, "size", 2.8 * RuneKit.nearK(sp, wv, 3, 0.6), "life", 0.3, "grow", 0.35, "fade", 0.5,
+                    "spin", back ? 25.0 : -25.0, "alpha", 0.95), glow, core);
+            for (int j = -2; j <= 2; j++) {
+                Vec3 dj = RuneKit.turn(f, j * cone / 6);
+                SkillFx.fx(level, "rpg:light_cut", V.add(V.up(c, 0.08), dj, radius * 0.55), Opt.of("dir", dj, "size", radius * 0.45, "thick", 0.3, "life", 0.8,
+                        "delay", 0.5, "color", glow, "alpha", 0.9));
+            }
+            RuneKit.zonePulse(level, V.add(c, f, 1.5), BLOOD, radius * 0.6, 0.35);
+            if (i == hits - 1) RuneBoost.impact(level, V.add(c, f, 1.5), glow, core, radius * 0.6, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 낫질 (앞 땅)
             SkillFx.play(level, "entity.player.attack.sweep", c, back ? 0.8 : 0.65, 1.0);
             SkillFx.play(level, "mace.smash_air", c, 0.7, 0.6);
             List<LivingEntity> got = new ArrayList<>();
             for (LivingEntity e : RuneKit.nearestTo(RuneKit.coneAround(sp, c, f, radius, cone), c)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) <= 0) continue;
                 got.add(e);
-                Vec3 at = Kit.bodyPoint(e);
-                if (got.size() <= 6) {
-                    Px.cut(fx, at, back ? 25 : -25, 2.4, glow, core, 1);
-                    Px.embers(fx, V.up(e.position(), 0.4), 5, 0.4, 1.0, -0.6, BLOOD, 14, 1);
-                } else if (got.size() <= 10) Px.star(fx, at, 1.2, glow, core, 1);
-                drops(level, at, 6, 0.3);
+                if (got.size() <= 6) cut(sp, level, e, glow, core, 1.1);
+                else SkillFx.burst(level, Kit.bodyPoint(e), glow, 0.7, 0.25);
             }
-            if (!got.isEmpty()) lifesteal(sp, r, k, got, fx);
+            if (!got.isEmpty()) {
+                SkillFx.shake(sp, 0.12, 0.12);
+                lifesteal(sp, r, k, got);
+            }
+            SkillFx.sparks(level, V.up(V.add(c, f, 2.0), 1.0), core, 6, 4);
         });
         return true;
     }

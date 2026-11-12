@@ -66,7 +66,7 @@ final class RuneGravity {
         // 띄운 몹의 낙하 피해를 막음 (피해 전 — false 면 취소) · 오래된 기록 지우기 (20틱마다)
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !noFallAfterLift(entity, source));
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (Tasks.now() % 20 == 0) mmorpg.fabric.vfx.PBridge.pixel(RuneGravity::gravityTick); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
+            if (Tasks.now() % 20 == 0) gravityTick();
         });
         // (기록은 몹마다 — 나간 사람의 것은 없음)
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LIFTED.clear());

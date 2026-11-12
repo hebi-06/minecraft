@@ -17,9 +17,6 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
-import mmorpg.fabric.vfx.Px;
-import mmorpg.fabric.vfx.Vfx;
-import mmorpg.fabric.vfx.VfxKit;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -156,10 +153,7 @@ final class RuneStorm {
 
     /**
      * 뇌전 감옥: 조준한 곳 (range 칸) 테두리에 번개가 둘러친 뒤 (delay 틱) 안쪽 radius 칸의 적 피해 + 기절 (stun) — 테두리 기둥 넷에 번개 구슬이 모이고 →
-     * 하늘에서 번개 넷 · 테두리를 따라 번개 창살 8개가 1.5초 동안 깜빡이며 섬, 바닥 · 위 (3칸) 의 마법진 (갇힌 모양).
-     * 2026-11-12 사용자 "수정 전 상태를 지금과 같은 그라데이션으로만" (원통으로 바꾼 시범 대신): 예전 구성 그대로 — 그림만 픽셀 (vfx.Px — 어두운 외곽선 →
-     * 계열 색 → 흰 심지): 바닥 육각별 마법진 · 테두리를 따라 튀는 번개 줄 · 기둥 넷의 번개 구슬 → 테두리를 둘러친 번개 여덟 줄 · 하늘의 번개 넷 · 번개 창살 여덟 ·
-     * 위 3칸의 마법진 · 가운데에서 갇힌 적에게 튀는 번개
+     * 하늘에서 번개 넷 (rpg:rfx_bolt) · 테두리를 따라 번개 창살 8개가 1.5초 동안 깜빡이며 섬, 바닥 · 위 (3칸) 의 고리 (갇힌 모양)
      */
     static boolean staticPrison(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -168,45 +162,65 @@ final class RuneStorm {
         double[] glow = cs[0];
         double[] core = cs[1];
         double radius = k.num("radius");
-        int delay = (int) k.num("delay");
+        double delay = k.num("delay");
         int stunTicks = (int) k.num("stun");
         DoubleFunction<Vec3> rim = a -> new Vec3(g.x + Math.cos(a) * radius, g.y + 0.6, g.z + Math.sin(a) * radius);
         Vec3[] posts = new Vec3[4];
         for (int i = 0; i < 4; i++) posts[i] = rim.apply((i / 4.0) * Math.PI * 2 + 0.4);
-        Vfx.Fx fx = Vfx.at(level, g, delay + stunTicks + 40);
-        // 바닥 마법진 (닫히기 전 빠르게 · 갇힌 동안 반대로)
-        Px.sigil(fx, V.up(g, 0.05), radius, 0, 6.0, glow, core, delay + stunTicks, 0);
+        SkillFx.rune(level, g, Opt.of("size", radius, "life", delay / 20 + 0.3, "color", glow, "alpha", 0.85, "rate", 120.0, "grow", 0.0));
         for (int t = 0; t < delay; t += 3) {
-            double a = Kit.rand() * Math.PI * 2;
-            Px.boltLine(fx, rim.apply(a), rim.apply(a + 0.8), glow, RuneKit.WHITE, 3, t);
+            final int tt = t;
+            RuneKit.later(t, () -> {
+                double a = Kit.rand() * Math.PI * 2;
+                SkillFx.bolt(level, rim.apply(a), rim.apply(a + 0.8), glow, Opt.of("jag", 0.35, "thick", 0.08, "life", 0.18));
+                // 기둥 넷에 모이는 번개 구슬 (커짐)
+                for (Vec3 p : posts) RuneKit.plasmaOrb(level, V.up(p, 0.6), 0.3 + (0.3 * (tt + 3)) / delay, glow, Opt.of("life", 0.17, "fade", 0.0));
+            });
         }
-        // 기둥 넷에 모이는 번개 구슬 (커짐)
-        for (Vec3 p : posts) Px.orb(fx, V.up(p, 0.6), 0.5, 1.4, delay, glow, core, delay + 2, 0);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", g, 1.2, 0.8);
         SkillFx.play(level, "respawn_anchor.charge", g, 1.2, 0.8);
-        // 닫힘: 테두리 번개 여덟 줄 · 하늘의 번개 넷 · 번쩍임 · 고리 · 등급 터짐
-        for (int i = 0; i < 8; i++) Px.boltLine(fx, rim.apply((i / 8.0) * Math.PI * 2), rim.apply(((i + 1) / 8.0) * Math.PI * 2), glow, RuneKit.WHITE, 9, delay);
-        for (Vec3 p : posts) Px.bolt(fx, V.up(p, -0.6), 6.5, glow, RuneKit.WHITE, 5, true, delay);
-        Px.star(fx, V.up(g, 1.0), 3.2, glow, core, delay);
-        Px.shock(fx, g, radius, glow, core, 8, delay);
-        Px.impact(fx, g, radius, glow, core, r.grade(), delay);
-        // 감옥: 위 (3칸) 의 마법진 · 번개 창살 여덟 (1.5초 — 모양이 바뀌며 깜빡임)
-        Px.sigil(fx, V.up(g, 3.0), radius * 0.95, 0, -4.0, core, RuneKit.WHITE, Math.min(stunTicks, 32) + 6, delay);
-        for (int i = 0; i < 8; i++) Px.bolt(fx, V.up(rim.apply((i / 8.0) * Math.PI * 2 + 0.2), -0.6), 3.1, glow, RuneKit.WHITE, 30, false, delay + 2);
         RuneKit.later(delay, () -> {
             if (sp.isRemoved()) return;
+            for (int i = 0; i < 8; i++) {
+                SkillFx.bolt(level, rim.apply((i / 8.0) * Math.PI * 2), rim.apply(((i + 1) / 8.0) * Math.PI * 2), glow, Opt.of("jag", 0.4, "thick", 0.2, "life", 0.45));
+            }
+            for (Vec3 p : posts) {
+                Vec3 gp = V.up(p, -0.6);
+                RuneKit.rfx2(level, "bolt", V.up(gp, 3.2), Opt.of("size", 3.2, "life", 0.26, "cell", Math.floor(Kit.rand() * 4)), glow, RuneKit.WHITE, BOLT, null);
+            }
+            SkillFx.burst(level, V.up(g, 1), glow, 2.2, 0.35);
+            RuneKit.zonePulse(level, g, glow, radius, 0.45);
+            RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 감옥이 닫히는 자리
             SkillFx.play(level, "ambient.weather.lightning.impact", g, 1.2, 0.5);
             SkillFx.play(level, "mob.ravager.stun", g, 1.0, 0.8);
             List<LivingEntity> stunned = new ArrayList<>();
             for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
-                    RuneKit.stun(e, stunTicks, glow, stunned.size() < 16); // 머리 위 기절 표시는 16명까지 (기절은 모두)
+                    RuneKit.stun(e, stunTicks, glow, stunned.size() < 16); // 머리 위 기절 표시는 16명까지 (파티클 예산 — 기절은 모두)
                     stunned.add(e);
                 }
             }
-            // 가운데에서 갇힌 적에게 튀는 번개: 한 틱 뒤, 4명까지
-            for (LivingEntity e : stunned.subList(0, Math.min(4, stunned.size()))) Px.boltLine(fx, Kit.bodyPoint(e), V.up(g, 0.6), glow, RuneKit.WHITE, 5, 1);
+            // 감옥: 바닥 고리 + 위 (3칸) 의 뚜껑 고리 — 창살과 함께 갇힌 모양 (기절 동안)
+            SkillFx.rune(level, g, Opt.of("size", radius, "life", stunTicks / 20.0, "color", glow, "alpha", 0.85, "rate", -40.0));
+            SkillFx.rune(level, V.up(g, 3.0), Opt.of("size", radius * 0.95, "life", Math.min(stunTicks, 32) / 20.0, "color", core, "alpha", 0.8, "rate", 60.0));
+            // 가운데에서 갇힌 적에게 튀는 번개: 한 틱 뒤, 4명까지 (파티클 예산)
+            Tasks.later(1, () -> {
+                for (LivingEntity e : stunned.subList(0, Math.min(4, stunned.size()))) {
+                    if (!e.isRemoved()) RuneKit.zap(level, V.up(g, 0.6), Kit.bodyPoint(e), glow, core, 0.1, 0.25);
+                }
+            });
         });
+        // 번개 창살: 테두리 8곳에 1.5초 (3틱마다 다른 모양으로 다시 그림 — 깜빡임)
+        for (int t = (int) delay + 2; t < delay + 32; t += 3) {
+            final int tt = t;
+            RuneKit.later(t, () -> {
+                for (int i = 0; i < 8; i++) {
+                    Vec3 p = rim.apply((i / 8.0) * Math.PI * 2 + 0.2);
+                    RuneKit.rfx2(level, "bolt", V.up(p, 0.95), Opt.of("size", 1.55, "life", 0.18, "cell", (double) ((i + tt) % 4), "alpha", 1.0), glow,
+                            RuneKit.WHITE, BOLT, 0.95);
+                }
+            });
+        }
         return true;
     }
 

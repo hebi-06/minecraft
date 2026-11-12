@@ -14,9 +14,6 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
-import mmorpg.fabric.vfx.Px;
-import mmorpg.fabric.vfx.Vfx;
-import mmorpg.fabric.vfx.VfxKit;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -326,10 +323,8 @@ final class RuneGladiator {
 
     /**
      * 투기장: 받는 피해 감소 (reduce, ticks 틱) · 내 자리를 가운데로 반지름 radius 칸의 투기장 (사슬 울타리 — 기둥 (블록 표시) 사이의 사슬 두 줄 · 모래빛 칼날
-     * 마법진) 이 ticks 틱 — 안에 들어온 적은 울타리 밖으로 나가지 못함 (보스 제외 — 밀어 넣음). gap 틱마다 hits 번 안의 적에게 하늘에서 사슬이 내리침
-     * (위력 × mult) → 끝에 사슬이 모두 모여 내리침 (위력 × crush).
-     * 2026-11-12 사용자 "방식은 기존이 좋은데 디자인만 지금 형태로" · "수정 전 상태를 지금과 같은 그라데이션으로만": 예전 구성 그대로 (기둥 열둘 · 사슬 울타리 두 줄 ·
-     * 칼날 마법진 · 하늘에서 내리치는 사슬 · 모여 내리치는 마무리) — 그림만 픽셀 (vfx.Px — 어두운 외곽선 → 계열 색 → 흰 심지)
+     * 문양) 이 ticks 틱 — 안에 들어온 적은 울타리 밖으로 나가지 못함 (보스 제외 — 밀어 넣음). gap 틱마다 hits 번 안의 적에게 하늘에서 사슬이 내리침
+     * (위력 × mult) → 끝에 사슬이 모두 모여 내리침 (위력 × crush)
      */
     static boolean arenaDomain(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -343,10 +338,7 @@ final class RuneGladiator {
         int crushAt = Math.max(first + (hits - 1) * gap + 12, ticks - 6);
         int end = crushAt + 6;
         Guards.set(sp, ticks, k.num("reduce"), null, null);
-        Vec3 g = VfxKit.ground(level, c);
-        Vfx.Fx fx = Vfx.at(level, g, end + 30);
-        // 모래빛 칼날 마법진 (천천히 돎)
-        Px.sigil(fx, V.up(g, 0.05), radius, 1, 0.35, SAND, CORE, end, 0);
+        RuneKit.domainSigil(level, c, radius, "blade", SAND, CORE, Opt.of("life", end / 20.0, "spinRate", 6.0, "alpha", 0.6, "fade", 0.1, "coreAlpha", 0.5));
         SkillFx.play(level, "block.chain.place", c, 0.6, 1.0);
         SkillFx.play(level, "block.bell.hit", c, 0.7, 1.0);
         SkillFx.play(level, "mob.ravager.roar", c, 1.2, 0.5);
@@ -367,13 +359,18 @@ final class RuneGladiator {
             RuneKit.later(2 + jj % 3, () -> post.pose(Vec3.ZERO, new Quaternionf(), 1.0, 3));
             RuneKit.later(end - 2, () -> post.crumble(5, 0.1, 1.6, 0.4));
         }
-        // 사슬 두 줄 (기둥 사이 — 기둥이 솟은 뒤 끝까지, 10틱마다 고리가 흐름)
-        for (int j = 0; j < posts; j++) {
-            Vec3 a = tops.get(j);
-            Vec3 b = tops.get((j + 1) % posts);
-            if (PairKit.nearCam(sp, V.lerp(a, b, 0.5), 2.0)) continue;
-            Px.chainLine(fx, V.up(a, -0.4), V.up(b, -0.4), STEEL, CORE, end - 8, 10, 6);
-            Px.chainLine(fx, V.up(a, -1.3), V.up(b, -1.3), STEEL, CORE, end - 8, 10, 6);
+        // 사슬 두 줄 (기둥 사이 — 10틱마다 다시 그림)
+        for (int t = 6; t < end; t += 10) {
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                for (int j = 0; j < posts; j++) {
+                    Vec3 a = tops.get(j);
+                    Vec3 b = tops.get((j + 1) % posts);
+                    if (PairKit.nearCam(sp, V.lerp(a, b, 0.5), 2.0)) continue;
+                    chain(level, V.up(a, -0.4), V.up(b, -0.4), 0.55, 0.95);
+                    chain(level, V.up(a, -1.3), V.up(b, -1.3), 0.55, 0.85);
+                }
+            });
         }
         // 가두기 (2틱마다): 안에 있던 적이 울타리에 닿으면 안으로 밀어 넣음
         Map<UUID, LivingEntity> inside = new LinkedHashMap<>();
@@ -386,16 +383,11 @@ final class RuneGladiator {
                     if (!inside.containsKey(e.getUUID()) || PairKit.boss(e) || dist < radius - 0.8) continue;
                     Vec3 in = V.flat(V.sub(c, e.position()));
                     Kit.knockback(e, in.x * 0.55, in.z * 0.55, 0.12);
-                    if (RuneKit.fxQuota("arenaWall", 3)) {
-                        Vec3 at = V.up(e.position(), 1.0);
-                        Px.star(fx, at, 1.4, STEEL, CORE, 0);
-                        Px.shards(fx, at, 3, 0.9, 0.7, STEEL, CORE, 0);
-                        SkillFx.play(level, "block.chain.hit", e.position(), 0.6, 1.2);
-                    }
+                    if (RuneKit.fxQuota("arenaWall", 3)) clang(level, V.up(e.position(), 1.0), 0.6);
                 }
             });
         }
-        // 사슬이 내리침 (하늘에서 대상으로 비스듬히)
+        // 사슬이 내리침
         for (int i = 0; i < hits; i++) {
             final int ii = i;
             RuneKit.later(first + i * gap, () -> {
@@ -404,17 +396,17 @@ final class RuneGladiator {
                 for (int j = 0; j < Math.min(6, ts.size()); j++) {
                     Vec3 b = Kit.bodyPoint(ts.get(j));
                     Vec3 top = V.add(V.up(b, 6.0), V.flat(V.sub(b, c)), 1.5);
-                    Px.chainLine(fx, top, b, STEEL, CORE, 7, 2, 0);
+                    chain(level, top, b, 0.3, 0.95);
                 }
-                Px.shock(fx, g, radius, ii % 2 == 0 ? STEEL : SAND, CORE, 8, 0);
+                RuneKit.zonePulse(level, c, ii % 2 == 0 ? STEEL : SAND, radius, 0.4);
                 SkillFx.play(level, "block.chain.hit", c, 0.6 + ii * 0.1, 1.0);
                 SkillFx.play(level, "mace.smash_ground", c, 1.2, 0.6);
                 for (LivingEntity e : ts) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("arenaHit", 6)) {
-                            Px.star(fx, Kit.bodyPoint(e), 1.6, STEEL, CORE, 0);
-                            Px.cut(fx, Kit.bodyPoint(e), ii % 2 == 0 ? 55 : -55, 2.0, STEEL, CORE, 0);
-                            Px.shock(fx, e.position(), 0.9, STEEL, CORE, 6, 0);
+                            clang(level, Kit.bodyPoint(e), 0.8);
+                            SkillFx.fx(level, "rpg:shock_ring", V.up(e.position(), 0.08), Opt.of("dir", V.ZERO, "size", 0.8, "life", 0.3, "color", STEEL, "alpha",
+                                    0.85));
                         }
                     });
                 }
@@ -423,11 +415,11 @@ final class RuneGladiator {
         // 마무리: 기둥마다 사슬이 가운데로 모여 내리침
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            for (int j = 0; j < posts; j += 2) Px.chainLine(fx, tops.get(j), V.up(g, 0.8), STEEL, CORE, 9, 2, 0);
-            Px.shock(fx, g, radius * 0.95, STEEL, CORE, 9, 0);
-            Px.star(fx, V.up(g, 1.0), 3.6, SAND, CORE, 0);
-            Px.impact(fx, g, radius, STEEL, CORE, r.grade(), 1);
-            Px.cracks(fx, g, 10, radius * 0.7, 2.4, STEEL, 5, 30, 1);
+            for (int j = 0; j < posts; j += 2) chain(level, tops.get(j), V.up(c, 0.8), 0.35, 0.95);
+            RuneKit.novaRing(level, c, 1.0, radius * 0.9, STEEL, CORE, Opt.of("life", 0.5));
+            RuneBoost.impact(level, c, STEEL, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 사슬이 모두 모여 내리치는 마무리
+            RuneKit.glowCrack(level, c, radius * 0.7, STEEL, CORE, Opt.of("life", 1.2));
+            RuneKit.shakeAround(level, c, 14, 0.35, 0.35);
             SkillFx.play(level, "block.anvil.land", c, 0.6, 0.8);
             SkillFx.play(level, "block.chain.break", c, 0.5, 1.0);
             SkillFx.play(level, "random.explode", c, 1.1, 0.5);
@@ -436,7 +428,7 @@ final class RuneGladiator {
             for (LivingEntity e : inside.values()) if (!e.isRemoved() && V.hdist(c, e.position()) <= radius + 2) got.putIfAbsent(e.getUUID(), e);
             for (LivingEntity e : got.values()) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IRON, life, dmg -> {
-                    Px.star(fx, Kit.bodyPoint(e), 2.0, STEEL, CORE, 0);
+                    clang(level, Kit.bodyPoint(e), 1.0);
                     if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.4);
                 });
             }

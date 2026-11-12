@@ -14,8 +14,6 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
-import mmorpg.fabric.vfx.Px;
-import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -224,10 +222,8 @@ final class RuneVolcano {
     // ------------------------------------------------------------ 희귀: 화산탄
 
     /**
-     * 화산탄: 조준한 곳 (range 칸) 으로 불타는 화산탄 hits 개를 gap 틱 간격으로 던짐 (포물선) — 떨어진 자리마다 폭발 (반지름 radius 칸, 위력 × mult),
-     * 처음 맞은 적은 화상 (마지막 화산탄 뒤부터).
-     * 2026-11-12 픽셀 연출 (사용자 예시 사진 — 주황 폭발 덩어리 · 금빛 불티, vfx.Px): 조준한 곳에 용암빛 점 고리, 화산탄 = 3D 마그마 덩어리 + 불 · 연기 꼬리,
-     * 떨어진 자리마다 불 폭발 덩어리 다섯 (부풀어 터져 식고 연기로 흩어짐) · 불티 · 그을린 균열 · 충격파, 마지막은 더 크게 + 등급 터짐
+     * 화산탄: 조준한 곳 (range 칸) 으로 불타는 화산탄 hits 개를 gap 틱 간격으로 던짐 (포물선 · 연기 꼬리) — 떨어진 자리마다 폭발 (반지름 radius 칸,
+     * 위력 × mult), 처음 맞은 적은 화상 (마지막 화산탄 뒤부터)
      */
     static boolean lavaBombs(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -241,33 +237,35 @@ final class RuneVolcano {
         int fly = 8;
         int lastLand = fly + (hits - 1) * gap;
         Map<UUID, LivingEntity> burned = new LinkedHashMap<>();
-        Vfx.Fx fx = Vfx.at(level, g, lastLand + 40);
-        Px.ring(fx, "dotring", V.up(g, 0.06), radius * 1.05, 3.0, LAVA, lastLand + 6, 0);
+        boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 화산탄이 처음 맞힌 적에 한 번
+        SkillFx.rune(level, g, Opt.of("size", radius, "life", (lastLand + 4) / 20.0, "color", LAVA, "alpha", 0.75, "rate", 60.0, "progress", 1.0));
         for (int i = 0; i < hits; i++) {
             final int ii = i;
-            boolean last = i == hits - 1;
             Vec3 land = PairKit.onGround(level, V.add(g, side, i == 0 ? 0 : (i % 2 == 1 ? 1.2 : -1.2)));
             RuneKit.later(i * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 hand = V.add(V.up(sp.position(), 1.6), Kit.facingOf(sp), 0.8);
-                Px.fireball(fx, hand, V.up(land, 0.3), fly, 1.3, PairKit.GRAVITY, 0);
+                bomb(sp, level, hand, V.up(land, 0.3), fly, 0.75, 3.0);
+                Vec3 fist = V.add(V.add(V.up(sp.position(), 1.05), Kit.facingOf(sp), 0.8), V.rightOf(Kit.facingOf(sp)), 0.55);
+                SkillFx.particle(level, ParticleTypes.SMALL_FLAME, fist, 4, 0.05, 0.01);
                 SkillFx.play(level, "entity.blaze.shoot", sp.position(), 0.8 + ii * 0.1, 0.8);
                 SkillFx.play(level, "item.firecharge.use", sp.position(), 0.9, 0.6);
             });
             RuneKit.later(i * gap + fly, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                double big = last ? 1.3 : 1.0;
-                Px.fire(fx, land, last ? 9 : 6, radius * 0.5 * big, 3.0 * big, 0);
-                Px.embers(fx, land, last ? 18 : 12, radius * 0.3, 1.8, 1.0, CORE, 22, 0);
-                Px.cracks(fx, land, last ? 7 : 4, radius * 0.75, 2.3, LAVA, 3, 44, 0);
-                Px.shock(fx, land, radius * big, LAVA, CORE, 7, 0);
-                Px.dust(fx, land, 3, radius * 0.5, 1.8, SMOKE, 4);
-                if (last) Px.impact(fx, land, radius, LAVA, CORE, r.grade(), 1);
+                blast(sp, level, land, radius, 0.5);
+                splatter(level, V.up(land, 0.3), 10, 6);
+                RuneKit.glowCrack(level, land, radius * 0.8, LAVA, CORE, Opt.of("life", 1.0));
+                RuneKit.shakeAround(level, land, 10, 0.2, 0.2);
                 SkillFx.play(level, "random.explode", land, 1.1, 0.7);
                 SkillFx.play(level, "block.lava.pop", land, 0.8, 1.0);
                 for (LivingEntity e : Kit.around(sp, land, radius, 3)) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
-                        if (RuneKit.fxQuota("lavaBombHit", 6)) Px.fire(fx, Kit.bodyPoint(e), 1, 0.2, 1.3, 0);
+                        flames(level, e);
+                        if (!burst[0]) {
+                            burst[0] = true;
+                            RuneBoost.impact(level, e.position(), LAVA, CORE, 2.0, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 화산탄이 처음 맞힌 적의 발밑
+                        }
                     });
                     if (burned.putIfAbsent(e.getUUID(), e) == null) burn(sp, r, e, P, k, lastLand - (ii * gap + fly) + (int) Math.max(10, k.numOr("dotGap", 20)), life);
                 }

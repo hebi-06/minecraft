@@ -62,26 +62,12 @@ public final class Vfx {
     /** 한 번에 떠 있는 효과 수 (넘으면 가장 오래된 것부터 지움 — 여럿이 한꺼번에 써도 버티게) */
     static final int MAX_FX = 400;
 
-    /**
-     * 그림판 하나 (vfx_sprites.json — 글꼴 rpg:vfx · 2026-11-12 px_sprites.json — 글꼴 rpg:px, 이름 앞에 "px/"): 축 (px · py — 칸 안 0 ~ 1, 왼쪽 위에서) 이
-     * 엔티티 자리에 옴, hb = 칸 높이 (블록 — 1칸 16픽셀 밀도), b = 같이 띄우는 심지 층 (없으면 null)
-     */
-    public record Sheet(String name, String chars, int frames, double aspect, boolean colored, FontDescription font, double px, double py, double hb, String b,
-            String bchars, int adv) {
+    /** 그림판 하나 (vfx_sprites.json) */
+    public record Sheet(String name, String chars, int frames, double aspect, boolean colored) {
         public char glyph(int frame) {
             return chars.charAt(Math.floorMod(frame, frames));
         }
-
-        /** 2026-11-12 이 칸의 흰 심지 글자 (같은 글줄에 겹쳐 그림 — 없으면 0) */
-        public char bglyph(int frame) {
-            if (bchars == null || bchars.isEmpty()) return 0;
-            char c = bchars.charAt(Math.floorMod(frame, Math.min(frames, bchars.length())));
-            return c == ' ' ? 0 : c;
-        }
     }
-
-    /** 뒤로 옮김 글자 (글꼴 rpg:vfx 의 space — 글자 space + b 가 −2^b) */
-    static int spaceFirst = 0xF800;
 
     static final Map<String, Sheet> SHEETS = new HashMap<>();
     static int glyphHeight = 64;
@@ -96,44 +82,24 @@ public final class Vfx {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> clear());
     }
 
-    /** 2026-11-12 픽셀 효과 글꼴 (tools/vfx_pixel.py — vfx.Px) */
-    public static final Identifier PX_FONT_ID = Mmorpg.rpg("px");
-    static final FontDescription PX_FONT = new FontDescription.Resource(PX_FONT_ID);
-
-    static void load() {
-        load("/mmorpg/vfx_sprites.json", "", FONT);
-        load("/mmorpg/px_sprites.json", "px/", PX_FONT);
-        Mmorpg.LOG.info("[vfx] sprites {}", SHEETS.size());
-    }
-
     @SuppressWarnings("unchecked")
-    private static void load(String file, String prefix, FontDescription font) {
-        try (InputStream in = Vfx.class.getResourceAsStream(file)) {
+    static void load() {
+        try (InputStream in = Vfx.class.getResourceAsStream("/mmorpg/vfx_sprites.json")) {
             if (in == null) {
-                Mmorpg.LOG.warn("[vfx] no sprite index {}", file);
+                Mmorpg.LOG.warn("[vfx] no sprite index");
                 return;
             }
             Map<String, Object> root = Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
             if (root.get("h") instanceof Number n) glyphHeight = n.intValue();
-            if (root.get("space") instanceof Number n) spaceFirst = n.intValue();
             Map<String, Object> sprites = (Map<String, Object>) root.get("sprites");
             for (Map.Entry<String, Object> e : sprites.entrySet()) {
                 Map<String, Object> m = (Map<String, Object>) e.getValue();
-                double px = 0.5;
-                double py = 0.5;
-                if (m.get("pivot") instanceof List<?> pv && pv.size() == 2) {
-                    px = ((Number) pv.get(0)).doubleValue();
-                    py = ((Number) pv.get(1)).doubleValue();
-                }
-                double hb = m.get("hb") instanceof Number n ? n.doubleValue() : 1.6;
-                String b = m.get("b") instanceof String bs ? prefix + bs : null;
-                String bchars = m.get("bchars") instanceof String bc ? bc : null;
-                int adv = m.get("adv") instanceof Number n ? n.intValue() : 0;
-                SHEETS.put(prefix + e.getKey(), new Sheet(prefix + e.getKey(), (String) m.get("chars"), ((Number) m.get("frames")).intValue(),
-                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored")), font, px, py, hb, b, bchars, adv));
+                SHEETS.put(e.getKey(), new Sheet(e.getKey(), (String) m.get("chars"), ((Number) m.get("frames")).intValue(),
+                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored"))));
             }
+            Mmorpg.LOG.info("[vfx] sprites {}", SHEETS.size());
         } catch (IOException | RuntimeException e) {
-            Mmorpg.LOG.warn("[vfx] sprite index {}: {}", file, e.toString());
+            Mmorpg.LOG.warn("[vfx] sprite index: {}", e.toString());
         }
     }
 
@@ -260,15 +226,7 @@ public final class Vfx {
 
         /** 입체 소품 (아이템 모델 — 아이템 정의 id, 예: rpg:vfx/rune_axe) */
         public Prop prop(String itemModel, Vec3 at) {
-            return prop(itemModel, at, null);
-        }
-
-        /**
-         * 2026-11-12 처음 모습 (init — 크기 · 회전 · 쥔 곳 · 빛 · 물들임) 을 정한 뒤 띄움: 띄우는 패킷에 처음 모습이 담겨, 같은 틱에 준 움직임 (to … ticks) 이
-         * 처음 모습에서부터 보간됨
-         */
-        public Prop prop(String itemModel, Vec3 at, java.util.function.Consumer<Prop> init) {
-            Prop p = new Prop(this, itemModel, at, init);
+            Prop p = new Prop(this, itemModel, at);
             props.add(p);
             propsMade++;
             return p;
@@ -276,12 +234,7 @@ public final class Vfx {
 
         /** 2D 그림 (글꼴 rpg:vfx 의 그림판 이름) — 카메라를 봄 */
         public Sprite sprite(String sheet, Vec3 at) {
-            return sprite(sheet, at, null);
-        }
-
-        /** 2026-11-12 처음 모습 (init — 색 · 방향 · 크기 · 칸 · 늘림) 을 정한 뒤 띄움 (prop 과 같은 까닭) */
-        public Sprite sprite(String sheet, Vec3 at, java.util.function.Consumer<Sprite> init) {
-            Sprite s = new Sprite(this, sheet(sheet), at, init);
+            Sprite s = new Sprite(this, sheet(sheet), at);
             sprites.add(s);
             spritesMade++;
             return s;
@@ -343,7 +296,7 @@ public final class Vfx {
         Vector3f grip = new Vector3f(8, 8, 8);
         boolean removed;
 
-        Prop(Fx fx, String itemModel, Vec3 at, java.util.function.Consumer<Prop> init) {
+        Prop(Fx fx, String itemModel, Vec3 at) {
             this.fx = fx;
             ItemStack stack = new ItemStack(Items.PAPER);
             stack.set(DataComponents.ITEM_MODEL, Identifier.parse(itemModel));
@@ -354,10 +307,6 @@ public final class Vfx {
             this.pos = at;
             e.setOffset(at.subtract(fx.origin));
             apply();
-            if (init != null) {
-                init.accept(this);
-                e.setInterpolationDuration(0);
-            }
             fx.addElement(e);
         }
 
@@ -484,9 +433,6 @@ public final class Vfx {
         double alpha = 1;
         int frame;
         double size = 1;
-        /** 2026-11-12 늘림 (그림 가로 · 세로 — 빛줄기 · 감옥 벽) */
-        double sx = 1;
-        double sy = 1;
         double roll;
         Quaternionf facing;
         boolean removed;
@@ -501,7 +447,7 @@ public final class Vfx {
         int fadeTicks;
         double fadeStart = 1;
 
-        Sprite(Fx fx, Sheet sheet, Vec3 at, java.util.function.Consumer<Sprite> init) {
+        Sprite(Fx fx, Sheet sheet, Vec3 at) {
             this.fx = fx;
             this.sheet = sheet;
             this.pos = at;
@@ -517,10 +463,6 @@ public final class Vfx {
             e.setOffset(at.subtract(fx.origin));
             text();
             transform();
-            if (init != null) {
-                init.accept(this);
-                e.setInterpolationDuration(0);
-            }
             fx.addElement(e);
         }
 
@@ -574,33 +516,6 @@ public final class Vfx {
             size = blocks;
             transform();
             return this;
-        }
-
-        /** 2026-11-12 늘림: 그림 가로 sx · 세로 sy 배 (ticks 틱 보간) — 축 (pivot) 은 그대로 */
-        public Sprite stretch(double sx, double sy, int ticks) {
-            if (removed) return this;
-            this.sx = sx;
-            this.sy = sy;
-            e.setInterpolationDuration(Math.max(0, ticks));
-            transform();
-            e.startInterpolationIfDirty();
-            return this;
-        }
-
-        /** 2026-11-12 세로축으로만 카메라를 봄 (번개 · 빛기둥 — 서 있는 그림) */
-        public Sprite vertical() {
-            facing = null;
-            e.setBillboardMode(Display.BillboardConstraints.VERTICAL);
-            transform();
-            return this;
-        }
-
-        public Vec3 pos() {
-            return pos;
-        }
-
-        public boolean removed() {
-            return removed;
         }
 
         /** 카메라를 보는 그림의 기울임 (화면에서 도는 각 — 도) · 고정 그림이면 그 면 안에서 돎 */
@@ -677,21 +592,7 @@ public final class Vfx {
         private void text() {
             if (removed) return;
             String g = String.valueOf(sheet.glyph(frame));
-            Style st = Style.EMPTY.withFont(sheet.font);
-            net.minecraft.network.chat.MutableComponent t = Component.literal(g).withStyle(st.withColor(rgb));
-            // 2026-11-12 픽셀 그림의 흰 심지 (B 글자 — 흰빛 0.7 섞은 색, 뒤로 옮겨 같은 자리에)
-            char b = sheet.bglyph(frame);
-            if (b != 0 && sheet.adv() > 0) {
-                StringBuilder back = new StringBuilder();
-                for (int bit = 10; bit >= 0; bit--) if ((sheet.adv() & (1 << bit)) != 0) back.appendCodePoint(spaceFirst + bit);
-                int r = rgb >> 16 & 255;
-                int gg = rgb >> 8 & 255;
-                int bb = rgb & 255;
-                int w = (r + (int) Math.round((255 - r) * 0.7)) << 16 | (gg + (int) Math.round((255 - gg) * 0.7)) << 8 | (bb + (int) Math.round((255 - bb) * 0.7));
-                t.append(Component.literal(back.toString()).withStyle(st));
-                t.append(Component.literal(String.valueOf(b)).withStyle(st.withColor(w)));
-            }
-            e.setText(t);
+            e.setText(Component.literal(g).withStyle(Style.EMPTY.withFont(FONT).withColor(rgb)));
         }
 
         private void opacity() {
@@ -708,16 +609,9 @@ public final class Vfx {
             float s = hidden ? 0F : (float) (size / (glyphHeight * TEXT_UNIT));
             Quaternionf q = facing != null ? new Quaternionf(facing) : new Quaternionf();
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
-            // 축 (pivot) 이 엔티티 자리에 오게: 그림 가운데 (글자 가운데 = 엔티티 자리) 를 축의 반대쪽으로 (회전한 면 안에서)
-            Vector3f t = new Vector3f();
-            if (!hidden && (sheet.px() != 0.5 || sheet.py() != 0.5)) {
-                double w = size * sheet.aspect() * sx;
-                double h = size * sy;
-                t = q.transform(new Vector3f((float) (-(sheet.px() - 0.5) * w), (float) (-(0.5 - sheet.py()) * h), 0F));
-            }
-            e.setTranslation(t);
+            e.setTranslation(new Vector3f());
             e.setLeftRotation(q);
-            e.setScale(new Vector3f((float) (s * sx), (float) (s * sy), s));
+            e.setScale(new Vector3f(s, s, s));
             e.setRightRotation(new Quaternionf());
         }
 

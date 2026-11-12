@@ -55,7 +55,7 @@ final class RuneMob {
     }
 
     static void init() {
-        ServerTickEvents.END_SERVER_TICK.register(server -> mmorpg.fabric.vfx.PBridge.pixel(RuneMob::tick)); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
+        ServerTickEvents.END_SERVER_TICK.register(server -> tick());
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LIVE.clear());
     }
 

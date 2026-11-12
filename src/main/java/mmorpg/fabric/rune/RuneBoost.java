@@ -48,10 +48,6 @@ final class RuneBoost {
 
     /** 터짐 (반지름 r — 룬의 영역 크기): 번쩍임 · 고리 둘 · 충격파 셋 · 땅 빛살 열여섯 · 불티 · 빛 알갱이 · 흔들림 */
     static void impact(ServerLevel level, Vec3 at, double[] glow, double[] core, double r) {
-        if (RuneKit.PIXEL) {
-            pixelImpact(level, at, glow, core, r, "transcend");
-            return;
-        }
         Vec3 mid = V.up(at, 1.0);
         RuneKit.skyFlare(level, V.up(at, 1.3), r * 1.05, glow, core, nearOwner(level, V.up(at, 1.3), r * 1.05).with("life", 0.5, "grow", 0.8));
         RuneKit.novaRing(level, at, r * 0.3, r * 0.95, glow, core, Opt.of("life", 0.45));
@@ -86,10 +82,6 @@ final class RuneBoost {
             impact(level, at, glow, core, r);
             return;
         }
-        if (RuneKit.PIXEL) {
-            pixelImpact(level, at, glow, core, r, grade);
-            return;
-        }
         double k = 0.25 + 0.15 * t; // 일반 0.4 · 희귀 0.55 · 고귀 0.7 · 영웅 0.85
         RuneKit.skyFlare(level, V.up(at, 1.1), r * k, glow, core, nearOwner(level, V.up(at, 1.1), r * k).with("life", 0.3 + 0.03 * t, "grow", 0.6));
         RuneKit.novaRing(level, at, r * 0.2, r * (0.45 + 0.1 * t), glow, core, Opt.of("life", 0.35 + 0.03 * t));
@@ -110,32 +102,8 @@ final class RuneBoost {
         if (t >= 4) RuneKit.shakeAround(level, at, 16, 0.3, 0.35);
     }
 
-    /**
-     * 2026-11-12 터짐의 픽셀판 (vfx.Px.impact — 시범 룬과 같은 그림, 사용자 "오케 이런 느낌으로 룬 다 바꿔보자"): 충격파 고리 · 번쩍임 · 균열 · 불티 (등급만큼) ·
-     * 고귀 이상 번개 조각 · 영웅 이상 두 번째 고리. 초월은 땅에 빛살 여덟 (빛줄기 판) 을 더함
-     */
-    static void pixelImpact(ServerLevel level, Vec3 at, double[] glow, double[] core, double r, String grade) {
-        Vec3 g = mmorpg.fabric.vfx.VfxKit.ground(level, at);
-        if (Math.abs(g.y - at.y) > 2.5) g = at; // 공중에서 터지면 그 자리
-        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(level, g, 60);
-        mmorpg.fabric.vfx.Px.impact(fx, g, r, glow, core, grade, 0);
-        if (grade.equals("transcend")) {
-            double off = Kit.rand() * 45;
-            for (int i = 0; i < 8; i++) {
-                Vec3 d = RuneKit.turn(new Vec3(1, 0, 0), off + i * 45);
-                mmorpg.fabric.vfx.Px.streak(fx, V.add(V.up(g, 0.08), d, r * 0.3), d, r * 0.75, 0.32, i % 2 == 0 ? glow : core, core, 3, 14, false, 0);
-            }
-            mmorpg.fabric.vfx.Px.embers(fx, g, 10, r * 0.6, 1.0, 2.2, glow, 24, 2);
-        }
-    }
-
     /** 부드러운 터짐 (버프 · 회복): 번쩍임 · 고리 둘 · 빛 알갱이 — 흔들림 · 충격파 없음 */
     static void bloom(ServerLevel level, Vec3 at, double[] glow, double[] core, double r) {
-        if (RuneKit.PIXEL) {
-            Vec3 g = mmorpg.fabric.vfx.VfxKit.ground(level, at);
-            mmorpg.fabric.vfx.Px.bloom(mmorpg.fabric.vfx.Vfx.at(level, g, 40), g, r, glow, core, 0);
-            return;
-        }
         RuneKit.skyFlare(level, V.up(at, 1.3), r * 0.8, glow, core, nearOwner(level, V.up(at, 1.3), r * 0.8).with("life", 0.45, "grow", 0.6));
         RuneKit.novaRing(level, at, r * 0.25, r * 0.8, glow, core, Opt.of("life", 0.5));
         RuneKit.later(3, () -> RuneKit.novaRing(level, at, r * 0.15, r * 0.5, core, RuneKit.WHITE, Opt.of("life", 0.7)));
@@ -235,8 +203,7 @@ final class RuneBoost {
         double fps = frames / Math.max(0.05, life);
         Opt b = o.with("life", life, "frames", (double) frames, "fps", fps, "fade", o.num("fade", 0.2));
         RuneKit.rfx(level, name, at, b.with("color", glow, "cell", (double) base));
-        mmorpg.fabric.vfx.PBridge.core(() -> RuneKit.rfx(level, name, at, b.with("color", core, "cell", (double) (base + frames), "alpha", o.num("coreAlpha",
-                o.num("alpha", 1)))));
+        RuneKit.rfx(level, name, at, b.with("color", core, "cell", (double) (base + frames), "alpha", o.num("coreAlpha", o.num("alpha", 1))));
     }
 
     /** 후광을 얹는 물체 그림 (검 · 화살 · 고드름 · 달 · 도끼 · 망치 · 표창 · 깃털 · 창 · 번개 구슬 · 얼음 결정) — 불티 · 문양 · 연기는 빼고 */

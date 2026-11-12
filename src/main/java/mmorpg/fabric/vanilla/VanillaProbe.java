@@ -998,8 +998,7 @@ final class VanillaProbe {
         mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
         // 카메라: 모드 영상과 같은 자리 (RpgRuneGallery.film — 영웅 · 초월은 넓게), 사진기가 지금 (옮긴 뒤) 몸 자리를 기준으로 삼음
         boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
-        // 2026-11-12 뒤 150° (3인칭처럼 — 앞을 보는 참격 · 몸 앞 연출이 정면으로 보이게, 모드 영상은 이제 찍지 않음)
-        say(p, "cam film 150 " + (big ? "8.2 4.6 1.6" : "7.4 4.0 1.1") + " 3.5 0.6");
+        say(p, "cam film 105 " + (big ? "7.6 4.2 1.9" : "7.0 3.6 1.1") + " 3.0 0.6");
         if (census) {
             Tasks.later(30, () -> census(p, r, name, step));
             return;

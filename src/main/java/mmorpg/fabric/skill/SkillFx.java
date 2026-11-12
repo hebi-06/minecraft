@@ -145,26 +145,20 @@ public final class SkillFx {
         Opt base = Opt.of("dir", dir, "speed", o.num("speed", 0), "spin", o.num("spin", 0), "size", o.num("size", 0), "life", o.num("life", 0.3));
         // 0.48.2 보는 사람 걸러내기 (룬의 휘두른 자국 판 — 주인의 1인칭에만 이 파티클)
         if (o.num("view", 0) != 0) base = base.with("view", o.num("view", 0), "owner", o.num("owner", 0));
-        final Opt b0 = base;
         double a = o.num("alpha", 1);
         double size = o.num("size", 0);
         double[] color = o.color("color", WHITE);
-        boolean aura = o.has("aura");
-        if (aura) fx(level, id + "_aura", V.add(at, dir, 0.04), b0.with("size", size * 1.03, "color", o.color("aura", WHITE), "alpha", 0.8 * a));
-        // 2026-11-12 픽셀 글꼴 (룬): 바깥 층만 외곽선 — 위에 겹치는 빛 · 심지 층은 C (아래 층을 외곽선으로 가리지 않게)
-        Runnable glow = () -> fx(level, id + "_glow", at, b0.with("color", color, "alpha", 0.95 * a));
-        if (aura) mmorpg.fabric.vfx.PBridge.core(glow);
-        else glow.run();
-        if (!(o.get("core") instanceof Boolean b && !b)) mmorpg.fabric.vfx.PBridge.core(() -> fx(level, id + "_core", V.add(at, dir, -0.04), b0.with("size",
-                size * 0.99, "color", whiten(color, 0.8), "alpha", a)));
+        if (o.has("aura")) fx(level, id + "_aura", V.add(at, dir, 0.04), base.with("size", size * 1.03, "color", o.color("aura", WHITE), "alpha", 0.8 * a));
+        fx(level, id + "_glow", at, base.with("color", color, "alpha", 0.95 * a));
+        if (!(o.get("core") instanceof Boolean b && !b)) fx(level, id + "_core", V.add(at, dir, -0.04), base.with("size", size * 0.99, "color", whiten(color, 0.8), "alpha", a));
     }
 
     /** 빛의 베인 자국 (rpg:light_cut): 몸에 그어진 뒤 hold 초 동안 떠 있다가 굵어지며 사라짐 */
     public static void cutMark(ServerLevel level, Vec3 at, Vec3 view, double angle, double hold, double[] glow, double[] core, double scale) {
         Vec3 dir = V.screenDir(view, angle);
         fx(level, "rpg:light_cut", at, Opt.of("dir", dir, "size", 0.95 * scale, "thick", 0.36 * scale, "life", hold + 0.16, "delay", hold, "color", glow, "alpha", 0.85));
-        mmorpg.fabric.vfx.PBridge.core(() -> fx(level, "rpg:light_cut", V.add(at, view, -0.05), Opt.of("dir", dir, "size", 0.9 * scale, "thick", 0.13 * scale,
-                "life", hold + 0.16, "delay", hold, "color", core, "alpha", 1.0)));
+        fx(level, "rpg:light_cut", V.add(at, view, -0.05), Opt.of("dir", dir, "size", 0.9 * scale, "thick", 0.13 * scale, "life", hold + 0.16, "delay", hold,
+                "color", core, "alpha", 1.0));
     }
 
     /** 바닥 룬 (progress 0~1 = 그려진 단계). o: size · life · spin · rate · grow · progress · color · alpha */
