@@ -50,7 +50,7 @@ public final class RuneMarks {
         RpgCombat.takenMult = e -> tm.applyAsDouble(e) * vulnMult(e);
         java.util.function.ToDoubleFunction<ServerPlayer> dm = RpgCombat.dealtMult;
         RpgCombat.dealtMult = p -> dm.applyAsDouble(p) * buffMult(p);
-        ServerTickEvents.END_SERVER_TICK.register(RuneMarks::tick);
+        ServerTickEvents.END_SERVER_TICK.register(server -> mmorpg.fabric.vfx.PBridge.pixel(() -> tick(server))); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
         Notify.addHudSuffix(RuneMarks::hud);
         RuneKit.onLifeEnded(BUFF::remove);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {

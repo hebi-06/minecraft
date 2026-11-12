@@ -66,11 +66,22 @@ public final class Vfx {
      * 그림판 하나 (vfx_sprites.json — 글꼴 rpg:vfx · 2026-11-12 px_sprites.json — 글꼴 rpg:px, 이름 앞에 "px/"): 축 (px · py — 칸 안 0 ~ 1, 왼쪽 위에서) 이
      * 엔티티 자리에 옴, hb = 칸 높이 (블록 — 1칸 16픽셀 밀도), b = 같이 띄우는 심지 층 (없으면 null)
      */
-    public record Sheet(String name, String chars, int frames, double aspect, boolean colored, FontDescription font, double px, double py, double hb, String b) {
+    public record Sheet(String name, String chars, int frames, double aspect, boolean colored, FontDescription font, double px, double py, double hb, String b,
+            String bchars, int adv) {
         public char glyph(int frame) {
             return chars.charAt(Math.floorMod(frame, frames));
         }
+
+        /** 2026-11-12 이 칸의 흰 심지 글자 (같은 글줄에 겹쳐 그림 — 없으면 0) */
+        public char bglyph(int frame) {
+            if (bchars == null || bchars.isEmpty()) return 0;
+            char c = bchars.charAt(Math.floorMod(frame, Math.min(frames, bchars.length())));
+            return c == ' ' ? 0 : c;
+        }
     }
+
+    /** 뒤로 옮김 글자 (글꼴 rpg:vfx 의 space — 글자 space + b 가 −2^b) */
+    static int spaceFirst = 0xF800;
 
     static final Map<String, Sheet> SHEETS = new HashMap<>();
     static int glyphHeight = 64;
@@ -104,6 +115,7 @@ public final class Vfx {
             }
             Map<String, Object> root = Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
             if (root.get("h") instanceof Number n) glyphHeight = n.intValue();
+            if (root.get("space") instanceof Number n) spaceFirst = n.intValue();
             Map<String, Object> sprites = (Map<String, Object>) root.get("sprites");
             for (Map.Entry<String, Object> e : sprites.entrySet()) {
                 Map<String, Object> m = (Map<String, Object>) e.getValue();
@@ -115,8 +127,10 @@ public final class Vfx {
                 }
                 double hb = m.get("hb") instanceof Number n ? n.doubleValue() : 1.6;
                 String b = m.get("b") instanceof String bs ? prefix + bs : null;
+                String bchars = m.get("bchars") instanceof String bc ? bc : null;
+                int adv = m.get("adv") instanceof Number n ? n.intValue() : 0;
                 SHEETS.put(prefix + e.getKey(), new Sheet(prefix + e.getKey(), (String) m.get("chars"), ((Number) m.get("frames")).intValue(),
-                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored")), font, px, py, hb, b));
+                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored")), font, px, py, hb, b, bchars, adv));
             }
         } catch (IOException | RuntimeException e) {
             Mmorpg.LOG.warn("[vfx] sprite index {}: {}", file, e.toString());
@@ -663,7 +677,21 @@ public final class Vfx {
         private void text() {
             if (removed) return;
             String g = String.valueOf(sheet.glyph(frame));
-            e.setText(Component.literal(g).withStyle(Style.EMPTY.withFont(sheet.font).withColor(rgb)));
+            Style st = Style.EMPTY.withFont(sheet.font);
+            net.minecraft.network.chat.MutableComponent t = Component.literal(g).withStyle(st.withColor(rgb));
+            // 2026-11-12 픽셀 그림의 흰 심지 (B 글자 — 흰빛 0.7 섞은 색, 뒤로 옮겨 같은 자리에)
+            char b = sheet.bglyph(frame);
+            if (b != 0 && sheet.adv() > 0) {
+                StringBuilder back = new StringBuilder();
+                for (int bit = 10; bit >= 0; bit--) if ((sheet.adv() & (1 << bit)) != 0) back.appendCodePoint(spaceFirst + bit);
+                int r = rgb >> 16 & 255;
+                int gg = rgb >> 8 & 255;
+                int bb = rgb & 255;
+                int w = (r + (int) Math.round((255 - r) * 0.7)) << 16 | (gg + (int) Math.round((255 - gg) * 0.7)) << 8 | (bb + (int) Math.round((255 - bb) * 0.7));
+                t.append(Component.literal(back.toString()).withStyle(st));
+                t.append(Component.literal(String.valueOf(b)).withStyle(st.withColor(w)));
+            }
+            e.setText(t);
         }
 
         private void opacity() {

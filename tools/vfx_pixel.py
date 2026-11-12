@@ -739,6 +739,23 @@ def orb():
     return frames
 
 
+def glow():
+    """빛 무리 (카메라를 봄 — 무기 끝 · 손 · 정령의 빛, 2026-11-12 VfxKit.glow 의 픽셀판): 반투명 무리 둘 · 계열 색 · 흰 심지 (0 · 1 깜빡임)"""
+    S = 32
+    x, y = grid(S, S)
+    r = np.hypot(x - S / 2, y - S / 2)
+    frames = []
+    for f in range(2):
+        k = 1.0 if f == 0 else 0.86
+        c = Cv(S, S)
+        c.A(r < 15.5 * k, MID, 0.28)
+        c.A(r < 12 * k, MID, 0.5)
+        c.A(r < 8.5 * k, BASE)
+        c.B(r < 4.6 * k)
+        frames.append(c.images())
+    return frames
+
+
 def pillar():
     """빛기둥 (세로 — 하늘에서 내리꽂힘, 세로축으로 카메라를 봄): 흰 심지 · 계열 색 · 짙은 가장자리 (세로 결), 가로 고리가 아래로 흐름 (0 ~ 3),
     4 ~ 6 가늘어지며 끊어짐. 위는 성기게 (하늘로 사라짐). 축 = 아래 가운데"""
@@ -1045,6 +1062,7 @@ SHEETS = [
     ("crack", crack, 1, (0.5, 0.5)),
     ("dust", dust, 1, (0.5, 0.5)),
     ("firepuff", firepuff, 0, (0.5, 0.5)),
+    ("glow", glow, 2, (0.5, 0.5)),
 ]
 
 

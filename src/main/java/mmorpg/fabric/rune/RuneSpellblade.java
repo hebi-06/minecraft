@@ -54,7 +54,7 @@ final class RuneSpellblade {
         RpgCombat.addWeaponHitHook(RuneSpellblade::imbueLanded);
         Notify.addHudSuffix(RuneSpellblade::imbueHud);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (Tasks.now() % 4 == 0) imbueTick(server);
+            if (Tasks.now() % 4 == 0) mmorpg.fabric.vfx.PBridge.pixel(() -> imbueTick(server)); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
         });
         // 죽음 · 차원 이동 · 탈것 부르기 (onLifeEnded) · 나감 (forgetRunes) · 서버 멈춤: 마검 부여도 끝
         RuneKit.onLifeEnded(id -> IMBUES.remove(id));

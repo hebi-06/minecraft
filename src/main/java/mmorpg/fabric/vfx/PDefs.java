@@ -73,8 +73,11 @@ public final class PDefs {
         return s < 0 ? -1 : CUSTOM + s;
     };
 
-    /** 글꼴 판 하나 (uv 칸 하나 = 글자 하나) */
-    record Sheet(int first, int n, int cols, int rows, double uw, double vh, int pxW, int pxH, int adv) {
+    /**
+     * 글꼴 판 하나 (uv 칸 하나 = 글자 하나). 2026-11-12 픽셀 글꼴 (rpg:vfxq — 룬): 칸 크기 qW · qH · 글자 너비 qAdv · 흰 심지 (B 글자) 가 있는 칸 qB ("0101…" —
+     * 없으면 null)
+     */
+    record Sheet(int first, int n, int cols, int rows, double uw, double vh, int pxW, int pxH, int adv, int qW, int qH, int qAdv, String qB) {
         /** uv (판 왼쪽 위) → 글자 (칸 밖이면 가장 가까운 칸) */
         int glyph(double u, double v) {
             int c = (int) Math.floor(u / uw + 1e-4);
@@ -88,6 +91,22 @@ public final class PDefs {
         /** 글자 가로세로 비 (픽셀) */
         double aspect() {
             return pxW / (double) pxH;
+        }
+
+        /** 픽셀 글꼴이 있는지 */
+        boolean pixel() {
+            return qB != null && qH > 0;
+        }
+
+        /** 픽셀 글꼴 글자의 가로세로 비 */
+        double qAspect() {
+            return qW / (double) qH;
+        }
+
+        /** 픽셀 글꼴에서 이 글자 (A) 에 흰 심지 (B) 가 있는지 */
+        boolean qCore(int glyph) {
+            int i = glyph - first;
+            return qB != null && i >= 0 && i < qB.length() && qB.charAt(i) == '1';
         }
     }
 
@@ -141,6 +160,10 @@ public final class PDefs {
     private static final Map<String, List<Layer[]>> CARDS = new HashMap<>();
     /** 글꼴 */
     static String font = "rpg:vfxp";
+    /** 2026-11-12 픽셀 글꼴 (룬) · B (흰 심지) · C (겹치는 심지 층) 글자 번호 차이 */
+    static String qfont = "rpg:vfxq";
+    static int qb = 0x400;
+    static int qc = 0x800;
     static int glyphH = 64;
     static int spaceFirst = 0xF800;
     static int loaded;
@@ -167,12 +190,18 @@ public final class PDefs {
         if (glyphs.get("font") instanceof String f) font = f;
         if (glyphs.get("h") instanceof Number n) glyphH = n.intValue();
         if (glyphs.get("space") instanceof Number n) spaceFirst = n.intValue();
+        if (glyphs.get("qfont") instanceof String f) qfont = f;
+        if (glyphs.get("qb") instanceof Number n) qb = n.intValue();
+        if (glyphs.get("qc") instanceof Number n) qc = n.intValue();
         if (glyphs.get("sheets") instanceof Map<?, ?> sm) {
             for (Map.Entry<?, ?> e : sm.entrySet()) {
                 Map<String, Object> m = (Map<String, Object>) e.getValue();
                 List<?> px = (List<?>) m.get("px");
+                Map<String, Object> q = m.get("q") instanceof Map<?, ?> qm ? (Map<String, Object>) qm : null;
+                List<?> qpx = q != null && q.get("px") instanceof List<?> l ? l : null;
                 sheets.put((String) e.getKey(), new Sheet(num(m.get("first")), num(m.get("n")), num(m.get("cols")), num(m.get("rows")), dbl(m.get("uw")),
-                        dbl(m.get("vh")), num(px.get(0)), num(px.get(1)), num(m.get("adv"))));
+                        dbl(m.get("vh")), num(px.get(0)), num(px.get(1)), num(m.get("adv")), qpx != null ? num(qpx.get(0)) : 0, qpx != null ? num(qpx.get(1)) : 0,
+                        q != null ? num(q.get("adv")) : 0, q != null && q.get("b") instanceof String b ? b : null));
             }
         }
         Map<String, Object> ofSheet = glyphs.get("particles") instanceof Map<?, ?> pm ? (Map<String, Object>) pm : Map.of();

@@ -94,7 +94,7 @@ public final class RuneStrike {
         RpgCombat.addRangedCooldownHook(RuneStrike::strikeRangedScale);
         // 신체 강화 · 평타 강화: 끝 · 회복 · 연출 (매 틱), 상태 줄 덧붙임 — 두 계열 함께 한 번만
         Notify.addHudSuffix(RuneStrike::buffHud);
-        ServerTickEvents.END_SERVER_TICK.register(RuneStrike::buffTick);
+        ServerTickEvents.END_SERVER_TICK.register(server -> mmorpg.fabric.vfx.PBridge.pixel(() -> buffTick(server))); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
         RuneSystem.onForget(id -> BUFFS.remove(id));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> BUFFS.clear());
         // 0.41.0 평타 강화 모습: 걸린 평타 강화마다 그 룬 (fn) 의 모습 — 활 · 완드 평타 색에도

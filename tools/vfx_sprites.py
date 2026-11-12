@@ -14,6 +14,10 @@
 
 글자 그림은 흰색 (밝기) — 글자 색으로 물들임 (불덩이 · 폭발처럼 미리 칠한 것은 colored: 흰 글자로 씀).
 칸마다 오른쪽 위 구석에 알파 1 점 (보이지 않음 — 셰이더가 0.1 아래를 버림): 마인크래프트가 비트맵 글자의 너비를 오른쪽 빈 열만큼 줄이지 않게 (가운데가 맞게).
+
+2026-11-12 픽셀 그림 (사용자 "오케 이런 느낌으로 룬 다 바꿔보자" — 시범 룬의 rpg:px 와 같은 느낌): 칸을 긴 변 64 픽셀까지 줄여 띠 색 (어두운 외곽선 · 반투명 무리 ·
+짙은 색 · 계열 색) 으로 다시 그림 (tools/vfx_particles.py 의 q_cell). 가장 밝은 봉우리는 B 글자 (bchars — 서버가 흰빛 섞은 색으로 같은 자리에 겹침, 뒤로
+옮김 space 글자 SPACE_FIRST + b = −2^b, 글자 너비 adv)
 """
 import json
 import math
@@ -22,6 +26,9 @@ import sys
 
 import numpy as np
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vfx_particles as vq  # noqa: E402 — 픽셀 그림 (q_cell)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src/main/resources/assets/mmorpg/textures/particle/addon/rpg/fx")
@@ -32,6 +39,8 @@ OUT_INDEX = os.path.join(ROOT, "src/main/resources/mmorpg/vfx_sprites.json")
 H = 64  # 글자 높이 (글꼴 단위 — 글자 표시 엔티티에서 1 = 0.025칸 → 1.6칸, 크기는 변환으로)
 FIRST = 0xE000  # 글자 (사용자 영역)
 COLS = 8  # 판 한 줄의 칸 수 (넘으면 다음 줄)
+PIXEL_LONG = 64  # 픽셀 그림 칸의 긴 변
+SPACE_FIRST = 0xF800  # 뒤로 옮김 글자 (−1 · −2 · −4 … −1024)
 
 
 # ------------------------------------------------------------ 그림판 자르기 (rfx_* 그림)
@@ -237,11 +246,11 @@ def build():
     providers = []
     index = {}
     code = FIRST
-    for name, make, colored in SPRITES:
-        cells = make()
-        cw, ch = cells[0].size
-        assert cw <= 256 and ch <= 256, (name, cw, ch)
-        assert all(c.size == (cw, ch) for c in cells), name
+    from io import BytesIO
+
+    def sheet_png(fname, cells, cw, ch):
+        """칸 목록 → 판 그림 · 글자들"""
+        nonlocal code
         cols = min(COLS, len(cells))
         rows = (len(cells) + cols - 1) // cols
         sheet = Image.new("RGBA", (cols * cw, rows * ch), (0, 0, 0, 0))
@@ -264,16 +273,38 @@ def build():
                 else:
                     line += "\u0000"
             lines.append(line)
-        from io import BytesIO
         buf = BytesIO()
         sheet.save(buf, "PNG", optimize=True)
-        files[os.path.join(OUT_TEX, name + ".png")] = buf.getvalue()
-        providers.append({"type": "bitmap", "file": "rpg:font/vfx/%s.png" % name, "height": H, "ascent": H // 2 - 2, "chars": lines})
-        index[name] = {"chars": "".join(chars), "frames": len(chars), "aspect": round(cw / ch, 4), "colored": colored}
+        files[os.path.join(OUT_TEX, fname + ".png")] = buf.getvalue()
+        providers.append({"type": "bitmap", "file": "rpg:font/vfx/%s.png" % fname, "height": H, "ascent": H // 2 - 2, "chars": lines})
+        return chars
+
+    for name, make, colored in SPRITES:
+        cells = make()
+        cw, ch = cells[0].size
+        assert cw <= 256 and ch <= 256, (name, cw, ch)
+        assert all(c.size == (cw, ch) for c in cells), name
+        # 픽셀 그림: 긴 변 PIXEL_LONG 까지 줄여 띠 색 (A) + 흰 심지 (B)
+        k = max(1.0, max(cw, ch) / PIXEL_LONG)
+        nw, nh = max(4, round(cw / k)), max(4, round(ch / k))
+        col = colored or vq.q_colored(cells)
+        A, B, has_b = [], [], []
+        for c in cells:
+            a, b, _c, hb = vq.q_cell(c, col, nw, nh)
+            A.append(Image.fromarray(a, "RGBA"))
+            B.append(Image.fromarray(b, "RGBA"))
+            has_b.append(hb)
+        chars = sheet_png(name, A, nw, nh)
+        bchars = sheet_png(name + "_b", B, nw, nh)
+        index[name] = {"chars": "".join(chars), "frames": len(chars), "aspect": round(nw / nh, 4), "colored": colored,
+                       "bchars": "".join(bc if hb else " " for bc, hb in zip(bchars, has_b)), "adv": int(0.5 + nw * H / nh) + 1}
+    assert code < SPACE_FIRST
+    providers.append({"type": "space", "advances": {chr(SPACE_FIRST + b): -(1 << b) for b in range(11)}})
     font = {"providers": providers}
-    idx = {"_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠한 그림인지. "
-                   "글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
-           "font": "rpg:vfx", "h": H, "sprites": index}
+    idx = {"_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠한 그림인지 · "
+                   "bchars (칸마다 흰 심지 글자 — 빈칸이면 없음) · adv (글자 너비). 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸), 뒤로 옮김 space 글자 "
+                   "space+b 가 −2^b",
+           "font": "rpg:vfx", "h": H, "space": SPACE_FIRST, "sprites": index}
     files[OUT_FONT] = (json.dumps(font, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
     files[OUT_INDEX] = (json.dumps(idx, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
     return files, index

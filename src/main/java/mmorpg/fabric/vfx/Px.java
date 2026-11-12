@@ -736,6 +736,109 @@ public final class Px {
         });
     }
 
+    // ------------------------------------------------------------ 2026-11-12 룬 전체 (사용자 "오케 이런 느낌으로 룬 다 바꿔보자") — 옛 조각의 픽셀판
+
+    /**
+     * 앞을 보는 참격 (RuneKit.arc 의 픽셀판 — 사용자 "앞을 보게 세움"): 가운데 at, 면은 face 쪽 (쓴 사람 · 뒤 카메라) 을 보고 뒷면도 그림 (거울 — 글자 표시는
+     * 한쪽 면만). 납작한 반원 (폭 width · 높이 height) 의 불룩한 쪽이 면 안에서 위 → roll 도 (face 쪽에서 볼 때 반시계). ltr = 왼쪽 → 오른쪽으로 드러남,
+     * every = 칸마다 틱 (드러남 넷 · 머묾 · 부서짐 셋), drift = 사는 동안 옮겨 가는 거리 (칸, move 쪽)
+     */
+    public static void arc(Vfx.Fx fx, Vec3 at, Vec3 face, double roll, double width, double height, double[] glow, double[] core, boolean ltr, int every,
+            Vec3 move, double drift, double alpha, int delay) {
+        fx.on(at(fx, delay), () -> {
+            Vec3 n = V.len(face) > 1e-6 ? V.unit(face) : new Vec3(0, 0, 1);
+            Vec3 d = V.scale(n, -1);
+            Vec3 right = V.cross(d, V.UP);
+            right = V.len(right) < 1e-3 ? new Vec3(1, 0, 0) : V.unit(right);
+            Vec3 up = V.unit(V.cross(right, d));
+            double a = Math.toRadians(roll);
+            Vec3 x = V.add(V.scale(right, Math.cos(a)), up, Math.sin(a));
+            Vec3 y = V.add(V.scale(right, -Math.sin(a)), up, Math.cos(a));
+            double radius = Math.max(0.2, width / 2);
+            double sy = Math.max(0.15, height / radius);
+            Vec3 pivot = V.add(at, y, -height * 0.5);
+            int e = Math.max(1, every);
+            int life = 9 * e;
+            Vec3 to = drift > 1e-3 && move != null && V.len(move) > 1e-6 ? V.add(pivot, V.unit(move), drift) : null;
+            for (Quaternionf q : new Quaternionf[] {plane(x, y), plane(V.scale(x, -1), y)}) {
+                int base = ltr ? 8 : 0;
+                Duo s = duo(fx, "swing", pivot, glow, core, sp -> sp.fixed(q).size(radius * 112.0 / 80.0).stretch(1, sy, 0).frame(base));
+                if (alpha < 0.99) s.alpha(alpha);
+                int t = fx.age();
+                s.seq(t + e, e, false, base + 1, base + 2, base + 3);
+                s.seq(t + 4 * e, e * 2, false, base + 4);
+                s.seq(t + 6 * e, e, true, base + 5, base + 6, base + 7);
+                if (to != null) s.to(to, -1, life);
+            }
+        });
+    }
+
+    /**
+     * 휘두른 초승달 (VfxKit.slash 의 픽셀판): 가운데 at, 휘두르는 쪽 swing (그림 +x — 그쪽으로 드러남), 면의 앞 normal (보는 쪽), 지름 size
+     */
+    public static void slash(Vfx.Fx fx, Vec3 at, Vec3 swing, Vec3 normal, double size, double[] glow, double[] core, int delay) {
+        Vec3 z = V.unit(normal);
+        Vec3 x = V.sub(swing, V.scale(z, V.dot(swing, z)));
+        if (V.len(x) < 1e-4) x = V.cross(z, V.len(V.cross(z, V.UP)) < 1e-3 ? new Vec3(1, 0, 0) : V.UP);
+        x = V.unit(x);
+        Vec3 y = V.unit(V.cross(z, x));
+        double radius = size / 2;
+        swing(fx, V.add(at, y, -radius * 0.55), plane(x, y), radius, 1, glow, core, true, delay, 1);
+    }
+
+    /** 튀는 작은 별 (VfxKit.sparks 의 픽셀판 — star 작은 칸): at 둘레로 n 개가 spread 칸 튀며 작아짐 */
+    public static void sparks(Vfx.Fx fx, Vec3 at, double[] color, int n, double spread, int delay) {
+        fx.on(at(fx, delay), () -> {
+            double[] core = Vfx.mix(color, WHITE, 0.7);
+            int t = fx.age();
+            for (int i = 0; i < n; i++) {
+                Vec3 d = V.unit(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.8 - 0.1, Kit.rand() - 0.5));
+                double sz = rnd(0.32, 0.5);
+                Duo s = duo(fx, "star", at, color, core, sp -> sp.size(sz).frame(1));
+                s.to(V.add(at, d, spread * rnd(0.6, 1.2)), -1, 5);
+                s.seq(t + 2, 2, true, 2, 3);
+            }
+        });
+    }
+
+    /** 피 튐 (VfxKit.blood 의 픽셀판 — 짙은 불티가 튀며 떨어짐): at 둘레 size 칸, n 덩이 (덩이마다 셋) */
+    public static void blood(Vfx.Fx fx, Vec3 at, double size, int n, double[] color, int delay) {
+        fx.on(at(fx, delay), () -> {
+            int t = fx.age();
+            for (int i = 0; i < n * 3; i++) {
+                Vec3 p = V.add(at, new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6 - 0.3, Kit.rand() - 0.5), size * 0.4);
+                Vec3 out = new Vec3(Kit.rand() - 0.5, rnd(0.1, 0.6), Kit.rand() - 0.5);
+                double sz = rnd(0.28, 0.46) * Math.max(0.7, size);
+                final int f0 = i % 3 == 0 ? 0 : 1;
+                Duo e = duo(fx, "ember", p, color, null, sp -> sp.size(sz).frame(f0));
+                Vec3 p1 = V.add(p, out, size * rnd(0.4, 0.8));
+                e.to(p1, -1, 3);
+                fx.on(t + 3, () -> e.to(V.up(p1, -rnd(0.5, 0.9)), -1, 6));
+                e.seq(t + 6, 2, true, 2, 3);
+            }
+        });
+    }
+
+    /** 빛 무리 (VfxKit.glow 의 픽셀판 — 카메라를 봄): 크기 size 칸, 불투명 alpha, life 틱 (깜빡이다 옅어짐) */
+    public static Duo glow(Vfx.Fx fx, Vec3 at, double size, double[] color, double alpha, int life) {
+        Duo d = duo(fx, "glow", at, color, Vfx.mix(color, WHITE, 0.7), sp -> sp.size(size).frame(0).alpha(Math.min(1, alpha * 1.6)));
+        int t = fx.age();
+        for (int k = 2; k < life; k += 2) {
+            final int fr = (k / 2) % 2;
+            fx.on(t + k, () -> d.frame(fr));
+        }
+        d.fade(t + Math.max(1, life - 4), 4);
+        return d;
+    }
+
+    /** 부드러운 터짐 (RuneBoost.bloom 의 픽셀판 — 버프 · 회복): 고리 · 떠오르는 불티 · 작은 번쩍임 (균열 · 충격 없음) */
+    public static void bloom(Vfx.Fx fx, Vec3 g, double r, double[] glow, double[] core, int delay) {
+        ring(fx, "dotring", V.up(g, 0.06), r * 0.7, 2, glow, 16, delay);
+        shock(fx, g, r * 0.8, glow, core, 8, delay);
+        star(fx, V.up(g, 1.1), 1.5, glow, core, delay);
+        embers(fx, g, 10, r * 0.5, 0.4, 2.0, glow, 22, delay);
+    }
+
     // ------------------------------------------------------------ 등급 터짐
 
     /**

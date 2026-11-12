@@ -139,7 +139,7 @@ final class RuneSpirit {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 2 != 0) return;
             try {
-                spiritTick(server);
+                mmorpg.fabric.vfx.PBridge.pixel(() -> spiritTick(server)); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] spirit tick", e); // 애드온의 runInterval 처럼 다음 번에 다시
             }

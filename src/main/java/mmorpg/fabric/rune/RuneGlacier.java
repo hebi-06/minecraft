@@ -138,7 +138,7 @@ final class RuneGlacier {
             String s = vm.apply(e);
             return frozen(e) ? MARK + (s == null ? "" : s) : s;
         };
-        ServerTickEvents.END_SERVER_TICK.register(RuneGlacier::tick);
+        ServerTickEvents.END_SERVER_TICK.register(server -> mmorpg.fabric.vfx.PBridge.pixel(() -> tick(server))); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
         RuneSystem.onForget(LAST::remove);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             FROZEN.clear();

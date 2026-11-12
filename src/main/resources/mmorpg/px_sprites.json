@@ -413,6 +413,29 @@
     0.5
    ],
    "hb": 3.0
+  },
+  "glow": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0,
+   "b": "glow.b"
+  },
+  "glow.b": {
+   "chars": "",
+   "frames": 2,
+   "aspect": 1.0,
+   "colored": false,
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "hb": 2.0
   }
  }
 }

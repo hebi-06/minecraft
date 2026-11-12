@@ -442,8 +442,8 @@ public final class RuneKit {
         double life = Math.max(0.05, len / speed);
         Vec3 u = V.unit(d);
         SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", u, "speed", len / life, "size", size, "thick", thick, "life", life, "color", glow, "alpha", 1.0));
-        SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", u, "speed", len / life, "size", size * 0.75, "thick", thick * 0.35, "life", life, "color", core,
-                "alpha", 1.0));
+        mmorpg.fabric.vfx.PBridge.core(() -> SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", u, "speed", len / life, "size", size * 0.75, "thick",
+                thick * 0.35, "life", life, "color", core, "alpha", 1.0)));
         return Math.max(1, (int) Math.round(life * 20));
     }
 
@@ -539,7 +539,9 @@ public final class RuneKit {
         double cell = o.num("cell", 0);
         double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔
         rfx(level, name, at, o.with("color", glow, "cell", c[0] + cell, "solo", solo > 0 ? solo * 2 : null));
-        rfx(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1), "solo", solo > 0 ? solo * 2 + 1 : null));
+        // 2026-11-12 심지 칸은 겹쳐 그리는 층 (픽셀 글꼴 C — 빛 층을 외곽선으로 가리지 않게)
+        mmorpg.fabric.vfx.PBridge.core(() -> rfx(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1),
+                "solo", solo > 0 ? solo * 2 + 1 : null)));
         // 0.50.0 아래 등급 룬의 물체 그림에 옅은 후광 (빛깔 겹 1.32배 — 다시 그리며 하나만 두는 solo 그림은 겹쳐 쌓이므로 뺌)
         double aura = solo > 0 ? 0 : RuneBoost.lowAura(name);
         if (aura > 0 && o.num("size", 0) >= 0.3) rfx(level, name, at, o.with("size", o.num("size", 1) * 1.32, "color", glow, "cell", c[0] + cell, "alpha", aura
@@ -559,6 +561,14 @@ public final class RuneKit {
     public static void waveCard(ServerLevel level, Vec3 at, Vec3 dir, Vec3 face, Opt o, double[] glow, double[] core) {
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;
         double life = Math.max(0.05, o.num("life", 0.3));
+        if (PIXEL) {
+            // 2026-11-12 픽셀 검기 (vfx.Px.wave — 시범 룬 검기 날리기와 같은 그림): 날아가는 가로 초승달, 앞을 30° 들어 뒤 · 위 카메라에 넓게
+            int ticks = Math.max(2, (int) Math.round(life * 20));
+            double width = 2 * o.num("size", 1) * (1 + o.num("grow", 0) * 0.5) * 1.15;
+            double tilt = o.num("roll", 0) + (Math.abs(V.dot(V.unit(face), V_UP)) < 0.5 ? 90 : 0);
+            mmorpg.fabric.vfx.Px.wave(mmorpg.fabric.vfx.Vfx.at(level, at, ticks + 12), at, d, o.num("speed", 0) * life, ticks, width, tilt, 30, glow, core, 0);
+            return;
+        }
         Opt card = Opt.of("dir", d, "face", face, "roll", o.num("roll", 0), "vel", V.scale(d, o.num("speed", 0)), "scale", o.num("size", 1), "life", life,
                 "grow", o.num("grow", 0), "alpha", o.num("alpha", 1), "fadeIn", 0.04, "fadeOut", Math.max(0.05, o.num("fade", 0.2) * life), "color", glow, "glow",
                 core, "glowAlpha", 0.0, "shine", 0.2);
@@ -620,6 +630,10 @@ public final class RuneKit {
             SkillFx.arc(level, at, dir, o);
             return;
         }
+        if (PIXEL) {
+            pixelArc(level, at, dir, o, shape, size);
+            return;
+        }
         int own = Tasks.owner();
         if (own != 0) SkillFx.arc(level, at, dir, o.with("view", 2.0, "owner", (double) own));
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;
@@ -647,6 +661,45 @@ public final class RuneKit {
                 0.95 * a, "shine", core ? 0.15 : 0.0));
     }
 
+    /**
+     * 2026-11-12 룬의 참격 · 검기 · 땅의 초승달을 픽셀 그림 (vfx.Px — 사용자 "오케 이런 느낌으로 룬 다 바꿔보자") 으로. 거짓이면 예전 판 (Fx3d 카드 · 파티클)
+     */
+    public static boolean PIXEL = true;
+
+    /**
+     * arc 의 픽셀판 (vfx.Px.arc — 사용자 "앞을 보게 세움"): 면은 쓴 사람 쪽을 봄 (몸 앞의 참격 = 앞을 봄 · 몸 둘레의 참격 = 몸 쪽, 뒷면도 그림). 불룩한 쪽은 화면
+     * 기울기 spin (예전 파티클과 같은 뜻 — 0 = 가로로 휩씀 · ±90 = 세로로 내리침), flip = 왼쪽 → 오른쪽. 폭 = size × 2.1 · 높이 = 폭 × 0.3 (thin 0.24 ·
+     * heavy 0.36), speed (칸/초) 만큼 앞으로 밀려남. aura 가 있으면 심지 색에 섞음
+     */
+    private static void pixelArc(ServerLevel level, Vec3 at, Vec3 dir, Opt o, String shape, double size) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;
+        double life = Math.max(0.05, o.num("life", 0.3));
+        int own = Tasks.owner();
+        net.minecraft.world.entity.Entity owner = own != 0 ? level.getEntity(own) : null;
+        Vec3 face = null;
+        if (owner != null) {
+            Vec3 to = V.flat(V.sub(owner.position(), at));
+            if (V.len(to) > 0.5) face = V.unit(to);
+        }
+        if (face == null) {
+            Vec3 fl = V.flat(d);
+            face = V.len(fl) > 1e-3 ? V.scale(V.unit(fl), -1) : new Vec3(0, 0, 1);
+        }
+        double width = size * 2.1;
+        double height = width * switch (shape) {
+            case "thin" -> 0.24;
+            case "heavy" -> 0.36;
+            default -> 0.3;
+        };
+        double[] color = o.color("color", WHITE);
+        double[] aura = o.color("aura", null);
+        double[] core = aura != null ? mmorpg.fabric.vfx.Vfx.mix(aura, WHITE, 0.55) : whiten(color, 0.7);
+        int every = Math.max(1, (int) Math.round(life * 20 / 7));
+        double drift = o.num("speed", 0) / 5.0 * (1 - Math.exp(-5 * life));
+        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(level, at, 9 * every + 6);
+        mmorpg.fabric.vfx.Px.arc(fx, at, face, o.num("spin", 0), width, height, color, core, o.truthy("flip"), every, d, drift, o.num("alpha", 1), 0);
+    }
+
     /** arc 를 주인 sp 로 (룬을 쓰는 중이 아닌 때 — 반격 같은 맞을 때의 되받아침) */
     public static void arcFor(ServerPlayer sp, ServerLevel level, Vec3 at, Vec3 dir, Opt o) {
         int prev = enter(sp);
@@ -660,6 +713,19 @@ public final class RuneKit {
     /** 0.48.2 땅에 눕힌 초승달 자국 (crescent 의 땅 판 — 불룩한 쪽이 수평 angle 도): 크게 내리친 · 휩쓴 자리 */
     public static void groundCrescent(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double angle, double life) {
         Vec3 d = turn(new Vec3(1, 0, 0), angle);
+        if (PIXEL) {
+            // 2026-11-12 픽셀: 땅에 눕힌 반원 (불룩한 쪽 d) — 다 드러난 칸으로 나타나 머문 뒤 부서짐
+            int ticks = Math.max(4, (int) Math.round(life * 20));
+            mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(level, at, ticks + 10);
+            double radius = size * 1.05;
+            Vec3 pivot = V.up(V.add(at, d, -radius * 0.55), 0.05);
+            org.joml.Quaternionf q = mmorpg.fabric.vfx.Px.plane(V.rightOf(d), d);
+            mmorpg.fabric.vfx.Px.Duo c = mmorpg.fabric.vfx.Px.duo(fx, "swing", pivot, glow, whiten(core, 0.3), sp -> sp.fixed(q).size(radius * 112.0 / 80.0)
+                    .frame(4));
+            int e = Math.max(1, ticks / 5);
+            c.seq(fx.age() + Math.max(1, ticks - 3 * e), e, true, 5, 6, 7);
+            return;
+        }
         int own = Tasks.owner();
         if (own != 0) crescentFx(level, at, V_UP, size, glow, core, angle, life, 2.0, own);
         double lf = Math.max(0.05, life);
@@ -1059,7 +1125,7 @@ public final class RuneKit {
     /** 번개 한 줄기 (빛 + 흰 심지 — 번개 · 원소 검사) */
     public static void zap(ServerLevel level, Vec3 a, Vec3 b, double[] glow, double[] core, double thick, double life) {
         SkillFx.bolt(level, a, b, glow, Opt.of("jag", 0.5, "thick", thick, "life", life));
-        SkillFx.bolt(level, a, b, core, Opt.of("jag", 0.3, "thick", thick * 0.35, "life", life * 0.8));
+        mmorpg.fabric.vfx.PBridge.core(() -> SkillFx.bolt(level, a, b, core, Opt.of("jag", 0.3, "thick", thick * 0.35, "life", life * 0.8)));
     }
 
     public static void zap(ServerLevel level, Vec3 a, Vec3 b, double[] glow, double[] core) {

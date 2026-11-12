@@ -101,7 +101,7 @@ public final class RuneAbyss {
             return active(e) != null ? MARK + (s == null ? "" : s) : s;
         };
         Notify.addHudSuffix(RuneAbyss::hud);
-        ServerTickEvents.END_SERVER_TICK.register(RuneAbyss::tick);
+        ServerTickEvents.END_SERVER_TICK.register(server -> mmorpg.fabric.vfx.PBridge.pixel(() -> tick(server))); // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
         RuneSystem.onForget(RuneAbyss::forget);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             BRANDS.clear();

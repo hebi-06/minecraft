@@ -73,11 +73,19 @@ public final class PBridge {
     /** 시험용: 파티클 ID → 다리에 들어온 수 */
     public static final Map<String, Integer> SEEN = new java.util.TreeMap<>();
     private static FontDescription font;
+    /** 2026-11-12 픽셀 글꼴 (rpg:vfxq — 룬을 쓰는 동안의 파티클, 사용자 "오케 이런 느낌으로 룬 다 바꿔보자") */
+    private static FontDescription qfont;
     private static final Set<String> WARNED = new HashSet<>();
+    /** 픽셀 글꼴로 그리는 중 (룬의 틱 처리 — Tasks 꼬리표 · 주인이 없는 곳) · 겹쳐 그리는 심지 층 (C 글자) */
+    private static int pixelDepth;
+    private static int coreDepth;
+    /** 시험용: 픽셀 글꼴로 만든 글자 표시 */
+    public static int pixelMade;
 
     public static void init() {
         PDefs.init();
         font = new FontDescription.Resource(Identifier.parse(PDefs.font));
+        qfont = new FontDescription.Resource(Identifier.parse(PDefs.qfont));
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> clear());
     }
 
@@ -101,6 +109,39 @@ public final class PBridge {
 
     static boolean isThird(ServerPlayer sp) {
         return THIRD.contains(sp.getId());
+    }
+
+    // ------------------------------------------------------------ 2026-11-12 픽셀 글꼴 (룬)
+
+    /**
+     * 지금 뿜는 파티클을 픽셀 글꼴 (rpg:vfxq) 로: 룬을 쓰는 동안 (Tasks 꼬리표 "계열:등급" · 효과의 주인 — Tasks.later 가 이어 줌) 또는 {@link #pixel} 안
+     * (룬의 틱 처리 — 버프 기운 · 정령 · 표식). 직업 스킬 · 보스 · 유물은 그대로 (rpg:vfxp)
+     */
+    public static boolean pixelNow() {
+        return pixelDepth > 0 || mmorpg.fabric.Tasks.tag() != null || mmorpg.fabric.Tasks.owner() != 0;
+    }
+
+    /** fn 안에서 뿜은 파티클은 픽셀 글꼴 (룬의 틱 처리 · 이벤트) */
+    public static void pixel(Runnable fn) {
+        pixelDepth++;
+        try {
+            fn.run();
+        } finally {
+            pixelDepth--;
+        }
+    }
+
+    /**
+     * fn 안에서 뿜은 파티클은 겹쳐 그리는 심지 층 (픽셀 글꼴의 C 글자 — 외곽선 · 반투명 무리 없이 밝은 곳만): 같은 자리에 빛 층 위로 겹치는 두 번째 장
+     * (RuneKit.rfx2 의 심지 칸 · 날아가는 빛의 속줄 · 번개의 흰 줄) 이 아래 층을 어두운 외곽선으로 가리지 않게
+     */
+    public static void core(Runnable fn) {
+        coreDepth++;
+        try {
+            fn.run();
+        } finally {
+            coreDepth--;
+        }
     }
 
     // ------------------------------------------------------------ 들어오는 곳
@@ -136,6 +177,8 @@ public final class PBridge {
         for (int k = 0; k < 4; k++) ev[PDefs.ER1 + k] = r.nextDouble();
         ev[PDefs.ELIFE] = d.active.eval(ev);
         long soloKey = solo > 0 && owner >= 0 ? ((long) owner << 20) | (solo & 0xFFFFF) : -1;
+        boolean px = pixelNow() && d.sheet != null && d.sheet.pixel();
+        boolean core = coreDepth > 0;
         if (d.sheet == null) {
             // 그림이 없는 파티클 (바닐라 그림 · 직업 그림 — 아직): 가루로
             if (WARNED.add(d.id)) Mmorpg.LOG.info("[vfx] particle {} has no glyph — dust", d.id);
@@ -169,7 +212,11 @@ public final class PBridge {
                     dropped++;
                     continue;
                 }
-                if (b == null) b = new Batch(level, at, who);
+                if (b == null) {
+                    b = new Batch(level, at, who);
+                    b.pixel = px;
+                    b.core = core;
+                }
                 Part part = b.add(p);
                 if (soloKey >= 0 && i == 0) {
                     part.soloKey = soloKey;
@@ -181,6 +228,8 @@ public final class PBridge {
         }
         // 계속 뿜는 발생기
         Batch b = new Batch(level, at, who);
+        b.pixel = px;
+        b.core = core;
         b.emitter = new Emitter(d, ev, at);
         b.attach();
     }
@@ -279,6 +328,9 @@ public final class PBridge {
         final List<Part> parts = new ArrayList<>();
         Emitter emitter;
         Card card;
+        /** 픽셀 글꼴 (rpg:vfxq) · 겹쳐 그리는 심지 층 (C 글자) */
+        boolean pixel;
+        boolean core;
         boolean ended;
         boolean attached;
         int age;
@@ -474,10 +526,13 @@ public final class PBridge {
             boolean wasHidden = hidden;
             hidden = false;
             int c = rgb(s.r, s.g, s.b);
+            PDefs.Sheet sh = sim.d.sheet;
+            boolean px = batch.pixel;
             if (s.glyph != glyph || c != rgb) {
                 glyph = s.glyph;
                 rgb = c;
-                e.setText(Component.literal(new String(Character.toChars(glyph))).withStyle(Style.EMPTY.withFont(font).withColor(rgb)));
+                e.setText(px ? pixelText(sh, glyph, rgb, batch.core) : Component.literal(new String(Character.toChars(glyph))).withStyle(Style.EMPTY.withFont(font)
+                        .withColor(rgb)));
             }
             if (Math.abs(o - opacity) > 2 || (o >= 250) != (opacity >= 250)) {
                 opacity = o;
@@ -512,13 +567,13 @@ public final class PBridge {
                 mode = m;
                 e.setBillboardMode(m);
             }
-            PDefs.Sheet sh = sim.d.sheet;
             double unit = PDefs.glyphH * TEXT_UNIT;
+            double aspect = px ? sh.qAspect() : sh.aspect();
             float sy = (float) (2 * s.h / unit);
-            float sx = (float) (2 * s.w / (unit * sh.aspect()));
+            float sx = (float) (2 * s.w / (unit * aspect));
             // 글자 가운데 맞춤 (글줄 너비 = advance — 그림 너비보다 1 단위쯤 넓음)
-            double gw = PDefs.glyphH * sh.aspect();
-            float cx = (float) ((sh.adv() - gw) / 2 * TEXT_UNIT * sx);
+            double gw = PDefs.glyphH * aspect;
+            float cx = (float) (((px ? sh.qAdv() : sh.adv()) - gw) / 2 * TEXT_UNIT * sx);
             Vector3f tr = q.transform(new Vector3f(cx, 0, 0));
             e.setInterpolationDuration(wasHidden ? 0 : dur);
             e.setTranslation(tr);
@@ -543,6 +598,25 @@ public final class PBridge {
             if (soloKey >= 0) SOLO.remove(soloKey, this);
             batch.removeElement(e);
         }
+    }
+
+    /**
+     * 픽셀 글꼴의 글줄: 심지 층 (core) 은 C 글자 하나, 아니면 A 글자 (띠 색) + 흰 심지가 있으면 같은 자리에 B 글자 (파티클 색에 흰빛 0.7 섞음 — 뒤로 옮겨 겹침)
+     */
+    static Component pixelText(PDefs.Sheet sh, int glyph, int rgb, boolean core) {
+        Style st = Style.EMPTY.withFont(qfont);
+        pixelMade++;
+        if (core) return Component.literal(new String(Character.toChars(glyph + PDefs.qc))).withStyle(st.withColor(rgb));
+        MutableComponent t = Component.literal(new String(Character.toChars(glyph))).withStyle(st.withColor(rgb));
+        if (sh.qCore(glyph)) {
+            int r = rgb >> 16 & 255;
+            int g = rgb >> 8 & 255;
+            int b = rgb & 255;
+            int w = (r + (int) Math.round((255 - r) * 0.7)) << 16 | (g + (int) Math.round((255 - g) * 0.7)) << 8 | (b + (int) Math.round((255 - b) * 0.7));
+            t.append(Component.literal(back(sh.qAdv())).withStyle(st));
+            t.append(Component.literal(new String(Character.toChars(glyph + PDefs.qb))).withStyle(st.withColor(w)));
+        }
+        return t;
     }
 
     /** 정한 방향 (고정 빌보드) 의 회전 — client AddonParticle.orientation 과 같음 (카메라 = 기준 눈) */

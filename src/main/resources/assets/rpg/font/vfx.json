@@ -12,7 +12,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfx/burst2.png",
+   "file": "rpg:font/vfx/burst_b.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -22,7 +22,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfx/bladering.png",
+   "file": "rpg:font/vfx/burst2.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -32,12 +32,52 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfx/blood.png",
+   "file": "rpg:font/vfx/burst2_b.png",
    "height": 64,
    "ascent": 30,
    "chars": [
     "",
-    "\u0000\u0000\u0000\u0000"
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/bladering.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/bladering_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/blood.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/blood_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
@@ -46,8 +86,18 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/cinder_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
    ]
   },
   {
@@ -56,7 +106,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/crack_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -65,7 +124,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/fissure_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -74,7 +142,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/aura_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -83,7 +160,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/flare_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -92,7 +178,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/wave_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -101,7 +196,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/fireball_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -110,7 +214,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/boom_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -119,7 +232,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/slash_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -128,7 +250,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/spin_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -137,7 +268,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/streak_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -146,7 +286,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/glow_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -155,7 +304,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/dust_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -164,7 +322,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/xcut_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -173,8 +340,33 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/shock_b.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "space",
+   "advances": {
+    "": -1,
+    "": -2,
+    "": -4,
+    "": -8,
+    "": -16,
+    "": -32,
+    "": -64,
+    "": -128,
+    "": -256,
+    "": -512,
+    "": -1024
+   }
   }
  ]
 }

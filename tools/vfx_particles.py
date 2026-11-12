@@ -14,6 +14,12 @@
 글자는 그림 그대로 (흰 그림 · 칠한 그림) — 서버가 파티클의 색 (식) 을 글자 색으로 곱함 (파티클과 같음).
 칸마다 오른쪽 위 구석에 알파 1 점: 마인크래프트가 비트맵 글자의 너비를 빈 열만큼 줄이지 않게 (너비 = 칸 전체 → 가운데가 맞음 · 서버가 너비를 앎).
 직업 스킬 그림 (rfx_j*) 은 직업 단계에서 (JOB_PARTICLES) — 룬이 쓰는 것만 RUNE_J 에.
+
+2026-11-12 픽셀 글꼴 rpg:vfxq (사용자 "오케 이런 느낌으로 룬 다 바꿔보자" — 시범 룬 일곱의 픽셀 그림 rpg:px 와 같은 느낌): 같은 그림을 반 크기 픽셀로 줄여
+띠 색 (어두운 외곽선 · 반투명 무리 둘 · 짙은 색 · 계열 색) + 흰 심지로 다시 그림. 룬을 쓰는 동안의 파티클 (서버 PBridge — Tasks 꼬리표 · 주인) 만 이 글꼴.
+- A 글자 (rpg:vfxp 와 같은 번호): 띠 색 (회색 × 파티클 색 — 미리 칠한 그림은 색조 그대로 밝기만 띠)
+- B 글자 (번호 + QB): 가장 밝은 봉우리 (흰빛 섞은 색으로 A 위에 겹침 — A 와 픽셀이 겹치지 않음)
+- C 글자 (번호 + QC): 겹쳐 그리는 심지 층 (rfx2 의 두 번째 장 · 날아가는 빛의 속줄 — 외곽선 · 무리 없이 밝은 곳만)
 """
 import json
 import os
@@ -21,7 +27,7 @@ import sys
 from io import BytesIO
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "src/main/resources")
@@ -31,6 +37,16 @@ MODEL_DIR = os.path.join(RES, "assets/mmorpg/fxmodel")
 OUT_TEX = os.path.join(RES, "assets/rpg/textures/font/vfxp")
 OUT_FONT = os.path.join(RES, "assets/rpg/font/vfxp.json")
 OUT_INDEX = os.path.join(RES, "mmorpg/vfx_particles.json")
+OUT_QTEX = os.path.join(RES, "assets/rpg/textures/font/vfxq")
+OUT_QFONT = os.path.join(RES, "assets/rpg/font/vfxq.json")
+
+# 픽셀 글꼴 (rpg:vfxq)
+QDIV = 2.0  # 칸을 이만큼 줄임 (긴 변 128 → 64 픽셀 — 화면에서 블록 질감과 비슷한 픽셀)
+QB = 0x400  # B 글자 (흰 심지) 번호 = A + QB
+QC = 0x800  # C 글자 (겹쳐 그리는 심지 층) 번호 = A + QC
+Q_T = (0.07, 0.24, 0.45, 0.72)  # 밝기 (밝기 × 알파) 띠: 무리 · 단단한 곳 · 계열 색 · 심지 봉우리
+Q_OUT, Q_DARK, Q_MID, Q_BASE = 0.2, 0.42, 0.7, 1.0  # A 회색 단계 (× 파티클 색) — rpg:px 와 같음
+Q_HALO = 0.85  # 무리 (반투명) 의 회색
 
 H = 64  # 글자 높이 (글꼴 단위 — 글자 표시 엔티티 1 단위 = 0.025칸 → 1.6칸, 크기는 변환으로)
 CAP = 128  # 칸의 긴 변 (픽셀) — 글꼴 그림은 모두 메모리에 올라감 (룬 묶음 약 700만 픽셀)
@@ -67,6 +83,109 @@ def shrink(cell, cap):
     rgb = np.where(al > 1e-4, b[..., :3] / np.maximum(al, 1e-4), 0)
     out = np.concatenate([np.clip(rgb, 0, 1), al], axis=-1)
     return Image.fromarray((out * 255 + 0.5).astype(np.uint8), "RGBA")
+
+
+# ------------------------------------------------------------ 픽셀 글꼴 (rpg:vfxq)
+
+def q_size(cw, ch):
+    return max(4, round(cw / QDIV)), max(4, round(ch / QDIV))
+
+
+def _q_resize_v(v, nw, nh):
+    """밝기 판 → (nw, nh): 평균과 최댓값을 반씩 (가는 선 · 작은 점이 사라지지 않게)"""
+    im = Image.fromarray((np.clip(v, 0, 1) * 255 + 0.5).astype(np.uint8), "L")
+    mean = np.asarray(im.resize((nw, nh), Image.BOX), np.float32) / 255
+    up = np.asarray(im.resize((nw * 4, nh * 4), Image.BILINEAR), np.float32) / 255
+    mx = up.reshape(nh, 4, nw, 4).max(axis=(1, 3))
+    return 0.5 * mean + 0.5 * mx
+
+
+def _q_resize_rgba(a, nw, nh):
+    """칠한 그림 → (nw, nh) 색 · 알파 (알파를 곱해 줄임)"""
+    pm = a[..., :3] * a[..., 3:4]
+    ch = [np.asarray(Image.fromarray((np.clip(pm[..., i], 0, 1) * 255 + 0.5).astype(np.uint8), "L").resize((nw, nh), Image.BOX), np.float32) / 255
+          for i in range(3)]
+    al = np.asarray(Image.fromarray((np.clip(a[..., 3], 0, 1) * 255 + 0.5).astype(np.uint8), "L").resize((nw, nh), Image.BOX), np.float32) / 255
+    rgb = np.dstack(ch)
+    rgb = np.where(al[..., None] > 1e-3, rgb / np.maximum(al[..., None], 1e-3), 0)
+    return np.clip(rgb, 0, 1), al
+
+
+def _q_dil(m):
+    o = m.copy()
+    o[1:, :] |= m[:-1, :]
+    o[:-1, :] |= m[1:, :]
+    o[:, 1:] |= m[:, :-1]
+    o[:, :-1] |= m[:, 1:]
+    return o
+
+
+def q_colored(cells):
+    """미리 칠한 그림인지 (불 · 바위 · 블랙홀 …) — 채도가 높은 픽셀이 많으면"""
+    sat = []
+    for c in cells:
+        a = np.asarray(c, np.float32) / 255
+        m = a[..., 3] > 0.3
+        if m.sum() < 4:
+            continue
+        rgb = a[m][:, :3]
+        sat.append(float(np.mean(rgb.max(1) - rgb.min(1))))
+    return bool(sat) and float(np.mean(sat)) > 0.12
+
+
+def q_cell(cell, colored, nw, nh):
+    """칸 하나 → (A, B, C) RGBA uint8 판 (nh × nw) · B 에 픽셀이 있는지"""
+    a = np.asarray(cell.convert("RGBA"), np.float32) / 255
+    lum = a[..., 0] * 0.3 + a[..., 1] * 0.55 + a[..., 2] * 0.15
+    v = _q_resize_v(lum * a[..., 3], nw, nh)
+    rgb, al = _q_resize_rgba(a, nw, nh)
+    lum2 = rgb[..., 0] * 0.3 + rgb[..., 1] * 0.55 + rgb[..., 2] * 0.15
+    t0, t1, t2, t3 = Q_T
+    # 어두운 픽셀로 그린 곳 (블랙홀 속 · 검은 테두리) — 밝기는 낮아도 보임
+    dark = (al >= 0.5) & (lum2 < 0.3)
+    vis = (v >= t0) | dark
+    solid = (v >= t1) | dark
+    halo2 = (v >= (t0 + t1) / 2) & ~solid
+    halo1 = vis & ~solid & ~halo2
+    # 심지 봉우리: 밝고 둘레 (흐린 판) 보다 밝은 곳 — 평평한 면 전체가 하얘지지 않게 (가장자리 안쪽 빛 · 가는 빛줄 · 빛 덩이 가운데)
+    blur = np.asarray(Image.fromarray((np.clip(v, 0, 1) * 255 + 0.5).astype(np.uint8), "L").filter(
+        ImageFilter.GaussianBlur(max(1.0, max(nw, nh) / 24))), np.float32) / 255
+    core = (v >= t3) & (v >= blur + 0.05) & ~dark
+    lvl = np.where(v >= t2, Q_BASE, np.where(v >= t1, Q_MID, Q_DARK)).astype(np.float32)
+    A = np.zeros((nh, nw, 4), np.float32)
+    if colored:
+        mx = np.maximum(rgb.max(-1), 1e-3)
+        hue = rgb / mx[..., None]
+        # 밝기 띠 (색조 그대로): 가장 밝은 채널을 다섯 단계로
+        q = np.select([mx < 0.18, mx < 0.38, mx < 0.6, mx < 0.82], [0.1, 0.3, 0.5, 0.75], 1.0)
+        A[..., :3] = hue * q[..., None]
+        A[halo1 | halo2, :3] = (hue * np.maximum(q, 0.5)[..., None])[halo1 | halo2]
+    else:
+        A[..., :3] = lvl[..., None]
+        A[halo1 | halo2, :3] = Q_HALO
+        A[dark, :3] = Q_OUT
+    A[..., 3] = np.where(solid, 1.0, np.where(halo2, 0.55, np.where(halo1, 0.3, 0.0)))
+    if max(nw, nh) >= 12:
+        ring = _q_dil(solid) & ~solid
+        A[ring, :3] = 0.16 if colored else Q_OUT
+        A[ring, 3] = 1.0
+    A[core, 3] = 0.0
+    B = np.zeros((nh, nw, 4), np.float32)
+    B[..., :3] = 1.0
+    B[..., 3] = core
+    # C: 겹쳐 그리는 심지 층 — 외곽선 없이 (옅은 곳은 반투명)
+    C = np.zeros((nh, nw, 4), np.float32)
+    cm = (v >= t0) & ~dark
+    if colored:
+        C[..., :3] = rgb
+    else:
+        C[..., :3] = np.where(v >= t2, 1.0, np.where(v >= t1, 0.85, 0.7))[..., None]
+    C[..., 3] = np.where(v >= t1, 1.0, 0.55) * cm
+
+    def u8(x):
+        return (np.clip(x, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+    return u8(A), u8(B), u8(C), bool(core.any())
 
 
 def particle_sheets(defs):
@@ -148,11 +267,12 @@ def build():
     cards = card_layers()
     files = {}
     providers = []
+    qproviders = []
     index_sheets = {}
     code = FIRST
 
-    def sheet_png(key, cells):
-        """칸 목록 → 판 그림 (칸 크기를 가장 큰 칸에 맞춤 — 한 판의 칸은 같은 크기) · 글자들 · advance"""
+    def sheet_png(key, cells, uniform=None):
+        """칸 목록 → 판 그림 (칸 크기를 가장 큰 칸에 맞춤 — 한 판의 칸은 같은 크기) · 글자들 · advance (uniform 에 같은 크기로 맞춘 칸들)"""
         nonlocal code
         cw = max(c.size[0] for c in cells)
         ch = max(c.size[1] for c in cells)
@@ -169,6 +289,8 @@ def build():
                     cell = cells[i]
                     if cell.size != (cw, ch):
                         cell = cell.resize((cw, ch), Image.LANCZOS)
+                    if uniform is not None:
+                        uniform.append(cell)
                     cell = cell.copy()
                     px = cell.load()
                     if px[cw - 1, 0][3] == 0:
@@ -188,10 +310,44 @@ def build():
         advance = int(0.5 + cw * scale) + 1
         return chars, cw, ch, advance
 
+    def q_sheet(key, cells, chars):
+        """픽셀 글꼴 판 셋 (A · B · C — 같은 칸 차례, 번호 + 0 · QB · QC) → 칸 크기 · advance · 심지가 있는 칸 ("0101…")"""
+        cw, ch = cells[0].size
+        nw, nh = q_size(cw, ch)
+        colored = q_colored(cells)
+        cols = min(COLS, len(cells))
+        rows = (len(cells) + cols - 1) // cols
+        imgs = [Image.new("RGBA", (cols * nw, rows * nh), (0, 0, 0, 0)) for _ in range(3)]
+        has_b = ""
+        for i, cell in enumerate(cells):
+            A, B, C, hb = q_cell(cell, colored, nw, nh)
+            has_b += "1" if hb else "0"
+            r, c = divmod(i, cols)
+            for img, arr in zip(imgs, (A, B, C)):
+                arr = arr.copy()
+                if arr[0, nw - 1, 3] == 0:
+                    arr[0, nw - 1] = (255, 255, 255, 1)  # 너비가 줄지 않게
+                img.paste(Image.fromarray(arr, "RGBA"), (c * nw, r * nh))
+        for img, suf, off in zip(imgs, ("", "_b", "_c"), (0, QB, QC)):
+            lines = []
+            for r in range(rows):
+                line = ""
+                for c in range(cols):
+                    i = r * cols + c
+                    line += chr(chars[i] + off) if i < len(chars) else "\u0000"
+                lines.append(line)
+            buf = BytesIO()
+            img.save(buf, "PNG", optimize=True)
+            files[os.path.join(OUT_QTEX, key + suf + ".png")] = buf.getvalue()
+            qproviders.append({"type": "bitmap", "file": "rpg:font/vfxq/%s%s.png" % (key, suf), "height": H, "ascent": H // 2 - 2, "chars": lines})
+        return {"px": [nw, nh], "adv": int(0.5 + nw * H / nh) + 1, "b": has_b, "colored": colored}
+
     for key in sorted(sheets):
         cells, uvc, grid = sheets[key]
-        chars, cw, ch, adv = sheet_png(key, cells)
-        index_sheets[key] = {"first": chars[0], "n": len(chars), "cols": grid[0], "rows": grid[1], "uw": uvc[0], "vh": uvc[1], "px": [cw, ch], "adv": adv}
+        uniform = []
+        chars, cw, ch, adv = sheet_png(key, cells, uniform)
+        index_sheets[key] = {"first": chars[0], "n": len(chars), "cols": grid[0], "rows": grid[1], "uw": uvc[0], "vh": uvc[1], "px": [cw, ch], "adv": adv,
+                             "q": q_sheet(key, uniform, chars)}
     index_cards = {}
     for name in CARDS:
         frames = []
@@ -203,18 +359,22 @@ def build():
             frames.append(fr)
         index_cards[name] = frames
     assert code < SPACE_FIRST, "glyphs overflow %x" % code
+    assert code - FIRST <= QB and FIRST + QC + (code - FIRST) < SPACE_FIRST, "pixel glyphs overflow"
     # 뒤로 옮김 (서버가 여러 겹을 한 글줄에 겹쳐 그림)
     adv = {chr(SPACE_FIRST + b): -(1 << b) for b in range(11)}
     providers.append({"type": "space", "advances": adv})
+    qproviders.append({"type": "space", "advances": adv})
     font = {"providers": providers}
     idx = {
         "_doc": "tools/vfx_particles.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfxp: 파티클 ID → 판 (uv 칸 하나 = 글자 하나, 칸 번호 = 줄 × cols + 칸), "
                 "카드 (Fx3d 판) → 칸마다 겹 (글자 · mat 0 몸 / 1 빛 · 모델 자리 · 반 크기). 글자 높이 h 글꼴 단위 (1 단위 = 0.025칸), adv = 글자 너비 (뒤로 옮김 space "
-                "글자 space+b 가 −2^b)",
+                "글자 space+b 가 −2^b). 픽셀 글꼴 qfont (판마다 q — 칸 크기 · adv · 흰 심지 B 가 있는 칸): A = 같은 번호 · B = + qb · C (겹치는 심지 층) = + qc",
         "font": "rpg:vfxp", "h": H, "space": SPACE_FIRST,
+        "qfont": "rpg:vfxq", "qb": QB, "qc": QC,
         "particles": of, "sheets": index_sheets, "cards": index_cards,
     }
     files[OUT_FONT] = (json.dumps(font, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
+    files[OUT_QFONT] = (json.dumps({"providers": qproviders}, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
     files[OUT_INDEX] = (json.dumps(idx, ensure_ascii=False, indent=1, sort_keys=True) + "\n").encode("utf-8")
     return files, idx
 
@@ -232,9 +392,11 @@ def main():
                 os.makedirs(os.path.dirname(path), exist_ok=True)
                 open(path, "wb").write(data)
     # 지난 판 (이제 쓰지 않는 그림) 지우기
-    if os.path.isdir(OUT_TEX):
-        for f in os.listdir(OUT_TEX):
-            p = os.path.join(OUT_TEX, f)
+    for d in (OUT_TEX, OUT_QTEX):
+        if not os.path.isdir(d):
+            continue
+        for f in os.listdir(d):
+            p = os.path.join(d, f)
             if p not in files:
                 if check:
                     bad.append(os.path.relpath(p, ROOT))

@@ -44,7 +44,9 @@ public final class RuneSystem {
         RpgHealth.shieldBroken = RuneSystem::onShieldBreak;
         RpgHealth.shieldAbsorbed = (sp, amount) -> onShieldAbsorb(sp);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (Tasks.now() % 10 == 0) for (ServerPlayer sp : server.getPlayerList().getPlayers()) shieldTick(sp);
+            if (Tasks.now() % 10 == 0) mmorpg.fabric.vfx.PBridge.pixel(() -> { // 2026-11-12 룬의 틱 그림도 픽셀 글꼴
+                for (ServerPlayer sp : server.getPlayerList().getPlayers()) shieldTick(sp);
+            });
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> SHIELD_FX_AT.clear());
         RuneFamilies.registerAll();
