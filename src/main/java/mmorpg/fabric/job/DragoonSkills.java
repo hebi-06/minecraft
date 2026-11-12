@@ -468,7 +468,7 @@ final class DragoonSkills {
             d.hold("dive");
             Vec3 tgt = carry ? land : ground(sp.level(), e.isRemoved() ? land : e.position());
             // 내리꽂는 자리 오른쪽 너머 (무리에 묻히지 않게) · 모드 없는 클라이언트 보간 (3틱) 만큼 앞당김
-            d.moveTo(V.up(V.add(V.add(tgt, right(f), 1.4), f, 0.9), 0.2), 4, 0, RuneMob.LINEAR, false);
+            d.moveTo(V.up(V.add(V.add(tgt, right(f), 2.4), f, 0.4), 0.2), 4, 0, RuneMob.LINEAR, false);
         });
         RuneKit.later(slamAt, () -> {
             if (drg[0] != null && drg[0].alive()) drg[0].hold("crash");
@@ -536,8 +536,8 @@ final class DragoonSkills {
         return true;
     }
 
-    /** 임페일의 용 크기 (날개 끝 사이 약 4.7칸) */
-    static final double IMPALE_SCALE = 0.85;
+    /** 임페일의 용 크기 (날개 끝 사이 약 5.4칸 — 영상 2: 0.85 는 들린 적 너머에서 작아 보였음) */
+    static final double IMPALE_SCALE = 1.0;
 
     // ------------------------------------------------------------ 드래곤 브레스
 
