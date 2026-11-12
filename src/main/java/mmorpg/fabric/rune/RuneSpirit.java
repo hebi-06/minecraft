@@ -366,7 +366,7 @@ final class RuneSpirit {
             "salamander", new BodyDef(TyrfingWarrior.SALAMANDER_ID, 1.6, 1.4, 0, true, TyrfingWarrior.SALAMANDER_SPIT_AT, 0.45, 0.95, 0.42),
             "undine", new BodyDef(RuneMob.UNDINE, 1.7, -1.5, 0.3, false, 4, 1.1, 0.65, 1.25),
             "sylph", new BodyDef(RuneMob.SYLPH, 2.0, 0.7, 1.6, false, 1, 0.75, 0.3, 0.75),
-            "gnome", new BodyDef(RuneMob.GNOME, 2.1, -2.4, 0, true, 5, 0.5, 1.15, 0.1));
+            "gnome", new BodyDef(RuneMob.GNOME, 2.4, -2.9, 0, true, 5, 0.5, 1.15, 0.1));
 
     /** 곁의 자리 (땅 높이 + up) */
     private static Vec3 bodySpot(ServerPlayer sp, BodyDef d) {

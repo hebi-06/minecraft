@@ -143,8 +143,9 @@ final class RuneHunter {
 
     // ------------------------------------------------------------ 희귀: 매의 습격
 
-    /** 매 (3D 몹 rpg:rune_hawk): 덮치기 동작 (dive) 을 틀고 발톱이 닿기까지 (0.25초) */
+    /** 매 (3D 몹 rpg:rune_hawk): 덮치기 동작 (dive) 을 틀고 발톱이 닿기까지 (0.25초) · 크기 (날개 2칸 × 1.35 — 영상에서 작아 키움) */
     static final int HAWK_STRIKE_AT = 5;
+    static final double HAWK_SCALE = 1.35;
 
     /**
      * 매의 습격: 앞 range 칸 · cone 도의 가장 가까운 적에게 영혼의 매를 날림 — gap 틱마다 hits 번 하늘에서 급강하해 대상 둘레 radius 칸의 적을
@@ -165,7 +166,7 @@ final class RuneHunter {
         Vec3 f0 = Kit.facingOf(sp);
         // 손에서 날아오름
         Vec3 hand = V.add(V.up(sp.position(), 1.4), f0, 0.8);
-        RuneMob hawk = RuneMob.spawn(RuneMob.HAWK, level0, hand, f0, 4 + hits * gap + 40, 1.0, true);
+        RuneMob hawk = RuneMob.spawn(RuneMob.HAWK, level0, hand, f0, 4 + hits * gap + 40, HAWK_SCALE, true);
         if (hawk == null) {
             Vec3 h2 = V.add(V.up(sp.position(), 1.6), f0, 0.8);
             Vec3 up0 = V.up(V.add(h2, f0, 1.5), 2.5);
@@ -196,7 +197,7 @@ final class RuneHunter {
                 if (hawk != null && hawk.alive()) {
                     LivingEntity e = cur[0];
                     Vec3 from = V.up(hawk.pos(), 0.5);
-                    hawk.moveTo(() -> e != null && !e.isRemoved() ? V.up(Kit.bodyPoint(e), -0.4) : V.up(tgt, -0.4), 4, ii == 0 ? 1.2 : 0, ii == 0 ? RuneMob.SMOOTH
+                    hawk.moveTo(() -> e != null && !e.isRemoved() ? V.up(Kit.bodyPoint(e), -0.55) : V.up(tgt, -0.55), 4, ii == 0 ? 1.2 : 0, ii == 0 ? RuneMob.SMOOTH
                             : RuneMob.IN, true);
                     RuneKit.streak(level0, from, tgt, WILD, 0.2, 0.25, 0.8, 0.0);
                     SkillFx.play(level0, "mob.phantom.flap", from, 1.3, 0.7);
@@ -503,13 +504,16 @@ final class RuneHunter {
 
     // ------------------------------------------------------------ 초월: 야수왕 강림
 
-    /** 야수왕 (3D 몹 rpg:rune_beast_king): 크기 (모델 키 약 2.6칸 × 1.5) · 하늘에서 내려앉는 틱 · 할퀴기 동작에서 발톱이 닿는 틱 (0.1초) · 짓밟기에서 앞발이 땅에 닿는 틱 (0.45초) */
-    static final double BEAST_SCALE = 1.5;
+    /**
+     * 야수왕 (3D 몹 rpg:rune_beast_king): 크기 (모델 어깨 1.5칸 · 뿔 끝 2.8칸 × 2.1 — 1.5 는 영상에서 드라우그만 해 2.1) · 하늘에서 내려앉는 틱 ·
+     * 할퀴기 동작에서 발톱이 닿는 틱 (0.1초) · 짓밟기에서 앞발이 땅에 닿는 틱 (0.45초)
+     */
+    static final double BEAST_SCALE = 2.1;
     static final int BEAST_LAND = 10;
     static final int BEAST_STRIKE_AT = 2;
     static final int BEAST_STOMP_AT = 9;
-    /** 야수왕이 서는 자리: 조준한 곳 너머 (쓴 사람에게서 멀어지는 쪽) 이만큼 — 쓴 사람 쪽을 보고 할큄 */
-    static final double BEAST_BACK = 2.6;
+    /** 야수왕이 서는 자리: 조준한 곳 너머 (쓴 사람에게서 멀어지는 쪽) 이만큼 — 쓴 사람 쪽을 보고 할큄 (머리 · 앞발이 조준한 곳 위에 오게) */
+    static final double BEAST_BACK = 3.9;
 
     /**
      * 야수왕 강림: 조준한 곳 (range 칸) 에 짙은 숲빛 하늘 (3돌부터) · 연둣빛 영역 문양 · 빛기둥 → 하늘에서 거대한 영혼의 늑대왕이 내려옴 (delay 틱) →
@@ -560,8 +564,8 @@ final class RuneHunter {
             RuneKit.later(land, () -> {
                 if (!king.alive()) return;
                 king.hold("rear");
-                SkillFx.fx(level, "rpg:shock_ring", V.up(base, 0.08), Opt.of("dir", V.ZERO, "size", 3.2, "life", 0.5, "color", WILD, "alpha", 0.95));
-                SkillFx.fx(level, "rpg:dust", V.up(base, 0.6), Opt.of("size", 3.0, "life", 0.7, "color", new double[] {0.55, 0.5, 0.4}, "alpha", 0.7));
+                SkillFx.fx(level, "rpg:shock_ring", V.up(base, 0.08), Opt.of("dir", V.ZERO, "size", 4.2, "life", 0.5, "color", WILD, "alpha", 0.95));
+                SkillFx.fx(level, "rpg:dust", V.up(base, 0.6), Opt.of("size", 4.0, "life", 0.7, "color", new double[] {0.55, 0.5, 0.4}, "alpha", 0.7));
                 RuneKit.rockBurst(level, V.up(base, 0.3), 8, 5, 0.25);
                 SkillFx.particle(level, ParticleTypes.POOF, V.up(base, 0.4), 24, 1.6, 0.08);
                 SkillFx.play(level, "mace.heavy_smash_ground", base, 0.6, 1.0);
