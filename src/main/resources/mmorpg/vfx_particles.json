@@ -1,0 +1,2476 @@
+{
+ "_doc": "tools/vfx_particles.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfxp: 파티클 ID → 판 (uv 칸 하나 = 글자 하나, 칸 번호 = 줄 × cols + 칸), 카드 (Fx3d 판) → 칸마다 겹 (글자 · mat 0 몸 / 1 빛 · 모델 자리 · 반 크기). 글자 높이 h 글꼴 단위 (1 단위 = 0.025칸), adv = 글자 너비 (뒤로 옮김 space 글자 space+b 가 −2^b)",
+ "cards": {
+  "slash_arc": [
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57942,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57943,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57944,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57945,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57946,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57947,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57948,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57949,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57950,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57951,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 1
+    }
+   ]
+  ],
+  "slash_arc_soft": [
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57952,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57953,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57954,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57955,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 96,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57956,
+     "half": [
+      1.0616,
+      0.7133
+     ],
+     "mat": 0
+    }
+   ]
+  ],
+  "slash_heavy": [
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57957,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57958,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57959,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57960,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57961,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57962,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57963,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57964,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57965,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57966,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 1
+    }
+   ]
+  ],
+  "slash_heavy_soft": [
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57967,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57968,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57969,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57970,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 79,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57971,
+     "half": [
+      1.2198,
+      1.0046
+     ],
+     "mat": 0
+    }
+   ]
+  ],
+  "slash_thin": [
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57972,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57973,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57974,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57975,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57976,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57977,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57978,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57979,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 1
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57980,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57981,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 1
+    }
+   ]
+  ],
+  "slash_thin_soft": [
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57982,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57983,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57984,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57985,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    }
+   ],
+   [
+    {
+     "adv": 65,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57986,
+     "half": [
+      0.7946,
+      0.7946
+     ],
+     "mat": 0
+    }
+   ]
+  ],
+  "slash_wave": [
+   [
+    {
+     "adv": 129,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57940,
+     "half": [
+      1.0,
+      0.5
+     ],
+     "mat": 0
+    },
+    {
+     "adv": 129,
+     "at": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "c": 57941,
+     "half": [
+      1.0,
+      0.5
+     ],
+     "mat": 1
+    }
+   ]
+  ]
+ },
+ "font": "rpg:vfxp",
+ "h": 64,
+ "particles": {
+  "rpg:aegis_hex": "fx_aegis_hex_64x64",
+  "rpg:aegis_shield": "fx_aegis_shield_256x256",
+  "rpg:aegis_stone": "fx_aegis_stone_32x32",
+  "rpg:arrow_shot": "fx_arrow_streak_64x16",
+  "rpg:arrow_spark": "fx_arrow_spark_16x16",
+  "rpg:arrow_trail": "fx_arrow_trail_32x16",
+  "rpg:artemis_arrow": "fx_artemis_arrow_384x96",
+  "rpg:artemis_bow": "fx_artemis_bow_320x320",
+  "rpg:artemis_crescent": "fx_artemis_crescent_128x128",
+  "rpg:artemis_moon": "fx_artemis_moon_256x256",
+  "rpg:bash_burst": "slash_bash_burst_128x128",
+  "rpg:bash_ring": "slash_shock_ring_128x128",
+  "rpg:boulder": "boss_boulder_32x32",
+  "rpg:breath": "boss_dust_32x32",
+  "rpg:crow": "boss_crow_16x16",
+  "rpg:drop": "boss_dust_32x32",
+  "rpg:dust": "boss_dust_32x32",
+  "rpg:ember": "boss_ember_16x16",
+  "rpg:fire_wall": "boss_flame_32x64",
+  "rpg:fire_wave": "boss_flame_32x64",
+  "rpg:fire_wing": "fx_fire_wing_192x128",
+  "rpg:glob": "boss_glob_32x32",
+  "rpg:ground_crack": "boss_ground_crack_128x128",
+  "rpg:gungnir_spear": "fx_gungnir_spear_512x96",
+  "rpg:gungnir_spear_part": "fx_gungnir_spear_128x96",
+  "rpg:gungnir_spin": "fx_gungnir_spear_512x96",
+  "rpg:ice_lance": "boss_ice_lance_64x16",
+  "rpg:ice_spike": "boss_ice_spike_32x64",
+  "rpg:icicle": "boss_icicle_16x48",
+  "rpg:light_cut": "fx_light_cut_128x32",
+  "rpg:magic_circle": "magic_magic_circle_128x128",
+  "rpg:magic_circle_flash": "magic_magic_circle_128x128",
+  "rpg:meteor": "boss_meteor_64x32",
+  "rpg:odin_eye": "fx_odin_eye_256x256",
+  "rpg:odin_mark": "fx_odin_mark_96x96",
+  "rpg:odin_raven": "fx_odin_raven_192x192",
+  "rpg:rfx_arrow": "fx_rfx_arrow_256x64",
+  "rpg:rfx_aura": "fx_rfx_aura_128x256",
+  "rpg:rfx_aurora": "fx_rfx_aurora_512x256",
+  "rpg:rfx_beast": "fx_rfx_beast_256x256",
+  "rpg:rfx_bloom": "fx_rfx_bloom_256x256",
+  "rpg:rfx_bloomflat": "fx_rfx_bloomflat_256x256",
+  "rpg:rfx_bolt": "fx_rfx_bolt_96x384",
+  "rpg:rfx_bomb": "fx_rfx_bomb_128x128",
+  "rpg:rfx_boom": "fx_rfx_boom_128x128",
+  "rpg:rfx_bow": "fx_rfx_bow_192x192",
+  "rpg:rfx_chain": "fx_rfx_chain_256x48",
+  "rpg:rfx_clock": "fx_rfx_clock_256x256",
+  "rpg:rfx_cloud": "fx_rfx_cloud_256x128",
+  "rpg:rfx_crack": "fx_rfx_crack_256x256",
+  "rpg:rfx_crystal": "fx_rfx_crystal_128x128",
+  "rpg:rfx_duel": "fx_rfx_duel_128x128",
+  "rpg:rfx_eclipse": "fx_rfx_eclipse_256x256",
+  "rpg:rfx_emblem": "fx_rfx_emblem_256x256",
+  "rpg:rfx_fireball": "fx_rfx_fireball_128x128",
+  "rpg:rfx_fissure": "fx_rfx_fissure_512x128",
+  "rpg:rfx_fist": "fx_rfx_fist_256x256",
+  "rpg:rfx_flare": "fx_rfx_flare_256x256",
+  "rpg:rfx_fountain": "fx_rfx_fountain_128x256",
+  "rpg:rfx_frost": "fx_rfx_frost_256x256",
+  "rpg:rfx_hex": "fx_rfx_hex_128x128",
+  "rpg:rfx_hole": "fx_rfx_hole_256x256",
+  "rpg:rfx_icicle": "fx_rfx_icicle_128x32",
+  "rpg:rfx_jbreak": "fx_rfx_jbreak_128x128",
+  "rpg:rfx_king": "fx_rfx_king_256x256",
+  "rpg:rfx_leaf": "fx_rfx_leaf_64x64",
+  "rpg:rfx_meteor": "fx_rfx_meteor_256x128",
+  "rpg:rfx_moon": "fx_rfx_moon_256x256",
+  "rpg:rfx_net": "fx_rfx_net_256x256",
+  "rpg:rfx_nova": "fx_rfx_nova_256x256",
+  "rpg:rfx_orb": "fx_rfx_orb_128x128",
+  "rpg:rfx_plasma": "fx_rfx_plasma_128x128",
+  "rpg:rfx_prop": "fx_rfx_prop_128x128",
+  "rpg:rfx_punch": "fx_rfx_punch_512x256",
+  "rpg:rfx_rays": "fx_rfx_rays_48x384",
+  "rpg:rfx_relic": "fx_rfx_relic_512x128",
+  "rpg:rfx_relicspin": "fx_rfx_relicspin_256x256",
+  "rpg:rfx_rift": "fx_rfx_rift_256x80",
+  "rpg:rfx_rock": "fx_rfx_rock_128x128",
+  "rpg:rfx_serpent": "fx_rfx_serpent_256x128",
+  "rpg:rfx_shade": "fx_rfx_shade_128x256",
+  "rpg:rfx_shield": "fx_rfx_shield_128x128",
+  "rpg:rfx_sigil": "fx_rfx_sigil_256x256",
+  "rpg:rfx_skyeye": "fx_rfx_skyeye_256x256",
+  "rpg:rfx_spear": "fx_rfx_spear_384x80",
+  "rpg:rfx_spirit": "fx_rfx_spirit_128x128",
+  "rpg:rfx_spiritking": "fx_rfx_spiritking_512x512",
+  "rpg:rfx_splash": "fx_rfx_splash_256x256",
+  "rpg:rfx_sun": "fx_rfx_sun_256x256",
+  "rpg:rfx_sword": "fx_rfx_sword_512x128",
+  "rpg:rfx_thorn": "fx_rfx_thorn_128x128",
+  "rpg:rfx_vortex": "fx_rfx_vortex_128x256",
+  "rpg:rfx_wave": "fx_rfx_wave_256x128",
+  "rpg:rfx_wings": "fx_rfx_wings_256x160",
+  "rpg:rfx_yggdrasil": "fx_rfx_yggdrasil_512x512",
+  "rpg:shock_ring": "slash_shock_ring_128x128",
+  "rpg:skill_rune": "magic_magic_circle_128x128",
+  "rpg:slash_arc_l_aura": "slash_slash_arc_l_aura_128x86",
+  "rpg:slash_arc_l_core": "slash_slash_arc_l_core_256x172",
+  "rpg:slash_arc_l_glow": "slash_slash_arc_l_glow_128x86",
+  "rpg:slash_arc_r_aura": "slash_slash_arc_r_aura_128x86",
+  "rpg:slash_arc_r_core": "slash_slash_arc_r_core_256x172",
+  "rpg:slash_arc_r_glow": "slash_slash_arc_r_glow_128x86",
+  "rpg:slash_heavy_l_aura": "slash_slash_heavy_l_aura_112x136",
+  "rpg:slash_heavy_l_core": "slash_slash_heavy_l_core_224x272",
+  "rpg:slash_heavy_l_glow": "slash_slash_heavy_l_glow_112x136",
+  "rpg:slash_heavy_r_aura": "slash_slash_heavy_r_aura_112x136",
+  "rpg:slash_heavy_r_core": "slash_slash_heavy_r_core_224x272",
+  "rpg:slash_heavy_r_glow": "slash_slash_heavy_r_glow_112x136",
+  "rpg:slash_thin_l_aura": "slash_slash_thin_l_aura_128x128",
+  "rpg:slash_thin_l_core": "slash_slash_thin_l_core_256x256",
+  "rpg:slash_thin_l_glow": "slash_slash_thin_l_glow_128x128",
+  "rpg:slash_thin_r_aura": "slash_slash_thin_r_aura_128x128",
+  "rpg:slash_thin_r_core": "slash_slash_thin_r_core_256x256",
+  "rpg:slash_thin_r_glow": "slash_slash_thin_r_glow_128x128",
+  "rpg:slash_x": "slash_slash_x_128x128",
+  "rpg:snowfall": "boss_snowflake_16x16",
+  "rpg:solas_sword": "fx_solas_sword_384x128",
+  "rpg:solas_sword_arc": "fx_solas_sword_384x128",
+  "rpg:splash": "boss_splash_32x32",
+  "rpg:svalinn_hex": "fx_svalinn_hex_64x64",
+  "rpg:svalinn_ice": "fx_svalinn_ice_32x32",
+  "rpg:svalinn_shield": "fx_svalinn_shield_256x256",
+  "rpg:tele_disc": "boss_tele_disc_64x64",
+  "rpg:tele_fill": "boss_tele_fill_64x64",
+  "rpg:tele_square": "boss_tele_square_64x64",
+  "rpg:tele_wave": "boss_tele_wave_128x128",
+  "rpg:tide_wave": "boss_tide_wave_64x32",
+  "rpg:tyr_ghostfire": "fx_tyr_ghostfire_128x256",
+  "rpg:tyr_warrior": "fx_tyr_warrior_256x256",
+  "rpg:whirlpool": "boss_whirlpool_128x128"
+ },
+ "sheets": {
+  "boss_boulder_32x32": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57344,
+   "n": 1,
+   "px": [
+    32,
+    32
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 32
+  },
+  "boss_crow_16x16": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57345,
+   "n": 2,
+   "px": [
+    16,
+    16
+   ],
+   "rows": 1,
+   "uw": 16,
+   "vh": 16
+  },
+  "boss_dust_32x32": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57347,
+   "n": 4,
+   "px": [
+    32,
+    32
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 32
+  },
+  "boss_ember_16x16": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57351,
+   "n": 1,
+   "px": [
+    16,
+    16
+   ],
+   "rows": 1,
+   "uw": 16,
+   "vh": 16
+  },
+  "boss_flame_32x64": {
+   "adv": 33,
+   "cols": 8,
+   "first": 57352,
+   "n": 8,
+   "px": [
+    32,
+    64
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 64
+  },
+  "boss_glob_32x32": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57360,
+   "n": 1,
+   "px": [
+    32,
+    32
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 32
+  },
+  "boss_ground_crack_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57361,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "boss_ice_lance_64x16": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57362,
+   "n": 1,
+   "px": [
+    64,
+    16
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 16
+  },
+  "boss_ice_spike_32x64": {
+   "adv": 33,
+   "cols": 1,
+   "first": 57363,
+   "n": 1,
+   "px": [
+    32,
+    64
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 64
+  },
+  "boss_icicle_16x48": {
+   "adv": 22,
+   "cols": 1,
+   "first": 57364,
+   "n": 1,
+   "px": [
+    16,
+    48
+   ],
+   "rows": 1,
+   "uw": 16,
+   "vh": 48
+  },
+  "boss_meteor_64x32": {
+   "adv": 129,
+   "cols": 1,
+   "first": 57365,
+   "n": 1,
+   "px": [
+    64,
+    32
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 32
+  },
+  "boss_snowflake_16x16": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57366,
+   "n": 1,
+   "px": [
+    16,
+    16
+   ],
+   "rows": 1,
+   "uw": 16,
+   "vh": 16
+  },
+  "boss_splash_32x32": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57367,
+   "n": 4,
+   "px": [
+    32,
+    32
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 32
+  },
+  "boss_tele_disc_64x64": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57371,
+   "n": 1,
+   "px": [
+    64,
+    64
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 64
+  },
+  "boss_tele_fill_64x64": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57372,
+   "n": 1,
+   "px": [
+    64,
+    64
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 64
+  },
+  "boss_tele_square_64x64": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57373,
+   "n": 1,
+   "px": [
+    64,
+    64
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 64
+  },
+  "boss_tele_wave_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57374,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "boss_tide_wave_64x32": {
+   "adv": 129,
+   "cols": 1,
+   "first": 57375,
+   "n": 1,
+   "px": [
+    64,
+    32
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 32
+  },
+  "boss_whirlpool_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57376,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_aegis_hex_64x64": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57377,
+   "n": 2,
+   "px": [
+    64,
+    64
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 64
+  },
+  "fx_aegis_shield_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57379,
+   "n": 12,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 3,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_aegis_stone_32x32": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57391,
+   "n": 4,
+   "px": [
+    32,
+    32
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 32
+  },
+  "fx_arrow_spark_16x16": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57395,
+   "n": 1,
+   "px": [
+    16,
+    16
+   ],
+   "rows": 1,
+   "uw": 16,
+   "vh": 16
+  },
+  "fx_arrow_streak_64x16": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57396,
+   "n": 1,
+   "px": [
+    64,
+    16
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 16
+  },
+  "fx_arrow_trail_32x16": {
+   "adv": 129,
+   "cols": 1,
+   "first": 57397,
+   "n": 1,
+   "px": [
+    32,
+    16
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 16
+  },
+  "fx_artemis_arrow_384x96": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57398,
+   "n": 8,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 8,
+   "uw": 384,
+   "vh": 96
+  },
+  "fx_artemis_bow_320x320": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57406,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 320,
+   "vh": 320
+  },
+  "fx_artemis_crescent_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57414,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_artemis_moon_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57415,
+   "n": 12,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 3,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_fire_wing_192x128": {
+   "adv": 97,
+   "cols": 1,
+   "first": 57427,
+   "n": 8,
+   "px": [
+    128,
+    85
+   ],
+   "rows": 8,
+   "uw": 192,
+   "vh": 128
+  },
+  "fx_gungnir_spear_128x96": {
+   "adv": 86,
+   "cols": 4,
+   "first": 57435,
+   "n": 32,
+   "px": [
+    128,
+    96
+   ],
+   "rows": 8,
+   "uw": 128,
+   "vh": 96
+  },
+  "fx_gungnir_spear_512x96": {
+   "adv": 342,
+   "cols": 1,
+   "first": 57467,
+   "n": 8,
+   "px": [
+    128,
+    24
+   ],
+   "rows": 8,
+   "uw": 512,
+   "vh": 96
+  },
+  "fx_light_cut_128x32": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57475,
+   "n": 1,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 32
+  },
+  "fx_odin_eye_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57476,
+   "n": 12,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 3,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_odin_mark_96x96": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57488,
+   "n": 1,
+   "px": [
+    96,
+    96
+   ],
+   "rows": 1,
+   "uw": 96,
+   "vh": 96
+  },
+  "fx_odin_raven_192x192": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57489,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 192,
+   "vh": 192
+  },
+  "fx_rfx_arrow_256x64": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57497,
+   "n": 2,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 64
+  },
+  "fx_rfx_aura_128x256": {
+   "adv": 33,
+   "cols": 4,
+   "first": 57499,
+   "n": 8,
+   "px": [
+    64,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 256
+  },
+  "fx_rfx_aurora_512x256": {
+   "adv": 129,
+   "cols": 2,
+   "first": 57507,
+   "n": 4,
+   "px": [
+    128,
+    64
+   ],
+   "rows": 2,
+   "uw": 512,
+   "vh": 256
+  },
+  "fx_rfx_beast_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57511,
+   "n": 6,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 3,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_bloom_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57517,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_bloomflat_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57521,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_bolt_96x384": {
+   "adv": 17,
+   "cols": 4,
+   "first": 57525,
+   "n": 8,
+   "px": [
+    32,
+    128
+   ],
+   "rows": 2,
+   "uw": 96,
+   "vh": 384
+  },
+  "fx_rfx_bomb_128x128": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57533,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_boom_128x128": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57535,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_bow_192x192": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57543,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 192,
+   "vh": 192
+  },
+  "fx_rfx_chain_256x48": {
+   "adv": 342,
+   "cols": 1,
+   "first": 57551,
+   "n": 2,
+   "px": [
+    128,
+    24
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 48
+  },
+  "fx_rfx_clock_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57553,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_cloud_256x128": {
+   "adv": 129,
+   "cols": 2,
+   "first": 57561,
+   "n": 4,
+   "px": [
+    128,
+    64
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 128
+  },
+  "fx_rfx_crack_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57565,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_crystal_128x128": {
+   "adv": 65,
+   "cols": 3,
+   "first": 57569,
+   "n": 6,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_duel_128x128": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57575,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_eclipse_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57577,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_emblem_256x256": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57581,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_fireball_128x128": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57582,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_fissure_512x128": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57586,
+   "n": 3,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 3,
+   "uw": 512,
+   "vh": 128
+  },
+  "fx_rfx_fist_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57589,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_flare_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57593,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_fountain_128x256": {
+   "adv": 33,
+   "cols": 4,
+   "first": 57595,
+   "n": 8,
+   "px": [
+    64,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 256
+  },
+  "fx_rfx_frost_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57603,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_hex_128x128": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57605,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_hole_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57607,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_icicle_128x32": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57609,
+   "n": 2,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 32
+  },
+  "fx_rfx_jbreak_128x128": {
+   "adv": 65,
+   "cols": 6,
+   "first": 57611,
+   "n": 12,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_king_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57623,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_leaf_64x64": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57625,
+   "n": 4,
+   "px": [
+    64,
+    64
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 64
+  },
+  "fx_rfx_meteor_256x128": {
+   "adv": 129,
+   "cols": 2,
+   "first": 57629,
+   "n": 4,
+   "px": [
+    128,
+    64
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 128
+  },
+  "fx_rfx_moon_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57633,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_net_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57635,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_nova_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57637,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_orb_128x128": {
+   "adv": 65,
+   "cols": 8,
+   "first": 57639,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_plasma_128x128": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57647,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_prop_128x128": {
+   "adv": 65,
+   "cols": 5,
+   "first": 57655,
+   "n": 10,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_punch_512x256": {
+   "adv": 129,
+   "cols": 1,
+   "first": 57665,
+   "n": 2,
+   "px": [
+    128,
+    64
+   ],
+   "rows": 2,
+   "uw": 512,
+   "vh": 256
+  },
+  "fx_rfx_rays_48x384": {
+   "adv": 9,
+   "cols": 2,
+   "first": 57667,
+   "n": 2,
+   "px": [
+    16,
+    128
+   ],
+   "rows": 1,
+   "uw": 48,
+   "vh": 384
+  },
+  "fx_rfx_relic_512x128": {
+   "adv": 257,
+   "cols": 2,
+   "first": 57669,
+   "n": 8,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 4,
+   "uw": 512,
+   "vh": 128
+  },
+  "fx_rfx_relicspin_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57677,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_rift_256x80": {
+   "adv": 206,
+   "cols": 1,
+   "first": 57685,
+   "n": 2,
+   "px": [
+    128,
+    40
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 80
+  },
+  "fx_rfx_rock_128x128": {
+   "adv": 65,
+   "cols": 3,
+   "first": 57687,
+   "n": 6,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_serpent_256x128": {
+   "adv": 129,
+   "cols": 4,
+   "first": 57693,
+   "n": 8,
+   "px": [
+    128,
+    64
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 128
+  },
+  "fx_rfx_shade_128x256": {
+   "adv": 33,
+   "cols": 8,
+   "first": 57701,
+   "n": 16,
+   "px": [
+    64,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 256
+  },
+  "fx_rfx_shield_128x128": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57717,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_sigil_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57719,
+   "n": 8,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_skyeye_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57727,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_spear_384x80": {
+   "adv": 304,
+   "cols": 2,
+   "first": 57731,
+   "n": 8,
+   "px": [
+    128,
+    27
+   ],
+   "rows": 4,
+   "uw": 384,
+   "vh": 80
+  },
+  "fx_rfx_spirit_128x128": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57739,
+   "n": 16,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 4,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_spiritking_512x512": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57755,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 512,
+   "vh": 512
+  },
+  "fx_rfx_splash_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57759,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_sun_256x256": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57763,
+   "n": 2,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_rfx_sword_512x128": {
+   "adv": 257,
+   "cols": 1,
+   "first": 57765,
+   "n": 2,
+   "px": [
+    128,
+    32
+   ],
+   "rows": 2,
+   "uw": 512,
+   "vh": 128
+  },
+  "fx_rfx_thorn_128x128": {
+   "adv": 65,
+   "cols": 3,
+   "first": 57767,
+   "n": 6,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 128
+  },
+  "fx_rfx_vortex_128x256": {
+   "adv": 33,
+   "cols": 4,
+   "first": 57773,
+   "n": 8,
+   "px": [
+    64,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 256
+  },
+  "fx_rfx_wave_256x128": {
+   "adv": 129,
+   "cols": 1,
+   "first": 57781,
+   "n": 2,
+   "px": [
+    128,
+    64
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 128
+  },
+  "fx_rfx_wings_256x160": {
+   "adv": 103,
+   "cols": 2,
+   "first": 57783,
+   "n": 4,
+   "px": [
+    128,
+    80
+   ],
+   "rows": 2,
+   "uw": 256,
+   "vh": 160
+  },
+  "fx_rfx_yggdrasil_512x512": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57787,
+   "n": 4,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 2,
+   "uw": 512,
+   "vh": 512
+  },
+  "fx_solas_sword_384x128": {
+   "adv": 192,
+   "cols": 1,
+   "first": 57791,
+   "n": 8,
+   "px": [
+    128,
+    43
+   ],
+   "rows": 8,
+   "uw": 384,
+   "vh": 128
+  },
+  "fx_svalinn_hex_64x64": {
+   "adv": 65,
+   "cols": 2,
+   "first": 57799,
+   "n": 2,
+   "px": [
+    64,
+    64
+   ],
+   "rows": 1,
+   "uw": 64,
+   "vh": 64
+  },
+  "fx_svalinn_ice_32x32": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57801,
+   "n": 4,
+   "px": [
+    32,
+    32
+   ],
+   "rows": 1,
+   "uw": 32,
+   "vh": 32
+  },
+  "fx_svalinn_shield_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57805,
+   "n": 12,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 3,
+   "uw": 256,
+   "vh": 256
+  },
+  "fx_tyr_ghostfire_128x256": {
+   "adv": 33,
+   "cols": 4,
+   "first": 57817,
+   "n": 8,
+   "px": [
+    64,
+    128
+   ],
+   "rows": 2,
+   "uw": 128,
+   "vh": 256
+  },
+  "fx_tyr_warrior_256x256": {
+   "adv": 65,
+   "cols": 4,
+   "first": 57825,
+   "n": 12,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 3,
+   "uw": 256,
+   "vh": 256
+  },
+  "magic_magic_circle_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57837,
+   "n": 10,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 10,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_bash_burst_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57847,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_shock_ring_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57848,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_slash_arc_l_aura_128x86": {
+   "adv": 96,
+   "cols": 1,
+   "first": 57849,
+   "n": 5,
+   "px": [
+    128,
+    86
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 86
+  },
+  "slash_slash_arc_l_core_256x172": {
+   "adv": 96,
+   "cols": 1,
+   "first": 57854,
+   "n": 5,
+   "px": [
+    128,
+    86
+   ],
+   "rows": 5,
+   "uw": 256,
+   "vh": 172
+  },
+  "slash_slash_arc_l_glow_128x86": {
+   "adv": 96,
+   "cols": 1,
+   "first": 57859,
+   "n": 5,
+   "px": [
+    128,
+    86
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 86
+  },
+  "slash_slash_arc_r_aura_128x86": {
+   "adv": 96,
+   "cols": 1,
+   "first": 57864,
+   "n": 5,
+   "px": [
+    128,
+    86
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 86
+  },
+  "slash_slash_arc_r_core_256x172": {
+   "adv": 96,
+   "cols": 1,
+   "first": 57869,
+   "n": 5,
+   "px": [
+    128,
+    86
+   ],
+   "rows": 5,
+   "uw": 256,
+   "vh": 172
+  },
+  "slash_slash_arc_r_glow_128x86": {
+   "adv": 96,
+   "cols": 1,
+   "first": 57874,
+   "n": 5,
+   "px": [
+    128,
+    86
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 86
+  },
+  "slash_slash_heavy_l_aura_112x136": {
+   "adv": 54,
+   "cols": 1,
+   "first": 57879,
+   "n": 5,
+   "px": [
+    105,
+    128
+   ],
+   "rows": 5,
+   "uw": 112,
+   "vh": 136
+  },
+  "slash_slash_heavy_l_core_224x272": {
+   "adv": 54,
+   "cols": 1,
+   "first": 57884,
+   "n": 5,
+   "px": [
+    105,
+    128
+   ],
+   "rows": 5,
+   "uw": 224,
+   "vh": 272
+  },
+  "slash_slash_heavy_l_glow_112x136": {
+   "adv": 54,
+   "cols": 1,
+   "first": 57889,
+   "n": 5,
+   "px": [
+    105,
+    128
+   ],
+   "rows": 5,
+   "uw": 112,
+   "vh": 136
+  },
+  "slash_slash_heavy_r_aura_112x136": {
+   "adv": 54,
+   "cols": 1,
+   "first": 57894,
+   "n": 5,
+   "px": [
+    105,
+    128
+   ],
+   "rows": 5,
+   "uw": 112,
+   "vh": 136
+  },
+  "slash_slash_heavy_r_core_224x272": {
+   "adv": 54,
+   "cols": 1,
+   "first": 57899,
+   "n": 5,
+   "px": [
+    105,
+    128
+   ],
+   "rows": 5,
+   "uw": 224,
+   "vh": 272
+  },
+  "slash_slash_heavy_r_glow_112x136": {
+   "adv": 54,
+   "cols": 1,
+   "first": 57904,
+   "n": 5,
+   "px": [
+    105,
+    128
+   ],
+   "rows": 5,
+   "uw": 112,
+   "vh": 136
+  },
+  "slash_slash_thin_l_aura_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57909,
+   "n": 5,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_slash_thin_l_core_256x256": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57914,
+   "n": 5,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 5,
+   "uw": 256,
+   "vh": 256
+  },
+  "slash_slash_thin_l_glow_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57919,
+   "n": 5,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_slash_thin_r_aura_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57924,
+   "n": 5,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_slash_thin_r_core_256x256": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57929,
+   "n": 5,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 5,
+   "uw": 256,
+   "vh": 256
+  },
+  "slash_slash_thin_r_glow_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57934,
+   "n": 5,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 5,
+   "uw": 128,
+   "vh": 128
+  },
+  "slash_slash_x_128x128": {
+   "adv": 65,
+   "cols": 1,
+   "first": 57939,
+   "n": 1,
+   "px": [
+    128,
+    128
+   ],
+   "rows": 1,
+   "uw": 128,
+   "vh": 128
+  }
+ },
+ "space": 63488
+}

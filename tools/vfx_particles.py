@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+"""2026-11-12 모드 없는 클라이언트의 파티클 다리 (vfx/PBridge — 사용자 "룬 스킬 다 만들어보자", 서버에 접속해 리소스만 받으면 됨):
+모드 클라이언트가 그리는 애드온 파티클 (rpg:* — assets/mmorpg/addon_particles.json) 과 2D 효과 판 (Fx3d 의 slash_* 카드) 을 모드 없는 클라이언트에서는
+서버가 글자 표시 엔티티로 띄움. 이 도구는 그 그림을 글꼴 rpg:vfxp 의 글자로 옮김.
+
+  python3 tools/vfx_particles.py          # 씀
+  python3 tools/vfx_particles.py --check  # 쓸 것이 없는지
+
+만드는 것
+- src/main/resources/assets/rpg/textures/font/vfxp/<판>.png   파티클 그림의 칸 (uv 칸 하나 = 글자 하나 — 긴 변 CAP 픽셀까지 줄임, 알파를 곱해 줄여 가장자리가 검지 않게)
+- src/main/resources/assets/rpg/font/vfxp.json                 글꼴 (판마다 bitmap — 높이 H · ascent H/2 − 2: 글자 가운데가 엔티티 자리, 뒤로 옮김 space)
+- src/main/resources/mmorpg/vfx_particles.json                 서버 목록: 파티클 ID → 판, 판 → 첫 글자 · 칸 수 · uv 칸 크기 · 글자 너비 (advance), 카드 → 칸마다 겹
+
+글자는 그림 그대로 (흰 그림 · 칠한 그림) — 서버가 파티클의 색 (식) 을 글자 색으로 곱함 (파티클과 같음).
+칸마다 오른쪽 위 구석에 알파 1 점: 마인크래프트가 비트맵 글자의 너비를 빈 열만큼 줄이지 않게 (너비 = 칸 전체 → 가운데가 맞음 · 서버가 너비를 앎).
+직업 스킬 그림 (rfx_j*) 은 직업 단계에서 (JOB_PARTICLES) — 룬이 쓰는 것만 RUNE_J 에.
+"""
+import json
+import os
+import sys
+from io import BytesIO
+
+import numpy as np
+from PIL import Image
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RES = os.path.join(ROOT, "src/main/resources")
+DEFS = os.path.join(RES, "assets/mmorpg/addon_particles.json")
+PARTICLE_TEX = os.path.join(RES, "assets/mmorpg/textures/particle")
+MODEL_DIR = os.path.join(RES, "assets/mmorpg/fxmodel")
+OUT_TEX = os.path.join(RES, "assets/rpg/textures/font/vfxp")
+OUT_FONT = os.path.join(RES, "assets/rpg/font/vfxp.json")
+OUT_INDEX = os.path.join(RES, "mmorpg/vfx_particles.json")
+
+H = 64  # 글자 높이 (글꼴 단위 — 글자 표시 엔티티 1 단위 = 0.025칸 → 1.6칸, 크기는 변환으로)
+CAP = 128  # 칸의 긴 변 (픽셀) — 글꼴 그림은 모두 메모리에 올라감 (룬 묶음 약 700만 픽셀)
+FIRST = 0xE000  # 글자 (사용자 영역 E000 ~ F8FF)
+SPACE_FIRST = 0xF800  # 뒤로 옮김 글자 (−1 · −2 · −4 … −1024)
+COLS = 8  # 판 한 줄의 칸 수
+
+# 룬이 쓰는 직업 그림 (rfx_j*) — 나머지 직업 그림은 직업 단계에서
+RUNE_J = {"rpg:rfx_jbreak"}
+# Fx3d 카드 (룬 휘두름 판 — RuneKit.arc · waveCard · groundCrescent)
+CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heavy_soft", "slash_thin", "slash_thin_soft"]
+
+
+def wanted(pid):
+    return "rfx_j" not in pid or pid in RUNE_J
+
+
+def shrink(cell, cap):
+    """긴 변을 cap 까지 (알파를 곱해 줄임 — 투명한 곳의 색이 번지지 않게)"""
+    w, h = cell.size
+    k = min(1.0, cap / max(w, h))
+    if k >= 1.0:
+        return cell
+    nw, nh = max(1, round(w * k)), max(1, round(h * k))
+    a = np.asarray(cell, dtype=np.float32) / 255.0
+    pm = a.copy()
+    pm[..., :3] *= pm[..., 3:4]
+    img = Image.fromarray((pm * 255 + 0.5).astype(np.uint8), "RGBA").resize((nw, nh), Image.LANCZOS)
+    b = np.asarray(img, dtype=np.float32) / 255.0
+    al = b[..., 3:4]
+    rgb = np.where(al > 1e-4, b[..., :3] / np.maximum(al, 1e-4), 0)
+    out = np.concatenate([np.clip(rgb, 0, 1), al], axis=-1)
+    return Image.fromarray((out * 255 + 0.5).astype(np.uint8), "RGBA")
+
+
+def particle_sheets(defs):
+    """파티클 ID → 판 이름, 판 이름 → (칸 그림 목록, uv 칸 [uw, vh], 칸 수 [cols, rows])"""
+    sheets = {}
+    of = {}
+    for pid in sorted(defs):
+        if not wanted(pid):
+            continue
+        d = defs[pid]
+        sprite = d["sprite"]
+        if not sprite.startswith("mmorpg:"):
+            continue  # 바닐라 그림 (generic · flame) — 서버가 바닐라 파티클로
+        uv = d["uv"]
+        uw, vh = (uv["flipbook"]["size"] if "flipbook" in uv else uv["size"])
+        tw, th = uv["tw"], uv["th"]
+        name = sprite.split(":", 1)[1].replace("addon/rpg/", "").replace("/", "_")
+        key = "%s_%dx%d" % (name, uw, vh)
+        of[pid] = key
+        if key in sheets:
+            continue
+        path = os.path.join(PARTICLE_TEX, sprite.split(":", 1)[1] + ".png")
+        im = Image.open(path).convert("RGBA")
+        W, Hh = im.size
+        sx, sy = W / tw, Hh / th
+        cols, rows = round(tw / uw), round(th / vh)
+        cells = []
+        for r in range(rows):
+            for c in range(cols):
+                x0, y0 = round(c * uw * sx), round(r * vh * sy)
+                x1, y1 = round((c + 1) * uw * sx), round((r + 1) * vh * sy)
+                cells.append(shrink(im.crop((x0, y0, x1, y1)), CAP))
+        sheets[key] = (cells, [uw, vh], [cols, rows])
+    return of, sheets
+
+
+def card_layers():
+    """카드 모델 → 칸 (anim play 의 f0 … 또는 main 하나) 마다 겹 [(그림, mat, 가운데 x y z, 반 너비 · 반 높이)] — 앞뒤 빛 겹 (z ±) 은 하나로"""
+    out = {}
+    for name in CARDS:
+        m = json.load(open(os.path.join(MODEL_DIR, name + ".json")))
+        tex = m["tex"].split(":", 1)[1]
+        im = Image.open(os.path.join(RES, "assets/mmorpg", tex)).convert("RGBA")
+        W, Hh = im.size
+        frames = []
+        for p in m["parts"]:
+            if not p["q"]:
+                continue
+            layers = []
+            seen = set()
+            for q in p["q"]:
+                xs = [q[i * 8] for i in range(4)]
+                ys = [q[i * 8 + 1] for i in range(4)]
+                us = [q[i * 8 + 3] for i in range(4)]
+                vs = [q[i * 8 + 4] for i in range(4)]
+                mat = int(q[32])
+                rect = (round(min(us) * W), round(min(vs) * Hh), round(max(us) * W), round(max(vs) * Hh))
+                if (mat, rect) in seen:
+                    continue  # 뒤쪽 빛 겹 (같은 그림) — 서버는 한 장
+                seen.add((mat, rect))
+                # 판 (모델) 의 가로세로 비로 늘임 — 모드는 그림 칸을 판에 늘여 붙임 (몸 · 빛 그림의 비가 달라도 같은 판). 한 글줄에 겹쳐 그리므로 겹마다 같은 비
+                qa = (max(xs) - min(xs)) / max(1e-6, max(ys) - min(ys))
+                crop = im.crop(rect)
+                ch_px = crop.size[1]
+                crop = crop.resize((max(1, round(ch_px * qa)), ch_px), Image.LANCZOS)
+                cell = shrink(crop, CAP)
+                cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+                layers.append((cell, mat, [round(cx, 4), round(cy, 4), 0.0], [round((max(xs) - min(xs)) / 2, 4), round((max(ys) - min(ys)) / 2, 4)]))
+            # 그리는 차례: 몸 (mat 0) 먼저, 빛 (mat 1) 을 위에 (모델에서 빛 겹이 몸 앞뒤에 있음)
+            layers.sort(key=lambda l: l[1])
+            frames.append(layers)
+        out[name] = frames
+    return out
+
+
+def build():
+    defs = json.load(open(DEFS))["particles"]
+    of, sheets = particle_sheets(defs)
+    cards = card_layers()
+    files = {}
+    providers = []
+    index_sheets = {}
+    code = FIRST
+
+    def sheet_png(key, cells):
+        """칸 목록 → 판 그림 (칸 크기를 가장 큰 칸에 맞춤 — 한 판의 칸은 같은 크기) · 글자들 · advance"""
+        nonlocal code
+        cw = max(c.size[0] for c in cells)
+        ch = max(c.size[1] for c in cells)
+        cols = min(COLS, len(cells))
+        rows = (len(cells) + cols - 1) // cols
+        img = Image.new("RGBA", (cols * cw, rows * ch), (0, 0, 0, 0))
+        lines = []
+        chars = []
+        for r in range(rows):
+            line = ""
+            for c in range(cols):
+                i = r * cols + c
+                if i < len(cells):
+                    cell = cells[i]
+                    if cell.size != (cw, ch):
+                        cell = cell.resize((cw, ch), Image.LANCZOS)
+                    cell = cell.copy()
+                    px = cell.load()
+                    if px[cw - 1, 0][3] == 0:
+                        px[cw - 1, 0] = (255, 255, 255, 1)  # 너비가 줄지 않게 (보이지 않음 — 0.1 아래는 버림)
+                    img.paste(cell, (c * cw, r * ch))
+                    chars.append(code)
+                    line += chr(code)
+                    code += 1
+                else:
+                    line += "\u0000"
+            lines.append(line)
+        buf = BytesIO()
+        img.save(buf, "PNG", optimize=True)
+        files[os.path.join(OUT_TEX, key + ".png")] = buf.getvalue()
+        providers.append({"type": "bitmap", "file": "rpg:font/vfxp/%s.png" % key, "height": H, "ascent": H // 2 - 2, "chars": lines})
+        scale = H / ch
+        advance = int(0.5 + cw * scale) + 1
+        return chars, cw, ch, advance
+
+    for key in sorted(sheets):
+        cells, uvc, grid = sheets[key]
+        chars, cw, ch, adv = sheet_png(key, cells)
+        index_sheets[key] = {"first": chars[0], "n": len(chars), "cols": grid[0], "rows": grid[1], "uw": uvc[0], "vh": uvc[1], "px": [cw, ch], "adv": adv}
+    index_cards = {}
+    for name in CARDS:
+        frames = []
+        for fi, layers in enumerate(cards[name]):
+            fr = []
+            for li, (cell, mat, c, half) in enumerate(layers):
+                chars, cw, ch, adv = sheet_png("card_%s_f%d_%d" % (name, fi, li), [cell])
+                fr.append({"c": chars[0], "mat": mat, "at": c, "half": half, "adv": adv})
+            frames.append(fr)
+        index_cards[name] = frames
+    assert code < SPACE_FIRST, "glyphs overflow %x" % code
+    # 뒤로 옮김 (서버가 여러 겹을 한 글줄에 겹쳐 그림)
+    adv = {chr(SPACE_FIRST + b): -(1 << b) for b in range(11)}
+    providers.append({"type": "space", "advances": adv})
+    font = {"providers": providers}
+    idx = {
+        "_doc": "tools/vfx_particles.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfxp: 파티클 ID → 판 (uv 칸 하나 = 글자 하나, 칸 번호 = 줄 × cols + 칸), "
+                "카드 (Fx3d 판) → 칸마다 겹 (글자 · mat 0 몸 / 1 빛 · 모델 자리 · 반 크기). 글자 높이 h 글꼴 단위 (1 단위 = 0.025칸), adv = 글자 너비 (뒤로 옮김 space "
+                "글자 space+b 가 −2^b)",
+        "font": "rpg:vfxp", "h": H, "space": SPACE_FIRST,
+        "particles": of, "sheets": index_sheets, "cards": index_cards,
+    }
+    files[OUT_FONT] = (json.dumps(font, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
+    files[OUT_INDEX] = (json.dumps(idx, ensure_ascii=False, indent=1, sort_keys=True) + "\n").encode("utf-8")
+    return files, idx
+
+
+def main():
+    check = "--check" in sys.argv
+    files, idx = build()
+    bad = []
+    for path, data in files.items():
+        old = open(path, "rb").read() if os.path.exists(path) else None
+        if old != data:
+            if check:
+                bad.append(os.path.relpath(path, ROOT))
+            else:
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                open(path, "wb").write(data)
+    # 지난 판 (이제 쓰지 않는 그림) 지우기
+    if os.path.isdir(OUT_TEX):
+        for f in os.listdir(OUT_TEX):
+            p = os.path.join(OUT_TEX, f)
+            if p not in files:
+                if check:
+                    bad.append(os.path.relpath(p, ROOT))
+                else:
+                    os.remove(p)
+    if check:
+        if bad:
+            print("vfx particles differ: " + ", ".join(bad[:8]) + (" …" if len(bad) > 8 else "") + " — python3 tools/vfx_particles.py")
+            return 1
+        print("vfx particles ok (%d particles, %d sheets, %d cards)" % (len(idx["particles"]), len(idx["sheets"]), len(idx["cards"])))
+        return 0
+    png = sum(len(v) for k, v in files.items() if k.endswith(".png"))
+    px = 0
+    for k, v in files.items():
+        if k.endswith(".png"):
+            w, h = Image.open(BytesIO(v)).size
+            px += w * h
+    print("wrote %d particles → %d sheets, %d cards; png %.1f MB, %.1f M px (RGBA %.0f MB)" % (len(idx["particles"]), len(idx["sheets"]), len(idx["cards"]),
+                                                                                         png / 1e6, px / 1e6, px * 4 / 1e6))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

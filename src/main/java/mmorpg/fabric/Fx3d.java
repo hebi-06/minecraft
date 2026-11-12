@@ -259,6 +259,14 @@ public final class Fx3d {
         send(level, near, p);
         sent++;
         lastModel = model;
+        // 2026-11-12 모드 없는 클라이언트: 2D 판 (slash_* 카드) 은 서버가 글자 표시로 (vfx.PBridge — 같은 그림 · 자리 · 방향 · 칸)
+        java.util.List<ServerPlayer> plain = null;
+        for (ServerPlayer sp : level.players()) {
+            if (mmorpg.fabric.vanilla.VanillaClients.isModded(sp) || sp.position().distanceToSqr(near) > RANGE * RANGE) continue;
+            if (plain == null) plain = new java.util.ArrayList<>(2);
+            plain.add(sp);
+        }
+        if (plain != null) mmorpg.fabric.vfx.PBridge.card(level, model, at, o, plain);
         return id;
     }
 

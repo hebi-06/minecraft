@@ -43,8 +43,11 @@ final class VanillaProbe {
             String name = p.getGameProfile().name();
             log("joined " + name + " modded=" + VanillaClients.isModded(p));
             if (NAME.equals(name)) Tasks.later(160, () -> {
-                if (Boolean.getBoolean("mmorpg.probe.films")) film(p, 0);
-                else scene(p, 0);
+                String films = System.getProperty("mmorpg.probe.films", "");
+                if (!films.isEmpty() && !films.equals("false")) {
+                    filmList(films);
+                    film(p, 0);
+                } else scene(p, 0);
             });
         });
     }
@@ -870,10 +873,59 @@ final class VanillaProbe {
 
     // ------------------------------------------------------------ 2026-11-11 영상 (VFILM — 3D 효과 엔진 시범)
 
-    /** 영상으로 찍을 룬 (도끼 넷 · 불의 정령) · 찍을 장 수 (틱) */
-    static final List<String> FILM_RUNES = List.of("rpg:rune_axe_common", "rpg:rune_axe_noble", "rpg:rune_axe_hero", "rpg:rune_axe_transcend",
+    /** 시범 (-Dmmorpg.probe.films=true): 도끼 넷 · 불의 정령 · 찍을 장 수 (틱) */
+    static final List<String> PILOT_RUNES = List.of("rpg:rune_axe_common", "rpg:rune_axe_noble", "rpg:rune_axe_hero", "rpg:rune_axe_transcend",
             "rpg:rune_spirit_common");
-    static final int[] FILM_FRAMES = {72, 62, 66, 150, 96};
+    static final int[] PILOT_FRAMES = {72, 62, 66, 150, 96};
+    /** 이번에 찍을 룬 · 장 수 (filmList) */
+    static final List<String> FILM_RUNES = new ArrayList<>();
+    static final List<Integer> FILM_FRAMES = new ArrayList<>();
+    /** 2026-11-12 census: 영상 대신 룬마다 사진 둘 · 파티클 다리 셈 (모든 룬 — 모드 없는 클라이언트가 보는 것) */
+    static boolean census;
+
+    /**
+     * 찍을 룬 (-Dmmorpg.probe.films=…): true = 시범, census = 모든 룬 (사진 · 셈), 그 밖 = 쉼표 목록 — 계열 (그 계열의 모든 등급) 또는 계열_등급.
+     * 장 수는 등급마다 (영웅 · 초월은 길게 — 모드 영상 RpgFilm.untilQuiet 의 끝과 비슷하게)
+     */
+    static void filmList(String spec) {
+        FILM_RUNES.clear();
+        FILM_FRAMES.clear();
+        if (spec.equals("true")) {
+            FILM_RUNES.addAll(PILOT_RUNES);
+            for (int f : PILOT_FRAMES) FILM_FRAMES.add(f);
+            return;
+        }
+        census = spec.equals("census");
+        List<String> keys = new ArrayList<>();
+        if (census) {
+            for (String fam : mmorpg.core.Runes.ALL_FAMILIES) {
+                for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(fam + "_" + g);
+            }
+        } else {
+            for (String k : spec.split(",")) {
+                k = k.trim();
+                if (k.isEmpty()) continue;
+                if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(k + "_" + g);
+                else keys.add(k);
+            }
+        }
+        for (String k : keys) {
+            int cut = k.lastIndexOf('_');
+            if (cut < 0) continue;
+            String fam = k.substring(0, cut);
+            String g = k.substring(cut + 1);
+            String id = mmorpg.core.Runes.runeId(fam, g);
+            if (mmorpg.core.Runes.parseRune(id) == null) continue;
+            FILM_RUNES.add(id);
+            FILM_FRAMES.add(switch (g) {
+                case "transcend" -> 150;
+                case "hero" -> 96;
+                case "noble" -> 76;
+                default -> 66;
+            });
+        }
+        log("film list " + spec + " → " + FILM_RUNES.size() + " runes" + (census ? " (census)" : ""));
+    }
     /** 영상 동안 서버 틱 빠르기 (클라이언트가 틱마다 한 장을 찍을 틈 — 클라이언트도 같은 빠르기로 돎) */
     static final int FILM_RATE = 5;
 
@@ -909,6 +961,10 @@ final class VanillaProbe {
         SPAWNED.clear();
         if (i >= FILM_RUNES.size()) {
             run(server, "tick rate 20");
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
+            if (census) log("census total seen " + mmorpg.fabric.vfx.PBridge.SEEN + " made " + mmorpg.fabric.vfx.PBridge.made + " dust "
+                    + mmorpg.fabric.vfx.PBridge.dusts + " dropped " + mmorpg.fabric.vfx.PBridge.dropped + " noGlyph " + mmorpg.fabric.vfx.PBridge.noGlyph
+                    + " cards " + mmorpg.fabric.vfx.PBridge.cards + " solo " + mmorpg.fabric.vfx.PBridge.soloReused);
             say(p, "cam off");
             say(p, "done");
             log("done");
@@ -937,10 +993,16 @@ final class VanillaProbe {
             SPAWNED.add(e);
         }
         String name = "vanilla_" + r.family() + "_" + r.grade();
-        int frames = FILM_FRAMES[Math.min(i, FILM_FRAMES.length - 1)];
+        int frames = FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1));
+        // 모드 없는 클라이언트는 1 · 3인칭을 서버가 모름 — 영상 카메라는 3인칭 (몸 둘레 그림 · 판을 봄, 1인칭 눈앞 그림은 숨김)
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
         // 카메라: 모드 영상과 같은 자리 (RpgRuneGallery.film — 영웅 · 초월은 넓게), 사진기가 지금 (옮긴 뒤) 몸 자리를 기준으로 삼음
         boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
         say(p, "cam film 105 " + (big ? "7.6 4.2 1.9" : "7.0 3.6 1.1") + " 3.0 0.6");
+        if (census) {
+            Tasks.later(30, () -> census(p, r, name, step));
+            return;
+        }
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);
@@ -951,6 +1013,38 @@ final class VanillaProbe {
                         + mmorpg.fabric.vfx.Vfx.spritesMade);
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /**
+     * 2026-11-12 census: 룬 하나를 쓰고 사진 둘 (쓴 뒤 10 · 26틱 — 영상 카메라) · 파티클 다리 셈을 로그 (이 룬이 보낸 파티클 ID · 글자 표시 · 가루 · 버림 · 그림 없음 ·
+     * 카드 · 가장 많이 떠 있던 수) → 다음 룬 (쓴 뒤 70틱)
+     */
+    private static void census(ServerPlayer p, mmorpg.core.Runes.Rune r, String name, int step) {
+        java.util.Map<String, Integer> seen0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.PBridge.SEEN);
+        int made0 = mmorpg.fabric.vfx.PBridge.made;
+        int dust0 = mmorpg.fabric.vfx.PBridge.dusts;
+        int drop0 = mmorpg.fabric.vfx.PBridge.dropped;
+        int no0 = mmorpg.fabric.vfx.PBridge.noGlyph;
+        int card0 = mmorpg.fabric.vfx.PBridge.cards;
+        int solo0 = mmorpg.fabric.vfx.PBridge.soloReused;
+        int[] peak = {0};
+        boolean ok = mmorpg.fabric.rune.RuneCast.castRune(p, r, false);
+        check("census cast " + name, ok);
+        for (int t = 1; t <= 66; t++) Tasks.later(t, () -> peak[0] = Math.max(peak[0], mmorpg.fabric.vfx.PBridge.live()));
+        Tasks.later(10, () -> say(p, "shot census_" + r.family() + "_" + r.grade() + "_a"));
+        Tasks.later(26, () -> say(p, "shot census_" + r.family() + "_" + r.grade() + "_b"));
+        Tasks.later(68, () -> {
+            StringBuilder b = new StringBuilder();
+            for (var e : mmorpg.fabric.vfx.PBridge.SEEN.entrySet()) {
+                int d = e.getValue() - seen0.getOrDefault(e.getKey(), 0);
+                if (d > 0) b.append(e.getKey().replace("rpg:", "")).append('=').append(d).append(' ');
+            }
+            log("census " + name + " made " + (mmorpg.fabric.vfx.PBridge.made - made0) + " dust " + (mmorpg.fabric.vfx.PBridge.dusts - dust0) + " dropped "
+                    + (mmorpg.fabric.vfx.PBridge.dropped - drop0) + " noGlyph " + (mmorpg.fabric.vfx.PBridge.noGlyph - no0) + " cards "
+                    + (mmorpg.fabric.vfx.PBridge.cards - card0) + " solo " + (mmorpg.fabric.vfx.PBridge.soloReused - solo0) + " peak " + peak[0] + " vfx "
+                    + mmorpg.fabric.vfx.Vfx.active() + " | " + b.toString().trim());
+            Tasks.later(2, () -> film(p, step + 1));
         });
     }
 

@@ -75,18 +75,33 @@ public final class AddonFx {
         return p;
     }
 
-    /** 파티클 하나 (모두에게 — 거리 · 파티클 설정 무시) */
+    /**
+     * 파티클 하나 (모두에게 — 거리 · 파티클 설정 무시). 2026-11-12 모드 클라이언트에는 파티클, 모드 없는 클라이언트에게는 서버가 같은 계산으로 움직이는
+     * 글자 표시 (vfx.PBridge — 같은 그림)
+     */
     public static void spawn(ServerLevel level, String id, Vec3 at, Vars vars) {
         int p = index(id);
         if (p < 0) return;
-        level.sendParticles(vars.options(p), true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+        AddonParticleOptions o = vars.options(p);
+        java.util.List<ServerPlayer> plain = null;
+        for (ServerPlayer sp : level.players()) {
+            if (mmorpg.fabric.vanilla.VanillaClients.isModded(sp)) {
+                level.sendParticles(sp, o, true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            } else {
+                if (plain == null) plain = new java.util.ArrayList<>(2);
+                plain.add(sp);
+            }
+        }
+        if (plain != null) mmorpg.fabric.vfx.PBridge.spawn(level, o, at, plain);
     }
 
-    /** 그 플레이어에게만 보이는 파티클 (player.spawnParticle) */
+    /** 그 플레이어에게만 보이는 파티클 (player.spawnParticle) — 모드 없는 클라이언트면 글자 표시 (vfx.PBridge) */
     public static void spawnFor(ServerPlayer sp, String id, Vec3 at, Vars vars) {
         int p = index(id);
         if (p < 0) return;
-        sp.level().sendParticles(sp, vars.options(p), true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+        AddonParticleOptions o = vars.options(p);
+        if (mmorpg.fabric.vanilla.VanillaClients.isModded(sp)) sp.level().sendParticles(sp, o, true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+        else mmorpg.fabric.vfx.PBridge.spawn(sp.level(), o, at, java.util.List.of(sp));
     }
 
     // ------------------------------------------------------------ skills.js fx() 의 변수 (dir · speed · spin · size · life · thick · delay · grow · progress · color)

@@ -43,9 +43,17 @@ def groups(only):
     for i, part in enumerate(p for p in only.split(";") if p.strip()):
         keys = [k.strip() for k in part.split(",") if k.strip()]
         prod = "prod" in keys
-        vfilm = "vfilm" in keys  # 2026-11-11 모드 없는 클라이언트 영상 (3D 효과 엔진 시범 — VanillaProbe.film)
-        vanilla = "vanilla" in keys or vfilm
-        keys = [k for k in keys if k not in ("prod", "vanilla", "vfilm")]
+        # 2026-11-11 모드 없는 클라이언트 영상 (VanillaProbe.film): vfilm = 시범, 2026-11-12 vfilm=<룬+룬…> (계열 또는 계열_등급) · vcensus (모든 룬 사진 · 셈)
+        vfilm = False
+        for k in keys:
+            if k == "vfilm":
+                vfilm = "true"
+            elif k.startswith("vfilm="):
+                vfilm = k[len("vfilm="):].replace("+", ",")
+            elif k == "vcensus":
+                vfilm = "census"
+        vanilla = "vanilla" in keys or bool(vfilm)
+        keys = [k for k in keys if k not in ("prod", "vanilla", "vfilm", "vcensus") and not k.startswith("vfilm=")]
         out.append({"name": "g%d" % (i + 1), "only": ",".join(keys) if keys else "none", "prod": prod, "vanilla": vanilla, "vfilm": vfilm})
     return out
 

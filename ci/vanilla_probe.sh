@@ -4,6 +4,9 @@
 # 통과: 서버 로그 "[vanilla-probe] done" · 클라이언트 로그 "[vanilla-client] done" · 끊김 없음.
 # 결과: ci-out/vanilla-server.log · vanilla-client.txt · vanilla-client-latest.log · shots/vanilla_*.png
 set -u
+# 2026-11-12 여러 묶음 (vfilm 목록 · vcensus) 이 같은 실행에서 돌면 로그 이름이 겹치지 않게 묶음 이름을 붙임 (기본 묶음 van 은 그대로)
+SUF=""
+if [ -n "${VGROUP:-}" ] && [ "${VGROUP}" != "van" ]; then SUF="-${VGROUP}"; fi
 MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
 LOADER=$(grep '^loader_version=' gradle.properties | cut -d= -f2)
 FAPI=$(grep '^fabric_version=' gradle.properties | cut -d= -f2)
@@ -26,8 +29,9 @@ cd "$dir" || exit 2
 rm -f in exit.code
 mkfifo in
 # 2026-11-11 VFILM=true (묶음 키 vfilm): 장면 없이 3D 효과 엔진 시범 룬 영상만 (VanillaProbe.film — 클라이언트가 틱마다 사진 → films.py)
+# 2026-11-12 VFILM=<룬 목록> (묶음 키 vfilm=str_common+int+… — 계열 또는 계열_등급) · census (묶음 키 vcensus — 모든 룬의 사진 둘 · 파티클 다리 셈)
 FILMS_FLAG=""
-[ "${VFILM:-}" = "true" ] && FILMS_FLAG="-Dmmorpg.probe.films=true"
+if [ -n "${VFILM:-}" ] && [ "${VFILM}" != "false" ]; then FILMS_FLAG="-Dmmorpg.probe.films=${VFILM}"; fi
 (java -Xmx3G -Dmmorpg.probe=true $FILMS_FLAG -jar server.jar nogui < in > out.log 2>&1; echo $? > exit.code) &
 exec 3>in
 t=0; up=0
@@ -49,12 +53,12 @@ if [ $up -eq 1 ]; then
   mkdir -p run-probe
   printf 'onboardAccessibility:false\nskipMultiplayerWarning:true\njoinedFirstServer:true\ntutorialStep:none\npauseOnLostFocus:false\nrenderDistance:6\nsimulationDistance:6\nguiScale:2\nnarrator:0\nsoundCategory_master:0.0\n' > run-probe/options.txt
   set +e
-  timeout 1200 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew probeClient --stacktrace --console=plain > ci-out/vanilla-client.txt 2>&1
+  timeout 1200 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew probeClient --stacktrace --console=plain > ci-out/vanilla-client${SUF}.txt 2>&1
   pcode=$?
   echo "[vanilla] probe client exit $pcode"
-  grep -h "\[vanilla-client\]" ci-out/vanilla-client.txt | head -n 60
+  grep -h "\[vanilla-client\]" ci-out/vanilla-client${SUF}.txt | head -n 60
   grep -h "\[vanilla-probe\] check\|\[vanilla-probe\] skills" "$dir/out.log" | sed 's/^.*\[vanilla-probe\] /  /' | head -n 80
-  if grep -q "\[vanilla-probe\] done" "$dir/out.log" && grep -q "\[vanilla-client\] done" ci-out/vanilla-client.txt \
+  if grep -q "\[vanilla-probe\] done" "$dir/out.log" && grep -q "\[vanilla-client\] done" ci-out/vanilla-client${SUF}.txt \
       && ! grep -q "\[vanilla-probe\] check fail" "$dir/out.log"; then code=0; fi
 fi
 
@@ -71,18 +75,18 @@ if [ -f "$pack" ]; then
   echo "--- note_block.json (앞)"
   unzip -p "$pack" assets/minecraft/blockstates/note_block.json 2>/dev/null | head -c 600; echo
 fi
-cp "$dir/out.log" ci-out/vanilla-server.log 2>/dev/null || true
-cp run-probe/logs/latest.log ci-out/vanilla-client-latest.log 2>/dev/null || true
+cp "$dir/out.log" ci-out/vanilla-server${SUF}.log 2>/dev/null || true
+cp run-probe/logs/latest.log ci-out/vanilla-client-latest${SUF}.log 2>/dev/null || true
 for f in run-probe/screenshots/probe_*.png; do [ -f "$f" ] && cp "$f" "ci-out/shots/vanilla_$(basename "$f" .png | sed 's/^probe_//').png"; done
 # 영상 (VFILM): 틱마다 찍은 사진 → mp4 (ci/films.py — ci-out/films/vanilla_<계열>_<등급>.mp4 · .json)
 if [ -d run-probe/films ]; then
   sudo apt-get install -y -qq ffmpeg > /dev/null 2>&1 || true
-  python3 ci/films.py run-probe/films ci-out/films "" | tee ci-out/films-vanilla.txt || true
+  python3 ci/films.py run-probe/films ci-out/films "" | tee ci-out/films-vanilla${SUF}.txt || true
 fi
 ls -la ci-out/shots | grep vanilla || true
 echo "----- [vanilla] server errors"
-grep -n -E "Exception|Caused by|/ERROR\]|/FATAL\]|\[vanilla-probe\]" ci-out/vanilla-server.log | head -n 80
+grep -n -E "Exception|Caused by|/ERROR\]|/FATAL\]|\[vanilla-probe\]" ci-out/vanilla-server${SUF}.log | head -n 80
 echo "----- [vanilla] client errors"
-grep -n -E "Exception|Caused by|/ERROR\]|/FATAL\]|disconnect|Disconnect" ci-out/vanilla-client-latest.log 2>/dev/null | head -n 60
+grep -n -E "Exception|Caused by|/ERROR\]|/FATAL\]|disconnect|Disconnect" ci-out/vanilla-client-latest${SUF}.log 2>/dev/null | head -n 60
 echo "[vanilla] result $code"
 exit $code
