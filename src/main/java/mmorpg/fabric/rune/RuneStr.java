@@ -132,8 +132,10 @@ final class RuneStr {
         Set<UUID> hit = new HashSet<>();
         SkillFx.play(level, "mace.heavy_smash_ground", start, 0.8, 1);
         SkillFx.shake(sp, 0.2, 0.25);
-        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.5), -0.3), f, Opt.of("shape", "heavy", "flip", true, "size", 2.0, "life", 0.24, "speed", 2.0,
-                "spin", 6.0, "color", glow, "aura", core));
+        // 2026-11-13 사용자 메모 (룬 도감 — 대지 균열 "애 왜 위에서 아래로 안내려찍어?"): 가로로 누운 초승달 (spin 6) → 위에서 아래로 내리긋는 세로 초승달
+        // (삼원소 연격의 얼음 세로 베기와 같은 세움) · 동작도 머리 위에서 곧장 내려찍음 (rn_fissure)
+        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.5), -0.3), f, Opt.of("shape", "heavy", "flip", true, "size", 2.3, "life", 0.24, "speed", 2.0,
+                "spin", 84.0, "color", glow, "aura", core));
         Vec3 side = V.rightOf(f);
         int length = (int) k.num("length");
         double width = k.num("width");
