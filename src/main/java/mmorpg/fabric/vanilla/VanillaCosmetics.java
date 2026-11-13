@@ -740,6 +740,7 @@ public final class VanillaCosmetics {
         }
 
         private int rate() {
+            if (VanillaRig.active(entity)) return 1; // 뼈 몸이 움직이는 동안은 틱마다 (뼈 몸과 같게)
             double best = Double.MAX_VALUE;
             for (ServerGamePacketListenerImpl c : getWatchingPlayers()) best = Math.min(best, c.getPlayer().distanceToSqr(entity));
             return best < 24 * 24 ? 2 : best < 48 * 48 ? 4 : 8;
@@ -788,11 +789,15 @@ public final class VanillaCosmetics {
             if (crouch) head.translate(0, -4.2F / 16F, 0);
             head.rotateY((float) -Math.toRadians(Mth.wrapDegrees(entity.getYHeadRot() - entity.yBodyRot)))
                     .rotateX((float) -Math.toRadians(entity.getXRot()));
+            // 2026-11-13 뼈 몸 (VanillaRig — 싸우는 동안 모션): 등 장식 · 머리 뼈 장식은 뼈 몸의 몸통 · 머리를 따라감 (회전 베기 · 기울기)
+            Matrix4f[] rf = s == 1F ? VanillaRig.frames(entity) : null;
+            Matrix4f bodyF = rf != null ? rf[0] : body;
+            Matrix4f headF = rf != null ? rf[1] : head;
             double speed = Math.max(0, Math.min(1, entity.walkAnimation.speed()));
             float ageTicks = entity.tickCount;
             Map<Rig, Matrix4f[]> worlds = new HashMap<>();
             for (Part p : parts) {
-                Matrix4f[] w = worlds.computeIfAbsent(p.rig(), r -> chain(r, "head".equals(r.root()) ? head : body, ageTicks, speed));
+                Matrix4f[] w = worlds.computeIfAbsent(p.rig(), r -> chain(r, "head".equals(r.root()) ? headF : bodyF, ageTicks, speed));
                 Bone b = p.rig().bones().get(p.index());
                 // 끝의 Y 180°: 아이템 표시의 뒤집힘을 되돌림 (VanillaModels.ITEM_FLIP — 2026-11-12 몹 모델과 같은 고침)
                 Matrix4f d = new Matrix4f(w[p.index()]).scale(1F / b.k())

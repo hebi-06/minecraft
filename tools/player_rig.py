@@ -91,27 +91,40 @@ def model_box(a, b):
 
 
 class Bone:
+    """뼈 하나: 층 0 (몸 — 늘 그림) · 층 1 (겉옷 — 따로 모델 <뼈>_o, 아이템 정의에서 custom_model_data flag 0 이 참일 때만).
+    2026-11-13 CI 43351661053: tint 색은 알파를 쓰지 않음 (바닐라 CustomModelDataSource 가 ARGB.opaque) — 겉옷 층의 투명 칸이 검게 칠해져 몸 전체가 검은
+    껍데기로 보였음 → 겉옷 층은 따로 모델 · 투명 칸은 그 밑 몸 칸의 색 (src [u, v, 1, 밑 u, 밑 v]), 겉옷이 하나도 없으면 flag 거짓 (그리지 않음)"""
+
     def __init__(self, name):
         self.name = name
-        self.elements = []
-        self.src = []
+        self.layers = {0: ([], []), 1: ([], [])}
 
-    def pixel(self, a, b, face_name, u, v, layer):
+    @property
+    def elements(self):
+        return self.layers[0][0] + self.layers[1][0]
+
+    @property
+    def src(self):
+        return self.layers[0][1] + self.layers[1][1]
+
+    def pixel(self, a, b, face_name, u, v, layer, base=None):
+        els, src = self.layers[layer]
         frm, to = model_box(a, b)
         n = tuple(int(c) for c in F * np.array(NORMAL[face_name]))
-        self.elements.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [0, 0, 16, 16], "texture": "#0", "tintindex": len(self.src)}}})
-        self.src.append([int(u), int(v), layer])
+        els.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [0, 0, 16, 16], "texture": "#0", "tintindex": len(src)}}})
+        src.append([int(u), int(v), layer] + ([int(base[0]), int(base[1])] if layer == 1 else []))
 
     def flat(self, a, b, face_name, avg):
         """자른 면 (한 칸 — 둘레 줄의 평균 색)"""
+        els, src = self.layers[0]
         frm, to = model_box(a, b)
         n = tuple(int(c) for c in F * np.array(NORMAL[face_name]))
-        self.elements.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [0, 0, 16, 16], "texture": "#0", "tintindex": len(self.src)}}})
-        self.src.append({"avg": [[int(u), int(v)] for u, v in avg]})
+        els.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [0, 0, 16, 16], "texture": "#0", "tintindex": len(src)}}})
+        src.append({"avg": [[int(u), int(v)] for u, v in avg]})
 
 
-def add_box(bone, origin, size, uv, inflate, layer, rows=None, skip=()):
-    """상자 하나의 면 픽셀 (rows = 옆면의 위에서부터 줄 [from, to) — 팔다리를 위 · 아래로 자름, skip = 뺄 면)"""
+def add_box(bone, origin, size, uv, inflate, layer, rows=None, skip=(), base_uv=None):
+    """상자 하나의 면 픽셀 (rows = 옆면의 위에서부터 줄 [from, to) — 팔다리를 위 · 아래로 자름, skip = 뺄 면, base_uv = 겉옷 층이면 그 밑 몸 층의 펼침 자리)"""
     faces = cube_faces(origin, size, uv, inflate)
     w, h, d = size
     for name, face in faces.items():
@@ -122,7 +135,8 @@ def add_box(bone, origin, size, uv, inflate, layer, rows=None, skip=()):
                 row = tv - (uv[1] + d)
                 if not (rows[0] <= row < rows[1]):
                     continue
-            bone.pixel(a, b, name, tu, tv, layer)
+            base = None if base_uv is None else (tu - uv[0] + base_uv[0], tv - uv[1] + base_uv[1])
+            bone.pixel(a, b, name, tu, tv, layer, base)
 
 
 def side_row(uv, size, row):
@@ -141,11 +155,11 @@ def limb(prefix, origin, size, uv, ov, out):
     up = Bone(prefix + "_u")
     add_box(up, origin, size, uv, 0, 0, rows=(0, half), skip=("up",))
     up.flat((x, y + half, z), (x + w, y + half, z + d), "up", side_row(uv, size, half - 1))
-    add_box(up, origin, size, ov, 0.25, 1, rows=(0, half), skip=("up",))
+    add_box(up, origin, size, ov, 0.25, 1, rows=(0, half), skip=("up",), base_uv=uv)
     lo = Bone(prefix + "_l")
     add_box(lo, origin, size, uv, 0, 0, rows=(half, h), skip=("down",))
     lo.flat((x, y + half, z), (x + w, y + half, z + d), "down", side_row(uv, size, half))
-    add_box(lo, origin, size, ov, 0.25, 1, rows=(half, h), skip=("down",))
+    add_box(lo, origin, size, ov, 0.25, 1, rows=(half, h), skip=("down",), base_uv=uv)
     out += [up, lo]
 
 
@@ -153,10 +167,10 @@ def build(slim):
     bones = []
     head = Bone("head")
     add_box(head, (-4, -8, -4), (8, 8, 8), (0, 0), 0, 0)
-    add_box(head, (-4, -8, -4), (8, 8, 8), (32, 0), 0.5, 1)
+    add_box(head, (-4, -8, -4), (8, 8, 8), (32, 0), 0.5, 1, base_uv=(0, 0))
     body = Bone("body")
     add_box(body, (-4, 0, -2), (8, 12, 4), (16, 16), 0, 0)
-    add_box(body, (-4, 0, -2), (8, 12, 4), (16, 32), 0.25, 1)
+    add_box(body, (-4, 0, -2), (8, 12, 4), (16, 32), 0.25, 1, base_uv=(16, 16))
     bones += [head, body]
     aw = 3 if slim else 4
     limb("rarm", (-2 if slim else -3, -2, -2), (aw, 12, 4), (40, 16), (40, 32), bones)
@@ -191,13 +205,15 @@ def default_skin():
                 px[xx, yy] = c
 
     def box(u, v, w, h, d, fill):
-        """상자 펼침 전체를 fill(face, x, y) 로 (face: up · down · right · front · left · back)"""
+        """상자 펼침 전체를 fill(face, x, y) 로 (face: up · down · right · front · left · back — None 이면 투명 그대로)"""
         regions = {"up": (u + d, v, w, d), "down": (u + d + w, v, w, d), "right": (u, v + d, d, h), "front": (u + d, v + d, w, h),
                    "left": (u + d + w, v + d, d, h), "back": (u + 2 * d + w, v + d, w, h)}
         for f, (x0, y0, ww, hh) in regions.items():
             for yy in range(hh):
                 for xx in range(ww):
-                    px[x0 + xx, y0 + yy] = fill(f, xx, yy, ww, hh)
+                    c = fill(f, xx, yy, ww, hh)
+                    if c is not None:
+                        px[x0 + xx, y0 + yy] = c
 
     def head(f, x, y, w, h):
         if f in ("up",):
@@ -257,13 +273,44 @@ def default_skin():
 
     box(0, 16, 4, 12, 4, leg)
     box(16, 48, 4, 12, 4, leg)
+
+    # 겉옷 층 (2026-11-13 — 투명 칸은 밑 몸 색 · 칠한 칸만 겉옷 색 · 다리는 겉옷 없음): 붉은 머리띠 · 가죽 어깨띠 · 팔 보호대
+    BAND, BAND_D = (168, 44, 40, 255), (122, 30, 28, 255)
+    STRAP, STRAP_D = (120, 78, 44, 255), (92, 58, 32, 255)
+
+    def hat(f, x, y, w, h):
+        if f in ("front", "back", "right", "left") and y == 2:
+            return BAND if (x + (f == "back")) % 3 else BAND_D
+        if f == "back" and y in (3, 4) and x in (3, 4):
+            return BAND_D  # 매듭 꼬리
+        return None
+
+    box(32, 0, 8, 8, 8, hat)
+
+    def jacket(f, x, y, w, h):
+        # 왼쪽 어깨 → 오른쪽 허리로 비스듬한 가죽 띠 (앞 · 뒤)
+        if f == "front" and x == 7 - (y * 7) // 7 and y < 8:
+            return STRAP if y % 3 else STRAP_D
+        if f == "back" and x == (y * 7) // 7 and y < 8:
+            return STRAP_D
+        return None
+
+    box(16, 32, 8, 12, 4, jacket)
+
+    def bracer(f, x, y, w, h):
+        if f in ("front", "back", "right", "left") and 7 <= y <= 9:
+            return STRAP if y != 8 else STRAP_D
+        return None
+
+    box(40, 32, 4, 12, 4, bracer)
+    box(48, 48, 4, 12, 4, bracer)
     return im
 
 
 def write(args):
     os.makedirs(OUT_TEX, exist_ok=True)
     Image.new("RGBA", (16, 16), (255, 255, 255, 255)).save(os.path.join(OUT_TEX, "white.png"))
-    manifest = {"_comment": "tools/player_rig.py 가 만듦 — 뼈마다 아이템 (rpg:vrig/<형>/<뼈>) · tint 순서의 픽셀 [u, v, 겉옷 층 (1 = 알파 그대로)] 또는 평균 칸 {avg}",
+    manifest = {"_comment": "tools/player_rig.py 가 만듦 — 뼈마다 아이템 (rpg:vrig/<형>/<뼈>) · custom_model_data colors 순서의 픽셀: 몸 층 [u, v, 0] · 평균 칸 {avg} 다음 겉옷 층 [u, v, 1, 밑 u, 밑 v] (투명이면 밑 몸 칸의 색 — tint 는 알파를 쓰지 않음), flag 0 = 겉옷 층을 그림",
                 "pivots": PIVOTS, "joints": JOINTS, "variants": {}}
     total = 0
     for variant in ("wide", "slim"):
@@ -274,11 +321,20 @@ def write(args):
             idir = os.path.join(OUT_ITEMS, variant)
             os.makedirs(mdir, exist_ok=True)
             os.makedirs(idir, exist_ok=True)
-            model = {"textures": {"0": "rpg:item/vrig/white", "particle": "rpg:item/vrig/white"}, "elements": b.elements}
-            with open(os.path.join(mdir, b.name + ".json"), "w", encoding="utf-8") as fp:
-                json.dump(model, fp, separators=(",", ":"))
-            tints = [{"type": "minecraft:custom_model_data", "index": i, "default": -1} for i in range(len(b.src))]
-            item = {"model": {"type": "minecraft:model", "model": "rpg:item/vrig/%s/%s" % (variant, b.name), "tints": tints}}
+            nb = len(b.layers[0][1])
+            no = len(b.layers[1][1])
+            for suffix, layer in (("", 0), ("_o", 1)):
+                model = {"textures": {"0": "rpg:item/vrig/white", "particle": "rpg:item/vrig/white"}, "elements": b.layers[layer][0]}
+                with open(os.path.join(mdir, b.name + suffix + ".json"), "w", encoding="utf-8") as fp:
+                    json.dump(model, fp, separators=(",", ":"))
+            # 몸 층 (색 0 ~ nb − 1) + 겉옷 층 (flag 0 이 참일 때 — 색 nb ~ nb + no − 1)
+            base = {"type": "minecraft:model", "model": "rpg:item/vrig/%s/%s" % (variant, b.name),
+                    "tints": [{"type": "minecraft:custom_model_data", "index": i, "default": -1} for i in range(nb)]}
+            outer = {"type": "minecraft:model", "model": "rpg:item/vrig/%s/%s_o" % (variant, b.name),
+                     "tints": [{"type": "minecraft:custom_model_data", "index": nb + i, "default": -1} for i in range(no)]}
+            item = {"model": {"type": "minecraft:composite", "models": [
+                base, {"type": "minecraft:condition", "property": "minecraft:custom_model_data", "index": 0, "on_true": outer,
+                       "on_false": {"type": "minecraft:empty"}}]}}
             with open(os.path.join(idir, b.name + ".json"), "w", encoding="utf-8") as fp:
                 json.dump(item, fp, separators=(",", ":"))
             vb.append({"name": b.name, "item": "vrig/%s/%s" % (variant, b.name), "src": b.src})

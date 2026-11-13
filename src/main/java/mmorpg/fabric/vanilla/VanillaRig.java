@@ -79,8 +79,12 @@ public final class VanillaRig {
     private static final Vector3f HIP = new Vector3f(0, 12, 0);
     private static final float FLIP_PIVOT = 0.55F;
 
-    /** 뼈 하나 (아이템 · tint 순서의 색 자리 — [u, v, 겉옷 층] 또는 평균 칸) */
-    record BoneDef(String item, int[] u, int[] v, boolean[] alpha, int[][] avg) {}
+    /**
+     * 뼈 하나 (아이템 · custom_model_data colors 순서의 색 자리 — 몸 층 [u, v] · 평균 칸, 겉옷 층 [u, v] + 밑 몸 칸 [bu, bv]). tint 색은 알파를 쓰지 않음 (바닐라
+     * CustomModelDataSource 가 ARGB.opaque — CI 43351661053 에서 겉옷 층의 투명 칸이 검게 칠해져 몸 전체가 검은 껍데기) → 겉옷 층의 투명 칸은 밑 몸 칸의 색,
+     * 겉옷이 하나도 없으면 flag 0 거짓 (겉옷 모델을 그리지 않음 — tools/player_rig.py)
+     */
+    record BoneDef(String item, int[] u, int[] v, boolean[] outer, int[] bu, int[] bv, int[][] avg) {}
 
     private static final Map<String, BoneDef[]> VARIANTS = new HashMap<>();
     private static Skin DEFAULT;
@@ -152,6 +156,16 @@ public final class VanillaRig {
     /** 뼈 몸을 보이는 중인지 (모드 없는 다른 사람에게 진짜 몸 · 손을 숨김) */
     public static boolean active(Entity e) {
         return e instanceof ServerPlayer && RIGS.containsKey(e.getUUID());
+    }
+
+    /**
+     * 뼈 몸의 지금 몸통 · 머리 틀 (j 공간 — 발 기준, VanillaCosmetics.CosmeticHolder 의 등 장식 · 머리 뼈 장식이 따라감: 회전 베기 · 몸 기울기 · 뿌리 움직임) —
+     * 뼈 몸이 없으면 null
+     */
+    static Matrix4f[] frames(Entity e) {
+        Rig r = e == null ? null : RIGS.get(e.getUUID());
+        if (r == null || r.bodyJ == null) return null;
+        return new Matrix4f[] {new Matrix4f(r.bodyJ), new Matrix4f(r.headJ)};
     }
 
     /** 내 모션 보기 (내 화면에도 뼈 몸 — 저장됨). 보이던 뼈 몸은 거둠 (다음 동작부터 새로) */
@@ -259,6 +273,9 @@ public final class VanillaRig {
         private float walkSpeed;
         private float bodyYaw = Float.NaN;
         private long lastPose = -1;
+        /** 꾸미기가 따라갈 몸통 · 머리 틀 (j 공간 — {@link #frames}) */
+        Matrix4f bodyJ;
+        Matrix4f headJ;
 
         Rig(ServerPlayer sp) {
             this.sp = sp;
@@ -276,7 +293,8 @@ public final class VanillaRig {
             ItemDisplayElement e = new ItemDisplayElement(ItemStack.EMPTY);
             e.setItemDisplayContext(ctx);
             e.setInterpolationDuration(1);
-            e.setDisplaySize(2F, 2.5F);
+            // 크기 0 = 가려짐 판정 없음 (표시 엔티티의 판정 상자는 제자리 (머리 위) 에서 위로만 — 다리만 보이는 화면에서 사라지지 않게)
+            e.setDisplaySize(0F, 0F);
             e.ignorePositionUpdates();
             addPassengerElement(e);
             return e;
@@ -574,14 +592,29 @@ public final class VanillaRig {
             }
             // 몸 (LivingEntityRenderer: Ry(180 − 몸) · 뿌리 (MotionRender.rotate) · S(−1, −1, 1) · 0.9375 · T(0, −1.501, 0)) — 탄 자리 (사람 키) 를 뺌
             Matrix4f root = new Matrix4f().translate(0, (float) -sp.getBbHeight() - (crouch ? 0.125F : 0F), 0).rotateY((180F - bodyYaw) * Mth.DEG_TO_RAD);
+            // 꾸미기 틀 (j 공간 = 모델 공간을 F = diag(−1, −1, 1) 로 — 발 기준, 탄 자리를 빼지 않음)
+            Matrix4f rootJ = new Matrix4f().translate(0, crouch ? -0.125F : 0F, 0).rotateY((180F - bodyYaw) * Mth.DEG_TO_RAD);
             if (p != null && p.has(Pose.ROOT)) {
                 float w = p.w;
                 float wu = p.softLegs && p.up < 0 ? w * (1 - Math.min(1, walkSpeed * 2.5F)) : w;
-                if (p.up != 0 || p.fwd != 0) root.translate(0, p.up * wu, -p.fwd * w);
-                if (p.spin != 0) root.rotateY(p.spin);
-                if (p.flip != 0) root.translate(0, FLIP_PIVOT, 0).rotateX(-p.flip).translate(0, -FLIP_PIVOT, 0);
+                if (p.up != 0 || p.fwd != 0) {
+                    root.translate(0, p.up * wu, -p.fwd * w);
+                    rootJ.translate(0, p.up * wu, -p.fwd * w);
+                }
+                if (p.spin != 0) {
+                    root.rotateY(p.spin);
+                    rootJ.rotateY(p.spin);
+                }
+                if (p.flip != 0) {
+                    root.translate(0, FLIP_PIVOT, 0).rotateX(-p.flip).translate(0, -FLIP_PIVOT, 0);
+                    rootJ.translate(0, FLIP_PIVOT, 0).rotateX(-p.flip).translate(0, -FLIP_PIVOT, 0);
+                }
             }
             root.scale(-1F, -1F, 1F).scale(0.9375F).translate(0, -1.501F, 0);
+            rootJ.scale(0.9375F).translate(0, 1.501F, 0);
+            // 부위 T(p) · Rz Ry Rx (모델) → j: T(F p) · Rz(z) · Ry(−y) · Rx(−x)
+            bodyJ = new Matrix4f(rootJ).translate(-body.x / 16F, -body.y / 16F, body.z / 16F).rotateZ(body.zRot).rotateY(-body.yRot).rotateX(-body.xRot);
+            headJ = new Matrix4f(rootJ).translate(-head.x / 16F, -head.y / 16F, head.z / 16F).rotateZ(head.zRot).rotateY(-head.yRot).rotateX(-head.xRot);
             Matrix4f mh = head.matrix(root);
             Matrix4f mb = body.matrix(root);
             Matrix4f mra = rarm.matrix(root);
@@ -743,6 +776,7 @@ public final class VanillaRig {
     /** 뼈 하나의 아이템: rpg:vrig/… 모델 · custom_model_data 색 (tint 순서) */
     private static ItemStack stack(BoneDef d, Skin s) {
         List<Integer> colors = new ArrayList<>(d.u().length);
+        boolean anyOuter = false;
         for (int i = 0; i < d.u().length; i++) {
             if (d.avg()[i] != null) {
                 long r = 0, g = 0, b = 0;
@@ -758,11 +792,21 @@ public final class VanillaRig {
                 continue;
             }
             int c = s.argb()[d.v()[i] * 64 + d.u()[i]];
-            colors.add(d.alpha()[i] ? c : 0xFF000000 | c);
+            if (d.outer()[i]) {
+                // 겉옷 층: 반 넘게 보이는 칸은 그 색, 투명한 칸은 밑 몸 칸의 색 (겉옷 껍데기가 몸처럼 보이게)
+                if ((c >>> 24) >= 128) {
+                    anyOuter = true;
+                    colors.add(0xFF000000 | c);
+                } else {
+                    colors.add(0xFF000000 | s.argb()[d.bv()[i] * 64 + d.bu()[i]]);
+                }
+                continue;
+            }
+            colors.add(0xFF000000 | c);
         }
         ItemStack st = new ItemStack(Items.PAPER);
         st.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath(Mmorpg.NS, d.item()));
-        st.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(List.of(), List.of(), List.of(), colors));
+        st.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(List.of(), List.of(anyOuter), List.of(), colors));
         return st;
     }
 
@@ -883,14 +927,20 @@ public final class VanillaRig {
                     int n = src.size();
                     int[] u = new int[n];
                     int[] vv = new int[n];
-                    boolean[] alpha = new boolean[n];
+                    boolean[] outer = new boolean[n];
+                    int[] bu = new int[n];
+                    int[] bv = new int[n];
                     int[][] avg = new int[n][];
                     for (int i = 0; i < n; i++) {
                         Object s = src.get(i);
                         if (s instanceof List<?> l && l.size() >= 3) {
                             u[i] = ((Number) l.get(0)).intValue();
                             vv[i] = ((Number) l.get(1)).intValue();
-                            alpha[i] = ((Number) l.get(2)).intValue() != 0;
+                            outer[i] = ((Number) l.get(2)).intValue() != 0 && l.size() >= 5;
+                            if (outer[i]) {
+                                bu[i] = ((Number) l.get(3)).intValue();
+                                bv[i] = ((Number) l.get(4)).intValue();
+                            }
                         } else if (s instanceof Map<?, ?> am && am.get("avg") instanceof List<?> al) {
                             int[] a = new int[al.size() * 2];
                             for (int k = 0; k < al.size(); k++) {
@@ -901,7 +951,7 @@ public final class VanillaRig {
                             avg[i] = a;
                         }
                     }
-                    defs[idx] = new BoneDef(String.valueOf(b.get("item")), u, vv, alpha, avg);
+                    defs[idx] = new BoneDef(String.valueOf(b.get("item")), u, vv, outer, bu, bv, avg);
                 }
                 boolean all = true;
                 for (BoneDef d : defs) all &= d != null;
