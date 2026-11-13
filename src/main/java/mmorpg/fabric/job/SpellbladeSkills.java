@@ -11,16 +11,19 @@ import mmorpg.core.Jobs;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 /**
  * 0.27.0 마검사 직업 스킬 (jobs.json spellblade — 남보라 마력 · 청록 칼날, 특성 「마력 검술」 · 마력 각인): 비전 참격 · 마력 도약 · 룬 검무 · 스펠 가이저 (0.51.0
@@ -405,10 +408,8 @@ final class SpellbladeSkills {
         int dive = (int) k.num("dive", 6);
         JobMove.run(sp, JobMove.to(0, rise, JobMove.up(sp, k.num("lift", 3)), JobMove.OUT), JobMove.hold(rise, thrustTick - dive - 1),
                 JobMove.to(thrustTick - dive - 1, thrustTick - 1, JobMove.landAhead(sp, k.num("diveDist", 2), c0.y), JobMove.IN));
-        // 0.47.0 입체: 솟아오르는 거대한 마력 검 (눈앞 2.6칸, 칼끝 위 — 주인을 따라가며 rise 틱에 0.9 → 3.4 배) → 베기 사이에도 들고 있음 (heldSword)
-        JobFx3d.spawn(level0, "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "to", new Vec3(0, 0.4, 2.6), "ctrl", new Vec3(0, 0.2, 2.6),
-                "travel", rise / 20.0, "dir", V.UP, "face", new Vec3(0, 0, 1), "scale", 0.9, "grow", 3.4 / 0.9 - 1, "life", rise / 20.0, "fadeIn", 0.2, "fadeOut", 0.0,
-                "glowAlpha", 0.6, "shine", 0.35));
+        // 2026-11-13 3D 거검 (직업 도감 메모 "검 연출을 3d로" — 환영 검 판 대신): 솟음 → 세 번 베기 → 찌르기를 틱마다 주인을 따라 (claymore)
+        claymore(sp, j, k, life, rise, gap, slashes.size(), thrustTick, c0);
         // 빨려 드는 빛 (솟는 동안)
         for (int t = 0; t < rise; t += 2) {
             int tt = t;
@@ -443,6 +444,84 @@ final class SpellbladeSkills {
         return true;
     }
 
+    /** 2026-11-13 찌르기 폭발 자리: 쓴 자리 (c0) 의 몸 높이에서 보는 쪽으로 thrustAt + diveDist 칸 (벽까지) — 3D 거검의 칼끝 · 폭발이 같은 자리 */
+    private static Vec3 thrustPoint(ServerPlayer sp, Jobs.Skill k, Vec3 c0) {
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 from = new Vec3(c0.x, Math.min(c0.y, sp.getY()) + 1.0, c0.z);
+        double reach = Math.max(1, RuneKit.rayLength(sp.level(), from, f, k.num("thrustAt", 6) + k.num("diveDist", 2)));
+        return V.add(from, f, reach);
+    }
+
+    /** 2026-11-13 아스트랄 클레이모어의 3D 거검 크기 (rune_sword — 길이 약 6.9칸, 예전 환영 검 판 3.4배와 비슷) */
+    private static final double CLAY = 2.7;
+
+    /**
+     * 2026-11-13 아스트랄 클레이모어의 3D 거검 (직업 도감 메모 "검 연출을 3d로" — 환영 검 판 대신, 계열 색 반투명 빛 날 · 룬 홈): 틱마다 주인을 따라 —
+     * 솟음 (0 ~ rise: 몸 앞 2.6칸 땅속에서 칼끝을 위로 솟으며 커짐) → 베기 (rise + i × gap: 몸 앞 2.2칸을 손잡이로 −25° → 105° 를 4틱 (처음에 빠르게) · 2틱 멈춤 ·
+     * 3틱 동안 다시 세움 — 가로 · 세로 · 대각) → 찌르기 (thrustTick − 4: 몸 쪽으로 당겨 눕힘 → thrustTick: 칼끝이 폭발 자리까지 2틱) → 머물다 오그라들며 사라짐
+     */
+    private static void claymore(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, String life, int rise, int gap, int n, int thrustTick, Vec3 c0) {
+        double[] glow = JobKit.glow(j);
+        double[] core = JobKit.core(j);
+        int end = thrustTick + 16;
+        int prep = thrustTick - 4;
+        Vec3 f0 = Kit.facingOf(sp);
+        Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), end + 4);
+        Vfx.Prop p = JobSword3d.sword(fx, V.up(V.add(sp.position(), f0, 2.6), -2.2), JobSword3d.HILT, JobSword3d.pose(V.UP, V.rightOf(f0)), CLAY * 0.3, glow, core);
+        Vec3[] point = {null};
+        fx.each(1, end, 1, a -> {
+            if (!RuneKit.sameLife(sp, life) || sp.isRemoved()) {
+                fx.end();
+                return;
+            }
+            Vec3 f = Kit.facingOf(sp);
+            Vec3 right = V.rightOf(f);
+            Vec3 base = sp.position();
+            Vec3 front = V.up(V.add(base, f, 2.6), 0.4);
+            Quaternionf upright = JobSword3d.pose(V.UP, right);
+            if (a <= rise) {
+                double q = 1 - Math.pow(1 - a / (double) Math.max(1, rise), 2);
+                p.to(V.up(front, -2.6 * (1 - q)), upright, CLAY * (0.3 + 0.7 * q), 1);
+                return;
+            }
+            if (a < prep) {
+                int i = Math.min(n - 1, (a - rise) / Math.max(1, gap));
+                int t = a - (rise + i * Math.max(1, gap));
+                if (t >= 9) {
+                    p.to(front, upright, CLAY, 1);
+                    return;
+                }
+                Vec3 sw = switch (i % 3) {
+                    case 0 -> right;
+                    case 1 -> f;
+                    default -> V.unit(V.add(right, f, 0.6));
+                };
+                double th = t < 4 ? -25 + 130 * (1 - Math.pow(1 - (t + 1) / 4.0, 2)) : t < 6 ? 105 : 105 * (1 - (t - 5) / 3.0);
+                double r = Math.toRadians(th);
+                Vec3 blade = V.add(V.scale(V.UP, Math.cos(r)), sw, Math.sin(r));
+                Vec3 edge = V.add(V.scale(V.UP, -Math.sin(r)), sw, Math.cos(r));
+                Vec3 pivot = V.up(V.add(base, f, 2.2), 0.25);
+                p.to(t >= 6 ? V.lerp(pivot, front, (t - 5) / 3.0) : pivot, JobSword3d.pose(blade, edge), CLAY, 1);
+                return;
+            }
+            Vec3 hilt0 = V.up(V.add(base, f, 0.4), 1.1);
+            if (a < thrustTick) {
+                // 당겨 눕힘 (3틱 동안 돌고 그 뒤로는 자리만 따라감)
+                if (a == prep) p.to(hilt0, JobSword3d.pose(f, right), CLAY, 3);
+                else p.move(hilt0, 1);
+                return;
+            }
+            if (a == thrustTick) {
+                point[0] = thrustPoint(sp, k, c0);
+                Vec3 d = V.unit(V.sub(point[0], hilt0));
+                p.to(V.add(point[0], d, -JobSword3d.REACH * CLAY), JobSword3d.pose(d, right), CLAY, 2);
+                return;
+            }
+            if (a == thrustTick + 9) p.size(CLAY * 0.08, 6);
+        });
+        fx.on(end, p::remove);
+    }
+
     /** 거대한 검의 베기 하나 (i = 0 가로 · 1 세로 · 2 대각): 검이 휘둘러지는 세 장 · 거대한 검기 · 화면을 가르는 빛, 앞 range 칸 · 폭 half × 2 의 적 */
     private static void giantSlash(ServerPlayer sp, Jobs.Job j, double P, double mult, int i, double range, double half, double[] glow, double[] core, String life,
             Set<UUID> marked, int untilNext, double groundY) {
@@ -458,15 +537,7 @@ final class SpellbladeSkills {
             case 1 -> f;
             default -> V.unit(V.add(right, f, 0.6));
         };
-        // 0.47.0 입체: 거대한 검이 위에서 sweep 쪽으로 휘둘러짐 (−25° → 105°, 4틱 — 처음에 빠르게, 넓은 면이 보는 사람 쪽) → 다시 세워 들고 다음 베기까지 (주인을 따라감)
-        Vec3 sw = V.unit(V.sub(sweep, V.scale(V.UP, V.dot(sweep, V.UP))));
-        JobFx3d.swing(level, "phantom_sword", pommel, V.UP, sw, -25, 105, 0.2, 0.14, 3.4, JobFx3d.SWORD_GRIP, j, Opt.of("shine", 0.45, "glowAlpha", 0.6, "arcEase",
-                "out"));
-        RuneKit.later(5, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "scale",
-                    3.4, "life", Math.max(0.1, (untilNext - 5) / 20.0), "pop", 0.12, "fadeIn", 0.05, "fadeOut", 0.0, "glowAlpha", 0.6, "shine", 0.35));
-        });
+        // 2026-11-13 거대한 검의 휘두름은 3D 거검 (claymore — 같은 손잡이 자리 · 같은 베는 면) 이 맡음
         Vec3 cutDir = switch (i % 3) {
             case 0 -> right;
             case 1 -> V.UP;
@@ -499,8 +570,8 @@ final class SpellbladeSkills {
         Vec3 f = Kit.facingOf(sp);
         // 0.50.0 찌르기는 쓴 자리 (c0) 에서 앞으로 — 내리꽂힌 거리 (diveDist) 만큼 더 멀리 (내려앉은 자리 뒤의 적도 찌르는 길에 들게)
         Vec3 from = new Vec3(c0.x, Math.min(c0.y, sp.getY()) + 1.0, c0.z);
-        double reach = Math.max(1, RuneKit.rayLength(level, from, f, k.num("thrustAt", 6) + k.num("diveDist", 2)));
-        Vec3 point = V.add(from, f, reach);
+        Vec3 point = thrustPoint(sp, k, c0);
+        double reach = Math.max(1, V.len(V.sub(point, from)));
         Vec3 ground = new Vec3(point.x, RuneKit.groundAt(level, point, sp.getY()), point.z);
         double radius = k.num("thrustRadius", 4);
         double markBurst = j.trait() == null ? 1.0 : j.trait().def().numOr("markBurst", 1.0);
@@ -508,10 +579,7 @@ final class SpellbladeSkills {
         Vec3 hilt = V.up(V.add(sp.position(), f, 1.8), 1.0);
         Vec3 dv = V.unit(V.sub(point, hilt));
         double lv0 = Math.max(1, V.len(V.sub(point, hilt)));
-        // 0.47.0 입체: 거대한 검이 몸 쪽에서 앞으로 뻗어 칼끝이 폭발 자리에 닿음 (0.1초) → 0.4초 머물며 흐려짐
-        double sc = Math.max(1.0, lv0 / JobFx3d.SWORD_TIP);
-        JobFx3d.spawn(level, "phantom_sword", V.add(hilt, dv, -1.6), j, Opt.of("to", hilt, "ctrl", V.add(hilt, dv, -0.8), "travel", 0.1, "ease", "out3", "dir", dv, "face",
-                V.UP, "scale", sc, "life", 0.5, "fadeOut", 0.4, "glowAlpha", 0.65, "shine", 0.5));
+        // 2026-11-13 거대한 검의 찌르기는 3D 거검 (claymore — 칼끝이 같은 폭발 자리 thrustPoint 에 닿음) 이 맡음
         RuneKit.flyStreak(level, hilt, point, 60, glow, core, 1.2, 0.45);
         // 폭발: 큰 터짐 · 둘레 둥근 베기 둘 (거꾸로) · 빛기둥 · 번쩍임
         JobFx.burst(level, point, 2.6, j, 0.45, Opt.empty());

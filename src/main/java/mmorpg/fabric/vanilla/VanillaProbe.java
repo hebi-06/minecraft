@@ -1249,7 +1249,11 @@ final class VanillaProbe {
             case "executioner_knell" -> new double[] {7.0, 2.8, 2.0, 0.6};
             case "soulreaper_scythe" -> new double[] {8.0, 3.0, 1.8, 0.6};
             case "warlock_ult" -> new double[] {12.0, 3.4, 4.2, 0.4};
-            case "elementalblade_ult" -> new double[] {12.0, 3.4, 4.6, 0.4};
+            // 2026-11-13 3D 검: 왕의 보물고 (몸 뒤 하늘의 금빛 문 아치 — 좌우 6.5칸 · 높이 7칸 · 과녁 위 8.8칸 대검) · 아스트랄 클레이모어 (6.9칸 거검 — 3칸 떠오름) ·
+            // 월드 클리버 (머리 위 8.8칸 대검)
+            case "elementalblade_ult" -> new double[] {13.5, 3.8, 4.4, 0.4};
+            case "spellblade_ult" -> new double[] {11.5, 3.6, 4.0, 0.5};
+            case "arcaneblade_ult" -> new double[] {12.5, 3.6, 4.6, 0.4};
             case "elementalblade_surge" -> new double[] {8.5, 3.0, 1.4, 0.5};
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};

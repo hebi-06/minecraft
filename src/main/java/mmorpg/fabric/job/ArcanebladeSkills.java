@@ -9,12 +9,14 @@ import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -608,8 +610,8 @@ final class ArcanebladeSkills {
         RuneKit.later(3, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 top = V.up(sp.position(), 2.3);
-            JobFx3d.spawn(sp.level(), "phantom_sword", top, j, Opt.of("dir", V.UP, "scale", 1.4, "grow", 2.6, "life", grow / 20.0 + 0.05, "fadeIn", 0.2, "fadeOut",
-                    0.05, "shine", 0.6, "glowAlpha", 0.6, "rune", 1.0));
+            // 2026-11-13 3D 거대한 대검 (직업 도감 메모 "검 연출을 3d로" — 환영 검 판 대신): 머리 위에서 자라 slamAt 에 앞 땅으로 내려침 (cleaver)
+            cleaver(sp, j, life, slamAt - 3, f);
             JobFx.line(sp.level(), V.up(top, 1.5), V.up(top, 14.0), j, grow / 20.0, Opt.of("alpha", 0.55));
         });
         for (int t = 4; t < slamAt - 2; t += 3) {
@@ -624,13 +626,11 @@ final class ArcanebladeSkills {
                 SkillFx.play(lv, "block.amethyst_block.resonate", tipAt, 0.6 + 0.8 * q, 0.5);
             });
         }
-        // 휘둘러 내려옴 (slamAt − 3 ~ slamAt): 거대한 대검이 쥔 곳을 축으로 하늘에서 앞 땅으로
-        double S = 1.4 * 3.6;
+        // 휘둘러 내려옴 (slamAt − 3 ~ slamAt): 거대한 대검이 쥔 곳을 축으로 하늘에서 앞 땅으로 (3D 대검 — cleaver)
         RuneKit.later(slamAt - 3, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 pivot = V.up(V.add(sp.position(), f, 0.5), 1.5);
-            JobFx3d.swing(lv, "phantom_sword", pivot, V.UP, f, -8, 98, 0.15, 0.55, S, JobFx3d.SWORD_GRIP, j, Opt.of("arcEase", "in", "shine", 0.7, "rune", 1.0));
             SkillFx.play(lv, "entity.player.attack.sweep", pivot, 0.5, 1.0);
             SkillFx.play(lv, "item.trident.riptide_3", pivot, 0.7, 0.9);
         });
@@ -644,6 +644,43 @@ final class ArcanebladeSkills {
             if (RuneKit.sameLife(sp, life)) erupt(sp, j, k, P, c0, f, life, marked);
         });
         return true;
+    }
+
+    /** 2026-11-13 월드 클리버의 3D 거대한 대검 크기 (rune_sword — 길이 약 8.8칸, 예전 환영 검 판 5배와 비슷) */
+    private static final double CLEAVER = 3.4;
+
+    /**
+     * 2026-11-13 월드 클리버의 3D 거대한 대검 (계열 색 반투명 빛 날 · 룬 홈 — 3틱 뒤에 부름): 머리 위 (손잡이 높이 2.3) 에서 칼끝을 하늘로 swingAt 틱까지 1 → CLEAVER
+     * 배로 자람 → swingAt 부터 3틱 동안 몸 앞 0.5칸 · 높이 1.5 를 손잡이로 −8° → 98° (앞 땅 — 내려칠수록 빨라짐, 넓은 면이 옆) → 11틱 박혀 있다 오그라들며 사라짐
+     */
+    private static void cleaver(ServerPlayer sp, Jobs.Job j, String life, int swingAt, Vec3 f) {
+        double[] glow = JobKit.glow(j);
+        double[] core = JobKit.core(j);
+        int at = Math.max(2, swingAt - 3);
+        int end = at + 3 + 11 + 7;
+        Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), end + 4);
+        Vfx.Prop p = JobSword3d.sword(fx, V.up(sp.position(), 2.3), JobSword3d.HILT, JobSword3d.pose(V.UP, f), 1.0, glow, core);
+        fx.each(1, at - 1, 1, a -> {
+            if (!RuneKit.sameLife(sp, life) || sp.isRemoved()) {
+                fx.end();
+                return;
+            }
+            double q = a / (double) Math.max(1, at - 1);
+            p.to(V.up(sp.position(), 2.3), null, 1.0 + (CLEAVER - 1.0) * q, 1);
+        });
+        for (int i = 1; i <= 3; i++) {
+            double t = i / 3.0;
+            double th = Math.toRadians(-8 + 106 * t * t);
+            int ii = i;
+            fx.on(at + i - 1, () -> {
+                Vec3 pivot = V.up(V.add(sp.position(), f, 0.5), 1.5);
+                Vec3 blade = V.add(V.scale(V.UP, Math.cos(th)), f, Math.sin(th));
+                Vec3 edge = V.add(V.scale(V.UP, -Math.sin(th)), f, Math.cos(th));
+                p.to(pivot, JobSword3d.pose(blade, edge), CLEAVER, ii == 1 ? 2 : 1);
+            });
+        }
+        fx.on(at + 3 + 11, () -> p.size(CLEAVER * 0.08, 6));
+        fx.on(end, p::remove);
     }
 
     /**

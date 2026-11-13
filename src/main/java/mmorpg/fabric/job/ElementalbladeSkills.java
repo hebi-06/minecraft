@@ -8,7 +8,9 @@ import mmorpg.core.Elements;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Kit;
@@ -16,6 +18,7 @@ import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -424,9 +427,9 @@ final class ElementalbladeSkills {
     // ------------------------------------------------------------ 엘리멘탈 칼라미티
 
     /**
-     * 엘리멘탈 칼라미티 (다섯 원소): 칼을 하늘로 치켜들면 칼끝에서 다섯 빛줄기가 솟아 겨눈 적 (range 칸 — 없으면 앞 fallback 칸의 땅 · 그 둘레 3칸의 가장 가까운 적) 위
-     * 하늘에 riseAt 틱에 다섯 원소의 거대한 칼이 둥글게 나타남 → first 틱부터 every 틱마다 order 차례로 내리꽂힘 (swords — 칼마다 그 원소를 묻힘: 같은 적 2초 제한 없이
-     * 이어서 반응) → finalAt 틱에 다섯 칼이 하나로 합쳐진 백금빛 대검이 내리찍음 (final · 큰 숫자)
+     * 엘리멘탈 칼라미티 (다섯 원소 — 2026-11-13 왕의 보물고): 칼을 하늘로 치켜들면 몸 뒤 하늘에 금빛 문이 아치로 열려 (riseAt ~) 문마다 3D 원소 검이 나옴 → first
+     * 틱부터 every 틱마다 order 의 원소 한 물결 (검 PER 자루가 겨눈 적 (range 칸 — 없으면 앞 fallback 칸의 땅 · 그 둘레 3칸의 가장 가까운 적) 둘레로 쏟아짐: 물결마다
+     * swords 피해 한 번 · 두 원소를 묻혀 반응 — 같은 적 2초 제한 없이 이어서) → finalAt 틱에 문의 빛이 모인 백금빛 3D 대검이 내리찍음 (final · 큰 숫자)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
@@ -452,96 +455,116 @@ final class ElementalbladeSkills {
         SkillFx.play(level0, "block.beacon.activate", c0, 1.3, 0.8);
         SkillFx.play(level0, "block.end_portal.spawn", c0, 1.6, 0.3);
         JobFx.aura(sp, j, 3.0, 0.6, 0.9);
-        // 0 ~ riseAt: 치켜든 칼끝에서 다섯 원소 빛줄기가 하늘로 솟음 (칼이 나타날 자리로)
-        Vec3[] seats = new Vec3[n];
-        for (int i = 0; i < n; i++) {
-            double a = Math.toRadians(-90 + i * 360.0 / n);
-            seats[i] = new Vec3(Math.cos(a) * R, H, Math.sin(a) * R);
+        // 2026-11-13 왕의 보물고 (직업 도감 메모 "검 연출을 3d로 바꾸고 … 게이트 오브 바빌론 같은 압도적인 물량으로 · 원소 반응 계속"): 몸 뒤 하늘에 금빛 문 GATES 개가
+        // 아치로 차례로 열리고 (riseAt ~) 문마다 3D 원소 검이 칼끝부터 나옴 → first 부터 every 틱마다 원소 한 물결 (PER 자루 — 두 원소가 번갈아 1 ~ 2틱 간격으로 날아가
+        // 과녁 둘레 땅에 꽂힘): 물결마다 그 원소의 피해 한 번 (PER 줄로 쌓이는 숫자 — 무적 시간 없이) · 두 원소를 묻혀 반응 한 번 (반응 위력 × REACT_K) →
+        // 문의 빛이 과녁 위로 모여 백금빛 3D 대검 → finalAt 내리찍음
+        Vec3 right0 = V.rightOf(f0);
+        java.util.Random rr = new java.util.Random(sp.getId() * 31L + Tasks.now());
+        Vec3[] gates = new Vec3[GATES];
+        for (int g = 0; g < GATES; g++) {
+            double u = (g + 0.5) / GATES * 2 - 1;
+            double arch = 1 - u * u;
+            Vec3 p = V.up(c0, 2.0 + 4.6 * arch + (rr.nextDouble() - 0.5) * 0.8);
+            gates[g] = V.add(V.add(p, right0, u * 6.5 + (rr.nextDouble() - 0.5) * 0.5), f0, -1.0 - 1.4 * arch + (rr.nextDouble() - 0.5) * 0.6);
         }
+        List<Integer> perm = new ArrayList<>();
+        for (int g = 0; g < GATES; g++) perm.add(g);
+        java.util.Collections.shuffle(perm, rr);
+        int total = n * PER;
+        int lastLaunch = first + (n - 1) * every - 3 + OFFS[PER - 1];
+        int[] openAt = new int[GATES];
+        for (int q = 0; q < GATES; q++) openAt[perm.get(q)] = riseAt + q * 10 / GATES;
+        Vfx.Fx fx = RuneProps.fx(level0, c0, finalAt + 40);
         Vec3 tip0 = V.up(c0, 3.0);
-        for (int i = 0; i < n; i++) {
-            Jobs.Job ej = tint(j, order.get(i));
-            Vec3 to = V.add(spot0, seats[i]);
-            int ii = i;
-            RuneKit.later(i, () -> JobFx.line(sp.level(), tip0, to, ej, 0.35 + ii * 0.03, Opt.of("alpha", 0.9)));
+        for (int g = 0; g < GATES; g++) {
+            int gg = g;
+            RuneKit.later(openAt[g], () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                Vec3 d = V.unit(V.sub(V.up(spot[0], 1.0), gates[gg]));
+                RuneKit.domainSigil(lv, gates[gg], 0.95, "blade", PRISM, PRISM_CORE, Opt.of("dir", d, "life", (lastLaunch - openAt[gg] + 8) / 20.0, "spin", rr.nextDouble() * 360,
+                        "spinRate", 70.0, "grow", 0.15, "alpha", 0.95, "fade", 0.2));
+                JobFx.glint(lv, gates[gg], 0.7, PRISM, PRISM_CORE, 0.25, Opt.empty());
+                if (gg % 2 == 0) JobFx.line(lv, tip0, gates[gg], tint(j, "prism", PRISM, PRISM_CORE), 0.3, Opt.of("alpha", 0.8));
+                if (gg % 4 == 0) SkillFx.play(lv, "block.amethyst_block.resonate", gates[gg], 0.9 + rr.nextDouble() * 0.4, 0.5);
+            });
         }
-        // riseAt: 하늘에 다섯 칼 (칼끝이 아래 · 천천히 오르내림) · 땅에 원소 고리
-        int[] ids = new int[n];
-        Vec3[] hover = new Vec3[n];
+        // 땅에 원소 고리 (과녁 둘레)
         RuneKit.later(riseAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             if (cur[0] != null && !cur[0].isRemoved()) spot[0] = cur[0].position();
-            for (int i = 0; i < n; i++) {
-                Jobs.Job ej = tint(j, order.get(i));
-                Vec3 at = V.add(spot[0], seats[i]);
-                hover[i] = at;
-                int stay = first + i * every - riseAt;
-                ids[i] = JobFx3d.spawn(lv, "phantom_sword", at, ej, Opt.of("dir", V.scale(V.UP, -1), "life", stay / 20.0 + 0.1, "scale", 2.1, "fadeIn", 0.2, "fadeOut", 0.05,
-                        "glowAlpha", 0.6, "shine", 0.4, "bob", 0.12, "bobHz", 0.9, "faceCam", 1.0));
-                JobFx.glint(lv, at, 0.8, ej, 0.35, Opt.empty());
-            }
             JobFx.runeRing(lv, V.up(ground(lv, spot[0]), 0.08), R + 0.6, j, n, 40, (finalAt - riseAt) / 20.0, Opt.of("alpha", 0.8));
             SkillFx.play(lv, "block.amethyst_block.resonate", spot[0], 0.7, 1.0);
             SkillFx.play(lv, "item.trident.riptide_3", spot[0], 1.4, 0.6);
         });
-        // 내리꽂힘: every 틱마다 한 자루 (3틱 전에 날아감 — 닿는 틱에 피해 · 원소 · 그 원소의 맞은 자리)
-        for (int i = 0; i < n; i++) {
-            int ii = i;
-            String el = order.get(i);
-            Jobs.Job ej = tint(j, el);
-            double mult = swords.get(i);
-            int at = first + i * every;
-            RuneKit.later(at - 3, () -> {
+        // 쏘는 검 하나하나: 문에서 칼끝부터 나옴 (4틱) → launch 에 날아감 (3틱) → 꽂힘 (8틱) → 오그라들며 사라짐
+        int[] lastUse = new int[GATES];
+        java.util.Arrays.fill(lastUse, -100);
+        for (int L = 0; L < total; L++) {
+            int w = L / PER;
+            int m = L % PER;
+            int g = perm.get(L % GATES);
+            String el = order.get(m % 2 == 0 ? w : (w + 1) % n);
+            int launch = first + w * every - 3 + OFFS[m];
+            int emerge = Math.max(openAt[g] + 1, Math.min(launch - 5, lastUse[g] + 2));
+            lastUse[g] = launch;
+            Vfx.Prop[] sw = {null};
+            RuneKit.later(emerge, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel lv = sp.level();
-                LivingEntity t = pick(sp, cur, spot);
-                Vec3 from = hover[ii] != null ? hover[ii] : V.add(spot[0], seats[ii]);
-                JobFx3d.kill(lv, ids[ii], from, 0.02);
-                Vec3 to = t != null ? Kit.bodyPoint(t) : V.up(ground(lv, spot[0]), 0.4);
-                JobFx3d.fly(lv, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 2.1, 0.15, 0.3, ej, Opt.of("fadeOut", 0.12, "shine", 0.6, "glowAlpha", 0.7));
-                SkillFx.play(lv, "item.trident.throw", from, 0.8, 0.8);
+                Vec3 d = V.unit(V.sub(V.up(spot[0], 0.8), gates[g]));
+                double[] eg = ElementFx.glow(el);
+                double[] ec = ElementFx.core(el);
+                Vfx.Prop p = JobSword3d.sword(fx, V.add(gates[g], d, 0.1), JobSword3d.TIP, JobSword3d.aim(d), BLADE * 0.35, eg, ec);
+                sw[0] = p;
+                p.to(V.add(gates[g], d, 1.5), null, BLADE, 4);
             });
-            RuneKit.later(at, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                JobTraits17.setBlade(sp, el);
-                LivingEntity t = pick(sp, cur, spot);
-                if (t == null) {
-                    // 적이 없음: 땅에 꽂힌 자리의 그림만
-                    ServerLevel lv = sp.level();
-                    Vec3 g = ground(lv, spot[0]);
-                    JobFx.burst(lv, V.up(g, 0.4), 1.2, ej, 0.3, Opt.empty());
-                    RuneKit.rockBurst(lv, V.up(g, 0.3), 5, 3.5, 0.2);
+            RuneKit.later(launch, () -> {
+                Vfx.Prop p = sw[0];
+                if (p == null) return;
+                if (!RuneKit.sameLife(sp, life)) {
+                    p.remove();
                     return;
                 }
-                JobKit.strike(sp, t, ej, P, mult, true, false, life, 0, x -> {
-                    ElementSystem.apply(sp, t, el, react, true, true);
-                    JobImpact.hit(sp, t, ej, 1.4);
-                    elementFx(sp, t, el, 1.1);
+                ServerLevel lv = sp.level();
+                LivingEntity t = pick(sp, cur, spot);
+                Vec3 base = t != null ? t.position() : spot[0];
+                double a = rr.nextDouble() * Math.PI * 2;
+                double rad = (t != null ? Kit.bodyPad(t) : 0) + 0.25 + rr.nextDouble() * 0.75;
+                Vec3 land = ground(lv, V.add(base, new Vec3(Math.cos(a), 0, Math.sin(a)), rad));
+                Vec3 to = V.up(land, -0.45);
+                Vec3 from = p.pos();
+                Vec3 d = V.sub(to, from);
+                p.to(to, JobSword3d.aim(V.len(d) < 1e-3 ? V.DOWN : d), BLADE, 3);
+                if (m % 3 == 0) SkillFx.play(lv, "item.trident.throw", from, 0.5, 1.1 + rr.nextDouble() * 0.4);
+                RuneKit.later(3, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    swordLands(sp, j, k, P, el, w, m, n, order, swords, react, life, cur, spot, land);
                 });
-                if (ii == n - 1) JobFx.aura(sp, j, 2.8, 0.5, 0.8);
+                RuneKit.later(3 + 8, () -> p.size(BLADE * 0.08, 4));
+                RuneKit.later(3 + 8 + 4, p::remove);
             });
         }
-        // 합쳐짐: 다섯 원소 빛이 적 위 높이 한 점으로 모여 백금빛 대검이 됨 (finalAt − 10)
+        // 합쳐짐 (finalAt − 10): 문들의 빛이 과녁 위로 모여 백금빛 3D 대검 (칼끝이 아래 — 자라남) → finalAt − 3 에 땅까지 꿰뚫음
         int merge = finalAt - 10;
-        int[] big = {0};
+        Vfx.Prop[] big = {null};
         Vec3[] bigAt = {null};
         RuneKit.later(merge, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             LivingEntity t = pick(sp, cur, spot);
             Vec3 base = t != null ? t.position() : ground(lv, spot[0]);
-            Vec3 top = V.up(base, H + 2.5);
+            Vec3 top = V.up(base, 2.4);
             bigAt[0] = top;
+            for (int g = 0; g < GATES; g += 2) JobFx.line(lv, gates[g], V.up(top, JobSword3d.REACH * FINAL * 0.6), tint(j, "prism", PRISM, PRISM_CORE), 0.4, Opt.of("alpha",
+                    0.9));
             for (int i = 0; i < n; i++) {
                 Jobs.Job ej = tint(j, order.get(i));
-                double a = Math.toRadians(-90 + i * 360.0 / n);
-                Vec3 from = V.add(base, new Vec3(Math.cos(a) * (R + 1.2), 0.6, Math.sin(a) * (R + 1.2)));
-                JobFx.line(lv, from, top, ej, 0.4, Opt.of("alpha", 0.95));
-                JobFx.glint(lv, top, 0.5 + i * 0.12, ej, 0.3, Opt.empty());
+                JobFx.glint(lv, V.up(top, 1.0 + i * 0.9), 0.5 + i * 0.12, ej, 0.3, Opt.empty());
             }
-            big[0] = JobFx3d.spawn(lv, "phantom_sword", top, tint(j, "prism", PRISM, PRISM_CORE), Opt.of("dir", V.scale(V.UP, -1), "life", 0.6, "scale", 3.4, "fadeIn",
-                    0.25, "fadeOut", 0.05, "glowAlpha", 0.8, "shine", 0.8, "faceCam", 1.0));
+            big[0] = JobSword3d.sword(fx, top, JobSword3d.TIP, JobSword3d.aim(V.DOWN), FINAL * 0.3, PRISM, PRISM_CORE);
+            big[0].size(FINAL, 6);
             Ult.flash(lv, top, PRISM, Opt.of("radius", 8.0, "time", new double[] {0.02, 0.04, 0.3}), sp);
             SkillFx.play(lv, "block.beacon.power_select", top, 0.7, 1.0);
             SkillFx.play(lv, "block.respawn_anchor.charge", top, 0.8, 0.9);
@@ -549,16 +572,16 @@ final class ElementalbladeSkills {
         RuneKit.later(finalAt - 4, () -> {
             if (RuneKit.sameLife(sp, life)) JobKit.motion(sp, k.id() + ":final");
         });
-        // 내리찍음: 대검이 3틱에 적에게 → finalAt 큰 한 방 · 다섯 원소 고리 · 백금빛 빛살 · X 검기
+        // 내리찍음: 대검이 3틱에 과녁을 꿰뚫고 땅에 박힘 (칼끝이 땅 아래 0.8칸) → 12틱 머물다 오그라들며 사라짐
         RuneKit.later(finalAt - 3, () -> {
-            if (!RuneKit.sameLife(sp, life) || bigAt[0] == null) return;
+            if (!RuneKit.sameLife(sp, life) || big[0] == null) return;
             ServerLevel lv = sp.level();
             LivingEntity t = pick(sp, cur, spot);
-            JobFx3d.kill(lv, big[0], bigAt[0], 0.02);
-            // 영상 42346989114: 칼끝이 가슴에서 멈춰 하늘에 걸린 칼처럼 보였음 → 과녁을 꿰뚫고 땅에 박힘 (칼끝이 땅 아래 0.8칸)
             Vec3 to = V.up(ground(lv, t != null ? t.position() : spot[0]), -0.8);
-            JobFx3d.fly(lv, "phantom_sword", bigAt[0], to, JobFx3d.SWORD_TIP, 3.4, 0.15, 0.45, tint(j, "prism", PRISM, PRISM_CORE), Opt.of("fadeOut", 0.2, "shine", 0.9,
-                    "glowAlpha", 0.85));
+            big[0].to(to, null, FINAL, 3);
+            Vfx.Prop bp = big[0];
+            RuneKit.later(3 + 12, () -> bp.size(FINAL * 0.08, 6));
+            RuneKit.later(3 + 12 + 6, bp::remove);
             SkillFx.play(lv, "item.trident.riptide_3", to, 0.8, 1.0);
         });
         RuneKit.later(finalAt, () -> {
@@ -588,6 +611,52 @@ final class ElementalbladeSkills {
             JobKit.strike(sp, t, pj, P, k.num("final", 28), true, true, life, 0, x -> JobImpact.hit(sp, t, pj, 2.5));
         });
         return true;
+    }
+
+    /** 2026-11-13 왕의 보물고: 금빛 문 수 · 물결마다 검 수 · 물결 안에서 쏘는 틱 (PER 개) · 쏘는 검 크기 (길이 약 2.6칸) · 백금빛 대검 크기 (약 8.8칸) · 반응 위력 배 */
+    private static final int GATES = 16;
+    private static final int PER = 8;
+    private static final int[] OFFS = {0, 1, 2, 4, 5, 6, 8, 9};
+    private static final double BLADE = 1.0;
+    private static final double FINAL = 3.4;
+    private static final double REACT_K = 0.4;
+
+    /**
+     * 칼라미티의 쏜 검 하나가 땅에 꽂힘 (물결 w 의 m 번째 — 원소 el): 꽂힌 자리의 원소 빛 · 불티 · 돌 조각. 물결의 첫 검 (m 0) = 그 원소의 피해 한 번 (swords[w] —
+     * PER 줄로 쌓이는 숫자 · 무적 시간 없이) · 그 원소를 묻힘 · 칼날 빛 · 원소 연출 / 둘째 검 (m 1) = 다음 원소를 묻혀 반응 (위력 × REACT_K — 물결마다 반응 한 번)
+     */
+    private static void swordLands(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, String el, int w, int m, int n, List<String> order, List<Double> swords,
+            double react, String life, LivingEntity[] cur, Vec3[] spot, Vec3 land) {
+        ServerLevel lv = sp.level();
+        double[] eg = ElementFx.glow(el);
+        double[] ec = ElementFx.core(el);
+        SkillFx.sparks(lv, V.up(land, 0.4), ec, 6, 4.5);
+        RuneKit.rockBurst(lv, V.up(land, 0.2), 3, 3.0, 0.15);
+        if (m >= 2) {
+            JobFx.glint(lv, V.up(land, 0.5), 0.55, eg, ec, 0.2, Opt.empty());
+            if (m % 2 == 0) SkillFx.play(lv, "item.trident.hit_ground", land, 0.5, 1.0 + Kit.rand() * 0.3);
+            return;
+        }
+        LivingEntity t = pick(sp, cur, spot);
+        Jobs.Job ej = tint(j, el);
+        if (m == 0) JobTraits17.setBlade(sp, el);
+        if (t == null) {
+            JobFx.burst(lv, V.up(land, 0.4), 1.2, ej, 0.3, Opt.empty());
+            return;
+        }
+        if (m == 0) {
+            double d = JobKit.hitSplit(sp, t, ej, P, swords.get(Math.min(w, swords.size() - 1)), PER, 1, true, false);
+            if (d > 0) {
+                ElementSystem.apply(sp, t, el, react * REACT_K, true, true);
+                JobImpact.hit(sp, t, ej, 1.3);
+                elementFx(sp, t, el, 1.0);
+            }
+            if (w == n - 1) JobFx.aura(sp, j, 2.8, 0.5, 0.8);
+            SkillFx.play(lv, "item.trident.hit", land, 0.8, 0.9);
+        } else {
+            ElementSystem.apply(sp, t, el, react * REACT_K, true, true);
+            elementFx(sp, t, el, 0.7);
+        }
     }
 
     /** 칼라미티의 지금 과녁: 처음 겨눈 적 (살아 있으면) → 아니면 자리 둘레 3칸의 가장 가까운 적 (자리를 그 적으로 옮김) */
