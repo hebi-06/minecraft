@@ -294,11 +294,11 @@ public final class JobTraits9 {
             if (n >= 2) break;
             int t = RpgCombat.extraArrow(sp, e, w, ratio);
             if (t < 0) continue;
-            Vec3 from = side[n];
+            Vec3 src = side[n];
             n++;
             Vec3 to = Kit.bodyPoint(e);
-            RuneKit.streak(level, from, to, glow, 0.07, 0.2, 0.75, 0);
-            RuneKit.flyArrow(level, from, to, V.len(V.sub(to, from)) / Math.max(0.05, t / 20.0), glow, core, 0.6, 0.0);
+            RuneKit.streak(level, src, to, glow, 0.07, 0.2, 0.75, 0);
+            RuneKit.flyArrow(level, src, to, V.len(V.sub(to, src)) / Math.max(0.05, t / 20.0), glow, core, 0.6, 0.0);
         }
         // 갈래 불티 (쏘는 쪽으로 세 갈래 — 다른 적이 없어도 보임)
         for (int s = -1; s <= 1; s++) {
