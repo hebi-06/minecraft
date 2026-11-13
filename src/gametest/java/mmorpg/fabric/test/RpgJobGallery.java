@@ -1002,9 +1002,10 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 직업 스킬 다섯을 같은 입력 (Shift + 칸 키) 으로 쓰고 틱마다 한 장 — 태세 · 강화는 뒤에 평타까지 */
     private void filmSkills(ClientGameTestContext ctx, TestServerContext server, String job, Case[] cases, RpgFilm f) {
         Jobs.Job j = Jobs.job(job);
-        // 2026-11-13 고른 스킬만 (only=job,film,filmjobN,filmids=swordsman_mirror+archer_rapid — 스킬 id, + 로 이음): 2D 그림만 바뀐 스킬의 모드 모습
-        // (모드 없는 클라이언트는 아직 직업 그림 rfx_j* 를 거의 못 그림 — tools/vfx_particles.py RUNE_J)
-        String ids = RpgFilm.valueOf("filmids");
+        // 2026-11-13 고른 스킬만 (only=job,film,filmjobN,jobids=swordsman_mirror+archer_rapid — 스킬 id, + 로 이음): 2D 그림만 바뀐 스킬의 모드 모습
+        // (모드 없는 클라이언트는 아직 직업 그림 rfx_j* 를 거의 못 그림 — tools/vfx_particles.py RUNE_J). filmids 는 룬 사진첩이 룬 id 로 읽음 (CI 43459150680 — 룬이
+        // 아닌 id 라 룬 영상 시험이 실패해 직업 영상까지 가지 못했음)
+        String ids = RpgFilm.valueOf("jobids");
         java.util.Set<String> pick = ids == null || ids.isBlank() ? null : java.util.Set.of(ids.split("\\+"));
         for (Case c : cases) {
             Jobs.Skill k = j.skill(c.slot());
