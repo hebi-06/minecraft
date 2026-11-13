@@ -7,6 +7,7 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneMob;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -37,6 +38,10 @@ final class PhoenixSkills {
     /** 디센트의 불사조: 가슴 높이 (불기둥 밑에서) · 날개 끝 사이 (칸) */
     static final double BIRD_UP = 7.5;
     static final double BIRD_SPAN = 10.5;
+    /** 2026-11-13 3D 푸른 불사조 (tools/job_mobs_art.py job_phoenix — 크기 1 에서 날개 끝 사이 약 5.6칸 · 가슴 높이 1.25칸): 크기 · 몹 자리 → 가슴 높이 */
+    static final String PHOENIX = "rpg:job_phoenix";
+    static final double BIRD_SCALE = BIRD_SPAN / 5.6;
+    static final double BIRD_CHEST = 1.25 * BIRD_SCALE;
 
     static void register() {
         JobSystem.register("phoenix_bash", PhoenixSkills::bash);
@@ -455,13 +460,22 @@ final class PhoenixSkills {
         int wake = pillarAt + 3;
         int circleFrom = pillarAt + 8;
         int diveFrom = diveAt - 6;
+        // 2026-11-13 3D 푸른 불사조 (직업 도감 메모 "피닉스 3d로 연출" — 2D 불사조 그림 대신, tools/job_mobs_art.py job_phoenix): 불기둥 꼭대기에서 날개를 펴며
+        // 깨어나 날갯짓하며 돌다 (가는 쪽을 봄) 머리를 아래로 내리꽂고 땅에서 날개를 펼치며 터짐
+        RuneMob[] px = {null};
         RuneKit.later(wake, () -> {
             if (!RuneKit.sameLife(sp, life) || base[0] == null) return;
             ServerLevel lv = sp.level();
             Vec3 top = V.up(base[0], BIRD_UP);
             bird[0] = top;
-            JobFx15.phoenix(lv, top, BIRD_SPAN, 0, 2, (circleFrom - wake) / 20.0 + 0.05, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.05),
-                    AZURE, AZURE_CORE);
+            px[0] = RuneMob.spawn(PHOENIX, lv, V.up(top, -BIRD_CHEST), f0, diveAt - wake + 30, BIRD_SCALE, true);
+            if (px[0] != null) {
+                px[0].hold("summon");
+                RuneKit.later(circleFrom - wake, () -> {
+                    if (px[0].alive()) px[0].anim("fly");
+                });
+            } else JobFx15.phoenix(lv, top, BIRD_SPAN, 0, 2, (circleFrom - wake) / 20.0 + 0.05, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade",
+                    0.05), AZURE, AZURE_CORE);
             JobFx.feathers(lv, top, 14, 4.0, 0.5, j, 1.8, Opt.empty());
             SkillFx.play(lv, "entity.ender_dragon.growl", top, 1.6, 0.8);
             SkillFx.play(lv, "entity.ender_dragon.flap", top, 1.0, 1.0);
@@ -476,8 +490,9 @@ final class PhoenixSkills {
                 Vec3 p = circlePoint(base[0], f0, (tt - circleFrom) / (double) Math.max(1, diveFrom - circleFrom));
                 Vec3 next = circlePoint(base[0], f0, (tt + 1 - circleFrom) / (double) Math.max(1, diveFrom - circleFrom));
                 bird[0] = p;
-                JobFx15.phoenix(lv, p, BIRD_SPAN, 2, 3, 0.2, true, Opt.of("vel", V.scale(V.sub(next, p), 20), "solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade",
-                        0.05, "fps", 10.0, "phase", ((tt - circleFrom) * 10 / 20.0) % 3), AZURE, AZURE_CORE);
+                if (px[0] != null && px[0].alive()) px[0].moveTo(V.up(next, -BIRD_CHEST), 1, 0, RuneMob.LINEAR, true);
+                else JobFx15.phoenix(lv, p, BIRD_SPAN, 2, 3, 0.2, true, Opt.of("vel", V.scale(V.sub(next, p), 20), "solo", BIRD_SOLO, "owner", (double) sp.getId(),
+                        "fade", 0.05, "fps", 10.0, "phase", ((tt - circleFrom) * 10 / 20.0) % 3), AZURE, AZURE_CORE);
                 if ((tt - circleFrom) % 4 == 0) JobFx.feathers(lv, V.up(p, -1.0), 3, 2.5, 0.42, j, 1.4, Opt.empty());
                 if ((tt - circleFrom) % 8 == 0) SkillFx.play(lv, "entity.ender_dragon.flap", p, 1.4, 0.9);
             });
@@ -502,7 +517,11 @@ final class PhoenixSkills {
                 Vec3 p = V.add(from, V.scale(V.sub(end, from), u * u));
                 Vec3 prev = V.add(from, V.scale(V.sub(end, from), Math.max(0, (tt - diveFrom) / (double) (diveAt - diveFrom))
                         * Math.max(0, (tt - diveFrom) / (double) (diveAt - diveFrom))));
-                JobFx15.phoenix(lv, p, BIRD_SPAN - 0.5, 5, 1, 0.1, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE, AZURE_CORE);
+                if (px[0] != null && px[0].alive()) {
+                    if (tt == diveFrom) px[0].hold("dive");
+                    px[0].moveTo(V.up(p, -BIRD_CHEST), 1, 0, RuneMob.LINEAR, false);
+                } else JobFx15.phoenix(lv, p, BIRD_SPAN - 0.5, 5, 1, 0.1, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE,
+                        AZURE_CORE);
                 JobFx.line(lv, V.up(prev, 1.5), V.up(p, 1.0), AZURE, AZURE_CORE, 0.4, Opt.of("alpha", 0.95));
                 JobFx.line(lv, V.add(V.up(prev, 2.5), V.rightOf(f0), 1.4), V.add(V.up(p, 1.5), V.rightOf(f0), 1.0), DEEP, DEEP_CORE, 0.35, Opt.of("alpha", 0.8));
                 JobFx.line(lv, V.add(V.up(prev, 2.5), V.rightOf(f0), -1.4), V.add(V.up(p, 1.5), V.rightOf(f0), -1.0), DEEP, DEEP_CORE, 0.35, Opt.of("alpha", 0.8));
@@ -515,7 +534,8 @@ final class PhoenixSkills {
             Vec3 g = spot[0] != null ? spot[0] : diveSpot(lv, target, fixed);
             double dr = k.num("diveRadius", 6);
             // 땅에 닿음: 불사조가 날개를 펼치며 크게 터짐 → 깃털로 흩어짐 · 둘레 불꽃 기둥 · 고리 · 금 · 깃털 비
-            JobFx15.phoenix(lv, V.up(g, 3.8), BIRD_SPAN + 1.5, 6, 1, 0.25, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE,
+            if (px[0] != null && px[0].alive()) px[0].leave("burst", 10); // 3D 불사조가 날개를 펼치며 터짐
+            else JobFx15.phoenix(lv, V.up(g, 3.8), BIRD_SPAN + 1.5, 6, 1, 0.25, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE,
                     AZURE_CORE);
             RuneKit.later(5, () -> JobFx15.phoenix(lv, V.up(g, 3.8), BIRD_SPAN + 1.5, 7, 1, 0.7, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade",
                     0.4), AZURE, AZURE_CORE));

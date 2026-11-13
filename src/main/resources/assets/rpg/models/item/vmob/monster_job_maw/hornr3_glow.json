@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_job_maw_emissive","particle":"rpg:item/vmob/allies_job_maw_emissive"},"elements":[{"from":[6.48,5.98,6.98],"to":[9.52,10.02,9.02],"faces":{"up":{"uv":[4.375,14.25,4.0,13.75],"texture":"#0"}},"light_emission":15}]}

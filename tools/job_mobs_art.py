@@ -701,6 +701,474 @@ def job_reaper_anims():
     }
 
 
+# ================================================================== 왕의 손 (2026-11-13 — 직업 도감 메모 타이런트 킹스 그립 "왕의 손을 3d로"): 보랏빛 망령 거인 왕의
+# 갑주 손 (비침) — 금 테 · 손등의 핏빛 왕관 룬 · 손가락 넷 (두 마디 + 핏빛 발톱) · 엄지 · 팔목 갑주. 손바닥이 아래 · 손가락이 앞 (−Z) — 쥐면 아래로 감김.
+# 손바닥 높이 약 20 ~ 28 픽셀 (크기 1) — 몹 자리 = 쥘 적의 발
+
+HD_METAL = (86, 52, 132)
+HD_DARK = (40, 22, 64)
+HD_GOLD = (236, 190, 92)
+HD_GLOW = (196, 120, 255)
+HD_CRIMSON = (232, 44, 72)
+HD_CORE = (255, 214, 238)
+HD_FINGERS = (-6.0, -2.0, 2.0, 6.0)
+
+
+def job_hand():
+    m = Model("job_hand", tex_w=128)
+    metal = see(Mat(HD_METAL, "metal", noise=6, edge=0.8, seed=1301, accent=HD_DARK, seam=HD_GLOW, seam_glow=0.0, seam_band=4, seam_dir="grid", seam_gap=0.4), 0.88)
+    plate = see(Mat(HD_METAL, "plates", noise=5, edge=0.82, seed=1302, accent=HD_DARK, band=3), 0.9)
+    dark = see(Mat(HD_DARK, "metal", noise=4, edge=0.86, seed=1303), 0.85)
+    gold = Mat(HD_GOLD, "metal", noise=4, edge=0.9, seed=1304)
+    glow = Mat(HD_GLOW, "flat", noise=5, edge=1.0, glow=0.9, seed=1305)
+    claw = Mat(HD_CRIMSON, "crystal", noise=4, edge=1.0, glow=0.75, seed=1306)
+    core = Mat(HD_CORE, "flat", noise=2, edge=1.0, glow=1.0, seed=1307)
+    root = m.bone("root", [0, 0, 0])
+    arm = m.bone("arm", [0, 24, 8], "root")
+    # 팔목 갑주 (뒤 +Z — 거인의 팔이 이어짐): 통 · 금 테 둘 · 빛 줄
+    arm.box([-6, 19.5, 8], [12, 9, 13], metal.with_(seed=1360))
+    arm.box([-6.5, 19, 9], [13, 10, 1.5], gold)
+    arm.box([-6.5, 19, 18], [13, 10, 1.5], gold.with_(seed=1308))
+    arm.box([-1, 28.4, 10.5], [2, 0.6, 7.5], glow)
+    arm.box([-6.4, 23, 11], [0.6, 2, 6], glow.with_(seed=1361))
+    arm.box([5.8, 23, 11], [0.6, 2, 6], glow.with_(seed=1362))
+    palm = m.bone("palm", [0, 24, 7], "arm")
+    # 손등 · 손바닥 (두툼하게) · 손등 갑주 판 · 왕관 룬 (핏빛 · 빛)
+    palm.box([-8, 20, -6], [16, 8, 14], metal)
+    palm.box([-8.5, 27.5, -6.5], [17, 2, 12], plate.with_(seed=1309))
+    palm.box([-3, 29.3, -2], [6, 0.6, 5], claw.with_(seed=1310))
+    palm.box([-1, 29.3, -3.5], [2, 0.6, 1.5], core)
+    palm.box([-3.5, 29.3, 3.2], [7, 0.6, 1], gold.with_(seed=1311))
+    for x in (-3.5, 0, 3.5):
+        palm.box([x - 0.5, 29.6, 2.4], [1, 1.2, 1], gold.with_(seed=1312 + int(x)))
+    # 손가락 넷: 뿌리 마디 (금 마디 테) · 끝 마디 · 핏빛 발톱 (빛)
+    for i, x in enumerate(HD_FINGERS):
+        f1 = m.bone(f"f{i}a", [x, 24, -6], "palm")
+        f1.box([x - 1.75, 21, -14.5], [3.5, 6, 8.5], metal.with_(seed=1320 + i))
+        f1.box([x - 2, 26.5, -13.5], [4, 1, 4], plate.with_(seed=1325 + i))
+        f1.box([x - 2, 20.8, -7], [4, 6.4, 1], gold.with_(seed=1330 + i), inflate=0.05)
+        f2 = m.bone(f"f{i}b", [x, 24, -14.5], f"f{i}a")
+        f2.box([x - 1.5, 21.5, -22.5], [3, 5, 8], metal.with_(seed=1335 + i))
+        f2.box([x - 1.5, 21.5, -15.5], [3, 5, 1], dark.with_(seed=1340 + i), inflate=0.05)
+        f2.box([x - 1, 21.5, -26.5], [2, 3, 4], claw.with_(seed=1345 + i))
+        f2.box([x - 0.5, 21.5, -28], [1, 1.5, 1.5], core.with_(seed=1350 + i))
+    # 엄지 (−X 옆 — 앞 아래로 비스듬히)
+    t1 = m.bone("thumbA", [-8, 23, 1], "palm", [0, -28, 0])
+    t1.box([-14, 20.5, -1.5], [6, 5, 5], metal.with_(seed=1355))
+    t1.box([-14.2, 25, -1.5], [6.4, 1, 5], plate.with_(seed=1356))
+    t2 = m.bone("thumbB", [-14, 23, 1], "thumbA")
+    t2.box([-19.5, 21, -1], [5.5, 4, 4], metal.with_(seed=1357))
+    t2.box([-22.5, 21.5, -0.5], [3, 3, 3], claw.with_(seed=1358))
+    return m
+
+
+HD_BONES = ("root", "arm", "palm", "thumbA", "thumbB") + tuple(f"f{i}{p}" for i in range(4) for p in "ab")
+
+
+def _hd_pose(kind):
+    """손의 자세: spread = 활짝 (손가락이 조금 젖혀짐 · 벌어짐) · grip = 쥠 (손가락이 아래로 감김 — 뿌리 70° · 끝 75°) · crush = 꽉 쥠 (더 감김 · 손바닥이 내려앉음) ·
+    slam = 쥔 채 앞으로 내리꽂음 (팔목이 앞으로 숙음)"""
+    if kind == "spread":
+        p = {"palm": [-6, 0, 0], "thumbA": [0, -18, -10], "thumbB": [0, -10, 0]}
+        for i in range(4):
+            p[f"f{i}a"] = [-14, (i - 1.5) * 7, 0]
+            p[f"f{i}b"] = [-6, 0, 0]
+        return p
+    if kind in ("grip", "crush"):
+        k = 1.0 if kind == "grip" else 1.18
+        p = {"palm": [8 * k, 0, 0], "thumbA": [0, 26 * k, 34 * k], "thumbB": [0, 30 * k, 0]}
+        for i in range(4):
+            p[f"f{i}a"] = [70 * k, (i - 1.5) * -2, 0]
+            p[f"f{i}b"] = [75 * k, 0, 0]
+        if kind == "crush":
+            p["root"] = [0, 0, 0]
+        return p
+    if kind == "slam":
+        p = _hd_pose("crush")
+        p["arm"] = [28, 0, 0]
+        return p
+    return {}
+
+
+def _hd_move(times, poses, extra=None, length=None):
+    bones = {}
+    for b in HD_BONES:
+        keys = [(t, (_hd_pose(p) if isinstance(p, str) else p).get(b, [0, 0, 0])) for t, p in zip(times, poses)]
+        if any(v != [0, 0, 0] for _, v in keys):
+            bones[b] = {"rotation": kf(keys)}
+    for b, v in (extra or {}).items():
+        bones.setdefault(b, {}).update(v)
+    out = {"bones": bones}
+    if length is not None:
+        out["animation_length"] = length
+    return out
+
+
+def job_hand_anims():
+    wob = f"math.sin({LT} * 90)"
+    out = {
+        # 늘 (작게): 손가락이 꿈틀 · 손이 떠 흔들림
+        "idle": {"loop": True, "bones": {
+            "root": {"position": [0, f"{wob} * 0.6", 0]},
+            "f0b": {"rotation": [f"math.sin({LT} * 120) * 4", 0, 0]},
+            "f2b": {"rotation": [f"math.sin({LT} * 120 + 90) * 4", 0, 0]},
+            "thumbB": {"rotation": [0, f"math.sin({LT} * 80) * 5", 0]},
+        }},
+        # 나타남 (0.3초 — 끝 = 활짝): 작게 커지며 손가락을 펼침
+        "summon": dict(_hd_move([0, 0.3], [{}, "spread"], {"root": {"scale": kf([(0, [0.3, 0.3, 0.3]), (0.22, [1.06, 1.06, 1.06]), (0.3, [1, 1, 1])])}}, 0.3)),
+        # 활짝 (이어 돎 — 손가락이 조금씩 오므렸다 폄)
+        "spread": dict(_hd_move([0], ["spread"]), loop=True),
+        # 움켜쥠 (0.18초 — 끝 자세를 지킴)
+        "grab": _hd_move([0, 0.1, 0.18], ["spread", {k: [v[0] * 1.1, v[1], v[2]] for k, v in _hd_pose("grip").items()}, "grip"], length=0.18),
+        # 쥔 채 (이어 돎 — 맥박)
+        "hold": dict(_hd_move([0], ["grip"]), loop=True),
+        # 쥐어짬 (0.3초 — 끝 = 쥔 자세): 꽉 쥐었다 놓음
+        "squeeze": _hd_move([0, 0.08, 0.3], ["grip", "crush", "grip"], {"root": {"scale": kf([(0, [1, 1, 1]), (0.08, [1.05, 0.95, 1.05]), (0.3, [1, 1, 1])])}},
+                            0.3),
+        # 내리꽂음 (0.25초 — 끝 자세를 지킴): 팔목이 앞으로 숙으며 꽉 쥠
+        "slam": _hd_move([0, 0.25], ["grip", "slam"], length=0.25),
+        # 놓음 (0.3초): 손가락을 펼치며 흐려짐
+        "release": _hd_move([0, 0.3], ["slam", "spread"], length=0.3),
+        # 흩어짐 (0.4초): 위로 솟으며 작아짐
+        "vanish": {"animation_length": 0.4, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.4, [0, 10, 0])]), "scale": kf([(0, [1, 1, 1]), (0.12, [1.08, 1.08, 1.08]), (0.4, [0.04, 0.04, 0.04])])},
+        }},
+    }
+    return out
+
+
+# ================================================================== 심연의 아가리 (2026-11-13 — 직업 도감 메모 다크 나이트 피스트 "방패 아가리 3d로" · 어비설 메이
+# "아가리 3d로"): 저주받은 방패의 얼굴 — 검붉은 쇠 판 (핏빛 금) · 굽은 뿔 둘 · 붉은 눈 · 위아래 송곳니 · 붉게 빛나는 목구멍. 아래턱이 벌어짐 (뒤 경첩).
+# 앞 = −Z (몹이 보는 쪽 — 물 적), 크기 1 에서 너비 약 1.4칸 · 높이 약 1.9칸 (뿔 포함). pit 동작은 뿌리를 젖혀 아가리가 하늘을 봄 (땅에서 솟는 아가리)
+
+MW_IRON = (52, 20, 26)
+MW_DARK = (22, 8, 12)
+MW_BLOOD = (255, 56, 72)
+MW_CORE = (255, 170, 160)
+MW_BONE = (236, 226, 204)
+MW_HORN = (30, 14, 16)
+
+
+def job_maw():
+    m = Model("job_maw", tex_w=128)
+    iron = Mat(MW_IRON, "metal", noise=6, edge=0.82, seed=1401, accent=MW_DARK)
+    iron2 = Mat((66, 26, 32), "metal", noise=5, edge=0.86, seed=1402, accent=MW_DARK)
+    dark = Mat(MW_DARK, "flat", noise=3, edge=0.9, seed=1403)
+    horn = Mat(MW_HORN, "chitin", noise=5, edge=0.85, seed=1404, band=2)
+    crack = Mat(MW_BLOOD, "flat", noise=6, edge=1.0, glow=0.9, seed=1450)
+    fang = Mat(MW_BONE, "bone", noise=3, edge=0.9, seed=1405)
+    throat = Mat(MW_BLOOD, "skin", noise=10, edge=1.0, glow=0.95, seed=1406, accent=(150, 10, 30))
+    core = Mat(MW_CORE, "flat", noise=2, edge=1.0, glow=1.0, seed=1407)
+    eyes = [("north", x, y, MW_CORE if (x in (5, 16)) else MW_BLOOD, 1.0) for x in (3, 4, 5, 6, 15, 16, 17, 18) for y in (1, 2)]
+    root = m.bone("root", [0, 0, 0])
+    head = m.bone("head", [0, 14, 4], "root")
+    # 위 얼굴 판 (눈썹 판 · 이마 · 볼 판) · 코 홈
+    head.box([-10, 14, -4], [20, 13, 9], iron)
+    head.box([-11, 25, -6], [22, 4, 6], iron2, decals=eyes)
+    head.box([-12, 15, -5], [3, 10, 8], iron.with_(seed=1408))
+    head.box([9, 15, -5], [3, 10, 8], iron.with_(seed=1409))
+    head.box([-2, 20, -5], [4, 5, 1], dark)
+    head.box([-1, 29, -5], [2, 2, 3], horn.with_(seed=1410))
+    # 핏빛 금 (얼굴 판의 갈라진 틈 — 빛)
+    head.box([-6.5, 17, -4.3], [0.6, 7, 0.4], crack)
+    head.box([-6.5, 17, -4.3], [3, 0.6, 0.4], crack.with_(seed=1451))
+    head.box([5.5, 15.5, -4.3], [0.6, 6, 0.4], crack.with_(seed=1452))
+    head.box([3, 21, -4.3], [3, 0.6, 0.4], crack.with_(seed=1453))
+    head.box([-11.6, 19, -5.3], [0.4, 5, 0.4], crack.with_(seed=1454))
+    head.box([11.2, 17, -5.3], [0.4, 5, 0.4], crack.with_(seed=1455))
+    # 위 송곳니 (앞 가장자리) · 입천장 (빛)
+    for i, x in enumerate((-8, -5, -2, 1.5, 4.5, 7.5)):
+        big = i in (0, 5)
+        head.box([x - 0.5, 11 - (2 if big else 0), -4.5], [2 if big else 1.5, 3 + (2 if big else 0), 1.5], fang.with_(seed=1411 + i))
+    head.box([-8.5, 13.4, -3.5], [17, 0.8, 7], throat)
+    # 뿔 (굽은 셋 마디 — 옆 위로 뻗어 앞으로 휨)
+    for side, sx in (("R", -1), ("L", 1)):
+        h1 = m.bone("horn" + side + "1", [10 * sx, 26, 0], "head", [0, 0, -28 * sx])
+        h1.box([10 * sx - 2 if sx > 0 else 10 * sx - 3, 26, -2], [5, 5, 4], horn.with_(seed=1420 + sx))
+        h2 = m.bone("horn" + side + "2", [12 * sx, 30, 0], "horn" + side + "1", [-20, 0, 18 * sx])
+        h2.box([12 * sx - 1.5 if sx > 0 else 12 * sx - 2.5, 30, -1.5], [4, 5, 3], horn.with_(seed=1422 + sx))
+        h3 = m.bone("horn" + side + "3", [13 * sx, 34.5, -0.5], "horn" + side + "2", [-30, 0, 16 * sx])
+        h3.box([13 * sx - 1 if sx > 0 else 13 * sx - 2, 34.5, -1], [3, 4, 2], horn.with_(seed=1424 + sx), faces={"up": core})
+    # 아래턱 (뒤 경첩): 턱 판 · 아래 송곳니 · 혀 · 목구멍 (빛)
+    jaw = m.bone("jaw", [0, 13, 4], "head")
+    jaw.box([-9, 6, -4], [18, 6, 8], iron.with_(seed=1430), faces={"up": throat.with_(seed=1431)})
+    jaw.box([-10, 7, -3], [2, 5, 6], iron2.with_(seed=1432))
+    jaw.box([8, 7, -3], [2, 5, 6], iron2.with_(seed=1433))
+    for i, x in enumerate((-7.5, -4.5, -1.5, 1.5, 4.5, 7)):
+        big = i in (0, 5)
+        jaw.box([x - 0.5, 12, -4.5], [2 if big else 1.5, 2 + (2 if big else 0), 1.5], fang.with_(seed=1434 + i))
+    jaw.box([-4, 12, -2], [8, 1.2, 6], throat.with_(seed=1440))
+    gul = m.bone("throat", [0, 12, 2], "head")
+    gul.box([-7, 10, -1], [14, 4, 6], throat.with_(seed=1441))
+    gul.box([-3, 11, 0], [6, 2, 4], core)
+    return m
+
+
+MW_BONES = ("root", "head", "jaw")
+
+
+def _mw_move(times, poses, extra=None, length=None):
+    bones = {}
+    for b in MW_BONES:
+        keys = [(t, p.get(b, [0, 0, 0])) for t, p in zip(times, poses)]
+        if any(v != [0, 0, 0] for _, v in keys):
+            bones[b] = {"rotation": kf(keys)}
+    for b, v in (extra or {}).items():
+        bones.setdefault(b, {}).update(v)
+    out = {"bones": bones}
+    if length is not None:
+        out["animation_length"] = length
+    return out
+
+
+MW_SHUT = {}
+MW_OPEN = {"head": [-14, 0, 0], "jaw": [52, 0, 0]}
+MW_WIDE = {"head": [-24, 0, 0], "jaw": [72, 0, 0]}
+MW_SNAP = {"head": [6, 0, 0], "jaw": [-4, 0, 0]}
+# 땅에서 솟는 아가리 (뿌리를 젖혀 하늘을 봄 — 뿌리 둘레로 돎: 얼굴이 뿌리 위로 오게 뿌리를 옮김)
+PIT = [-90, 0, 0]
+
+
+def _pit(pose):
+    p = dict(pose)
+    p["root"] = PIT
+    return p
+
+
+def job_maw_anims():
+    br = f"math.sin({LT} * 120)"
+    out = {
+        "idle": {"loop": True, "bones": {
+            "head": {"rotation": [f"{br} * 1.5", 0, 0]},
+            "jaw": {"rotation": [f"6 + math.max(0, math.sin({LT} * 90)) * 6", 0, 0]},
+            "throat": {"scale": [f"1 + {br} * 0.05", f"1 + {br} * 0.08", 1]},
+        }},
+        # 나타남 (0.3초 — 끝 = 다묾): 그림자에서 커짐
+        "summon": {"animation_length": 0.3, "bones": {"root": {"scale": kf([(0, [0.2, 0.2, 0.2]), (0.22, [1.08, 1.08, 1.08]), (0.3, [1, 1, 1])])}}},
+        # 벌림 (0.25초 — 끝 자세를 지킴) · 크게 벌림 (0.3초)
+        "open": _mw_move([0, 0.25], [MW_SHUT, MW_OPEN], length=0.25),
+        "wide": _mw_move([0, 0.3], [MW_OPEN, MW_WIDE], length=0.3),
+        # 콱 다묾 (0.12초 — 끝 자세를 지킴)
+        "snap": _mw_move([0, 0.06, 0.12], [MW_WIDE, MW_SNAP, MW_SHUT], {"root": {"scale": kf([(0, [1, 1, 1]), (0.06, [1.08, 0.94, 1.08]), (0.12, [1, 1, 1])])}}, 0.12),
+        # 짓씹음 (이어 돎 0.35초)
+        "chew": dict(_mw_move([0, 0.17, 0.35], [MW_SHUT, {"head": [-6, 0, 0], "jaw": [26, 0, 0]}, MW_SHUT]), loop=True),
+        # 포효 (0.5초): 크게 벌리고 흔듦
+        "roar": _mw_move([0, 0.15, 0.4, 0.5], [MW_SHUT, MW_WIDE, {"head": [-30, 6, 0], "jaw": [78, 0, 0]}, MW_OPEN], length=0.5),
+        # 땅에서 솟는 아가리 (하늘을 봄): 솟으며 크게 벌림 (0.4초) · 콱 다묾 · 짓씹음 (이어 돎)
+        "pit_rise": _mw_move([0, 0.4], [_pit(MW_SHUT), _pit(MW_WIDE)], {"root": {"position": kf([(0, [0, -26, 6]), (0.4, [0, 0, 6])])}}, 0.4),
+        "pit_wide": dict(_mw_move([0], [_pit(MW_WIDE)], {"root": {"position": [0, 0, 6]}}), loop=True),
+        "pit_snap": _mw_move([0, 0.06, 0.12], [_pit(MW_WIDE), _pit(MW_SNAP), _pit(MW_SHUT)], {"root": {"position": [0, 0, 6]}}, 0.12),
+        "pit_chew": dict(_mw_move([0, 0.15, 0.3], [_pit(MW_SHUT), _pit({"head": [-6, 0, 0], "jaw": [24, 0, 0]}), _pit(MW_SHUT)], {"root": {"position": [0, 0, 6]}}),
+                         loop=True),
+        "pit_sink": {"animation_length": 0.5, "bones": {
+            "root": {"rotation": [-90, 0, 0], "position": kf([(0, [0, 0, 6]), (0.5, [0, -30, 6])]),
+                     "scale": kf([(0, [1, 1, 1]), (0.1, [1.1, 1.1, 1.1]), (0.5, [0.6, 0.6, 0.6])])}}},
+        # 흩어짐 (0.35초): 작아지며 가라앉음
+        "vanish": {"animation_length": 0.35, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.35, [0, -6, 0])]), "scale": kf([(0, [1, 1, 1]), (0.1, [1.06, 1.06, 1.06]), (0.35, [0.04, 0.04, 0.04])])}}},
+    }
+    return out
+
+
+# ================================================================== 금서 (2026-11-13 — 직업 도감 메모 매지션 포비든 그리모어 "책 연출을 3d로"): 떠 있는 거대한 마도서 —
+# 남색 가죽 표지 (금 모서리 · 겉의 마력의 눈 보석) · 금 등 · 하얀 책장 (빛나는 룬 글자 줄) · 넘어가는 책장 셋. 등은 세로 (x 0), 펼치면 책장이 앞 (−Z) 을 봄.
+# 크기 1 에서 펼친 너비 약 2칸 · 높이 1.25칸 (가운데 높이 16 픽셀)
+
+TM_LEATHER = (30, 34, 92)
+TM_DARK = (16, 18, 52)
+TM_GOLD = (236, 196, 96)
+TM_PAGE = (246, 238, 212)
+TM_RUNE = (120, 200, 255)
+TM_CORE = (226, 244, 255)
+
+
+def job_tome():
+    m = Model("job_tome", tex_w=128)
+    leather = Mat(TM_LEATHER, "skin", noise=6, edge=0.84, seed=1501, accent=TM_DARK)
+    gold = Mat(TM_GOLD, "metal", noise=4, edge=0.9, seed=1502)
+    page = Mat(TM_PAGE, "flat", noise=4, edge=0.95, seed=1503)
+    edges = Mat(TM_PAGE, "chitin", noise=3, edge=0.92, seed=1508, band=2)
+    rune = Mat(TM_RUNE, "flat", noise=6, edge=1.0, glow=0.9, seed=1504)
+    core = Mat(TM_CORE, "flat", noise=2, edge=1.0, glow=1.0, seed=1505)
+    gem = Mat((150, 90, 255), "crystal", noise=4, edge=1.0, glow=0.8, seed=1506)
+    root = m.bone("root", [0, 0, 0])
+    book = m.bone("book", [0, 16, 0], "root")
+    book.box([-1.5, 5.5, -0.5], [3, 21, 3], gold)
+    book.box([-1, 6, -1.2], [2, 20, 0.8], leather.with_(seed=1507))
+    for side, sx in (("L", -1), ("R", 1)):
+        half = m.bone("half" + side, [0, 16, 0], "book")
+        x0 = -16 if sx < 0 else 0
+        # 표지 (뒤) · 금 모서리 · 겉의 보석 · 책장 덩이 (앞) · 룬 줄 (빛)
+        half.box([x0, 5.5, 0.5], [16, 21, 1.5], leather.with_(seed=1510 + sx))
+        for cy in (5.3, 25.2):
+            half.box([x0 + (13 if sx > 0 else 0), cy, 0.3], [3, 1.5, 1.9], gold.with_(seed=1512 + sx + int(cy)))
+        half.box([x0 + (0 if sx > 0 else 15.5), 5.5, 0.3], [0.5, 21, 1.9], gold.with_(seed=1515 + sx))
+        half.box([x0 + 5.5, 13, 2.0], [5, 5, 0.6], gem.with_(seed=1517 + sx))
+        half.box([x0 + 6.5, 14, 2.4], [3, 3, 0.4], core.with_(seed=1519 + sx))
+        px = -15 if sx < 0 else 0.5
+        half.box([px, 6.5, -1.5], [14.5, 19, 2], page.with_(seed=1520 + sx), faces={"east": edges, "west": edges, "up": edges, "down": edges})
+        for i, ry in enumerate((8.5, 11.5, 14.5, 17.5, 20.5)):
+            half.box([px + 2, ry, -1.8], [10.5 - (i % 2) * 3, 1.3, 0.4], rune.with_(seed=1522 + i + sx * 10))
+        half.box([px + 4.5, 22.6, -1.75], [5.5, 2, 0.35], core.with_(seed=1527 + sx))
+    # 넘어가는 책장 셋 (오른쪽 반에 붙어 — 등 앞 경첩에서 왼쪽으로 넘어감, 닫히면 함께 접힘)
+    for i in range(3):
+        pg = m.bone(f"page{i}", [0, 16, -1.6 - i * 0.15], "halfR")
+        z = -1.75 - i * 0.15
+        pg.box([0.3, 7, z], [14, 18, 0.3], page.with_(seed=1530 + i))
+        for q, ry in enumerate((10, 14, 18)):
+            pg.box([2.3, ry, z - 0.15], [9.5 - q * 2, 0.7, 0.2], rune.with_(seed=1535 + i * 3 + q))
+    return m
+
+
+TM_OPEN = {"halfL": [0, 0, 0], "halfR": [0, 0, 0]}
+TM_SHUT = {"halfL": [0, -86, 0], "halfR": [0, 86, 0]}
+
+
+def job_tome_anims():
+    bob = f"math.sin({LT} * 80)"
+    flip = {}
+    for i in range(3):
+        t0 = i * 0.2
+        flip[f"page{i}"] = {"rotation": kf([(t0, [0, 0, 0]), (t0 + 0.3, [0, 178, 0]), (0.9, [0, 178, 0])])}
+    out = {
+        # 늘 (작게): 떠서 흔들림 · 앞으로 조금 젖힘 (책장이 위를 봄)
+        "idle": {"loop": True, "bones": {
+            "root": {"position": [0, f"{bob} * 0.8", 0]},
+            "book": {"rotation": [f"-18 + {bob} * 2", f"math.sin({LT} * 50) * 4", 0]},
+        }},
+        # 닫힌 채 (이어 돎)
+        "shut": {"loop": True, "bones": {b: {"rotation": v} for b, v in TM_SHUT.items()}},
+        # 펼침 (0.5초 — 끝 자세를 지킴): 닫힌 책이 커지며 활짝
+        "open": {"animation_length": 0.5, "bones": {
+            "halfL": {"rotation": kf([(0, TM_SHUT["halfL"]), (0.35, [0, 8, 0]), (0.5, [0, 0, 0])])},
+            "halfR": {"rotation": kf([(0, TM_SHUT["halfR"]), (0.35, [0, -8, 0]), (0.5, [0, 0, 0])])},
+            "root": {"scale": kf([(0, [0.3, 0.3, 0.3]), (0.35, [1.06, 1.06, 1.06]), (0.5, [1, 1, 1])])},
+        }},
+        # 책장이 넘어감 (이어 돎 0.9초 — 셋이 차례로)
+        "flip": {"loop": True, "animation_length": 0.9, "bones": flip},
+        # 탁 닫힘 (0.2초 — 끝 자세를 지킴)
+        "close": {"animation_length": 0.2, "bones": {
+            "halfL": {"rotation": kf([(0, [0, 0, 0]), (0.14, [0, -92, 0]), (0.2, TM_SHUT["halfL"])])},
+            "halfR": {"rotation": kf([(0, [0, 0, 0]), (0.14, [0, 92, 0]), (0.2, TM_SHUT["halfR"])])},
+            "root": {"scale": kf([(0, [1, 1, 1]), (0.14, [1.15, 1.15, 1.15]), (0.2, [1.05, 1.05, 1.05])])},
+        }},
+        # 흩어짐 (0.4초)
+        "vanish": {"animation_length": 0.4, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.4, [0, 6, 0])]), "scale": kf([(0, [1.05, 1.05, 1.05]), (0.12, [1.15, 1.15, 1.15]), (0.4, [0.04, 0.04, 0.04])])},
+        }},
+    }
+    return out
+
+
+# ================================================================== 푸른 불사조 (2026-11-13 — 직업 도감 메모 피닉스 가드 피닉스 디센트 "피닉스 3d로 연출"): 푸른 불의 새 —
+# 하늘빛 불꽃 깃 (빛) · 흰 심지의 가슴 · 볏 셋 · 금빛 부리 · 넓은 날개 (속 날개 · 겉 날개 · 끝 깃 넷) · 부채꼴 꼬리 깃 다섯. 앞 = −Z, 크기 1 에서 날개 끝 사이 약 5.6칸
+
+PX_FIRE = (70, 158, 255)
+PX_DEEP = (34, 92, 220)
+PX_CORE = (226, 244, 255)
+PX_GOLD = (255, 214, 120)
+PX_DARK = (18, 40, 110)
+
+
+def job_phoenix():
+    m = Model("job_phoenix", tex_w=128)
+    fire = Mat(PX_FIRE, "scales", noise=10, edge=0.95, glow=0.85, seed=1601, accent=PX_DEEP)
+    deep = Mat(PX_DEEP, "scales", noise=8, edge=0.92, glow=0.7, seed=1602, accent=PX_DARK)
+    core = Mat(PX_CORE, "flat", noise=4, edge=1.0, glow=1.0, seed=1603)
+    gold = Mat(PX_GOLD, "metal", noise=4, edge=0.95, glow=0.6, seed=1604)
+    eye = [("north", 1, 1, PX_GOLD, 1.0), ("north", 4, 1, PX_GOLD, 1.0)]
+    root = m.bone("root", [0, 0, 0])
+    body = m.bone("body", [0, 20, 0], "root")
+    # 몸 (가슴이 앞) · 가슴의 흰 불 · 등
+    body.box([-4.5, 16, -6], [9, 8, 13], fire)
+    body.box([-3.5, 15.5, -7], [7, 6, 6], core.with_(seed=1605))
+    body.box([-3, 23.5, -4], [6, 1.5, 10], deep.with_(seed=1606))
+    neck = m.bone("neck", [0, 22, -6], "body")
+    neck.box([-2.5, 21, -11], [5, 5, 6], fire.with_(seed=1607))
+    head = m.bone("head", [0, 24, -11], "neck")
+    head.box([-3, 22.5, -16], [6, 5, 5.5], fire.with_(seed=1608), decals=eye)
+    head.box([-1, 23, -19.5], [2, 2.5, 3.5], gold)
+    head.box([-0.5, 22.6, -20.8], [1, 1.5, 1.3], gold.with_(seed=1609))
+    # 볏 셋 (뒤로 휘어 솟음)
+    for i, (dx, h) in enumerate(((-1.5, 6), (0, 8), (1.5, 6))):
+        cr = m.bone(f"crest{i}", [dx, 27.5, -13], "head", [-35 - i * 5, 0, (i - 1) * 10])
+        cr.box([dx - 0.5, 27.5, -13.5], [1, h, 1.5], core.with_(seed=1610 + i))
+    # 날개 (속 · 겉 · 끝 깃 넷 — 뒤 (+Z) 로 비스듬히)
+    for side, sx in (("R", -1), ("L", 1)):
+        w1 = m.bone("wing" + side + "1", [4 * sx, 23, -2], "body")
+        x1 = -22 if sx < 0 else 4
+        w1.box([x1, 22, -4], [18, 2, 11], fire.with_(seed=1620 + sx))
+        w1.box([x1, 21.5, 5], [18, 1, 4], deep.with_(seed=1622 + sx))
+        w2 = m.bone("wing" + side + "2", [22 * sx, 23, -2], "wing" + side + "1")
+        x2 = -40 if sx < 0 else 22
+        w2.box([x2, 22.3, -3], [18, 1.5, 9], fire.with_(seed=1624 + sx))
+        w2.box([x2, 22, 4], [18, 1, 3], deep.with_(seed=1626 + sx))
+        for q in range(4):
+            fx = (-40 - q * 1.5) if sx < 0 else (40 + q * 1.5 - 12)
+            fw = m.bone(f"feather{side}{q}", [(40 if sx > 0 else -40) + 0 * q, 23, -1 + q * 2.5], "wing" + side + "2", [0, sx * (8 + q * 9), 0])
+            fw.box([fx if sx > 0 else fx - 0, 22.6, -2 + q * 2.5], [12, 0.8, 2.4], (core if q == 0 else fire).with_(seed=1630 + q + sx * 5))
+    # 꼬리 깃 다섯 (부채꼴 — 뒤로)
+    tail = m.bone("tail", [0, 19, 7], "body")
+    for q in range(5):
+        tq = m.bone(f"tail{q}", [0, 19, 7], "tail", [0, (q - 2) * 16, 0])
+        tq.box([-1.5, 18.5, 7], [3, 1, 16 + (2 - abs(q - 2)) * 3], (core if q == 2 else fire).with_(seed=1640 + q))
+        tq.box([-2, 18.3, 19 + (2 - abs(q - 2)) * 3], [4, 1.2, 4], deep.with_(seed=1646 + q))
+    return m
+
+
+PX_WINGS = ("wingR1", "wingR2", "wingL1", "wingL2")
+
+
+def _px_wing(r1, r2):
+    """날개 각 (속 · 겉 — Z 둘레, 오른쪽은 반대 부호)"""
+    return {"wingR1": [0, 0, -r1], "wingR2": [0, 0, -r2], "wingL1": [0, 0, r1], "wingL2": [0, 0, r2]}
+
+
+def job_phoenix_anims():
+    flap1 = f"math.sin({LT} * 720) * 34"
+    flap2 = f"math.sin({LT} * 720 - 50) * 22"
+    out = {
+        # 늘 (작게): 몸이 오르내림 · 꼬리 깃이 흔들림 · 볏
+        "idle": {"loop": True, "bones": {
+            "body": {"position": [0, f"math.sin({LT} * 120) * 0.8", 0]},
+            "tail": {"rotation": [f"math.sin({LT} * 160) * 6", f"math.sin({LT} * 90) * 8", 0]},
+            "head": {"rotation": [f"math.sin({LT} * 70) * 4", 0, 0]},
+        }},
+        # 날갯짓 (이어 돎 — 0.5초)
+        "fly": {"loop": True, "bones": {
+            "wingR1": {"rotation": [0, 0, f"-({flap1})"]}, "wingL1": {"rotation": [0, 0, flap1]},
+            "wingR2": {"rotation": [0, 0, f"-({flap2})"]}, "wingL2": {"rotation": [0, 0, flap2]},
+            "body": {"position": [0, f"math.sin({LT} * 720 + 90) * 1.2", 0]},
+        }},
+        # 미끄러짐 (이어 돎): 날개를 펴고 조금 기울임
+        "glide": {"loop": True, "bones": dict({b: {"rotation": v} for b, v in _px_wing(-6, 4).items()},
+                                              **{"root": {"rotation": [0, 0, f"math.sin({LT} * 60) * 10"]}})},
+        # 깨어남 (0.6초 — 끝 자세를 지킴): 불길 속에서 커지며 날개를 활짝 · 고개를 젖혀 울음
+        "summon": {"animation_length": 0.6, "bones": {
+            "root": {"scale": kf([(0, [0.2, 0.2, 0.2]), (0.4, [1.08, 1.08, 1.08]), (0.6, [1, 1, 1])])},
+            "wingR1": {"rotation": kf([(0, [0, 0, 70]), (0.4, [0, 0, -30]), (0.6, [0, 0, -14])])},
+            "wingL1": {"rotation": kf([(0, [0, 0, -70]), (0.4, [0, 0, 30]), (0.6, [0, 0, 14])])},
+            "wingR2": {"rotation": kf([(0, [0, 0, 60]), (0.4, [0, 0, -10]), (0.6, [0, 0, -6])])},
+            "wingL2": {"rotation": kf([(0, [0, 0, -60]), (0.4, [0, 0, 10]), (0.6, [0, 0, 6])])},
+            "neck": {"rotation": kf([(0, [0, 0, 0]), (0.4, [-40, 0, 0]), (0.6, [-20, 0, 0])])},
+        }},
+        # 내리꽂음 (0.25초 — 끝 자세를 지킴): 머리를 아래로 · 날개를 위 뒤로 모아 V
+        "dive": {"animation_length": 0.25, "bones": dict({b: {"rotation": kf([(0, [0, 0, 0]), (0.25, v)])} for b, v in
+                                                          {"wingR1": [0, -40, -60], "wingL1": [0, 40, 60], "wingR2": [0, 0, -30], "wingL2": [0, 0, 30]}.items()},
+                                                         **{"root": {"rotation": kf([(0, [0, 0, 0]), (0.25, [68, 0, 0])])},
+                                                            "neck": {"rotation": kf([(0, [0, 0, 0]), (0.25, [10, 0, 0])])}})},
+        # 땅에 닿아 날개를 활짝 펴며 터짐 (0.5초): 커지며 흩어짐
+        "burst": {"animation_length": 0.5, "bones": {
+            "root": {"rotation": kf([(0, [40, 0, 0]), (0.15, [0, 0, 0])]),
+                     "scale": kf([(0, [1, 1, 1]), (0.15, [1.35, 1.35, 1.35]), (0.5, [0.05, 0.05, 0.05])])},
+            "wingR1": {"rotation": kf([(0, [0, 0, -50]), (0.15, [0, 0, 20])])}, "wingL1": {"rotation": kf([(0, [0, 0, 50]), (0.15, [0, 0, -20])])},
+        }},
+        "vanish": {"animation_length": 0.4, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.4, [0, 10, 0])]), "scale": kf([(0, [1, 1, 1]), (0.12, [1.1, 1.1, 1.1]), (0.4, [0.04, 0.04, 0.04])])}}},
+    }
+    return out
+
+
 R.MOBS["job_dragon"] = (job_dragon, job_dragon_anims, dict(fam="job_dragon", health=40, move=0.4, box=[1.6, 1.8], fly=True), "entity_emissive", ["idle"], None)
 R.MOBS["job_reaper"] = (job_reaper, job_reaper_anims, dict(fam="job_reaper", health=40, move=0.4, box=[1.0, 2.6], fly=True), "entity_alphablend", ["idle"], True)
 R.PREVIEW_POSES["job_reaper"] = ((["idle"], 0.0), (["rise"], 0.3), (["idle", "swing_a"], 0.08), (["idle", "swing_a"], 0.15), (["idle", "swing_b"], 0.15),
@@ -715,7 +1183,19 @@ R.PREVIEW_POSES["job_dragon"] = ((["idle"], 0.0), (["idle", "fly"], 0.15), (["id
                                  (["idle", "breathe"], 0.2), (["idle", "dive"], 0.25), (["idle", "crash"], 0.5), (["summon"], 0.2),
                                  (["idle", "launch"], 0.1), (["idle", "launch"], 0.18), (["idle", "spin"], 0.2), (["idle", "bite"], 0.1),
                                  (["idle", "bite"], 0.3), (["idle", "rear"], 0.5), (["idle", "slam"], 0.15), (["idle", "stomp"], 0.1), (["idle", "stomp"], 0.2))
-JOB_MOBS = ("job_dragon", "job_bear", "job_reaper")
+R.MOBS["job_hand"] = (job_hand, job_hand_anims, dict(fam="job_hand", health=40, move=0.4, box=[1.6, 1.8], fly=True), "entity_alphablend", ["idle"], True)
+R.PREVIEW_POSES["job_hand"] = ((["idle"], 0.0), (["idle", "spread"], 0.0), (["idle", "grab"], 0.1), (["idle", "grab"], 0.18), (["idle", "squeeze"], 0.08),
+                               (["idle", "slam"], 0.25), (["idle", "release"], 0.3), (["summon"], 0.15), (["idle", "vanish"], 0.2))
+R.MOBS["job_maw"] = (job_maw, job_maw_anims, dict(fam="job_maw", health=40, move=0.4, box=[1.4, 1.8], fly=True), "entity_emissive", ["idle"], None)
+R.PREVIEW_POSES["job_maw"] = ((["idle"], 0.0), (["idle", "open"], 0.25), (["idle", "wide"], 0.3), (["idle", "snap"], 0.12), (["idle", "roar"], 0.4),
+                              (["idle", "pit_rise"], 0.2), (["idle", "pit_wide"], 0.0), (["idle", "pit_snap"], 0.12), (["idle", "pit_chew"], 0.15))
+R.MOBS["job_tome"] = (job_tome, job_tome_anims, dict(fam="job_tome", health=40, move=0.4, box=[1.6, 1.4], fly=True), "entity_emissive", ["idle"], None)
+R.PREVIEW_POSES["job_tome"] = ((["idle"], 0.0), (["idle", "shut"], 0.0), (["idle", "open"], 0.3), (["idle", "flip"], 0.15), (["idle", "flip"], 0.45),
+                               (["idle", "close"], 0.2))
+R.MOBS["job_phoenix"] = (job_phoenix, job_phoenix_anims, dict(fam="job_phoenix", health=40, move=0.4, box=[1.6, 1.6], fly=True), "entity_emissive", ["idle"], None)
+R.PREVIEW_POSES["job_phoenix"] = ((["idle"], 0.0), (["idle", "fly"], 0.1), (["idle", "fly"], 0.3), (["idle", "glide"], 0.0), (["summon"], 0.5),
+                                  (["idle", "dive"], 0.25), (["idle", "burst"], 0.12))
+JOB_MOBS = ("job_dragon", "job_bear", "job_reaper", "job_hand", "job_maw", "job_tome", "job_phoenix")
 
 
 def main():

@@ -10,6 +10,7 @@ import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneMob;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -363,6 +364,11 @@ final class MageSkills {
 
     // ------------------------------------------------------------ 금서 개방
 
+    /** 2026-11-13 3D 금서 (tools/job_mobs_art.py job_tome — 남색 가죽 · 금 등 · 룬 책장 · 넘어가는 책장 셋): 크기 (펼친 너비 약 2.5칸) · 뿌리에서 책 가운데까지 높이 */
+    private static final String TOME = "rpg:job_tome";
+    private static final double TOME_SCALE = 1.25;
+    private static final double TOME_MID = 1.0 * TOME_SCALE;
+
     /**
      * 금서 개방: 남색 밤하늘 · 조준한 곳 (range 칸) 위에 금서가 펼쳐짐 (rise 틱 — 책장이 넘어감) · 책장 pages 장이 둘레 radius 칸을 맴돎 → gap 틱마다 책장 page 장씩 (waves 번)
      * 불 · 얼음 · 번개 주문이 되어 떨어짐 (둘레 radius 칸의 적에게 나눠 — 적이 적으면 같은 적에게 여러 장: 숫자 여러 줄) → finalDelay 틱 뒤 책이 닫히며 대폭발 (final — 둘레
@@ -402,7 +408,17 @@ final class MageSkills {
         double tilt = Math.toRadians(35);
         Vec3 bookFace = V.unit(V.add(V.scale(toMe, Math.cos(tilt)), V.UP, Math.sin(tilt)));
         Vec3 bookUp = V.unit(V.add(V.scale(V.UP, Math.cos(tilt)), toMe, -Math.sin(tilt)));
-        int bookId = JobFx3d.spawn(level0, "grimoire", V.up(bookAt, -1.6), j, Opt.of("to", bookAt, "ctrl", V.up(bookAt, -0.5), "travel", rise / 20.0, "ease", "out3",
+        // 2026-11-13 3D 금서 (직업 도감 메모 "책 연출을 3d로" — 환영 금서 판 대신, tools/job_mobs_art.py job_tome): 아래에서 솟으며 펼쳐져 (책장이 나를 봄) 책장이
+        // 차례로 넘어감 → finalAt 에 탁 닫히고 흩어짐
+        RuneMob tome = RuneMob.spawn(TOME, level0, V.up(bookAt, -1.6 - TOME_MID), toMe, finalAt + 40, TOME_SCALE, true);
+        int bookId = 0;
+        if (tome != null) {
+            tome.hold("open");
+            tome.moveTo(V.up(bookAt, -TOME_MID), rise, 0, RuneMob.OUT, false);
+            RuneKit.later(10, () -> {
+                if (tome.alive()) tome.anim("flip");
+            });
+        } else bookId = JobFx3d.spawn(level0, "grimoire", V.up(bookAt, -1.6), j, Opt.of("to", bookAt, "ctrl", V.up(bookAt, -0.5), "travel", rise / 20.0, "ease", "out3",
                 "dir", bookUp, "face", bookFace, "scale", 2.1, "pop", rise / 20.0, "life", finalAt / 20.0 + 0.55, "anim", "flip", "loop", 1.0, "animSpeed", 0.8,
                 "fadeIn", 0.2, "fadeOut", 0.3, "glowAlpha", 0.4, "shine", 0.2, "bob", 0.12, "bobHz", 0.5));
         for (int t = 0; t < finalAt - 4; t += 12) {
@@ -421,7 +437,7 @@ final class MageSkills {
                     "delay", Math.min(rise / 20.0, 0.05 * i), "glowAlpha", 0.5, "shine", 0.25));
         }
         JobFx3d.guard(sp, life, pageIds, finalAt);
-        JobFx3d.guard(sp, life, new int[] {bookId}, finalAt);
+        if (bookId != 0) JobFx3d.guard(sp, life, new int[] {bookId}, finalAt);
         for (int w = 0; w < waves; w++) {
             int ww = w;
             RuneKit.later(rise + w * gap, () -> {
@@ -436,9 +452,16 @@ final class MageSkills {
             });
             JobKit.motionLater(sp, "mage_ult:wave", rise + w * gap - 1, life); // 0.47.0 완드를 휘둘러 책장을 떨어뜨리는 동작
         }
+        int bookId0 = bookId;
         RuneKit.later(finalAt, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            mmorpg.fabric.Fx3d.anim(sp.level(), bookId, "close", false, bookAt); // 0.47.0 금서가 탁 닫힘 (0.4초)
+            if (!RuneKit.sameLife(sp, life)) {
+                if (tome != null) tome.leave("vanish", 6);
+                return;
+            }
+            if (tome != null && tome.alive()) {
+                tome.hold("close"); // 2026-11-13 3D 금서가 탁 닫힘 → 흩어짐
+                RuneKit.later(10, () -> tome.leave("vanish", 8));
+            } else if (bookId0 != 0) mmorpg.fabric.Fx3d.anim(sp.level(), bookId0, "close", false, bookAt); // 0.47.0 금서가 탁 닫힘 (0.4초)
             closeBook(sp, j, k, P, center, bookAt, radius, glow, core, life);
         });
         JobKit.motionLater(sp, "mage_ult:close", finalAt - 4, life); // 0.47.0 두 팔을 맞부딪쳐 책을 닫는 동작 (4틱 뒤)

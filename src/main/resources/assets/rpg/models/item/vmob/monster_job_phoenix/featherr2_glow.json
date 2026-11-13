@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_job_phoenix_emissive","particle":"rpg:item/vmob/allies_job_phoenix_emissive"},"elements":[{"from":[1.98,7.98,6.98],"to":[14.02,8.02,9.02],"faces":{"up":{"uv":[14.0,13.25,12.5,13.0],"texture":"#0"},"down":{"uv":[15.5,13.0,14.0,13.25],"texture":"#0"}},"light_emission":15}]}

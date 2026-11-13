@@ -1237,7 +1237,7 @@ final class VanillaProbe {
             case "arcmage_ult" -> new double[] {12.0, 3.6, 5.0, 0.4};
             case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6};
             // 2026-11-13 3D 빙하 도끼 (길이 약 11칸 — 하늘에서 돌 때 자루 끝이 13칸 가까이) · 3D 빙하: 멀리 · 위를 봄
-            case "frostraider_ult" -> new double[] {13.5, 3.8, 5.6, 0.4};
+            case "frostraider_ult" -> new double[] {13.5, 3.6, 4.6, 0.4};
             case "frostraider_jotunn" -> new double[] {8.5, 3.0, 2.4, 0.5};
             case "frostraider_shatter" -> new double[] {8.0, 3.0, 1.6, 0.6};
             case "frostraider_leap" -> new double[] {8.5, 3.0, 1.4, 0.6};
@@ -1256,9 +1256,12 @@ final class VanillaProbe {
             case "arcaneblade_ult" -> new double[] {12.5, 3.6, 4.6, 0.4};
             // 2026-11-13 3D 심장 · 망치 · 묘비: 머리 위 심장 (2칸) · 하늘의 거대한 심장 (4칸 남짓 — 겨눈 곳 위 6칸) · 떨어지는 망치 (6.7칸) · 묘비 고리
             case "warlock_nova" -> new double[] {8.0, 3.0, 2.4, 0.6};
-            case "warlock_ult" -> new double[] {12.5, 3.6, 4.6, 0.4};
             case "tyrant_ult" -> new double[] {12.0, 3.6, 4.2, 0.4};
             case "necromancer_yard" -> new double[] {9.0, 3.4, 1.4, 0.6};
+            // 2026-11-13 3D 왕의 손 · 심연의 아가리 · 금서
+            case "tyrant_grip" -> new double[] {8.5, 3.2, 2.0, 0.6};
+            case "darkknight_feast" -> new double[] {8.0, 3.0, 1.6, 0.6};
+            case "mage_ult" -> new double[] {12.0, 3.6, 4.0, 0.4};
             case "elementalblade_surge" -> new double[] {8.5, 3.0, 1.4, 0.5};
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};

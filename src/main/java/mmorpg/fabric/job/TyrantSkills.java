@@ -8,6 +8,7 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneMob;
 import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
@@ -233,7 +234,16 @@ final class TyrantSkills {
         RpgCombat.setSteadfast(sp, slamAt + 3);
         // 뻗음: 거대한 손이 그 적 위에서 내려옴 · 내 왼손에서 그 적으로 보랏빛 번개
         Vec3 hb = Kit.bodyPoint(e);
-        JobFx.grip(level0, V.up(hb, 1.4 + size * 0.4), size, 0, 2, grabAt / 20.0, false, Opt.of("dir", V.DOWN, "speed", (1.4 + size * 0.4) / (grabAt / 20.0)),
+        // 2026-11-13 3D 왕의 손 (직업 도감 메모 "왕의 손을 3d로" — 2D 손 그림 대신): 그 적 머리 위 높이에서 손가락을 펼치며 나타나 (손가락이 나를 봄 — 쥐면 적의 앞쪽으로
+        // 감김) grabAt 에 머리 위로 내려와 움켜쥠 → 들어 올린 적을 따라감 · 쥐어짤 때마다 꽉 → slamAt 에 내 앞 땅으로 내리꽂고 놓으며 흩어짐
+        Vec3 toMe = V.flat(V.sub(sp.position(), e.position()));
+        double hs = 1.35 + pad * 0.9;
+        double over = Math.max(0, e.getBbHeight() - 1.95) + 0.12;
+        RuneMob hand = RuneMob.spawn(HAND, level0, V.up(e.position(), over + 2.6), toMe, slamAt + 40, hs, true);
+        if (hand != null) {
+            hand.hold("summon");
+            hand.moveTo(() -> V.up(e.isRemoved() ? base : e.position(), over), grabAt, 0, RuneMob.IN, false);
+        } else JobFx.grip(level0, V.up(hb, 1.4 + size * 0.4), size, 0, 2, grabAt / 20.0, false, Opt.of("dir", V.DOWN, "speed", (1.4 + size * 0.4) / (grabAt / 20.0)),
                 VIOLET, CRIMSON);
         JobFx.arc(level0, V.up(V.add(sp.position(), V.rightOf(Kit.facingOf(sp)), -0.4), 1.4), hb, VIOLET, VIOLET_CORE, grabAt / 20.0, Opt.empty());
         SkillFx.play(level0, "entity.warden.sonic_charge", sp.position(), 1.4, 0.6);
@@ -243,7 +253,11 @@ final class TyrantSkills {
             if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
             ServerLevel lv = sp.level();
             RuneKit.effect(e, "slowness", slamAt - grabAt + 4, JobKit.isBoss(e) ? 1 : 10);
-            JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55), size, 2, 1, 0.15, false, Opt.of("vel", RuneKit.entVel(e)), VIOLET, CRIMSON);
+            if (hand != null && hand.alive()) {
+                hand.hold("grab");
+                hand.follow(() -> e.isRemoved() ? null : V.up(e.position(), over), 0.7, slamAt - grabAt - 4);
+            } else JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55), size, 2, 1, 0.15, false, Opt.of("vel", RuneKit.entVel(e)), VIOLET,
+                    CRIMSON);
             JobFx.burst(lv, Kit.bodyPoint(e), 1.2 + pad * 0.4, VIOLET, VIOLET_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
             SkillFx.play(lv, "entity.iron_golem.attack", e.position(), 0.6, 0.9);
         });
@@ -259,7 +273,8 @@ final class TyrantSkills {
                     e.resetFallDistance();
                 }
                 if ((tt - grabAt) % 6 == 1) {
-                    JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55), size, 3, 2, 0.32, true, Opt.empty(), VIOLET, CRIMSON);
+                    if (hand == null || !hand.alive()) JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55), size, 3, 2, 0.32, true, Opt.empty(),
+                            VIOLET, CRIMSON);
                     JobFx.arc(lv, V.up(V.add(sp.position(), V.rightOf(Kit.facingOf(sp)), -0.4), 1.4), Kit.bodyPoint(e), VIOLET, VIOLET_CORE, 0.3, Opt.empty());
                 }
             });
@@ -270,6 +285,7 @@ final class TyrantSkills {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
                 ServerLevel lv = sp.level();
                 Vec3 b = Kit.bodyPoint(e);
+                if (hand != null && hand.alive()) hand.hold("squeeze");
                 JobFx.burst(lv, b, 1.0 + pad * 0.4, CRIMSON, CRIMSON_CORE, 0.25, Opt.empty());
                 SkillFx.play(lv, "entity.warden.heartbeat", b, 0.9, 0.9);
                 JobKit.strike(sp, e, j, P, k.num("squeeze", 1.65), true, false, life, 0, d -> {
@@ -281,6 +297,17 @@ final class TyrantSkills {
             });
         }
         JobKit.motionLater(sp, "tyrant_grip:slam", slamAt - 4, life);
+        RuneKit.later(slamAt - 4, () -> {
+            if (hand == null || !hand.alive() || !RuneKit.sameLife(sp, life)) return;
+            Vec3 c = sp.position();
+            Vec3 g = held[0] != null ? ThunderlordSkills.ground(sp.level(), V.add(c, Kit.facingOf(sp), 1.9 + pad)) : ThunderlordSkills.ground(sp.level(), e.position());
+            hand.hold("slam");
+            hand.moveTo(V.up(g, over - 0.3), 4, 0.8, RuneMob.IN, false);
+            RuneKit.later(10, () -> {
+                if (hand.alive()) hand.hold("release");
+            });
+            RuneKit.later(16, () -> hand.leave("vanish", 8));
+        });
         // 내리꽂음: 손이 그 적을 내 앞 땅으로
         RuneKit.later(slamAt, () -> {
             if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
@@ -293,7 +320,8 @@ final class TyrantSkills {
                 e.resetFallDistance();
             }
             Vec3 b = Kit.bodyPoint(e);
-            JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55 + 0.3), size, 5, 3, 0.45, false, Opt.empty(), VIOLET, CRIMSON);
+            if (hand == null || !hand.alive()) JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55 + 0.3), size, 5, 3, 0.45, false,
+                    Opt.empty(), VIOLET, CRIMSON);
             JobFx.smash(lv, V.up(e.position(), 0.05), 2.4, j, 0.5, Opt.empty());
             JobFx.volt(lv, V.up(e.position(), 0.08), 2.0, j, 0.45, Opt.empty());
             JobFx.thunder(lv, e.position(), 8, VIOLET, VIOLET_CORE, 0.3, Opt.empty());
@@ -335,6 +363,9 @@ final class TyrantSkills {
     }
 
     // ------------------------------------------------------------ 스톨른 썬더
+
+    /** 2026-11-13 킹스 그립의 3D 왕의 손 (tools/job_mobs_art.py job_hand — 보랏빛 망령 갑주 손 · 금 테 · 핏빛 발톱, 손가락이 앞) */
+    private static final String HAND = "rpg:job_hand";
 
     /** 2026-11-13 스톨른 썬더의 3D 망치 크기: 머리 위 (빨아들일 때마다 — 길이 약 2.3 · 3.0 · 3.6칸) · 떨어지는 거대한 망치 (약 6.7칸) */
     private static final double[] HAMMER_UP = {0.9, 1.15, 1.4};

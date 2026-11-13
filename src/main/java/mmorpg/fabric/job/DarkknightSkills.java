@@ -7,6 +7,7 @@ import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneMob;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -270,6 +271,10 @@ final class DarkknightSkills {
 
     // ------------------------------------------------------------ 피스트
 
+    /** 2026-11-13 3D 심연의 아가리 (tools/job_mobs_art.py job_maw — 저주받은 방패의 얼굴 · 뿔 · 붉은 눈 · 송곳니 · 빛나는 목구멍) · 땅에서 솟는 아가리 크기 (core 4칸) */
+    private static final String MAW = "rpg:job_maw";
+    private static final double PIT_SCALE = 3.4;
+
     /**
      * 피스트 (롤 탐 켄치 · 블리츠크랭크 Q): 방패를 앞에 박으면 pullAt 틱에 아가리에서 검은 혀 (많아야 count) 가 둘레 radius 칸 적에게 뻗어 감아 (pull) 방패 앞으로 끌어옴 →
      * biteAt 틱 거대하게 벌어진 아가리가 둘레 biteRadius 칸을 한꺼번에 물어뜯음 (bite · 문 적마다 굶주림)
@@ -288,7 +293,22 @@ final class DarkknightSkills {
         Vec3 spot = V.add(c0, f0, 1.9);
         // 박음: 방패의 아가리가 벌어짐 · 발밑 검붉은 금
         // (수명은 물어뜯는 아가리가 나온 뒤까지 — solo 가 바꿔 그림. 2026-11-06 영상 검토: biteAt − 2 까지면 그 사이 한두 틱 아가리가 비었음)
-        JobFx15.dmaw(level0, mouth, 1.1, 0, 3, (biteAt + 2) / 20.0, false, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "fade", 0.0), VOID, BLOOD);
+        // 2026-11-13 3D 방패 아가리 (직업 도감 메모 "방패 아가리 3d로" — 2D 아가리 그림 대신): 방패 앞에서 커지며 나타나 벌어짐 → 혀가 끌어오는 동안 벌린 채 →
+        // biteAt − 4 에 앞으로 나가며 거대해져 크게 벌림 → biteAt 에 콱 다묾 · 짓씹다 흩어짐
+        RuneMob maw = RuneMob.spawn(MAW, level0, V.up(mouth, -1.15), f0, biteAt + 30, 0.9, true);
+        if (maw != null) {
+            maw.hold("summon");
+            RuneKit.later(4, () -> {
+                if (maw.alive()) maw.hold("open");
+            });
+        } else JobFx15.dmaw(level0, mouth, 1.1, 0, 3, (biteAt + 2) / 20.0, false, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "fade", 0.0), VOID, BLOOD);
+        RuneKit.later(biteAt - 4, () -> {
+            if (maw == null || !maw.alive() || !RuneKit.sameLife(sp, life)) return;
+            Vec3 f = Kit.facingOf(sp);
+            maw.hold("wide");
+            maw.size(1.75);
+            maw.moveTo(V.up(V.add(sp.position(), f, 1.9), -0.15), 4, 0, RuneMob.OUT, false);
+        });
         RuneKit.glowCrack(level0, V.up(V.add(c0, f0, 1.2), 0.04), 1.8, CRIMSON, CRIMSON_CORE, Opt.of("life", biteAt / 20.0 + 0.3));
         SkillFx.play(level0, "entity.warden.sniff", c0, 0.8, 1.0);
         SkillFx.play(level0, "item.shield.block", c0, 0.5, 0.8);
@@ -339,8 +359,14 @@ final class DarkknightSkills {
             Vec3 c = sp.position();
             Vec3 f = Kit.facingOf(sp);
             Vec3 center = V.add(c, f, 1.9);
-            // 한꺼번에 물어뜯음: 거대하게 벌어졌다 다무는 아가리 → 삼킴 · 검붉은 부채 · 핏빛
-            JobFx15.dmaw(lv, V.up(center, 1.2), 2.1, 2, 4, 0.5, false, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "alpha", 1.0), VOID, BLOOD);
+            // 한꺼번에 물어뜯음: 거대하게 벌어졌다 다무는 아가리 (3D — 콱 다묾 · 짓씹음 · 흩어짐) → 삼킴 · 검붉은 부채 · 핏빛
+            if (maw != null && maw.alive()) {
+                maw.hold("snap");
+                RuneKit.later(3, () -> {
+                    if (maw.alive()) maw.anim("chew");
+                });
+                RuneKit.later(12, () -> maw.leave("vanish", 7));
+            } else JobFx15.dmaw(lv, V.up(center, 1.2), 2.1, 2, 4, 0.5, false, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "alpha", 1.0), VOID, BLOOD);
             JobFx15.fury(lv, V.up(V.add(c, f, 0.4), 0.06), f, 3.4, 0, 6, 0.5, Opt.of("alpha", 0.95), VOID, BLOOD);
             JobFx.burst(lv, V.up(center, 1.0), 2.2, CRIMSON, CRIMSON_CORE, 0.35, Opt.empty());
             SkillFx.sparks(lv, V.up(center, 1.0), BLOOD, 20, 6);
@@ -454,21 +480,38 @@ final class DarkknightSkills {
                 }
             });
         }
+        // 2026-11-13 3D 심연의 아가리 (직업 도감 메모 "아가리 3d로" — 2D 아가리 그림 대신): swallowAt − 8 에 가운데 땅속에서 하늘을 보며 솟아 크게 벌림 (8틱) →
+        // swallowAt 콱 다묾 → 짓씹음 → crushAt 에 물어 터뜨리며 가라앉음
+        RuneMob[] pit = {null};
+        RuneKit.later(swallowAt - 8, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 face = V.flat(V.sub(sp.position(), center));
+            pit[0] = RuneMob.spawn(MAW, sp.level(), center, face, crushAt - swallowAt + 40, PIT_SCALE * Math.max(0.6, core / 4.0), true);
+            if (pit[0] != null) pit[0].hold("pit_rise");
+        });
         // 턱 끝이 땅을 뚫음 (솟기 직전)
         RuneKit.later(swallowAt - 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            JobFx15.abyss(lv, center, core, 1, 2, 0.3, false, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(), "fade", 0.0), VOID, BLOOD);
+            if (pit[0] == null || !pit[0].alive()) JobFx15.abyss(lv, center, core, 1, 2, 0.3, false, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(), "fade", 0.0),
+                    VOID, BLOOD);
             SkillFx.play(lv, "block.sculk_shrieker.shriek", center, 0.6, 0.7);
             SkillFx.sparks(lv, V.up(center, 0.3), BLOOD, 16, 6);
         });
         RuneKit.later(swallowAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            // 삼킴: 콱 다무는 아가리 (번쩍) → 짓씹음 (이어 돌림)
-            JobFx15.abyss(lv, center, core, 3, 1, 0.15, false, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(), "fade", 0.0, "alpha", 1.0), VOID, BLOOD);
-            RuneKit.later(3, () -> JobFx15.abyss(lv, center, core, 4, 2, (crushAt - swallowAt - 3) / 20.0, true, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(),
-                    "fade", 0.0, "fps", 6.0), VOID, BLOOD));
+            // 삼킴: 콱 다무는 아가리 (번쩍) → 짓씹음 (이어 돌림 — 3D 아가리)
+            if (pit[0] != null && pit[0].alive()) {
+                pit[0].hold("pit_snap");
+                RuneKit.later(3, () -> {
+                    if (pit[0].alive()) pit[0].anim("pit_chew");
+                });
+            } else {
+                JobFx15.abyss(lv, center, core, 3, 1, 0.15, false, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(), "fade", 0.0, "alpha", 1.0), VOID, BLOOD);
+                RuneKit.later(3, () -> JobFx15.abyss(lv, center, core, 4, 2, (crushAt - swallowAt - 3) / 20.0, true, Opt.of("solo", ABYSS_SOLO, "owner",
+                        (double) sp.getId(), "fade", 0.0, "fps", 6.0), VOID, BLOOD));
+            }
             JobFx.burst(lv, V.up(center, 2.0), 3.0, CRIMSON, CRIMSON_CORE, 0.35, Opt.empty());
             SkillFx.sparks(lv, V.up(center, 1.5), BLOOD, 24, 7);
             Ult.flash(lv, center, CRIMSON, Opt.of("radius", 6.0, "time", new double[] {0.02, 0.05, 0.3}), sp);
@@ -497,7 +540,8 @@ final class DarkknightSkills {
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            // 물어 터뜨림: 아가리가 터지며 빛살 · 조각 → 연기 속에 가라앉음 · 둘레 기둥이 무너짐 · 충격 고리
+            // 물어 터뜨림: 아가리가 터지며 빛살 · 조각 → 연기 속에 가라앉음 (3D 아가리가 부풀어 가라앉음) · 둘레 기둥이 무너짐 · 충격 고리
+            if (pit[0] != null && pit[0].alive()) pit[0].leave("pit_sink", 10);
             JobFx15.abyss(lv, center, core, 6, 1, 0.3, false, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(), "fade", 0.0, "alpha", 1.0), VOID, BLOOD);
             RuneKit.later(6, () -> JobFx15.abyss(lv, center, core, 7, 1, 0.7, false, Opt.of("solo", ABYSS_SOLO, "owner", (double) sp.getId(), "fade", 0.4), VOID,
                     BLOOD));
