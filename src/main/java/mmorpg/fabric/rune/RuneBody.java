@@ -214,24 +214,24 @@ final class RuneBody {
     }
 
     /**
-     * 2026-11-13 강철 근육의 3D 쇳빛 육각 판 여섯 (hex_panel — 강철 · 기운 색 보석): 발밑 둘레 (1.0칸) 에서 나선으로 돌며 (틱마다 30°) 가슴 높이로 감아 오르고
+     * 2026-11-13 강철 근육의 3D 육각 판 여섯 (hex_panel 0.95칸 — 기운 색 테 · 흰 보석): 발밑 둘레 (1.4칸) 에서 나선으로 돌며 (틱마다 30°) 가슴 높이로 감아 오르고
      * 몸 쪽으로 좁혀져 (8틱) 9틱에 번쩍 → 몸속으로 작아지며 스밈
      */
     private static void steelSpiral(ServerPlayer sp, double[] col) {
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 20);
-        double s = RuneProps.scaleFor(0.6, RuneProps.HEX_PANEL_H);
+        double s = RuneProps.scaleFor(0.95, RuneProps.HEX_PANEL_H); // 2026-11-13 CI 43425659435 에서 안 보여 0.6 → 0.95칸 · 테를 기운 색으로 (쇳빛은 둘레 빛에 묻힘)
         for (int i = 0; i < 6; i++) {
             final double a0 = i * 60.0;
             final double y0 = 0.25 + (i % 3) * 0.12;
             mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(sp.position(), y0), RuneProps.MID, RuneProps.along(V.UP, new Vec3(1, 0, 0)),
-                    s * 0.4, RuneKit.STEEL, col);
+                    s * 0.4, col, RuneKit.WHITE);
             for (int t = 1; t <= 8; t++) {
                 final int tt = t;
                 fx.on(t, () -> {
                     double u = tt / 8.0;
                     Vec3 d = RuneKit.turn(Kit.facingOf(sp), a0 + tt * 30.0);
-                    Vec3 at = V.up(V.add(sp.position(), d, 1.0 - 0.45 * u), y0 + (1.15 - y0) * u + (a0 / 60.0 % 2) * 0.25 * u);
+                    Vec3 at = V.up(V.add(sp.position(), d, 1.4 - 0.8 * u), y0 + (1.15 - y0) * u + (a0 / 60.0 % 2) * 0.25 * u);
                     p.to(at, RuneProps.facing(d, V.UP), s * (0.4 + 0.6 * u), 1);
                 });
             }
@@ -271,8 +271,8 @@ final class RuneBody {
         if (Notify.actionbarFree(sp)) Notify.notify(sp, "§7신체 강화가 끝났습니다", 16);
     }
 
-    /** 죽음: 신체 강화를 모두 없앰 (모든 스탯 · 밀려나지 않음도) */
-    private static void clearBody(ServerPlayer sp) {
+    /** 죽음: 신체 강화를 모두 없앰 (모든 스탯 · 밀려나지 않음도) — 영상 사이에도 (RuneKit.filmReset) */
+    static void clearBody(ServerPlayer sp) {
         BUFFS.remove(sp.getUUID());
         RpgCombat.clearSteadfast(sp.getUUID());
         RpgStats.setBuff(sp, 0);

@@ -176,12 +176,12 @@ public final class RuneStrike {
         Vec3 f = V.flat(sp.getViewVector(1F));
         Vec3 rt = V.rightOf(f);
         Vec3 hilt = V.up(V.add(V.add(sp.position(), f, 1.1), rt, 0.45), 0.9);
-        double len = 1.6;
+        double len = 1.9; // 2026-11-13 1.6 → 1.9칸 (영상에서 작음)
         double ss = RuneProps.scaleFor(len, RuneProps.SWORD_LEN);
         org.joml.Quaternionf up = RuneProps.along(V.UP, rt);
         mmorpg.fabric.vfx.Vfx.Prop sword = RuneProps.prop(fx, RuneProps.SWORD, hilt, RuneProps.SWORD_HILT, up, ss * 0.3, col, RuneKit.WHITE);
         fx.on(1, () -> sword.size(ss, 2));
-        double hs = RuneProps.scaleFor(0.42, RuneProps.HALO_D);
+        double hs = RuneProps.scaleFor(0.5, RuneProps.HALO_D);
         mmorpg.fabric.vfx.Vfx.Prop ring = RuneProps.prop(fx, RuneProps.HALO, V.up(hilt, 0.3), RuneProps.MID, RuneProps.along(V.UP, rt), 0.01, col, RuneKit.WHITE);
         for (int pass = 0; pass < 2; pass++) {
             for (int i = 0; i <= 3; i++) {
@@ -189,7 +189,7 @@ public final class RuneStrike {
                 final int t = 2 + pass * 4 + i;
                 final boolean top = i == 3;
                 fx.on(t, () -> {
-                    Vec3 at = V.up(hilt, 0.3 + 0.95 * u); // 날밑 위 → 칼끝 아래 (손잡이 가운데에서 칼끝까지 1.34칸)
+                    Vec3 at = V.up(hilt, 0.36 + 1.13 * u); // 날밑 위 → 칼끝 아래 (손잡이 가운데에서 칼끝까지 1.59칸)
                     ring.to(at, RuneProps.along(V.UP, RuneKit.turn(rt, t * 35.0)), hs * (top ? 0.5 : 1.0), 1);
                     SkillFx.sparks(level, at, RuneKit.WHITE, 2, 2.5);
                 });

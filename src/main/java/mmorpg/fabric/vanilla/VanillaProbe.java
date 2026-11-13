@@ -1022,6 +1022,7 @@ final class VanillaProbe {
             return;
         }
         run(server, "tick rate 20");
+        mmorpg.fabric.rune.RuneKit.filmReset(p); // 2026-11-13 앞 룬의 남은 연출 · 버프 (신체 강화의 기운 · 하트) 가 이 영상에 남지 않게
         run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 12");
         mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
         mmorpg.fabric.RpgHealth.healFull(p);

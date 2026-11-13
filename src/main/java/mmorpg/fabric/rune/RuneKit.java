@@ -1108,6 +1108,16 @@ public final class RuneKit {
         LIFE_ENDED.add(fn);
     }
 
+    /**
+     * 2026-11-13 영상 사이 (VanillaProbe.film — 같은 사람이 룬을 이어 찍음): 앞 룬의 남은 연출 · 버프를 죽은 것처럼 끝냄 — 목숨 (sameLife 연출 · 콤보 · 표식 ·
+     * 정령) · 죽음으로만 끝나는 버프 · 신체 강화 (CI 43425659435: 재생의 기운 · 하트가 다음 영상 (날 세우기) 에 남았음)
+     */
+    public static void filmReset(ServerPlayer sp) {
+        DEATHS.merge(sp.getUUID(), 1, Integer::sum);
+        lifeEnded(sp.getUUID());
+        RuneBody.clearBody(sp);
+    }
+
     /** 죽음 · 차원 이동 · 탈것 부르기 (runes.js onLifeEnded · interruptRunes) */
     public static void lifeEnded(UUID id) {
         LIVES.merge(id, 1, Integer::sum);
