@@ -1002,8 +1002,13 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 직업 스킬 다섯을 같은 입력 (Shift + 칸 키) 으로 쓰고 틱마다 한 장 — 태세 · 강화는 뒤에 평타까지 */
     private void filmSkills(ClientGameTestContext ctx, TestServerContext server, String job, Case[] cases, RpgFilm f) {
         Jobs.Job j = Jobs.job(job);
+        // 2026-11-13 고른 스킬만 (only=job,film,filmjobN,filmids=swordsman_mirror+archer_rapid — 스킬 id, + 로 이음): 2D 그림만 바뀐 스킬의 모드 모습
+        // (모드 없는 클라이언트는 아직 직업 그림 rfx_j* 를 거의 못 그림 — tools/vfx_particles.py RUNE_J)
+        String ids = RpgFilm.valueOf("filmids");
+        java.util.Set<String> pick = ids == null || ids.isBlank() ? null : java.util.Set.of(ids.split("\\+"));
         for (Case c : cases) {
             Jobs.Skill k = j.skill(c.slot());
+            if (pick != null && !pick.contains(k.id())) continue;
             home(server);
             server.runOnServer(s -> prepare(player(s), job, k.id()));
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
