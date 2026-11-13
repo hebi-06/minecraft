@@ -62,7 +62,7 @@ final class RuneHunter {
     // ------------------------------------------------------------ 일반: 강철 덫
 
     /** 2026-11-13 3D 강철 덫 너비 (경첩 막대 — 칸: 1인칭 5칸 앞에서도 턱이 보이게) */
-    private static final double TRAP_BLOCKS = 1.7;
+    private static final double TRAP_BLOCKS = 2.2; // 2026-11-13 영상에서 적 발밑에 묻혀 1.7 → 2.2칸
 
     /**
      * 2026-11-13 3D 강철 덫 (trap_base + trap_jaw 둘 — 블록 표시 덫 대신, 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 손에서 조준한 곳 g 까지 포물선

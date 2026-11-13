@@ -289,7 +289,7 @@ final class RuneVit {
 
     /**
      * 강철 피부: 주위 충격 + ticks 동안 받는 피해 -reduce, 때린 몹에게 위력 × reflect 반사 —
-     * 2026-11-13 3D 쇳빛 육각 판 여덟 (hex_panel — 2D 판 대신, ironPlates): 몸 옆 · 뒤 (±100° ~ ±178° — 1인칭 화면에는 들지 않음) 1.9칸에서 돌며 몸으로 날아들어
+     * 2026-11-13 3D 육각 판 여덟 (hex_panel — 룬 빛 테 · 2D 판 대신, ironPlates): 몸 옆 · 뒤 (±100° ~ ±178° — 1인칭 화면에는 들지 않음) 2.3칸에서 돌며 몸으로 날아들어
      * 붙는 순간 (4틱) 번쩍 → 몸속으로 작아지며 스며듦. 버티는 동안 몸 양옆 뒤의 작은 판 둘이 몸을 따라오며 20틱마다 번쩍 (ironGuard)
      */
     static boolean ironSkin(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -332,24 +332,24 @@ final class RuneVit {
         return true;
     }
 
-    /** 2026-11-13 강철 피부의 3D 판 여덟: 몸 옆 · 뒤 1.9칸 → gather 틱에 몸 0.5칸까지 돌며 날아듦 (몸을 따라감) → 번쩍 → 몸속으로 작아짐 */
+    /** 2026-11-13 강철 피부의 3D 판 여덟 (1.0칸): 몸 옆 · 뒤 2.3칸 → gather 틱에 몸 0.55칸까지 돌며 날아듦 (몸을 따라감) → 번쩍 → 몸속으로 작아짐 */
     private static void ironPlates(ServerPlayer sp, int gather, double[] glow) {
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), gather + 14);
-        double s = RuneProps.scaleFor(0.72, RuneProps.HEX_PANEL_H);
+        double s = RuneProps.scaleFor(1.0, RuneProps.HEX_PANEL_H); // 2026-11-13 영상에서 작고 흐려 0.72 → 1.0칸 · 테를 룬 빛으로
         Vec3 f0 = Kit.facingOf(sp);
         for (int i = 0; i < 8; i++) {
             double deg = (i % 2 == 1 ? 1 : -1) * (100 + (i / 2) * 26);
             double y = 0.5 + (i % 3) * 0.55;
             double spin0 = i * 40;
             Vec3 d0 = RuneKit.turn(f0, deg);
-            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(V.add(sp.position(), d0, 1.9), y), RuneProps.MID, RuneProps.facing(d0, V.UP), s * 0.6,
-                    RuneKit.STEEL, glow);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(V.add(sp.position(), d0, 2.3), y), RuneProps.MID, RuneProps.facing(d0, V.UP), s * 0.6,
+                    glow, RuneKit.WHITE);
             for (int t = 1; t <= gather; t++) {
                 final double u = t / (double) gather;
                 fx.on(t, () -> {
                     Vec3 d = RuneKit.turn(Kit.facingOf(sp), deg);
-                    Vec3 at = V.up(V.add(sp.position(), d, 1.9 + (0.5 - 1.9) * u), y);
+                    Vec3 at = V.up(V.add(sp.position(), d, 2.3 + (0.55 - 2.3) * u), y);
                     Vec3 up = RuneSwords.rot(V.UP, d, spin0 + u * 160);
                     p.to(at, RuneProps.facing(d, up), s * (0.6 + 0.4 * u), 1);
                 });
@@ -363,19 +363,19 @@ final class RuneVit {
         }
     }
 
-    /** 2026-11-13 버티는 동안 몸 양옆 뒤 (보는 쪽에서 ±130° · 0.6칸 · 높이 1.15) 의 작은 3D 판 둘 (바깥을 봄 — 천천히 돎): 틱마다 몸을 따라오고 20틱마다 번쩍 → 끝에 작아짐 */
+    /** 2026-11-13 버티는 동안 몸 양옆 뒤 (보는 쪽에서 ±130° · 0.6칸 · 높이 1.15) 의 작은 3D 판 둘 (0.75칸 · 바깥을 봄 — 천천히 돎): 틱마다 몸을 따라오고 20틱마다 번쩍 → 끝에 작아짐 */
     private static void ironGuard(ServerPlayer sp, int ticks, double[] glow) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), ticks + 10);
-        double s = RuneProps.scaleFor(0.55, RuneProps.HEX_PANEL_H);
+        double s = RuneProps.scaleFor(0.75, RuneProps.HEX_PANEL_H); // 2026-11-13 0.55 → 0.75칸 · 테를 룬 빛으로
         int[] sds = {-1, 1};
         mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[2];
         java.util.function.BiFunction<Integer, Integer, Vec3> spot = (i, t) -> V.up(V.add(sp.position(), RuneKit.turn(Kit.facingOf(sp), sds[i] * 130), 0.6),
                 1.15 + 0.07 * Math.sin(t * 0.2 + i * 2.1));
         for (int i = 0; i < 2; i++) {
             Vec3 d = RuneKit.turn(Kit.facingOf(sp), sds[i] * 130);
-            ps[i] = RuneProps.prop(fx, RuneProps.HEX_PANEL, spot.apply(i, 0), RuneProps.MID, RuneProps.facing(d, V.UP), s * 0.1, RuneKit.STEEL, glow);
+            ps[i] = RuneProps.prop(fx, RuneProps.HEX_PANEL, spot.apply(i, 0), RuneProps.MID, RuneProps.facing(d, V.UP), s * 0.1, glow, RuneKit.WHITE);
         }
         boolean[] done = {false};
         Runnable end = () -> {

@@ -472,19 +472,19 @@ final class RuneGolem {
     }
 
     /**
-     * 2026-11-13 석화 결계의 3D 결계 벽: 둘레 반지름 radius 의 육각 판 열 (높이 1.0 · 안쪽을 봄) + 위 줄 다섯 (높이 2.0 · 조금 작게) 이 판마다 1틱씩 늦게 땅에서
-     * 솟아 (4틱) 8틱마다 살짝 번쩍 → breakAt 틱에 바깥으로 튕겨 나가며 작아짐 (6틱). 내 눈 · 카메라 가까이 (2.4칸) 의 판은 세우지 않음 (1인칭 화면을 덮지 않게)
+     * 2026-11-13 석화 결계의 3D 결계 벽: 둘레 반지름 radius 의 육각 판 열 (1.6칸 · 높이 1.0 · 안쪽을 봄) + 위 줄 다섯 (높이 2.5 · 조금 작게) 이 판마다 1틱씩 늦게 땅에서
+     * 솟아 (4틱) 8틱마다 살짝 번쩍 → breakAt 틱에 바깥으로 튕겨 나가며 작아짐 (6틱). 내 눈 · 카메라 가까이 (2.8칸) 의 판은 세우지 않음 (1인칭 화면을 덮지 않게)
      */
     private static void barrierPanels(ServerPlayer sp, Vec3 g, double radius, int breakAt) {
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, breakAt + 12);
-        double s0 = RuneProps.scaleFor(1.15, RuneProps.HEX_PANEL_H);
+        double s0 = RuneProps.scaleFor(1.6, RuneProps.HEX_PANEL_H); // 2026-11-13 영상에서 흐려 1.15 → 1.6칸 (위 줄 높이 2.0 → 2.5)
         for (int j = 0; j < 15; j++) {
             boolean top = j >= 10;
             double a = top ? (j - 10) / 5.0 * Math.PI * 2 + 0.31 : j / 10.0 * Math.PI * 2;
             Vec3 ring = PairKit.ring(g, radius, a);
-            double y = top ? 2.0 : 1.0;
-            if (PairKit.nearCam(sp, V.up(ring, y + 0.2), 2.4)) continue;
+            double y = top ? 2.5 : 1.0;
+            if (PairKit.nearCam(sp, V.up(ring, y + 0.2), 2.8)) continue;
             Vec3 in = new Vec3(-Math.cos(a), 0, -Math.sin(a));
             double s = top ? s0 * 0.8 : s0;
             Vec3 at = V.up(ring, y);

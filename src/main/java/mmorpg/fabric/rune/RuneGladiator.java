@@ -364,8 +364,8 @@ final class RuneGladiator {
     private static void rushShield(ServerPlayer sp, String life, Vec3 f, int bash, int slam) {
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), slam + 20);
-        double s = RuneProps.scaleFor(1.4, RuneProps.TOWER_SHIELD_H);
-        java.util.function.Supplier<Vec3> held = () -> V.up(V.add(V.add(sp.position(), f, 0.75), V.rightOf(f), 0.3), 0.95);
+        double s = RuneProps.scaleFor(1.7, RuneProps.TOWER_SHIELD_H); // 2026-11-13 영상에서 몸에 가려 1.4 → 1.7칸 · 몸 앞으로 (0.75 → 0.95칸 · 오른쪽 0.3 → 0.12)
+        java.util.function.Supplier<Vec3> held = () -> V.up(V.add(V.add(sp.position(), f, 0.95), V.rightOf(f), 0.12), 1.0);
         Quaternionf front = RuneProps.facing(f, V.UP);
         mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.TOWER_SHIELD, held.get(), RuneProps.TOWER_SHIELD_MID, front, s * 0.4, STEEL, CORE);
         boolean[] dead = {false};

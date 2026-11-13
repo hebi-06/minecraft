@@ -289,7 +289,7 @@ final class RuneAssassin {
      * 부채꼴 셋이 서로 다르게) → stick 이면 끝에 꽂혀 6틱 머물다 작아짐 (조금 기울어 박힘), 아니면 끝에서 바로 작아짐
      */
     private static void starFlight(ServerLevel level, Vec3 from, Vec3 d, double len, int ticks, boolean stick, double lean, double[] glow, double[] core) {
-        double s = RuneProps.scaleFor(0.6, RuneProps.SHURIKEN_D);
+        double s = RuneProps.scaleFor(0.85, RuneProps.SHURIKEN_D); // 2026-11-13 영상에서 작아 0.6 → 0.85칸
         Vec3 side = V.unit(V.cross(d, V.UP).lengthSqr() < 1e-6 ? new Vec3(1, 0, 0) : V.cross(d, V.UP));
         Vec3 n = V.unit(V.add(V.UP, side, 0.35 * lean + 0.15));
         Vec3 a0 = V.add(from, d, 0.35);

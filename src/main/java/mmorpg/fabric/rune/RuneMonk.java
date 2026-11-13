@@ -138,13 +138,13 @@ final class RuneMonk {
      * 작아져 사라짐
      */
     private static void fistFlight(ServerLevel level, Vec3 hand, Vec3 d) {
-        double s = RuneProps.scaleFor(1.0, RuneProps.FIST_H);
+        double s = RuneProps.scaleFor(1.5, RuneProps.FIST_H); // 2026-11-13 영상에서 작게 보여 1.0 → 1.5칸
         org.joml.Quaternionf q = RuneProps.along(V.scale(d, -1), V.cross(V.UP, d));
         Vec3 a0 = V.add(hand, d, 0.3);
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, a0, 10);
         mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.FIST, a0, RuneProps.FIST_FACE, q, s * 0.45, GOLD, CORE);
-        fx.on(1, () -> p.to(V.add(hand, d, 2.6), null, s, 2));
-        fx.on(3, () -> p.to(V.add(hand, d, 3.1), null, s * 0.15, 3));
+        fx.on(1, () -> p.to(V.add(hand, d, 2.8), null, s, 2));
+        fx.on(3, () -> p.to(V.add(hand, d, 3.4), null, s * 0.15, 3));
         fx.on(6, p::remove);
     }
 
@@ -152,9 +152,9 @@ final class RuneMonk {
     private static void palmPush(ServerLevel level, Vec3 at, Vec3 d) {
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, 14);
         org.joml.Quaternionf q = RuneProps.facing(d, V.UP);
-        mmorpg.fabric.vfx.Vfx.Group hand3d = RuneProps.shape(fx, RuneProps.PALM, at, q, palmScale(0.3), GOLD, CORE);
-        fx.on(1, () -> hand3d.to(V.add(at, d, 2.4), null, palmScale(1.0), 4));
-        fx.on(6, () -> hand3d.to(V.add(at, d, 3.0), null, palmScale(0.3), 4));
+        mmorpg.fabric.vfx.Vfx.Group hand3d = RuneProps.shape(fx, RuneProps.PALM, at, q, palmScale(0.45), GOLD, CORE);
+        fx.on(1, () -> hand3d.to(V.add(at, d, 2.8), null, palmScale(1.4), 4)); // 2026-11-13 영상에서 고리에 묻혀 1.0 → 1.4
+        fx.on(6, () -> hand3d.to(V.add(at, d, 3.5), null, palmScale(0.4), 4));
         fx.on(10, hand3d::remove);
     }
 
