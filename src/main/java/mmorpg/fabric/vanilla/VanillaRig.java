@@ -394,6 +394,8 @@ public final class VanillaRig {
         @Override
         protected void onTick() {
             if (!attached || sp.isRemoved()) return;
+            // 보는 모드 없는 사람이 없으면 셈도 쉼 (동작 시각은 틱으로 셈 — 다시 보이면 그 자리부터)
+            if (getWatchingPlayers().isEmpty()) return;
             skin(skinOf(sp));
             // 보내는 빠르기: 동작 중 틱마다 · 동작 뒤 (걷기 · 서 있기) 는 2틱마다 (보간도 2틱 — 보내는 양을 반으로)
             int want = motion != null ? 1 : 2;
