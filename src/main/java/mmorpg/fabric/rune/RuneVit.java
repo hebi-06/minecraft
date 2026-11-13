@@ -255,9 +255,37 @@ final class RuneVit {
     }
 
     /**
+     * 2026-11-13 불굴의 방벽의 3D 빛의 육각 판 열둘 (hex_panel — 바깥을 봄, 셋째마다 금빛 · 거의 투명한 판에 밝은 테 · 가운데 보석): 땅속에서 차례로 솟음 (보는 쪽부터
+     * — 5틱), pulse 틱마다 모두 번쩍 커졌다 돌아옴 (안의 적을 밀어내는 틱), ticks 틱에 차례로 가라앉음. 예전 2D 육각 판 (10틱마다 다시 그림) 대신
+     */
+    private static void bulwarkPanels(ServerPlayer sp, Vec3 c, double radius, double plate, int ticks, int pulse, double[] glow, double[] gold, double[] core) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, ticks + 24);
+        int n = 12;
+        double sc = RuneProps.scaleFor(plate * 2, RuneProps.HEX_PANEL_H);
+        double yaw0 = Math.atan2(Kit.facingOf(sp).z, Kit.facingOf(sp).x);
+        for (int j = 0; j < n; j++) {
+            double a = ((double) j / n) * Math.PI * 2;
+            Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
+            Vec3 at = V.up(V.add(c, d, radius), plate * 0.93);
+            org.joml.Quaternionf rot = RuneProps.facing(d, V.UP);
+            double diff = Math.abs(Math.atan2(Math.sin(a - yaw0), Math.cos(a - yaw0)));
+            int delay = 1 + (int) Math.round(diff / Math.PI * 6);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(at, -plate * 2.4), new double[] {8, 8, 8}, rot, sc * 0.3,
+                    j % 3 != 0 ? glow : gold, core);
+            fx.on(delay, () -> p.to(at, null, sc, 5));
+            for (int t = pulse; t < ticks; t += pulse) {
+                fx.on(t, () -> p.size(sc * 1.09, 2));
+                fx.on(t + 3, () -> p.size(sc, 5));
+            }
+            fx.on(ticks + delay, () -> p.to(V.up(at, -plate * 2.4), null, sc * 0.4, 8));
+            fx.on(ticks + delay + 9, p::remove);
+        }
+    }
+
+    /**
      * 불굴의 방벽: 선 자리에 방벽 (ticks). 안의 아군은 받는 피해 -reduce, 안의 적은 pulse 틱마다 피해 + 밀려남 —
-     * 둘레에 빛의 육각 판 12장이 벽을 이룸 (판마다 바깥을 봄, 금빛 셋째마다 — 밝은 테두리 · 옅은 판). 쓴 사람이 보는 쪽의 판은 테두리만,
-     * 카메라 가까이의 판은 흐리게
+     * 둘레에 빛의 육각 판 12장이 벽을 이룸 (2026-11-13 3D — bulwarkPanels: 판마다 바깥을 봄, 금빛 셋째마다 · 거의 투명한 판에 밝은 테)
      */
     static boolean bulwark(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -275,26 +303,9 @@ final class RuneVit {
         RuneBoost.bloom(level, c, glow, core, 3.5); // 0.50.0 2D 강화 (아래 등급 터짐): 방벽이 서는 순간의 빛 (방벽 가운데)
         SkillFx.play(level, "beacon.activate", c, 1.0, 1);
         SkillFx.play(level, "random.totem", c, 1.6, 0.3);
+        bulwarkPanels(sp, c, radius, plate, ticks, pulse, glow, gold, core);
         for (int t = 0; t < ticks; t += 10) {
-            final int tt = t;
-            Tasks.later(t, () -> {
-                boolean first = tt == 0;
-                boolean valid = !sp.isRemoved();
-                Vec3 eye = valid ? sp.getEyePosition() : null;
-                Vec3 view = valid ? V.flat(sp.getViewVector(1F)) : null;
-                for (int j = 0; j < n; j++) {
-                    double a = ((double) j / n) * Math.PI * 2;
-                    Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
-                    Vec3 p = V.up(V.add(c, d, radius), plate * 0.93);
-                    // 카메라 (1인칭 눈 · 3인칭 뒤 4.5칸) 가까이의 판은 흐리게 — 화면을 덮지 않게
-                    double near = valid ? Math.max(0.15, Math.min(1, (RuneKit.camDist(sp, p) - 1) / 2.5)) : 1;
-                    // 쓴 사람이 보는 쪽 (±60°) 의 판은 테두리만 (1인칭에서 벽 너머의 적 · 조준점이 보이게)
-                    boolean front = eye != null && V.dot(V.unit(V.flat(V.sub(p, eye))), view) > 0.5;
-                    RuneKit.hexPlate(level, p, d, plate, j % 3 != 0 ? glow : gold, Opt.of("life", 0.55, "fade", tt + 10 >= ticks ? 0.4 : 0.0, "alpha",
-                            (front ? 0.1 : 0.3) * near, "coreAlpha", (front ? 0.7 : 0.95) * near, "grow", first ? 0.08 : 0.0, "core", core));
-                }
-                RuneKit.zonePulse(level, V.up(c, plate * 1.85), gold, radius, 0.55); // 위쪽 빛 고리 (방벽 지붕)
-            });
+            Tasks.later(t, () -> RuneKit.zonePulse(level, V.up(c, plate * 1.85), gold, radius, 0.55)); // 위쪽 빛 고리 (방벽 지붕)
         }
         int pulses = ticks / pulse;
         for (int i = 0; i < pulses; i++) {
@@ -321,6 +332,47 @@ final class RuneVit {
         }
         Tasks.later(ticks, () -> SkillFx.play(level, "beacon.deactivate", c, 1.0, 1));
         return true;
+    }
+
+    private static final net.minecraft.world.level.block.state.BlockState PACT_SHELL = net.minecraft.world.level.block.Blocks.RED_STAINED_GLASS.defaultBlockState();
+    private static final net.minecraft.world.level.block.state.BlockState PACT_CORE = net.minecraft.world.level.block.Blocks.REDSTONE_BLOCK.defaultBlockState();
+
+    /**
+     * 2026-11-13 불사의 맹약의 핏빛 결정 (만년빙하처럼 — 블록을 꼭짓점으로 세워 늘린 결정: 붉은 유리 겉 · 레드스톤 블록 속): 맺는 순간 둘레에서 결정 아홉이
+     * 바깥으로 기울어 솟고 (앞 50° 는 비움 — 1인칭 화면) 1.5초 뒤 부서져 가라앉음, pulse 틱마다 몸 둘레에 작은 결정 둘이 솟았다 부서짐 (회복 틱). 죽으면 멈춤
+     */
+    private static void pactCrystals(ServerPlayer sp, Vec3 c0, int pulses, int pulse, int alive) {
+        ServerLevel level = sp.level();
+        Vec3 f = Kit.facingOf(sp);
+        int n = 9;
+        for (int i = 0; i < n; i++) {
+            double a = 50 + (i + 0.5) / n * 260 + (Kit.rand() - 0.5) * 14;
+            Vec3 d = RuneKit.turn(f, a);
+            double rr = 1.9 + Kit.rand() * 0.8;
+            Vec3 b = V.add(c0, d, rr);
+            Vec3 base = new Vec3(b.x, RuneKit.groundAt(level, b, c0.y), b.z);
+            double h = 1.5 + Kit.rand() * 1.3;
+            RuneGlacier.Crystal cr = new RuneGlacier.Crystal(RuneGlacier.tilted(d, 18 + Kit.rand() * 18), h, 0.55 + h * 0.18, Kit.rand() * 90);
+            RuneGlacier.erupt(level, base, cr, PACT_CORE, PACT_SHELL, 1 + i % 3, 4, 26 + (int) (Kit.rand() * 6), 8);
+        }
+        SkillFx.play(level, "block.amethyst_block.break", c0, 1.2, 0.6);
+        SkillFx.play(level, "block.glass.break", c0, 1.0, 0.7);
+        for (int k = 1; k < pulses; k++) {
+            Tasks.later(k * pulse, () -> {
+                if (!RuneKit.aliveSince(sp, alive)) return;
+                Vec3 c = sp.position();
+                Vec3 ff = Kit.facingOf(sp);
+                for (int j = 0; j < 2; j++) {
+                    Vec3 d = RuneKit.turn(ff, 70 + Kit.rand() * 220);
+                    Vec3 b = V.add(c, d, 1.3 + Kit.rand() * 0.6);
+                    Vec3 base = new Vec3(b.x, RuneKit.groundAt(sp.level(), b, c.y), b.z);
+                    double h = 0.8 + Kit.rand() * 0.6;
+                    RuneGlacier.Crystal cr = new RuneGlacier.Crystal(RuneGlacier.tilted(d, 22 + Kit.rand() * 14), h, 0.4 + h * 0.2, Kit.rand() * 90);
+                    RuneGlacier.erupt(sp.level(), base, cr, PACT_CORE, PACT_SHELL, 1 + j, 3, 8, 6);
+                }
+                SkillFx.play(sp.level(), "block.amethyst_cluster.break", c, 0.8, 0.8);
+            });
+        }
     }
 
     /**
@@ -376,6 +428,7 @@ final class RuneVit {
         });
         int pulses = ticks / pulse;
         int alive = RuneKit.deathToken(sp); // 죽으면 끝 (회복 · 반격 · 기운 · 쓰러지지 않음 모두 — 차원 이동 · 탈것 부르기로는 끝나지 않음)
+        pactCrystals(sp, c0, pulses, pulse, alive);
         for (int i = 0; i < pulses; i++) {
             final int ii = i;
             Tasks.later(i * pulse, () -> {

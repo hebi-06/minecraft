@@ -211,11 +211,16 @@ final class RuneGlacier {
      * 돌려준 목록 = 띄운 표시 (없으면 빈 목록)
      */
     static List<Display> erupt(ServerLevel level, Vec3 base, Crystal c, boolean core, BlockState shell, int delay, int rise, int hold, int brk) {
+        return erupt(level, base, c, core ? BLUE : null, shell, delay, rise, hold, brk);
+    }
+
+    /** 2026-11-13 속 블록을 고르는 결정 (불사의 맹약의 핏빛 결정 — 붉은 유리 겉 · 레드스톤 블록 속): coreState null 이면 속 없음 */
+    static List<Display> erupt(ServerLevel level, Vec3 base, Crystal c, BlockState coreState, BlockState shell, int delay, int rise, int hold, int brk) {
         List<Display> out = new ArrayList<>();
         int life = delay + rise + hold + brk + 2;
         Display.BlockDisplay outer = spawnCrystal(level, base, shell, c, 0.7, life);
         Crystal inner = new Crystal(c.axis(), c.h() * 0.9, c.w() * 0.62, c.spin() + 30);
-        Display.BlockDisplay in = core ? spawnCrystal(level, base, BLUE, inner, 0.7, life) : null;
+        Display.BlockDisplay in = coreState != null ? spawnCrystal(level, base, coreState, inner, 0.7, life) : null;
         if (outer != null) out.add(outer);
         if (in != null) out.add(in);
         int d = Math.max(2, delay);

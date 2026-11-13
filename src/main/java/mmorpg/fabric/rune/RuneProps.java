@@ -55,6 +55,15 @@ public final class RuneProps {
     public static final double BOULDER_D = 16;
     /** 2026-11-13 블랙홀의 공허 핵 (void_orb): 가운데 (8, 8, 8) · 지름 약 19 · 면 테두리 빛 = 계열 색 (tint 0) */
     public static final String VOID_ORB = "rpg:vfx/void_orb";
+    /** 2026-11-13 머리 위 빛 고리 (tools/vfx_blocky.py halo — 가운데 (8, 8, 8) · 지름 약 19.6, 물들임 빛 · 속빛) */
+    public static final String HALO = "rpg:vfx/halo";
+    public static final double HALO_D = 19.6;
+    /** 2026-11-13 빛의 육각 판 (hex_panel — 가운데 (8, 8, 8) · 높이 16 (꼭짓점 위아래) · 너비 13.9 · 앞 = ±Z, 물들임 빛 · 속빛) */
+    public static final String HEX_PANEL = "rpg:vfx/hex_panel";
+    public static final double HEX_PANEL_H = 16;
+    /** 2026-11-13 대천사의 날개 (조각 물체 angel_wing — 쥔 곳 = 날개 뿌리 · 바깥 +Z · 위 +Y, 바깥 끝까지 약 50px · 물들임 깃 · 빛 깃) */
+    public static final String ANGEL_WING = "angel_wing";
+    public static final double ANGEL_WING_SPAN = 50;
 
     /** 룬 전용 검: 칼끝 y 31 · 자루 끝 y −10.2 (길이 41.2 픽셀) · 날 가운데 (8, 17.5, 8) · 손잡이 가운데 (8, −3.5, 8) */
     public static final double SWORD_LEN = 41.2;
@@ -218,10 +227,11 @@ public final class RuneProps {
 
     /** 조각 물체 하나 (손바닥 · 파도 · 물기둥 — 쥔 곳은 모양마다 vfx_shapes.json): at · 회전 · 크기 · 늘 밝게 · 물들임 */
     public static Vfx.Group shape(Vfx.Fx fx, String shape, Vec3 at, Quaternionf rot, double scale, double[]... tints) {
-        Vfx.Group g = fx.group(shape, at).bright();
-        if (tints.length > 0) g.tint(tints);
-        g.to(at, rot, scale, 0);
-        return g;
+        return fx.group(shape, at, g -> {
+            g.bright();
+            if (tints.length > 0) g.tint(tints);
+            g.to(at, rot, scale, 0);
+        });
     }
 
     /** 2026-11-13 아무 축 둘레로 조금씩 도는 회전 (구르는 바위) — 씨앗 seed · 나이 t · 도/틱 rate */

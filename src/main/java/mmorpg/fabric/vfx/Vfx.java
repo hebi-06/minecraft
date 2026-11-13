@@ -248,7 +248,17 @@ public final class Vfx {
 
         /** 조각 물체 (mmorpg/vfx_shapes.json 의 이름 — tools/vfx_shapes.py: 파도 · 물기둥 · 기의 손바닥) */
         public Group group(String shape, Vec3 at) {
+            return group(shape, at, null);
+        }
+
+        /**
+         * 2026-11-13 조각 물체를 init (물들임 · 밝기 · 첫 모습) 을 마친 뒤 띄움 — 띄운 뒤 바꾸면 모드 없는 클라이언트가 한두 틱 물들지 않은 · 처음 회전의 조각을 봄
+         * (Prop 과 같음)
+         */
+        public Group group(String shape, Vec3 at, java.util.function.Consumer<Group> init) {
             Group g = new Group(this, shape(shape), at);
+            if (init != null) init.accept(g);
+            g.show();
             propsMade++;
             return g;
         }
@@ -514,6 +524,7 @@ public final class Vfx {
         Quaternionf rot = new Quaternionf();
         float scale = 1F;
         boolean removed;
+        boolean shown;
 
         Group(Fx fx, ShapeDef def, Vec3 at) {
             this.fx = fx;
@@ -530,6 +541,12 @@ public final class Vfx {
                 els.add(e);
             }
             apply();
+        }
+
+        /** 띄움 (한 번만 — Fx.group 이 init 뒤에 부름) */
+        void show() {
+            if (shown || removed) return;
+            shown = true;
             for (ItemDisplayElement e : els) fx.addElement(e);
         }
 
@@ -617,7 +634,7 @@ public final class Vfx {
         public void remove() {
             if (removed) return;
             removed = true;
-            for (ItemDisplayElement e : els) fx.removeElement(e);
+            if (shown) for (ItemDisplayElement e : els) fx.removeElement(e);
         }
     }
 

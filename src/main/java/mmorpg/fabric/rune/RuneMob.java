@@ -38,6 +38,9 @@ public final class RuneMob {
     /** 2026-11-13 기의 화신 (무투 — 백열권): 동작 appear · barrage (되풀이 0.2초) · finisher (치는 때 KI_FINISH_AT 틱) · vanish */
     public static final String KI_AVATAR = "rpg:rune_ki_avatar";
     public static final int KI_FINISH_AT = 5;
+    /** 2026-11-13 투신의 화신 (신체 영웅 — 투신): 동작 appear · roar (1.1초 — 0.3 에 두 팔을 활짝) · slam (0.6초 — 땅을 치는 때 WAR_GOD_SLAM_AT 틱) · vanish */
+    public static final String WAR_GOD = "rpg:rune_war_god";
+    public static final int WAR_GOD_SLAM_AT = 6;
     public static final String WOLF = TyrfingWarrior.WOLF_ID;
 
     /** 빠르기 곡선: 고르게 · 빨리 시작해 느려짐 · 느리게 시작해 빨라짐 · 부드럽게 */

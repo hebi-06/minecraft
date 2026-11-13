@@ -375,8 +375,105 @@ final class RuneHoly {
         }
     }
 
+    /** 날개 하나의 자리 (뿌리) · 회전 */
+    private record WingPose(Vec3 at, org.joml.Quaternionf rot) {}
+
     /**
-     * 대천사 강림: hits × gap 틱 동안 등 뒤에 금빛 날개 (rpg:rfx_wings — 보는 방향에 수직인 면, 날갯짓). gap 틱마다 allyRadius 칸 안 아군 회복 · 보호막
+     * 날개 하나: s = 1 오른쪽 · −1 왼쪽, sweep = 뒤로 젖힌 각 (도 — 0 이면 옆으로 곧게), flap = 들어 올린 각 (도). 뿌리 = 등 뒤 어깨뼈 (발에서 1.36칸 · 뒤 0.24 ·
+     * 옆 0.16). 모델 바깥 (+Z) = 날개 끝 쪽, 위 (+Y) = 날개 면의 위
+     */
+    private static WingPose wingPose(Vec3 c, Vec3 f, int s, double sweep, double flap) {
+        Vec3 r = V.rightOf(f);
+        Vec3 at = V.add(V.add(V.up(c, 1.36), f, -0.24), r, s * 0.16);
+        double ps = Math.toRadians(sweep);
+        double th = Math.toRadians(flap);
+        Vec3 out0 = V.add(V.scale(r, s * Math.cos(ps)), f, -Math.sin(ps));
+        Vec3 out = V.add(V.scale(out0, Math.cos(th)), V.UP, Math.sin(th));
+        Vec3 up = V.sub(V.scale(V.UP, Math.cos(th)), V.scale(out0, Math.sin(th)));
+        return new WingPose(at, RuneProps.facing(out, up));
+    }
+
+    /** 머리 위 빛 고리: 뒤로 18° 기울고 천천히 돎 */
+    private static org.joml.Quaternionf haloRot(Vec3 f, int t) {
+        double a = Math.toRadians(18);
+        Vec3 n = V.sub(V.scale(V.UP, Math.cos(a)), V.scale(f, Math.sin(a)));
+        return RuneProps.along(n, RuneKit.turn(V.rightOf(f), t * 5.0));
+    }
+
+    /**
+     * 2026-11-13 대천사의 3D 날개 (조각 물체 angel_wing 둘 — 깃털 스물넷씩, 왼쪽은 같은 날개를 돌려 씀) · 머리 위 빛 고리 (halo): 등 뒤 날개 뿌리에서 접힌 채
+     * 솟아 (0 ~ 6) 활짝 펴고 gap 틱마다 날갯짓 (회복 · 피해 틱에 내려친 날개가 끝남 — 내려칠 때 조금 앞으로), 2틱마다 몸을 따라옴 (앞질러 옮김 — 2틱 보간).
+     * total 틱에 위로 접히며 작아짐 (깃털이 흩어지는 2D 는 archangel). 죽거나 나가면 바로 접혀 사라짐
+     */
+    private static void wings3d(ServerPlayer sp, int total, int gap, int alive, double[] wingCol, double[] glow) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), total + 16);
+        double ws = RuneProps.scaleFor(2.5, RuneProps.ANGEL_WING_SPAN);
+        double hs = RuneProps.scaleFor(0.8, RuneProps.HALO_D);
+        Vec3 c0 = sp.position();
+        Vec3 f0 = Kit.facingOf(sp);
+        mmorpg.fabric.vfx.Vfx.Group[] w = new mmorpg.fabric.vfx.Vfx.Group[2];
+        for (int i = 0; i < 2; i++) {
+            WingPose p = wingPose(c0, f0, i == 0 ? 1 : -1, 80, -40);
+            w[i] = RuneProps.shape(fx, RuneProps.ANGEL_WING, p.at(), p.rot(), ws * 0.25, wingCol, RuneKit.WHITE);
+        }
+        mmorpg.fabric.vfx.Vfx.Prop halo = RuneProps.prop(fx, RuneProps.HALO, V.up(c0, 2.3), new double[] {8, 8, 8}, haloRot(f0, 0), hs * 0.15, glow,
+                RuneKit.WHITE);
+        Vec3[] last = {c0};
+        boolean[] done = {false};
+        int g = Math.max(8, gap);
+        fx.each(2, total + 6, 2, t -> {
+            if (done[0]) return;
+            boolean gone = !RuneKit.aliveSince(sp, alive) || sp.isRemoved() || sp.level() != level;
+            Vec3 c = gone ? last[0] : sp.position();
+            Vec3 lead = V.sub(c, last[0]);
+            last[0] = c;
+            if (V.len(lead) > 3) lead = Vec3.ZERO;
+            Vec3 cc = V.add(c, lead);
+            Vec3 f = gone ? f0 : Kit.facingOf(sp);
+            double sweep;
+            double flap;
+            double k;
+            int dt = 2;
+            if (gone || t >= total) {
+                // 접힘: 위 뒤로 모이며 작아짐 → 지움
+                done[0] = true;
+                for (int i = 0; i < 2; i++) {
+                    WingPose p = wingPose(cc, f, i == 0 ? 1 : -1, 70, 55);
+                    w[i].to(V.up(p.at(), 0.4), p.rot(), ws * 0.15, 6);
+                }
+                halo.to(V.up(cc, 2.6), haloRot(f, t), hs * 0.1, 6);
+                fx.on(t + 7, () -> {
+                    for (mmorpg.fabric.vfx.Vfx.Group x : w) x.remove();
+                    halo.remove();
+                });
+                return;
+            }
+            if (t <= 6) {
+                // 펼침: 접힌 채 (뒤로 80° · 아래 40°) → 활짝 (뒤 8° · 위 32°), 0.25 → 1.06배
+                double u = RuneSwords.ease(t / 6.0, "out");
+                sweep = 80 - 72 * u;
+                flap = -40 + 72 * u;
+                k = 0.25 + 0.81 * u;
+            } else {
+                // 날갯짓 (gap 틱마다 — 회복 · 피해 틱에 아래 끝): 위 34° ~ 아래 −14°, 내려칠 때 조금 앞으로
+                double ph = 2 * Math.PI * ((t % g) / (double) g);
+                double cw = Math.cos(ph);
+                flap = 10 - 24 * cw;
+                sweep = 16 + 7 * cw;
+                k = t < 10 ? 1.06 - 0.06 * (t - 6) / 4.0 : 1.0;
+            }
+            for (int i = 0; i < 2; i++) {
+                WingPose p = wingPose(cc, f, i == 0 ? 1 : -1, sweep, flap);
+                w[i].to(p.at(), p.rot(), ws * k, dt);
+            }
+            double hk = t < 4 ? 0.15 : t < 10 ? 0.15 + 0.85 * (t - 4) / 6.0 : 1 + (t % g == 0 ? 0.08 : 0);
+            halo.to(V.add(V.up(cc, 2.28), f, -0.1), haloRot(f, t), hs * hk, dt);
+        });
+    }
+
+    /**
+     * 대천사 강림: hits × gap 틱 동안 등 뒤에 금빛 날개 (2026-11-13 3D — 깃털 조각 날개 둘 · 머리 위 빛 고리, wings3d). gap 틱마다 allyRadius 칸 안 아군 회복 · 보호막
      * (최대 cap), radius 칸 안 적 신성 피해. 눈앞에 금빛 깃털 (rpg:rfx_prop 깃털) 이 천천히 떨어짐 (1인칭). 죽으면 끝 (차원 이동으로는 끝나지 않음).
      * 초월 2차 강화: 천상의 금빛 하늘 (죽으면 걷힘) · 번쩍임 · 하늘의 성광 문양 (후광) · 발밑 문양 · 앞쪽 빛기둥 다섯
      */
@@ -418,6 +515,7 @@ final class RuneHoly {
                     "life", 1.3, "jitter", 10.0));
         });
         int alive = RuneKit.deathToken(sp); // 죽으면 끝 (날개 · 회복 · 보호막 · 피해 — 차원 이동 · 탈것 부르기로는 끝나지 않음)
+        wings3d(sp, total, gap, alive, wingCol, glow);
         int[] feather = RuneKit.RFX.get("feather");
         for (int t = 0; t < total; t += 2) {
             final int tt = t;
@@ -426,12 +524,8 @@ final class RuneHoly {
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
                 Vec3 f = Kit.facingOf(sp);
-                // 날개: 등 뒤 0.5칸 · 어깨 높이, 날갯짓 (12틱마다 위 · 아래). 2틱마다 짧게 다시 그림 (몸을 따라옴 — 돌거나 뒷걸음질해도 눈앞을 오래 가리지 않게)
-                Opt wo = Opt.of("dir", f, "size", 2.6, "life", RuneKit.BODY_LIFE, "cell", (double) ((tt / 12) % 2), "vel", RuneKit.bodyVel(sp));
-                RuneBoost.aura(level, "wings", V.up(V.add(c, f, -0.55), 1.4), wo, wingCol, 1.35, 0.4); // 0.48.2 2D 강화: 날개 후광 (2.3 → 2.6)
-                RuneKit.rfx2(level, "wings", V.up(V.add(c, f, -0.5), 1.4), wo, wingCol, RuneKit.WHITE, new int[] {0, RuneKit.WINGS_CORE}, 0.85);
+                // 날개 · 머리 위 빛 고리는 3D (wings3d — 2026-11-13, 예전 2D 날개 그림 rpg:rfx_wings 대신)
                 if (tt % 6 != 0) return;
-                if (tt % 12 == 0) SkillFx.rune(level, V.up(c, 2.35), Opt.of("size", 0.4, "life", 0.65, "color", glow, "alpha", 0.95, "rate", 120.0)); // 후광
                 // 눈앞에 천천히 떨어지는 금빛 깃털 (1인칭)
                 if (tt % 12 == 6) {
                     for (int j = 0; j < 2; j++) {

@@ -1143,6 +1143,142 @@ def rune_ki_avatar_anims():
     }
 
 
+# ================================================================== 투신의 화신 (신체 영웅 — 투신)
+
+WG_SKIN = (190, 38, 32)     # 투신의 기운 (핏빛)
+WG_SKIN2 = (150, 26, 24)
+WG_IRON = (52, 48, 56)
+WG_GOLD = (222, 168, 64)
+WG_EYE = (255, 196, 120)
+WG_RIM = (255, 120, 80)
+
+
+def rune_war_god():
+    """투신의 화신: 쓴 사람 뒤에 솟는 반투명 핏빛 거인 전사의 윗몸 (다리 대신 핏빛 기의 소용돌이) — 굽은 뿔 둘의 검은 쇠 투구 (금 테 · 이마의 보석) ·
+    빛나는 눈 · 넓은 가슴 · 갈라진 배 · 가시 달린 검은 어깨 갑옷 · 금 팔찌 · 굵은 주먹, 등 뒤 갈라진 망토 (비침). 키 약 2.6칸 (크기 1) · 앞 = −Z"""
+    m = Model("rune_war_god", tex_w=128)
+    skin = see(Mat(WG_SKIN, "skin", noise=6, edge=0.8, seed=1301, accent=(236, 92, 60), rim=WG_RIM, rim_glow=0.6), 0.8)
+    skin2 = see(Mat(WG_SKIN2, "skin", noise=5, edge=0.84, seed=1302, accent=(206, 66, 46), rim=WG_RIM, rim_glow=0.45), 0.76)
+    iron = Mat(WG_IRON, "metal", noise=5, edge=0.82, seed=1303, seam=WG_RIM, seam_glow=0.6, seam_band=5, seam_dir="h", seam_gap=0.5)
+    gold = Mat(WG_GOLD, "metal", noise=4, edge=0.86, seed=1304)
+    core = Mat(WG_EYE, "flat", noise=3, edge=1.0, glow=1.0, seed=1305)
+    horn = Mat((236, 220, 190), "bone", noise=5, edge=0.82, seed=1306)
+    swirl = see(Mat(WG_SKIN, "ice", noise=8, edge=0.95, seed=1307, accent=(255, 120, 80)), 0.55)
+    cape = see(Mat((120, 16, 22), "knit", noise=5, edge=0.86, seed=1308, rim=WG_RIM, rim_glow=0.5), 0.85)
+
+    root = m.bone("root", [0, 0, 0])
+    sw = m.bone("swirl", [0, 6, 0], "root")
+    sw.box([-2, -2, -2], [4, 4, 4], swirl)
+    sw.box([-4, 2, -4], [8, 4, 8], swirl.with_(seed=1309))
+    sw.box([-6, 5, -6], [12, 4, 12], swirl.with_(seed=1310))
+    body = m.bone("body", [0, 9, 0], "root")
+    # 허리 · 금 띠 (가운데 보석) · 갈라진 배 · 넓은 가슴
+    body.box([-6, 9, -3.5], [12, 6, 7], skin2, decals=[("north", 5, 1, (110, 20, 18)), ("north", 6, 1, (110, 20, 18)), ("north", 5, 3, (110, 20, 18)),
+                                                     ("north", 6, 3, (110, 20, 18))])
+    body.box([-6.5, 9, -3.9], [13, 2, 8], gold, decals=[("north", 6, 0, WG_EYE, 1.0), ("north", 6, 1, WG_EYE, 1.0)])
+    body.box([-9, 15, -5], [18, 10, 10], skin, decals=[("north", 4, 6, (120, 22, 20)), ("north", 13, 6, (120, 22, 20)), ("north", 8, 3, WG_RIM, 0.5),
+                                                     ("north", 9, 3, WG_RIM, 0.5)])
+    # 등 뒤 망토 (갈라진 두 자락)
+    cp = m.bone("cape", [0, 24, 5], "body")
+    cp.box([-8, 8, 5], [7, 16, 1], cape)
+    cp.box([1, 8, 5], [7, 16, 1], cape.with_(seed=1311))
+    # 머리 · 투구 (금 테 · 이마 보석 · 볼 가리개) · 빛나는 눈
+    head = m.bone("head", [0, 25, 0], "body")
+    head.box([-4, 25, -4], [8, 8, 8], skin.with_(seed=1320), decals=[("north", 1, 4, WG_EYE, 1.0), ("north", 2, 4, WG_EYE, 1.0), ("north", 5, 4, WG_EYE, 1.0),
+                                                                     ("north", 6, 4, WG_EYE, 1.0), ("north", 2, 1, (90, 14, 14)), ("north", 3, 1, (90, 14, 14)),
+                                                                     ("north", 4, 1, (90, 14, 14)), ("north", 5, 1, (90, 14, 14))])
+    head.box([-4.5, 29, -4.5], [9, 5, 9], iron, inflate=0.2, faces={"north": None} if False else None)
+    head.box([-4.6, 29, -4.7], [9, 1, 1], gold)
+    head.box([-1, 30, -4.9], [2, 2, 1], core)
+    head.box([-4.6, 25, -4.6], [2, 4, 3], iron.with_(seed=1321))
+    head.box([2.6, 25, -4.6], [2, 4, 3], iron.with_(seed=1322))
+    # 뿔 (마디 셋 — 밖 위로 굽음)
+    for side, sx in (("R", -1), ("L", 1)):
+        h1 = m.bone("horn1" + side, [4.5 * sx, 31.5, 0], "head", rotation=[0, 0, 60 * sx])
+        h1.box([4.5 * sx - 1.5, 31.5, -1.5], [3, 5, 3], horn)
+        h2 = m.bone("horn2" + side, [4.5 * sx, 36.0, 0], "horn1" + side, rotation=[0, 0, -32 * sx])
+        h2.box([4.5 * sx - 1, 36.0, -1], [2, 5, 2], horn.with_(seed=1323))
+        h3 = m.bone("horn3" + side, [4.5 * sx, 40.5, 0], "horn2" + side, rotation=[-20, 0, -28 * sx])
+        h3.box([4.5 * sx - 0.5, 40.5, -0.5], [1, 4, 1], core)
+    # 팔 (가시 달린 어깨 갑옷 · 굵은 팔 · 금 팔찌 · 주먹)
+    for side, sx in (("R", -1), ("L", 1)):
+        arm = m.bone("arm" + side, [9 * sx, 23, 0], "body")
+        ax = -14 if sx < 0 else 9
+        arm.box([ax - 0.5 * sx - 0.5, 21, -3.5], [6, 5, 7], iron.with_(seed=1330 + sx), inflate=0.3)
+        arm.box([ax + (1 if sx > 0 else 2), 26, -0.5], [2, 3, 1], horn.with_(seed=1332 + sx))
+        arm.box([ax, 15, -2.5], [5, 7, 5], skin.with_(seed=1334 + sx))
+        fa = m.bone("forearm" + side, [11.5 * sx, 15, 0], "arm" + side)
+        fa.box([ax, 7, -2.5], [5, 8, 5], skin2.with_(seed=1336 + sx))
+        fa.box([ax - 0.4, 8, -2.9], [5, 3, 5], gold.with_(seed=1338 + sx), inflate=0.25)
+        fist = m.bone("fist" + side, [11.5 * sx, 7, 0], "forearm" + side)
+        fist.box([ax - 0.5, 1, -3], [6, 6, 6], skin.with_(seed=1340 + sx), decals=[("down", 1, 1, WG_RIM, 0.9), ("down", 3, 1, WG_RIM, 0.9),
+                                                                                   ("down", 5, 1, WG_RIM, 0.9)])
+    return m
+
+
+WG_READY = {
+    "armR": {"rotation": [-15, 0, 12]}, "armL": {"rotation": [-15, 0, -12]},
+    "forearmR": {"rotation": [-30, 0, 0]}, "forearmL": {"rotation": [-30, 0, 0]},
+    "body": {"rotation": [6, 0, 0]},
+}
+
+
+def wg_rel(bones):
+    out = {}
+    for bone, chans in bones.items():
+        out[bone] = {}
+        for ch, frames in chans.items():
+            base = WG_READY.get(bone, {}).get(ch)
+            if base is None or ch == "scale":
+                out[bone][ch] = kf(frames)
+                continue
+            out[bone][ch] = kf([(t, [v - b for v, b in zip(vec, base)]) for t, vec in frames])
+    return out
+
+
+def rune_war_god_anims():
+    R = WG_READY
+    return {
+        "idle": {"loop": True, "bones": {
+            "armR": R["armR"], "armL": R["armL"], "forearmR": R["forearmR"], "forearmL": R["forearmL"],
+            "body": {"rotation": [f"6 + math.sin({LT} * 100) * 2", f"math.sin({LT} * 60) * 4", 0], "position": [0, f"math.sin({LT} * 100) * 0.6", 0]},
+            "head": {"rotation": [f"math.sin({LT} * 80) * 3", f"math.sin({LT} * 45) * 6", 0]},
+            "swirl": {"rotation": [0, f"{LT} * -280", 0], "scale": [f"1 + math.sin({LT} * 380) * 0.1", 1, f"1 + math.sin({LT} * 380) * 0.1"]},
+            "cape": {"rotation": [f"12 + math.sin({LT} * 200) * 6", 0, 0]},
+        }},
+        # 기에서 솟음 (0.4초)
+        "appear": {"animation_length": 0.4, "bones": {
+            "root": {"position": kf([(0, [0, -18, 0]), (0.28, [0, 1.5, 0]), (0.4, [0, 0, 0])]),
+                     "scale": kf([(0, [0.4, 0.4, 0.4]), (0.28, [1.08, 1.08, 1.08]), (0.4, [1, 1, 1])])},
+        }},
+        # 포효 (1.1초 — 0.15 두 팔을 가슴 앞에 모아 웅크림 · 0.3 두 팔을 위 바깥으로 활짝 · 고개를 젖힘 → 떨며 머묾)
+        "roar": {"animation_length": 1.1, "bones": wg_rel({
+            "armR": {"rotation": [(0, [-15, 0, 12]), (0.15, [-70, 30, -20]), (0.3, [-125, 0, 78]), (0.95, [-125, 0, 82]), (1.1, [-15, 0, 12])]},
+            "armL": {"rotation": [(0, [-15, 0, -12]), (0.15, [-70, -30, 20]), (0.3, [-125, 0, -78]), (0.95, [-125, 0, -82]), (1.1, [-15, 0, -12])]},
+            "forearmR": {"rotation": [(0, [-30, 0, 0]), (0.15, [-110, 0, 0]), (0.3, [-25, 0, 0]), (1.1, [-30, 0, 0])]},
+            "forearmL": {"rotation": [(0, [-30, 0, 0]), (0.15, [-110, 0, 0]), (0.3, [-25, 0, 0]), (1.1, [-30, 0, 0])]},
+            "body": {"rotation": [(0, [6, 0, 0]), (0.15, [22, 0, 0]), (0.3, [-14, 0, 0]), (0.5, [-12, 0, 2]), (0.7, [-14, 0, -2]), (0.95, [-12, 0, 0]),
+                              (1.1, [6, 0, 0])],
+                     "position": [(0, [0, 0, 0]), (0.15, [0, -2, 0]), (0.3, [0, 1.5, 0]), (1.1, [0, 0, 0])]},
+            "head": {"rotation": [(0, [0, 0, 0]), (0.15, [18, 0, 0]), (0.3, [-28, 0, 0]), (0.95, [-26, 0, 0]), (1.1, [0, 0, 0])]},
+        })},
+        # 내려찍기 (0.6초 — 0.2 두 주먹을 모아 머리 위로 · 0.3 앞 땅으로 내리찍음 · 머묾)
+        "slam": {"animation_length": 0.6, "bones": wg_rel({
+            "armR": {"rotation": [(0, [-15, 0, 12]), (0.2, [-170, -10, -12]), (0.3, [-60, -10, -10]), (0.5, [-58, -10, -10]), (0.6, [-15, 0, 12])]},
+            "armL": {"rotation": [(0, [-15, 0, -12]), (0.2, [-170, 10, 12]), (0.3, [-60, 10, 10]), (0.5, [-58, 10, 10]), (0.6, [-15, 0, -12])]},
+            "forearmR": {"rotation": [(0, [-30, 0, 0]), (0.2, [-60, 0, 0]), (0.3, [-5, 0, 0]), (0.6, [-30, 0, 0])]},
+            "forearmL": {"rotation": [(0, [-30, 0, 0]), (0.2, [-60, 0, 0]), (0.3, [-5, 0, 0]), (0.6, [-30, 0, 0])]},
+            "body": {"rotation": [(0, [6, 0, 0]), (0.2, [-18, 0, 0]), (0.3, [42, 0, 0]), (0.5, [40, 0, 0]), (0.6, [6, 0, 0])],
+                     "position": [(0, [0, 0, 0]), (0.2, [0, 2, 1]), (0.3, [0, -4, -3]), (0.5, [0, -4, -3]), (0.6, [0, 0, 0])]},
+            "head": {"rotation": [(0, [0, 0, 0]), (0.2, [-14, 0, 0]), (0.3, [-20, 0, 0]), (0.6, [0, 0, 0])]},
+        })},
+        # 쓴 사람에게 스며듦 (0.45초 — 작아지며 앞 아래로)
+        "vanish": {"animation_length": 0.45, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.45, [0, 4, -10])]), "scale": kf([(0, [1, 1, 1]), (0.12, [1.08, 1.08, 1.08]), (0.45, [0.15, 0.15, 0.15])])},
+        }},
+    }
+
+
 def behavior(fam, health, move, box, fly=False):
     c = {
         "minecraft:type_family": {"family": ["rpg_ally", fam]},
@@ -1178,6 +1314,8 @@ MOBS = {
     "rune_shade": (rune_shade, rune_shade_anims, dict(fam="rune_shade", health=40, move=0.4, box=[0.6, 1.8], fly=True), "entity_alphablend", ["idle"], True),
     "rune_ki_avatar": (rune_ki_avatar, rune_ki_avatar_anims, dict(fam="rune_ki_avatar", health=40, move=0.4, box=[0.9, 2.0], fly=True), "entity_alphablend",
                        ["idle"], True),
+    "rune_war_god": (rune_war_god, rune_war_god_anims, dict(fam="rune_war_god", health=40, move=0.4, box=[1.0, 2.4], fly=True), "entity_alphablend",
+                     ["idle"], True),
 }
 
 
@@ -1279,6 +1417,7 @@ PREVIEW_POSES = {
     "rune_spirit_king": ((["idle"], 0.0), (["idle", "raise"], 0.5), (["idle", "cast"], 0.15)),
     "rune_ki_avatar": ((["idle"], 0.0), (["idle", "barrage"], 0.05), (["idle", "barrage"], 0.15), (["idle", "finisher"], 0.15),
                        (["idle", "finisher"], 0.25)),
+    "rune_war_god": ((["idle"], 0.0), (["idle", "roar"], 0.15), (["idle", "roar"], 0.5), (["idle", "slam"], 0.2), (["idle", "slam"], 0.35)),
     "rune_shade": ((["idle"], 0.0), (["idle", "slash"], 0.1), (["idle", "slash"], 0.2), (["idle", "stab"], 0.2), (["idle", "xcut"], 0.15),
                    (["idle", "xcut"], 0.25)),
 }

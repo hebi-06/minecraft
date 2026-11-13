@@ -250,13 +250,82 @@ final class RuneBody {
         return true;
     }
 
-    /** 투신: 12초 동안 모든 스탯 +15% · 받는 피해 -20% (핏빛 기운 · 땅이 울림) */
+    /**
+     * 2026-11-13 투신의 화신 (rpg:rune_war_god · 1.4배 — 굽은 뿔 투구의 핏빛 거인 윗몸): 쓴 사람 뒤 (1.3칸 · 오른쪽 0.45) 에서 핏빛 기로 솟아 (appear) 몸을 따라오며
+     * 4틱에 포효 (roar — 두 팔을 활짝, 쓴 사람의 포효와 함께) → 22틱에 두 주먹을 모아 앞 땅을 내리찍음 (slam — 28틱에 땅이 갈라지고 충격 고리 · 튀는 바위,
+     * 피해 없음 — 버프) → 36틱에 쓴 사람에게 스며듦 (vanish — 핏빛 빛 줄기가 몸으로)
+     */
+    private static void warGodAvatar(ServerPlayer sp, double[] col) {
+        ServerLevel level = sp.level();
+        String life = RuneKit.lifeToken(sp);
+        java.util.function.Supplier<Vec3> spot = () -> {
+            Vec3 ff = Kit.facingOf(sp);
+            return V.add(V.add(sp.position(), ff, -1.3), V.rightOf(ff), 0.45);
+        };
+        RuneMob m = RuneMob.spawn(RuneMob.WAR_GOD, level, spot.get(), Kit.facingOf(sp), 70, 1.4, true);
+        if (m == null) return;
+        m.anim("appear");
+        m.follow(() -> {
+            if (!sp.isRemoved()) m.face(Kit.facingOf(sp));
+            return spot.get();
+        }, 0.55, 44);
+        SkillFx.burst(level, V.up(spot.get(), 1.4), col, 1.8, 0.35);
+        SkillFx.fx(level, "rpg:ground_crack", V.up(spot.get(), 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.2, "life", 1.0, "color",
+                new double[] {0.4, 0.06, 0.04}, "alpha", 0.85));
+        RuneKit.later(4, () -> {
+            if (m.alive()) m.anim("roar");
+        });
+        RuneKit.later(9, () -> {
+            if (!m.alive()) return;
+            SkillFx.play(level, "mob.ravager.roar", m.pos(), 1.0, 0.6);
+            SkillFx.shock(level, V.up(m.pos(), 2.6), col, 2.4, 0.45);
+        });
+        RuneKit.later(22, () -> {
+            if (m.alive()) m.anim("slam");
+        });
+        RuneKit.later(22 + RuneMob.WAR_GOD_SLAM_AT, () -> {
+            if (!RuneKit.sameLife(sp, life) || !m.alive()) return;
+            Vec3 hit = PairKit.onGround(level, V.add(m.pos(), m.forward(), 1.9));
+            SkillFx.fx(level, "rpg:ground_crack", V.up(hit, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 3.4, "life", 1.4, "color",
+                    new double[] {0.4, 0.06, 0.04}, "alpha", 0.9));
+            SkillFx.shock(level, hit, col, 3.2, 0.5);
+            SkillFx.burst(level, V.up(hit, 0.6), col, 2.0, 0.35);
+            RuneKit.glowCrack(level, hit, 2.6, col, COLOR[1], Opt.of("life", 0.9));
+            for (int i = 0; i < 6; i++) {
+                double a = (i / 6.0) * Math.PI * 2 + Kit.rand() * 0.5;
+                Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
+                SkillFx.fx(level, "rpg:boulder", V.add(V.up(hit, 0.3), d, 0.8), Opt.of("dir", V.unit(new Vec3(d.x, 1.2, d.z)), "speed", 5 + Kit.rand() * 2,
+                        "size", 0.22, "life", 0.6, "spin", Kit.rand() * 360, "color", RuneKit.ROCK, "alpha", 1.0));
+            }
+            SkillFx.play(level, "mace.heavy_smash_ground", hit, 1.0, 0.7);
+            SkillFx.play(level, "random.explode", hit, 0.8, 0.7);
+        });
+        RuneKit.later(36, () -> {
+            if (!m.alive()) return;
+            Vec3 from = V.up(m.pos(), 2.2);
+            m.leave("vanish", 9);
+            if (sp.isRemoved()) return;
+            for (int i = 0; i < 4; i++) {
+                final int ii = i;
+                RuneKit.later(i * 2, () -> {
+                    if (sp.isRemoved()) return;
+                    RuneKit.streak(level, V.add(from, RuneKit.turn(Kit.facingOf(sp), ii * 90.0), 0.6), V.up(sp.position(), 1.1), col, 0.22, 0.35, 0.8, 0);
+                });
+            }
+            RuneKit.later(8, () -> {
+                if (!sp.isRemoved()) RuneKit.bodyAura(sp, col, Opt.of("n", 6, "size", 1.3, "alpha", 0.9, "life", 0.4, "force", true));
+            });
+        });
+    }
+
+    /** 투신: 12초 동안 모든 스탯 +15% · 받는 피해 -20% (핏빛 기운 · 땅이 울림 · 2026-11-13 등 뒤 투신의 화신 — 포효 · 내려찍기 · 스며듦) */
     static boolean warGod(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         startBody(sp, r, P, k);
         bodyCast(sp, r, k, 0.8);
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         double[] col = accent(k);
+        warGodAvatar(sp, col);
         SkillFx.fx(level, "rpg:ground_crack", V.up(c, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.6, "life", 1.4, "color",
                 new double[] {0.4, 0.06, 0.04}, "alpha", 0.9));
         RuneBoost.bloom(level, c, col, COLOR[1], 3.5); // 0.50.0 2D 강화 (아래 등급 터짐): 투신이 깨어나는 순간의 빛
@@ -271,8 +340,48 @@ final class RuneBody {
     }
 
     /**
+     * 2026-11-13 초인 각성의 3D 바위 (boulder — 틈의 빛 = 각성 색): 둘레 (앞 · 옆 240° — 등 뒤는 3인칭 카메라 앞이라 비움) 의 땅에서 바위 일곱이 솟아 떨며 떠오르다
+     * (1 ~ 5) 충격파 틱 (5) 에 바깥 위로 날아가 구르며 떨어짐 (포물선 10 ~ 13틱) → 땅에 박혀 가라앉음
+     */
+    private static void awakenRocks(ServerPlayer sp, double[] col) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, 40);
+        int n = 7;
+        for (int i = 0; i < n; i++) {
+            double a = -120 + (i + 0.5) / n * 240 + (Kit.rand() - 0.5) * 18;
+            Vec3 d = RuneKit.turn(f, a);
+            double rr = 1.7 + Kit.rand() * 0.8;
+            if (V.dot(d, f) > 0.8) rr += 0.8; // 내 앞 (1인칭 화면) 은 조금 멀리
+            Vec3 b = V.add(c, d, rr);
+            final Vec3 ground = new Vec3(b.x, RuneKit.groundAt(level, b, c.y), b.z);
+            final double hgt = 0.8 + Kit.rand() * 0.9;
+            final double sc = RuneProps.scaleFor(0.55 + Kit.rand() * 0.45, RuneProps.BOULDER_D);
+            final long seed = (long) (Kit.rand() * 1e9) + i;
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.BOULDER, V.up(ground, -0.5), new double[] {8, 8, 8}, RuneProps.tumble(seed, 0, 0), sc * 0.5,
+                    col);
+            fx.on(1, () -> p.to(V.up(ground, hgt), RuneProps.tumble(seed, 4, 8), sc, 3));
+            fx.on(4, () -> p.move(V.up(ground, hgt + 0.15), 1));
+            // 날아감: 바깥 4 ~ 6.5칸 · 솟음 2 ~ 3칸 (포물선 — 틱마다)
+            final Vec3 from = V.up(ground, hgt + 0.15);
+            final Vec3 land = PairKit.onGround(level, V.add(ground, d, 4 + Kit.rand() * 2.5));
+            final int fly = 10 + (int) (Kit.rand() * 4);
+            final double arc = 2 + Kit.rand();
+            for (int t = 1; t <= fly; t++) {
+                final double u = t / (double) fly;
+                final int tt = t;
+                fx.on(5 + t, () -> p.to(V.add(V.lerp(from, V.up(land, 0.25), u), V.UP, arc * 4 * u * (1 - u)), RuneProps.tumble(seed, 4 + tt, 30), -1, 1));
+            }
+            fx.on(5 + fly + 1, () -> SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.DUST_PLUME, V.up(land, 0.3), 5, 0.3, 0.05));
+            fx.on(5 + fly + 6, () -> p.to(V.up(land, -0.6), null, sc * 0.5, 8));
+            fx.on(5 + fly + 15, p::remove);
+        }
+    }
+
+    /**
      * 초인 각성: 15초 동안 모든 스탯 +25% · 받는 피해 -30% · 1초마다 회복. 쓸 때 하늘에서 금빛 빛기둥이 내려와 몸에 닿고 (머리 위까지)
-     * 주위 radius 칸에 충격파 (위력 × mult, 밀쳐냄 · 땅이 갈라지고 바위가 튐)
+     * 주위 radius 칸에 충격파 (위력 × mult, 밀쳐냄 · 땅이 갈라지고 바위가 튐 — 2026-11-13 둘레에서 솟아 떠오른 3D 바위가 바깥으로 날아감, awakenRocks)
      */
     static boolean awakening(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         startBody(sp, r, P, k);
@@ -290,6 +399,7 @@ final class RuneBody {
         SkillFx.play(level, "beacon.activate", c, 0.8, 1);
         // 2차 강화 — 각성: 호박빛 하늘 · 충격파 때 번쩍임 → 성광 문양 · 하늘의 섬광 (1틱 뒤) → 앞쪽 빛기둥 넷 (3틱 뒤 — 충격파 틱의 파티클 예산)
         RuneKit.ultSkyFor(sp, level, c, "awakening", 76, null);
+        awakenRocks(sp, col);
         RuneKit.later(5, () -> {
             if (!RuneKit.sameLife(sp, life)) return; // 죽음 · 차원 이동이면 충격파 없음
             Vec3 cc = sp.position();

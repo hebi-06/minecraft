@@ -236,6 +236,41 @@ def tex_ki(alpha=0.55, rim=0.92, seed=5, bright=1.0):
     return gen
 
 
+def tex_feather(seed=31, glow=False):
+    """2026-11-13 깃털 (대천사 강림의 날개 — 회색, 계열 색 물들임): 끝 (위) 이 뾰족하고 아래 깃대 (깃 없음) 로 좁아지는 깃 · 가운데 깃대 (밝게) ·
+    바깥 깃이 조금 좁음 · 깃대에서 위 바깥으로 비스듬한 깃가지 줄 · 가장자리 밝은 테 · 깃대를 따라 위로 오르는 빛 (프레임마다). 깃 밖은 투명"""
+    def gen(frame):
+        ys, xs = np.mgrid[0:TEX, 0:TEX]
+        u = 1.0 - (ys + 0.5) / TEX  # 0 아래 ~ 1 위 (끝)
+        cx = (TEX - 1) / 2
+        dx = xs - cx
+        k = np.clip((u - 0.1) / 0.9, 0, 1)
+        prof = np.where(k < 0.7, np.sin(np.pi * np.minimum(k, 0.5)) ** 0.5, np.sin(np.pi * 0.5 * np.clip((1 - k) / 0.3, 0, 1)) ** 0.75)  # 넓게 · 끝 30% 에서 뾰족
+        hw = np.where(dx < 0, 0.78, 1.0) * (TEX / 2 - 0.6) * prof
+        inside = (np.abs(dx) <= hw + 0.35) & (u > 0.06)
+        shaft = (np.abs(dx) <= 0.6) & (u > 0.0)
+        r = np.where(hw > 0.01, np.abs(dx) / np.maximum(hw, 0.01), 1.0)
+        v = 0.97 - 0.2 * r
+        # 깃가지 (위 바깥으로 비스듬한 줄)
+        barb = ((np.abs(dx) * 0.7 + ys) % 3.2) < 0.9
+        v = np.where(barb & inside & ~shaft, v - 0.1, v)
+        rim = inside & (np.abs(dx) >= hw - 0.9)
+        v = np.where(rim, 1.0, v)
+        v = np.where(shaft, 1.0, v)
+        a = np.where(inside, 0.86 if not glow else 0.9, 0.0)
+        a = np.where(rim, 0.95, a)
+        a = np.where(shaft, 1.0, a)
+        # 깃대를 따라 오르는 빛 (프레임마다)
+        band = (u * 8 - frame / FRAMES * 8) % 8
+        lit = (band < 1.2) & inside
+        v = np.where(lit, np.minimum(1.0, v + 0.12), v)
+        if glow:
+            v = np.minimum(1.0, v + 0.06)
+        img = np.repeat(np.clip(v, 0, 1)[..., None], 3, -1)
+        return np.concatenate([img, np.clip(a, 0, 1)[..., None]], -1)
+    return gen
+
+
 # 이름: (그림, 물들임 번호 또는 None, 빛)
 SHARDS = {
     "water": (tex_water("#1E62C8", "#5DB4FA", 0.8, s_alpha=0.45, n_streak=3, seed=11, flat=True), None, True),
@@ -245,6 +280,8 @@ SHARDS = {
     "foam": (tex_foam(0.86), None, True),
     "ki": (tex_ki(0.8, 0.9, seed=21), 0, True),
     "ki_core": (tex_ki(0.85, 1.0, seed=23, bright=1.0), 1, True),
+    "feather": (tex_feather(31), 0, True),
+    "feather_glow": (tex_feather(37, glow=True), 1, True),
 }
 
 
@@ -417,7 +454,60 @@ def palm():
     return sh
 
 
-BUILD = {"wave": wave, "water_column": water_column, "palm": palm}
+def angel_wing():
+    """2026-11-13 대천사의 날개 (오른쪽 — 왼쪽은 서버가 세로축 둘레로 뒤집어 씀): 쥔 곳 = 날개 뿌리 (0, 0, 0) · 바깥 = +Z · 위 = +Y · 두께 = X.
+    앞 가장자리 (뼈 — 위 바깥으로 솟았다가 끝이 아래로 휨) 의 빛 깃 · 바깥 끝의 긴 첫째 깃 다섯 (아래 바깥으로 펼침) · 안쪽 둘째 깃 다섯 (아래로) ·
+    덮깃 다섯 (짧게 — 겹쳐서). 깃마다 계열 색 (빛 깃은 속빛)"""
+    sh = Shape("angel_wing", (0, 0, 0), "대천사의 날개 (2026-11-13 — 깃털 조각 스물넷 · 뼈의 빛 깃 · 첫째 · 둘째 깃 · 덮깃)")
+    N = np.array([1.0, 0, 0])
+    BONE = ((72, 9.0), (40, 10.0), (8, 9.0), (-28, 8.0))
+
+    def d_of(deg):
+        a = math.radians(deg)
+        return np.array([0.0, math.sin(a), math.cos(a)])
+
+    def feather(m, base, deg, L, w, t=0.4, x=0.0):
+        d = d_of(deg)
+        xa = unit(np.cross(d, N))
+        q = q_from_basis(xa, d, unit(np.cross(xa, d)))
+        c = np.array([x, base[1], base[2]]) + d * (L / 2)
+        sh.box(m, c, q, (w, L, t))
+    # 뼈 (z, y)
+    bone = [(0.0, 0.0)]
+    for deg, L in BONE:
+        z, y = bone[-1]
+        a = math.radians(deg)
+        bone.append((z + L * math.cos(a), y + L * math.sin(a)))
+
+    def on_bone(i, u):
+        (z0, y0), (z1, y1) = bone[i], bone[i + 1]
+        return (z0 + (z1 - z0) * u, y0 + (y1 - y0) * u)
+
+    def pt(zy):
+        return np.array([0.0, zy[1], zy[0]])
+    # 첫째 깃 (바깥 — 길게, 아래 바깥으로 펼침)
+    for (i, u, deg, L, x) in ((3, 0.95, -20, 24.0, 0.3), (3, 0.5, -34, 25.0, -0.3), (2, 0.98, -47, 24.5, 0.3), (2, 0.66, -58, 23.5, -0.3),
+                              (2, 0.33, -68, 22.0, 0.3)):
+        feather("feather", pt(on_bone(i, u)), deg, L, 6.0, x=x)
+    # 둘째 깃 (안쪽 — 아래로, 넓게 겹침)
+    for (i, u, deg, L, x) in ((2, 0.02, -77, 21.0, -0.3), (1, 0.7, -84, 20.0, 0.3), (1, 0.4, -90, 19.0, -0.3), (1, 0.1, -96, 17.5, 0.3),
+                              (0, 0.65, -103, 14.5, -0.3), (0, 0.3, -112, 10.0, 0.3)):
+        feather("feather", pt(on_bone(i, u)), deg, L, 6.6, x=x)
+    # 덮깃 (짧게 — 앞)
+    for (i, u, deg, L) in ((3, 0.3, -40, 11.0), (2, 0.7, -57, 11.5), (2, 0.25, -72, 11.5), (1, 0.6, -86, 10.5), (1, 0.15, -98, 9.0)):
+        feather("feather", pt(on_bone(i, u)) + np.array([0, -0.5, 0]), deg, L, 6.2, t=0.35, x=0.75)
+    # 작은 덮깃 (뼈 가까이 — 뒤)
+    for (i, u, deg, L) in ((3, 0.4, -42, 6.5), (2, 0.55, -64, 7.0), (1, 0.75, -82, 6.5), (1, 0.25, -94, 6.0)):
+        feather("feather_glow", pt(on_bone(i, u)) + np.array([0, -0.3, 0]), deg, L, 5.6, t=0.35, x=-0.75)
+    # 앞 가장자리 빛 깃 (뼈를 따라 — 바깥으로 누운 깃)
+    for i, (deg, L) in enumerate(BONE):
+        z0, y0 = bone[i]
+        d = d_of(deg)
+        feather("feather_glow", np.array([0.0, y0, z0]) - d * 1.0, deg, L + 2.0, 3.6, t=1.1)
+    return sh
+
+
+BUILD = {"wave": wave, "water_column": water_column, "palm": palm, "angel_wing": angel_wing}
 
 
 # ------------------------------------------------------------------ 미리보기 (광선 추적 — 조각마다 아핀 변환)
@@ -526,9 +616,9 @@ def render(shape, texs, tints, view, W=380, H=380, ss=2, bg=(92, 98, 112), half=
     return im.resize((W, H), Image.LANCZOS) if ss > 1 else im
 
 
-TINTS = {"palm": [(1.0, 0.78, 0.3), (1.0, 0.95, 0.75)]}
+TINTS = {"palm": [(1.0, 0.78, 0.3), (1.0, 0.95, 0.75)], "angel_wing": [(1.0, 0.9, 0.62), (1.0, 1.0, 1.0)]}
 VIEWS = {"wave": [(0.6, 0.45, -1.0), (1.0, 0.15, 0.05), (-0.5, 0.35, 1.0)], "water_column": [(1.0, 0.35, -0.7), (0.2, 1.0, -0.2), (-0.8, 0.1, 0.6)],
-         "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0), (1.0, 0.25, 0.1)]}
+         "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0), (1.0, 0.25, 0.1)], "angel_wing": [(1.0, 0.1, 0.0), (1.0, 0.3, 0.6), (-1.0, 0.2, 0.3)]}
 
 
 def textures_frame0():

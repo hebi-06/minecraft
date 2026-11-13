@@ -63,7 +63,7 @@ public class TyrfingWarrior extends BedrockMob {
      * (정령 룬) · 정령왕 (정령왕 강림) · 2026-11-13 그림자 분신 (그림자 난도질 · 월광 암살) · 기의 화신 (백열권)
      */
     public static final java.util.Set<String> RUNE_MOBS = java.util.Set.of("rpg:rune_hawk", "rpg:rune_beast_king", "rpg:rune_undine", "rpg:rune_sylph",
-            "rpg:rune_gnome", "rpg:rune_spirit_king", "rpg:rune_shade", "rpg:rune_ki_avatar");
+            "rpg:rune_gnome", "rpg:rune_spirit_king", "rpg:rune_shade", "rpg:rune_ki_avatar", "rpg:rune_war_god");
 
     /** 2026-11-12 직업 스킬의 3D 몹 (tools/job_mobs_art.py — 움직임은 rune.RuneMob 을 쓰는 스킬): 드라군의 붉은 용 */
     public static final java.util.Set<String> JOB_MOBS = java.util.Set.of("rpg:job_dragon");

@@ -241,7 +241,9 @@ final class VanillaModels {
             // 2026-11-13 아군 몹 (TyrfingWarrior — 맞지 않음 · 조준에도 잡히지 않음) 은 맞는 칸이 없음: 드라군 변신의 용은 시전자 몸을 감싸 조준 · 평타를 가로막았음
             boolean ally = mob instanceof mmorpg.fabric.mob.TyrfingWarrior;
             hit = ally ? null : InteractionElement.redirect(mob);
-            quick = ally && mmorpg.fabric.mob.TyrfingWarrior.JOB_MOBS.contains(BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString());
+            // 2026-11-13 룬 스킬 몹도 1틱마다 (그림자 분신 · 기의 화신의 0.2초 주먹 비 — 2틱마다 보면 0 · 0.1초만 보여 주먹이 늘 거둔 자세로 멈춰 보임)
+            String typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString();
+            quick = ally && (mmorpg.fabric.mob.TyrfingWarrior.JOB_MOBS.contains(typeId) || mmorpg.fabric.mob.TyrfingWarrior.RUNE_MOBS.contains(typeId));
             if (hit != null) {
                 resizeHit();
                 addElement(hit);

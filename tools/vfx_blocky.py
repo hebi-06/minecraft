@@ -1737,9 +1737,96 @@ def void_orb():
     return m
 
 
+def ring_segs(m, mat, c, R, w, h, n=16, faces=None):
+    """2026-11-13 가로 고리 (XZ 면): 가운데 c · 반지름 R — 접선으로 누운 상자 n 개 (22.5° 단위: 90° 를 넘는 접선은 가로 · 세로를 바꿔 같은 꼴)"""
+    cx, cy, cz = c
+    L = 2 * math.pi * R / n * 1.08
+    for k in range(n):
+        th = k * 360.0 / n
+        r = math.radians(th)
+        px, pz = cx + R * math.cos(r), cz + R * math.sin(r)
+        tang = (th + 90.0) % 180.0  # 접선 방향 (X 에서)
+        if tang > 90.0 + 1e-6:
+            tang -= 180.0
+        if abs(tang) <= 45.0 + 1e-6:
+            f, t = (px - L / 2, cy - h / 2, pz - w / 2), (px + L / 2, cy + h / 2, pz + w / 2)
+            ang = -tang
+        else:
+            f, t = (px - w / 2, cy - h / 2, pz - L / 2), (px + w / 2, cy + h / 2, pz + L / 2)
+            ang = -(tang - 90.0 if tang > 0 else tang + 90.0)
+        m.box(mat, f, t, rot=("y", ang, (px, cy, pz)) if abs(ang) > 1e-6 else None, faces=faces)
+
+
+def halo():
+    """2026-11-13 머리 위 빛 고리 (대천사 강림 · 초인 각성): 가운데 (8, 8, 8) · 지름 약 18 — 금빛 고리 (빛 — 계열 색) 를 감싼 반투명 빛 테 · 안쪽 흰 고리 (속빛) ·
+    금 고리 위의 작은 빛 보석 넷"""
+    m = BModel("halo", "머리 위 빛 고리 (2026-11-13 — 금 고리 · 반투명 빛 테 · 흰 속 고리 · 빛 보석 넷, 계열 색은 서버가 물들임)", d=2.0)
+    weapon_mats(m)
+    m.mat("light", Mat(light_blade(0.6), tint=0, glow=True, animated=True))
+    m.mat("core", Mat(gem_paint(0.75), tint=1, glow=True, animated=True))
+    ring_segs(m, "core", (8, 8, 8), 7.6, 0.9, 0.9)
+    ring_segs(m, "light", (8, 8, 8), 7.6, 2.0, 1.6)
+    ring_segs(m, "gold", (8, 8, 8), 9.0, 0.7, 0.7)
+    for k in range(4):
+        r = math.radians(k * 90 + 45)
+        px, pz = 8 + 9.0 * math.cos(r), 8 + 9.0 * math.sin(r)
+        m.box("core", (px - 0.9, 7.1, pz - 0.9), (px + 0.9, 8.9, pz + 0.9), rot=("y", 45, (px, 8, pz)))
+    return m
+
+
+def hex_paint(fill=0.2):
+    """2026-11-13 빛의 육각 판 (회색 — 계열 색 물들임 · 거의 투명): 꼭짓점이 위아래인 육각 · 밝은 테 (두 겹) · 안쪽 옅은 육각 테 둘 · 꼭짓점으로 뻗는 줄 ·
+    위로 흐르는 빛 띠 (프레임마다)"""
+    def paint(w, h, face, rng, frame):
+        pl = pulse(frame)
+        ys, xs = np.mgrid[0:h, 0:w]
+        cx, cy = (w - 1) / 2, (h - 1) / 2
+        R = min(h / 2, w / 2 / 0.866) - 0.3
+        dx, dy = np.abs(xs - cx), np.abs(ys - cy)
+        # 육각까지의 거리 (안쪽 +)
+        e1 = R * 0.866 - dx
+        e2 = (R - dy) * 0.866 - dx * 0.5
+        dist = np.minimum(e1, e2)
+        inside = dist >= 0
+        v = np.full((h, w), 0.86)
+        a = np.where(inside, fill, 0.0)
+        # 안쪽 육각 테 둘 (옅게) · 가운데에서 꼭짓점 여섯으로 뻗는 옅은 줄
+        inner = inside & (((dist >= R * 0.3) & (dist < R * 0.3 + 0.7)) | ((dist >= R * 0.55) & (dist < R * 0.55 + 0.7)))
+        a = np.where(inner, fill + 0.2, a)
+        ang = np.degrees(np.arctan2(ys - cy, xs - cx)) % 60.0
+        spoke = inside & (np.abs(ang - 30.0) < 2.2 * 16.0 / np.maximum(4.0, np.hypot(xs - cx, ys - cy) + 4.0))
+        a = np.where(spoke & (dist > 1.6), np.maximum(a, fill + 0.12), a)
+        # 흐르는 빛 띠
+        band = ((ys / h + frame / FRAMES) % 1.0) < 0.14
+        v = np.where(inside & band, 1.0, v)
+        a = np.where(inside & band, np.maximum(a, fill + 0.25), a)
+        # 테 두 겹
+        rim = inside & (dist < 1.6)
+        rim2 = inside & (dist >= 3.0) & (dist < 3.8)
+        v = np.where(rim | rim2, 1.0, v)
+        a = np.where(rim, 0.98, a)
+        a = np.where(rim2, 0.6 + 0.2 * pl, a)
+        img = np.repeat(np.clip(v, 0, 1)[..., None], 3, -1)
+        return np.concatenate([img, np.clip(a, 0, 1)[..., None]], -1), None
+    return paint
+
+
+def hex_panel():
+    """2026-11-13 불굴의 방벽의 빛의 육각 판: 가운데 (8, 8, 8) · 높이 16 (꼭짓점 위아래) · 너비 약 13.9 · 두께 0.4 — 앞뒤 면만 (육각 그림),
+    가운데 금 테 보석 (속빛) 이 앞뒤로 솟음"""
+    m = BModel("hex_panel", "빛의 육각 판 (2026-11-13 — 거의 투명한 육각 · 두 겹 테 · 안쪽 테 · 흐르는 빛, 가운데 금 테 보석)", d=3.0)
+    weapon_mats(m)
+    m.mat("hex", Mat(hex_paint(0.16), tint=0, glow=True, animated=True))
+    m.mat("core", Mat(gem_paint(0.7), tint=1, glow=True, animated=True))
+    m.box("core", (6.6, 6.6, 7.1), (9.4, 9.4, 8.9), rot=("z", 45, (8, 8, 8)))
+    m.box("gold", (6.1, 6.1, 7.3), (9.9, 9.9, 8.7), rot=("z", 45, (8, 8, 8)))
+    m.box("hex", (0.0, 0.0, 7.8), (16.0, 16.0, 8.2), faces=("north", "south"))
+    return m
+
+
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
-         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade}
+         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
 # 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
@@ -1886,9 +1973,10 @@ TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "met
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)],
          "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)],
          "boulder": [(0.6, 0.24, 0.9)], "void_orb": [(0.6, 0.24, 0.9)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
-         "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)]}
+         "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)],
+         "halo": [(1.0, 0.86, 0.45), (1.0, 1.0, 0.9)], "hex_panel": [(1.0, 0.78, 0.35), (1.0, 0.95, 0.8)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
-VIEWS_OF = {"fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
+VIEWS_OF = {"halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
 
 def main():

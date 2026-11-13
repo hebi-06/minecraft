@@ -69,37 +69,6 @@ fpl(m, 4.4, FPL_FLEX, "out3")
 fpl(m, 12, FPL_FLEX)
 use(m, "ironSkin")
 
-# 불굴의 방벽: 무기를 두 손으로 들어 (0.4) 앞 땅에 꽂음 (1.5 — 둘레에 빛의 판 12장이 벽을 이룸) → 꽂은 채 버팀
-m = off_bare(Motion("bulwark", 22, "불굴의 방벽 — 무기를 두 손으로 들어 앞 땅에 꽂고 버팀", fade=(0.03, 0.12)))
-keyp(m, 0.4, P(body=[-6, 0, 0], ra=arm([0.08, 0.6, 0.8], 60, [0, -0.1, 1]), la=arm([-0.05, 0.6, 0.8], 60), **LEGS_FIGHT))
-PLANT = P(body=[22, 0, 0], head=[6, 0], ra=RA_PLANT, la=arm([-0.04, -0.3, 0.95], 45), rl=[-24, 0, 4], ll=[14, 0, -4], rk=40, lk=24, root=[-0.16, 0.1])
-keyp(m, 1.5, PLANT, "in")
-keyp(m, 15, P(PLANT, body=[20, 0, 0]))
-FPL_GRIP = ((-0.25, -0.1, -0.15), (-5, 60, 0))  # 1인칭 왼손: 꽂은 무기의 손잡이 위
-fpw(m, 0.4, FPW_UP)
-fpw(m, 1.5, FPW_DOWN, "in")
-fpw(m, 15, FPW_DOWN)
-fpl(m, 0.4, ((-0.2, 0.15, 0.0), (30, 60, 0)))
-fpl(m, 1.5, FPL_GRIP, "in")
-fpl(m, 15, FPL_GRIP)
-use(m, "bulwark")
-
-# 불사의 맹약: 왼 주먹을 가슴에 대고 고개를 숙여 맹세 (2.5 ~ 8 — 눈앞에 불사의 문장) → 무기를 하늘로 치켜듦 (11.5)
-m = off_bare(Motion("undying_pact", 26, "불사의 맹약 — 왼 주먹을 가슴에 대고 고개 숙여 맹세한 뒤 무기를 하늘로 치켜듦", fade=(0.04, 0.12)))
-OATH = P(body=[10, 0, 0], head=[24, 0], ra=RA_LOW, la=L(A_CHEST), **LEGS_FIGHT)
-keyp(m, 2.5, OATH)
-keyp(m, 8, P(OATH, body=[12, 0, 0], head=[28, 0]))
-LIFT = P(body=[-12, -4, 0], head=[-26, 0], ra=RA_SKY, la=L(A_CHEST), **LEGS_WIDE)
-keyp(m, 11.5, LIFT, "out3")
-keyp(m, 20, P(LIFT, body=[-10, -4, 0]))
-fpw(m, 2.5, FPW_LOW)
-fpw(m, 8, FPW_LOW)
-fpw(m, 11.5, FPW_SKY, "out3")
-fpw(m, 20, FPW_SKY)
-fpl(m, 2.5, FPL_CHEST)
-fpl(m, 20, FPL_CHEST)
-use(m, "undyingPact")
-
 # ------------------------------------------------------------ 마력
 
 # 화염구: 왼손으로 겨누고 무기 (지팡이) 를 귀 옆 뒤로 당겼다가 (0.3) 앞으로 내던짐 (1.4 — 오른손 자리에서 불덩이가 날아감)
@@ -250,21 +219,6 @@ fpl(m, 12.4, FP_DOWN, "in")
 fpl(m, 17, FP_DOWN)
 use(m, "divineSmite")
 
-# 대천사 강림: 팔을 가슴 앞에 모아 고개를 숙였다가 (1.2) 두 팔을 활짝 펴고 하늘을 봄 (4.2 — 등 뒤에 금빛 날개) · 발끝으로 조금 떠오름
-m = off_bare(Motion("archangel", 26, "대천사 강림 — 팔을 모아 고개 숙였다가 두 팔을 활짝 펴 날개를 펼치고 하늘을 봄", fade=(0.04, 0.12)))
-keyp(m, 1.2, P(body=[14, 0, 0], head=[18, 0], ra=RA_ACROSS, la=L(A_CROSS), rk=20, lk=20, root=[-0.08, 0]))
-WINGS = P(body=[-12, 0, 0], head=[-22, 0], ra=arm([0.9, 0.42, 0.1], 6, [0.6, 0.8, 0.0]), la=L(arm([0.9, 0.42, 0.1], 6)), rl=[4, 0, 4], ll=[-4, 0, -4],
-          rk=4, lk=4, root=[0.06, 0])
-keyp(m, 4.2, WINGS, "out3")
-keyp(m, 18, P(WINGS, body=[-10, 0, 0], root=[0.08, 0]))
-fpw(m, 1.2, FPW_ACROSS)
-fpw(m, 4.2, FPW_SKY, "out3", dp=(0.55, -0.35, 0))
-fpw(m, 18, FPW_SKY, dp=(0.55, -0.35, 0))
-fpl(m, 1.2, FP_CROSS)
-fpl(m, 4.2, FP_SPREAD_UP, "out3")
-fpl(m, 18, FP_SPREAD_UP)
-use(m, "archangel")
-
 # ------------------------------------------------------------ 번개
 
 # 연쇄 번개: 무기를 조금 당겼다가 (0.3) 앞으로 곧게 내뻗음 (1.2 — 손끝의 번개 구슬) → 번개가 튈 때마다 (3 · 6 · 9) 팔이 움찔
@@ -389,39 +343,6 @@ fpw(m, 13, FPW_LOW)
 fpl(m, 3, FPL_CHEST)
 fpl(m, 13, FPL_CHEST)
 use(m, "regenBody")
-
-# 투신: 오른발을 들어 (1.6) 땅을 힘껏 구르며 (3.6 — 땅이 울림) 두 팔을 아래 바깥으로 뻗고 포효
-m = off_bare(Motion("war_god", 20, "투신 — 발을 들어 땅을 힘껏 구르고 두 팔을 뻗으며 포효", fade=(0.04, 0.12)))
-keyp(m, 1.6, P(body=[-4, 0, 0], head=[-6, 0], ra=arm([0.6, 0.6, 0.4], 70, [0.2, 0.9, 0.3]), la=L(A_RAISE_FIST), **LEGS_STOMP_UP))
-ROAR = P(body=[-12, 0, 0], head=[-24, 0], ra=RA_SPREAD_DOWN, la=LA_SPREAD_DOWN, **LEGS_STOMP)
-keyp(m, 3.6, ROAR, "in")
-keyp(m, 13, P(ROAR, body=[-10, 0, 0]))
-fpw(m, 1.6, FPW_UP, dp=(0.25, 0, 0))
-fpw(m, 3.6, FPW_SPREAD, "in")
-fpw(m, 13, FPW_SPREAD)
-fpl(m, 1.6, FP_RAISE)
-fpl(m, 3.6, FPL_SPREAD_DOWN, "in")
-fpl(m, 13, FPL_SPREAD_DOWN)
-use(m, "warGod")
-
-# 초인 각성: 웅크려 두 팔을 얼굴 앞에 엇갈림 (1.5 ~ 4.2 — 금빛 빛기둥이 몸으로 내려옴) → 터지듯 두 팔을 활짝 펴고 하늘을 봄 (5.4 — 충격파)
-m = off_bare(Motion("awakening", 26, "초인 각성 — 웅크려 팔을 엇갈려 빛을 받다가 충격파와 함께 두 팔을 활짝 펴고 포효", fade=(0.04, 0.12)))
-GATHER = P(body=[20, 0, 0], head=[16, 0], ra=arm([0.2, -0.05, 0.98], 120, [-0.9, 0.3, 0.2]), la=L(bent([0.2, -0.05, 0.98], 120, (-1, 0.5, 0))),
-           rl=[-24, 0, 10], ll=[-24, 0, -10], rk=50, lk=50, root=[-0.2, 0])
-keyp(m, 1.5, GATHER)
-keyp(m, 4.2, P(GATHER, body=[22, 0, 0], root=[-0.22, 0]))
-BURST = P(body=[-16, 0, 0], head=[-28, 0], ra=RA_SPREAD_UP, la=L(arm([0.6, 0.75, 0.2], 10)), root=[0.04, 0], **LEGS_WIDE)
-keyp(m, 5.4, BURST, "out3")
-keyp(m, 16, P(BURST, body=[-12, 0, 0], head=[-22, 0]))
-fpw(m, 1.5, FPW_ACROSS)
-fpw(m, 4.2, FPW_ACROSS)
-fpw(m, 5.4, FPW_SKY, "out3", dp=(0.4, -0.2, 0))
-fpw(m, 16, FPW_SKY, dp=(0.4, -0.2, 0))
-fpl(m, 1.5, FP_CROSS)
-fpl(m, 4.2, FP_CROSS)
-fpl(m, 5.4, FP_SPREAD_UP, "out3")
-fpl(m, 16, FP_SPREAD_UP)
-use(m, "awakening")
 
 # ------------------------------------------------------------ 중력
 
