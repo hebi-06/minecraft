@@ -383,7 +383,7 @@ final class RuneStorm {
     /**
      * 뇌신의 창: charge 틱 동안 오른손 위에 번개 창 (2026-11-13 3D — Spear3d) 이 모임 → 던짐. 시선 방향 range 칸 (벽 앞까지) 을 꿰뚫어 폭 width 칸의 적 피해 · 기절,
      * 맞은 적마다 하늘에서 번개 (rpg:rfx_bolt) + chainRange 칸 안의 새 적 하나에게 연쇄 (chainMult).
-     * 초월 2차 강화: 폭풍 하늘 · 앞쪽 하늘의 먹구름 둘 · 발밑의 칼날 문양 · 모으는 동안 앞쪽 땅에 번개 셋 → 보랏빛 번쩍임 · 발밑에서 퍼지는 고리 ·
+     * 초월 2차 강화: 폭풍 하늘 · 발밑의 칼날 문양 · 모으는 동안 둘레 땅에 번개 여덟 (2026-11-13 먹구름 뺌 — 사용자 메모) → 보랏빛 번쩍임 · 발밑에서 퍼지는 고리 ·
      * 창이 날아가는 길에 번개 셋 · 창이 꽂힌 땅이 갈라져 빛남
      */
     static boolean thunderSpear(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -416,27 +416,27 @@ final class RuneStorm {
         SkillFx.play(level, "mob.evocation_illager.cast_spell", sp.position(), 0.8, 0.8);
         // 2차 강화 — 예고: 폭풍 하늘 · 앞쪽 하늘의 먹구름 둘 · 발밑의 칼날 문양 (빠르게 돎) · 모으는 동안 앞쪽 땅에 하늘에서 번개 셋
         Vec3 c0 = sp.position();
-        Vec3 f0 = V.flat(sp.getViewVector(1F));
         RuneKit.ultSkyFor(sp, level, c0, "thunderSpear", (int) charge + 44, null);
-        Vec3 storm = RuneKit.skyPoint(sp, V.add(c0, f0, 10), 6, 20, 6, 22);
-        // 2026-11-12 3D 먹구름 둘 (사용자 "구름 3d") — 처음 크기 6.4 → 조금 커짐 (2D 그림의 grow 0.2)
-        {
-            Vec3[] at0 = {V.add(storm, V.rightOf(f0), -5.2), V.add(storm, V.rightOf(f0), 5.2)};
-            double[] half = {6.4, 6.4};
-            RuneProps.CloudBank bank = RuneProps.clouds(level, at0, half, new double[] {0.3, 0.24, 0.46}, glow, (int) (charge + 24));
-            RuneKit.later(8, () -> {
-                for (int i = 0; i < 2; i++) bank.place(i, at0[i], 7.5, (int) charge + 10);
-            });
-        }
+        // 2026-11-13 사용자 메모 (룬 도감 — 뇌신의 창 "구름을 빼고 주위에 번개가 치는걸로"): 먹구름 (3D) 을 빼고 모으는 동안 둘레 (온 방향 3.5 ~ 7칸) 에 하늘에서 번개
+        // 여덟 — 떨어진 땅이 갈라져 빛나고 불꽃이 튐 (앞쪽은 멀리 — 1인칭 화면)
         RuneKit.domainSigil(level, c0, 5, "blade", glow, white, Opt.of("life", (charge + 2) / 20, "spinRate", 120.0, "grow", 0.3, "alpha", 0.8, "fade", 0.15));
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 8; i++) {
             final int ii = i;
-            Tasks.later(3 + i * 6, () -> {
+            Tasks.later(2 + i * 2, () -> {
                 if (sp.isRemoved()) return;
-                Vec3 p = V.add(V.add(sp.position(), f0, 9 + Kit.rand() * 7), V.rightOf(f0), (Kit.rand() - 0.5) * 10);
+                Vec3 ff = V.flat(sp.getViewVector(1F));
+                Vec3 d = RuneKit.turn(ff, ii * 135.0 + (Kit.rand() - 0.5) * 50);
+                double rr = 3.5 + Kit.rand() * 3.5;
+                if (V.dot(d, ff) > 0.6) rr += 3;
+                Vec3 p = V.add(sp.position(), d, rr);
                 double gy = RuneKit.groundAt(level, p, sp.getY());
-                RuneKit.rfx2(level, "bolt", new Vec3(p.x, gy + 6, p.z), Opt.of("size", 6.0, "life", 0.24, "cell", (double) ((ii * 3) % 4)), glow, white, BOLT, null);
-                SkillFx.play(level, "ambient.weather.thunder", p, 0.6, 0.6);
+                Vec3 g = new Vec3(p.x, gy, p.z);
+                RuneKit.rfx2(level, "bolt", V.up(g, 6), Opt.of("size", 6.0, "life", 0.24, "cell", (double) ((ii * 3) % 4)), glow, white, BOLT, null);
+                RuneKit.glowCrack(level, g, 1.3, glow, white, Opt.of("life", 0.6));
+                SkillFx.burst(level, V.up(g, 0.3), glow, 1.2, 0.25);
+                SkillFx.sparks(level, V.up(g, 0.3), core, 6, 5);
+                if (ii % 2 == 0) SkillFx.play(level, "ambient.weather.thunder", p, 0.7 + Kit.rand() * 0.3, 0.6);
+                else SkillFx.play(level, "ambient.weather.lightning.impact", p, 1.0, 0.5);
             });
         }
         RuneKit.later(charge, () -> {
