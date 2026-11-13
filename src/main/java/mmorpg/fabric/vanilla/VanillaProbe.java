@@ -1088,7 +1088,7 @@ final class VanillaProbe {
             java.util.Map.entry("trickster", "28 26 46 24a8 76"),
             java.util.Map.entry("pierrot", "58 22 34 70 100"),
             java.util.Map.entry("stormlancer", "36 28 48 34 86"),
-            java.util.Map.entry("dragoon", "30 34 32 30 72"),
+            java.util.Map.entry("dragoon", "40 48 46 42 82"), // 2026-11-13 변신: 사람으로 돌아오는 것까지 (끝 + DragonForm.LINGER)
             java.util.Map.entry("soulreaper", "30 30 62 26a3 66"),
             java.util.Map.entry("executioner", "30 24 34 26a3 80"),
             java.util.Map.entry("thunderlord", "28 24 40 24a3 66"),
@@ -1179,6 +1179,8 @@ final class VanillaProbe {
             case "dragoon_impale" -> new double[] {7.5, 2.6, 2.0, 1.0};
             case "dragoon_breath" -> new double[] {7.5, 2.4, 1.6, 1.0};
             case "dragoon_ult" -> new double[] {13.0, 4.0, 6.0, 0.5};
+            // 2026-11-13 드라군 변신 (사람 대신 용 — 꼬리가 둘레 3칸을 휩쓺): 조금 멀리
+            case "dragoon_tail" -> new double[] {7.5, 2.6, 1.4, 1.0};
             // 디바인 썬더의 3D 대망치 (구름 속 13칸 위에서 떨어짐): 멀리서 올려다봄
             case "paladin_ult" -> new double[] {11.5, 3.2, 4.6, 0.5};
             default -> new double[] {6.0, 2.1, 1.0, 1.0};

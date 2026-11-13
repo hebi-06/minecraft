@@ -47,6 +47,13 @@ public final class MotionRender {
     // ------------------------------------------------------------ 렌더 상태
 
     public static void extract(Avatar entity, AvatarRenderState state, float partial) {
+        // 2026-11-13 몸이 사라지는 스킬 (투명 — 드라군 변신 · 까마귀 떼 · 스며듦): 손에 든 것도 숨김 (바닐라는 투명이어도 손에 든 것을 그림)
+        if (state.isInvisible) {
+            state.leftHandItemState.clear();
+            state.rightHandItemState.clear();
+            state.setData(KEY, NONE);
+            return;
+        }
         Pose p = null;
         if (!state.isVisuallySwimming && !state.isFallFlying && !state.isSpectator) {
             p = ClientMotions.pose(entity.getId(), state.mainArm == HumanoidArm.LEFT, partial, new Pose());

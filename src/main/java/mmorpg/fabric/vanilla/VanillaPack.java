@@ -346,6 +346,7 @@ final class VanillaPack {
      * 2026-11-08 꾸미기 (VanillaCosmetics): RPG 무기 · 투구 아이템 정의를 custom_model_data 글자 (서버가 그 사람의 장식으로 넣음) 로 감쌈 —
      * 무기: 스킨 키면 손 (1 · 3인칭) 에서 스킨 모델 (rpg:item/model/&lt;디자인&gt; — 모드 장식과 같은 모델), 투구: 머리 장식 모델 이름이면 머리 자리 (head —
      * 투구 그림을 뺀 투구를 바닐라가 CustomHeadLayer 로 그림) 에 그 장식 (뼈 모델 묶음 — tools/vanilla_cosmetics.py), "hide" 면 머리 자리 빈 그림.
+     * 2026-11-13 무기는 스킨이 없는 계열도 감쌈: "hide" 면 손에서 빈 그림 (드라군 변신 — VanillaCosmetics.hideHands).
      * 다른 자리 (가방 · 핫바 · 땅 · 액자) 와 글자가 없을 때는 그대로. 장식 아이콘의 어두운 것 rpg:vcosdim/&lt;키&gt; (꾸미기 창 — 아직 가지지 않은 것).
      */
     private static void cosmeticItems(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
@@ -373,10 +374,15 @@ final class VanillaPack {
             com.google.gson.JsonElement original = def.get("model");
             if (item instanceof mmorpg.fabric.RpgWeaponItem) {
                 java.util.List<String[]> skins = byType.get(VanillaCosmetics.weaponType(item));
-                if (skins == null) continue;
-                for (String[] s : skins) {
-                    cases.add(when(s[0], context(HANDS, model(Mmorpg.NS + ":item/model/" + s[1]), original)));
+                if (skins != null) {
+                    for (String[] s : skins) {
+                        cases.add(when(s[0], context(HANDS, model(Mmorpg.NS + ":item/model/" + s[1]), original)));
+                    }
                 }
+                // 2026-11-13 드라군 변신 (VanillaCosmetics.hideHands — 사람이 용이 된 동안 내 화면): "hide" 면 손 (1 · 3인칭) 에서 빈 그림
+                com.google.gson.JsonObject none = new com.google.gson.JsonObject();
+                none.addProperty("type", "minecraft:empty");
+                cases.add(when("hide", context(HANDS, none, original)));
                 weapons++;
             } else if (item instanceof mmorpg.fabric.gear.RpgArmorItem) {
                 net.minecraft.world.item.equipment.Equippable eq = item.components().get(net.minecraft.core.component.DataComponents.EQUIPPABLE);

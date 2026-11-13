@@ -234,7 +234,44 @@ public final class VanillaCosmetics {
         CosmeticHolder h = HOLDERS.remove(sp.getUUID());
         if (h != null) h.destroy();
         PENDING.remove(sp.getUUID());
+        HANDS_HIDDEN.remove(sp.getUUID());
         for (Preview p : new ArrayList<>(PREVIEWS.values())) if (p.owner().equals(sp.getUUID())) endPreview(p, server);
+    }
+
+    // ------------------------------------------------------------ 2026-11-13 손에 든 것 숨김 (드라군 변신 — job.DragonForm: 사람이 용이 된 동안)
+
+    /** 손에 든 것을 숨긴 사람 */
+    private static final Set<UUID> HANDS_HIDDEN = ConcurrentHashMap.newKeySet();
+
+    /**
+     * sp 의 손에 든 것을 보이지 않게 (hidden) / 다시 보이게: 다른 사람 (모드 · 모드 없는 클라이언트) 에게는 장비 패킷의 손 칸을 비우고 (바닐라는 투명이어도 손에
+     * 든 것을 그림), 모드 없는 클라이언트의 내 화면 (1 · 3인칭) 은 무기를 손 자리 빈 그림 ("hide" — VanillaPack) 으로 — 바뀌면 장비 · 가방을 다시 보냄
+     */
+    public static void hideHands(ServerPlayer sp, boolean hidden) {
+        boolean changed = hidden ? HANDS_HIDDEN.add(sp.getUUID()) : HANDS_HIDDEN.remove(sp.getUUID());
+        if (!changed || sp.isRemoved()) return;
+        List<Pair<EquipmentSlot, ItemStack>> hands = List.of(Pair.of(EquipmentSlot.MAINHAND, sp.getMainHandItem().copy()),
+                Pair.of(EquipmentSlot.OFFHAND, sp.getOffhandItem().copy()));
+        ClientboundSetEquipmentPacket p = new ClientboundSetEquipmentPacket(sp.getId(), hands);
+        for (ServerPlayer viewer : sp.level().players()) {
+            if (viewer != sp && viewer.distanceToSqr(sp) < 160 * 160) viewer.connection.send(p); // VanillaPackets.rewrite 가 손 칸을 비움 (보던 사람만 받음)
+        }
+        if (VanillaClients.isVanilla(sp)) sp.containerMenu.sendAllDataToRemote();
+    }
+
+    /** e 의 손에 든 것을 숨겼는지 */
+    public static boolean handsHidden(Entity e) {
+        return e != null && HANDS_HIDDEN.contains(e.getUUID());
+    }
+
+    /** 장비 패킷의 손 칸을 비움 */
+    private static ClientboundSetEquipmentPacket emptyHands(ClientboundSetEquipmentPacket p) {
+        List<Pair<EquipmentSlot, ItemStack>> out = new ArrayList<>();
+        for (Pair<EquipmentSlot, ItemStack> s : p.getSlots()) {
+            boolean hand = s.getFirst() == EquipmentSlot.MAINHAND || s.getFirst() == EquipmentSlot.OFFHAND;
+            out.add(hand ? Pair.of(s.getFirst(), ItemStack.EMPTY) : s);
+        }
+        return new ClientboundSetEquipmentPacket(p.getEntity(), out);
     }
 
     /** 보이는 것을 다시: 따라가는 표시 엔티티 · 다른 사람의 장비 그림 · 내 가방 (다른 창이 열려 있으면 닫은 뒤) */
@@ -268,6 +305,11 @@ public final class VanillaCosmetics {
         if (view == null) {
             ServerPlayer receiver = receiver(ctx);
             if (receiver == null) return;
+            // 2026-11-13 드라군 변신 (hideHands): 내 무기 — 손 (1 · 3인칭) 에서 빈 그림 (가방 · 핫바 · 땅은 그대로)
+            if (stack.getItem() instanceof RpgWeaponItem && HANDS_HIDDEN.contains(receiver.getUUID())) {
+                out.set(DataComponents.CUSTOM_MODEL_DATA, cmd("hide"));
+                return;
+            }
             Look own = LOOKS.get(receiver.getUUID());
             view = new View(own == null ? Look.EMPTY : own, receiver.isInvisible(), true);
         }
@@ -382,8 +424,10 @@ public final class VanillaCosmetics {
 
     /** 장비 패킷 하나 (모드 없는 클라이언트에게): 그 엔티티의 모습으로 바닐라 아이템을 만들어 넣음 · 빈 칸에 장식 그림 */
     static Packet<?> equipment(ServerPlayer receiver, ClientboundSetEquipmentPacket p) {
-        if (!VanillaClients.isVanilla(receiver)) return p;
         Entity e = receiver.level().getEntity(p.getEntity());
+        // 2026-11-13 드라군 변신 (hideHands): 다른 사람에게는 손 칸을 비움 — 모드 클라이언트도 (투명한 몸에 창만 떠 보이지 않게)
+        if (e != null && e != receiver && HANDS_HIDDEN.contains(e.getUUID())) p = emptyHands(p);
+        if (!VanillaClients.isVanilla(receiver)) return p;
         Look look = lookOf(e);
         boolean person = person(e);
         boolean rpg = false;

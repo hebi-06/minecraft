@@ -69,7 +69,11 @@ final class JobMove {
         Kit.noFall(sp, last + 30);
         boolean[] stuck = {false};
         Vec3[] placed = {null};
-        for (Seg s : segs) {
+        Plan plan = new Plan(life, gen, mmorpg.fabric.Tasks.now(), segs, stuck);
+        PLANS.put(sp.getUUID(), plan);
+        for (int i = 0; i < segs.length; i++) {
+            Seg s = segs[i];
+            int idx = i;
             Vec3[] from = new Vec3[1];
             Vec3[] to = new Vec3[1];
             int n = Math.max(1, s.end() - s.start());
@@ -77,13 +81,15 @@ final class JobMove {
                 if (!alive(sp, life, gen, stuck, placed)) return;
                 from[0] = sp.position();
                 to[0] = s.target() == null ? from[0] : s.target().apply(from[0]);
+                plan.from[idx] = from[0];
+                plan.to[idx] = to[0];
             });
             for (int t = 1; t <= n; t++) {
                 int tt = t;
                 RuneKit.later(s.start() + t, () -> {
                     if (from[0] == null || !alive(sp, life, gen, stuck, placed)) return;
                     double u = tt / (double) n;
-                    Vec3 p = s.peak() > 0 ? RuneKit.leapPoint(from[0], to[0], s.peak(), u) : V.add(from[0], V.sub(to[0], from[0]), ease(u, s.ease()));
+                    Vec3 p = point(s, from[0], to[0], u);
                     if (!Kit.moveTo(sp, p)) {
                         stuck[0] = true;
                         return;
@@ -94,6 +100,51 @@ final class JobMove {
                 });
             }
         }
+    }
+
+    /** 구간 s 의 u (0 ~ 1) 자리: 솟는 포물선 (peak) 이나 빠르기 (ease) 대로 */
+    private static Vec3 point(Seg s, Vec3 from, Vec3 to, double u) {
+        return s.peak() > 0 ? RuneKit.leapPoint(from, to, s.peak(), u) : V.add(from, V.sub(to, from), ease(u, s.ease()));
+    }
+
+    /**
+     * 2026-11-13 드라군 변신 (DragonForm): 지금 움직임의 구간 · 시작한 구간의 처음 · 끝 자리 — {@link #predict} 가 앞날 자리를 셈 (용이 사람의 몇 틱 뒤
+     * 자리에 미리 서야 모드 · 모드 없는 클라이언트가 3틱에 걸쳐 따라가는 몸 자리 보간이 지금 자리에 맞음)
+     */
+    private record Plan(String life, int gen, long t0, Seg[] segs, boolean[] stuck, Vec3[] from, Vec3[] to) {
+        Plan(String life, int gen, long t0, Seg[] segs, boolean[] stuck) {
+            this(life, gen, t0, segs, stuck, new Vec3[segs.length], new Vec3[segs.length]);
+        }
+    }
+
+    private static final java.util.Map<java.util.UUID, Plan> PLANS = new java.util.HashMap<>();
+
+    /**
+     * 지금 움직임 (run) 대로면 n 틱 뒤 발 자리 — 움직임이 없거나 끝났거나 그만 · 막혔으면 null. 아직 시작하지 않은 구간은 앞 구간의 끝에서 그 구간의 목표를 미리 셈
+     * (쓴 때 정해지는 목표 — 솟을 높이 · 조준한 곳). 구간 사이 (앞 구간이 끝나고 다음이 시작하기 전) 는 앞 구간의 끝 자리
+     */
+    static Vec3 predict(ServerPlayer sp, int n) {
+        Plan p = PLANS.get(sp.getUUID());
+        if (p == null || p.stuck()[0] || gen(sp) != p.gen() || !RuneKit.sameLife(sp, p.life())) return null;
+        long r = mmorpg.fabric.Tasks.now() - p.t0() + n;
+        Seg[] segs = p.segs();
+        if (r > segs[segs.length - 1].end()) return null;
+        Vec3 cur = sp.position();
+        if (r <= segs[0].start()) return cur;
+        Vec3 end = null;
+        for (int i = 0; i < segs.length; i++) {
+            Seg s = segs[i];
+            if (r <= s.start()) return end != null ? end : cur;
+            Vec3 a = p.from()[i];
+            Vec3 b = p.to()[i];
+            if (a == null) {
+                a = end != null ? end : cur;
+                b = s.target() == null ? a : s.target().apply(a);
+            }
+            if (r <= s.end()) return point(s, a, b, (r - s.start()) / (double) Math.max(1, s.end() - s.start()));
+            end = b;
+        }
+        return end;
     }
 
     /** 이 움직임이 아직 이어지는지: 같은 삶 · 같은 번호 · 막히지 않음 · 마지막에 놓은 자리에서 1칸 안 (넘으면 다른 것이 옮긴 것 — 그만) */

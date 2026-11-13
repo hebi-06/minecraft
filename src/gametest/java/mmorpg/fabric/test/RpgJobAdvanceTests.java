@@ -2308,6 +2308,8 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 2.9);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "웜테일 휩쓸기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits11.airborne(sp), "hopping after the sweep (비상)");
+            // 2026-11-13 변신: 스킬을 쓰는 동안 사람은 사라지고 용이 함 (DragonForm)
+            h.assertTrue(mmorpg.fabric.job.DragonForm.active(sp) && sp.hasEffect(MobEffects.INVISIBILITY), "웜테일: the dragoon turned into the dragon (invisible)");
         }));
         steps.add(new RpgJobTests.Step(14, () -> {
             double hm = JobTraits11.lastHeightMult(sp);
@@ -2387,7 +2389,11 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), inner), "드래곤폴 (안쪽) " + TestDummies.dealt(z.get(0)) + " vs " + inner);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), outer), "드래곤폴 (바깥) " + TestDummies.dealt(z.get(1)) + " vs " + outer);
             h.assertTrue(!JobTraits11.immune(sp), "landed (no longer untouchable)");
+            h.assertTrue(mmorpg.fabric.job.DragonForm.active(sp), "드래곤폴: still the dragon while the pillars rise");
         }));
+        // 변신이 끝남: 불기둥 뒤 (끝 + 남는 틈) 사람으로 · 투명이 걷힘
+        steps.add(new RpgJobTests.Step(30, () -> h.assertTrue(!mmorpg.fabric.job.DragonForm.active(sp) && !sp.hasEffect(MobEffects.INVISIBILITY),
+                "back to the person after the skill (visible)")));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);

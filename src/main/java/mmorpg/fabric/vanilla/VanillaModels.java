@@ -218,6 +218,8 @@ final class VanillaModels {
         private int every = 2;
         private float hitW = -1;
         private float hitH = -1;
+        /** 2026-11-13 직업 스킬의 3D 몹 (드라군 변신의 용 — 늘 시전자 곁): 가까우면 틱마다 자세 (빠른 동작 — 꼬리 휩쓸기 · 내리꽂기 — 의 뼈가 곧게 이어지며 줄어 보이지 않게) */
+        private final boolean quick;
         /** 엔티티에 붙음 (EntityAttachment 등록 뒤 — 태우는 패킷에 뼈 번호가 실림) */
         boolean attached;
 
@@ -236,9 +238,14 @@ final class VanillaModels {
                 shown[i] = true;
                 if (look.glow[i]) glows[i] = element(look.stack(i, variant, true), w, h);
             }
-            hit = InteractionElement.redirect(mob);
-            resizeHit();
-            addElement(hit);
+            // 2026-11-13 아군 몹 (TyrfingWarrior — 맞지 않음 · 조준에도 잡히지 않음) 은 맞는 칸이 없음: 드라군 변신의 용은 시전자 몸을 감싸 조준 · 평타를 가로막았음
+            boolean ally = mob instanceof mmorpg.fabric.mob.TyrfingWarrior;
+            hit = ally ? null : InteractionElement.redirect(mob);
+            quick = ally && mmorpg.fabric.mob.TyrfingWarrior.JOB_MOBS.contains(BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString());
+            if (hit != null) {
+                resizeHit();
+                addElement(hit);
+            }
             pose(); // 처음 보일 때부터 자세 (뼈가 한 점에 모였다 퍼지지 않게)
         }
 
@@ -252,6 +259,7 @@ final class VanillaModels {
         }
 
         private void resizeHit() {
+            if (hit == null) return;
             float w = mob.getBbWidth();
             float h = mob.getBbHeight();
             if (w != hitW || h != hitH) {
@@ -305,6 +313,7 @@ final class VanillaModels {
                 ServerPlayer p = c.getPlayer();
                 best = Math.min(best, p.distanceToSqr(mob));
             }
+            if (quick && best < 32 * 32) return 1;
             return best < 32 * 32 ? 2 : best < 64 * 64 ? 4 : 8;
         }
 
