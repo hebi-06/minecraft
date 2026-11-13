@@ -371,7 +371,8 @@ final class RuneGravity {
         }
         SkillFx.play(level, "mob.breeze.charge", sp.position(), 1.2, 0.8);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", sp.position(), 0.9, 1.2);
-        liftBoulders(sp, life, sp.position(), f, 5.0, gap, glow); // 2026-11-13 적과 함께 떠오르는 3D 바위 → 내리꽂을 때 함께 떨어짐
+        // 2026-11-13 적과 함께 떠오르는 3D 바위 → 내리꽂을 때 함께 떨어짐 (희귀 — CI 43407028798 영상에서 옆 카메라 앞의 바위가 화면을 덮어 작게 · 앞 ±100° 에만 · 낮게)
+        liftBoulders(sp, life, sp.position(), f, 5.0, gap, glow, 0.6, 200, 0.7);
         List<LivingEntity> hitList = new ArrayList<>();
         List<LivingEntity> floating = new ArrayList<>();
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), cone, 10)) {
@@ -529,7 +530,7 @@ final class RuneGravity {
         }
         SkillFx.play(level, "mob.warden.sonic_charge", c, 1.0, 1.1);
         SkillFx.play(level, "mob.breeze.charge", c, 1.2, 0.7);
-        liftBoulders(sp, life, c, f, radius, gap, glow);
+        liftBoulders(sp, life, c, f, radius, gap, glow, 1.0, 240, 1.0);
         List<LivingEntity> hitList = new ArrayList<>();
         List<LivingEntity> floating = new ArrayList<>();
         for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
@@ -585,22 +586,23 @@ final class RuneGravity {
      * 2026-11-13 중력 역전의 3D 바위 (boulder · 틈의 빛 = 중력 색): 내 둘레 (내 앞을 비운 고리) 의 땅에서 바위 덩이 여덟이 솟아 (6틱) 2.4 ~ 4.6칸 높이에 떠서
      * 천천히 구르며 오르내리다가, gap 틱 (내리꽂음) 에 한꺼번에 땅으로 내리꽂혀 (2틱 — 빨라짐) 부서지며 가라앉음
      */
-    private static void liftBoulders(ServerPlayer sp, String life, Vec3 c, Vec3 f, double radius, int gap, double[] glow) {
+    private static void liftBoulders(ServerPlayer sp, String life, Vec3 c, Vec3 f, double radius, int gap, double[] glow, double sizeK, double spread,
+            double liftK) {
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, gap + 16);
         int n = 8;
         long seed0 = (long) (Kit.rand() * 1e9);
         for (int i = 0; i < n; i++) {
-            // 앞 · 옆 240° 에만 (등 뒤 = 3인칭 카메라 앞 — 가까운 바위가 화면을 덮음, 2026-11-13 영상)
-            double a = -120 + (i + 0.5) / n * 240 + (Kit.rand() - 0.5) * 16;
+            // 앞 · 옆 spread 도 에만 (등 뒤 = 3인칭 카메라 앞 — 가까운 바위가 화면을 덮음, 2026-11-13 영상)
+            double a = -spread / 2 + (i + 0.5) / n * spread + (Kit.rand() - 0.5) * 16;
             double rr = Math.min(radius, 2.4 + Kit.rand() * 2.2);
             Vec3 d = RuneKit.turn(f, a);
             if (V.dot(d, f) > 0.75) rr = Math.max(rr, 3.6); // 내 앞 (1인칭 화면) 은 멀리
             Vec3 base = V.add(c, d, rr);
             double gy = RuneKit.groundAt(level, base, c.y);
             final Vec3 ground = new Vec3(base.x, gy, base.z);
-            final double hgt = 2.2 + Kit.rand() * 2.0;
-            final double size = 0.75 + Kit.rand() * 0.6;
+            final double hgt = (2.2 + Kit.rand() * 2.0) * liftK;
+            final double size = (0.75 + Kit.rand() * 0.6) * sizeK;
             final long seed = seed0 + i * 7919L;
             final double sc = RuneProps.scaleFor(size, RuneProps.BOULDER_D);
             mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.BOULDER, V.up(ground, -0.6), new double[] {8, 8, 8}, RuneProps.tumble(seed, 0, 0), sc * 0.5,

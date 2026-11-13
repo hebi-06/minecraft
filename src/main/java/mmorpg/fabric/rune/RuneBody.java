@@ -178,6 +178,7 @@ final class RuneBody {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         RuneKit.zonePulse(level, c, col, 1.3, 0.4);
+        if (k.str("fn").equals("regenBody")) risingHalos(sp, col, 1, 0); // 2026-11-13 회복마다 발밑에서 작은 3D 고리가 솟음
         SkillFx.vanilla(level, "minecraft:heart_particle", V.up(c, 2.1));
         for (int i = 0; i < 3; i++) {
             double a = Kit.rand() * Math.PI * 2;
@@ -185,6 +186,81 @@ final class RuneBody {
                     "size", 0.18, "grow", 1.4, "life", 0.7, "color", i > 0 ? col : RuneKit.WHITE, "alpha", 1.0));
         }
         SkillFx.play(level, "random.orb", c, 1.4, 0.35);
+    }
+
+    /**
+     * 2026-11-13 몸 둘레의 3D 빛 고리 n 개 (halo — 계열 기운 색 · 흰 심지): gap 틱 간격으로 발밑에서 작게 나타나 돌며 머리 위 (2.4) 까지 솟고 (8틱 — 커졌다가)
+     * 작아지며 사라짐. 몸을 따라옴
+     */
+    private static void risingHalos(ServerPlayer sp, double[] col, int n, int gap) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), n * gap + 16);
+        double s = RuneProps.scaleFor(1.35, RuneProps.HALO_D);
+        for (int i = 0; i < n; i++) {
+            final int t0 = i * gap;
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HALO, V.up(sp.position(), 0.1), RuneProps.MID, RuneProps.along(V.UP, new Vec3(1, 0, 0)),
+                    0.01, col, RuneKit.WHITE);
+            for (int t = 1; t <= 10; t++) {
+                final int tt = t;
+                fx.on(t0 + t, () -> {
+                    double u = tt / 10.0;
+                    double sc = s * (u < 0.4 ? 0.5 + u * 1.5 : 1.1 - (u - 0.4) * 1.6);
+                    p.to(V.up(sp.position(), 0.1 + 2.4 * RuneSwords.ease(u, "out")), RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), tt * 24.0)),
+                            Math.max(0.01, sc), 1);
+                });
+            }
+            fx.on(t0 + 11, p::remove);
+        }
+    }
+
+    /**
+     * 2026-11-13 강철 근육의 3D 쇳빛 육각 판 여섯 (hex_panel — 강철 · 기운 색 보석): 발밑 둘레 (1.0칸) 에서 나선으로 돌며 (틱마다 30°) 가슴 높이로 감아 오르고
+     * 몸 쪽으로 좁혀져 (8틱) 9틱에 번쩍 → 몸속으로 작아지며 스밈
+     */
+    private static void steelSpiral(ServerPlayer sp, double[] col) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 20);
+        double s = RuneProps.scaleFor(0.6, RuneProps.HEX_PANEL_H);
+        for (int i = 0; i < 6; i++) {
+            final double a0 = i * 60.0;
+            final double y0 = 0.25 + (i % 3) * 0.12;
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(sp.position(), y0), RuneProps.MID, RuneProps.along(V.UP, new Vec3(1, 0, 0)),
+                    s * 0.4, RuneKit.STEEL, col);
+            for (int t = 1; t <= 8; t++) {
+                final int tt = t;
+                fx.on(t, () -> {
+                    double u = tt / 8.0;
+                    Vec3 d = RuneKit.turn(Kit.facingOf(sp), a0 + tt * 30.0);
+                    Vec3 at = V.up(V.add(sp.position(), d, 1.0 - 0.45 * u), y0 + (1.15 - y0) * u + (a0 / 60.0 % 2) * 0.25 * u);
+                    p.to(at, RuneProps.facing(d, V.UP), s * (0.4 + 0.6 * u), 1);
+                });
+            }
+            fx.on(9, () -> p.size(s * 1.3, 1));
+            fx.on(10, () -> p.to(V.up(sp.position(), 1.1), null, s * 0.1, 5));
+            fx.on(15, p::remove);
+        }
+    }
+
+    /** 2026-11-13 재생의 3D 생명빛 고리: 머리 위 3.2칸에서 작게 나타나 돌며 내려와 (2.3 — 6틱) 머리 위에서 잠깐 돈 뒤 발밑까지 내려오며 커지고 (8틱) 작아지며 사라짐 */
+    private static void regenHalo(ServerPlayer sp, double[] col) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 26);
+        double s1 = RuneProps.scaleFor(1.0, RuneProps.HALO_D);
+        double s2 = RuneProps.scaleFor(1.8, RuneProps.HALO_D);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HALO, V.up(sp.position(), 3.2), RuneProps.MID, RuneProps.along(V.UP, new Vec3(1, 0, 0)), s1 * 0.3,
+                col, RuneKit.WHITE);
+        for (int t = 1; t <= 18; t++) {
+            final int tt = t;
+            fx.on(t, () -> {
+                Vec3 cc = sp.position();
+                org.joml.Quaternionf q = RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), tt * 20.0));
+                if (tt <= 6) p.to(V.up(cc, 3.2 - 0.9 * RuneSwords.ease(tt / 6.0, "out")), q, s1 * (0.3 + 0.7 * tt / 6.0), 1);
+                else if (tt <= 9) p.to(V.up(cc, 2.3), q, s1, 1);
+                else p.to(V.up(cc, 2.3 - 2.2 * RuneSwords.ease((tt - 9) / 9.0, "in")), q, s1 + (s2 - s1) * (tt - 9) / 9.0, 1);
+            });
+        }
+        fx.on(19, () -> p.size(0.01, 4));
+        fx.on(24, p::remove);
     }
 
     /** 신체 강화가 모두 끝남: 기운이 흩어짐 */
@@ -210,6 +286,7 @@ final class RuneBody {
         Vec3 f = Kit.facingOf(sp);
         double[] col = accent(k);
         RuneBoost.bloom(level, sp.position(), col, COLOR[1], 2.5); // 0.50.0 2D 강화 (아래 등급 터짐): 투지가 차오르는 순간의 빛
+        risingHalos(sp, col, 2, 3); // 2026-11-13 3D 빛 고리 둘이 발밑에서 머리 위로 솟음 (사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자")
         for (int i = 0; i < 4; i++) { // 뒤로 흐르는 바람
             RuneKit.streak(level, V.up(V.add(sp.position(), f, -0.6 - i * 0.5), 0.4 + i * 0.3), V.up(V.add(sp.position(), f, -1.4 - i * 0.6), 0.4 + i * 0.3),
                     col, 0.1, 0.3, 0.8, 0);
@@ -225,12 +302,7 @@ final class RuneBody {
         bodyCast(sp, r, k, 0.4);
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
-        Vec3 f = Kit.facingOf(sp);
-        for (int i = 0; i < 6; i++) {
-            Vec3 d = RuneKit.turn(f, (i % 2 == 1 ? 1 : -1) * (70 + i * 14));
-            RuneKit.rfx(level, "prop", V.up(V.add(c, d, 0.5), 0.5 + (i % 3) * 0.5), Opt.of("size", 0.3, "life", 0.4, "cell", GLINT, "spin", i * 30.0,
-                    "color", RuneKit.WHITE, "grow", 0.4, "fade", 0.5));
-        }
+        steelSpiral(sp, accent(k)); // 2026-11-13 3D 쇳빛 육각 판 여섯이 몸 둘레를 나선으로 감아 오르며 몸에 붙음 (2D 반짝임 여섯 대신)
         SkillFx.burst(level, V.up(c, 1), RuneKit.STEEL, 1.8, 0.35);
         RuneBoost.bloom(level, c, accent(k), COLOR[1], 2.8); // 0.50.0 2D 강화 (아래 등급 터짐): 몸이 강철이 되는 순간의 빛
         SkillFx.play(level, "armor.equip_iron", c, 0.8, 1);
@@ -245,6 +317,7 @@ final class RuneBody {
         ServerLevel level = sp.level();
         SkillFx.vanilla(level, "minecraft:heart_particle", V.up(sp.position(), 2.1));
         RuneBoost.bloom(level, sp.position(), accent(k), COLOR[1], 3.2); // 0.50.0 2D 강화 (아래 등급 터짐): 재생이 시작되는 순간의 빛
+        regenHalo(sp, accent(k)); // 2026-11-13 3D 생명빛 고리가 머리 위에서 돌며 발밑까지 내려옴 (회복마다 발밑에서 작은 고리가 솟음 — bodyPulse)
         SkillFx.play(level, "beacon.power", sp.position(), 1.6, 0.6);
         SkillFx.play(level, "random.levelup", sp.position(), 1.8, 0.4);
         return true;

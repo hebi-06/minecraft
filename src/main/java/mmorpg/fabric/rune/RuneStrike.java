@@ -162,7 +162,51 @@ public final class RuneStrike {
         }
         SkillFx.play(level, "random.anvil_use", sp.position(), 2.0, 0.3);
         SkillFx.play(level, "item.spear.attack_miss", sp.position(), 1.6, 0.6);
+        honeSword(sp, accent(k)); // 2026-11-13 3D 룬 검 (몸 앞 오른쪽에 세움) 을 따라 빛 고리 (숫돌) 가 두 번 훑음 → 손으로 스밈
         return true;
+    }
+
+    /**
+     * 2026-11-13 날 세우기의 3D 룬 검 (rune_sword — 칼날이 위 · 넓은 면이 나를 봄, 1.6칸): 몸 앞 오른쪽 (1.1칸 앞 · 0.45 오른쪽 · 손잡이 높이 0.9) 에 나타나
+     * (2틱) 3D 빛 고리 (halo — 숫돌) 가 손잡이에서 칼끝까지 두 번 훑어 오르며 (2 ~ 5 · 6 ~ 9 — 고리 자리마다 불티) 10틱에 번쩍 → 무기를 든 손으로 작아지며 스밈
+     */
+    private static void honeSword(ServerPlayer sp, double[] col) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 22);
+        Vec3 f = V.flat(sp.getViewVector(1F));
+        Vec3 rt = V.rightOf(f);
+        Vec3 hilt = V.up(V.add(V.add(sp.position(), f, 1.1), rt, 0.45), 0.9);
+        double len = 1.6;
+        double ss = RuneProps.scaleFor(len, RuneProps.SWORD_LEN);
+        org.joml.Quaternionf up = RuneProps.along(V.UP, rt);
+        mmorpg.fabric.vfx.Vfx.Prop sword = RuneProps.prop(fx, RuneProps.SWORD, hilt, RuneProps.SWORD_HILT, up, ss * 0.3, col, RuneKit.WHITE);
+        fx.on(1, () -> sword.size(ss, 2));
+        double hs = RuneProps.scaleFor(0.42, RuneProps.HALO_D);
+        mmorpg.fabric.vfx.Vfx.Prop ring = RuneProps.prop(fx, RuneProps.HALO, V.up(hilt, 0.3), RuneProps.MID, RuneProps.along(V.UP, rt), 0.01, col, RuneKit.WHITE);
+        for (int pass = 0; pass < 2; pass++) {
+            for (int i = 0; i <= 3; i++) {
+                final double u = i / 3.0;
+                final int t = 2 + pass * 4 + i;
+                final boolean top = i == 3;
+                fx.on(t, () -> {
+                    Vec3 at = V.up(hilt, 0.3 + 0.95 * u); // 날밑 위 → 칼끝 아래 (손잡이 가운데에서 칼끝까지 1.34칸)
+                    ring.to(at, RuneProps.along(V.UP, RuneKit.turn(rt, t * 35.0)), hs * (top ? 0.5 : 1.0), 1);
+                    SkillFx.sparks(level, at, RuneKit.WHITE, 2, 2.5);
+                });
+            }
+        }
+        fx.on(10, () -> {
+            ring.size(0.01, 2);
+            sword.size(ss * 1.12, 1);
+        });
+        fx.on(11, () -> {
+            Vec3 hand = RuneKit.handOf(sp).hand();
+            sword.to(hand, null, ss * 0.1, 5);
+        });
+        fx.on(17, () -> {
+            sword.remove();
+            ring.remove();
+        });
     }
 
     /** 연타: 7초 동안 활 · 완드 재사용 × rangedCd, 근접 평타마다 잔상 (위력 × echo, 옆의 적 하나에게도) */
@@ -180,6 +224,10 @@ public final class RuneStrike {
                     "life", 0.18, "speed", 4.0, "spin", 20.0, "color", col, "core", true));
         });
         SkillFx.play(level, "mob.breeze.whirl", sp.position(), 1.6, 0.6);
+        // 2026-11-13 3D 룬 검 둘이 X 로 휩씀 (오른쪽 위 → 왼쪽 아래 · 2틱 뒤 왼쪽 위 → 오른쪽 아래 — 2D 초승달과 같은 때)
+        String life = RuneKit.lifeToken(sp);
+        RuneSwing.sword(sp, life, 1.2, 0.6, 2.6, 40, 95, -95, 0, 2, 1, "out", col, RuneKit.WHITE);
+        RuneSwing.sword(sp, life, 1.2, 0.6, 2.6, -40, -95, 95, 2, 2, 1, "out", col, RuneKit.WHITE);
         return true;
     }
 
@@ -193,6 +241,8 @@ public final class RuneStrike {
                 RuneKit.WHITE);
         SkillFx.play(level, "item.spear.attack_miss", sp.position(), 0.9, 0.8);
         SkillFx.play(level, "random.anvil_use", sp.position(), 1.4, 0.3);
+        // 2026-11-13 3D 룬 도끼가 낮고 넓게 오른쪽에서 왼쪽 끝까지 가로로 휩씀 (2D 물결과 같은 때)
+        RuneSwing.axe(sp, RuneKit.lifeToken(sp), 0.95, 0.3, RuneProps.scaleFor(2.2, RuneAxe.RUNE_AXE_LEN), 8, 110, -100, 0, 3, 2, "out", accent(k), RuneKit.WHITE);
         return true;
     }
 
