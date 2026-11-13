@@ -990,7 +990,19 @@ final class VanillaProbe {
             p.getInventory().clearContent();
             // 2026-11-13 뼈 몸 모션 (VanillaRig): 사진기는 프로브 자신의 화면 — 내 모션 보기를 켬 (기본은 내 화면에 뼈 몸을 그리지 않음)
             VanillaRig.selfView(p, true);
-            Tasks.later(40, () -> film(p, 1));
+            // 2026-11-13 몸풀기: 첫 룬을 영상 전에 한 번 써 둠 — 묶음의 첫 영상만 쓴 직후 4 ~ 6장이 멈춘 채 찍혔음 (CI 43428424571 강철 피부 · 43423572384
+            // 수호의 외침 — 이웃 프레임 차이 0, 그 뒤 한꺼번에 따라잡음: 처음 쓰는 길의 클래스 적재 · 모델 첫 표시). 남은 연출은 첫 영상의 filmReset 이 끝냄
+            int wait = 40;
+            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0));
+            if (warm != null) {
+                Tasks.later(10, () -> {
+                    if (p.isRemoved()) return;
+                    mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
+                    log("film warm-up " + FILM_RUNES.get(0) + " " + mmorpg.fabric.rune.RuneCast.castRune(p, warm, false));
+                });
+                wait = 110;
+            }
+            Tasks.later(wait, () -> film(p, 1));
             return;
         }
         int i = step - 1;
