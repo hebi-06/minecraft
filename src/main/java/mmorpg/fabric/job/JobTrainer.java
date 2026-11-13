@@ -62,12 +62,12 @@ public final class JobTrainer {
 
     /** 직업 이름 글자색 (창 · 알림 — § 색 하나: 직업 색에 가까운 것) */
     private static final Map<String, String> CODE = Map.ofEntries(Map.entry("swordsman", "§b"), Map.entry("warrior", "§c"), Map.entry("spellblade", "§d"),
-            Map.entry("mage", "§9"), Map.entry("archer", "§a"), Map.entry("assassin", "§5"), Map.entry("lancer", "§6"), Map.entry("reaper", "§3"),
+            Map.entry("mage", "§9"), Map.entry("archer", "§9"), Map.entry("assassin", "§5"), Map.entry("lancer", "§6"), Map.entry("reaper", "§3"),
             Map.entry("paladin", "§e"), Map.entry("priest", "§f"), Map.entry("guardian", "§7"),
             // 0.51.0 2차 직업 (없는 것은 1차 직업 색)
             Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("frostraider", "§b"), Map.entry("arcaneblade", "§5"),
             Map.entry("elementalblade", "§6"), Map.entry("arcmage", "§9"), Map.entry("necromancer", "§a"),
-            Map.entry("sniper", "§a"), Map.entry("battlearcher", "§b"), Map.entry("trickster", "§d"), Map.entry("pierrot", "§c"),
+            Map.entry("sniper", "§e"), Map.entry("battlearcher", "§5"), Map.entry("trickster", "§d"), Map.entry("pierrot", "§c"),
             Map.entry("stormlancer", "§b"), Map.entry("dragoon", "§6"), Map.entry("soulreaper", "§b"), Map.entry("executioner", "§6"), Map.entry("thunderlord", "§e"), Map.entry("tyrant", "§5"),
             Map.entry("saint", "§e"), Map.entry("warlock", "§4"), Map.entry("phoenix", "§b"), Map.entry("darkknight", "§4"));
     /** 카드 그림 (직업 id → 무기 아이템) */

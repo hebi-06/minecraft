@@ -123,15 +123,27 @@ public final class JobTraits9 {
 
     // ------------------------------------------------------------ 스나이퍼: 급소 사격 · 헌터스 마크
 
-    /** 급소 사격을 쏨 (JobTraitsMore.onFired — 호흡 8): 활 앞 흰 섬광 · 약점 과녁 번쩍 · 화살 길을 따라 흰 금빛 줄 · 맑은 소리 */
+    /**
+     * 천벌의 화살을 쏨 (JobTraitsMore.onFired — 심판 8, 2026-11-14): 활 앞 흰 반짝임 · 화살 길을 따라 흰 금빛 줄 · 날아가는 빛 · 화살이 닿는 자리에 하늘의 빛기둥 · 맑은 소리
+     */
     static void snipeFx(ServerPlayer sp, Jobs.Job j, Vec3 from, Vec3 dir, double dist) {
         ServerLevel level = sp.level();
         Vec3 bow = V.add(RuneKit.bowHand(sp), dir, 0.5);
-        JobFx.weak(level, bow, 0.42, 4, 2, 0.22, false, Opt.of("vel", RuneKit.bodyVel(sp)), JobKit.glow(j), SNIPE);
+        ArrowFx.glint(level, bow, 0.5, 0.25, SNIPE, Opt.of("vel", RuneKit.bodyVel(sp)));
         double len = Math.max(2, dist);
         Vec3 end = V.add(from, dir, len);
         RuneKit.streak(level, V.add(from, dir, 1.2), end, SNIPE, 0.06, 0.3, 1.0, 0);
         RuneKit.streak(level, V.add(from, dir, 1.2), end, JobKit.glow(j), 0.16, 0.25, 0.55, 0);
+        RpgCombat.Shot shot = RpgCombat.arrowShot(len);
+        RuneKit.flyStreak(level, V.add(from, dir, 1.0), end, len / Math.max(0.05, shot.life()), JobKit.glow(j), SNIPE, 0.9, 0.24);
+        int t = Math.max(1, (int) Math.round(shot.life() * 20));
+        String life = RuneKit.lifeToken(sp);
+        RuneKit.later(t, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 g = new Vec3(end.x, RuneKit.groundAt(level, end, end.y - 1.5), end.z);
+            RuneKit.godRays(sp, level, g, 0, 1, JobKit.glow(j), JobKit.core(j), Opt.of("h", 9.0, "life", 0.4, "skipNear", true));
+            ArrowFx.glint(level, end, 0.7, 0.25, RuneKit.WHITE, Opt.empty());
+        });
         SkillFx.play(level, "item.trident.hit", sp.position(), 1.8, 0.7);
         SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 2.0, 0.6);
     }
@@ -189,36 +201,37 @@ public final class JobTraits9 {
         return new RpgCombat.Bonus(add, "", KEY_MARK, DamageNumbers.Style.JOB_BIG, null, JobKit.grad(j));
     }
 
-    /** 맞힌 수 (n / every) 만큼 적 머리 위 은빛 표식 (작은 약점 과녁 — 나란히) */
+    /** 맞힌 수 (n / every) 만큼 적 머리 위 빛의 표식 (2026-11-14 — 반짝임 · 나란히, 켜진 것은 크고 진하게) */
     private static void pips(ServerLevel level, LivingEntity e, int n, int every, Jobs.Job j) {
-        // 영상 1: 표식이 작고 옅어 멀리서 보이지 않았음 → 크게 · 켜진 것은 진하게
         Vec3 head = RuneKit.overHead(e, 0.5);
         double pad = Kit.bodyPad(e);
         for (int i = 0; i < every - 1; i++) {
             boolean lit = i < n;
             Vec3 at = V.add(head, new Vec3(1, 0, 0), (i - (every - 2) / 2.0) * (0.62 + pad * 0.2));
-            JobFx.weak(level, at, (lit ? 0.34 : 0.24) + pad * 0.08, lit ? 1 : 5, lit ? 3 : 1, 0.6, lit, Opt.of("vel", RuneKit.entVel(e), "fade", 0.3, "alpha", lit ? 1.0 : 0.6),
-                    STEEL, SILVER);
+            ArrowFx.glint(level, at, (lit ? 0.4 : 0.22) + pad * 0.08, 0.6, lit ? JobKit.core(j) : JobKit.glow(j), Opt.of("vel", RuneKit.entVel(e), "fade", 0.3, "alpha",
+                    lit ? 1.0 : 0.55, "spin", 45.0, "spinRate", 60.0, "grow", 0.0));
         }
         SkillFx.play(level, "block.amethyst_block.hit", e.position(), 1.4 + n * 0.2, 0.6);
     }
 
-    /** 셋째 화살: 은빛 화살이 함께 꿰뚫음 — 적 앞뒤를 지나는 은빛 줄 · 몸 가운데 은빛 약점 과녁이 깨짐 · 은빛 섬광 · 맑은 쇳소리 */
+    /**
+     * 셋째 화살 (2026-11-14 심판의 화살 — 은빛 화살 대신): 그 적 위 하늘에서 3D 금빛 화살이 내리꽂힘 (2틱) · 하늘의 빛기둥 · 몸 가운데 큰 반짝임 · 발밑 고리 · 세라핌의
+     * 날개가 크게 내려침 · 맑은 쇳소리
+     */
     private static void silverBolt(ServerPlayer sp, ServerLevel level, LivingEntity e, Jobs.Job j) {
         Vec3 c = Kit.bodyPoint(e);
-        Vec3 d = V.unit(V.sub(c, sp.getEyePosition()));
         double pad = Kit.bodyPad(e);
-        Vec3 a = V.add(c, d, -2.8 - pad);
-        Vec3 b = V.add(c, d, 1.9 + pad);
-        JobFx.greatArrow(level, a, b, 40, 1.2, Opt.of("fade", 0.2), STEEL, SILVER);
-        RuneKit.streak(level, a, b, SILVER, 0.16, 0.4, 1.0, 0);
-        RuneKit.streak(level, a, b, STEEL, 0.3, 0.35, 0.5, 0);
-        JobFx.greatArrowAt(level, V.add(c, d, 0.3 + pad), d, 1.0, 0.55, Opt.of("vel", RuneKit.entVel(e), "fade", 0.35), STEEL, SILVER);
-        JobFx.weak(level, c, 0.85 + pad * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(e)), STEEL, SILVER);
-        JobFx.burst(level, c, 0.9 + pad * 0.3, STEEL, SILVER, 0.3, Opt.empty());
-        SkillFx.sparks(level, c, SILVER, 14, 5);
+        double[] glow = JobKit.glow(j);
+        double[] core = JobKit.core(j);
+        ArrowFx.fallArrow(level, e.position(), 2.6, e.getBbHeight() + 5, 2, 12, glow, SNIPE);
+        RuneKit.godRays(sp, level, e.position(), 0, 1, glow, core, Opt.of("h", 11.0, "life", 0.45, "skipNear", true));
+        ArrowFx.glint(level, c, 1.0 + pad * 0.3, 0.35, RuneKit.WHITE, Opt.empty());
+        RuneKit.zonePulse(level, e.position(), glow, 1.6 + pad, 0.35);
+        SkillFx.burst(level, c, core, 1.1 + pad * 0.3, 0.3);
+        SkillFx.sparks(level, c, SNIPE, 14, 5);
+        SniperSkills.seraphBeat(sp);
         SkillFx.play(level, "item.trident.hit", c, 1.6, 0.9);
-        SkillFx.play(level, "block.anvil.land", c, 1.9, 0.35);
+        SkillFx.play(level, "block.amethyst_block.break", c, 1.9, 0.5);
     }
 
     // ------------------------------------------------------------ 배틀 아처: 난사
@@ -258,19 +271,39 @@ public final class JobTraits9 {
         for (LivingEntity e : Kit.around(sp, sp.position(), range, 4)) if (e != target && Kit.splashFoe(sp, e)) others.add(e);
         others.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
         ServerLevel level = sp.level();
+        double[] glow = JobKit.glow(j);
+        double[] core = JobKit.core(j);
         Vec3 bow = V.add(RuneKit.bowHand(sp), dir, 0.45);
+        // 2026-11-14 분신: 섀도 댄스면 곁의 3D 분신 둘이 함께 쏨 (재빨리 당겨 놓음), 아니면 양옆에 그림자 분신이 번쩍 솟아 쏨 (2D — 평타마다 몹을 세우지 않게)
+        List<mmorpg.fabric.rune.RuneMob> dancers = ShadeArchers.dancers(sp);
+        Vec3 f = Kit.facingOf(sp);
+        Vec3[] side = new Vec3[2];
+        for (int s = 0; s < 2; s++) {
+            if (s < dancers.size()) {
+                mmorpg.fabric.rune.RuneMob m = dancers.get(s);
+                m.anim("burst");
+                side[s] = ShadeArchers.bowOf(m);
+            } else {
+                Vec3 feet = V.add(V.add(sp.position(), V.rightOf(f), s == 0 ? 1.2 : -1.2), f, -0.3);
+                RuneKit.shadeClone(sp, level, feet, f, 1, ShadeArchers.DARK, glow, Opt.of("life", 0.35, "fade", 0.6, "alpha", 0.8));
+                side[s] = V.add(V.up(feet, 1.35), f, 0.6);
+            }
+        }
         int n = 0;
         for (LivingEntity e : others) {
             if (n >= 2) break;
-            if (RpgCombat.extraArrow(sp, e, w, ratio) < 0) continue;
+            int t = RpgCombat.extraArrow(sp, e, w, ratio);
+            if (t < 0) continue;
+            Vec3 from = side[n];
             n++;
             Vec3 to = Kit.bodyPoint(e);
-            RuneKit.streak(level, bow, to, JobKit.glow(j), 0.07, 0.2, 0.75, 0);
+            RuneKit.streak(level, from, to, glow, 0.07, 0.2, 0.75, 0);
+            RuneKit.flyArrow(level, from, to, V.len(V.sub(to, from)) / Math.max(0.05, t / 20.0), glow, core, 0.6, 0.0);
         }
         // 갈래 불티 (쏘는 쪽으로 세 갈래 — 다른 적이 없어도 보임)
         for (int s = -1; s <= 1; s++) {
             Vec3 d = V.unit(V.add(dir, V.rightOf(V.flat(dir)), s * 0.32));
-            SkillFx.fx(level, "rpg:arrow_spark", bow, Opt.of("dir", d, "speed", 5.0, "size", 0.12, "grow", 0.5, "life", 0.22, "color", s == 0 ? JobKit.core(j) : JobKit.glow(j),
+            SkillFx.fx(level, "rpg:arrow_spark", bow, Opt.of("dir", d, "speed", 5.0, "size", 0.12, "grow", 0.5, "life", 0.22, "color", s == 0 ? core : glow,
                     "alpha", 1.0));
         }
     }
@@ -342,12 +375,12 @@ public final class JobTraits9 {
             if (JobSkills.cooldownLeft(sp, DIVE) <= 0) continue;
             JobSkills.clearCooldown(sp, DIVE);
             ServerLevel lv = sp.level();
-            JobFx.feathers(lv, V.up(sp.position(), 1.4), 8, 1.0, 0.2, j, 1.0, JobFx.hide1p(sp));
-            JobFx.eyeRing(sp, j, 2.2, 0.8, 0.4);
+            ShadeArchers.puff(lv, sp.position(), JobKit.glow(j), 1.0);
+            RuneKit.zonePulse(lv, sp.position(), JobKit.glow(j), 1.6, 0.35);
             SkillFx.sparks(lv, V.up(sp.position(), 1.0), JobKit.core(j), 10, 4);
             SkillFx.play(lv, "block.amethyst_block.chime", sp.position(), 1.7, 0.8);
-            SkillFx.play(lv, "entity.phantom.flap", sp.position(), 1.6, 0.6);
-            JobSystem.note(sp, "§b팰컨 다이브 §7— 다시 쓸 수 있음");
+            SkillFx.play(lv, "mob.endermen.portal", sp.position(), 1.6, 0.6);
+            JobSystem.note(sp, "§5섀도 스위치 §7— 다시 쓸 수 있음");
         }
     }
 
@@ -361,7 +394,10 @@ public final class JobTraits9 {
 
     /** 4틱마다 (JobTraits.tick — 사람마다): 배틀 아처 — 움직임 · 게이지 (갈래 1 · 3) · 스톰 스트라이드가 끝나면 이동 속도를 거둠 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
-        if (!BA.equals(j.id())) return;
+        if (!BA.equals(j.id())) {
+            if (ShadeArchers.dancerCount(sp) > 0) ShadeArchers.danceEnd(sp, JobKit.glow(j)); // 직업이 바뀜
+            return;
+        }
         State st = of(sp);
         Vec3 p = sp.position();
         if ((st.lastPos != null && Math.hypot(p.x - st.lastPos.x, p.z - st.lastPos.z) > 0.2) || Math.hypot(sp.getKnownMovement().x, sp.getKnownMovement().z) > 0.04) st.lastMove = now;
@@ -371,6 +407,7 @@ public final class JobTraits9 {
             speedMod(sp, 0);
             st.speedOn = false;
         }
+        if (!stride && ShadeArchers.dancerCount(sp) > 0) ShadeArchers.danceEnd(sp, JobKit.glow(j)); // 섀도 댄스가 끝남 — 분신이 연기로 꺼짐
         int g = stride || now - st.lastMove <= 4 ? 3 : 1;
         if (g != st.gauge) {
             st.gauge = g;
@@ -385,10 +422,11 @@ public final class JobTraits9 {
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         ServerLevel level = sp.level();
         if (MARK.equals(stance)) {
+            // 2026-11-14 세라핌: 활 앞 반짝임 · 등의 날개에서 솟는 빛 (날개 여섯 · 빛 고리는 SniperSkills — LightWings)
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), JobFx.hide1p(sp).with("size", 0.16, "life", 0.4, "cell",
-                    (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "spinRate", 180.0, "color", SILVER, "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
+                    (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "spinRate", 180.0, "color", JobKit.core(j), "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
             Vec3 back = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.35), 1.5);
-            SkillFx.fx(level, "rpg:arrow_spark", back, Opt.of("dir", V.UP, "speed", 1.6, "size", 0.12, "grow", 0.6, "life", 0.4, "color", SILVER, "alpha", 0.9));
+            SkillFx.fx(level, "rpg:arrow_spark", back, Opt.of("dir", V.UP, "speed", 1.6, "size", 0.12, "grow", 0.6, "life", 0.4, "color", JobKit.glow(j), "alpha", 0.9));
             State st = STATES.get(sp.getUUID());
             if (st != null && st.markEnt != null && st.markHits > 0 && !st.markEnt.isRemoved() && st.markEnt.isAlive() && st.markEnt.level() == level) {
                 Jobs.Skill k = j.skill(MARK);
@@ -397,7 +435,8 @@ public final class JobTraits9 {
             return true;
         }
         if (STRIDE.equals(stance)) {
-            JobFx.wind(level, V.up(sp.position(), 0.06), 1.1, j, 0.45, JobFx.hide1p(sp).with("alpha", 0.8, "vel", RuneKit.bodyVel(sp)));
+            // 2026-11-14 섀도 댄스: 발밑 그림자 연기 · 보랏빛 불티 (곁의 분신 둘은 ShadeArchers.dance)
+            JobFx.smoke(level, V.up(sp.position(), 0.3), 0.8, ShadeArchers.DARK, JobKit.glow(j), 0.4, JobFx.hide1p(sp).with("alpha", 0.75, "vel", RuneKit.bodyVel(sp)));
             JobFx.speed(sp, j, 0.4, 0.75, RuneKit.bodyVel(sp));
             Vec3 c = V.up(sp.position(), 0.4);
             for (int i = 0; i < 2; i++) {

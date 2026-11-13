@@ -1172,6 +1172,226 @@ def job_phoenix_anims():
     return out
 
 
+# ================================================================== 그림자 궁수 (2026-11-14 — 사용자가 고른 배틀 아처 컨셉 "그림자 사수": 분신과 함께 쏨): 두건을 쓴 보랏빛
+# 그림자 궁수 — 얼굴은 어둠 · 라일락 눈 둘, 보랏빛 테의 옷 · 망토 · 등의 화살통, 아래는 해진 옷자락이 그림자 연기로 (비침 — 떠 있음), 왼손에 검보라 활 (빛나는 테 ·
+# 라일락 시위 · 늘 걸린 그림자 화살). 키 약 1.9칸 (사람과 같음) · 앞 = −Z. 활은 아래팔을 따라 (팔을 앞으로 뻗으면 활대가 위아래 · 화살이 앞): 활대는 쉬는 팔의 앞뒤 (Z),
+# 시위는 팔꿈치 쪽 (+Y). 시위 반쪽 둘은 활 끝에서 가운데로 — 당기면 각각 돌고 늘어나 (z 크기) 팔꿈치 쪽 오늬로 모임 · 화살은 오늬를 따라 (위치)
+
+SA_CLOTH = (50, 32, 80)
+SA_CLOTH2 = (70, 46, 108)
+SA_TRIM = (170, 100, 255)     # 그림자 사수 빛 (0.67, 0.39, 1.0)
+SA_CORE = (242, 222, 255)
+SA_VOID = (8, 4, 16)
+SA_WOOD = (44, 28, 64)
+SA_WRAP = (60, 40, 84)
+SA_BOW_A = 10.0               # 활대 첫 마디 (도)
+SA_BOW_B = 22.0               # 활대 끝 마디 (도 — 첫 마디에 더함)
+SA_L1 = 6.0                   # 활대 첫 마디 · 끝 마디 길이 (픽셀)
+SA_L2 = 5.0
+SA_GRIP = (3.4, 10.5)         # 활 쥔 곳 (x · y — 쉬는 왼팔 손의 안쪽: 시위 · 화살이 아래팔 안에 묻히지 않게)
+SA_DRAW = 8.0                 # 당긴 오늬 (쉬는 시위에서 팔꿈치 쪽으로)
+
+
+def _sa_tip():
+    """활 끝 (쉬는 팔 기준 y · z — 쥔 곳에서 ±0.6 부터 두 마디)"""
+    import math
+    a = math.radians(SA_BOW_A)
+    b = math.radians(SA_BOW_A + SA_BOW_B)
+    y = SA_GRIP[1] + SA_L1 * math.sin(a) + SA_L2 * math.sin(b)
+    z = 0.6 + SA_L1 * math.cos(a) + SA_L2 * math.cos(b)
+    return y, z
+
+
+def job_shade_archer():
+    m = Model("job_shade_archer", tex_w=128)
+    cloth = Mat(SA_CLOTH, "knit", noise=5, edge=0.8, seed=1601, accent=(24, 14, 40), seam=SA_TRIM, seam_glow=0.7, seam_band=6, seam_dir="v", seam_gap=0.6)
+    cloth2 = Mat(SA_CLOTH2, "knit", noise=5, edge=0.82, seed=1602, accent=(36, 22, 58))
+    trim = Mat(SA_TRIM, "flat", noise=4, edge=1.0, glow=0.85, seed=1603)
+    core = Mat(SA_CORE, "flat", noise=3, edge=1.0, glow=1.0, seed=1604)
+    void = Mat(SA_VOID, "flat", noise=2, edge=1.0, seed=1605)
+    wood = Mat(SA_WOOD, "wood", noise=5, edge=0.85, seed=1606, rim=SA_TRIM, rim_glow=0.8)
+    wrap = Mat(SA_WRAP, "knit", noise=4, edge=0.85, seed=1607)
+    smoke = see(Mat((70, 40, 110), "ice", noise=8, edge=0.95, seed=1608, accent=(110, 60, 170)), 0.5)
+    tatter = see(Mat(SA_CLOTH2, "knit", noise=5, edge=0.85, seed=1609, rim=SA_TRIM, rim_glow=0.5), 0.88)
+    cape = see(Mat(SA_CLOTH2, "knit", noise=5, edge=0.85, seed=1610, rim=SA_TRIM, rim_glow=0.6), 0.9)
+    eye = SA_CORE
+
+    root = m.bone("root", [0, 0, 0])
+    # 아래: 해진 옷자락 · 그림자 연기 (비침 — 다리 대신, 떠 있음)
+    tail = m.bone("tail", [0, 12, 0], "root")
+    tail.box([-4.5, 4, -3], [9, 8, 6], tatter)
+    tail.box([-4, 1, -2.5], [3, 3, 2], tatter.with_(seed=1611))
+    tail.box([1, 0, -2.5], [3, 4, 2], tatter.with_(seed=1612))
+    tail.box([-3, 1.5, 1], [6, 3, 2], tatter.with_(seed=1613))
+    tail.box([-4, -2, -2.5], [8, 5, 5], smoke)
+    body = m.bone("body", [0, 12, 0], "root")
+    body.box([-4, 12, -2.5], [8, 12, 5], cloth, decals=[("north", 3, 5, SA_TRIM, 0.8), ("north", 4, 5, SA_TRIM, 0.8)])
+    body.box([-4.2, 15, -2.7], [8.4, 1, 5.4], trim.with_(seed=1614), inflate=0.1)
+    body.box([-1, 13, -2.8], [2, 11, 0.3], trim.with_(seed=1615))
+    # 망토 (등 — 비침) · 화살통 (오른쪽 어깨 뒤 — 그림자 화살 촉 셋)
+    cloak = m.bone("cloak", [0, 23.5, 2.5], "body")
+    cloak.box([-4.5, 9, 2.5], [9, 14, 1], cape)
+    cloak.box([-4.5, 9, 2.6], [9, 1, 1], trim.with_(seed=1616))
+    quiver = m.bone("quiver", [-2, 22, 3.6], "body", [0, 0, 18])
+    quiver.box([-3.5, 14, 3.6], [3, 9, 2.4], wood.with_(seed=1617))
+    for i, (qx, qy) in enumerate(((-3.2, 23), (-2.2, 23.6), (-1.2, 23.2))):
+        quiver.box([qx, qy, 4.3], [0.6, 2, 0.6], core.with_(seed=1618 + i))
+    # 머리: 두건 (얼굴은 어둠 · 라일락 눈 둘) · 뒤로 늘어진 두건 끝
+    head = m.bone("head", [0, 24, 0], "body")
+    head.box([-4, 24, -4], [8, 8, 8], cloth2, faces={"north": void}, decals=[("north", 2, 4, eye, 1.0), ("north", 5, 4, eye, 1.0),
+                                                                          ("north", 2, 3, SA_TRIM, 0.7), ("north", 5, 3, SA_TRIM, 0.7)])
+    head.box([-4.5, 31, -4.5], [9, 1, 9], cloth.with_(seed=1621))
+    head.box([-4.5, 24, -4.6], [9, 1, 1], trim.with_(seed=1622))
+    hood = m.bone("hood", [0, 31.5, 3.5], "head", [-62, 0, 0])
+    hood.box([-2.5, 31.5, 3.5], [5, 2, 4], cloth2.with_(seed=1623))
+    hood.box([-1.5, 31.5, 7.5], [3, 1.6, 2.5], cloth.with_(seed=1624))
+    # 팔 (오른손 = 시위를 당기는 손 · 왼손 = 활)
+    for side, sx in (("R", -1), ("L", 1)):
+        arm = m.bone("arm" + side, [5 * sx, 22, 0], "body")
+        ax = -7 if sx < 0 else 4
+        arm.box([ax, 16, -1.5], [3, 7, 3], cloth.with_(seed=1625 + sx))
+        fa = m.bone("forearm" + side, [5.5 * sx, 16, 0], "arm" + side)
+        fa.box([ax, 10, -1.5], [3, 6, 3], wrap.with_(seed=1627 + sx))
+        fa.box([ax - 0.2, 14, -1.7], [3.4, 1, 3.4], trim.with_(seed=1629 + sx))
+    # 활 (왼손): 쥔 곳 · 활대 두 마디씩 (앞 −z = 팔을 뻗으면 위 · 뒤 +z = 아래) · 끝의 빛 · 시위 반쪽 둘 · 그림자 화살
+    gx, gy = SA_GRIP
+    bow = m.bone("bow", [gx, gy, 0], "forearmL")
+    bow.box([gx - 0.7, gy - 1.4, -0.75], [1.4, 2.8, 1.5], wood.with_(seed=1631))
+    bow.box([gx - 0.8, gy - 0.5, -0.8], [1.6, 1.0, 1.6], trim.with_(seed=1632))
+    for name, sz in (("A", -1), ("B", 1)):
+        z0 = 0.6 * sz
+        l1 = m.bone("limb" + name + "1", [gx, gy, z0], "bow", [SA_BOW_A * -sz, 0, 0])
+        l1.box([gx - 0.6, gy - 0.5, min(z0, z0 + SA_L1 * sz)], [1.2, 1.0, SA_L1], wood.with_(seed=1633 + sz))
+        l1.box([gx - 0.25, gy + 0.45, min(z0, z0 + SA_L1 * sz)], [0.5, 0.2, SA_L1], trim.with_(seed=1645 + sz))
+        z1 = z0 + SA_L1 * sz
+        l2 = m.bone("limb" + name + "2", [gx, gy, z1], "limb" + name + "1", [SA_BOW_B * -sz, 0, 0])
+        l2.box([gx - 0.5, gy - 0.45, min(z1, z1 + SA_L2 * sz)], [1.0, 0.9, SA_L2], wood.with_(seed=1635 + sz))
+        l2.box([gx - 0.2, gy + 0.4, min(z1, z1 + SA_L2 * sz)], [0.4, 0.2, SA_L2], trim.with_(seed=1647 + sz))
+        z2 = z1 + SA_L2 * sz
+        l2.box([gx - 0.5, gy - 0.5, min(z2, z2 + 1.0 * sz)], [1.0, 1.0, 1.0], core.with_(seed=1637 + sz))
+    ty, tz = _sa_tip()
+    for name, sz in (("A", -1), ("B", 1)):
+        st = m.bone("string" + name, [gx, ty, tz * sz], "bow")
+        st.box([gx - 0.18, ty - 0.18, min(tz * sz, 0)], [0.36, 0.36, tz], core.with_(seed=1639 + sz))
+    # 그림자 화살 (늘 걸림): 살대 · 촉 · 깃 — 오늬가 시위 가운데
+    arrow = m.bone("arrow", [gx, ty, 0], "bow")
+    arrow.box([gx - 0.3, ty - 16, -0.3], [0.6, 16, 0.6], trim.with_(seed=1641))
+    arrow.box([gx - 0.7, ty - 18, -0.7], [1.4, 2.2, 1.4], core.with_(seed=1642))
+    arrow.box([gx - 0.8, ty - 2.2, -0.12], [1.6, 2.0, 0.24], core.with_(seed=1643))
+    arrow.box([gx - 0.12, ty - 2.2, -0.8], [0.24, 2.0, 1.6], core.with_(seed=1644))
+    return m
+
+
+def _sa_draw_rot():
+    """당긴 시위 반쪽의 돌림 (도) · z 늘림 — 활 끝에서 오늬 (쉬는 시위에서 팔꿈치 쪽 SA_DRAW) 까지"""
+    import math
+    ty, tz = _sa_tip()
+    ang = math.degrees(math.atan2(SA_DRAW, tz))
+    return ang, math.hypot(SA_DRAW, tz) / tz
+
+
+# 쉬는 자세 (idle 이 늘 켜져 있고 동작은 더해짐 — sa_rel 로 뺌): 활을 왼쪽 앞에 낮게 든 팔 · 오른손은 화살통 쪽으로 늘어뜨림 · 조금 숙인 몸
+SA_READY = {
+    "armL": {"rotation": [-38, -8, -6]}, "forearmL": {"rotation": [-22, 0, 0]},
+    "armR": {"rotation": [-14, 8, 10]}, "forearmR": {"rotation": [-24, 0, 0]},
+    "body": {"rotation": [6, 0, 0]}, "head": {"rotation": [-4, 0, 0]}, "tail": {"rotation": [10, 0, 0]}, "cloak": {"rotation": [10, 0, 0]},
+}
+# 당긴 자세: 활 팔을 앞으로 곧게 (활대가 위아래 · 화살이 앞) · 시위 손은 가슴 앞을 가로질러 오늬로 · 몸은 조금 뒤로
+SA_AIM = {"armL": [-88, -6, 0], "forearmL": [-2, 0, 0], "armR": [-84, -62, 0], "forearmR": [-58, 0, 0], "body": [-2, 8, 0], "head": [2, -8, 0]}
+# 하늘로 겨눈 자세 (위로 55°)
+SA_AIM_UP = {"armL": [-140, -6, 0], "forearmL": [-2, 0, 0], "armR": [-136, -58, 0], "forearmR": [-58, 0, 0], "body": [-16, 8, 0], "head": [-34, -8, 0]}
+# 아래를 겨눈 자세 (몸을 앞으로 숙여 — 섀도 스위치에서 뛰어들 때)
+SA_DIVE = {"armL": [-48, -6, 0], "forearmL": [-2, 0, 0], "armR": [-44, -58, 0], "forearmR": [-58, 0, 0], "body": [38, 6, 0], "head": [-14, -6, 0],
+           "tail": [36, 0, 0], "cloak": [46, 0, 0]}
+
+
+def sa_rel(bones):
+    """동작 열쇠 (그 뼈의 실제 자세) → 쉬는 자세에서 더할 값"""
+    out = {}
+    for b, chans in bones.items():
+        out[b] = {}
+        for ch, frames in chans.items():
+            base = SA_READY.get(b, {}).get(ch)
+            if base is None or ch == "scale":
+                out[b][ch] = kf(frames)
+                continue
+            out[b][ch] = kf([(t, [v - q for v, q in zip(vec, base)]) for t, vec in frames])
+    return out
+
+
+def job_shade_archer_anims():
+    bob = f"math.sin({LT} * 110)"
+    R0 = SA_READY
+    ang, stretch = _sa_draw_rot()
+
+    def rot_of(pose, b):
+        return pose.get(b, R0.get(b, {}).get("rotation", [0, 0, 0]))
+
+    def seq(*keys):
+        """keys = [(t, 자세 dict)] → 뼈마다 회전 열쇠 (없는 뼈는 쉬는 자세)"""
+        names = set()
+        for _, d in keys:
+            names.update(d)
+        return {b: {"rotation": [(t, rot_of(d, b)) for t, d in keys]} for b in names}
+
+    def drawn(times):
+        """시위 · 화살: times = [(t, 당김 0 ~ 1)] — 시위 반쪽이 돌고 늘어나 오늬로 · 화살이 오늬를 따라 뒤로"""
+        out = {}
+        for name, sz in (("stringA", -1), ("stringB", 1)):
+            out[name] = {"rotation": [(t, [ang * q * sz, 0, 0]) for t, q in times], "scale": [(t, [1, 1, 1 + (stretch - 1) * q]) for t, q in times]}
+        out["arrow"] = {"position": [(t, [0, SA_DRAW * q, 0]) for t, q in times]}
+        return out
+
+    def merge(a, b):
+        out = dict(a)
+        for k, v in b.items():
+            out[k] = dict(out.get(k, {}), **v)
+        return out
+
+    aim_keys = [(0, {}), (0.18, SA_AIM), (0.3, SA_AIM)]
+    return {
+        "idle": {"loop": True, "bones": {
+            "root": {"position": [0, f"{bob} * 0.6 + 0.6", 0]},
+            "armL": R0["armL"], "forearmL": R0["forearmL"], "armR": R0["armR"], "forearmR": R0["forearmR"],
+            "body": {"rotation": [f"6 + {bob} * 2", f"math.sin({LT} * 60) * 5", 0]},
+            "head": {"rotation": [f"-4 + math.sin({LT} * 80) * 3", f"math.sin({LT} * 45) * 7", 0]},
+            "tail": {"rotation": [f"10 + math.sin({LT} * 150) * 6", 0, f"math.sin({LT} * 110) * 5"], "scale": [1, f"1 + {bob} * 0.05", 1]},
+            "cloak": {"rotation": [f"10 + math.sin({LT} * 160) * 7", 0, f"math.sin({LT} * 110) * 4"]},
+            "hood": {"rotation": [f"math.sin({LT} * 130) * 5", 0, 0]},
+        }},
+        # 그림자 연기에서 솟음 (0.3초)
+        "appear": {"animation_length": 0.3, "bones": {
+            "root": {"position": kf([(0, [0, -18, 0]), (0.2, [0, 1, 0]), (0.3, [0, 0, 0])]),
+                     "scale": kf([(0, [0.55, 0.55, 0.55]), (0.2, [1.05, 1.05, 1.05]), (0.3, [1, 1, 1])])},
+        }},
+        # 당김 (0.3초 — 0.18초에 활을 앞으로 · 0.3초에 끝까지 당김, 끝 자세를 잡으려면 hold)
+        "aim": {"animation_length": 0.3, "bones": sa_rel(merge(seq(*aim_keys), drawn([(0, 0), (0.12, 0), (0.3, 1)])))},
+        # 놓음 (0.3초 — 당긴 자세에서 0.04초에 시위가 돌아오며 시위 손이 뒤로 튐)
+        "shoot": {"animation_length": 0.3, "bones": sa_rel(merge(seq((0, SA_AIM), (0.04, SA_AIM), (0.1, dict(SA_AIM, armR=[-80, -20, 30], forearmR=[-30, 0, 0])),
+                                                                 (0.3, {})), drawn([(0, 1), (0.04, 0), (0.3, 0)])))},
+        # 재빨리 당겨 놓음 (0.4초 — 0.1초 = BURST_AT 2틱에 놓음 · 시위 손이 뒤로 튐 → 쉬는 자세)
+        "burst": {"animation_length": 0.4, "bones": sa_rel(merge(seq((0, {}), (0.08, SA_AIM), (0.1, SA_AIM), (0.16, dict(SA_AIM, armR=[-80, -20, 30], forearmR=[-30, 0, 0])),
+                                                                 (0.4, {})), drawn([(0, 0), (0.08, 1), (0.1, 0), (0.4, 0)])))},
+        # 하늘로 재빨리 당겨 놓음 (0.45초 — 0.1초에 놓음)
+        "burst_up": {"animation_length": 0.45, "bones": sa_rel(merge(seq((0, {}), (0.08, SA_AIM_UP), (0.1, SA_AIM_UP),
+                                                                        (0.18, dict(SA_AIM_UP, armR=[-130, -20, 30], forearmR=[-30, 0, 0])), (0.45, {})),
+                                                                    drawn([(0, 0), (0.08, 1), (0.1, 0), (0.45, 0)])))},
+        # 아래를 겨눔 (0.2초 — 끝 자세를 잡으려면 hold): 몸을 앞으로 숙여 뛰어듦
+        "dive": {"animation_length": 0.2, "bones": sa_rel(merge(seq((0, {}), (0.2, SA_DIVE)), drawn([(0, 0), (0.2, 1)])))},
+        # 그림자 연기로 꺼짐 (0.35초)
+        "vanish": {"animation_length": 0.35, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.1, [0, 1, 0]), (0.35, [0, -16, 0])]),
+                     "scale": kf([(0, [1, 1, 1]), (0.1, [1.06, 0.94, 1.06]), (0.35, [0.3, 0.3, 0.3])])},
+        }},
+    }
+
+
+R.MOBS["job_shade_archer"] = (job_shade_archer, job_shade_archer_anims, dict(fam="job_shade_archer", health=40, move=0.4, box=[0.6, 1.8], fly=True),
+                              "entity_alphablend", ["idle"], True)
+R.PREVIEW_POSES["job_shade_archer"] = ((["idle"], 0.0), (["idle", "aim"], 0.3), (["idle", "shoot"], 0.12), (["idle", "burst"], 0.08),
+                                       (["idle", "burst_up"], 0.08), (["idle", "dive"], 0.2), (["appear"], 0.15), (["idle", "vanish"], 0.2))
+
+
 R.MOBS["job_dragon"] = (job_dragon, job_dragon_anims, dict(fam="job_dragon", health=40, move=0.4, box=[1.6, 1.8], fly=True), "entity_emissive", ["idle"], None)
 R.MOBS["job_reaper"] = (job_reaper, job_reaper_anims, dict(fam="job_reaper", health=40, move=0.4, box=[1.0, 2.6], fly=True), "entity_alphablend", ["idle"], True)
 R.PREVIEW_POSES["job_reaper"] = ((["idle"], 0.0), (["rise"], 0.3), (["idle", "swing_a"], 0.08), (["idle", "swing_a"], 0.15), (["idle", "swing_b"], 0.15),
@@ -1198,7 +1418,7 @@ R.PREVIEW_POSES["job_tome"] = ((["idle"], 0.0), (["idle", "shut"], 0.0), (["idle
 R.MOBS["job_phoenix"] = (job_phoenix, job_phoenix_anims, dict(fam="job_phoenix", health=40, move=0.4, box=[1.6, 1.6], fly=True), "entity_emissive", ["idle"], None)
 R.PREVIEW_POSES["job_phoenix"] = ((["idle"], 0.0), (["idle", "fly"], 0.1), (["idle", "fly"], 0.3), (["idle", "glide"], 0.0), (["summon"], 0.5),
                                   (["idle", "dive"], 0.25), (["idle", "burst"], 0.12))
-JOB_MOBS = ("job_dragon", "job_bear", "job_reaper", "job_hand", "job_maw", "job_tome", "job_phoenix")
+JOB_MOBS = ("job_dragon", "job_bear", "job_reaper", "job_hand", "job_maw", "job_tome", "job_phoenix", "job_shade_archer")
 
 
 def main():

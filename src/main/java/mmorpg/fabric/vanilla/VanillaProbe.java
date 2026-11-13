@@ -1144,7 +1144,7 @@ final class VanillaProbe {
             java.util.Map.entry("spellblade", "22 20 42 28 72"),
             java.util.Map.entry("warrior", "24 22 54 24a3 80"),
             java.util.Map.entry("mage", "18 18 76 58 84"),
-            java.util.Map.entry("archer", "18 30a4 52 40a4 64"),
+            java.util.Map.entry("archer", "18 30a4 52 40a4 84"),
             java.util.Map.entry("assassin", "20 50 50 24a4 58"),
             java.util.Map.entry("lancer", "20 22 24 30a3 66"),
             java.util.Map.entry("reaper", "22 34 16 24a3 90"),
@@ -1228,8 +1228,10 @@ final class VanillaProbe {
         return switch (id) {
             case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4};
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3};
-            case "archer_ult" -> new double[] {11.0, 3.4, 2.8, 0.4};
-            case "archer_focus" -> new double[] {7.5, 2.8, 1.2, 0.6};
+            // 2026-11-14 헤븐 보우: 앞 하늘의 3D 폭풍의 활 (너비 6.6칸 — 뛰어오른 자리의 눈 위 1.9칸) · 길을 따라 날아가는 번개 화살 · 벼락
+            case "archer_ult" -> new double[] {12.0, 3.6, 3.8, 0.4};
+            // 스톰 아이: 머리 위 먹구름 (발에서 3.6칸)
+            case "archer_focus" -> new double[] {8.0, 3.0, 2.2, 0.6};
             case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5};
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};

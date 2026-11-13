@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_job_shade_archer_emissive","particle":"rpg:item/vmob/allies_job_shade_archer_emissive"},"elements":[{"from":[6.48,2.18,6.98],"to":[9.52,11.22,9.02],"faces":{"north":{"uv":[13.75,0.5,14.125,2.75],"texture":"#0"},"south":{"uv":[14.375,0.5,14.75,2.75],"texture":"#0"}},"light_emission":15}]}

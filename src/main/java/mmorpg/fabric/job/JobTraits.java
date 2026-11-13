@@ -577,7 +577,7 @@ public final class JobTraits {
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
             // 0.51.0 스펠 서지 (몸 둘레를 도는 금빛 별 · 완드 끝 별빛)
         } else if (JobTraits9.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 헌터스 마크 (활 앞 은빛 · 적 머리 위 은빛 표식) · 스톰 스트라이드 (발밑 폭풍 바람 · 바람 줄)
+            // 2026-11-14 세라핌 (등의 빛의 날개 여섯 · 적 머리 위 빛의 표식) · 섀도 댄스 (곁의 그림자 분신 · 발밑 그림자)
         } else if (JobTraits10.stanceFx(sp, j, st.stance)) {
             // 2026-11-07 팬텀 왈츠 (손의 청록 섬광 — 춤 상대 환영은 JobTraits10.waltzTick)
         } else if (JobTraits13.stanceFx(sp, j, st.stance)) {
@@ -587,9 +587,10 @@ public final class JobTraits {
         } else if (JobTraits15.stanceFx(sp, j, st.stance)) {
             // 0.51.0 이그니션 (등의 푸른 불꽃 날개) · 언홀리 프렌지 (방패의 아가리 · 핏빛 숨) — JobTraits15 가 그림
         } else if (st.stance.equals("archer_focus")) {
-            // 와일드 헌트 (2026-11-07 — 이글 아이 대신): 활을 든 손 앞 금빛 반짝임 (늑대 정령은 SpiritWolves)
-            RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
-                    (double) RuneKit.RFX.get("glint")[0], "spin", 30.0, "spinRate", 160.0, "color", JobKit.core(j), "grow", 0.4, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
+            // 2026-11-14 스톰 아이 (와일드 헌트 대신): 활을 든 손 앞 번개 구슬 · 활에 감기는 작은 번개 (머리 위 먹구름은 StormEye)
+            Vec3 hb = V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35);
+            RuneKit.plasmaOrb(level, hb, 0.18, JobKit.glow(j), Opt.of("life", 0.4, "fade", 0.3, "vel", RuneKit.bodyVel(sp)));
+            RuneKit.zap(level, V.up(hb, 0.25), V.up(hb, -0.25), JobKit.glow(j), JobKit.core(j), 0.04, 0.2);
         }
     }
 
