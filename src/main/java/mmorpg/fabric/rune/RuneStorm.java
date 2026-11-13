@@ -73,6 +73,8 @@ final class RuneStorm {
         SkillFx.fx(level, "rpg:magic_circle_flash", hand, Opt.of("size", 0.35, "life", 0.2, "spin", Kit.rand() * 360, "progress", 1.0, "color", glow, "alpha", 1.0));
         RuneKit.plasmaOrb(level, V.add(hand, sp.getViewVector(1F), 0.7), 0.15, glow, Opt.of("life", 0.2));
         double gap = k.num("gap");
+        // 2026-11-13 3D 번개 창 (뇌신의 창 1.7칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 손에서 첫 대상에게 꽂혀 (1틱) 연쇄가 끝날 때까지 떨며 남음
+        spearAt(level, hand, first, 1, (int) Math.round(n * gap) + 6, 1.7, glow, core);
         boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게만
         for (int i = 0; i < n; i++) {
             final int ii = i;
@@ -97,6 +99,47 @@ final class RuneStorm {
             });
         }
         return true;
+    }
+
+    /**
+     * 2026-11-13 연쇄 번개의 3D 번개 창 (len 칸): 손 (from) 에서 대상의 몸까지 fly 틱에 날아가 꽂혀 (촉이 몸 가운데) 대상을 따라가며 떨다가 hold 틱에 작아져 사라짐
+     */
+    private static void spearAt(ServerLevel level, Vec3 from, LivingEntity e, int fly, int hold, double len, double[] glow, double[] core) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, from, fly + hold + 8);
+        double reach = len * (31.6 - RuneProps.THUNDER_SPEAR_GRIP[1]) / RuneProps.THUNDER_SPEAR_LEN;
+        Vec3 d0 = V.unit(V.sub(Kit.bodyPoint(e), from));
+        Vec3 face = Math.abs(d0.y) > 0.95 ? new Vec3(1, 0, 0) : V.rightOf(V.flat(d0));
+        RuneSwords.Blade s = RuneSwords.spear(fx, from, d0, face, len, 0.5, glow, core);
+        fx.on(1, () -> {
+            s.grow(1, 1);
+            s.pose(V.sub(Kit.bodyPoint(e), V.scale(d0, reach * 0.85)), d0, face, Math.max(1, fly));
+        });
+        fx.each(fly + 2, fly + hold, 1, t -> {
+            if (e.isRemoved()) return;
+            Vec3 j = RuneKit.turn(new Vec3(0.035, 0, 0), t * 97.0);
+            s.pose(V.add(V.sub(Kit.bodyPoint(e), V.scale(d0, reach * 0.85)), j), d0, face, 1);
+        });
+        fx.on(fly + hold, () -> s.grow(0.1, 4));
+        fx.on(fly + hold + 5, s::remove);
+    }
+
+    /** 2026-11-13 뇌전 감옥의 기둥 하나 = 3D 번개 창 (2.4칸 — 촉이 아래): delay 틱 뒤 기둥 자리 위 8칸에서 2틱에 내리꽂혀 촉이 땅에 박힘 → until 까지 서 있다가 흩어짐 */
+    private static void prisonSpear(ServerLevel level, Vec3 ground, int delay, int until, double[] glow, double[] core) {
+        double len = 2.4;
+        double reach = len * (31.6 - RuneProps.THUNDER_SPEAR_GRIP[1]) / RuneProps.THUNDER_SPEAR_LEN;
+        Vec3 grip = V.up(ground, reach - 0.4);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, ground, until + 10);
+        Vec3 face = RuneKit.turn(new Vec3(1, 0, 0), Kit.rand() * 180);
+        RuneSwords.Blade s = RuneSwords.spear(fx, V.up(grip, 8), V.DOWN, face, len, delay > 0 ? 0.02 : 0.8, glow, core);
+        fx.on(Math.max(1, delay), () -> s.grow(1, 1));
+        fx.on(delay + 1, () -> s.prop.move(V.up(grip, 3.5), 1));
+        fx.on(delay + 2, () -> s.prop.move(grip, 1));
+        fx.on(delay + 3, () -> {
+            SkillFx.burst(level, V.up(ground, 0.3), glow, 0.9, 0.25);
+            SkillFx.sparks(level, V.up(ground, 0.3), core, 5, 4);
+        });
+        fx.on(Math.max(delay + 4, until), () -> s.grow(0.1, 5));
+        fx.on(Math.max(delay + 4, until) + 6, s::remove);
     }
 
     /**
@@ -179,6 +222,8 @@ final class RuneStorm {
         }
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", g, 1.2, 0.8);
         SkillFx.play(level, "respawn_anchor.charge", g, 1.2, 0.8);
+        // 2026-11-13 감옥의 기둥 넷 = 하늘에서 차례로 내리꽂히는 3D 번개 창 (2.4칸): 닫힐 때까지 · 기절 동안 서 있다가 흩어짐
+        for (int i = 0; i < 4; i++) prisonSpear(level, V.up(posts[i], -0.6), i * 2, (int) delay + Math.min(stunTicks, 40), glow, core);
         RuneKit.later(delay, () -> {
             if (sp.isRemoved()) return;
             for (int i = 0; i < 8; i++) {

@@ -413,3 +413,414 @@ m.keys[0.0] = P(K.SPIN_WIND_R, body=[10, -58, 0], head=[0, 20], rk=44, lk=40, ro
 keyp(m, 41.5, P(body=[14, 16, 0], ra=arm([0.55, -0.7, 0.45], 20, [0.4, -0.85, 0.35]), la=arm([-0.5, -0.6, -0.2], 30), rk=30, lk=26, root=[-0.14, 0.05],
                 spin=-1440))
 use(m, "bloodWhirl")
+
+# ============================================================ 묶음 H (마법 · 원거리): 마력 · 궁수 · 번개 · 중력 · 해류 · 신성
+
+off_bare = K.off_bare
+LA = L  # 왼팔 거울
+
+# ------------------------------------------------------------ 마력
+
+# 화염구 (효과: 0 손에서 불덩이 (속에 3D 운석) 가 날아감 · 닿으면 폭발 + 3D 바위 조각): 0 에서 무기를 귀 옆 뒤로 크게 당기고 몸을 오른쪽으로 비틀어 왼손으로
+# 대상을 겨눔 (무게는 뒷발) → 1 에 몸째 내던지며 크게 내디딤 → 던진 자세로 숨 → 거둠
+m = off_bare(Motion("fireball", 12, "화염구 — 무기를 귀 옆 뒤로 크게 당겨 왼손으로 겨눴다가 몸째 내던지며 크게 내디뎌 불덩이를 날림", fade=(0.01, 0.12)))
+FB_WIND = P(body=[-8, 48, 0], head=[0, -30], ra=K.RA_BACK_HIGH, la=LA(K.A_POINT), rl=[22, 0, 4], ll=[-18, 0, -4], rk=34, lk=16, root=[-0.1, -0.14])
+FB_REL = P(body=[22, -32, 0], head=[4, 10], ra=arm([0.0, -0.1, 1], 4, [0, 0.3, 0.95]), la=LA(K.A_HIP), root=[-0.32, 0.55], **LUNGE_DEEP)
+keyp(m, 0.0, FB_WIND)
+keyp(m, 1.1, FB_REL, "in")
+keyp(m, 2.4, P(FB_REL, body=[26, -38, 0], ra=arm([-0.1, -0.35, 0.93], 8, [0, 0.1, 1])), "out")
+breathe(m, 3.4, 7.0, P(FB_REL, body=[26, -38, 0], ra=arm([-0.1, -0.35, 0.93], 8, [0, 0.1, 1])), step=1.2, lean=1.0, knee=2)
+keyp(m, 10.6, P(W_READY, body=[8, -6, 0], root=[-0.04, 0.2]))
+fpw(m, 0.0, K.FPW_DRAWN)
+fpw(m, 1.1, FPW_FWD, "in")
+fpw(m, 7.0, FPW_FWD, dp=(0, -0.12, 0.12))
+fpl(m, 0.0, K.FP_JAB)
+fpl(m, 1.1, FP_LOW, "in")
+use(m, "fireball")
+
+# 서리 폭발 (효과: 0 ~ 4 몸 둘레에 얼음 결정이 네 겹 솟음 · 1 피해 · 빙결): 0 에서 두 팔을 가슴 앞에 엇갈려 깊이 웅크림 (떨림) → 1 에 터지듯 일어서며 두 팔을 아래
+# 바깥으로 힘껏 펼치고 다리를 넓게 → 지나쳐 젖혔다가 돌아옴 → 펼친 채 숨 → 거둠
+m = off_bare(Motion("frost_nova", 16, "서리 폭발 — 두 팔을 가슴 앞에 엇갈려 깊이 웅크렸다가 터지듯 일어서며 아래 바깥으로 힘껏 펼쳐 얼음을 터뜨림", fade=(0.01, 0.1)))
+NOVA_IN = P(body=[26, 0, 0], head=[14, 0], ra=K.RA_ACROSS, la=LA(K.A_CROSS), rl=[-22, 0, 8], ll=[-22, 0, -8], rk=66, lk=66, root=[-0.36, 0])
+NOVA_OUT = P(body=[-10, 0, 0], head=[-8, 0], ra=K.RA_SPREAD_DOWN, la=LA(arm([0.88, -0.42, 0.2], 6)), rl=[-2, 0, 18], ll=[-2, 0, -18], rk=22, lk=22,
+             root=[-0.12, 0])
+keyp(m, 0.0, NOVA_IN)
+keyp(m, 0.6, P(NOVA_IN, body=[28, 0, 1], rk=70, lk=70))
+keyp(m, 1.2, NOVA_OUT, "in")
+keyp(m, 2.4, P(NOVA_OUT, body=[-14, 0, 0], head=[-12, 0]), "out")
+keyp(m, 3.6, NOVA_OUT)
+breathe(m, 4.6, 10.0, NOVA_OUT, step=1.8, lean=1.2, knee=2)
+keyp(m, 14.5, P(W_READY, body=[6, 0, 0]))
+FPL_NOVA = ((0.32, -0.12, -0.12), (5, -38, 0))
+fpw(m, 0.0, K.FPW_ACROSS)
+fpw(m, 1.2, K.FPW_SPREAD, "in")
+fpw(m, 10.0, K.FPW_SPREAD)
+fpl(m, 0.0, K.FP_CROSS)
+fpl(m, 1.2, FPL_NOVA, "in")
+fpl(m, 10.0, FPL_NOVA)
+fpl(m, 14.5, FP_LOW)
+use(m, "frostNova")
+
+# 화염 폭풍 (효과: 0 ~ 50 조준한 곳의 불 회오리 — 3D 불바위가 감아 오름 · 10 틱마다 피해 · 50 폭발): 0 에서 왼손을 조준한 곳으로 힘껏 내밀고 다리를 넓게 →
+# 손으로 큰 원을 그리듯 휘저으며 (세 바퀴) 몸도 따라 흔들림 · 점점 크게 → 46 에 두 팔을 가슴으로 끌어당겨 웅크렸다가 → 50 에 깊이 내디디며 두 손을 앞으로 힘껏 밀어 터뜨림
+m = off_bare(Motion("fire_storm", 60, "화염 폭풍 — 왼손을 내밀어 불 회오리를 크게 휘저어 돌리다가, 두 팔을 끌어당겼다 깊이 내디디며 힘껏 밀어 터뜨림", fade=(0.01, 0.08)))
+STIR = P(body=[6, -12, 0], head=[2, 6], ra=K.RA_UPF, la=LA(K.A_PALM), rl=[16, 0, 12], ll=[-18, 0, -12], rk=26, lk=26, root=[-0.14, 0.1])
+keyp(m, 0.0, P(STIR, body=[12, -18, 0], la=LA(arm([-0.05, 0.1, 1], 0, [0, 1, 0.1])), root=[-0.2, 0.2]))
+keyp(m, 2.0, STIR, "out3")
+fpw(m, 2.0, FPW_UP, "out3", dp=(0.1, -0.15, -0.2))
+fpl(m, 0.0, nudge(FP_PALM, (0, 0, -0.1)))
+fpl(m, 2.0, FP_PALM, "out3")
+CIRCLE = [(-0.14, 0.32), (0.16, 0.1), (-0.14, -0.12), (-0.42, 0.1)]
+for rev in range(3):
+    amp = 1.0 + rev * 0.25
+    for j, (x, y) in enumerate(CIRCLE):
+        tick = 5 + rev * 12 + j * 3
+        e = "linear" if tick > 5 else None
+        keyp(m, tick, P(STIR, la=LA(arm([x * amp, y * amp, 1], 8, [0, 1, 0.2])), ra=arm([0.2 - x * 0.3, 0.55 + y * 0.3, 0.8], 20, [0.1, 0.9, 0.4]),
+                        body=[6 + 3 * y * amp, -12 + 10 * x * amp, 2 * x * amp]), e)
+        fpl(m, tick, nudge(FP_PALM, (x * 0.45 * amp, y * 0.45 * amp, 0)), e)
+fpw(m, 41, FPW_UP, dp=(0.1, -0.15, -0.2))
+FS_COIL = P(body=[14, 30, 0], head=[4, -10], ra=arm([0.4, -0.2, -0.4], 100, [0.2, 0.8, 0.5]), la=LA(K.A_CHAMBER), rl=[22, 0, 6], ll=[-24, 0, -6], rk=44,
+            lk=40, root=[-0.24, -0.06])
+keyp(m, 46.5, FS_COIL, "out3")
+keyp(m, 49.0, P(FS_COIL, body=[16, 34, 0], rk=50, lk=46, root=[-0.28, -0.08]))
+FS_PUSH = P(body=[20, -10, 0], head=[4, 0], ra=arm([0.0, 0.1, 1], 2, [0, 0.3, 0.95]), la=LA(K.A_PALM), root=[-0.36, 0.6], **LUNGE_DEEP)
+keyp(m, 50.6, FS_PUSH, "in")
+keyp(m, 52.0, P(FS_PUSH, body=[16, -8, 0], root=[-0.32, 0.55]), "out")
+breathe(m, 53.0, 56.0, P(FS_PUSH, body=[16, -8, 0], root=[-0.32, 0.55]), step=1.5, lean=1.0, knee=2)
+keyp(m, 59.0, P(W_READY, body=[6, -4, 0]))
+fpw(m, 46.5, K.FPW_DRAWN)
+fpw(m, 50.6, FPW_FWD, "in")
+fpw(m, 56.0, FPW_FWD)
+fpl(m, 46.5, K.FP_CHAMBER)
+fpl(m, 50.6, FP_PALM, "in")
+fpl(m, 56.0, FP_PALM)
+use(m, "fireStorm")
+
+# ------------------------------------------------------------ 궁수 (주 손에 든 활 — 왼손이 시위를 당김)
+
+DRAW = P(body=[2, -28, 0], ra=arm([0.05, 0.1, 1], 0, [0, 1, 0]), la=arm([0.2, 0.05, -0.2], 140), rl=[14, 0, 10], ll=[-18, 0, -10], rk=22, lk=20,
+         root=[-0.1, 0])  # 다리를 넓게 벌리고 활을 앞으로 · 시위를 뺨까지 (몸을 비틂)
+LOOSE = P(DRAW, body=[-4, -24, 0], head=[-2, 0], ra=arm([0.06, 0.2, 1], 0, [0, 1, 0.05]), la=arm([-0.25, 0.1, -0.75], 30))  # 놓음: 시위 손이 뒤로 튕김 · 활이 들림
+FP_BOW = (-0.25, 0.08, 0.0)
+
+# 관통 화살 (효과: 0 3D 빛 화살이 곧게 날아가 꽂힘 · 1 피해): 0 에서 다리를 넓게 벌리고 끝까지 당긴 자세 (숨을 참음) → 1 에 놓으며 시위 손이 뒤로 튕기고 몸이
+# 반동으로 젖혀짐 → 활을 든 채 숨 → 내림
+m = Motion("pierce_arrow", 12, "관통 화살 — 다리를 넓게 벌리고 끝까지 당겼다가 놓는 순간 시위 손이 뒤로 튕기며 몸이 반동으로 젖혀짐", fade=(0.01, 0.12))
+keyp(m, 0.0, P(DRAW, body=[4, -30, 0], la=arm([0.24, 0.04, -0.3], 145)))
+keyp(m, 1.0, LOOSE, "in")
+keyp(m, 2.4, P(LOOSE, body=[-6, -22, 0]), "out")
+breathe(m, 3.4, 7.0, P(LOOSE, body=[-6, -22, 0]), step=1.2, lean=0.8, knee=2)
+keyp(m, 10.5, P(W_READY, body=[6, -6, 0]))
+for t, p in ((0.0, FP_BOW), (1.0, (-0.25, 0.14, 0.12)), (7.0, (-0.25, 0.1, 0.1))):
+    m.fp(t, (p[0], p[1] - 0.08, p[2]))
+use(m, "pierceArrow")
+
+# 속박 화살 (효과: 0 3D 화살이 대상에게 꽂힘 · 1 대상 둘레에 3D 말뚝 화살 셋 · 빛의 사슬): 0 에서 한쪽 무릎을 꿇고 대상의 발께로 낮게 겨눠 끝까지 당김 → 1 에 놓음
+# (시위 손이 뒤로) → 무릎 꿇은 채 숨 → 일어섬
+m = Motion("pin_arrow", 12, "속박 화살 — 한쪽 무릎을 꿇고 대상의 발께로 낮게 겨눠 끝까지 당겼다가 놓음", fade=(0.01, 0.12))
+KNEEL_DRAW = P(DRAW, body=[14, -24, 0], head=[8, 0], ra=arm([0.05, -0.25, 1], 0, [0, 1, 0.25]), rl=[2, 0, 4], rk=92, ll=[-82, 0, -4], lk=88,
+               root=[-0.4, 0])
+keyp(m, 0.0, KNEEL_DRAW)
+keyp(m, 1.0, P(KNEEL_DRAW, body=[10, -20, 0], ra=arm([0.05, -0.18, 1], 0, [0, 1, 0.05]), la=arm([-0.3, 0.0, -0.7], 40)), "in")
+keyp(m, 2.4, P(KNEEL_DRAW, body=[8, -18, 0], ra=arm([0.05, -0.15, 1], 0, [0, 1, 0.05]), la=arm([-0.3, -0.1, -0.68], 40)), "out")
+breathe(m, 3.4, 7.4, P(KNEEL_DRAW, body=[8, -18, 0], ra=arm([0.05, -0.15, 1], 0, [0, 1, 0.05]), la=arm([-0.3, -0.1, -0.68], 40)), step=1.3, lean=0.8,
+        knee=2)
+keyp(m, 10.8, P(W_READY, body=[6, -6, 0]))
+for t, p in ((0.0, FP_BOW), (1.0, (-0.25, 0.1, 0.1)), (7.4, FP_BOW)):
+    m.fp(t, (p[0], p[1] - 0.12, p[2]))
+use(m, "pinArrow")
+
+# 도약 사격 (효과: 0 ~ 6 뒤로 포물선으로 날아감 · 2 · 5 · 8 세 발 (3D 화살)): 0 에서 웅크려 박차며 몸을 뒤로 젖힘 → 공중에서 무릎을 당긴 채 당겨 쏨 (2 · 5) →
+# 6 에 낮게 내려앉아 (무릎으로 받음) → 8 에 마지막 한 발 → 낮게 숨 → 일어섬
+m = Motion("backstep", 14, "도약 사격 — 웅크려 뒤로 박차 공중에서 무릎을 당긴 채 쏘고, 낮게 내려앉으며 마지막 한 발을 쏨", fade=(0.01, 0.12))
+AIR = dict(rl=[-50, 0, 8], ll=[-30, 0, -8], rk=86, lk=70, root=[0.1, 0])
+LAND = dict(rl=[-30, 0, 10], ll=[-20, 0, -10], rk=70, lk=60, root=[-0.34, 0])
+keyp(m, 0.0, P(DRAW, body=[22, -20, 0], la=arm([0.1, -0.4, -0.3], 60), rl=[-20, 0, 6], ll=[-20, 0, -6], rk=64, lk=64, root=[-0.3, 0]))
+keyp(m, 1.2, P(DRAW, body=[-14, -20, 0], head=[-6, 0], **AIR), "out")
+for tick, legs, lean in ((2, AIR, -12), (5, AIR, -6), (8, LAND, 18)):
+    keyp(m, tick - 0.6, P(DRAW, body=[lean, -22, 0], **legs))
+    keyp(m, tick + 0.4, P(LOOSE, body=[lean - 4, -18, 0], **legs), "out3")
+    m.fp(tick - 0.6, FP_BOW)
+    m.fp(tick + 0.4, (-0.25, 0.1, 0.1), ease="out3")
+keyp(m, 6.4, P(DRAW, body=[22, -20, 0], **LAND), "in")
+breathe(m, 9.4, 11.0, P(LOOSE, body=[16, -18, 0], **LAND), step=0.8, lean=0.8, knee=2)
+keyp(m, 13.4, P(W_READY, body=[6, -6, 0]))
+use(m, "backstep")
+
+# ------------------------------------------------------------ 번개
+
+# 연쇄 번개 (효과: 0 손에서 3D 번개 창이 첫 대상에 꽂힘 · 0 · 3 · 6 · 9 번개가 적에서 적으로 튐): 0 에서 무기를 몸 뒤로 당겨 감은 자세 → 1 에 내디디며 무기를
+# 곧게 내뻗음 (왼손으로 팔을 받침) → 번개가 튈 때마다 팔이 움찔 · 몸이 조금 밀림 → 거둠
+m = off_bare(Motion("chain_lightning", 16, "연쇄 번개 — 무기를 뒤로 당겨 감았다가 내디디며 곧게 내뻗어 번개를 쏘고, 번개가 튈 때마다 움찔하며 버팀", fade=(0.01, 0.1)))
+CL_WIND = P(body=[0, 40, 0], head=[0, -24], ra=arm([0.45, 0.1, -0.5], 90, [0.1, 0.9, 0.3]), la=LA(K.A_POINT), rl=[20, 0, 4], ll=[-16, 0, -4], rk=30,
+            lk=16, root=[-0.1, -0.12])
+ZAP = P(body=[14, -18, 0], head=[2, 8], ra=K.RA_POINT, la=LA(bent([0.3, -0.25, 0.92], 70, (1, 0.2, 0))), root=[-0.26, 0.4], **LUNGE_DEEP)
+keyp(m, 0.0, CL_WIND)
+keyp(m, 1.0, ZAP, "in")
+for i, tick in enumerate((3, 6, 9)):
+    keyp(m, tick + 0.4, P(ZAP, body=[10 - i, -16, 0], ra=arm([-0.03, 0.22, 1], 4, [0, 0.25, 0.97]), root=[-0.28, 0.32 - 0.04 * i]), "out")
+    keyp(m, tick + 1.6, P(ZAP, root=[-0.27, 0.36 - 0.03 * i]))
+    fpw(m, tick + 0.4, FPW_FWD, "out", dp=(0, 0.04, 0.1))
+    fpw(m, tick + 1.6, FPW_FWD)
+keyp(m, 14.5, P(W_READY, body=[6, -4, 0]))
+fpw(m, 0.0, FPW_UP, dp=(0.2, -0.25, 0.15))
+fpw(m, 1.0, FPW_FWD, "in")
+fpl(m, 1.0, K.FP_PALM, "in")
+fpl(m, 12.0, FP_LOW)
+use(m, "chainLightning")
+
+# 섬광 이동 (효과: 0 앞으로 순간 이동 — 떠난 자리에 번개빛 잔상 · 지나간 적 감전): 0 = 이미 끝 자리 — 몸을 깊이 숙여 무기를 뒤로 끈 채 미끄러지는 자세
+# (뒷다리를 길게) → 미끄러지며 멈춤 → 일어서며 무기를 털어 앞을 겨눔
+m = Motion("blink", 12, "섬광 이동 — 번개처럼 옮겨 몸을 깊이 숙여 무기를 뒤로 끈 채 미끄러져 멈춘 뒤 일어서며 앞을 겨눔", fade=(0.01, 0.12))
+DASH_END = P(body=[40, -14, 0], head=[16, 0], ra=arm([0.45, -0.3, -0.84], 20, [0.3, -0.2, -0.95]), la=arm([-0.45, -0.3, -0.84], 20), rl=[-46, 0, 0],
+             ll=[40, 0, 0], rk=70, lk=36, root=[-0.36, 0.45])
+keyp(m, 0.0, DASH_END)
+keyp(m, 2.6, P(DASH_END, body=[32, -12, 0], root=[-0.32, 0.15]), "out")
+breathe(m, 3.4, 6.0, P(DASH_END, body=[30, -12, 0], root=[-0.3, 0.1]), step=1.2, lean=1.0, knee=2)
+keyp(m, 8.4, P(body=[12, -14, 0], ra=K.RA_POINT, la=LA(A_GUARD), rl=[16, 0, 4], ll=[-20, 0, -4], rk=26, lk=26, root=[-0.14, 0.1]), "out3")
+keyp(m, 11.0, P(W_READY, body=[6, -4, 0]))
+fpw(m, 0.0, FPW_LOW, dp=(0.25, -0.1, 0.35))
+fpw(m, 2.6, FPW_LOW, "out")
+fpw(m, 8.4, FPW_FWD, "out3")
+fpw(m, 11.0, FPW_LOW)
+use(m, "blink")
+
+# 뇌전 감옥 (효과: 0 ~ 8 조준한 곳 둘레에 3D 번개 창 넷이 차례로 내리꽂힘 · 테두리 번개 · 10 감옥이 닫힘 — 기절): 0 에서 왼손을 조준한 곳으로 힘껏 펴고 낮게 버팀 →
+# 창이 꽂힐 때마다 손이 떨리며 조금씩 움켜쥠 → 10 에 주먹을 쥐어 몸쪽으로 홱 당기며 몸을 젖힘 → 쥔 채 숨 → 풂
+m = off_bare(Motion("static_prison", 22, "뇌전 감옥 — 왼손을 조준한 곳으로 펴 번개 창을 내리꽂고, 감옥이 닫힐 때 주먹을 쥐어 몸쪽으로 홱 당김", fade=(0.01, 0.1)))
+CAGE = P(body=[12, 16, 0], head=[4, -8], ra=K.RA_READY, la=LA(arm([-0.08, 0.1, 1], 0, [0, 1, 0.1])), rl=[16, 0, 10], ll=[-20, 0, -10], rk=34, lk=34,
+         root=[-0.2, 0.12])
+keyp(m, 0.0, P(CAGE, body=[16, 18, 0], root=[-0.24, 0.2]))
+keyp(m, 1.6, CAGE, "out3")
+for i, tick in enumerate((2.6, 4.6, 6.6, 8.6)):
+    k = (i + 1) / 4.0
+    keyp(m, tick, P(CAGE, body=[12 + i, 16 + 2 * i, (1 if i % 2 else -1) * 1.0], la=LA(bent([-0.06, 0.1, 1], 12 * k * 2, (0, 1, 0)))))
+    fpl(m, tick, nudge(FP_PALM, (0.02 * (1 if i % 2 else -1), 0, 0.03 * k)))
+CLENCH = P(body=[-4, 30, 0], head=[-6, -14], ra=K.RA_READY, la=LA(K.A_PULL), rl=[22, 0, 10], ll=[-18, 0, -10], rk=30, lk=26, root=[-0.12, -0.2])
+keyp(m, 10.2, CLENCH, "in")
+keyp(m, 11.4, P(CLENCH, body=[-6, 32, 0]), "out")
+breathe(m, 12.4, 16.0, CLENCH, step=1.2, lean=1.0, knee=2)
+keyp(m, 20.0, P(W_READY, body=[6, 2, 0]))
+fpw(m, 0.0, FPW_LOW)
+fpw(m, 20.0, FPW_LOW)
+fpl(m, 0.0, nudge(FP_PALM, (0, 0, -0.08)))
+fpl(m, 1.6, FP_PALM, "out3")
+fpl(m, 10.2, K.FP_CHAMBER, "in")
+fpl(m, 16.0, K.FP_CHAMBER)
+fpl(m, 20.0, FP_LOW)
+use(m, "staticPrison")
+
+# ------------------------------------------------------------ 중력
+
+# 중력탄 (효과: 0 손에서 3D 공허 핵이 날아가 터질 자리에서 커짐 → 끌어당긴 뒤 꺼지며 터짐): 0 에서 두 손을 가슴 앞에 모아 웅크리고 몸을 오른쪽으로 감음 (떨림) →
+# 1 에 내디디며 두 손을 앞으로 힘껏 밀어 보냄 → 민 채 숨 → 거둠
+m = off_bare(Motion("gravity_orb", 12, "중력탄 — 두 손을 가슴 앞에 모아 웅크렸다가 내디디며 앞으로 힘껏 밀어 어두운 구체를 날림", fade=(0.01, 0.12)))
+GATHER = P(body=[16, 24, 0], head=[6, -10], ra=bent([0.35, -0.3, 0.3], 115, (0, 0.6, 0.8)), la=LA(bent([0.35, -0.3, 0.3], 115, (-0.6, 0.5, 0.6))),
+           rl=[16, 0, 4], ll=[-20, 0, -4], rk=40, lk=36, root=[-0.24, -0.06])
+ORB = P(body=[18, -14, 0], head=[4, 6], ra=K.RA_POINT, la=LA(K.A_PALM), root=[-0.3, 0.5], **LUNGE_DEEP)
+keyp(m, 0.0, GATHER)
+keyp(m, 1.1, ORB, "in")
+keyp(m, 2.4, P(ORB, body=[14, -12, 0], root=[-0.28, 0.46]), "out")
+breathe(m, 3.4, 7.0, P(ORB, body=[14, -12, 0], root=[-0.28, 0.46]), step=1.2, lean=1.0, knee=2)
+keyp(m, 10.6, P(W_READY, body=[6, -4, 0]))
+fpw(m, 0.0, FPW_UP, dp=(-0.1, -0.35, 0.15))
+fpw(m, 1.1, FPW_FWD, "in")
+fpw(m, 7.0, FPW_FWD)
+fpl(m, 0.0, K.FP_GATHER_L)
+fpl(m, 1.1, FP_PALM, "in")
+fpl(m, 7.0, FP_PALM)
+use(m, "gravityOrb")
+
+# 공중 부양 (효과: 0 앞의 적과 3D 바위가 떠오름 · 18 내리꽂음 — 땅에 닿을 때 피해): 0 에서 웅크려 두 손을 아래로 → 2 에 두 팔을 퍼 올리듯 앞 위로 쳐들며 몸을
+# 젖힘 → 떠 있는 동안 떨며 받침 (점점 더 들어 올림) → 17 에 더 높이 → 18 에 두 팔을 힘껏 내리꽂으며 깊이 웅크림 → 웅크린 채 숨 → 일어섬
+m = off_bare(Motion("lift_slam", 26, "공중 부양 — 웅크렸다가 두 팔을 퍼 올리듯 쳐들어 적과 바위를 띄우고, 떨며 받치다가 힘껏 내리꽂으며 깊이 웅크림", fade=(0.01, 0.08)))
+SCOOP = P(body=[24, 0, 0], head=[10, 0], ra=arm([0.2, -0.85, 0.45], 20, [0.1, -0.5, 0.85]), la=LA(arm([0.2, -0.85, 0.45], 20)), rl=[-20, 0, 10],
+          ll=[-20, 0, -10], rk=60, lk=60, root=[-0.32, 0])
+LIFT = P(body=[-16, 0, 0], head=[-20, 0], ra=K.RA_UPF, la=LA(K.A_RAISE_FWD), rl=[0, 0, 14], ll=[0, 0, -14], rk=14, lk=14, root=[0.02, 0])
+keyp(m, 0.0, SCOOP)
+keyp(m, 2.0, LIFT, "in")
+keyp(m, 3.0, P(LIFT, body=[-20, 0, 0], head=[-24, 0]), "out")
+for i, tick in enumerate(range(5, 16, 2)):
+    s = 1 if i % 2 else -1
+    q = i / 5.0
+    keyp(m, tick, P(LIFT, body=[-16 - 4 * q + s * 1.2, s * 1.5, s * 1.0], ra=arm([0.2, 0.68 + 0.1 * q, 0.7 - 0.1 * q], 18, [0.1, 0.95, 0.3]),
+                    la=LA(arm([0.1, 0.8 + 0.08 * q, 0.6 - 0.1 * q], 4, [0, 1, 0.4]))))
+keyp(m, 17.0, P(LIFT, body=[-24, 0, 0], head=[-28, 0], ra=K.RA_SKY, la=LA(K.A_RAISE), rk=8, lk=8, root=[0.06, 0]), "out3")
+SLAM = P(body=[40, 0, 0], head=[14, 0], ra=arm([0.05, -0.6, 0.8], 6, [0, -0.8, 0.6]), la=LA(K.A_DOWN_FWD), rl=[-30, 0, 12], ll=[-30, 0, -12], rk=74,
+         lk=74, root=[-0.46, 0.1])
+keyp(m, 18.4, SLAM, "in")
+keyp(m, 19.6, P(SLAM, body=[36, 0, 0], rk=68, lk=68, root=[-0.42, 0.1]), "out")
+breathe(m, 20.6, 23.0, P(SLAM, body=[36, 0, 0], rk=68, lk=68, root=[-0.42, 0.1]), step=1.2, lean=1.0, knee=2)
+keyp(m, 25.5, P(W_READY, body=[8, 0, 0]))
+fpw(m, 2.0, FPW_UP, "in")
+fpw(m, 15.0, FPW_UP, dp=(0, 0.1, 0))
+fpw(m, 17.0, FPW_SKY, "out3")
+fpw(m, 18.4, FPW_DOWN, "in")
+fpw(m, 23.0, FPW_DOWN)
+fpl(m, 2.0, K.FP_PALM_UP, "in")
+fpl(m, 15.0, nudge(K.FP_PALM_UP, (0, 0.08, 0), (10, 0, 0)))
+fpl(m, 17.0, K.FP_RAISE, "out3")
+fpl(m, 18.4, K.FP_DOWN, "in")
+fpl(m, 23.0, K.FP_DOWN)
+use(m, "liftSlam")
+
+# 중력장 (효과: 0 ~ 50 조준한 곳에 3D 공허 핵이 자라고 바위가 나선으로 빨려 듦 · 50 붕괴): 0 에서 왼손을 조준한 곳으로 힘껏 펴고 다리를 넓게 → 천천히 움켜쥐며
+# (떨림이 점점 커짐) 몸이 끌려가지 않게 뒤로 버팀 → 50 에 주먹을 쥐어 몸쪽으로 홱 당기며 젖힘 → 쥔 채 숨 → 풂
+m = off_bare(Motion("gravity_well", 56, "중력장 — 왼손을 펴 천천히 움켜쥐며 끌려가지 않게 뒤로 버티다가, 붕괴할 때 주먹을 쥐어 몸쪽으로 홱 당김", fade=(0.01, 0.08)))
+WELL = P(body=[8, 14, 0], head=[2, -8], ra=K.RA_READY, la=LA(K.A_PALM), rl=[18, 0, 12], ll=[-22, 0, -12], rk=30, lk=30, root=[-0.18, 0.1])
+keyp(m, 0.0, P(WELL, body=[14, 16, 0], root=[-0.24, 0.2]))
+keyp(m, 2.0, WELL, "out3")
+fpl(m, 2.0, FP_PALM, "out3")
+for i, tick in enumerate(range(6, 47, 4)):
+    k = i / 10.0
+    s = 1 if i % 2 else -1
+    keyp(m, tick, P(WELL, body=[8 - 8 * k + s * (0.6 + 1.2 * k), 14 + 8 * k, s * (0.6 + 1.0 * k)], la=LA(bent([-0.05, 0.1, 1], 10 + 50 * k, (0, 1, 0))),
+                    rl=[18 + 10 * k, 0, 12], ll=[-22 + 6 * k, 0, -12], root=[-0.18 - 0.06 * k, 0.1 - 0.2 * k]))
+    fpl(m, tick, nudge(FP_PALM, (0.01 * s * (1 + 3 * k), 0, 0.1 * k), (5 * k, -10 * k, 0)))
+YANK = P(body=[-8, 30, 0], head=[-8, -16], ra=K.RA_READY, la=LA(K.A_PULL), rl=[26, 0, 10], ll=[-16, 0, -10], rk=30, lk=24, root=[-0.12, -0.24])
+keyp(m, 50.2, YANK, "in")
+keyp(m, 51.4, P(YANK, body=[-10, 32, 0]), "out")
+breathe(m, 52.4, 54.4, YANK, step=1.0, lean=1.0, knee=2)
+keyp(m, 55.6, P(W_READY, body=[6, 4, 0]))
+fpw(m, 2.0, FPW_LOW)
+fpw(m, 55.6, FPW_LOW)
+fpl(m, 50.2, K.FP_CHAMBER, "in")
+fpl(m, 54.4, K.FP_CHAMBER)
+use(m, "gravityWell")
+
+# ------------------------------------------------------------ 해류
+
+# 물의 창 (효과: 0 손 앞에 물이 모여 3D 물의 창이 되어 날아감 · 1 피해 — 꿰뚫음): 0 에서 무기를 오른 허리 뒤로 당기고 왼손으로 앞을 겨눈 자세 (무게는 뒷발) →
+# 1 에 몸을 던지듯 깊이 내디디며 곧게 내지름 → 뻗은 채 숨 → 거둠
+m = Motion("tide_lance", 12, "물의 창 — 무기를 허리 뒤로 당겨 왼손으로 겨눴다가 몸을 던지듯 깊이 내디디며 곧게 내질러 물의 창을 날림", fade=(0.01, 0.12))
+keyp(m, 0.0, TH_WIND)
+strike_with(m, "thrust", 0.1, 1.1, 2.6, a=P(body=[3, 50, 0], root=[-0.24, -0.26], rl=[26, 0, 4], ll=[-18, 0, -4], rk=50, lk=18),
+            b=P(body=[28, -30, 0], head=[4, 0], root=[-0.36, 0.86], **LUNGE_DEEP))
+keyp(m, 3.6, TH_END, "out")
+breathe(m, 4.6, 7.6, TH_END, step=1.5, lean=1.0, knee=2)
+keyp(m, 10.6, P(W_READY, body=[6, 2, 0], root=[-0.04, 0.2]))
+fpw(m, 0.0, FPW_BACK, dp=(0.08, -0.05, 0.1))
+fpw(m, 3.6, FPW_FWD)
+fpw(m, 10.6, FPW_LOW)
+use(m, "tideLance")
+
+# 치유의 비 (효과: 0 ~ 10 조준한 곳 위에 3D 비구름이 모임 · 10 · 22 · 34 · 46 빗줄기): 0 에서 웅크려 두 손을 아래에 모았다가 → 3 에 두 팔을 하늘로 활짝 쳐들어
+# 구름을 모으며 (몸을 젖힘 · 손이 천천히 원을 그림) → 10 에 손바닥을 펴 앞 아래로 내려 비를 내림 → 빗줄기마다 손을 조금씩 내림 → 거둠
+m = off_bare(Motion("healing_rain", 28, "치유의 비 — 웅크렸다가 두 팔을 하늘로 활짝 쳐들어 비구름을 모으고, 손바닥을 펴 앞 아래로 내리며 비를 내림", fade=(0.01, 0.08)))
+keyp(m, 0.0, P(body=[22, 0, 0], head=[8, 0], ra=arm([0.25, -0.85, 0.4], 30, [0.1, 0.3, 0.95]), la=LA(arm([0.25, -0.85, 0.4], 30)), rl=[-16, 0, 8],
+               ll=[-16, 0, -8], rk=50, lk=50, root=[-0.26, 0]))
+keyp(m, 3.0, P(K.CALL, body=[-16, 0, 0], head=[-28, 0], ra=K.RA_SPREAD_UP, la=LA(arm([0.6, 0.75, 0.2], 10))), "in")
+keyp(m, 6.0, P(K.CALL, body=[-18, 0, 1], head=[-30, 0], ra=arm([0.4, 0.85, 0.3], 10, [0.2, 1, 0.1]), la=LA(arm([0.45, 0.82, 0.3], 10))))
+keyp(m, 8.6, P(K.CALL, body=[-14, 0, -1], head=[-26, 0], ra=K.RA_SPREAD_UP, la=LA(arm([0.6, 0.75, 0.2], 10))))
+RAIN = P(body=[8, 0, 0], head=[0, 0], ra=arm([0.35, 0.05, 0.94], 10, [0.2, 0.5, 0.85]), la=LA(arm([0.35, 0.05, 0.94], 4, [0.1, 0.2, 1])),
+         rl=[10, 0, 12], ll=[-12, 0, -12], rk=24, lk=24, root=[-0.12, 0.1])
+keyp(m, 10.4, RAIN, "in")
+keyp(m, 16.0, P(RAIN, body=[10, 0, 0], ra=arm([0.38, -0.05, 0.92], 10, [0.2, 0.4, 0.9]), la=LA(arm([0.38, -0.05, 0.92], 4))))
+keyp(m, 22.4, P(RAIN, body=[8, 0, 0], ra=arm([0.38, -0.12, 0.9], 10, [0.2, 0.35, 0.9]), la=LA(arm([0.38, -0.12, 0.9], 4))))
+keyp(m, 27.0, P(W_READY, body=[6, 0, 0]))
+fpw(m, 3.0, FPW_SKY, "in", dp=(0.35, -0.15, 0))
+fpw(m, 8.6, FPW_SKY, dp=(0.35, -0.15, 0))
+fpw(m, 10.4, FPW_UP, "in", dp=(0.25, -0.35, -0.2))
+fpw(m, 22.4, FPW_UP, dp=(0.3, -0.4, -0.2))
+fpl(m, 3.0, K.FP_SPREAD_UP, "in")
+fpl(m, 8.6, K.FP_SPREAD_UP)
+fpl(m, 10.4, nudge(FP_PALM, (0.12, 0, 0), (0, -20, 0)), "in")
+fpl(m, 22.4, nudge(FP_PALM, (0.15, -0.05, 0), (-5, -20, 0)))
+use(m, "healingRain")
+
+# 소용돌이 감옥 (효과: 0 ~ 60 조준한 곳의 소용돌이 · 3D 물기둥 — 10 틱마다 끌어당김 · 끝에 물기둥이 솟아 터짐): 0 에서 무기 끝으로 조준한 곳을 겨누며 낮게 버팀 →
+# 소용돌이를 그리듯 크게 휘저음 (네 바퀴 — 몸도 따라 흔들림 · 점점 크게) → 54 에 무기를 아래로 당겨 웅크렸다가 → 58 에 무기를 하늘로 확 쳐올리며 솟음
+m = Motion("maelstrom", 62, "소용돌이 감옥 — 무기 끝으로 조준한 곳을 겨눠 소용돌이를 크게 휘젓다가, 웅크렸다 무기를 하늘로 확 쳐올려 물기둥을 솟게 함", fade=(0.01, 0.08))
+STIRP = P(body=[14, -12, 0], head=[6, 4], ra=K.RA_POINT_LOW, la=LA(A_HIP), rl=[16, 0, 12], ll=[-18, 0, -12], rk=30, lk=30, root=[-0.18, 0.1])
+keyp(m, 0.0, P(STIRP, body=[18, -14, 0], root=[-0.22, 0.16]))
+keyp(m, 2.0, STIRP, "out3")
+fpw(m, 2.0, FPW_DOWN, "out3")
+CIR = [(0.0, 0.14), (0.26, 0.0), (0.0, -0.14), (-0.26, 0.0)]
+for rev in range(4):
+    amp = 1.0 + rev * 0.18
+    for j, (x, y) in enumerate(CIR):
+        tick = 4 + rev * 12 + j * 3
+        e = "linear" if tick > 4 else None
+        keyp(m, tick, P(STIRP, ra=arm([-0.02 + x * amp, -0.25 + y * amp, 0.97], 4, [x * 1.5, -0.35 + y, 0.94]), body=[14 + 6 * y * amp, -12 + 16 * x * amp,
+                                                                                                                         3 * x * amp]), e)
+        fpw(m, tick, FPW_DOWN, e, dp=(x * 0.9 * amp, y * 0.9 * amp, 0))
+SURGE_COIL = P(body=[28, -6, 0], head=[10, 0], ra=arm([0.2, -0.75, 0.6], 20, [0.1, -0.6, 0.8]), la=LA(arm([-0.2, -0.75, 0.6], 20)), rl=[-18, 0, 10],
+               ll=[-18, 0, -10], rk=60, lk=60, root=[-0.34, 0])
+keyp(m, 54.0, SURGE_COIL, "out3")
+SURGE = P(body=[-16, -6, 0], head=[-20, 0], ra=K.RA_SKY, la=LA(K.A_RAISE_FWD), rl=[0, 0, 14], ll=[0, 0, -14], rk=10, lk=10, root=[0.06, 0])
+keyp(m, 58.0, SURGE, "in")
+keyp(m, 59.4, P(SURGE, body=[-18, -6, 0]), "out")
+keyp(m, 61.5, P(SURGE, body=[-12, -4, 0]))
+fpw(m, 54.0, FPW_DOWN, "out3")
+fpw(m, 58.0, FPW_SKY, "in")
+fpw(m, 61.5, FPW_SKY)
+use(m, "maelstrom")
+
+# ------------------------------------------------------------ 신성
+
+# 빛의 보호막 (효과: 0 몸 둘레에 3D 빛의 육각 판 여섯이 솟음 (돔) · 금빛 방패 문장 · 1 밀쳐냄): 0 에서 웅크려 무기를 얼굴 앞에 세우고 왼손을 가슴에 → 1 에 일어서며
+# 다리를 넓게 디디고 왼손을 앞 위로 높이 들어 보호막을 폄 (몸을 조금 젖힘) → 든 채 숨 → 거둠
+m = off_bare(Motion("light_barrier", 16, "빛의 보호막 — 웅크려 무기를 얼굴 앞에 세웠다가 일어서며 다리를 넓게 디디고 왼손을 앞 위로 높이 들어 보호막을 폄", fade=(0.01, 0.1)))
+WARD_IN = P(body=[20, 0, 0], head=[8, 0], ra=K.RA_UPRIGHT, la=LA(K.A_CHEST), rl=[-14, 0, 8], ll=[-14, 0, -8], rk=46, lk=46, root=[-0.26, 0])
+WARD = P(body=[-10, 0, 0], head=[-12, 0], ra=K.RA_UPRIGHT, la=LA(arm([-0.1, 0.55, 0.83], 6, [0, 1, 0.1])), rl=[6, 0, 14], ll=[-8, 0, -14], rk=18, lk=18,
+         root=[-0.06, 0])
+keyp(m, 0.0, WARD_IN)
+keyp(m, 1.2, WARD, "in")
+keyp(m, 2.4, P(WARD, body=[-14, 0, 0], head=[-16, 0]), "out")
+breathe(m, 3.6, 10.0, WARD, step=1.6, lean=1.0, knee=2)
+keyp(m, 14.5, P(W_READY, body=[6, 0, 0]))
+fpw(m, 0.0, FPW_UP, dp=(0, -0.2, 0.1))
+fpw(m, 1.2, FPW_UP, "in")
+fpw(m, 10.0, FPW_UP)
+fpl(m, 0.0, ((-0.18, -0.12, 0.12), (25, 70, 0)))
+fpl(m, 1.2, K.FP_PALM_UP, "in")
+fpl(m, 10.0, K.FP_PALM_UP)
+fpl(m, 14.5, FP_LOW)
+use(m, "lightBarrier")
+
+# 정화의 빛 (효과: 0 하늘에서 3D 빛 고리가 내려와 머리 위에서 돌다 땅으로 퍼짐 · 빛의 비): 0 에서 한쪽 무릎을 꿇고 두 손을 가슴 앞에 모아 기도 → 2 에 일어서며
+# 두 팔을 하늘로 활짝 들고 하늘을 봄 (발끝으로) → 빛이 퍼질 때 (9 ~ 15) 두 팔을 천천히 내려 손바닥을 앞으로 → 거둠
+m = off_bare(Motion("purify", 18, "정화의 빛 — 무릎을 꿇고 기도하다가 일어서며 두 팔을 하늘로 활짝 들어 빛을 받고, 빛이 퍼질 때 천천히 두 팔을 내림", fade=(0.01, 0.1)))
+PRAY = P(body=[16, 0, 0], head=[16, 0], ra=K.RA_UPRIGHT, la=LA(K.A_PRAY), rl=[2, 0, 4], rk=92, ll=[-82, 0, -4], lk=88, root=[-0.4, 0])
+BLESS = P(body=[-14, 0, 0], head=[-30, 0], ra=K.RA_SPREAD_UP, la=LA(arm([0.6, 0.75, 0.2], 10)), rl=[2, 0, 12], ll=[-4, 0, -12], rk=6, lk=6,
+          root=[0.06, 0])
+keyp(m, 0.0, PRAY)
+keyp(m, 0.8, P(PRAY, head=[20, 0]))
+keyp(m, 2.4, BLESS, "in")
+keyp(m, 3.6, P(BLESS, body=[-16, 0, 0], head=[-32, 0]), "out")
+breathe(m, 4.6, 8.6, BLESS, step=1.3, lean=1.0, knee=1)
+OPEN = P(body=[-2, 0, 0], head=[-6, 0], ra=arm([0.6, 0.1, 0.8], 10, [0.3, 0.6, 0.7]), la=LA(arm([0.6, 0.1, 0.8], 10)), rl=[2, 0, 10], ll=[-4, 0, -10],
+         rk=12, lk=12)
+keyp(m, 13.0, OPEN, "out3")
+keyp(m, 17.0, P(W_READY, body=[6, 0, 0]))
+fpw(m, 0.0, FPW_UP, dp=(0, -0.3, 0.1))
+fpw(m, 2.4, FPW_SKY, "in", dp=(0.35, -0.15, 0))
+fpw(m, 8.6, FPW_SKY, dp=(0.35, -0.15, 0))
+fpw(m, 13.0, FPW_LOW, "out3")
+fpl(m, 0.0, ((-0.18, -0.12, 0.12), (25, 70, 0)))
+fpl(m, 2.4, K.FP_SPREAD_UP, "in")
+fpl(m, 8.6, K.FP_SPREAD_UP)
+fpl(m, 13.0, nudge(FP_PALM, (0.15, -0.1, 0), (-5, -25, 0)), "out3")
+fpl(m, 17.0, FP_LOW)
+use(m, "purify")
+
+# 심판의 망치 (효과: 0 3D 금빛 망치가 손을 떠나 돌며 날아가 적 사이를 튐 · 2 첫 피해): 0 에서 망치를 머리 뒤로 크게 젖히고 몸을 활처럼 휘며 왼손으로 겨눔 (무게는
+# 뒷발) → 1.6 에 온몸으로 내던지며 크게 내디딤 → 던진 빈손으로 숨 → 거둠 (던진 뒤는 빈손)
+m = Motion("judge_hammer", 14, "심판의 망치 — 금빛 망치를 머리 뒤로 크게 젖혀 몸을 활처럼 휘었다가 온몸으로 내던지며 크게 내디딤", fade=(0.01, 0.12))
+m.set(hands={"main": "prop"}, hold="rpg:prop_judge_hammer")
+JH_WIND = P(body=[-18, 34, 0], head=[-6, -20], ra=arm([0.35, 0.7, -0.62], 70, [0.1, 0.9, -0.4]), la=LA(K.A_POINT), rl=[22, 0, 4], ll=[-16, 0, -4], rk=34,
+            lk=14, root=[-0.06, -0.16])
+JH_REL = P(body=[26, -28, 0], head=[6, 8], ra=arm([0.05, 0.0, 1], 2, [0, 0.3, 0.95]), la=LA(K.A_HIP), root=[-0.34, 0.58], **LUNGE_DEEP)
+keyp(m, 0.0, JH_WIND)
+keyp(m, 1.0, P(JH_WIND, body=[-22, 38, 0], root=[-0.08, -0.18]))
+keyp(m, 1.7, JH_REL, "in")
+keyp(m, 3.0, P(JH_REL, body=[30, -34, 0], ra=arm([-0.1, -0.4, 0.9], 8, [0, 0.1, 1])), "out")
+breathe(m, 4.0, 8.0, P(JH_REL, body=[30, -34, 0], ra=arm([-0.1, -0.4, 0.9], 8, [0, 0.1, 1])), step=1.3, lean=1.0, knee=2)
+keyp(m, 12.4, P(W_READY, body=[6, -4, 0]))
+m.set(holdAt=[0.0, m.t(1.65)])
+m.fp(0.0, (0.05, 0.4, 0.3), (55, 0, 0))
+m.fp(1.6, (-0.1, 0.2, -0.45), (-40, 0, 0), ease="in")
+K.fpr(m, 1.8, nudge(K.FP_JAB2, (0, -0.05, 0), (-5, 0, 0)))
+K.fpr(m, 8.0, K.FP_LOW)
+use(m, "judgeHammer")

@@ -507,7 +507,45 @@ def angel_wing():
     return sh
 
 
-BUILD = {"wave": wave, "water_column": water_column, "palm": palm, "angel_wing": angel_wing}
+def water_lance():
+    """2026-11-13 물의 창 (해류 일반 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 쥔 곳 = 밑 가운데 (8, 0, 8) · 촉 +Y (끝 y 약 50) —
+    만년빙하처럼 기울인 반투명 조각: 짙은 물 결정 대 (굵게) 를 밝은 물 결정이 감싸고, 나선으로 감아 오르는 물 띠 셋 (촉 쪽으로 가늘어짐) ·
+    뾰족한 촉 (유리 결정 + 밝은 속 결정) · 촉 아래 물마루 (뒤로 젖혀진 거품 결정 넷) · 꼬리의 물보라 (뒤 · 바깥으로)"""
+    sh = Shape("water_lance", (8, 0, 8), "물의 창 (2026-11-13 — 물 결정 대 · 나선 물 띠 · 뾰족한 유리 촉 · 물마루 · 꼬리 물보라)")
+    cx, cz = 8.0, 8.0
+    sh.tip("deep", (cx, 2.0, cz), (0, 1.0, 0), 40.0, 4.6, spin=0, bury=0.0)
+    sh.tip("light", (cx, 0.0, cz), (0, 1.0, 0), 44.0, 2.4, spin=45, bury=0.0)
+    # 나선 물 띠 (셋 · 띠마다 다섯 조각 — 촉 쪽으로 반지름 · 굵기가 줄어듦)
+    for band in range(3):
+        a0 = band * 2 * math.pi / 3
+        for k in range(5):
+            ym = 6.0 + k * 6.4
+            ang = a0 + ym * 0.21
+            r = 3.6 - 2.0 * (ym / 34.0)
+            pos = np.array([cx + math.cos(ang) * r, ym, cz + math.sin(ang) * r])
+            tang = np.array([-math.sin(ang), 0.0, math.cos(ang)])
+            outw = np.array([math.cos(ang), 0.0, math.sin(ang)])
+            along = unit(tang * math.cos(math.radians(55)) + np.array([0, 1.0, 0]) * math.sin(math.radians(55)))
+            xa = unit(np.cross(along, outw))
+            m = ("water", "light", "glass")[(band + k) % 3]
+            sh.box(m, pos, q_from_basis(xa, along, unit(np.cross(xa, along))), (1.8 - 0.18 * k, 7.0, 0.8))
+    # 촉 (유리 결정 + 밝은 속) · 촉 아래 물마루 (뒤로 젖혀진 거품 결정 넷)
+    sh.tip("glass", (cx, 36.0, cz), (0, 1.0, 0), 16.0, 6.4, spin=10, bury=0.0)
+    sh.tip("light", (cx, 37.5, cz), (0, 1.0, 0), 13.0, 3.2, spin=55, bury=0.0)
+    for k in range(4):
+        ang = k * math.pi / 2 + 0.4
+        outw = np.array([math.cos(ang), 0.0, math.sin(ang)])
+        sh.tip("foam", np.array([cx, 37.0, cz]) + outw * 2.2, unit(np.array([0.0, -1.0, 0.0]) + outw * 0.9), 6.5, 2.2, spin=k * 25, bury=0.15)
+    # 꼬리 물보라 (뒤 · 바깥으로 — 날아가며 끄는 물)
+    for k in range(6):
+        ang = k * 2 * math.pi / 6 + 0.25
+        outw = np.array([math.cos(ang), 0.0, math.sin(ang)])
+        sh.tip("foam" if k % 2 == 0 else "water", np.array([cx, 1.5, cz]) + outw * 1.6, unit(np.array([0.0, -1.0, 0.0]) + outw * 0.7), 7.0 + 1.5 * (k % 2), 2.0,
+               spin=k * 30, bury=0.2)
+    return sh
+
+
+BUILD = {"wave": wave, "water_column": water_column, "palm": palm, "angel_wing": angel_wing, "water_lance": water_lance}
 
 
 # ------------------------------------------------------------------ 미리보기 (광선 추적 — 조각마다 아핀 변환)
@@ -618,7 +656,8 @@ def render(shape, texs, tints, view, W=380, H=380, ss=2, bg=(92, 98, 112), half=
 
 TINTS = {"palm": [(1.0, 0.78, 0.3), (1.0, 0.95, 0.75)], "angel_wing": [(1.0, 0.9, 0.62), (1.0, 1.0, 1.0)]}
 VIEWS = {"wave": [(0.6, 0.45, -1.0), (1.0, 0.15, 0.05), (-0.5, 0.35, 1.0)], "water_column": [(1.0, 0.35, -0.7), (0.2, 1.0, -0.2), (-0.8, 0.1, 0.6)],
-         "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0), (1.0, 0.25, 0.1)], "angel_wing": [(1.0, 0.1, 0.0), (1.0, 0.3, 0.6), (-1.0, 0.2, 0.3)]}
+         "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0), (1.0, 0.25, 0.1)], "angel_wing": [(1.0, 0.1, 0.0), (1.0, 0.3, 0.6), (-1.0, 0.2, 0.3)],
+         "water_lance": [(1.0, 0.2, 0.0), (1.0, 0.6, 0.6), (0.2, -0.3, 1.0)]}
 
 
 def textures_frame0():

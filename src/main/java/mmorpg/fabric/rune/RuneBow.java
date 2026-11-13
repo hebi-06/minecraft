@@ -46,9 +46,8 @@ final class RuneBow {
         double[] glow = cs[0];
         double[] core = cs[1];
         double s0 = Math.min(1.4, len);
-        // 촉이 벽 (len) 에서 멈추게: 가운데가 len − 0.76 까지
-        RuneKit.rfx2(level, "arrow", V.add(from, view, s0), Opt.of("dir", view, "speed", speed, "size", 0.95, "life", Math.max(0.05, (len - s0 - 0.76) / speed)),
-                glow, RuneKit.WHITE);
+        // 2026-11-13 3D 룬 빛 화살 (1.9칸 — 2D 화살 그림 대신, 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 손 앞에서 촉이 벽 (len) 까지 날아가 꽂혀 머물다 흩어짐
+        arrowFlight(level, V.add(from, view, s0 - 0.6), view, len - s0 + 0.6, speed, 1.9, 6, glow, core);
         SkillFx.fx(level, "rpg:light_cut", V.add(from, view, len / 2), Opt.of("dir", view, "size", len / 2, "thick", 0.2, "life", 0.55, "delay", 0.3, "color", glow,
                 "alpha", 0.85));
         SkillFx.ring(level, V.add(from, view, 0.6), view, glow, 0.38, 0.22, 0);
@@ -91,6 +90,9 @@ final class RuneBow {
         double[] core = cs[1];
         Vec3 from = RuneKit.bowHand(sp);
         int ticks = RuneKit.flyArrow(level, from, Kit.bodyPoint(target), 40, glow, RuneKit.WHITE, 0.8, 1.2);
+        // 2026-11-13 3D 룬 빛 화살 (1.6칸): 대상의 몸까지 날아가 꽂힘 (2D 빛줄기와 같은 때)
+        Vec3 pd = V.unit(V.sub(Kit.bodyPoint(target), from));
+        arrowFlight(level, from, pd, V.len(V.sub(Kit.bodyPoint(target), from)), 40, 1.6, 3, glow, core);
         SkillFx.play(level, "crossbow.shoot", from, 1.0, 0.9);
         RuneKit.later(ticks, () -> {
             if (sp.isRemoved() || target.isRemoved()) return;
@@ -113,7 +115,8 @@ final class RuneBow {
                 Vec3 tilt = V.unit(new Vec3(-Math.cos(a) * 0.45, -1, -Math.sin(a) * 0.45));
                 double sz = 0.62;
                 RuneKit.later(ii, () -> {
-                    RuneKit.rfx2(level, "arrow", V.add(p, tilt, -sz * 0.75), Opt.of("dir", tilt, "size", sz, "life", hold - ii / 20.0, "fade", 0.15), glow, core);
+                    // 2026-11-13 3D 룬 빛 화살 (1.3칸 — 2D 화살 그림 대신): 위에서 내리꽂혀 말뚝처럼 박힌 채 묶인 동안 남음
+                    pinStake(level, p, tilt, (int) Math.round((hold - ii / 20.0) * 20), glow, core);
                     SkillFx.sparks(level, V.up(p, 0.1), core, 3, 3);
                     // 빛의 사슬: 화살 깃 → 몸
                     Vec3 nock = V.add(p, tilt, -sz * 1.5);
@@ -132,6 +135,42 @@ final class RuneBow {
             RuneKit.later(2, () -> SkillFx.play(level, "use.chain", g, 1.1, 0.8));
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 3D 룬 빛 화살 하나 (alen 칸 — rune_arrow): 오늬가 from 에서 시작해 촉이 from + d × dist 에 닿을 때까지 speed 칸/초로 날아감 (2D 화살 · 빛줄기와 같은
+     * 때) → stick 틱 꽂혀 있다가 작아져 흩어짐
+     */
+    static void arrowFlight(ServerLevel level, Vec3 from, Vec3 d, double dist, double speed, double alen, int stick, double[] glow, double[] core) {
+        int ticks = Math.max(1, (int) Math.round(Math.max(0, dist) / speed * 20));
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, from, ticks + stick + 10);
+        Vec3 face = Math.abs(d.y) > 0.95 ? new Vec3(1, 0, 0) : V.rightOf(V.flat(d));
+        RuneSwords.Blade a = RuneSwords.arrow(fx, from, d, face, alen, 0.6, glow, core);
+        double reach = alen * (31 - RuneProps.ARROW_NOCK[1]) / RuneProps.ARROW_LEN;
+        Vec3 nock = V.add(from, d, Math.max(0, dist - reach));
+        fx.on(1, () -> {
+            a.grow(1, 1);
+            a.pose(nock, d, face, ticks);
+        });
+        fx.on(1 + ticks, () -> SkillFx.sparks(level, V.add(from, d, dist), core, 4, 4));
+        fx.on(1 + ticks + stick, () -> a.grow(0.1, 4));
+        fx.on(1 + ticks + stick + 5, a::remove);
+    }
+
+    /** 2026-11-13 속박 화살의 3D 말뚝 화살 (1.3칸): 촉이 p 아래로 박히게 tilt 쪽으로 위에서 내리꽂혀 (2틱) hold 틱 남았다가 작아져 사라짐 */
+    private static void pinStake(ServerLevel level, Vec3 p, Vec3 tilt, int hold, double[] glow, double[] core) {
+        double alen = 1.3;
+        double reach = alen * (31 - RuneProps.ARROW_NOCK[1]) / RuneProps.ARROW_LEN;
+        Vec3 nock = V.sub(V.add(p, tilt, 0.25), V.scale(tilt, reach));
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, p, hold + 10);
+        Vec3 face = V.rightOf(V.flat(tilt).lengthSqr() < 1e-6 ? new Vec3(0, 0, 1) : V.flat(tilt));
+        RuneSwords.Blade a = RuneSwords.arrow(fx, V.sub(nock, V.scale(tilt, 2.5)), tilt, face, alen, 0.7, glow, core);
+        fx.on(1, () -> {
+            a.grow(1, 1);
+            a.pose(nock, tilt, face, 2);
+        });
+        fx.on(Math.max(4, hold), () -> a.grow(0.1, 4));
+        fx.on(Math.max(4, hold) + 5, a::remove);
     }
 
     /**
@@ -178,6 +217,7 @@ final class RuneBow {
                     if (sp.isRemoved() || e.isRemoved()) return;
                     Vec3 from = RuneKit.bowHand(sp);
                     int ticks = RuneKit.flyArrow(level, from, Kit.bodyPoint(e), 45, glow, RuneKit.WHITE, 0.7, 1.2);
+                    arrowFlight(level, from, V.unit(V.sub(Kit.bodyPoint(e), from)), V.len(V.sub(Kit.bodyPoint(e), from)), 45, 1.5, 3, glow, core); // 2026-11-13 3D 화살
                     SkillFx.ring(level, V.add(from, sp.getViewVector(1F), 0.7), V.unit(V.sub(Kit.bodyPoint(e), from)), glow, 0.3, 0.18, 0);
                     SkillFx.play(level, "random.bow", from, 1.3 + ii * 0.1, 0.8);
                     RuneKit.later(ticks, () -> {

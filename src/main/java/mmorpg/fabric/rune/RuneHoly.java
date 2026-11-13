@@ -62,6 +62,58 @@ final class RuneHoly {
      * 빛의 보호막: 나와 radius 칸 안 아군에게 보호막 (최대 체력 × shield × 스탯 비례, ticks), 가까운 적 (hitRadius) 은 밀어내며 신성 피해 —
      * 앞 머리 위에 커다란 금빛 방패 문장 (rpg:rfx_shield), 받은 사람마다 몸 둘레의 방패 셋 (shieldGainFx — 쓴 사람 + 아군 둘까지)
      */
+    /**
+     * 2026-11-13 빛의 보호막의 3D 빛의 육각 판 여섯 (hex_panel 1.5칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 몸 둘레 1.6칸에 보는 쪽부터 차례로 땅에서
+     * 솟아 (바깥을 보고 안으로 15° 기욺 — 돔) 6틱에 번쩍 → 14틱에 가라앉으며 작아져 사라짐
+     */
+    private static void barrierDome(ServerPlayer sp, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, 30);
+        double s = RuneProps.scaleFor(1.5, RuneProps.HEX_PANEL_H);
+        for (int i = 0; i < 6; i++) {
+            Vec3 out = RuneKit.turn(f, i * 60);
+            Vec3 up = V.unit(V.add(V.UP, out, -0.27));
+            final Vec3 at = V.up(V.add(c, out, 1.6), 1.0);
+            final org.joml.Quaternionf rot = RuneProps.facing(out, up);
+            final int d = Math.min(i, 6 - i);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(at, -1.2), new double[] {8, 8, 8}, rot, s * 0.2, glow, core);
+            fx.on(1 + d, () -> p.to(at, rot, s, 3));
+            fx.on(7, () -> p.size(s * 1.1, 1));
+            fx.on(8, () -> p.size(s, 2));
+            fx.on(14 + d, () -> p.to(V.up(at, -0.9), rot, s * 0.15, 5));
+            fx.on(20 + d, p::remove);
+        }
+    }
+
+    /**
+     * 2026-11-13 정화의 빛의 3D 빛 고리 (halo): 머리 위 5.5칸에서 작게 나타나 돌며 내려와 (6틱 — 머리 위 2.3칸 · 지름 1.1칸) 빛나다 → 9 ~ 15틱에 땅으로 내려가며
+     * radius 의 0.8배 지름으로 퍼져 → 작아져 사라짐
+     */
+    private static void purifyHalo(ServerPlayer sp, double radius, double[] glow) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, 26);
+        double s1 = RuneProps.scaleFor(1.1, RuneProps.HALO_D);
+        double s2 = RuneProps.scaleFor(Math.max(3, radius * 0.8), RuneProps.HALO_D);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HALO, V.up(c, 5.5), new double[] {8, 8, 8}, RuneProps.along(V.UP, new Vec3(1, 0, 0)), s1 * 0.3,
+                glow, RuneKit.WHITE);
+        for (int t = 1; t <= 15; t++) {
+            final int tt = t;
+            fx.on(t, () -> {
+                Vec3 cc = sp.isRemoved() ? c : sp.position();
+                org.joml.Quaternionf q = RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), tt * 18.0));
+                if (tt <= 6) p.to(V.up(cc, 5.5 - 3.2 * RuneSwords.ease(tt / 6.0, "out")), q, s1 * (0.3 + 0.7 * tt / 6.0), 1);
+                else if (tt <= 8) p.to(V.up(cc, 2.3 + 0.05 * Math.sin(tt)), q, s1, 1);
+                else p.to(V.up(cc, 2.3 - 2.1 * RuneSwords.ease((tt - 8) / 7.0, "in")), q, s1 + (s2 - s1) * RuneSwords.ease((tt - 8) / 7.0, "out"), 1);
+            });
+        }
+        fx.on(16, () -> p.size(s2 * 1.1, 2));
+        fx.on(18, () -> p.size(0.01, 4));
+        fx.on(23, p::remove);
+    }
+
     static boolean lightBarrier(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
@@ -87,6 +139,7 @@ final class RuneHoly {
         RuneKit.zonePulse(level, c, glow, k.num("radius"), 0.55);
         RuneKit.zonePulse(level, V.up(c, 1.2), core, k.num("radius") * 0.7, 0.5);
         RuneBoost.bloom(level, c, glow, core, 2.5); // 0.50.0 2D 강화 (아래 등급 터짐): 보호막이 펼쳐지는 순간 (부드러운 터짐)
+        barrierDome(sp, glow, core); // 2026-11-13 몸 둘레에 솟는 3D 빛의 육각 판 여섯 (돔)
         // 큰 금빛 방패 문장: 앞 1.8칸 · 머리 위쪽 (1인칭 화면 위쪽에 보이고, 3인칭에서는 몸 앞 위)
         Vec3 em = V.up(V.add(c, Kit.facingOf(sp), 1.8), 2.55);
         double ek = RuneKit.nearK(sp, em, 3, 0.45);
@@ -147,6 +200,7 @@ final class RuneHoly {
         SkillFx.rune(level, c, Opt.of("size", 2.4, "life", 1.0, "color", glow, "alpha", 0.85, "rate", 60.0, "grow", 0.3));
         RuneKit.zonePulse(level, c, glow, radius, 0.6);
         RuneBoost.bloom(level, c, glow, core, 3.0); // 0.50.0 2D 강화 (아래 등급 터짐): 정화의 빛이 내리는 순간 (부드러운 터짐)
+        purifyHalo(sp, radius, glow); // 2026-11-13 하늘에서 내려와 머리 위에서 돌다 땅으로 퍼지는 3D 빛 고리
         // 빛의 비: 둘레 (반지름 radius × 0.8 안) 에 내리꽂히는 빛줄기 12개 (3틱에 걸쳐)
         for (int i = 0; i < 12; i++) {
             final int ii = i;

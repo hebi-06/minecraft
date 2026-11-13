@@ -312,6 +312,8 @@ final class RuneGravity {
         double pull = k.num("pull");
         int pullTicks = (int) k.num("pullTicks");
         double radius = k.num("radius");
+        // 2026-11-13 3D 공허 핵 (void_orb — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 손에서 날아가 (ticks) 터질 자리에서 돌며 커지다 (pullTicks) 안으로 꺼짐
+        orbFlight(sp, life, hand, to0, ticks, pullTicks, nearScale(sp, to0), glow);
         RuneKit.later(ticks, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 c = target != null && !target.isRemoved() && V.len(V.sub(Kit.bodyPoint(target), to0)) < 3 ? Kit.bodyPoint(target) : to0;
@@ -369,6 +371,7 @@ final class RuneGravity {
         }
         SkillFx.play(level, "mob.breeze.charge", sp.position(), 1.2, 0.8);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", sp.position(), 0.9, 1.2);
+        liftBoulders(sp, life, sp.position(), f, 5.0, gap, glow); // 2026-11-13 적과 함께 떠오르는 3D 바위 → 내리꽂을 때 함께 떨어짐
         List<LivingEntity> hitList = new ArrayList<>();
         List<LivingEntity> floating = new ArrayList<>();
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), cone, 10)) {
@@ -442,6 +445,8 @@ final class RuneGravity {
         double pull = k.num("pull");
         SkillFx.play(level, "mob.warden.sonic_charge", g, 0.9, 1.3);
         SkillFx.play(level, "portal.trigger", g, 0.6, 1.4);
+        // 2026-11-13 3D 공허 핵 + 나선으로 빨려 드는 3D 바위 (블랙홀과 같은 것 — 작게): 8틱에 자라고 붕괴 (T) 에 오그라듦
+        voidCore(sp, life, hole, 8, Math.max(2, T - 8), sc * 0.6, glow);
         for (int t = 0; t < T; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -613,6 +618,35 @@ final class RuneGravity {
             });
             fx.on(gap + 9, p::remove);
         }
+    }
+
+    /**
+     * 2026-11-13 중력탄의 3D 공허 핵 (void_orb 0.45칸): 손에서 to 까지 ticks 틱에 날아가 (돌며) → pullTicks 동안 돌며 0.95칸까지 커지고 → 안으로 오그라들어 사라짐.
+     * 죽거나 나가면 그때 오그라듦
+     */
+    private static void orbFlight(ServerPlayer sp, String life, Vec3 hand, Vec3 to, int ticks, int pullTicks, double sc, double[] glow) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, hand, ticks + pullTicks + 10);
+        double d0 = 19.0 / 16.0;
+        mmorpg.fabric.vfx.Vfx.Prop core = RuneProps.prop(fx, RuneProps.VOID_ORB, V.add(hand, V.sub(to, hand), 0.08), new double[] {8, 8, 8}, new Quaternionf(),
+                0.25 / d0 * sc, glow);
+        fx.on(1, () -> core.to(to, new Quaternionf().rotateY((float) Math.toRadians(ticks * 30)), 0.45 / d0 * sc, Math.max(1, ticks - 1)));
+        boolean[] done = {false};
+        for (int t = ticks + 2; t <= ticks + pullTicks; t += 2) {
+            final double s = (0.45 + 0.5 * (t - ticks) / (double) Math.max(1, pullTicks)) / d0 * sc;
+            final int tt = t;
+            fx.on(t, () -> {
+                if (done[0]) return;
+                if (!RuneKit.sameLife(sp, life)) {
+                    done[0] = true;
+                    core.size(0.02, 3);
+                    return;
+                }
+                core.to(null, new Quaternionf().rotateY((float) Math.toRadians(tt * 24)).rotateX((float) Math.toRadians(tt * 9)), s, 2);
+            });
+        }
+        fx.on(ticks + pullTicks, () -> core.size(0.02, 3));
+        fx.on(ticks + pullTicks + 4, core::remove);
     }
 
     /**

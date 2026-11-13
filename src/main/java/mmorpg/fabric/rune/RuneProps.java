@@ -29,6 +29,9 @@ public final class RuneProps {
     public static final String NET = "rpg:vfx/net";
     public static final String WAVE = "wave";
     public static final String WATER_COLUMN = "water_column";
+    /** 2026-11-13 물의 창 (조각 물체 water_lance — 쥔 곳 = 꼬리 가운데 (8, 0, 8) · 촉 +Y, 끝 y 약 52 · 물 재질이라 물들임 없음) */
+    public static final String WATER_LANCE = "water_lance";
+    public static final double WATER_LANCE_LEN = 52;
 
     /**
      * 2026-11-13 룬 빛 화살 (저격 · 천궁 — tools/vfx_blocky.py rune_arrow): 촉 끝 y 31 · 오늬 끝 y −14 (길이 45) · 가운데 (8, 8.5, 8) · 오늬 (8, −13, 8).

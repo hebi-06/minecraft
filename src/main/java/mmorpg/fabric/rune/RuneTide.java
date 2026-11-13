@@ -92,6 +92,29 @@ final class RuneTide {
      * 물의 창: 손 앞에 물이 모여 (물 고리 · 물보라) 뾰족한 물의 창 (rpg:rfx_icicle 을 물빛으로 + 감싼 물줄기) 이 range 칸 (벽 앞까지) 을 speed 칸/초로 날아가며
      * 폭 width 칸의 적을 꿰뚫음 (위력 × mult) — 맞은 적은 물보라 왕관 · 밀쳐짐 (knock). 지나간 자리에 물보라 · 물결 고리
      */
+    /**
+     * 2026-11-13 물의 창 (조각 물체 water_lance 2.6칸): 꼬리가 from 에서 시작해 촉이 from + d × dist 에 닿을 때까지 speed 칸/초로 날아감 (2D 물줄기와 같은 때) →
+     * 끝에서 물보라를 튀기며 커졌다 작아져 사라짐
+     */
+    private static void lanceFlight(ServerLevel level, Vec3 from, Vec3 d, double dist, double speed) {
+        double alen = 2.6;
+        int ticks = Math.max(1, (int) Math.round(Math.max(0, dist) / speed * 20));
+        double s = RuneProps.scaleFor(alen, RuneProps.WATER_LANCE_LEN);
+        org.joml.Quaternionf rot = RuneProps.along(d, Math.abs(d.y) > 0.95 ? new Vec3(1, 0, 0) : V.rightOf(V.flat(d)));
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, from, ticks + 14);
+        mmorpg.fabric.vfx.Vfx.Group g = RuneProps.shape(fx, RuneProps.WATER_LANCE, from, rot, s * 0.5);
+        Vec3 tail = V.add(from, d, Math.max(0, dist - alen));
+        fx.on(1, () -> g.to(tail, rot, s, Math.max(1, ticks)));
+        fx.on(1 + ticks, () -> {
+            Vec3 tip = V.add(from, d, dist);
+            SkillFx.particle(level, ParticleTypes.SPLASH, tip, 24, 0.4, 0.15);
+            SkillFx.ring(level, tip, d, FOAM, 0.8, 0.3, 1.2);
+            g.to(V.add(tail, d, 0.4), rot, s * 1.15, 2);
+        });
+        fx.on(ticks + 4, () -> g.size(s * 0.1, 5));
+        fx.on(ticks + 10, g::remove);
+    }
+
     static boolean tideLance(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
@@ -108,8 +131,8 @@ final class RuneTide {
         // 손 앞에 물이 모임
         SkillFx.ring(level, V.add(sp.getEyePosition(), view, 1.6), view, WATER, 0.42, 0.22, 3.0);
         SkillFx.particle(level, ParticleTypes.SPLASH, hand, 16, 0.25, 0.1);
-        // 물의 창 (뾰족한 촉) + 감싼 물줄기 둘
-        RuneKit.rfx2(level, "icicle", hand, Opt.of("dir", d, "speed", speed, "size", 0.95, "life", fly, "fade", 0.15), WATER, FOAM);
+        // 물의 창: 2026-11-13 3D 조각 물체 (water_lance 2.6칸 — 2D 얼음 촉 대신, 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자") + 감싼 물줄기 둘
+        lanceFlight(level, hand, d, len - s0, speed);
         RuneKit.flyStreak(level, hand, V.add(from, d, len), speed, WATER, FOAM, 1.4, 0.42);
         RuneKit.later(1, () -> RuneKit.flyStreak(level, hand, V.add(from, d, len), speed, DEEP, WATER, 1.1, 0.6));
         for (int t = 1; t <= ticks; t++) {

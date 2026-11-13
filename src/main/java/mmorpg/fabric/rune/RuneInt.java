@@ -45,6 +45,8 @@ final class RuneInt {
         double s0 = Math.min(0.8, len * 0.5);
         RuneKit.rfx(level, "fireball", V.add(from, d, s0), Opt.of("dir", d, "speed", (len - s0) / life, "size", 0.5, "life", life, "frames", 4.0, "fps", 14.0,
                 "loop", true, "phase", Kit.rand() * 4));
+        // 2026-11-13 2D 불덩이 속 3D 운석 (0.7칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 같은 길을 구르며 날아가 터지는 자리에 박혀 사라짐
+        meteorRock(level, V.add(from, d, s0), to, d, ticks, 0.7);
         for (double s = 0.9; s < len; s += 0.6) {
             double delay = (s / len) * life;
             SkillFx.fx(level, "rpg:arrow_trail", V.add(from, d, s), Opt.of("dir", d, "size", 0.34, "thick", 0.3, "life", delay + 0.32, "delay", delay,
@@ -67,6 +69,8 @@ final class RuneInt {
             SkillFx.sparks(level, at, glow, 10, 5);
             RuneKit.zonePulse(level, new Vec3(at.x, at.y - 0.9, at.z), glow, radius, 0.4);
             RuneBoost.impact(level, new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1.2), at.z), glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 터진 자리의 땅
+            // 2026-11-13 터진 자리에서 3D 바위 조각 넷이 사방으로 튐 (틈의 빛 = 불)
+            RuneSwing.erupt(level, new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1.2), at.z), d, 4, 360, 0.3, 0.8, 0.25, 0.45, 2.0, glow);
             SkillFx.vanilla(level, "minecraft:lava_particle", at);
             SkillFx.play(level, "random.explode", at, 1.4, 0.5);
             SkillFx.play(level, "fire.ignite", at, 1.0, 1);
@@ -170,6 +174,7 @@ final class RuneInt {
         int total = (hits - 1) * gap + 10;
         double sc = RuneKit.nearK(sp, V.up(g, 2.5), 6, 0.25); // 가까이 겨누면 작게 (화면을 덮지 않게)
         SkillFx.rune(level, g, Opt.of("size", radius, "life", total / 20.0 + 0.3, "color", glow, "alpha", 0.8, "rate", 90.0, "grow", 0.0));
+        stormRocks(level, g, radius, (hits - 1) * gap, sc); // 2026-11-13 불 회오리를 따라 솟아 도는 3D 불바위 → 마지막 폭발에 사방으로
         SkillFx.play(level, "mob.ghast.fireball", g, 0.8, 1);
         SkillFx.play(level, "fire.ignite", g, 0.8, 1);
         for (int t = 0; t < total; t += 3) {
@@ -230,6 +235,60 @@ final class RuneInt {
             }
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 화염 폭풍의 3D 불바위 (운석 모델 조각 일곱 — 0.35 ~ 0.6칸): 불 회오리 둘레 (반지름 0.5 ~ 1.3 × sc) 에서 땅을 박차고 솟아 회오리를 따라 돌며
+     * (틱에 22° — 회오리와 같은 쪽) 위로 감아 올라가 (until 까지 4칸) → until 에 사방으로 튀어 떨어져 가라앉음
+     */
+    private static void stormRocks(ServerLevel level, Vec3 g, double radius, int until, double sc) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, until + 34);
+        int n = 7;
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[n];
+        double[] rr = new double[n];
+        double[] s = new double[n];
+        double[] ph = new double[n];
+        double[] h0 = new double[n];
+        long[] seed = new long[n];
+        for (int j = 0; j < n; j++) {
+            rr[j] = (0.5 + Kit.rand() * 0.8) * Math.max(0.5, sc) * Math.min(1.4, radius / 3.0);
+            s[j] = RuneProps.scaleFor(0.35 + Kit.rand() * 0.25, RuneProps.METEOR_D);
+            ph[j] = j * 360.0 / n + Kit.rand() * 20;
+            h0[j] = Kit.rand() * 0.8;
+            seed[j] = (long) (Kit.rand() * 1e9) + j;
+            ps[j] = RuneProps.prop(fx, RuneProps.METEOR, V.up(g, -0.4), new double[] {8, 8, 8}, RuneProps.tumble(seed[j], 0, 0), s[j] * 0.3);
+        }
+        Vec3[] last = new Vec3[n];
+        fx.each(1, until, 1, t -> {
+            double rise = Math.min(1, t / 8.0);
+            for (int j = 0; j < n; j++) {
+                double a = Math.toRadians(ph[j] - t * 22);
+                double hgt = h0[j] + 4.0 * t / (double) Math.max(1, until);
+                double r = rr[j] * (0.6 + 0.4 * rise) * (1 + 0.25 * Math.sin(t * 0.3 + j));
+                Vec3 at = new Vec3(g.x + Math.cos(a) * r, g.y + hgt * rise + 0.3, g.z + Math.sin(a) * r);
+                last[j] = at;
+                ps[j].to(at, RuneProps.tumble(seed[j], t, 20), t == 1 ? s[j] : -1, 1);
+            }
+        });
+        fx.on(until, () -> {
+            for (int j = 0; j < n; j++) {
+                final int jj = j;
+                Vec3 from = last[j] == null ? V.up(g, 1) : last[j];
+                Vec3 out = V.flat(V.sub(from, g));
+                Vec3 d = V.len(out) < 1e-3 ? new Vec3(1, 0, 0) : V.unit(out);
+                final Vec3 land = PairKit.onGround(level, V.add(from, d, 2.5 + Kit.rand() * 2.5));
+                final int fly = 8 + (int) (Kit.rand() * 4);
+                final double arc = 1.0 + Kit.rand();
+                for (int t = 1; t <= fly; t++) {
+                    final double u = t / (double) fly;
+                    final int tt = t;
+                    fx.on(until + t, () -> ps[jj].to(V.add(V.lerp(from, V.up(land, 0.2), u), V.UP, arc * 4 * u * (1 - u)), RuneProps.tumble(seed[jj], 40 + tt, 30),
+                            -1, 1));
+                }
+                fx.on(until + fly + 4, () -> ps[jj].to(V.up(land, -0.4), null, s[jj] * 0.3, 6));
+                fx.on(until + fly + 11, ps[jj]::remove);
+            }
+        });
     }
 
     /** 눈구름 덩이 하나 (가운데에서 x · z, 크기 s, 그림 칸) */
