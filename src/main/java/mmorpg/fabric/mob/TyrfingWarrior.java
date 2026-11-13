@@ -65,8 +65,8 @@ public class TyrfingWarrior extends BedrockMob {
     public static final java.util.Set<String> RUNE_MOBS = java.util.Set.of("rpg:rune_hawk", "rpg:rune_beast_king", "rpg:rune_undine", "rpg:rune_sylph",
             "rpg:rune_gnome", "rpg:rune_spirit_king", "rpg:rune_shade", "rpg:rune_ki_avatar", "rpg:rune_war_god");
 
-    /** 2026-11-12 직업 스킬의 3D 몹 (tools/job_mobs_art.py — 움직임은 rune.RuneMob 을 쓰는 스킬): 드라군의 붉은 용 */
-    public static final java.util.Set<String> JOB_MOBS = java.util.Set.of("rpg:job_dragon");
+    /** 2026-11-12 직업 스킬의 3D 몹 (tools/job_mobs_art.py — 움직임은 rune.RuneMob 을 쓰는 스킬): 드라군의 붉은 용 · 2026-11-13 워로드의 곰의 혼 */
+    public static final java.util.Set<String> JOB_MOBS = java.util.Set.of("rpg:job_dragon", "rpg:job_bear");
 
     /** 이 몹 (스스로 생각하지 않고 스킬이 움직이는 아군 몹) 꼴로 등록할 엔티티 id 인지 */
     public static boolean isAllyId(String id) {

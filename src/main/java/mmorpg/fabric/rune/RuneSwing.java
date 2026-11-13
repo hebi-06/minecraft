@@ -16,7 +16,7 @@ import org.joml.Quaternionf;
  * 45 = 오른쪽 위 ↔ 왼쪽 아래 대각선). a 가 앞 (0) 을 지나는 틱이 피해 틱이 되게 씀.
  * <p>끝 각 (머무는 곳) 은 ±100° 안: CI 43404783003 영상에서 −125 ~ −130 · 105 ~ 120 에 머문 칼은 몸 뒤로 뻗어 손에서 떨어져 보였음 (시작 각은 뒤여도 됨 — 감은 자세).
  */
-final class RuneSwing {
+public final class RuneSwing {
     private RuneSwing() {}
 
     /** 휘두르는 면 위의 방향: 앞 f 에서 w 쪽으로 a 도 */
@@ -168,12 +168,12 @@ final class RuneSwing {
      * 땅에서 솟아 튀는 바위 (3D boulder — 틈의 빛 = col): c 둘레 (앞 f 기준 ±spread/2 도 · 반지름 r0 ~ r1) 의 땅에서 n 개가 솟아 (2틱 — 0.4 ~ 1칸) 바깥으로
      * 구르며 날아가 (out 칸 · 포물선) 떨어져 가라앉음. size = 지름 칸 (s0 ~ s1)
      */
-    static void erupt(ServerLevel level, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out, double[] col) {
+    public static void erupt(ServerLevel level, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out, double[] col) {
         erupt(level, RuneProps.BOULDER, RuneProps.BOULDER_D, c, f, n, spread, r0, r1, s0, s1, out, col);
     }
 
     /** 2026-11-13 erupt 와 같고 모델만 다름 (화산 — 달아오른 운석 조각 METEOR) */
-    static void erupt(ServerLevel level, String model, double modelD, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out,
+    public static void erupt(ServerLevel level, String model, double modelD, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out,
             double[] col) {
         Vfx.Fx fx = RuneProps.fx(level, c, 40);
         for (int i = 0; i < n; i++) {

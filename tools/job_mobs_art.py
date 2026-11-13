@@ -326,12 +326,210 @@ def job_dragon_anims():
     return out
 
 
+# ================================================================== 워로드의 곰의 혼 (2026-11-13 — 직업 도감 메모 하이버네이트 · 그리즐리 크러시 · 베어 스톰프 ·
+# 카타클리즘 "곰과 땅 연출을 3d로"): 짙은 갈색 털 · 호박빛 정령 핏줄 · 등과 어깨의 돌 판 (호박빛 금) · 호박빛 눈 · 상아 발톱 (빛 테) · 달아오른 입.
+# 네 발로 섰을 때 어깨 약 1.9칸 · 코에서 꼬리 약 3칸 (크기 1). 앞 = −z
+
+BR_FUR = (82, 52, 30)
+BR_FUR_DARK = (48, 29, 17)
+BR_BELLY = (122, 86, 54)
+BR_GLOW = (255, 148, 40)     # 워로드 빛 (1.0, 0.58, 0.16)
+BR_CORE = (255, 214, 140)
+BR_STONE = (96, 84, 70)
+BR_STONE_DARK = (60, 52, 44)
+BR_IVORY = (242, 228, 198)
+BR_EYE = (255, 206, 80)
+
+# 일어선 자세 (뒷발로 — 엉덩이 hips 를 X 로 젖힘) · 두 팔을 치켜든 자세 (오른쪽 R = −x)
+BR_REAR = -62
+
+
+def job_bear():
+    m = Model("job_bear", tex_w=256)
+    fur = Mat(BR_FUR, "fur", noise=9, accent=BR_FUR_DARK, seed=901, veins=1, vein=BR_GLOW, vein_glow=0.75)
+    furp = Mat(BR_FUR, "fur", noise=9, accent=BR_FUR_DARK, seed=902)
+    belly = Mat(BR_BELLY, "fur", noise=6, accent=(92, 62, 38), seed=903)
+    stone = Mat(BR_STONE, "plates", noise=6, edge=0.8, accent=BR_STONE_DARK, seed=904, seam=BR_GLOW, seam_glow=0.9, seam_band=3, seam_dir="grid",
+                seam_gap=0.3)
+    glow = Mat(BR_GLOW, "flat", noise=8, edge=1.0, glow=0.9, seed=905)
+    claw = Mat(BR_IVORY, "bone", noise=3, edge=0.9, seed=907, rim=BR_GLOW, rim_glow=0.65)
+    dark = Mat((26, 16, 10), "flat", noise=3, edge=0.9, seed=908)
+    teeth = Mat((246, 238, 218), "flat", noise=2, edge=0.95, seed=909)
+    mouth = Mat((255, 118, 36), "flat", noise=8, edge=0.9, glow=0.85, seed=910)
+
+    root = m.bone("root", [0, 0, 0])
+    hips = m.bone("hips", [0, 18, 8], "root")
+    body = m.bone("body", [0, 20, 0], "hips")
+    # 몸통 (앞 −z): 배 · 어깨 혹 (정령 핏줄) · 엉덩이 · 등의 돌 판 넷 (호박빛 금) · 어깨 돌 판
+    body.box([-8, 11, -13], [16, 14, 25], furp.with_(seed=910), faces={"down": belly})
+    body.box([-8.5, 19, -15], [17, 10, 12], fur.with_(seed=911), faces={"down": belly.with_(seed=912)})
+    body.box([-7.5, 12, 6], [15, 14, 9], furp.with_(seed=913), faces={"down": belly.with_(seed=914)})
+    body.box([-5, 29, -14], [10, 2, 8], stone)
+    body.box([-4.5, 26.5, -5], [9, 2, 7], stone.with_(seed=915))
+    body.box([-4, 25.5, 3], [8, 2, 6], stone.with_(seed=916))
+    body.box([-3, 25.5, 10], [6, 2, 4], stone.with_(seed=917))
+    for i, z in enumerate((-12, -4, 4)):
+        body.box([-1, 31 - (2.5 if i == 1 else 0) - (3.5 if i == 2 else 0), z], [2, 2, 2], glow.with_(seed=918 + i))  # 판 위 빛 돌기
+    body.box([-10, 22, -13], [3, 6, 8], stone.with_(seed=921))
+    body.box([7, 22, -13], [3, 6, 8], stone.with_(seed=922))
+    # 머리: 두개 · 주둥이 (옅은 털) · 코 · 눈썹 돌 판 · 이마의 빛 · 송곳니 · 귀
+    head = m.bone("head", [0, 24, -14], "body")
+    eyes = [("north", 2, 4, BR_EYE, 1.0), ("north", 3, 4, BR_EYE, 1.0), ("north", 7, 4, BR_EYE, 1.0), ("north", 8, 4, BR_EYE, 1.0),
+            ("north", 2, 5, (60, 24, 6)), ("north", 8, 5, (60, 24, 6)), ("north", 5, 1, BR_GLOW, 0.9), ("north", 5, 2, BR_GLOW, 0.9)]
+    head.box([-5.5, 17, -24], [11, 11, 10], furp.with_(seed=930), decals=eyes)
+    head.box([-3.5, 17, -30], [7, 6, 6], belly.with_(seed=931))
+    head.box([-1.5, 21.5, -31], [3, 2, 1], dark)
+    head.box([-5.5, 27, -24.5], [11, 2, 5], stone.with_(seed=932))
+    head.box([-3, 15.5, -29.5], [1, 2, 1], teeth)
+    head.box([2, 15.5, -29.5], [1, 2, 1], teeth.with_(seed=933))
+    jaw = m.bone("jaw", [0, 18, -24], "head")
+    jaw.box([-3, 15, -30], [6, 2, 6], belly.with_(seed=934), faces={"up": mouth})
+    jaw.box([-2.5, 17, -29.5], [1, 1, 1], teeth.with_(seed=935))
+    jaw.box([1.5, 17, -29.5], [1, 1, 1], teeth.with_(seed=936))
+    for side, sx in (("R", -1), ("L", 1)):
+        ear = m.bone("ear" + side, [4 * sx, 28, -18], "head")
+        ear.box([4 * sx - 1.5, 28, -19], [3, 3, 2], furp.with_(seed=937 + sx), decals=[("north", 1, 1, BR_GLOW, 0.7)])
+    # 앞다리 (몸을 따라 — 일어서 치켜듦): 윗다리 · 아랫다리 · 큰 발 · 상아 발톱 넷 (빛 테)
+    for side, sx in (("R", -1), ("L", 1)):
+        x0 = -10.5 if sx < 0 else 4.5
+        up = m.bone("legF" + side, [7.5 * sx, 21, -8], "body")
+        up.box([x0, 8, -12], [6, 14, 8], furp.with_(seed=940 + sx))
+        lo = m.bone("armF" + side, [7.5 * sx, 9, -8], "legF" + side)
+        lo.box([x0 + 0.5, 2, -11.5], [5, 8, 6], furp.with_(seed=942 + sx))
+        lo.box([x0 - 0.5, 0, -14], [7, 3, 8], furp.with_(seed=944 + sx), faces={"down": dark})
+        for i in range(4):
+            lo.box([x0 - 0.25 + i * 1.75, 0.5, -17], [1, 1, 3], claw.with_(seed=946 + i))
+        # 뒷다리 (땅에 — 몸이 일어서도 그대로)
+        xb = -9.5 if sx < 0 else 3.5
+        th = m.bone("legB" + side, [6.5 * sx, 17, 9], "root")
+        th.box([xb, 7, 4], [6, 12, 10], furp.with_(seed=950 + sx))
+        th.box([xb + 0.5, 2, 6], [5, 6, 6], furp.with_(seed=952 + sx))
+        th.box([xb, 0, 2], [6, 2, 8], furp.with_(seed=954 + sx), faces={"down": dark})
+        for i in range(3):
+            th.box([xb + 0.5 + i * 2, 0.25, 0.5], [1, 1, 2], claw.with_(seed=956 + i))
+    tail = m.bone("tail", [0, 23, 15], "body")
+    tail.box([-1.5, 21, 14.5], [3, 3, 3], furp.with_(seed=960))
+    return m
+
+
+def _br_pose(kind):
+    """곰의 자세 (뼈 → 회전): rear = 일어서 두 팔을 치켜듦 · wide = 일어서 두 팔을 양옆으로 활짝 · hug = 일어서 두 팔을 앞 가운데로 모음 ·
+    wind = 내려치기 직전 (더 젖혀 두 팔을 머리 위로) · hit = 두 앞발이 땅을 침 · curl = 엎드려 웅크림 (뿌리를 낮춤 — 다리는 땅 아래)"""
+    if kind == "rear":
+        return {"hips": [BR_REAR, 0, 0], "head": [48, 0, 0], "jaw": [26, 0, 0], "legFR": [-105, 32, 0], "legFL": [-105, -32, 0],
+                "armFR": [-25, 0, 0], "armFL": [-25, 0, 0], "tail": [20, 0, 0]}
+    if kind == "wide":
+        return {"hips": [BR_REAR, 0, 0], "head": [44, 0, 0], "jaw": [32, 0, 0], "legFR": [-98, 72, 0], "legFL": [-98, -72, 0],
+                "armFR": [-15, 0, 0], "armFL": [-15, 0, 0], "tail": [20, 0, 0]}
+    if kind == "hug":
+        return {"hips": [BR_REAR + 6, 0, 0], "head": [52, 0, 0], "jaw": [36, 0, 0], "legFR": [-50, 0, -24], "legFL": [-50, 0, 24],
+                "armFR": [-45, 0, 0], "armFL": [-45, 0, 0], "tail": [20, 0, 0]}
+    if kind == "wind":
+        return {"hips": [BR_REAR - 10, 0, 0], "head": [58, 0, 0], "jaw": [38, 0, 0], "legFR": [-128, 12, 0], "legFL": [-128, -12, 0],
+                "armFR": [-20, 0, 0], "armFL": [-20, 0, 0], "tail": [24, 0, 0]}
+    if kind == "hit":
+        return {"hips": [10, 0, 0], "head": [18, 0, 0], "jaw": [34, 0, 0], "legFR": [-28, 0, 6], "legFL": [-28, 0, -6],
+                "armFR": [8, 0, 0], "armFL": [8, 0, 0], "tail": [-6, 0, 0], "body": [0, 0, 0]}
+    if kind == "roared":
+        return {"hips": [BR_REAR - 8, 0, 0], "head": [20, 0, 0], "jaw": [44, 0, 0], "legFR": [-93, 47, 0], "legFL": [-93, -47, 0],
+                "armFR": [-17, 0, 0], "armFL": [-17, 0, 0], "tail": [24, 0, 0]}
+    if kind == "curl":
+        return {"hips": [6, 0, 0], "head": [24, -30, 8], "jaw": [0, 0, 0], "legFR": [-70, 20, 0], "legFL": [-70, 30, 0],
+                "armFR": [60, 0, 0], "armFL": [60, 0, 0], "tail": [0, 0, 0]}
+    return {}
+
+
+BR_BONES = ("hips", "head", "jaw", "legFR", "legFL", "armFR", "armFL", "tail")
+
+
+def _br_move(times, poses, extra=None, length=None):
+    """자세 차례 → 뼈마다 회전 키 (times[i] 초에 poses[i] — 없는 뼈는 0)"""
+    bones = {}
+    for b in BR_BONES:
+        keys = [(t, _br_pose(p).get(b, [0, 0, 0]) if isinstance(p, str) else p.get(b, [0, 0, 0])) for t, p in zip(times, poses)]
+        if any(v != [0, 0, 0] for _, v in keys):
+            bones[b] = {"rotation": kf(keys)}
+    for b, v in (extra or {}).items():
+        bones.setdefault(b, {}).update(v)
+    out = {"bones": bones}
+    if length is not None:
+        out["animation_length"] = length
+    return out
+
+
+def job_bear_anims():
+    br = f"math.sin({LT} * 110)"
+    still = {
+        # 늘 (작게): 숨 · 머리 · 입 · 귀
+        "idle": {"loop": True, "bones": {
+            "body": {"position": [0, f"{br} * 0.45", 0], "scale": [f"1 + {br} * 0.015", f"1 + {br} * 0.02", 1]},
+            "head": {"rotation": [f"math.sin({LT} * 70) * 3", f"math.sin({LT} * 45) * 6", 0]},
+            "jaw": {"rotation": [f"math.max(0, math.sin({LT} * 55)) * 6", 0, 0]},
+            "earR": {"rotation": [0, 0, f"math.max(0, math.sin({LT} * 140)) * -10"]},
+            "earL": {"rotation": [0, 0, f"math.max(0, math.sin({LT} * 140 + 90)) * 10"]},
+        }},
+    }
+    curl_extra = {"root": {"position": [0, -9, 0]}, "body": {"scale": [f"1 + {br} * 0.03", f"1 + {br} * 0.04", 1]}}
+    run = {
+        # 땅에서 솟음 (0.5초): 작게 땅속에서 커지며 올라옴 · 고개를 듦
+        "summon": {"animation_length": 0.5, "bones": {
+            "root": {"scale": kf([(0, [0.2, 0.2, 0.2]), (0.3, [1.08, 1.08, 1.08]), (0.5, [1, 1, 1])]),
+                     "position": kf([(0, [0, -12, 0]), (0.3, [0, 0, 0])])},
+            "head": {"rotation": kf([(0, [24, 0, 0]), (0.5, [0, 0, 0])])},
+        }},
+        # 땅에서 솟으며 일어서 두 팔을 활짝 (0.25초 — 끝 자세를 지킴): 그리즐리 크러시
+        "rise_wide": dict(_br_move([0, 0.25], [{}, "wide"], {"root": {"scale": kf([(0, [0.3, 0.3, 0.3]), (0.18, [1.06, 1.06, 1.06]), (0.25, [1, 1, 1])]),
+                                                                       "position": kf([(0, [0, -14, 0]), (0.18, [0, 0, 0])])}}, 0.25)),
+        # 일어섬 (0.45초 — 끝 자세를 지킴): 뒷발로 서며 두 팔을 치켜듦 · 포효
+        "rear": _br_move([0, 0.2, 0.45], [{}, {"hips": [BR_REAR + 14, 0, 0], "head": [10, 0, 0], "jaw": [20, 0, 0]}, "rear"], length=0.45),
+        # 포효 (0.9초 — 끝 자세를 지킴): 네 발에서 일어서며 (0.3) 고개를 하늘로 젖혀 입을 크게 · 두 팔을 활짝 (0.55)
+        "roar": _br_move([0, 0.3, 0.55, 0.9], [{}, {"hips": [BR_REAR - 4, 0, 0], "head": [66, 0, 0], "jaw": [12, 0, 0], "legFR": [-100, 22, 0],
+                                                  "legFL": [-100, -22, 0], "armFR": [-30, 0, 0], "armFL": [-30, 0, 0], "tail": [20, 0, 0]}, "roared", "roared"],
+                         length=0.9),
+        # 포효한 채 내려침 (0.55초 — 닿는 때 0.25초): 활짝 편 팔을 머리 위로 → 내리찍음 (카타클리즘)
+        "roarslam": _br_move([0, 0.12, 0.25, 0.38, 0.55], ["roared", "wind", "hit", "hit", {}],
+                             {"body": {"position": kf([(0, [0, 0, 0]), (0.25, [0, -2.5, -1]), (0.38, [0, -2, -1]), (0.55, [0, 0, 0])])}}, 0.55),
+        # 으르렁 (0.7초 — 네 발로): 앞을 들썩이며 고개를 들어 입을 크게 → 낮춤 (베어 스톰프의 끝)
+        "growl": _br_move([0, 0.2, 0.5, 0.7], [{}, {"hips": [-14, 0, 0], "head": [-26, 0, 0], "jaw": [44, 0, 0], "legFR": [-30, 0, 0], "legFL": [-30, 0, 0]},
+                                               {"hips": [-10, 0, 0], "head": [-20, 0, 0], "jaw": [40, 0, 0], "legFR": [-20, 0, 0], "legFL": [-20, 0, 0]}, {}],
+                          length=0.7),
+        # 내려침 (0.55초 — 두 앞발이 땅에 닿는 때 0.25초 = 서버 BEAR_SLAM_AT 5틱): 일어선 자세에서 더 젖혀 머리 위로 (0.12) → 온몸으로 내리찍음 → 네 발로
+        "slam": _br_move([0, 0.12, 0.25, 0.38, 0.55], ["rear", "wind", "hit", "hit", {}],
+                         {"body": {"position": kf([(0, [0, 0, 0]), (0.25, [0, -2.5, -1]), (0.38, [0, -2, -1]), (0.55, [0, 0, 0])])}}, 0.55),
+        # 껴안기 (0.35초 — 끝 자세를 지킴): 활짝 편 두 팔을 앞 가운데로 휩쓸어 모음
+        "hug": _br_move([0, 0.35], ["wide", "hug"], length=0.35),
+        # 껴안은 채 내려침 (0.55초 — 닿는 때 0.25초): 모은 팔을 머리 위로 → 내리찍음
+        "hugslam": _br_move([0, 0.12, 0.25, 0.38, 0.55], ["hug", "wind", "hit", "hit", {}],
+                            {"body": {"position": kf([(0, [0, 0, 0]), (0.25, [0, -2.5, -1]), (0.38, [0, -2, -1]), (0.55, [0, 0, 0])])}}, 0.55),
+        # 엎드려 웅크림 (이어 돎 — 하이버네이트): 몸을 낮추고 고개를 옆으로 묻음 · 깊은 숨
+        "curl": dict(_br_move([0], ["curl"], curl_extra), loop=True),
+        # 깨어나 일어섬 (0.5초 — 끝 = 일어선 자세): 웅크림에서 몸을 들어 뒷발로 서며 두 팔을 치켜듦 · 포효
+        "wake": _br_move([0, 0.2, 0.5], ["curl", {"hips": [BR_REAR + 20, 0, 0], "head": [20, 0, 0], "jaw": [40, 0, 0], "legFR": [-80, 30, 0], "legFL": [-80, -30, 0],
+                                                  "armFR": [-20, 0, 0], "armFL": [-20, 0, 0]}, "rear"],
+                         {"root": {"position": kf([(0, [0, -9, 0]), (0.2, [0, 0, 0])])}}, 0.5),
+        # 흩어짐 (0.5초): 부풀었다가 작아지며 솟음
+        "vanish": {"animation_length": 0.5, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.5, [0, 8, 0])]), "scale": kf([(0, [1, 1, 1]), (0.15, [1.1, 1.1, 1.1]), (0.5, [0.04, 0.04, 0.04])])},
+            "head": {"rotation": kf([(0, [0, 0, 0]), (0.2, [-30, 0, 0])])},
+            "jaw": {"rotation": kf([(0, [0, 0, 0]), (0.2, [34, 0, 0])])},
+        }},
+    }
+    out = dict(still)
+    out.update(run)
+    return out
+
+
 R.MOBS["job_dragon"] = (job_dragon, job_dragon_anims, dict(fam="job_dragon", health=40, move=0.4, box=[1.6, 1.8], fly=True), "entity_emissive", ["idle"], None)
+R.MOBS["job_bear"] = (job_bear, job_bear_anims, dict(fam="job_bear", health=40, move=0.3, box=[1.8, 2.0]), "entity_emissive", ["idle"], None)
+R.PREVIEW_POSES["job_bear"] = ((["idle"], 0.0), (["idle", "rear"], 0.45), (["idle", "roar"], 0.55), (["idle", "slam"], 0.12), (["idle", "slam"], 0.25),
+                               (["idle", "roarslam"], 0.12), (["idle", "growl"], 0.3),
+                               (["idle", "rise_wide"], 0.25), (["idle", "hug"], 0.35), (["idle", "hugslam"], 0.25), (["curl"], 0.0), (["idle", "wake"], 0.25),
+                               (["summon"], 0.25), (["idle", "vanish"], 0.3))
 R.PREVIEW_POSES["job_dragon"] = ((["idle"], 0.0), (["idle", "fly"], 0.15), (["idle", "fly"], 0.45), (["idle", "roar"], 0.6), (["idle", "inhale"], 0.4),
                                  (["idle", "breathe"], 0.2), (["idle", "dive"], 0.25), (["idle", "crash"], 0.5), (["summon"], 0.2),
                                  (["idle", "launch"], 0.1), (["idle", "launch"], 0.18), (["idle", "spin"], 0.2), (["idle", "bite"], 0.1),
                                  (["idle", "bite"], 0.3), (["idle", "rear"], 0.5), (["idle", "slam"], 0.15), (["idle", "stomp"], 0.1), (["idle", "stomp"], 0.2))
-JOB_MOBS = ("job_dragon",)
+JOB_MOBS = ("job_dragon", "job_bear")
 
 
 def main():

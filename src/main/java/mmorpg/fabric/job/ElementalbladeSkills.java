@@ -295,12 +295,16 @@ final class ElementalbladeSkills {
                 Vec3 p = ground(lv, V.add(V.add(c0, f, s), r, side));
                 // 영상 42346989114: 0.75 ~ 1.2 는 과녁 (2칸) 보다 작아 보였음 → 1.15 ~ 1.65 (높이 약 2.3 ~ 3.3칸) · 양옆에 작은 가시 하나씩
                 double size = 1.15 + 0.4 * Math.sin(Math.PI * s / (len + 0.6)) + Kit.rand() * 0.1;
-                JobFx.spikeLife(lv, p, size, 0.1, 0.6, Opt.of("spin", Kit.rand() * 24 - 12), ROCK_BODY, ROCK_SEAM);
+                // 2026-11-13 3D 바위 가시 (직업 도감 메모 "땅 연출을 3d로" — 2D rfx_jspike 대신, 금 사이 금빛)
+                WarlordSkills.spike3d(lv, p, size, 0.1, 0.6, ROCK_SEAM);
                 Vec3 q = ground(lv, V.add(p, r, (side > 0 ? -1 : 1) * 0.8));
-                JobFx.spikeLife(lv, q, size * 0.6, 0.12, 0.5, Opt.of("spin", Kit.rand() * 30 - 15), ROCK_BODY, ROCK_SEAM);
+                WarlordSkills.spike3d(lv, q, size * 0.6, 0.12, 0.5, ROCK_SEAM);
                 RuneKit.glowCrack(lv, p, 1.1, ROCK_BODY, ROCK_SEAM, Opt.of("life", 1.0, "v", (double) ((int) (s * 3) % 2)));
             }
             RuneKit.rockBurst(lv, V.up(V.add(c0, f, len * 0.5), 0.5), 10, 5.0, 0.3);
+            // 2026-11-13 갈라진 길에서 3D 바위가 솟아 양옆으로 튐
+            for (double u : new double[] {0.35, 0.75}) mmorpg.fabric.rune.RuneSwing.erupt(lv, ground(lv, V.add(c0, f, len * u)), f, 4, 360, 0.6, 1.4, 0.4, 0.75, 2.4,
+                    ROCK_SEAM);
             SkillFx.play(lv, "item.mace.smash_ground", sp.position(), 0.7, 1.0);
             SkillFx.play(lv, "block.pointed_dripstone.land", V.add(c0, f, len * 0.5), 0.6, 1.0);
             SkillFx.play(lv, "block.stone.break", V.add(c0, f, len * 0.5), 0.5, 0.9);
