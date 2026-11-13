@@ -11,6 +11,7 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Kit;
@@ -18,6 +19,7 @@ import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -270,10 +272,8 @@ final class WarriorSkills {
         int leechMax = (int) k.num("leechMax", 5);
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
-        // 0.47.0 입체: 몸 둘레를 도는 환영 도끼 셋 (허리 높이 · 날이 바깥 — 오른쪽으로 도는 몸과 같이)
-        int[] axes = JobFx3d.orbitOwner(sp, "phantom_axe", 3, new Vec3(0, 1.0, 0), r * 0.32, -900, true, dur / 20.0 + 0.05, 1.45, j, Opt.of("fadeIn", 0.12,
-                "fadeOut", 0.2, "shine", 0.35, "glowAlpha", 0.5));
-        JobFx3d.guard(sp, life, axes, dur);
+        // 2026-11-13 3D 도끼 셋 (직업 도감 메모 "도끼 연출을 3d로" — 환영 도끼 판 대신)
+        whirlAxes(sp, j, life, dur);
         SkillFx.play(sp.level(), "mob.breeze.whirl", sp.position(), 0.8, 1.0);
         SkillFx.play(sp.level(), "mob.ravager.roar", sp.position(), 1.4, 0.5);
         for (int t = 0; t <= dur; t += 2) {
@@ -318,6 +318,55 @@ final class WarriorSkills {
             }
         });
         return true;
+    }
+
+    /** 2026-11-13 액스 사이클론의 3D 도끼 크기 (길이 약 3.3칸) · 도는 빠르기 (도/틱 — 예전 환영 도끼와 같은 −900°/초) · 높이 · 위아래 기울기 */
+    private static final double WHIRL_AXE = 1.15;
+    private static final double WHIRL_RATE = -45;
+    private static final double[] WHIRL_H = {0.75, 1.2, 1.65};
+    private static final double[] WHIRL_TILT = {-0.22, 0.05, 0.3};
+
+    /**
+     * 액스 사이클론의 3D 도끼 셋 (tools/vfx_blocky.py job_axe — 쇠 머리 · 계열 색 빛 날): 몸 둘레 120° 씩 · 높이와 위아래 기울기가 다르게 · 손잡이는 몸 가까이
+     * (0.45칸), 자루는 바깥 · 날은 도는 쪽 — 틱마다 몸을 따라 45° 돎. 3틱 동안 커지고 끝나면 5틱 동안 오그라들며 사라짐 (죽으면 바로)
+     */
+    private static void whirlAxes(ServerPlayer sp, Jobs.Job j, String life, int dur) {
+        double[] glow = JobKit.glow(j);
+        double[] core = JobKit.core(j);
+        Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), dur + 10);
+        Vfx.Prop[] ps = new Vfx.Prop[3];
+        for (int i = 0; i < 3; i++) ps[i] = JobAxe3d.axe(fx, false, whirlGrip(sp, i, 0), JobAxe3d.GRIP, whirlPose(i, 0), WHIRL_AXE * 0.3, glow, core);
+        fx.each(1, dur, 1, age -> {
+            if (!RuneKit.sameLife(sp, life) || sp.isRemoved()) {
+                fx.end();
+                return;
+            }
+            double k = age < 3 ? 0.3 + 0.7 * age / 3.0 : 1.0;
+            for (int i = 0; i < 3; i++) ps[i].to(whirlGrip(sp, i, age), whirlPose(i, age), WHIRL_AXE * k, 1);
+        });
+        fx.on(dur + 1, () -> {
+            for (Vfx.Prop p : ps) p.size(WHIRL_AXE * 0.08, 5);
+        });
+        fx.on(dur + 6, fx::end);
+    }
+
+    /** 도끼 i 의 각 (나이 age) */
+    private static double whirlAngle(int i, int age) {
+        return Math.toRadians(i * 120.0 + WHIRL_RATE * age);
+    }
+
+    /** 도끼 i 의 손잡이 자리 (몸 둘레 0.45칸 · 높이 WHIRL_H) */
+    private static Vec3 whirlGrip(ServerPlayer sp, int i, int age) {
+        double a = whirlAngle(i, age);
+        return V.up(V.add(sp.position(), new Vec3(Math.cos(a), 0, Math.sin(a)), 0.45), WHIRL_H[i]);
+    }
+
+    /** 도끼 i 의 회전: 자루 = 바깥 (위아래 기울기) · 날 = 도는 쪽 */
+    private static org.joml.Quaternionf whirlPose(int i, int age) {
+        double a = whirlAngle(i, age);
+        Vec3 out = new Vec3(Math.cos(a), WHIRL_TILT[i], Math.sin(a));
+        Vec3 lead = WHIRL_RATE < 0 ? new Vec3(Math.sin(a), 0, -Math.cos(a)) : new Vec3(-Math.sin(a), 0, Math.cos(a));
+        return JobAxe3d.pose(out, lead);
     }
 
     // ------------------------------------------------------------ 투혼

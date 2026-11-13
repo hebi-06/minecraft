@@ -9,11 +9,14 @@ import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.rune.IceFx;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,7 +34,7 @@ import net.minecraft.world.phys.Vec3;
  * <li>깨짐: 이 사람이 얼린 적을 직업 스킬로 치면 그 타 × (1 + shatter) (JobKit.hit 배율) → 둘레 shardRadius 칸의 다른 적에 얼음 조각 (위력 × shard) · 서리 0 · 풀림.
  * 샤터 · 핌불윈터는 제 결정을 제 숫자로 깨므로 그 타 앞에 {@link #thaw} (덤 없음)</li>
  * <li>요툰 그립 (태세): 도끼 평타가 맞으면 평타 × echo 를 더함 (무기 덤) · 서리 +1 더 · 휘두를 때마다 등 뒤 서리 거인의 어깨에서 거대한 얼음 도끼가 머리 위를 넘어
- * 같은 쪽으로 내려침 (환영 도끼 판 — {@link #giantSwing})</li>
+ * 같은 쪽으로 내려침 (2026-11-13 3D 빙하 도끼 · 3D 얼음 — {@link #giantSwing})</li>
  * </ul>
  */
 public final class JobTraits16 {
@@ -266,12 +269,12 @@ public final class JobTraits16 {
         }
     }
 
-    /** 서리 거인의 도끼 크기 (환영 도끼 판의 배) */
-    static final double GIANT_AXE = 2.8;
+    /** 2026-11-13 서리 거인의 3D 빙하 도끼 크기 (길이 약 5.7칸 — 직업 도감 메모 "얼음과 도끼 연출을 3d로", 예전 환영 도끼 판 2.8배 대신) */
+    static final double GIANT_AXE = 2.0;
 
     /**
-     * 요툰 그립 동안 도끼를 휘두름: 등 뒤 높이 (서리 거인의 어깨) 에서 거대한 얼음 도끼가 머리 위를 넘어 같은 쪽 앞으로 내려침 (JobFx3d.swing — 뒤 −45° → 앞 120°,
-     * 0.16초 · 얼음 빛 끌림) → 앞 땅에 얼음 고리 · 조각. 1인칭은 화면을 가리지 않게 옅게
+     * 요툰 그립 동안 도끼를 휘두름: 등 뒤 높이 (서리 거인의 어깨) 에서 거대한 3D 빙하 도끼가 머리 위를 넘어 같은 쪽 앞 땅으로 내려침 → 앞 땅에 3D 얼음 가시 ·
+     * 결정 · 얼음 고리 · 조각
      */
     private static void onSwing(ServerPlayer sp, Weapon w) {
         if (w == null || !"axe".equals(w.type()) || !JobTraits.stanceOn(sp, JOTUNN)) return;
@@ -282,29 +285,57 @@ public final class JobTraits16 {
         SkillFx.play(sp.level(), "entity.polar_bear.warning", sp.position(), 1.6, 0.25);
     }
 
-    /** 서리 거인의 내려침 한 번 (등 뒤 어깨 → 머리 위 → 앞 땅): secs 초에 내려침 · hold 초 머무름 */
+    /** 내려치는 각 deg (위 0° → 앞 90° → 앞 아래) 의 자루 쪽 (어깨 → 도끼머리) */
+    private static Vec3 haftAt(Vec3 f, double deg) {
+        double r = Math.toRadians(deg);
+        return V.add(V.scale(V.UP, Math.cos(r)), f, Math.sin(r));
+    }
+
+    /** 내려치는 각 deg 의 3D 도끼 회전 (자루 = haftAt · 날 = 내려치는 쪽) */
+    private static org.joml.Quaternionf giantPose(Vec3 f, double deg) {
+        double r = Math.toRadians(deg);
+        return JobAxe3d.pose(haftAt(f, deg), V.add(V.scale(V.UP, -Math.sin(r)), f, Math.cos(r)));
+    }
+
+    /**
+     * 서리 거인의 내려침 한 번 (2026-11-13 3D): 어깨 (몸 뒤 0.6 · 높이 2.8) 를 손잡이로 −50° (뒤 위) → 128° (앞 땅) 를 secs 초 (내려칠수록 빨라짐 — 틱마다 180° 를 넘지
+     * 않게) · 크기 scale → hold 초 박혀 있다 오그라들며 사라짐. 내려친 틱에 도끼머리 아래 땅: 3D 얼음 가시 셋 · 결정 셋 · 얼음 고리 · 조각
+     */
     static void giantSwing(ServerPlayer sp, Jobs.Job j, double scale, double secs, double hold) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 pivot = V.up(V.add(sp.position(), f, -0.9), 3.3);
-        JobFx3d.swing(level, "phantom_axe", pivot, V.UP, f, -45, 120, secs, hold, scale, JobFx3d.AXE_GRIP, j, JobFx.hide1p(sp).with("arcEase", "in", "shine", 0.7,
-                "glowAlpha", 0.75));
-        JobFx3d.swing(level, "phantom_axe", pivot, V.UP, f, -45, 120, secs, hold, scale, JobFx3d.AXE_GRIP, j, JobFx.only1p(sp).with("arcEase", "in", "shine", 0.4,
-                "glowAlpha", 0.4, "alpha", 0.45));
-        int at = Math.max(1, (int) Math.round(secs * 20));
-        RuneKit.later(at, () -> {
+        Vec3 pivot = V.up(V.add(sp.position(), f, -0.6), 2.8);
+        int n = Math.max(2, (int) Math.round(secs * 20));
+        int h = Math.max(2, (int) Math.round(hold * 20));
+        double a0 = -50;
+        double a1 = 128;
+        Vfx.Fx fx = RuneProps.fx(level, pivot, n + h + 8);
+        Vfx.Prop p = JobAxe3d.axe(fx, true, pivot, JobAxe3d.GRIP, giantPose(f, a0), scale * 0.7, ICE, FROST_WHITE);
+        for (int i = 1; i <= n; i++) {
+            double t = i / (double) n;
+            double a = a0 + (a1 - a0) * t * t;
+            fx.on(i, () -> p.to(null, giantPose(f, a), scale, 1));
+        }
+        fx.on(n + h, () -> p.size(scale * 0.1, 5));
+        fx.on(n + h + 5, p::remove);
+        Vec3 head = V.add(pivot, haftAt(f, a1), JobAxe3d.REACH * scale);
+        RuneKit.later(n, () -> {
             if (sp.isRemoved()) return;
-            Vec3 g = V.add(sp.position(), Kit.facingOf(sp), scale * 0.95);
-            Vec3 gg = new Vec3(g.x, RuneKit.groundAt(sp.level(), V.up(g, 1.2), sp.getY()), g.z);
-            JobFx15.halo(sp.level(), V.up(gg, 0.08), 1.4, 0.35, Opt.of("alpha", 0.9), ICE, FROST_WHITE);
-            shardsFx(sp.level(), V.up(gg, 0.4), 0.7);
-            SkillFx.play(sp.level(), "block.glass.break", gg, 0.7, 0.5);
+            ServerLevel lv = sp.level();
+            Vec3 gg = new Vec3(head.x, RuneKit.groundAt(lv, V.up(head, 1.2), sp.getY()), head.z);
+            JobAxe3d.spikeRing(lv, gg, 3, 0.5, 1.3, 0.9 * scale / GIANT_AXE, 1.4 * scale / GIANT_AXE, 6);
+            JobAxe3d.crystals(lv, gg, 3, 0.2, 0.9, 0.8, 1.3, 0.4, 25, 45, false, 0, 4, 3);
+            JobFx15.halo(lv, V.up(gg, 0.08), 1.4, 0.35, Opt.of("alpha", 0.9), ICE, FROST_WHITE);
+            shardsFx(lv, V.up(gg, 0.4), 0.7);
+            IceFx.shards(lv, V.up(gg, 0.3), 18, 0.6, 0.2, 0.18);
+            SkillFx.play(lv, "block.glass.break", gg, 0.7, 0.5);
         });
     }
 
-    /** 요툰 그립 태세가 켜짐: 서리 거인이 도끼를 한 번 크게 내려침 (포효) */
+    /** 요툰 그립 태세가 켜짐: 서리 거인이 도끼를 한 번 크게 내려침 (포효) · 몸 둘레로 3D 얼음 결정이 솟았다 부서짐 (서리 갑옷) */
     static void jotunnOn(ServerPlayer sp, Jobs.Job j) {
         giantSwing(sp, j, GIANT_AXE * 1.25, 0.22, 0.35);
+        JobAxe3d.crystals(sp.level(), sp.position(), 6, 1.3, 1.8, 1.2, 1.9, 0.36, 15, 30, false, 0, 14, 4);
     }
 
     // ------------------------------------------------------------ 게이지

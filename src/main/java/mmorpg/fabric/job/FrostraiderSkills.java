@@ -10,8 +10,11 @@ import java.util.UUID;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.FxDisplays;
 import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.rune.IceFx;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Kit;
@@ -19,10 +22,13 @@ import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 /**
  * 2026-11-07 재설계안 3판 — 전사 반전 프로스트 레이더 (글래디에이터 대신 — 사용자 "컨셉이 마음에 안듬" → 고른 것 "서리 도끼를 던져 박고 되불러 얼린 적을 깨부숨 —
@@ -44,12 +50,13 @@ public final class FrostraiderSkills {
         JobSystem.register("frostraider_ult", FrostraiderSkills::ult);
     }
 
-    /** 박힌 서리 도끼: 박힌 적 (없으면 null — 땅) · 박힌 자리 · 목숨 · 박힌 도끼 그림 번호 · 되부르는 중 */
+    /** 박힌 서리 도끼: 박힌 적 (없으면 null — 땅) · 박힌 자리 · 목숨 · 박힌 3D 도끼 (효과 · 소품 — 2026-11-13) · 되부르는 중 */
     private static final class Thrown {
         LivingEntity target;
         Vec3 stuck;
         String life;
-        int card;
+        Vfx.Fx fx;
+        Vfx.Prop prop;
         boolean back;
     }
 
@@ -62,15 +69,15 @@ public final class FrostraiderSkills {
         return th.target;
     }
 
-    /** 도는 서리 도끼 (환영 도끼 판 — 얼음 빛): from → to 를 secs 초 (to 가 null 이면 그 자리에서 life 초) · spin = 도는 각 (0 이면 돌지 않음) */
-    private static int axe(ServerLevel level, Vec3 from, Vec3 to, double secs, double life, double scale, double spin) {
-        Vec3 d = to == null ? V.ZERO : V.sub(to, from);
-        double len = V.len(d);
-        Vec3 u = len < 1e-3 ? new Vec3(1, 0, 0) : V.scale(d, 1 / len);
-        Opt b = Opt.of("dir", u, "face", JobFx3d.sideOf(u), "spin", spin, "spinAxis", "z", "scale", scale, "life", Math.max(life, secs), "fadeIn", 0.02, "fadeOut",
-                0.08, "glowAlpha", 0.7, "shine", 0.5);
-        if (to != null && len > 1e-3) b = b.with("to", to, "ctrl", V.up(V.lerp(from, to, 0.5), Math.min(1.2, len * 0.08)), "travel", secs);
-        return JobFx3d.spawn(level, "phantom_axe", from, ICE, WHITE, b);
+    /**
+     * 2026-11-13 도는 서리 도끼 (3D 빙하 도끼 — 직업 도감 메모 "얼음과 도끼 연출을 3d로", 환영 도끼 판 대신): from → to 를 ticks 틱 · 도끼머리 둘레로 틱마다
+     * 95° 앞으로 구름 (곡선은 거리의 6% — 1칸까지) · 닿은 다음 틱에 지움
+     */
+    private static void axe(ServerLevel level, Vec3 from, Vec3 to, int ticks, double scale) {
+        int n = Math.max(1, ticks);
+        Vfx.Fx fx = RuneProps.fx(level, from, n + 3);
+        Vfx.Prop p = JobAxe3d.thrown(fx, true, from, to, n, Math.min(1.0, V.len(V.sub(to, from)) * 0.06), -95, scale, ICE, WHITE);
+        fx.on(fx.age() + n + 1, p::remove);
     }
 
     /** 날아가는 길의 서리: 얼음빛 줄기 · 눈발 */
@@ -85,8 +92,8 @@ public final class FrostraiderSkills {
 
     // ------------------------------------------------------------ 프로스트 바이트
 
-    /** 박힌 도끼 그림의 크기 */
-    private static final double AXE = 1.7;
+    /** 던지는 3D 서리 도끼의 크기 (길이 약 2.4칸 — 예전 환영 도끼 판 1.7 배와 비슷) */
+    private static final double AXE = 0.85;
 
     /**
      * 프로스트 바이트 (롤 드레이븐 Q · 올라프 Q — 도끼 되부르기): throwAt 틱에 서리 도끼를 겨눈 적 (range 칸 — 없으면 보는 쪽 range 칸) 에게 회전시켜 던짐 → hitAt
@@ -123,7 +130,7 @@ public final class FrostraiderSkills {
             Vec3 from = V.up(RuneKit.handOf(sp).hand(), 0.3);
             Vec3 to = t != null ? Kit.bodyPoint(t) : V.up(V.add(sp.position(), f0, Math.max(2, RuneKit.rayLength(lv, V.up(sp.position(), 1.2), f0, range))), 0.6);
             int fly = hitAt - throwAt;
-            axe(lv, from, to, fly / 20.0, fly / 20.0, AXE, -1440);
+            axe(lv, from, to, fly, AXE);
             frostTrail(lv, from, to, j, JobFx.hide1p(sp));
             SkillFx.play(lv, "item.trident.throw", from, 0.8, 1.0);
             SkillFx.play(lv, "entity.player.attack.sweep", from, 1.1, 0.6);
@@ -135,12 +142,18 @@ public final class FrostraiderSkills {
             int left = (int) Math.max(1, JobRecast.left(sp, k.id()));
             if (t != null && t.isAlive() && !t.isRemoved()) {
                 th.stuck = Kit.bodyPoint(t);
-                // 박힌 도끼: 그 적을 따라감 (follow — 자리는 그 적 기준 [오른쪽, 위, 앞] · 자루가 앞 (던진 쪽) 위로 비스듬히 나옴)
-                Vec3 dir = V.unit(new Vec3(0, -0.45, -0.9));
-                double up = t.getBbHeight() * 0.55;
-                Vec3 local = V.add(new Vec3(0, up, 0), dir, -JobFx3d.AXE_REACH * AXE * 0.4);
-                th.card = JobFx3d.spawn(lv, "phantom_axe", local, ICE, WHITE, Opt.of("follow", (double) t.getId(), "dir", dir, "face", new Vec3(1, 0, 0), "scale", AXE,
-                        "life", left / 20.0 + 0.3, "fadeIn", 0.0, "fadeOut", 0.1, "glowAlpha", 0.7, "shine", 0.45));
+                // 2026-11-13 박힌 3D 도끼: 날이 몸에 박히고 (조금 위로) 자루는 던진 쪽 위로 비스듬히 나옴 — 틱마다 그 적을 따라감
+                Vec3 u = V.flat(V.sub(th.stuck, sp.position()));
+                Vec3 edge = V.unit(V.add(u, V.UP, 0.55));
+                Quaternionf q = JobAxe3d.pose(V.unit(V.add(V.UP, u, -0.55)), edge);
+                double bite = JobAxe3d.BITE * AXE;
+                java.util.function.Supplier<Vec3> head = () -> V.add(V.add(Kit.bodyPoint(t), edge, -bite), u, Kit.bodyPad(t) * 0.3);
+                th.fx = RuneProps.fx(lv, th.stuck, left + 8);
+                th.prop = JobAxe3d.axe(th.fx, true, head.get(), JobAxe3d.HEAD, q, AXE, ICE, WHITE);
+                Vfx.Prop pr = th.prop;
+                th.fx.each(th.fx.age() + 1, th.fx.age() + left + 6, 1, age -> {
+                    if (!th.back && t.isAlive() && !t.isRemoved()) pr.move(head.get(), 1);
+                });
                 JobKit.strike(sp, t, j, P, k.num("throw", 2.5), false, false, life, 0, d -> {
                     JobImpact.hit(sp, t, j, 1.4);
                     JobTraits16.addFrost(sp, j, t, Math.max(0, (int) k.num("frost", 2) - 1)); // 맞힌 +1 (JobKit) 에 더해
@@ -151,10 +164,13 @@ public final class FrostraiderSkills {
             } else {
                 th.target = null;
                 Vec3 g = new Vec3(th.stuck.x, RuneKit.groundAt(lv, V.up(th.stuck, 0.5), th.stuck.y - 1), th.stuck.z);
-                Vec3 dir = V.unit(V.add(V.flat(f0), V.UP, -0.9));
                 th.stuck = V.up(g, 0.4);
-                th.card = JobFx3d.spawn(lv, "phantom_axe", V.add(V.up(g, 0.25), dir, -JobFx3d.AXE_REACH * AXE * 0.45), ICE, WHITE, Opt.of("dir", dir, "face",
-                        JobFx3d.sideOf(V.flat(f0)), "scale", AXE, "life", left / 20.0 + 0.3, "fadeIn", 0.0, "fadeOut", 0.1, "glowAlpha", 0.7, "shine", 0.45));
+                // 2026-11-13 땅에 박힌 3D 도끼: 날이 앞 아래로 박히고 자루는 앞으로 40° 들림
+                Vec3 u = V.flat(f0);
+                Quaternionf q = JobAxe3d.pose(V.add(V.scale(u, 0.766), V.UP, 0.643), V.add(V.scale(u, 0.643), V.UP, -0.766));
+                th.fx = RuneProps.fx(lv, th.stuck, left + 8);
+                th.prop = JobAxe3d.axe(th.fx, true, V.up(g, 0.15), JobAxe3d.HEAD, q, AXE, ICE, WHITE);
+                JobAxe3d.spikeRing(lv, g, 3, 0.5, 0.9, 0.6, 0.9, 8);
                 JobFx15.halo(lv, V.up(g, 0.08), 1.2, 0.4, Opt.of("alpha", 0.8), ICE, WHITE);
                 JobTraits16.shardsFx(lv, V.up(g, 0.3), 0.5);
                 SkillFx.play(lv, "block.glass.place", g, 0.8, 0.6);
@@ -198,10 +214,12 @@ public final class FrostraiderSkills {
                 return;
             }
             ServerLevel lv = sp.level();
-            Vec3 from = t != null && t.isAlive() && !t.isRemoved() ? Kit.bodyPoint(t) : th.stuck;
+            // 2026-11-13 박힌 3D 도끼의 도끼머리 자리에서 뽑힘
+            Vec3 from = th.prop != null ? th.prop.pos() : t != null && t.isAlive() && !t.isRemoved() ? Kit.bodyPoint(t) : th.stuck;
             Vec3 to = V.up(RuneKit.handOf(sp).hand(), 0.3);
-            if (th.card != 0) mmorpg.fabric.Fx3d.kill(lv, th.card, from, 0.0);
-            axe(lv, from, to, back / 20.0, back / 20.0, AXE, 1440);
+            if (th.fx != null) th.fx.end();
+            axe(lv, from, to, back, AXE);
+            JobAxe3d.iceShards(lv, from, 6, 1.6, 0.45);
             frostTrail(lv, from, to, j, JobFx.hide1p(sp));
             SkillFx.play(lv, "block.glass.break", from, 1.2, 0.7);
             SkillFx.play(lv, "entity.player.attack.sweep", from, 1.3, 0.6);
@@ -228,7 +246,7 @@ public final class FrostraiderSkills {
     /** 남은 박힌 도끼를 지움 (새로 던짐) */
     private static void dropThrown(ServerPlayer sp) {
         Thrown th = THROWN.remove(sp.getUUID());
-        if (th != null && th.card != 0) mmorpg.fabric.Fx3d.kill(sp.level(), th.card, th.stuck != null ? th.stuck : sp.position(), 0.05);
+        if (th != null && th.fx != null) th.fx.end();
     }
 
     // ------------------------------------------------------------ 아이스 바운드
@@ -287,11 +305,9 @@ public final class FrostraiderSkills {
             Vec3 f = Kit.facingOf(sp);
             // 내리찍음: 큰 세로 검기 (땅을 달림) · 얼음 가시 고리 · 얼음 고리 · 충격 · 조각
             JobFx.groundWave(lv, sp, g, f, 1.6, 3.5, 22, j);
-            for (int q = 0; q < 7; q++) {
-                double a = q * Math.PI * 2 / 7 + Kit.rand() * 0.3;
-                Vec3 p = new Vec3(g.x + Math.cos(a) * R * 0.85, g.y, g.z + Math.sin(a) * R * 0.85);
-                JobFx.spikeLife(lv, new Vec3(p.x, RuneKit.groundAt(lv, V.up(p, 1.0), g.y), p.z), 0.75 + Kit.rand() * 0.25, 0.12, 0.5, Opt.empty(), ICE, WHITE);
-            }
+            // 2026-11-13 3D 얼음 (직업 도감 메모 "얼음 연출을 3d로" — 2D 가시 그림 대신): 바깥 고리의 얼음 가시 일곱 · 발밑에서 바깥으로 기운 결정 다섯
+            JobAxe3d.spikeRing(lv, g, 7, R * 0.75, R * 1.05, 1.2, 1.7, 9);
+            JobAxe3d.crystals(lv, g, 5, 0.9, R * 0.6, 0.9, 1.4, 0.4, 28, 46, false, 0, 7, 4);
             JobFx15.halo(lv, V.up(g, 0.08), R, 0.45, Opt.of("alpha", 1.0), ICE, WHITE);
             SkillFx.shock(lv, V.up(g, 0.1), ICE, R * 1.2, 0.4);
             JobTraits16.shardsFx(lv, V.up(g, 0.5), 1.2);
@@ -333,6 +349,7 @@ public final class FrostraiderSkills {
         JobFx.charge(sp, j, new Vec3(0.2, 2.2, -0.2), slamAt, 0.8);
         SkillFx.play(level0, "block.respawn_anchor.charge", sp.position(), 1.6, 0.5);
         Vec3[] cage = {null};
+        List<List<Display>> cageIce = new ArrayList<>();
         RuneKit.later(slamAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
@@ -342,10 +359,11 @@ public final class FrostraiderSkills {
             double h = t != null ? t.getBbHeight() + 1.0 : 2.4;
             JobFx.slash(sp, j, 1.8, 0.3, 2.6, 92.0, 0.22);
             JobFx.groundWave(lv, sp, ground(lv, sp.position()), f, 1.4, Math.max(1.0, Math.hypot(g.x - sp.getX(), g.z - sp.getZ())), 30, j);
-            JobFx16.iceCage(lv, g, h, 0, 2, 0.12, false, Opt.empty(), ICE, WHITE);
-            int hold = shatterAt - slamAt - 2;
-            RuneKit.later(2, () -> JobFx16.iceCage(sp.level(), t != null && !t.isRemoved() ? t.position() : g, h, 2, 3, hold / 20.0 + 0.02, true, Opt.of("fade", 0.0), ICE,
-                    WHITE));
+            // 2026-11-13 3D 얼음 감옥 (직업 도감 메모 "얼음 연출을 3d로" — 2D 결정 그림 대신): 안쪽으로 기운 결정 여섯 (shatterAt 에 부서짐) · 몸을 가둔 얼음 덩어리
+            double pad = t != null ? Kit.bodyPad(t) : 0.3;
+            JobAxe3d.crystals(lv, g, 6, pad + 0.4, pad + 0.75, h * 0.8, h * 1.05, 0.3, 10, 20, true, 0, shatterAt - slamAt - 4, 3);
+            if (t != null && t.isAlive() && !t.isRemoved()) cageIce.add(IceFx.encase(lv, t, t.position(), shatterAt - slamAt + 3));
+            IceFx.shards(lv, V.up(g, 0.4), 16, 0.6, 0.2, 0.12);
             SkillFx.play(lv, "item.mace.smash_ground", g, 1.0, 0.9);
             SkillFx.play(lv, "block.glass.place", g, 0.6, 1.0);
             SkillFx.play(lv, "block.amethyst_block.place", g, 0.5, 0.9);
@@ -365,7 +383,10 @@ public final class FrostraiderSkills {
             ServerLevel lv = sp.level();
             Vec3 g = t != null && !t.isRemoved() ? t.position() : cage[0] != null ? cage[0] : sp.position();
             double h = t != null ? t.getBbHeight() + 1.0 : 2.4;
-            JobFx16.iceCage(lv, g, h * 1.1, 5, 3, 0.45, false, Opt.empty(), ICE, WHITE);
+            // 2026-11-13 3D 감옥이 깨짐: 얼음 덩어리를 지우고 3D 얼음 조각이 사방으로 튐 (결정은 이 틱에 부서지기 시작)
+            for (List<Display> l : cageIce) for (Display d : l) FxDisplays.remove(d);
+            JobAxe3d.iceShards(lv, V.up(g, h * 0.45), 10, 2.8, 0.75);
+            IceFx.shards(lv, V.up(g, h * 0.5), 46, 0.7, h * 0.3, 0.28);
             JobTraits16.shardsFx(lv, V.up(g, h * 0.45), 2.0);
             JobFx.slash(sp, j, 2.0, 0.2, 3.0, 4.0, 0.25);
             JobFx.slashWave(sp, j, 4.0, 2.2, 5.0, 26);
@@ -412,9 +433,26 @@ public final class FrostraiderSkills {
 
     // ------------------------------------------------------------ 핌불윈터
 
-    /** 핌불윈터 빙하 도끼의 크기 (환영 도끼 판의 배) · 박힌 모델 가운데 높이 (도끼머리 가운데 = 가운데 − 0.44 × 크기 → 땅에 조금 묻힘) */
-    private static final double GIANT = 7.0;
-    private static final double GIANT_REST = JobFx3d.AXE_REACH * 0.4 * GIANT - 0.4;
+    /**
+     * 2026-11-13 핌불윈터의 3D 빙하 도끼: 크기 (길이 약 11칸 — 예전 환영 도끼 판 7배와 비슷) · 하늘에서 도는 도끼머리 가운데 높이 (겨눈 곳 위 — 영상 카메라에 들게) ·
+     * 박힌 도끼머리 가운데 높이 (도끼머리가 아래 — 창끝 · 날 아래쪽이 땅에 묻힘, 자루는 9칸 가까이 솟음)
+     */
+    private static final double GIANT = 3.9;
+    private static final double SKY = 7.5;
+    private static final double REST = 0.6;
+
+    /**
+     * 하늘에서 도는 빙하 도끼의 도끼머리 가운데 (소품의 쥔 곳): 도끼 가운데 (자루 위 모델 (8, 6.75, 8)) c 둘레로 axis (보는 쪽) 를 축 삼아 deg 돈 자리 — 처음 (0°)
+     * 은 자루가 위 · 날이 side. k = 크기 배
+     */
+    private static Vec3 skyHead(Vec3 c, Vec3 axis, Vec3 side, double deg, double k) {
+        double r = Math.toRadians(deg);
+        Vec3 n = V.unit(axis);
+        Vec3 haft = V.add(V.scale(V.UP, Math.cos(r)), V.cross(n, V.UP), Math.sin(r));
+        Vec3 edge = V.add(V.add(V.scale(side, Math.cos(r)), V.cross(n, side), Math.sin(r)), n, V.dot(n, side) * (1 - Math.cos(r)));
+        double px = GIANT * k / 16.0;
+        return V.add(V.add(c, haft, (JobAxe3d.HEAD[1] - 6.75) * px), edge, (8 - JobAxe3d.HEAD[2]) * px);
+    }
 
     /**
      * 핌불윈터 (롤 세주아니 R · 애쉬 R): throwAt 틱에 도끼를 하늘 높이 던지면 하늘이 얼어붙고 (rpg:ult_fimbul) 눈보라 → 거대한 빙하 도끼로 자라 겨눈 적 (range 칸 — 없으면
@@ -438,12 +476,12 @@ public final class FrostraiderSkills {
         SkillFx.play(level0, "entity.polar_bear.warning", c0, 0.5, 1.0);
         SkillFx.play(level0, "item.trident.riptide_3", c0, 0.7, 0.8);
         JobFx.charge(sp, j, new Vec3(0.2, 2.3, -0.3), throwAt, 1.0);
-        // 하늘로 던짐
+        // 하늘로 던짐 (2026-11-13 3D 빙하 도끼가 앞으로 구르며 솟음)
         RuneKit.later(throwAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 from = V.up(RuneKit.handOf(sp).hand(), 0.3);
-            axe(lv, from, V.up(from, 14), 0.35, 0.35, 1.8, -1800);
+            axe(lv, from, V.up(V.add(from, f0, 1.5), 12), 7, AXE);
             frostTrail(lv, from, V.up(from, 10), j, Opt.empty());
             SkillFx.play(lv, "item.trident.throw", from, 0.6, 1.0);
         });
@@ -459,45 +497,57 @@ public final class FrostraiderSkills {
                 }
             });
         }
-        // 하늘의 빙하 도끼: 겨눈 곳 위 18칸에 자라 천천히 돌다가 (dropAt − 5 까지) 내리꽂힘
+        // 2026-11-13 하늘의 3D 빙하 도끼 (직업 도감 메모 "도끼와 얼음 연출을 3d로 수정" — 환영 도끼 판 대신): 겨눈 곳 위 SKY 칸에 자라 넓은 면을 보이며 천천히 돌아
+        // (dropAt − 5 에 도끼머리가 아래) 내리꽂힘 → 빙하에 박혀 있다가 (shatterAt − 4) 뽑혀 작아지며 손으로
         int grow = throwAt + 6;
+        int spinFor = Math.max(7, dropAt - 5 - grow);
+        Vec3 side = V.rightOf(f0);
+        Quaternionf up0 = JobAxe3d.pose(V.UP, side);
+        Vfx.Prop[] giant = {null};
         RuneKit.later(grow, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
             Vec3 s = t != null && t.isAlive() && !t.isRemoved() ? t.position() : spot[0];
             spot[0] = s;
-            JobFx3d.spawn(sp.level(), "phantom_axe", V.up(s, 18), ICE, WHITE, Opt.of("dir", V.scale(V.UP, -1), "face", JobFx3d.sideOf(f0), "spin", -220.0, "spinAxis",
-                    "z", "scale", GIANT, "life", (dropAt - 5 - grow) / 20.0 + 0.05, "fadeIn", 0.2, "fadeOut", 0.02, "glowAlpha", 0.9, "shine", 0.6, "pop", 0.4));
-            JobFx15.halo(sp.level(), V.up(s, 0.08), R * 1.6, (dropAt - grow) / 20.0, Opt.of("alpha", 0.75), ICE, WHITE);
-            SkillFx.play(sp.level(), "block.beacon.power_select", s, 0.5, 0.9);
+            Vec3 c = V.up(s, SKY);
+            Vfx.Fx fx = RuneProps.fx(lv, c, shatterAt - grow + 4);
+            Vfx.Prop p = JobAxe3d.axe(fx, true, skyHead(c, f0, side, 0, 0.25), JobAxe3d.HEAD, up0, GIANT * 0.25, ICE, WHITE);
+            giant[0] = p;
+            // 자라며 (5틱) 돌기 시작 → 틱마다 이어 돎 (도끼 가운데 둘레 — 내리꽂는 틱 앞까지, 같은 틱에 겹쳐 옮기지 않게)
+            double d5 = 180.0 * 5 / spinFor;
+            fx.on(1, () -> p.to(skyHead(c, f0, side, d5, 1), JobAxe3d.turn(up0, f0, d5), GIANT, 5));
+            fx.each(6, spinFor - 1, 1, a -> {
+                Vec3 cur = t != null && t.isAlive() && !t.isRemoved() ? t.position() : spot[0];
+                spot[0] = cur;
+                double deg = 180.0 * a / spinFor;
+                p.to(skyHead(V.up(cur, SKY), f0, side, deg, 1), JobAxe3d.turn(up0, f0, deg), -1, 1);
+            });
+            JobFx15.halo(lv, V.up(s, 0.08), R * 1.6, (dropAt - grow) / 20.0, Opt.of("alpha", 0.75), ICE, WHITE);
+            IceFx.snow(lv, V.up(s, SKY), 30, 2.0, 2.0, 0.05);
+            SkillFx.play(lv, "block.beacon.power_select", s, 0.5, 0.9);
         });
         RuneKit.later(dropAt - 5, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 s = t != null && t.isAlive() && !t.isRemoved() ? t.position() : spot[0];
+            if (!RuneKit.sameLife(sp, life) || giant[0] == null) return;
+            Vec3 s = ground(sp.level(), t != null && t.isAlive() && !t.isRemoved() ? t.position() : spot[0]);
             spot[0] = s;
-            JobFx3d.spawn(sp.level(), "phantom_axe", V.up(s, 18), ICE, WHITE, Opt.of("to", V.up(s, GIANT_REST), "travel", 0.25, "ease", "in", "dir", V.scale(V.UP, -1),
-                    "face", JobFx3d.sideOf(f0), "spin", 0.0, "scale", GIANT, "life", 0.27, "fadeIn", 0.0, "fadeOut", 0.02, "glowAlpha", 0.95, "shine", 0.7));
-            frostTrail(sp.level(), V.up(s, 18), V.up(s, 3), j, Opt.empty());
+            giant[0].to(V.up(s, REST), JobAxe3d.turn(up0, f0, 180), GIANT, 5);
+            frostTrail(sp.level(), V.up(s, SKY + 3), V.up(s, 3), j, Opt.empty());
             SkillFx.play(sp.level(), "item.trident.riptide_2", s, 0.6, 1.0);
         });
-        // 내리꽂힘: 빙하가 솟아 가둠 · 얼음 가시 고리 · 충격 · 박힌 빙하 도끼
+        // 내리꽂힘: 3D 빙하가 솟아 가둠 (가운데 큰 결정 · 둘레 결정 · 바깥 얼음 가시) · 맞은 적을 얼음 덩어리에 가둠 · 충격
+        List<List<Display>> encased = new ArrayList<>();
         RuneKit.later(dropAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 s = ground(lv, spot[0]);
             int hold = shatterAt - dropAt;
-            JobFx16.iceCage(lv, s, 6.5, 0, 2, 0.12, false, Opt.empty(), ICE, WHITE);
-            RuneKit.later(2, () -> JobFx16.iceCage(sp.level(), s, 6.5, 2, 3, (hold - 2) / 20.0 + 0.02, true, Opt.of("fade", 0.0), ICE, WHITE));
-            JobFx3d.spawn(lv, "phantom_axe", V.up(s, GIANT_REST), ICE, WHITE, Opt.of("dir", V.scale(V.UP, -1), "face", JobFx3d.sideOf(f0), "spin", 0.0, "scale", GIANT,
-                    "life", (hold - 4) / 20.0, "fadeIn", 0.0, "fadeOut", 0.05, "glowAlpha", 0.8, "shine", 0.5));
-            for (int q = 0; q < 10; q++) {
-                double a = q * Math.PI * 2 / 10 + Kit.rand() * 0.25;
-                double r = R + 0.8 + Kit.rand() * 1.4;
-                Vec3 p = new Vec3(s.x + Math.cos(a) * r, s.y, s.z + Math.sin(a) * r);
-                JobFx.spikeLife(lv, new Vec3(p.x, RuneKit.groundAt(lv, V.up(p, 1.5), s.y), p.z), 1.0 + Kit.rand() * 0.6, 0.15, hold / 20.0 - 0.2, Opt.empty(), ICE, WHITE);
-            }
+            JobAxe3d.crystals(lv, s, 6, 1.0, 2.1, 3.4, 5.6, 0.36, 6, 20, false, 0, hold - 4, 4);
+            JobAxe3d.crystals(lv, s, 9, R * 1.0, R * 1.4, 1.6, 2.6, 0.42, 20, 38, false, 0, hold - 4, 4);
+            JobAxe3d.spikeRing(lv, s, 10, R + 0.8, R + 2.2, 1.1, 1.7, hold - 2);
             JobFx15.halo(lv, V.up(s, 0.08), R * 2.2, 0.6, Opt.of("alpha", 1.0), ICE, WHITE);
             SkillFx.shock(lv, V.up(s, 0.1), ICE, R * 2.6, 0.5);
             JobTraits16.shardsFx(lv, V.up(s, 1.0), 2.4);
+            IceFx.shards(lv, V.up(s, 0.6), 60, 1.6, 0.6, 0.3);
             Ult.flash(lv, s, WHITE, Opt.empty(), sp);
             SkillFx.play(lv, "item.mace.smash_ground_heavy", s, 0.7, 1.0);
             SkillFx.play(lv, "block.glass.place", s, 0.4, 1.0);
@@ -506,14 +556,32 @@ public final class FrostraiderSkills {
                 JobKit.strike(sp, e, j, P, k.num("drop", 20), false, true, life, 0, d -> {
                     JobImpact.hit(sp, e, j, 2.0);
                     JobTraits16.freeze(sp, j, e, hold, false);
+                    if (!JobKit.isBoss(e) && e.isAlive() && !e.isRemoved()) encased.add(IceFx.encase(sp.level(), e, e.position(), hold + 2));
                 });
             }
         });
-        // 되부름 (shatterAt − 4): 도끼가 빙하에서 뽑혀 손으로 → shatterAt 빙하가 산산이 깨짐
+        // 되부름 (shatterAt − 4): 도끼가 빙하에서 뽑혀 (2틱) 구르며 작아져 손으로 (3틱) → shatterAt 빙하가 산산이 깨짐
         RuneKit.later(shatterAt - 4, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
+            if (!RuneKit.sameLife(sp, life) || giant[0] == null) return;
+            Vfx.Prop p = giant[0];
             Vec3 s = ground(sp.level(), spot[0]);
-            axe(sp.level(), V.up(s, 3.0), V.up(RuneKit.handOf(sp).hand(), 0.3), 0.2, 0.2, 2.2, 1800);
+            Vec3 out = V.up(s, REST + 2.6);
+            p.to(out, null, GIANT * 0.8, 2);
+            RuneKit.later(2, () -> {
+                if (!RuneKit.sameLife(sp, life)) {
+                    p.remove();
+                    return;
+                }
+                Vec3 hand = V.up(RuneKit.handOf(sp).hand(), 0.3);
+                Vec3 fly = V.sub(hand, out);
+                Vec3 ax = JobFx3d.sideOf(V.len(fly) < 1e-3 ? f0 : V.unit(fly));
+                Quaternionf q0 = p.rot();
+                for (int i = 1; i <= 3; i++) {
+                    int ii = i;
+                    RuneKit.later(i - 1, () -> p.to(V.lerp(out, hand, ii / 3.0), JobAxe3d.turn(q0, ax, -95.0 * ii), GIANT * 0.8 + (AXE - GIANT * 0.8) * ii / 3.0, 1));
+                }
+                RuneKit.later(4, p::remove);
+            });
             frostTrail(sp.level(), V.up(s, 3.0), V.up(sp.position(), 1.2), j, JobFx.hide1p(sp));
             SkillFx.play(sp.level(), "item.trident.return", s, 0.8, 1.0);
         });
@@ -521,7 +589,11 @@ public final class FrostraiderSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 s = ground(lv, spot[0]);
-            JobFx16.iceCage(lv, s, 7.0, 5, 3, 0.55, false, Opt.empty(), ICE, WHITE);
+            // 2026-11-13 3D 빙하가 깨짐 (결정은 이 틱에 부서지기 시작): 갇힌 얼음 덩어리를 지우고 큰 3D 얼음 조각이 사방으로
+            for (List<Display> l : encased) for (Display dd : l) FxDisplays.remove(dd);
+            JobAxe3d.iceShards(lv, V.up(s, 2.4), 14, 5.0, 1.3);
+            JobAxe3d.iceShards(lv, V.up(s, 0.9), 10, 3.6, 0.9);
+            IceFx.shards(lv, V.up(s, 2.0), 90, 2.2, 1.6, 0.35);
             JobTraits16.shardsFx(lv, V.up(s, 2.5), 3.2);
             JobTraits16.shardsFx(lv, V.up(s, 0.8), 2.4);
             JobFx15.halo(lv, V.up(s, 0.1), R * 2.6, 0.5, Opt.of("alpha", 1.0), ICE, WHITE);

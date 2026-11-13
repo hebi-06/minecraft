@@ -1236,7 +1236,12 @@ final class VanillaProbe {
             case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35};
             case "arcmage_ult" -> new double[] {12.0, 3.6, 5.0, 0.4};
             case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6};
-            case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4};
+            // 2026-11-13 3D 빙하 도끼 (길이 약 11칸 — 하늘에서 돌 때 자루 끝이 13칸 가까이) · 3D 빙하: 멀리 · 위를 봄
+            case "frostraider_ult" -> new double[] {13.5, 3.8, 5.6, 0.4};
+            case "frostraider_jotunn" -> new double[] {8.5, 3.0, 2.4, 0.5};
+            case "frostraider_shatter" -> new double[] {8.0, 3.0, 1.6, 0.6};
+            case "frostraider_leap" -> new double[] {8.5, 3.0, 1.4, 0.6};
+            case "warrior_whirl" -> new double[] {7.5, 3.0, 1.2, 0.8};
             case "frostraider_throw" -> new double[] {8.0, 3.0, 2.2, 0.6};
             case "executioner_ult" -> new double[] {12.0, 3.6, 4.4, 0.35};
             case "executioner_raven" -> new double[] {8.0, 3.0, 1.4, 0.4};

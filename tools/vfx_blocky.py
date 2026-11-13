@@ -1689,6 +1689,76 @@ def rune_scythe():
     return m
 
 
+def _axe(name, credit, frost):
+    """2026-11-13 직업 도끼 (전사 액스 사이클론 · 프로스트 레이더 — 사용자 메모 "도끼 연출을 3d로" · "얼음과 도끼 연출을 3d로"): 자루 +Y (가운데 x 8 · z 8),
+    도끼날은 −Z (초승달 날 — 위 뿔 · 아래 수염이 자루 쪽으로 휨), 뒤 (+Z) 는 가시 · 위는 창끝. 자루 끝 y −16 · 창끝 y 29.5 · 날 끝 z ~−6.6 ·
+    손잡이 (8, −7, 8) · 도끼머리 가운데 (8, 18, 2). frost = 얼음 날 (빙하 도끼) · 아니면 쇠 머리 + 빛 날 (계열 색)"""
+    m = BModel(name, credit, d=2.0)
+    weapon_mats(m)
+    m.mat("haft", Mat(bevel("#2A1C16", "#3E2A20", "#160E0B", grain="v")))
+    m.mat("band", Mat(gem_paint(0.7), tint=0, glow=True, animated=True))
+    m.mat("core", Mat(gem_paint(0.62), tint=1, glow=True, animated=True))
+    m.mat("channel", Mat(rune_channel(), tint=1, glow=True, animated=True))
+    m.mat("edge2", Mat(edge_light(0.95), glow=True))
+    if frost:
+        m.mat("head", Mat(bevel("#5E7FA8", "#9CC0E6", "#34506F", speck=0.1)))
+        m.mat("bl", Mat(ice(0.86), glow=True, animated=True))
+        m.mat("bl2", Mat(ice(0.9, light=True, cell=30.0), glow=True, animated=True))
+        m.mat("lite", Mat(ice(0.82, light=True, cell=24.0), glow=True, animated=True))
+        m.mat("haft", Mat(bevel("#22303F", "#3A5068", "#111922", grain="v")))
+    else:
+        m.mat("head", Mat(bevel("#34343F", "#5A5A6A", "#1C1C23", speck=0.06)))
+        m.mat("bl", Mat(bevel("#3C3C48", "#666678", "#20202A", speck=0.05)))
+        m.mat("bl2", Mat(bevel("#46465A", "#727288", "#262632", speck=0.04)))
+        m.mat("lite", Mat(light_blade(0.8), tint=0, glow=True, animated=True))
+    # 자루 끝: 금 받침 · 마름모 보석
+    m.box("gold", (6.9, -14.5, 6.9), (9.1, -13.0, 9.1))
+    m.box("gem", (7.15, -16.0, 7.15), (8.85, -14.5, 8.85), rot=("y", 45, (8, -15.25, 8)))
+    # 자루 · 손잡이 (가죽 · 금 고리 둘) · 빛 띠 둘
+    m.box("haft", (7.25, -13.0, 7.25), (8.75, 12.0, 8.75))
+    m.box("grip", (7.1, -12.0, 7.1), (8.9, -2.5, 8.9))
+    for y in (-12.6, -3.1):
+        m.box("gold", (6.95, y, 6.95), (9.05, y + 0.7, 9.05))
+    for y in (1.5, 7.0):
+        m.box("band", (7.05, y, 7.05), (8.95, y + 0.9, 8.95))
+    # 도끼머리 (자루를 감싼 쇠 · 금 테 둘) · 위 창끝
+    m.box("head", (6.6, 12.0, 6.2), (9.4, 23.5, 9.8))
+    m.box("gold", (6.45, 12.0, 6.05), (9.55, 12.9, 9.95))
+    m.box("gold", (6.45, 22.6, 6.05), (9.55, 23.5, 9.95))
+    m.box("core", (6.3, 16.6, 7.2), (9.7, 18.6, 8.8), rot=("x", 45, (8, 17.6, 8)))
+    m.box("head", (7.2, 23.5, 7.2), (8.8, 26.0, 8.8))
+    m.box("edge", (7.45, 25.0, 7.45), (8.55, 29.5, 8.55), rot=("y", 45, (8, 27.2, 8)))
+    # 뒤 가시 (+Z)
+    m.box("head", (7.2, 15.6, 9.8), (8.8, 20.4, 12.2))
+    m.box("edge", (7.35, 16.3, 11.3), (8.65, 19.7, 14.7), rot=("x", 45, (8, 18.0, 13.0)))
+    # 날: 목 · 몸 · 바깥 몸 · 위 비탈 (바깥으로 22.5° 오름) · 아래 수염 (바깥으로 45° 내려감) — 초승달 날까지 넓어짐
+    m.box("head", (7.0, 14.0, 3.0), (9.0, 21.6, 6.2))
+    m.box("bl", (7.1, 12.6, -0.6), (8.9, 22.8, 3.0))
+    m.box("bl", (7.15, 10.4, -4.2), (8.85, 24.6, -0.6))
+    _seg(m, "bl", (3.0, 21.2), 22.5, 8.2, 1.7, 2.6, -1)
+    _seg(m, "bl", (3.0, 14.6), -45.0, 7.0, 1.7, 2.8, -1)
+    # 솟은 룬 홈 (속빛 — 양면 · 가늘게)
+    m.box("channel", (6.9, 13.4, -2.2), (9.1, 22.0, -0.8))
+    # 빛 날 (반투명 — 뒤에): 초승달 (가운데 · 위아래 뿔은 자루 쪽으로 휨) · 흰 날
+    m.box("lite", (7.3, 9.6, -6.2), (8.7, 25.6, -3.4))
+    _seg(m, "lite", (-5.4, 25.0), 45.0, 4.4, 1.3, 2.2, 1)
+    _seg(m, "lite", (-5.4, 10.2), -45.0, 4.4, 1.3, 2.2, 1)
+    m.box("edge2", (7.5, 10.0, -6.9), (8.5, 25.2, -6.2))
+    if frost:
+        # 서리 결정 (날 위 · 뒤 가시 둘레 — 마름모)
+        for (z, y, r) in ((-2.4, 26.4, 1.3), (0.8, 24.8, 1.0), (-2.6, 9.2, 1.1), (11.0, 21.4, 0.9)):
+            m.box("bl2", (8 - r * 0.8, y - r, z - r), (8 + r * 0.8, y + r, z + r), rot=("x", 45, (8, y, z)))
+    return m
+
+
+def job_axe():
+    return _axe("job_axe", "직업 도끼 (2026-11-13 — 쇠 머리 · 초승달 빛 날 · 룬 홈 · 뒤 가시 · 창끝, 계열 색은 서버가 물들임)", False)
+
+
+def frost_axe():
+    return _axe("frost_axe", "빙하 도끼 (2026-11-13 프로스트 레이더 — 얼음 날 · 서리 결정 · 룬 홈 · 뒤 가시 · 창끝)", True)
+
+
 def boulder():
     """2026-11-13 떠오르는 바위 덩이 (중력 역전 · 블랙홀 · 초인 각성): 가운데 (8, 8, 8) · 지름 약 16 — 크기가 다른 돌 덩이 넷을 엇갈려 겹친 울퉁불퉁한 바위,
     금 사이 빛 = 계열 색 (tint 0 — 바위 가시와 같은 돌 · 빛 겹)"""
@@ -2106,7 +2176,8 @@ BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cl
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear,
          "shuriken": shuriken, "smoke_bomb": smoke_bomb, "tower_shield": tower_shield, "grapple_hook": grapple_hook, "chain_link": chain_link,
-         "spike_ball": spike_ball, "trap_jaw": trap_jaw, "trap_base": trap_base}
+         "spike_ball": spike_ball, "trap_jaw": trap_jaw, "trap_base": trap_base,
+         "job_axe": job_axe, "frost_axe": frost_axe}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
 # 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
@@ -2255,9 +2326,10 @@ TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "met
          "boulder": [(0.6, 0.24, 0.9)], "void_orb": [(0.6, 0.24, 0.9)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
          "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)],
          "halo": [(1.0, 0.86, 0.45), (1.0, 1.0, 0.9)], "hex_panel": [(1.0, 0.78, 0.35), (1.0, 0.95, 0.8)],
-         "thunder_spear": [(0.62, 0.42, 1.0), (0.85, 0.95, 1.0)]}
+         "thunder_spear": [(0.62, 0.42, 1.0), (0.85, 0.95, 1.0)], "job_axe": [(1.0, 0.45, 0.25), (1.0, 0.85, 0.7)],
+         "frost_axe": [(0.6, 0.9, 1.0), (0.94, 0.99, 1.0)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
-VIEWS_OF = {"trap_jaw": [(0.0, 1.0, 0.25), (1.0, 0.5, 0.6)], "trap_base": [(0.0, 1.0, 0.3), (1.0, 0.4, 0.6)], "tower_shield": [(0.4, 0.3, 1.0), (1.0, 0.3, 0.3)], "shuriken": [(0.0, 1.0, 0.0001), (1.0, 0.35, -0.6)], "thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
+VIEWS_OF = {"job_axe": [(1.0, 0.25, 0.0001), (1.0, 0.45, -0.7)], "frost_axe": [(1.0, 0.25, 0.0001), (1.0, 0.45, -0.7)], "trap_jaw": [(0.0, 1.0, 0.25), (1.0, 0.5, 0.6)], "trap_base": [(0.0, 1.0, 0.3), (1.0, 0.4, 0.6)], "tower_shield": [(0.4, 0.3, 1.0), (1.0, 0.3, 0.3)], "shuriken": [(0.0, 1.0, 0.0001), (1.0, 0.35, -0.6)], "thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
 
 def main():
