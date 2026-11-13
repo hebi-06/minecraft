@@ -59,8 +59,8 @@ public final class RuneMob {
 
     private record Move(Vec3 from, Supplier<Vec3> to, long t0, int ticks, double arc, int ease, boolean faceMove) {}
 
-    /** 따라가기: 틱마다 지금 자리에서 to 쪽으로 k 몫 (1 = 바로) — until 틱까지 */
-    private record Follow(Supplier<Vec3> to, double k, long until) {}
+    /** 따라가기: 틱마다 지금 자리에서 to 쪽으로 k 몫 (1 = 바로) — until 틱까지 · faceTo (null = 그대로) 쪽을 봄 */
+    private record Follow(Supplier<Vec3> to, double k, long until, Supplier<Vec3> faceTo) {}
 
     private Follow follow;
 
@@ -176,8 +176,13 @@ public final class RuneMob {
 
     /** 틱마다 to 쪽으로 k 몫 다가감 (늦게 따라감 — 1 = 바로 붙음) · ticks 틱 동안 (옮기기를 끊음) */
     public void follow(Supplier<Vec3> to, double k, int ticks) {
+        follow(to, null, k, ticks);
+    }
+
+    /** 2026-11-13 따라가며 틱마다 faceTo 쪽을 봄 (사신 현신 — 쓴 사람이 보는 쪽) */
+    public void follow(Supplier<Vec3> to, Supplier<Vec3> faceTo, double k, int ticks) {
         move = null;
-        follow = new Follow(to, Math.max(0.05, Math.min(1, k)), Tasks.now() + Math.max(1, ticks));
+        follow = new Follow(to, Math.max(0.05, Math.min(1, k)), Tasks.now() + Math.max(1, ticks), faceTo);
     }
 
     /** 크기 (Attributes.SCALE — 모델 몇 배): 모드 · 모드 없는 클라이언트 모두 뼈 표시가 그만큼 */
@@ -235,7 +240,9 @@ public final class RuneMob {
                         m.x.setPos(p.x, p.y, p.z);
                         m.x.setDeltaMovement(Vec3.ZERO);
                     }
-                    if (m.face != null) m.face(m.face);
+                    Vec3 fd = fl.faceTo() != null ? fl.faceTo().get() : null;
+                    if (fd != null) m.face(fd);
+                    else if (m.face != null) m.face(m.face);
                     continue;
                 }
             }

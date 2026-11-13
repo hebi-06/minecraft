@@ -441,6 +441,10 @@ final class SoulreaperSkills {
 
     // ------------------------------------------------------------ 페일 하베스트
 
+    /** 2026-11-13 3D 망령 사신 spin2 의 첫 바퀴 가운데 (동작을 튼 뒤 7틱 — 다음 바퀴 +10) · reap 의 날이 땅에 박히는 때 (8틱) */
+    static final int REAPER_SPIN_AT = 7;
+    static final int REAPER_REAP_AT = 8;
+
     /**
      * 페일 하베스트 (롤 요릭 R · 다리우스 Q): 영혼의 밤 (rpg:ult_souls) — 낫을 치켜들고, riseAt 틱부터 몸 너머로 (3인칭 카메라는 왼쪽 뒤 — 등 뒤에 세우면 화면을 덮음)
      * 거대한 망령 사신이 땅에서 솟아 (0.5초) → sweepAt 틱부터 every 틱마다 sweeps 번 둘레 radius 칸을 크게 휩씀 (sweep · 맞은 적의 영혼이 사신에게 빨려 듦 — 휩쓸 때마다
@@ -468,6 +472,11 @@ final class SoulreaperSkills {
         Vec3 base = ground(level0, V.add(c0, f0, 3.2));
         Vec3 mid = V.up(base, tall / 2 - 0.3);
         Opt ghost = JobFx.hide1p(sp).with("alpha", 0.8, "coreAlpha", 0.75);
+        // 2026-11-13 3D 망령 사신 (직업 도감 메모 "사신을 3d몹 처럼 만들어서 직접 낫을 휩쓸고 베게" — rpg:job_reaper 크기 2.4): 몸 너머 3.2칸 땅에서 솟아 (rise) 나를
+        // 봄 → 휩쓸기 두 번에 맞춰 낫을 옆으로 뻗고 두 바퀴 돎 (spin2 — 바퀴 가운데가 휩쓸기 틱) → 마지막에 낫을 머리 위로 치켜들어 앞 땅에 내리찍음 (reap) → 흩어짐.
+        // 못 세우면 예전 2D 그림 (JobFx.reaper)
+        boolean mob3d = mmorpg.fabric.mob.RpgEntities.type(JobTraits3.REAPER) != null; // 솟는 때 (riseAt) 에 세움
+        mmorpg.fabric.rune.RuneMob[] gm = {null};
         // 치켜듦: 낫 끝에 모이는 영혼 빛 · 발밑 영혼 고리 · 비명 · 1인칭 눈앞 고리
         JobFx.charge(sp, j, new Vec3(0.3, 2.3, 0.2), sweepAt, 1.0);
         JobFx.halo(level0, V.up(c0, 0.08), 3.0, j, 0.6, Opt.empty());
@@ -480,7 +489,23 @@ final class SoulreaperSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             double rise = tall * 0.6;
-            JobFx.reaper(lv, V.up(mid, -rise), size, j, 0, 0.5, ghost.with("vel", new Vec3(0, rise / 0.5, 0), "fade", 0.05));
+            if (mob3d) {
+                gm[0] = mmorpg.fabric.rune.RuneMob.spawn(JobTraits3.REAPER, lv, base, V.scale(f0, -1), finalAt + 40 - riseAt, 2.4, true);
+                if (gm[0] != null) {
+                    gm[0].anim("rise");
+                    mmorpg.fabric.rune.RuneMob m = gm[0];
+                    RuneKit.later(Math.max(0, sweepAt - REAPER_SPIN_AT - riseAt), () -> {
+                        if (m.alive()) m.anim("spin2");
+                    });
+                    RuneKit.later(finalAt - REAPER_REAP_AT - riseAt, () -> {
+                        if (m.alive()) m.anim("reap");
+                    });
+                    RuneKit.later(finalAt + 6 - riseAt, () -> {
+                        if (m.alive()) m.leave("vanish", 10);
+                    });
+                }
+            }
+            if (gm[0] == null) JobFx.reaper(lv, V.up(mid, -rise), size, j, 0, 0.5, ghost.with("vel", new Vec3(0, rise / 0.5, 0), "fade", 0.05));
             JobFx.smoke(lv, V.up(base, 0.4), 2.6, SHADE, SOUL, 0.9, Opt.of("alpha", 0.8));
             JobFx.halo(lv, V.up(base, 0.08), 3.4, j, 0.7, Opt.empty());
             for (int q = 0; q < 8; q++) {
@@ -492,16 +517,18 @@ final class SoulreaperSkills {
         });
         // 서 있음 (휩쓸기 사이 — 흔들리는 사신 · 둘레를 도는 영혼)
         int standFrom = riseAt + 10;
-        standLater(sp, life, j, mid, size, ghost, standFrom, sweepAt - standFrom);
+        if (!mob3d) standLater(sp, life, j, mid, size, ghost, standFrom, sweepAt - standFrom);
         for (int i = 0; i < sweeps; i++) {
             int ii = i;
             int at = sweepAt + i * every;
             int next = i < sweeps - 1 ? at + every : finalAt;
             // 휘두름 (4장 — 0.3초) 뒤 다음까지 서 있음
-            RuneKit.later(at, () -> {
-                if (RuneKit.sameLife(sp, life)) JobFx.reaper(sp.level(), mid, size, j, 1, 0.3, ghost.with("fade", 0.05));
-            });
-            standLater(sp, life, j, mid, size, ghost, at + 6, next - at - 6);
+            if (!mob3d) {
+                RuneKit.later(at, () -> {
+                    if (RuneKit.sameLife(sp, life)) JobFx.reaper(sp.level(), mid, size, j, 1, 0.3, ghost.with("fade", 0.05));
+                });
+                standLater(sp, life, j, mid, size, ghost, at + 6, next - at - 6);
+            }
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
@@ -540,7 +567,7 @@ final class SoulreaperSkills {
         // 내리꽂음 (동작 6틱 전 — 뛰어올라 낫을 거꾸로)
         JobKit.motionLater(sp, "soulreaper_ult:slam", finalAt - 6, life);
         RuneKit.later(finalAt - 3, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.reaper(sp.level(), mid, size, j, 1, 0.3, ghost.with("fade", 0.1));
+            if (RuneKit.sameLife(sp, life) && !mob3d) JobFx.reaper(sp.level(), mid, size, j, 1, 0.3, ghost.with("fade", 0.1));
         });
         RuneKit.later(finalAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -583,7 +610,7 @@ final class SoulreaperSkills {
         RuneKit.later(finalAt + 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            JobFx.reaper(lv, mid, size, j, 0, 0.45, ghost.with("fade", 0.9, "alpha", 0.6));
+            if (!mob3d) JobFx.reaper(lv, mid, size, j, 0, 0.45, ghost.with("fade", 0.9, "alpha", 0.6));
             JobFx.smoke(lv, mid, 2.8, SHADE, SOUL, 0.8, JobFx.hide1p(sp).with("alpha", 0.6));
             for (int q = 0; q < 12; q++) {
                 Vec3 p = V.add(mid, new Vec3((Kit.rand() - 0.5) * size * 1.4, (Kit.rand() - 0.5) * tall * 0.8, (Kit.rand() - 0.5) * 0.6));

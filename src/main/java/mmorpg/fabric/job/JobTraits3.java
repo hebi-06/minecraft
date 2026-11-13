@@ -83,7 +83,15 @@ public final class JobTraits3 {
         long ghostUntil;
         /** 사신 현신 그림자가 휘두르는 중 (이 틱까지 — 서 있는 그림을 다시 그리지 않음) */
         long avatarSwingUntil;
+        /** 2026-11-13 사신 현신의 3D 망령 사신 (rpg:job_reaper — 없으면 예전 2D 그림자) · 다음 휘두름이 거꾸로인지 */
+        mmorpg.fabric.rune.RuneMob avatarMob;
+        boolean avatarFlip;
     }
+
+    /** 2026-11-13 사신 현신 · 페일 하베스트의 3D 망령 사신 (tools/job_mobs_art.py job_reaper — 동작 rise · swing_a · swing_b · spin2 · reap · vanish) */
+    static final String REAPER = "rpg:job_reaper";
+    /** swing_a · swing_b 의 날이 지나는 때 (동작을 튼 뒤 3틱) */
+    static final int REAPER_SWING_AT = 3;
 
     private static final Map<UUID, State> STATES = new HashMap<>();
     /** 표식: "공격자|적" → {수, 끝나는 틱} */
@@ -758,10 +766,25 @@ public final class JobTraits3 {
         return V.up(V.add(V.add(sp.position(), f, -0.6), V.rightOf(f), -1.1), 2.0);
     }
 
+    /** 2026-11-13 3D 망령 사신이 서는 자리 (발 — 몸 뒤 왼쪽: 3인칭 카메라와 몸 사이를 가리지 않게 · 낫이 몸에 걸리지 않게 1.5칸 옆) */
+    static Vec3 avatarFeet(ServerPlayer sp) {
+        Vec3 f = Kit.facingOf(sp);
+        return V.add(V.add(sp.position(), f, -0.9), V.rightOf(f), -1.5);
+    }
+
     /** 사신 현신: 등 뒤 그림자가 낫을 휘두름 (3인칭 · 다른 사람) + 눈앞 큰 초승달 (1인칭도) — 같은 틱에 한 번 */
     private static void avatarSwing(ServerPlayer sp, Jobs.Job j) {
         if (!RuneKit.fxQuota("jobAvatarSwing" + sp.getId(), 1)) return;
         ServerLevel level = sp.level();
+        State st0 = of(sp);
+        if (st0.avatarMob != null && st0.avatarMob.alive()) {
+            // 2026-11-13 3D 망령 사신이 낫을 비스듬히 휘두름 (번갈아 베어 내림 · 베어 올림)
+            st0.avatarMob.anim(st0.avatarFlip ? "swing_b" : "swing_a");
+            st0.avatarFlip = !st0.avatarFlip;
+            JobFx.slash(sp, j, 2.6, 0.1, 2.3, Kit.rand() < 0.5 ? 10.0 : 190.0, 0.26);
+            SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 0.55, 0.8);
+            return;
+        }
         // 휘두르는 그림이 서 있는 그림을 바꿈 (solo — 두 장이 겹치지 않게), 끝나기 한 틱 전에 서 있는 그림이 다시 바꿈 (그사이 다른 휘두름이면 그쪽이)
         of(sp).avatarSwingUntil = Tasks.now() + 6;
         JobFx.reaper(level, avatarAt(sp), 1.5, j, 1, 0.35, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9, "solo", 1.0));
@@ -779,7 +802,17 @@ public final class JobTraits3 {
      * 사신 현신을 걸 때: 땅에서 솟는 그림자 (자라며 올라옴) — 같은 solo 라 서 있는 그림이 이어 받음 (솟는 동안은 서 있는 그림을 다시 그리지 않고, 끝나기 전에
      * 서 있는 그림이 바꿈 — 겹친 두 장의 줄무늬 없이)
      */
-    static void avatarRise(ServerPlayer sp, Jobs.Job j) {
+    static void avatarRise(ServerPlayer sp, Jobs.Job j, int dur) {
+        // 2026-11-13 3D 망령 사신 (직업 도감 메모 "사신 그림자가 3d몹처럼 나와서 휘두르는거 처럼") — 몸 뒤 왼쪽 땅에서 솟아 태세 동안 몸을 따라감 (보는 쪽을 봄)
+        State st = of(sp);
+        if (st.avatarMob != null && st.avatarMob.alive()) st.avatarMob.leave("vanish", 10);
+        mmorpg.fabric.rune.RuneMob m = mmorpg.fabric.rune.RuneMob.spawn(REAPER, sp.level(), avatarFeet(sp), Kit.facingOf(sp), dur + 30, 1.15, true);
+        st.avatarMob = m;
+        if (m != null) {
+            m.anim("rise");
+            m.follow(() -> sp.isRemoved() ? null : avatarFeet(sp), () -> sp.isRemoved() ? null : Kit.facingOf(sp), 0.35, dur);
+            return;
+        }
         of(sp).avatarSwingUntil = Tasks.now() + 10;
         JobFx.reaper(sp.level(), V.up(avatarAt(sp), -0.6), 1.5, j, 0, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "grow", 0.25, "alpha", 0.9, "solo",
                 1.0));
@@ -796,6 +829,8 @@ public final class JobTraits3 {
      * 바로 사라짐: 겹친 두 장이 깊이 싸움으로 줄무늬가 지던 것, 사진 검토). 수명은 다시 그리는 간격 (8틱) 보다 길게 (늦게 와도 비지 않게)
      */
     private static void avatarStand(ServerPlayer sp, Jobs.Job j) {
+        State st = STATES.get(sp.getUUID());
+        if (st != null && st.avatarMob != null && st.avatarMob.alive()) return; // 3D 망령 사신이 서 있음
         double phase = (Tasks.now() * 6 / 20.0) % 4;
         JobFx.reaper(sp.level(), avatarAt(sp), 1.5, j, 0, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.75, "solo", 1.0, "phase", phase));
     }
@@ -868,6 +903,11 @@ public final class JobTraits3 {
     static void stanceEnded(ServerPlayer sp, String id) {
         if (id.equals("assassin_veil")) veilBreak(sp);
         else if (id.equals("reaper_avatar")) {
+            State st = STATES.get(sp.getUUID());
+            if (st != null && st.avatarMob != null) {
+                if (st.avatarMob.alive()) st.avatarMob.leave("vanish", 10);
+                st.avatarMob = null;
+            }
             Jobs.Job j = jobIf(sp, "reaper");
             if (j != null) {
                 JobFx.smoke(sp.level(), V.up(sp.position(), 1.4), 1.2, j, 0.6, JobFx.hide1p(sp));

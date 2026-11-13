@@ -249,7 +249,7 @@ final class ReaperSkills {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         Vec3 behind = JobTraits3.avatarAt(sp);
-        JobTraits3.avatarRise(sp, j);
+        JobTraits3.avatarRise(sp, j, dur);
         JobFx.smoke(level, V.up(c, 0.3), 1.6, j, 0.8, JobFx.hide1p(sp));
         JobFx.smoke(level, V.up(behind, -0.4), 1.4, j, 0.7, JobFx.hide1p(sp).with("alpha", 0.7));
         for (int i = 0; i < 6; i++) {

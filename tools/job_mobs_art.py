@@ -23,6 +23,7 @@ import rune_mobs_art as R  # noqa: E402
 from monster_kit import Mat, Model, kf  # noqa: E402
 
 LT = R.LT
+see = R.see
 
 # ================================================================== 드라군의 붉은 용
 
@@ -519,7 +520,192 @@ def job_bear_anims():
     return out
 
 
+# ================================================================== 망령 사신 (2026-11-13 — 직업 도감 메모 데스 아바타 "사신 그림자가 3d몹처럼 나와서 휘두르는거" ·
+# 페일 하베스트 "사신을 3d몹 처럼 만들어서 직접 낫을 휩쓸고 베게"): 떠 있는 두건 쓴 사신 — 짙은 남빛 옷 (청록 테 · 룬 줄) · 두건 속 해골 (청록 눈) ·
+# 뼈 손 · 어깨의 뼈 · 아래는 해진 옷자락이 영혼 연기로 (비침), 오른손에 큰 낫 (검은 자루 · 청록 고리 · 휘어진 영혼빛 날). 키 약 2.6칸 (크기 1) · 앞 = −Z
+
+RP_ROBE = (24, 28, 44)
+RP_ROBE2 = (36, 42, 62)
+RP_TRIM = (64, 238, 216)      # 사신 빛 (0.22, 0.96, 0.86)
+RP_CORE = (206, 255, 248)
+RP_BONE = (228, 222, 202)
+RP_VOID = (6, 8, 14)
+RP_SHAFT = (38, 30, 34)
+RP_BLADE = (96, 214, 236)
+
+
+def job_reaper():
+    m = Model("job_reaper", tex_w=128)
+    robe = see(Mat(RP_ROBE, "knit", noise=5, edge=0.8, seed=1201, accent=(16, 18, 30)), 0.9)
+    robe2 = see(Mat(RP_ROBE2, "knit", noise=5, edge=0.82, seed=1202, accent=(24, 28, 44)), 0.92)
+    trim = Mat(RP_TRIM, "flat", noise=4, edge=1.0, glow=0.9, seed=1203)
+    core = Mat(RP_CORE, "flat", noise=3, edge=1.0, glow=1.0, seed=1204)
+    bone = Mat(RP_BONE, "bone", noise=4, edge=0.86, seed=1205)
+    void = Mat(RP_VOID, "flat", noise=2, edge=1.0, seed=1206)
+    shaft = Mat(RP_SHAFT, "wood", noise=5, edge=0.85, seed=1207)
+    blade = Mat(RP_BLADE, "crystal", noise=4, edge=1.0, glow=0.6, seed=1208)
+    smoke = see(Mat((40, 70, 84), "ice", noise=8, edge=0.95, seed=1209, accent=(60, 150, 160)), 0.55)
+    tatter = see(Mat(RP_ROBE2, "knit", noise=5, edge=0.85, seed=1210, accent=(20, 24, 38)), 0.88)
+    eyes = [("north", 1, 3, RP_CORE, 1.0), ("north", 2, 3, RP_TRIM, 1.0), ("north", 4, 3, RP_TRIM, 1.0), ("north", 5, 3, RP_CORE, 1.0),
+            ("north", 3, 4, RP_VOID), ("north", 1, 5, RP_VOID), ("north", 3, 5, RP_VOID), ("north", 5, 5, RP_VOID)]
+
+    root = m.bone("root", [0, 0, 0])
+    # 아래: 해진 옷자락 · 영혼 연기 (비침 — 떠 있음)
+    tail = m.bone("tail", [0, 12, 0], "root")
+    tail.box([-6, 3, -4], [12, 9, 8], tatter)
+    tail.box([-5, 0, -3.5], [3, 3, 2], tatter.with_(seed=1211))
+    tail.box([1, -1, -3.5], [3, 4, 2], tatter.with_(seed=1212))
+    tail.box([-4, 0, 1.5], [3, 3, 2], tatter.with_(seed=1213))
+    tail.box([2, 1, 1.5], [3, 2, 2], tatter.with_(seed=1219))
+    tail.box([-4.5, -2, -3], [9, 5, 6], smoke)
+    body = m.bone("body", [0, 12, 0], "root")
+    # 옷: 아랫단 (청록 테) · 가슴 · 앞섶의 빛 줄 · 허리띠 · 가슴뼈
+    body.box([-6.5, 12, -4], [13, 11, 8], robe)
+    body.box([-6.5, 12, -4], [13, 1, 8], trim.with_(seed=1214), inflate=0.15)
+    body.box([-5.5, 23, -3.5], [11, 8, 7], robe.with_(seed=1215), decals=[("north", 3, 2, RP_BONE), ("north", 7, 2, RP_BONE), ("north", 3, 4, RP_BONE),
+                                                                           ("north", 7, 4, RP_BONE), ("north", 5, 1, RP_TRIM, 0.9)])
+    body.box([-1, 12, -4.4], [2, 19, 1], trim.with_(seed=1216))
+    body.box([-6, 22, -4.2], [12, 1, 8], trim.with_(seed=1217), inflate=0.1)
+    # 어깨 옷 · 어깨뼈 (가시)
+    mantle = m.bone("mantle", [0, 31, 0], "body")
+    mantle.box([-8, 28, -4.5], [16, 3, 9], robe2, faces={"down": robe2})
+    mantle.box([-8, 28, -4.5], [16, 1, 9], trim.with_(seed=1218), inflate=0.1)
+    mantle.box([-9.5, 30, -2.5], [3, 3, 5], bone.with_(seed=1219))
+    mantle.box([6.5, 30, -2.5], [3, 3, 5], bone.with_(seed=1220))
+    mantle.box([-9, 33, -1.5], [1, 2, 1], bone.with_(seed=1221))
+    mantle.box([8, 33, -1.5], [1, 2, 1], bone.with_(seed=1222))
+    # 머리: 두건 (앞이 트임) 속 해골 · 두건 끝 테 · 뒤로 늘어진 두건 끝
+    head = m.bone("head", [0, 31, 0], "body")
+    head.box([-3.5, 31, -3], [7, 7, 7], bone.with_(seed=1223), decals=eyes)
+    head.box([-5, 38, -4.5], [10, 2, 10], robe2.with_(seed=1224))
+    head.box([-5, 30, -4.5], [1, 8, 10], robe2.with_(seed=1225))
+    head.box([4, 30, -4.5], [1, 8, 10], robe2.with_(seed=1226))
+    head.box([-5, 30, 4.5], [10, 8, 1], robe2.with_(seed=1227))
+    head.box([-5, 39, -5], [10, 1, 1], trim.with_(seed=1228))
+    head.box([-5, 30, -5], [1, 9, 1], trim.with_(seed=1229))
+    head.box([4, 30, -5], [1, 9, 1], trim.with_(seed=1230))
+    tip = m.bone("hoodTip", [0, 39, 4], "head", [-32, 0, 0])
+    tip.box([-2, 37, 4], [4, 3, 6], robe2.with_(seed=1231))
+    # 팔: 넓은 소매 (청록 테 끝) · 뼈 팔 · 뼈 손
+    for side, sx in (("R", -1), ("L", 1)):
+        ax = -10 if sx < 0 else 6
+        arm = m.bone("arm" + side, [7 * sx, 29, 0], "body")
+        arm.box([ax, 20, -2.5], [4, 9, 5], robe2.with_(seed=1232 + sx))
+        arm.box([ax, 20, -2.5], [4, 1, 5], trim.with_(seed=1234 + sx), inflate=0.15)
+        fa = m.bone("forearm" + side, [8 * sx, 21, 0], "arm" + side)
+        fx = -9 if sx < 0 else 7
+        fa.box([fx, 14, -1], [2, 7, 2], bone.with_(seed=1236 + sx))
+        fa.box([fx - 0.5, 11, -1.5], [3, 3, 3], bone.with_(seed=1238 + sx))
+    # 낫 (오른손 — 아래팔을 따라 자루가 손을 지나 위아래로): 검은 자루 · 청록 고리 셋 · 밑 가시 · 위 끝에서 앞으로 뻗어 아래로 휘는 영혼빛 날 (세 마디)
+    sc = m.bone("scythe", [-8, 12.5, 0], "forearmR")
+    sc.box([-8.5, -12, -0.5], [1, 46, 1], shaft)
+    for y in (-2, 9, 31):
+        sc.box([-9, y, -1], [2, 1, 2], trim.with_(seed=1240 + y))
+    sc.box([-8.5, -15, -0.5], [1, 3, 1], bone.with_(seed=1244))
+    sc.box([-9, 32, -1.5], [2, 3, 3], bone.with_(seed=1245))
+    b1 = m.bone("blade1", [-8, 33.5, -1], "scythe")
+    b1.box([-8.5, 32, -11], [1, 3, 10], blade, faces={"down": core})
+    b2 = m.bone("blade2", [-8, 33.5, -11], "blade1", [24, 0, 0])
+    b2.box([-8.5, 32.5, -18], [1, 2, 7], blade.with_(seed=1246), faces={"down": core})
+    b3 = m.bone("blade3", [-8, 33.5, -18], "blade2", [26, 0, 0])
+    b3.box([-8.5, 33, -22], [1, 1, 4], core.with_(seed=1247))
+    return m
+
+
+# 쉬는 자세 (idle 이 늘 켜져 있고 동작은 더해짐 — rp_rel 로 뺌): 낫을 오른쪽에 세워 듦 · 왼손은 자루 쪽으로 · 조금 숙인 몸
+RP_READY = {
+    "armR": {"rotation": [-28, 0, 6]}, "forearmR": {"rotation": [-40, 0, 0]}, "scythe": {"rotation": [68, 0, 0]},
+    "armL": {"rotation": [-36, -24, -6]}, "forearmL": {"rotation": [-48, 0, 0]},
+    "body": {"rotation": [6, 0, 0]}, "head": {"rotation": [-4, 0, 0]}, "tail": {"rotation": [10, 0, 0]},
+}
+
+
+def rp_rel(bones):
+    """동작 열쇠 (그 뼈의 실제 자세) → 쉬는 자세에서 더할 값"""
+    out = {}
+    for b, chans in bones.items():
+        out[b] = {}
+        for ch, frames in chans.items():
+            base = RP_READY.get(b, {}).get(ch)
+            if base is None or ch == "scale":
+                out[b][ch] = kf(frames)
+                continue
+            out[b][ch] = kf([(t, [v - q for v, q in zip(vec, base)]) for t, vec in frames])
+    return out
+
+
+def job_reaper_anims():
+    bob = f"math.sin({LT} * 100)"
+    R0 = RP_READY
+
+    def pose(t, **kw):
+        return t, kw
+
+    def seq(*keys):
+        """keys = [(t, {뼈: 회전})] → 뼈마다 열쇠 (없는 뼈는 쉬는 자세)"""
+        bones = {}
+        names = set()
+        for _, d in keys:
+            names.update(d)
+        for b in names:
+            base = R0.get(b, {}).get("rotation", [0, 0, 0])
+            bones[b] = {"rotation": [(t, d.get(b, base)) for t, d in keys]}
+        return bones
+
+    return {
+        "idle": {"loop": True, "bones": {
+            "root": {"position": [0, f"{bob} * 0.8 + 1", 0]},
+            "armR": R0["armR"], "forearmR": R0["forearmR"], "scythe": R0["scythe"], "armL": R0["armL"], "forearmL": R0["forearmL"],
+            "body": {"rotation": [f"6 + {bob} * 2", f"math.sin({LT} * 60) * 5", 0]},
+            "head": {"rotation": [f"-4 + math.sin({LT} * 80) * 3", f"math.sin({LT} * 45) * 8", 0]},
+            "tail": {"rotation": [f"10 + math.sin({LT} * 150) * 6", 0, f"math.sin({LT} * 110) * 5"], "scale": [1, f"1 + {bob} * 0.05", 1]},
+            "hoodTip": {"rotation": [f"math.sin({LT} * 130) * 6", 0, 0]},
+        }},
+        # 땅에서 솟음 (0.5초): 작게 땅 아래에서 커지며 올라옴
+        "rise": {"animation_length": 0.5, "bones": {
+            "root": {"position": kf([(0, [0, -34, 0]), (0.35, [0, 1, 0]), (0.5, [0, 0, 0])]),
+                     "scale": kf([(0, [0.45, 0.45, 0.45]), (0.35, [1.05, 1.05, 1.05]), (0.5, [1, 1, 1])])},
+            "head": {"rotation": kf([(0, [20, 0, 0]), (0.5, [0, 0, 0])])},
+        }},
+        # 비스듬히 베기 (0.35초 — 낫 날이 지나는 때 0.15초 = 서버 REAPER_SWING_AT 3틱): 오른쪽 위로 감았다가 왼쪽 아래로
+        "swing_a": {"animation_length": 0.35, "bones": rp_rel(seq(
+            pose(0, **{}), pose(0.08, armR=[-150, -30, 20], forearmR=[-20, 0, 0], scythe=[40, 0, -30], body=[-6, 30, 0], armL=[-120, 20, -10]),
+            pose(0.15, armR=[-60, 40, -30], forearmR=[-10, 0, 0], scythe=[20, 0, 40], body=[18, -35, 0], armL=[-60, 10, -20]),
+            pose(0.25, armR=[-40, 50, -40], forearmR=[-20, 0, 0], scythe=[30, 0, 50], body=[20, -40, 0], armL=[-40, 0, -20]),
+            pose(0.35, **{})))},
+        # 거꾸로 베어 올림 (0.35초 — 0.15초): 왼쪽 아래에서 오른쪽 위로
+        "swing_b": {"animation_length": 0.35, "bones": rp_rel(seq(
+            pose(0, **{}), pose(0.08, armR=[-30, 50, -40], forearmR=[-20, 0, 0], scythe=[10, 0, 60], body=[10, -35, 0], armL=[-30, 10, -20]),
+            pose(0.15, armR=[-130, -20, 30], forearmR=[-10, 0, 0], scythe=[40, 0, -20], body=[-10, 30, 0], armL=[-110, 20, -10]),
+            pose(0.25, armR=[-150, -30, 40], forearmR=[-20, 0, 0], scythe=[50, 0, -30], body=[-12, 35, 0], armL=[-120, 20, -10]),
+            pose(0.35, **{})))},
+        # 휩쓸기 두 바퀴 (1.2초 — 오른팔을 옆으로 뻗어 낫을 수평으로 (날이 앞) → 0.15 ~ 1.05초에 뿌리가 720° 돎 (한 틱 40° — 모드 없는 클라이언트가 뼈 변환 사이를
+        # 곧게 이으므로) · 날이 한 바퀴 도는 가운데 = 0.35초 · 0.85초 (서버 REAPER_SPIN_AT 7틱 · 다음 바퀴 +10틱)
+        "spin2": {"animation_length": 1.2, "bones": dict(rp_rel(seq(
+            pose(0, **{}), pose(0.12, armR=[-25, 0, 80], forearmR=[-10, 0, 0], scythe=[-26, 2, -164], armL=[-70, 0, -30], forearmL=[-20, 0, 0], body=[12, 0, 0]),
+            pose(1.05, armR=[-25, 0, 80], forearmR=[-10, 0, 0], scythe=[-26, 2, -164], armL=[-70, 0, -30], forearmL=[-20, 0, 0], body=[12, 0, 0]),
+            pose(1.2, **{}))), root={"rotation": kf([(0, [0, 0, 0]), (0.12, [0, 30, 0]), (0.15, [0, 30, 0])]
+                                                    + [(round(0.15 + i * 0.05, 2), [0, 30 - i * 40, 0]) for i in range(1, 19)] + [(1.2, [0, -720, 0])])})},
+        # 거두기 (0.7초 — 날이 땅에 박히는 때 0.4초 = REAPER_REAP_AT 8틱): 두 손으로 낫을 머리 위 뒤로 치켜들었다가 (0.25) 앞 땅으로 내리찍음 (날이 땅에 걸림)
+        "reap": {"animation_length": 0.7, "bones": rp_rel(seq(
+            pose(0, **{}), pose(0.25, armR=[-170, 0, 8], forearmR=[-10, 0, 0], scythe=[151, 0, 8], body=[-16, 0, 0], head=[-14, 0, 0], armL=[-165, 0, -8],
+                                forearmL=[-10, 0, 0]),
+            pose(0.33, armR=[-110, 0, 4], forearmR=[-5, 0, 0], scythe=[137, 4, 2], body=[10, 0, 0], head=[4, 0, 0], armL=[-105, 0, -4], forearmL=[-5, 0, 0]),
+            pose(0.4, armR=[-45, 0, 0], forearmR=[-5, 0, 0], scythe=[128, 0, 0], body=[30, 0, 0], head=[16, 0, 0], armL=[-42, 0, 0], forearmL=[-5, 0, 0]),
+            pose(0.55, armR=[-45, 0, 0], forearmR=[-5, 0, 0], scythe=[128, 0, 0], body=[30, 0, 0], head=[16, 0, 0], armL=[-42, 0, 0], forearmL=[-5, 0, 0]),
+            pose(0.7, **{})))},
+        # 흩어짐 (0.5초): 부풀었다가 영혼으로 작아지며 솟음
+        "vanish": {"animation_length": 0.5, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.5, [0, 10, 0])]), "scale": kf([(0, [1, 1, 1]), (0.15, [1.08, 1.08, 1.08]), (0.5, [0.04, 0.04, 0.04])])},
+        }},
+    }
+
+
 R.MOBS["job_dragon"] = (job_dragon, job_dragon_anims, dict(fam="job_dragon", health=40, move=0.4, box=[1.6, 1.8], fly=True), "entity_emissive", ["idle"], None)
+R.MOBS["job_reaper"] = (job_reaper, job_reaper_anims, dict(fam="job_reaper", health=40, move=0.4, box=[1.0, 2.6], fly=True), "entity_alphablend", ["idle"], True)
+R.PREVIEW_POSES["job_reaper"] = ((["idle"], 0.0), (["rise"], 0.3), (["idle", "swing_a"], 0.08), (["idle", "swing_a"], 0.15), (["idle", "swing_b"], 0.15),
+                                 (["idle", "spin2"], 0.15), (["idle", "spin2"], 0.35), (["idle", "reap"], 0.25), (["idle", "reap"], 0.33),
+                                 (["idle", "reap"], 0.4), (["idle", "vanish"], 0.3))
 R.MOBS["job_bear"] = (job_bear, job_bear_anims, dict(fam="job_bear", health=40, move=0.3, box=[1.8, 2.0]), "entity_emissive", ["idle"], None)
 R.PREVIEW_POSES["job_bear"] = ((["idle"], 0.0), (["idle", "rear"], 0.45), (["idle", "roar"], 0.55), (["idle", "slam"], 0.12), (["idle", "slam"], 0.25),
                                (["idle", "roarslam"], 0.12), (["idle", "growl"], 0.3),
@@ -529,7 +715,7 @@ R.PREVIEW_POSES["job_dragon"] = ((["idle"], 0.0), (["idle", "fly"], 0.15), (["id
                                  (["idle", "breathe"], 0.2), (["idle", "dive"], 0.25), (["idle", "crash"], 0.5), (["summon"], 0.2),
                                  (["idle", "launch"], 0.1), (["idle", "launch"], 0.18), (["idle", "spin"], 0.2), (["idle", "bite"], 0.1),
                                  (["idle", "bite"], 0.3), (["idle", "rear"], 0.5), (["idle", "slam"], 0.15), (["idle", "stomp"], 0.1), (["idle", "stomp"], 0.2))
-JOB_MOBS = ("job_dragon", "job_bear")
+JOB_MOBS = ("job_dragon", "job_bear", "job_reaper")
 
 
 def main():
