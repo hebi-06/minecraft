@@ -126,9 +126,11 @@ final class JobMove {
     static Vec3 predict(ServerPlayer sp, int n) {
         Plan p = PLANS.get(sp.getUUID());
         if (p == null || p.stuck()[0] || gen(sp) != p.gen() || !RuneKit.sameLife(sp, p.life())) return null;
-        long r = mmorpg.fabric.Tasks.now() - p.t0() + n;
+        long now = mmorpg.fabric.Tasks.now() - p.t0();
+        long r = now + n;
         Seg[] segs = p.segs();
-        if (r > segs[segs.length - 1].end()) return null;
+        // 움직임이 이미 끝났으면 없음 · 끝나기 직전이면 끝 자리 (영상 1: 내리꽂기 끝 3틱에 null 이라 지금 자리 (공중) 로 되돌아가 용이 다시 솟아 보였음)
+        if (now > segs[segs.length - 1].end()) return null;
         Vec3 cur = sp.position();
         if (r <= segs[0].start()) return cur;
         Vec3 end = null;
@@ -142,9 +144,9 @@ final class JobMove {
                 b = s.target() == null ? a : s.target().apply(a);
             }
             if (r <= s.end()) return point(s, a, b, (r - s.start()) / (double) Math.max(1, s.end() - s.start()));
-            end = b;
+            end = s.peak() > 0 || s.target() != null ? b : a;
         }
-        return end;
+        return end != null ? end : cur;
     }
 
     /** 이 움직임이 아직 이어지는지: 같은 삶 · 같은 번호 · 막히지 않음 · 마지막에 놓은 자리에서 1칸 안 (넘으면 다른 것이 옮긴 것 — 그만) */

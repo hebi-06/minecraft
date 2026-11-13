@@ -38,8 +38,11 @@ import net.minecraft.world.phys.Vec3;
 public final class DragonForm {
     private DragonForm() {}
 
-    /** 변신한 용 크기 (날개 끝 사이 약 4.9칸 · 등 높이 약 1.46칸 — 1인칭 눈 (1.62) 이 등 바로 위, 앞에 목 · 머리 · 양옆에 날개) */
-    static final double SCALE = 0.9;
+    /**
+     * 변신한 용 크기 (날개 끝 사이 약 6.2칸 · 등 높이 약 1.45칸 — 1인칭 눈 (1.62) 이 등 바로 위, 앞에 목 · 머리 · 양옆에 날개). 영상 1 (0.9): 과녁 (드라우그) 과
+     * 키가 비슷해 묻혀 보였고 물기 · 꼬리가 앞 과녁에 닿지 않았음
+     */
+    static final double SCALE = 1.15;
     /** 스킬이 끝난 뒤 용으로 남는 틱 (이어 쓸 틈) */
     static final int LINGER = 12;
     /** 몸 자리 보간 (3틱) 만큼 앞당김 */

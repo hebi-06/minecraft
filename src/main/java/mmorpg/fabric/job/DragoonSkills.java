@@ -622,7 +622,9 @@ final class DragoonSkills {
                 Vec3 vel = V.scale(V.sub(end, mouth), 1 / 0.45);
                 int dl = q % 4;
                 Vec3 m0 = mouth;
-                RuneKit.later(dl, () -> JobFx.fire(lv, V.add(m0, ff, 0.6), 0.95 + 0.5 * Kit.rand(), 0.5, Opt.of("vel", vel, "grow", 1.9, "spin", Kit.rand() * 40 - 20), FIRE_GLOW,
+                // 2026-11-13 변신 영상 1: 과녁 뒤에 묻혀 작게 보였음 → 불꽃 덩이 크게
+                double sz = (0.95 + 0.5 * Kit.rand()) * (flat(u) ? 1.0 : 1.35);
+                RuneKit.later(dl, () -> JobFx.fire(lv, V.add(m0, ff, 0.6), sz, 0.5, Opt.of("vel", vel, "grow", 1.9, "spin", Kit.rand() * 40 - 20), FIRE_GLOW,
                         FIRE_CORE));
             }
             for (int q = 0; q < 9; q++) {
@@ -652,8 +654,8 @@ final class DragoonSkills {
 
     // ------------------------------------------------------------ 드래곤폴
 
-    /** 드래곤폴의 용 크기: 내리꽂을 때 (날개 끝 사이 약 8.8칸 — 내리꽂기 앞 4틱에 커짐) */
-    static final double ULT_BIG = 1.6;
+    /** 드래곤폴의 용 크기: 내리꽂을 때 (날개 끝 사이 약 10칸 — 내리꽂기 앞 4틱에 커짐) */
+    static final double ULT_BIG = 1.9;
 
     /**
      * 드래곤폴 (롤 판테온 R): 용의 하늘 (rpg:ult_wyrm) — 크게 웅크려 soarAt 틱에 하늘 높이 (height 칸 — 머리 위 여유까지) 솟구침 (그때부터 내리꽂을 때까지 받는 피해
