@@ -1258,6 +1258,27 @@ final class JobFx {
      * 무지개 다리 줄기 (rfx_jbifrost — 가는 쪽으로 누움, 이어 돌림): from → to 를 따라 무지개 다섯 띠 (위에서 빨강 → 보라, 띠 사이 gap 칸 — 0.11 이면 띠가 맞닿음).
      * 조각 길이를 2.5칸으로 정해 (2.2칸마다 · 끝 조각은 길 끝에 맞춤) 띠 굵기 (높이의 35% — 약 0.11칸) 가 길이와 상관없이 같게
      */
+    /**
+     * 2026-11-13 단색 빛의 다리 (직업 도감 메모 세이비어 러시 "무지개는 좀 그럼 차라리 단색으로"): 무지개 다섯 띠 대신 직업 빛 (겉빛 · 속빛) 의 세 띠 — 가운데 띠가
+     * 가장 짙고 위아래로 옅어짐
+     */
+    static void bifrost(ServerLevel level, Vec3 from, Vec3 to, double gap, double life, Opt o, Jobs.Job j) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.3) return;
+        Vec3 u = V.scale(d, 1 / len);
+        int n = Math.max(1, (int) Math.ceil(len / 2.2));
+        double a = o.num("alpha", 1.0);
+        for (int s = 0; s < n; s++) {
+            Vec3 mid = V.add(from, u, n == 1 ? len / 2 : Math.min(len - 1.1, 1.1 + 2.2 * s));
+            for (int i = 0; i < 3; i++) {
+                double[] c = i == 1 ? outer(j) : inner(j);
+                loop(level, "jbifrost", BIFROST, V.up(mid, (1 - i) * gap * 1.6), life, 12, o.with("dir", u, "size", 1.25, "phase", (double) ((s + i) % BIFROST), "alpha",
+                        a * (i == 1 ? 1.0 : 0.6)), c, inner(j));
+            }
+        }
+    }
+
     static void bifrost(ServerLevel level, Vec3 from, Vec3 to, double gap, double life, Opt o) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);

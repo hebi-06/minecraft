@@ -662,7 +662,7 @@ final class TricksterSkills {
         Ult.sky(sp.level(), sp.position(), "rpg:ult_mirror", finalAt + 30); // 하늘은 끝나기 전부터 걷힘 — 깨질 때까지 보랏빛 (영상 42335099916)
         Vec3 u = blinkFront(sp, e, 1.2, j);
         ServerLevel level0 = sp.level();
-        RpgCombat.setSteadfast(sp, slashAt + 6);
+        RpgCombat.setSteadfast(sp, finalAt + 4); // 2026-11-13 내 몸이 거울 사이를 꿰뚫고 다님 (밀려나지 않게 끝까지)
         SkillFx.play(level0, "entity.illusioner.mirror_move", sp.position(), 0.8, 1.0);
         SkillFx.play(level0, "entity.enderman.teleport", sp.position(), 0.9, 0.8);
         JobTraits10.startMirror(sp, e, finalAt + 2);
@@ -724,7 +724,13 @@ final class TricksterSkills {
                 Vec3 s0 = V.add(c0, spots[si], R);
                 Vec3 s1 = V.add(c0, spots[si], R - 0.9);
                 Vec3 face = V.scale(spots[si], -1);
-                // 거울이 번쩍 → 환영이 걸어 나옴
+                // 거울이 번쩍 → 내가 그 거울에서 걸어 나옴 (2026-11-13 직업 도감 메모 "암살자인데 화려하게 안움직이고 가만히 있는게 마음에 안듬" — 환영만 꿰뚫던 것을
+                // 내 몸이 함께: 거울로 순간 이동 · 과녁을 봄)
+                if (!Status.isRooted(sp) && !Kit.ridingAny(sp)) {
+                    Vec3 g1 = new Vec3(s1.x, RuneKit.groundAt(lv, V.up(s1, 1.5), c0.y), s1.z);
+                    Kit.noFall(sp, 30);
+                    Kit.moveTo(sp, g1, (float) Math.toDegrees(Math.atan2(-face.x, face.z)), 0F);
+                }
                 JobFx.pane(lv, V.up(s0, mirrorH / 2), face, mirrorH, 0.25, Opt.of("alpha", 1.0), ILLUSION_CORE, ILLUSION_CORE);
                 JobFx.glint(lv, V.up(s0, mirrorH / 2), 1.0, ILLUSION, ILLUSION_CORE, 0.25, Opt.empty());
                 for (int t = 0; t <= 1; t++) {
@@ -742,6 +748,13 @@ final class TricksterSkills {
                 for (int t = 0; t <= 3; t++) {
                     int tt = t;
                     RuneKit.later(t, () -> illusion(sp, lv, V.lerp(s1, t1, tt / 3.0), face, tt < 3 ? 1 : 3, j, 0.16, 0.9));
+                }
+                // 2026-11-13 내 몸이 과녁을 꿰뚫고 맞은편 거울까지 (3틱) · 눈앞 베기
+                if (!Status.isRooted(sp) && !Kit.ridingAny(sp)) {
+                    Vec3 tg = new Vec3(t1.x, RuneKit.groundAt(lv, V.up(t1, 1.5), c0.y), t1.z);
+                    JobMove.run(sp, JobMove.to(0, 3, JobMove.at(tg), JobMove.OUT));
+                    JobFx.slash(sp, j, 1.9, 0.2, 1.4, (Kit.rand() < 0.5 ? 20.0 : 200.0), 0.2);
+                    JobFx.speed(sp, j, 0.2, 0.9);
                 }
                 JobFx.line(lv, V.up(s1, 1.0), V.up(t1, 1.0), ILLUSION, ILLUSION_CORE, 0.35, Opt.empty());
                 JobFx.line(lv, V.up(s1, 1.05), V.up(t1, 1.05), j, 0.3, Opt.of("alpha", 0.7));

@@ -288,7 +288,7 @@ final class SwordsmanSkills {
                 given[0] = true;
                 mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "달빛 가호", JobFx.outer(j), JobFx.inner(j));
                 // 발키리의 날개 (가호 동안 등 뒤 — 1인칭에서는 숨김) · 내려앉는 깃털
-                JobFx.valWings(sp, j, 0.95, (int) k.num("buffTicks", 80), 0.72);
+                JobFx.valWings(sp, j, 1.35, (int) k.num("buffTicks", 80), 0.8); // 2026-11-13 날개를 크게 (직업 도감 메모 "날개를 더 크게")
                 JobFx.feathers(sp.level(), V.up(sp.position(), 2.2), 6, 1.0, 0.17, j, 1.5, JobFx.hide1p(sp));
             };
             int[] pending = {targets.size()};
@@ -329,6 +329,8 @@ final class SwordsmanSkills {
             });
         }
         JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
+        // 2026-11-13 등 뒤 커다란 빛의 날개 (직업 도감 메모 "날개를 더 크게 표현하면 좋겠음" — 태세 동안)
+        JobFx.valWings(sp, j, 1.7, dur, 0.85);
         // 0.50.0 칼날 고리 (재설계표 — rfx_jbladering: 여섯 자루가 바깥을 겨눈 고리가 발밑에서 천천히 돎)
         JobFx.bladeRing(sp.level(), V.up(sp.position(), 0.07), 1.6, j, 1.0, 10, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.35, "alpha", 0.95));
         // 0.47.0 입체: 태세 동안 몸 둘레를 천천히 도는 환영 검 둘 (가슴 높이 · 칼끝이 가는 쪽 — 1인칭에서는 숨김)

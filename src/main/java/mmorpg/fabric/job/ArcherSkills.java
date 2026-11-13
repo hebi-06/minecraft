@@ -70,8 +70,7 @@ final class ArcherSkills {
                 ServerLevel level = sp.level();
                 Vec3 from = RuneKit.bowHand(sp);
                 Vec3 to = V.up(Kit.bodyPoint(target), ((ii % 3) - 1) * 0.2);
-                // 빛의 활이 당겼다 놓임 (손 앞 — 카메라를 봄) · 빛의 화살
-                JobFx.bow(level, bowAt(sp, 0.5), 0.42, j, 2, 4, every / 20.0 + 0.06, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.3));
+                // 빛의 화살 (2026-11-13 직업 도감 메모 "캐릭터 앞에 활 모양 삭제" — 손 앞의 빛의 활 그림은 뺌)
                 int t = JobFx.arrow(level, from, to, j, 55, 0.62, Opt.empty());
                 SkillFx.play(level, "random.bow", from, 1.3 + ii * 0.08, 0.7);
                 if (ii == 0) JobKit.strikeSplit(sp, target, j, P, mult, n, every, false, false, life, t, d -> {});

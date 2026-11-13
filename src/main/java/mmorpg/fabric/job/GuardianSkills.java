@@ -157,7 +157,7 @@ final class GuardianSkills {
                         Vec3 stop = prev;
                         if (best != null && best.s() > sPrev + 0.05 && Kit.moveTo(sp, best.p())) stop = best.p();
                         JobFx.dash(d, V.up(prev, 0.9), V.up(stop, 0.9), j, 0.3, JobFx.hide1p(sp));
-                        JobFx.bifrost(d, V.up(prev, 0.55), V.up(stop, 0.55), 0.11, 0.6, JobFx.hide1p(sp)); // 0.50.0 무지개 다리 줄기 (rfx_jbifrost)
+                        JobFx.bifrost(d, V.up(prev, 0.55), V.up(stop, 0.55), 0.11, 0.6, JobFx.hide1p(sp), j); // 2026-11-13 단색 빛의 다리 (무지개 대신)
                         JobFx.speed(sp, j, 0.25, 0.8);
                         arrive(sp, j, k, P, null, dir, life);
                         return;
@@ -165,8 +165,8 @@ final class GuardianSkills {
                 }
                 if (!Kit.moveTo(sp, to)) return;
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
-                // 0.50.0 무지개 다리 줄기 (재설계표 — rfx_jbifrost: 지나온 길에 빨강 · 주황 · 초록 · 파랑 · 보라 다섯 띠)
-                JobFx.bifrost(d, V.up(prev, 0.55), V.up(to, 0.55), 0.11, 0.6, JobFx.hide1p(sp));
+                // 2026-11-13 단색 빛의 다리 (직업 도감 메모 "무지개는 좀 그럼 차라리 단색으로" — 무지개 다섯 띠 대신 직업 빛 세 띠)
+                JobFx.bifrost(d, V.up(prev, 0.55), V.up(to, 0.55), 0.11, 0.6, JobFx.hide1p(sp), j);
                 SkillFx.sparks(d, V.up(to, 0.15), DUST, 3, 2);
                 JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.8);
             });
