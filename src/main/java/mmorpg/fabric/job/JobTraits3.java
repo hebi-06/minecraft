@@ -161,6 +161,7 @@ public final class JobTraits3 {
     static void reset(ServerPlayer sp) {
         State st = STATES.remove(sp.getUUID());
         if (st != null && st.veilUntil > 0) removeInvisibility(sp);
+        avatarGone(st);
         speedMod(sp, VEIL_SPEED, 0);
         speedMod(sp, SOUL_SPEED, 0);
         String p = sp.getUUID() + "|";
@@ -168,7 +169,7 @@ public final class JobTraits3 {
     }
 
     static void forget(UUID id) {
-        STATES.remove(id);
+        avatarGone(STATES.remove(id));
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -766,10 +767,20 @@ public final class JobTraits3 {
         return V.up(V.add(V.add(sp.position(), f, -0.6), V.rightOf(f), -1.1), 2.0);
     }
 
-    /** 2026-11-13 3D 망령 사신이 서는 자리 (발 — 몸 뒤 왼쪽: 3인칭 카메라와 몸 사이를 가리지 않게 · 낫이 몸에 걸리지 않게 1.5칸 옆) */
+    /**
+     * 2026-11-13 3D 망령 사신이 서는 자리 (발 — 몸 뒤 오른쪽 1.7칸 옆: 낫이 몸에 걸리지 않게. 뒤 왼쪽은 영상 카메라 (왼쪽 뒤 125°) 와 몸 사이를 가려 사람 · 과녁이
+     * 사신 등에 묻혔음 — CI 43445225021)
+     */
     static Vec3 avatarFeet(ServerPlayer sp) {
         Vec3 f = Kit.facingOf(sp);
-        return V.add(V.add(sp.position(), f, -0.9), V.rightOf(f), -1.5);
+        return V.add(V.add(sp.position(), f, -1.0), V.rightOf(f), 1.7);
+    }
+
+    /** 2026-11-13 직업을 바꿈 · 시험: 3D 망령 사신이 사라짐 (태세가 끝나지 않고 지워져도 — 다음 영상까지 남아 화면을 가렸음) */
+    private static void avatarGone(State st) {
+        if (st == null || st.avatarMob == null) return;
+        if (st.avatarMob.alive()) st.avatarMob.leave("vanish", 4);
+        st.avatarMob = null;
     }
 
     /** 사신 현신: 등 뒤 그림자가 낫을 휘두름 (3인칭 · 다른 사람) + 눈앞 큰 초승달 (1인칭도) — 같은 틱에 한 번 */

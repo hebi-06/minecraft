@@ -1263,10 +1263,13 @@ final class VanillaProbe {
             // 2026-11-13 드라군 변신 (사람 대신 용 — 꼬리가 둘레 3칸을 휩쓺): 조금 멀리
             case "dragoon_tail" -> new double[] {7.5, 2.6, 1.4, 1.0};
             // 2026-11-13 워로드 3D 곰 (일어서면 4~5칸): 멀리 · 위를 봄 (CI 43442895567 카타클리즘 — 일어선 곰의 머리가 화면 위로 잘림)
-            case "warlord_ult" -> new double[] {12.5, 3.6, 4.2, 0.4};
+            case "warlord_ult" -> new double[] {11.5, 3.4, 3.4, 0.4};
             case "warlord_hug" -> new double[] {8.5, 3.0, 2.2, 0.5};
             case "warlord_stomp" -> new double[] {8.5, 3.2, 2.2, 0.5};
-            case "warlord_slumber" -> new double[] {8.0, 2.8, 1.8, 0.5};
+            case "warlord_slumber" -> new double[] {9.5, 3.2, 2.6, 0.5};
+            // 2026-11-13 3D 망령 사신 (키 3칸 남짓 — 몸 뒤 오른쪽) · 페일 하베스트의 거대한 사신 (2.4배): 멀리 · 위를 봄 (CI 43445225021 — 머리가 화면 위로 잘림)
+            case "reaper_avatar" -> new double[] {8.5, 3.0, 2.0, 0.5};
+            case "soulreaper_ult" -> new double[] {12.5, 3.6, 4.4, 0.4};
             default -> new double[] {6.0, 2.1, 1.0, 1.0};
         };
     }
