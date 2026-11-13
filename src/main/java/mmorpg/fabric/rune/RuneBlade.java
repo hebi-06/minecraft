@@ -325,6 +325,16 @@ final class RuneBlade {
      * 오른쪽 뒤로 당김 → 찌르기 (2 × gap — 칼끝이 찌르는 끝까지 날아감) → 작아지며 흩어짐. 피해 · 틱은 그대로 (2D 초승달 · 검기도 그대로)
      */
     private static void tripleSword(ServerPlayer sp, String life, int gap, double thrust, double[] glow, double[] core) {
+        tripleSword(sp, life, gap, thrust, new double[][] {glow, glow, glow}, new double[][] {core, core, core});
+    }
+
+    /**
+     * 2026-11-13 마디마다 색이 다른 삼단 검 (삼원소 연격 — 불 가로 · 얼음 세로 · 번개 찌르기, RuneElement.triElement): glows · cores = 가로 · 세로 · 찌르기의
+     * {빛, 속빛} — 다음 마디로 넘어가는 틱에 검을 다시 물들임
+     */
+    static void tripleSword(ServerPlayer sp, String life, int gap, double thrust, double[][] glows, double[][] cores) {
+        double[] glow = glows[0];
+        double[] core = cores[0];
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 2 * gap + 12);
         double len = 3.4;
@@ -338,6 +348,7 @@ final class RuneBlade {
         RuneSwords.swing(b, 0, 4, chest, 0.7, (f, a) -> RuneSwords.flatDir(f, a, 8), f -> V.UP, 70, -130, "out");
         // 머리 위로 (왼쪽 위 → 하늘 뒤)
         fx.on(5, () -> {
+            if (glows[1] != glows[0]) b.prop.tint(glows[1], cores[1]);
             Vec3 f = chest.fwd();
             Vec3 d = V.unit(V.add(V.scale(V.rightOf(f), -0.55), V.UP, 0.85));
             b.pose(V.add(high.pivot(), d, 0.6), d, V.rightOf(f), 2);
@@ -353,12 +364,13 @@ final class RuneBlade {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 tip = b.tip();
             Vec3 g = new Vec3(tip.x, RuneKit.groundAt(level, tip, sp.getY()), tip.z);
-            RuneKit.glowCrack(level, g, 1.7, glow, RuneKit.WHITE, Opt.of("life", 1.0, "v", 1.0));
-            SkillFx.burst(level, V.up(g, 0.2), glow, 0.9, 0.25);
-            SkillFx.sparks(level, V.up(g, 0.3), core, 5, 4);
+            RuneKit.glowCrack(level, g, 1.7, glows[1], RuneKit.WHITE, Opt.of("life", 1.0, "v", 1.0));
+            SkillFx.burst(level, V.up(g, 0.2), glows[1], 0.9, 0.25);
+            SkillFx.sparks(level, V.up(g, 0.3), cores[1], 5, 4);
         });
         // 오른쪽 뒤로 당김 (칼끝은 앞)
         fx.on(gap + 5, () -> {
+            if (glows[2] != glows[1]) b.prop.tint(glows[2], cores[2]);
             Vec3 f = chest.fwd();
             Vec3 d = V.unit(V.add(f, V.UP, 0.06));
             b.pose(V.add(V.add(chest.pivot(), V.rightOf(f), 0.55), f, -0.9), d, V.UP, 3);
@@ -379,7 +391,7 @@ final class RuneBlade {
         fx.on(2 * gap + 3, () -> {
             b.grow(0.15, 4);
             b.prop.move(V.add(b.hilt(), b.dir(), 1.6), 4);
-            SkillFx.sparks(level, b.tip(), core, 6, 5);
+            SkillFx.sparks(level, b.tip(), cores[2], 6, 5);
         });
         fx.on(2 * gap + 7, b::remove);
     }

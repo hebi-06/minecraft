@@ -233,13 +233,6 @@ fpw(m, 2.5, FPW_ACROSS, "out3")
 fpw(m, 44, FPW_ACROSS, dp=(0, 0.02, 0))
 use(m, "counterStance")
 
-# 삼단베기 (· 삼원소 연격): 가로 (0) → 세로 (10) → 찌르기 (20)
-m = Motion("triple_cut", 28, "삼단베기 — 가로로 베고 세로로 내려 벤 뒤 앞으로 찌름", fade=(0.03, 0.1))
-strike(m, "slash_h", 0, 1.5)
-strike(m, "slash_v", 8.3, 10.5)
-strike(m, "thrust", 18.3, 20.6)
-use(m, "triElement")  # 2026-11-13 삼단베기는 새 동작 (rune_motions_hero blade_triple)
-
 # ------------------------------------------------------------ 마검사
 
 # 마력 베기: 가로 베기 (닿음 1.5) → 맞힌 적에 마력이 터지는 때 (10) 왼손을 펴 내밂

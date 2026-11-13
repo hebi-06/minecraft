@@ -334,7 +334,15 @@ final class RuneVit {
         return true;
     }
 
-    private static final net.minecraft.world.level.block.state.BlockState PACT_SHELL = net.minecraft.world.level.block.Blocks.RED_STAINED_GLASS.defaultBlockState();
+    /** 이름으로 찾은 블록 (자바 판마다 이름표 필드가 바뀌어도 — 26.3 에는 Blocks.RED_STAINED_GLASS 필드가 없음), 없으면 fallback */
+    private static net.minecraft.world.level.block.state.BlockState blockOr(String id, net.minecraft.world.level.block.Block fallback) {
+        net.minecraft.world.level.block.Block b = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(
+                net.minecraft.resources.Identifier.withDefaultNamespace(id));
+        return (b == null || b == net.minecraft.world.level.block.Blocks.AIR ? fallback : b).defaultBlockState();
+    }
+
+    private static final net.minecraft.world.level.block.state.BlockState PACT_SHELL = blockOr("red_stained_glass",
+            net.minecraft.world.level.block.Blocks.REDSTONE_BLOCK);
     private static final net.minecraft.world.level.block.state.BlockState PACT_CORE = net.minecraft.world.level.block.Blocks.REDSTONE_BLOCK.defaultBlockState();
 
     /**

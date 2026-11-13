@@ -327,6 +327,11 @@ final class RuneElement {
      */
     static boolean triElement(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         String life = RuneKit.lifeToken(sp);
+        // 2026-11-13 3D 원소 검 (룬 전용 검 2판 3.4칸 — 삼단베기와 같은 길: 불 가로 → 얼음 세로 (땅을 침) → 번개 찌르기, 마디마다 그 원소 색)
+        double[][] fc = colorOf("fire");
+        double[][] ic = colorOf("ice");
+        double[][] tc = colorOf("thunder");
+        RuneBlade.tripleSword(sp, life, (int) k.num("gap"), k.num("thrust"), new double[][] {fc[0], ic[0], tc[0]}, new double[][] {fc[1], ic[1], tc[1]});
         SkillFx.every((int) k.num("hits"), (int) k.num("gap"), i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();

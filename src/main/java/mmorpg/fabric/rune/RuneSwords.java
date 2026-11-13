@@ -101,6 +101,12 @@ public final class RuneSwords {
         return new Blade(fx, RuneProps.ARROW, RuneProps.ARROW_NOCK, 31 - RuneProps.ARROW_NOCK[1], RuneProps.ARROW_LEN, nock, dir, face, len, k0, glow, core);
     }
 
+    /** 2026-11-13 뇌신의 창 하나 (쥔 곳 = 손잡이 hilt · 촉 방향 dir · 번개 꼴 촉의 넓은 면 face · 길이 len 칸) */
+    public static Blade spear(Vfx.Fx fx, Vec3 grip, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
+        return new Blade(fx, RuneProps.THUNDER_SPEAR, RuneProps.THUNDER_SPEAR_GRIP, 31.6 - RuneProps.THUNDER_SPEAR_GRIP[1], RuneProps.THUNDER_SPEAR_LEN, grip,
+                dir, face, len, k0, glow, core);
+    }
+
     /** v 를 axis 둘레로 deg 도 (오른손 — axis 가 위면 위에서 보아 반시계) */
     public static Vec3 rot(Vec3 v, Vec3 axis, double deg) {
         Vec3 a = V.unit(axis);

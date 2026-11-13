@@ -55,6 +55,10 @@ public final class RuneProps {
     public static final double BOULDER_D = 16;
     /** 2026-11-13 블랙홀의 공허 핵 (void_orb): 가운데 (8, 8, 8) · 지름 약 19 · 면 테두리 빛 = 계열 색 (tint 0) */
     public static final String VOID_ORB = "rpg:vfx/void_orb";
+    /** 2026-11-13 뇌신의 창 (tools/vfx_blocky.py thunder_spear — 촉 +Y: 촉 끝 y 31.6 · 꼬리 끝 y −14, 쥔 곳 = 손잡이 (8, 4, 8) · 촉의 번개 꼴 면 = YZ, 물들임 빛 · 속빛) */
+    public static final String THUNDER_SPEAR = "rpg:vfx/thunder_spear";
+    public static final double THUNDER_SPEAR_LEN = 45.6;
+    public static final double[] THUNDER_SPEAR_GRIP = {8, 4, 8};
     /** 2026-11-13 머리 위 빛 고리 (tools/vfx_blocky.py halo — 가운데 (8, 8, 8) · 지름 약 19.6, 물들임 빛 · 속빛) */
     public static final String HALO = "rpg:vfx/halo";
     public static final double HALO_D = 19.6;

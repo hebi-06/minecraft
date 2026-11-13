@@ -304,13 +304,84 @@ final class RuneStorm {
         return true;
     }
 
-    /** 번개 창이 모이는 자리: 눈 위 0.62칸에서 보는 쪽 (수평) 으로 1.5칸 */
-    private static Vec3 spearAt(ServerPlayer sp) {
-        return V.add(V.up(sp.getEyePosition(), 0.62), V.flat(sp.getViewVector(1F)), 1.5);
+    /**
+     * 2026-11-13 뇌신의 3D 창 (thunder_spear — 길이 len 칸): charge 틱 동안 오른손 위 (머리 뒤 · 어깨 위 0.45칸) 에서 작게 나타나 커지며 시선 쪽을 겨눔 (2틱마다 따라옴) →
+     * 던짐 (thrown): 눈 조금 위에서 시선 쪽으로 speed 칸/초 (틱마다) → 끝에 촉이 박혀 떨다가 작아지며 흩어짐. 촉의 번개 꼴 면은 오른쪽 위로 비스듬히 (옆 · 뒤 위에서 보임)
+     */
+    static final class Spear3d {
+        final ServerPlayer sp;
+        final mmorpg.fabric.vfx.Vfx.Fx fx;
+        final RuneSwords.Blade b;
+        final double len;
+        boolean flying;
+
+        Spear3d(ServerPlayer sp, int charge, double len, double[] glow, double[] core) {
+            this.sp = sp;
+            this.len = len;
+            this.fx = RuneProps.fx(sp.level(), sp.position(), charge + 60);
+            Vec3 view = sp.getViewVector(1F);
+            this.b = RuneSwords.spear(fx, hold(sp), view, face(view), len, 0.3, glow, core);
+            fx.each(1, charge - 1, 2, t -> {
+                if (flying || sp.isRemoved()) return;
+                Vec3 v = sp.getViewVector(1F);
+                b.grow(0.3 + 0.7 * Math.min(1, (t + 2) / (double) charge), 2);
+                b.pose(hold(sp), v, face(v), 2);
+            });
+        }
+
+        /** 쥔 곳: 오른 어깨 위 (발에서 2.05칸 · 오른쪽 0.38 · 뒤 0.2) */
+        static Vec3 hold(ServerPlayer sp) {
+            Vec3 f = Kit.facingOf(sp);
+            return V.add(V.add(V.up(sp.position(), 2.05), V.rightOf(f), 0.38), f, -0.2);
+        }
+
+        static Vec3 face(Vec3 view) {
+            Vec3 r = V.rightOf(V.flat(view));
+            return V.unit(V.add(r, V.UP, 0.8));
+        }
+
+        Vec3 gripNow() {
+            return b.hilt();
+        }
+
+        Vec3 tipNow() {
+            return b.tip();
+        }
+
+        /** 던짐: shown (눈 조금 위) 에서 view 쪽 len 칸까지 speed 칸/초 → 촉이 박힘 · 떨림 · 흩어짐 */
+        void thrown(Vec3 shown, Vec3 view, double reach, double speed) {
+            flying = true;
+            b.grow(1, 1);
+            double toTip = b.reach();
+            Vec3 face = face(view);
+            double per = speed / 20.0;
+            int fly = Math.max(1, (int) Math.ceil(Math.max(0.5, reach - toTip * 0.85) / per));
+            int t0 = fx.age();
+            b.pose(shown, view, face, 1);
+            for (int i = 1; i <= fly; i++) {
+                final double sdist = Math.min(reach - toTip * 0.85, i * per);
+                fx.on(t0 + i, () -> b.pose(V.add(shown, view, sdist), view, face, 1));
+            }
+            // 박힌 채 떨림 (촉 둘레로 조금씩) → 작아지며 흩어짐
+            Vec3 stuck = V.add(shown, view, Math.max(0, reach - toTip * 0.85));
+            for (int j = 0; j < 6; j++) {
+                final int jj = j;
+                fx.on(t0 + fly + 1 + j, () -> {
+                    double amp = 3.0 * (1 - jj / 6.0) * (jj % 2 == 0 ? 1 : -1);
+                    Vec3 d = RuneSwords.rot(view, face, amp);
+                    b.pose(V.add(V.add(stuck, view, toTip), d, -toTip), d, face, 1);
+                });
+            }
+            fx.on(t0 + fly + 20, () -> {
+                b.grow(0.15, 6);
+                b.prop.move(V.add(stuck, view, toTip * 0.7), 6);
+            });
+            fx.on(t0 + fly + 27, b::remove);
+        }
     }
 
     /**
-     * 뇌신의 창: charge 틱 동안 눈앞 위에 번개 창 (rpg:rfx_spear) 이 모임 → 던짐. 시선 방향 range 칸 (벽 앞까지) 을 꿰뚫어 폭 width 칸의 적 피해 · 기절,
+     * 뇌신의 창: charge 틱 동안 오른손 위에 번개 창 (2026-11-13 3D — Spear3d) 이 모임 → 던짐. 시선 방향 range 칸 (벽 앞까지) 을 꿰뚫어 폭 width 칸의 적 피해 · 기절,
      * 맞은 적마다 하늘에서 번개 (rpg:rfx_bolt) + chainRange 칸 안의 새 적 하나에게 연쇄 (chainMult).
      * 초월 2차 강화: 폭풍 하늘 · 앞쪽 하늘의 먹구름 둘 · 발밑의 칼날 문양 · 모으는 동안 앞쪽 땅에 번개 셋 → 보랏빛 번쩍임 · 발밑에서 퍼지는 고리 ·
      * 창이 날아가는 길에 번개 셋 · 창이 꽂힌 땅이 갈라져 빛남
@@ -323,21 +394,22 @@ final class RuneStorm {
         double[] white = RuneKit.WHITE;
         double charge = k.num("charge");
         int stunTicks = (int) k.num("stun");
+        // 2026-11-13 3D 뇌신의 창 (thunder_spear — 2D 창 그림 대신): 오른손 위에서 커지며 겨눔 → 던짐 → 꽂힘 (spear3d)
+        double wk0 = k.num("width") / 1.6;
+        Spear3d sp3 = new Spear3d(sp, (int) charge, 2.8 * wk0, glow, core);
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (sp.isRemoved()) return;
                 Vec3 view = sp.getViewVector(1F);
-                Vec3 at = spearAt(sp);
+                Vec3 at = sp3.tipNow();
                 double grow = 0.4 + 0.6 * (tt / charge);
-                Opt so = Opt.of("dir", view, "size", 1.25 * grow, "life", 0.14, "cell", (double) ((tt / 2) % 4));
-                RuneBoost.auraCell(level, "spear", at, so, glow, SPEAR[0], 1.35, 0.42); // 0.48.2 2D 강화: 창 후광
-                RuneKit.rfx2(level, "spear", at, so, glow, white, SPEAR, null);
-                SkillFx.fx(level, "rpg:magic_circle", V.add(at, view, -1.8), Opt.of("size", 0.5 + 0.5 * grow, "life", 0.14, "spin", tt * 18.0, "progress",
+                SkillFx.fx(level, "rpg:magic_circle", V.add(sp3.gripNow(), view, -0.9), Opt.of("size", 0.5 + 0.5 * grow, "life", 0.14, "spin", tt * 18.0, "progress",
                         Math.min(1, (tt + 2) / charge), "color", glow, "alpha", 0.9)); // 창 뒤 · 눈 뒤 (1인칭 화면을 가리지 않음)
                 double a = Kit.rand() * Math.PI * 2;
-                SkillFx.bolt(level, V.add(at, new Vec3(Math.cos(a) * 1.6, Math.sin(a) * 1.0, Math.sin(a) * 1.6)), at, glow, Opt.of("jag", 0.35, "thick", 0.09,
+                SkillFx.bolt(level, V.add(at, new Vec3(Math.cos(a) * 1.4, Math.sin(a) * 0.9, Math.sin(a) * 1.4)), at, glow, Opt.of("jag", 0.35, "thick", 0.09,
                         "life", 0.14));
+                if (tt % 4 == 0) SkillFx.bolt(level, sp3.gripNow(), at, white, Opt.of("jag", 0.25, "thick", 0.06, "life", 0.12));
             });
         }
         SkillFx.play(level, "item.trident.riptide_3", sp.position(), 0.6, 0.8);
@@ -378,8 +450,8 @@ final class RuneStorm {
             // 창 크기 · 길의 번개 굵기는 폭 width 를 따라 (기본 1.6칸 → 1.35 · 0.12 — 8단계 6돌은 폭이 넓어져 창도 큼)
             double wk = k.num("width") / 1.6;
             Opt fo = Opt.of("dir", view, "speed", speed, "size", 1.35 * wk, "life", Math.max(0.05, (len - 1.2) / speed), "cell", Math.floor(Kit.rand() * 4));
-            RuneBoost.auraCell(level, "spear", V.add(shown, view, 1.2), fo, glow, SPEAR[0], 1.4, 0.45);
-            RuneKit.rfx2(level, "spear", V.add(shown, view, 1.2), fo, glow, white, SPEAR, null);
+            RuneBoost.auraCell(level, "spear", V.add(shown, view, 1.2), fo, glow, SPEAR[0], 1.4, 0.45); // 날아가는 3D 창의 후광 (2D 창 그림은 빼고)
+            sp3.thrown(shown, view, len, speed);
             for (double s = 0; s < len; s += 4) {
                 final double ss = s;
                 RuneKit.later(Math.round((s / speed) * 20), () -> SkillFx.bolt(level, V.add(from, view, ss), V.add(from, view, Math.min(len, ss + 4)), glow,

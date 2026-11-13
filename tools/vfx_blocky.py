@@ -1824,9 +1824,50 @@ def hex_panel():
     return m
 
 
+def _zig(m, mat, a, lean, L, w, t=0.8, x0=8.0):
+    """2026-11-13 YZ 면의 곧은 마디: a = (z, y) 에서 위로 길이 L, 위 끝이 +Z 쪽으로 lean 도 (22.5 단위) 기움 · 너비 w (z) · 두께 t (x) → 끝 (z, y)"""
+    az, ay = a
+    m.box(mat, (x0 - t / 2, ay, az - w / 2), (x0 + t / 2, ay + L, az + w / 2), rot=("x", lean, (x0, ay, az)) if lean else None)
+    r = math.radians(lean)
+    return (az + L * math.sin(r), ay + L * math.cos(r))
+
+
+def thunder_spear():
+    """2026-11-13 뇌신의 창 (뇌신의 창 — 촉 +Y): 빛나는 속대 (속빛) 를 감싼 반투명 번개 대 (빛) · 금 고리 셋 · 가죽 손잡이 · 번개 꼴로 꺾인 커다란 촉 (빛 · 흰 날) ·
+    촉 밑의 마름모 보석 (속빛) · 아래로 꺾인 옆 가지 둘 · 꼬리의 보석. 촉 끝 y 약 32 · 꼬리 끝 y −14 (길이 46), 쥔 곳 (8, 4, 8)"""
+    m = BModel("thunder_spear", "뇌신의 창 (2026-11-13 — 번개 대 · 금 고리 · 번개 꼴 촉 · 옆 가지 · 보석, 계열 색은 서버가 물들임)", d=2.5)
+    weapon_mats(m)
+    m.mat("light", Mat(light_blade(0.74), tint=0, glow=True, animated=True))
+    m.mat("edge2", Mat(edge_light(0.92), glow=True))
+    m.mat("core", Mat(gem_paint(0.7), tint=1, glow=True, animated=True))
+    m.mat("channel", Mat(rune_channel(), tint=1, glow=True, animated=True))
+    # 꼬리 보석 · 속대 · 반투명 번개 대
+    m.box("gem", (7.0, -14.0, 7.0), (9.0, -11.6, 9.0), rot=("y", 45, (8, -12.8, 8)))
+    m.box("channel", (7.55, -12.0, 7.55), (8.45, 21.0, 8.45))
+    m.box("light", (7.2, -11.0, 7.2), (8.8, 19.5, 8.8))
+    # 손잡이 · 금 고리
+    m.box("grip", (7.05, 1.8, 7.05), (8.95, 7.2, 8.95))
+    for y in (1.2, 7.2, 18.6):
+        m.box("gold", (6.85, y, 6.85), (9.15, y + 0.9, 9.15))
+    # 촉 밑 마름모 보석
+    m.box("core", (7.3, 18.8, 6.0), (8.7, 22.8, 10.0), rot=("x", 45, (8, 20.8, 8)))
+    # 번개 꼴 촉 (꺾인 마디 셋 — 빛) + 흰 날
+    a = (8.0, 20.0)
+    for lean, L, w in ((45.0, 5.0, 4.0), (-67.5, 6.0, 3.6), (22.5, 5.4, 3.2)):
+        b = _zig(m, "light", a, lean, L, w, t=1.3)
+        _zig(m, "edge2", a, lean, L + 0.4, 0.9, t=1.5)
+        a = b
+    # 옆 가지 (촉 밑에서 아래 바깥으로 — 위 끝을 축으로 아래 끝이 바깥으로 45°)
+    for side in (-1, 1):
+        zc = 8 + side * 1.0
+        m.box("light", (7.6, 15.6, zc - 0.8), (8.4, 19.8, zc + 0.8), rot=("x", -45.0 * side, (8, 19.8, zc)))
+        m.box("edge2", (7.7, 15.2, zc - 0.3), (8.3, 19.8, zc + 0.3), rot=("x", -45.0 * side, (8, 19.8, zc)))
+    return m
+
+
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
-         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel}
+         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
 # 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
@@ -1974,9 +2015,10 @@ TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "met
          "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)],
          "boulder": [(0.6, 0.24, 0.9)], "void_orb": [(0.6, 0.24, 0.9)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
          "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)],
-         "halo": [(1.0, 0.86, 0.45), (1.0, 1.0, 0.9)], "hex_panel": [(1.0, 0.78, 0.35), (1.0, 0.95, 0.8)]}
+         "halo": [(1.0, 0.86, 0.45), (1.0, 1.0, 0.9)], "hex_panel": [(1.0, 0.78, 0.35), (1.0, 0.95, 0.8)],
+         "thunder_spear": [(0.62, 0.42, 1.0), (0.85, 0.95, 1.0)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
-VIEWS_OF = {"halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
+VIEWS_OF = {"thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
 
 def main():
