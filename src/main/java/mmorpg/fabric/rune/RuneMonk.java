@@ -300,7 +300,34 @@ final class RuneMonk {
     // ------------------------------------------------------------ 영웅: 백열권
 
     /**
-     * 백열권: 수많은 주먹 (2틱마다 날아가는 기의 주먹 셋 · 맞은 자리의 주먹) 을 퍼부음 — 피해는 gap 틱마다 hits 번 앞 radius 칸 · cone 도의 적 (위력 × mult) →
+     * 2026-11-13 백열권의 3D 기의 화신 (rpg:rune_ki_avatar · 1.7배): 쓴 사람 뒤에서 기의 소용돌이로 솟아 (appear) 몸을 따라오며 주먹 비 (barrage — 되풀이)
+     * 를 퍼붓고, 마지막 일격 틱 (flurry) 에 맞춰 크게 당겼다 쭉 뻗어 침 (finisher — KI_FINISH_AT 틱 먼저 틈) → 위로 기가 되어 흩어짐
+     */
+    private static void kiAvatar(ServerPlayer sp, String life, int flurry) {
+        ServerLevel level = sp.level();
+        java.util.function.Supplier<Vec3> spot = () -> {
+            Vec3 f = Kit.facingOf(sp);
+            return V.up(V.add(sp.position(), f, -1.35), 0.15);
+        };
+        RuneMob m = RuneMob.spawn(RuneMob.KI_AVATAR, level, spot.get(), Kit.facingOf(sp), flurry + 40, 1.7, true);
+        if (m == null) return;
+        m.anim("appear");
+        m.follow(() -> {
+            if (!sp.isRemoved()) m.face(Kit.facingOf(sp));
+            return spot.get();
+        }, 0.6, flurry + 12);
+        RuneKit.later(6, () -> {
+            if (m.alive()) m.hold("barrage");
+        });
+        RuneKit.later(Math.max(7, flurry - RuneMob.KI_FINISH_AT), () -> {
+            if (m.alive()) m.anim("finisher");
+        });
+        RuneKit.later(flurry + 9, () -> m.leave("vanish", 9));
+        SkillFx.burst(level, V.up(spot.get(), 1.2), GOLD, 1.6, 0.35);
+    }
+
+    /**
+     * 백열권: 수많은 주먹 (2틱마다 날아가는 기의 주먹 셋 · 맞은 자리의 주먹 · 2026-11-13 뒤의 3D 기의 화신이 함께 주먹 비) 을 퍼부음 — 피해는 gap 틱마다 hits 번 앞 radius 칸 · cone 도의 적 (위력 × mult) →
      * 마지막 일격 (커다란 주먹 · 충격 고리 — 위력 × crush, 밀쳐냄 knock)
      */
     static boolean hundredFists(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -311,6 +338,7 @@ final class RuneMonk {
         double cone = k.num("cone");
         int flurry = hits * gap;
         SkillFx.play(sp.level(), "item.enchant.lunge3", sp.position(), 1.2, 0.7);
+        kiAvatar(sp, life, flurry);
         for (int t = 0; t < flurry; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {

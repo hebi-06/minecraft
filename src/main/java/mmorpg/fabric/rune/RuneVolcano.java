@@ -166,6 +166,21 @@ final class RuneVolcano {
                 SkillFx.particle(level, ParticleTypes.FLAME, p, 2, 0.08, 0.01);
             });
         }
+        // 2026-11-13 3D 화산탄 (운석 모델 — 검은 바위 · 달아오른 틈): 2D 불덩이 속에서 같은 포물선을 틱마다 따라가며 구름 (떨어지면 사라짐 — 터짐은 부르는 쪽)
+        final int start = i0;
+        RuneKit.later(start, () -> {
+            double dia = Math.max(0.35, size * 0.8);
+            double sc = RuneProps.scaleFor(dia, RuneProps.METEOR_D);
+            long seed = (long) (Kit.rand() * 1e9);
+            mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, p0, ticks - start + 3);
+            mmorpg.fabric.vfx.Vfx.Prop rock = RuneProps.prop(fx, RuneProps.METEOR, p0, new double[] {8, 8, 8}, RuneProps.tumble(seed, 0, 0), sc);
+            for (int i = 1; i <= ticks - start; i++) {
+                final Vec3 p = lobAt(from, v, (start + i) / 20.0);
+                final int ii = i;
+                fx.on(i, () -> rock.to(p, RuneProps.tumble(seed, ii, 25), -1, 1));
+            }
+            fx.on(ticks - start + 1, rock::remove);
+        });
     }
 
     /** 포물선 위 s 초 뒤 자리 (처음 속도 v · 중력 PairKit.GRAVITY) */
@@ -559,7 +574,10 @@ final class RuneVolcano {
                 });
             });
         }
-        // 대분화
+        // 대분화 — 2026-11-13 10틱 앞에 단계 동작 (rn_grand_eruption_burst — 두 팔을 가슴 앞에 엇갈려 모았다가 하늘로 확 펼침: 10 이 대분화)
+        RuneKit.later(crushAt - 10, () -> {
+            if (RuneKit.sameLife(sp, life)) mmorpg.fabric.motion.MotionSystem.skill(sp, "rune:grandEruption:burst");
+        });
         RuneKit.later(crushAt - 8, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             SkillFx.play(level, "block.lava.extinguish", vc, 0.5, 1.0);

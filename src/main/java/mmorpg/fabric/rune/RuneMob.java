@@ -35,6 +35,9 @@ public final class RuneMob {
     /** 그림자 분신의 slash · slash2 · stab 이 닿는 때 (동작을 튼 뒤 틱 — 0.2초), xcut 은 5틱 */
     public static final int SHADE_STRIKE_AT = 4;
     public static final int SHADE_XCUT_AT = 5;
+    /** 2026-11-13 기의 화신 (무투 — 백열권): 동작 appear · barrage (되풀이 0.2초) · finisher (치는 때 KI_FINISH_AT 틱) · vanish */
+    public static final String KI_AVATAR = "rpg:rune_ki_avatar";
+    public static final int KI_FINISH_AT = 5;
     public static final String WOLF = TyrfingWarrior.WOLF_ID;
 
     /** 빠르기 곡선: 고르게 · 빨리 시작해 느려짐 · 느리게 시작해 빨라짐 · 부드럽게 */

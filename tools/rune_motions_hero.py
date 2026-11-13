@@ -366,3 +366,246 @@ fpl(m, 18.2, ((0.0, 0.0, -0.25), (15, 50, 0)))
 fpl(m, 20.4, FP_CHAMBER, "out3")
 fpl(m, 28.5, FP_LOW)
 use(m, "bloodBrand")
+
+
+# ------------------------------------------------------------ 중력 · 무투 · 화산 · 대지 · 빙하 (2026-11-13 묶음 C — 3D 바위 · 공허 핵 · 기의 화신 · 화산탄)
+
+def off_bare(m):
+    m.set(hands={"main": "weapon", "off": "fist"})
+    return m
+
+
+A_SKY = arm([0.14, 1, 0.08], 4, [0, 1, 0.05])
+A_SCOOP = arm([0.3, -0.85, 0.42], 10)  # 아래 바깥에서 퍼 올릴 준비
+
+# 중력 역전 (효과: 0 띄움 — 둘레의 3D 바위가 솟아 떠오름 · 24 한꺼번에 내리꽂음): 낮게 웅크려 두 팔을 아래 바깥으로 → 퍼 올리듯 두 팔을 하늘로 쳐들며
+# 발끝으로 솟음 → 하늘을 받친 채 떨며 버팀 (더 젖혀짐) → 두 주먹을 머리 뒤로 젖혔다가 힘껏 내리꽂으며 깊이 웅크림 → 일어섬
+m = off_bare(Motion("gravity_reverse", 34, "중력 역전 — 웅크렸다가 두 팔을 퍼 올리듯 하늘로 쳐들어 적과 바위를 띄우고, 떨며 받치다가 두 주먹을 힘껏 내리꽂으며 깊이 웅크림",
+                    fade=(0.02, 0.08)))
+SCOOP = P(body=[26, 0, 0], head=[8, 0], ra=K.A_SPREAD_DOWN, la=L(K.A_SPREAD_DOWN), **K.LEGS_SQUAT)
+keyp(m, 0.0, SCOOP)
+HOLD_SKY = P(body=[-16, 0, 0], head=[-30, 0], ra=arm([0.25, 0.97, 0.05], 8, [0, 1, 0.1]), la=L(arm([0.25, 0.97, 0.05], 8)), rl=[0, 0, 10], ll=[0, 0, -10],
+             rk=4, lk=4, root=[0.12, 0])
+keyp(m, 3.2, HOLD_SKY, "out3")
+for i, tick in enumerate((7, 10.5, 14, 17.5)):
+    s = 1 if i % 2 else -1
+    q = (i + 1) / 4.0
+    keyp(m, tick, P(HOLD_SKY, body=[-16 - 6 * q, 0, s * 1.5], head=[-30 - 4 * q, 0], root=[0.08, 0], rk=8 + 6 * q, lk=8 + 6 * q))
+WIND_SKY = P(body=[-26, 0, 0], head=[-34, 0], ra=bent([0.2, 0.9, -0.4], 60, (0, 0.3, -1)), la=L(bent([0.2, 0.9, -0.4], 60, (0, 0.3, -1))), rl=[0, 0, 10],
+             ll=[0, 0, -10], rk=16, lk=16, root=[0.04, 0])
+keyp(m, 22.0, WIND_SKY, "out")
+SLAM = P(body=[42, 0, 0], head=[16, 0], ra=bent([0.18, -0.8, 0.55], 40, (0, 1, 0.3)), la=L(bent([0.18, -0.8, 0.55], 40, (0, 1, 0.3))), **K.LEGS_SQUAT)
+keyp(m, 24.2, P(SLAM, root=[-0.4, 0.1]), "in")
+keyp(m, 28.0, P(SLAM, body=[38, 0, 0], root=[-0.36, 0.1]))
+keyp(m, 32.5, P(W_READY, body=[6, 0, 0]))
+fpw(m, 0.0, FPW_LOW, dp=(0, -0.2, 0))
+fpw(m, 3.2, FPW_SKY, "out3")
+fpw(m, 22.0, FPW_SKY, dp=(0.1, 0.1, 0.2))
+fpw(m, 24.2, FPW_DOWN, "in")
+fpw(m, 32.5, FPW_LOW)
+fpl(m, 0.0, FP_LOW)
+fpl(m, 3.2, FP_RAISE, "out3")
+fpl(m, 22.0, nudge(FP_RAISE, (0.05, 0.1, 0.1)))
+fpl(m, 24.2, K.FP_GROUND, "in")
+fpl(m, 32.5, FP_LOW)
+use(m, "gravityReverse")
+
+# 블랙홀 (효과: 0 ~ 16 조준한 곳 위에 3D 공허 핵이 자람 · 16 ~ 76 빨아들임 · 76 붕괴 — 붕괴는 단계 동작 black_hole_crush 를 70 에 다시 보냄):
+# 두 손을 앞 위로 들어 핵을 빚듯 둘레를 번갈아 감싸고 → 핵이 다 자라면 한 손을 쭉 뻗어 붙들고 다른 손으로 받친 채 끌려가지 않으려고 몸을 뒤로 젖혀 버팀 (떨림)
+m = off_bare(Motion("black_hole", 64, "블랙홀 — 두 손으로 앞 위의 공허를 빚어 키우고, 다 자라면 손을 쭉 뻗어 붙든 채 빨려 들지 않으려고 몸을 젖혀 버팀",
+                    fade=(0.03, 0.04)))
+SHAPE = P(body=[-6, 0, 0], head=[-14, 0], ra=arm([0.2, 0.5, 0.85], 30, [0.0, 0.9, 0.45]), la=L(bent([0.2, 0.5, 0.86], 35, (-1, 0.4, 0))), **LEGS_WIDE)
+keyp(m, 2.5, SHAPE, "out3")
+for i, tick in enumerate((5.5, 8.5, 11.5, 14.5)):
+    up = i % 2 == 0
+    keyp(m, tick, P(SHAPE, body=[-6, -10 if up else 10, 0], ra=arm([0.3 if up else 0.05, 0.75 if up else 0.3, 0.6], 30, [0, 0.9, 0.4]),
+                    la=L(bent([0.05 if up else 0.3, 0.3 if up else 0.75, 0.9], 35, (-1, 0.4, 0)))))
+BRACE_HOLD = P(body=[-12, -8, 0], head=[-14, 0], ra=arm([0.0, 0.45, 0.9], 2, [0, 0.5, 0.86]), la=L(bent([0.3, 0.3, 0.8], 70, (1, 0.3, 0))),
+               rl=[34, 0, 10], ll=[-6, 0, -10], rk=40, lk=18, root=[-0.18, -0.15])  # 한 손을 쭉 뻗어 붙들고 몸을 뒤로 젖혀 버팀 (오른발 뒤)
+keyp(m, 17.5, BRACE_HOLD, "out")
+for i in range(12):
+    tick = 21 + i * 3.4
+    s = 1 if i % 2 else -1
+    keyp(m, tick, P(BRACE_HOLD, body=[-12 + s * 2, -8 + s * 3, s * 1.2], root=[-0.18 + 0.02 * s, -0.15 - 0.01 * i]))
+keyp(m, 62.0, P(BRACE_HOLD, body=[-10, -6, 0], root=[-0.2, -0.28]))
+fpw(m, 2.5, FPW_UP, "out3", dp=(0.1, 0, 0))
+fpw(m, 17.5, FPW_FWD, "out", dp=(0, 0.3, 0))
+fpw(m, 62.0, FPW_FWD, dp=(0, 0.3, 0.05))
+fpl(m, 2.5, FP_PALM, "out3")
+fpl(m, 8.5, nudge(FP_PALM, (0.1, 0.15, 0)))
+fpl(m, 14.5, nudge(FP_PALM, (-0.05, -0.05, 0)))
+fpl(m, 17.5, nudge(FP_PALM, (0.15, 0.1, 0.1)), "out")
+fpl(m, 62.0, nudge(FP_PALM, (0.15, 0.1, 0.1)))
+use(m, "blackHole")
+
+# 블랙홀 붕괴 (단계 — 효과 70 에 보냄 · 6 이 붕괴): 버티던 자세에서 두 주먹을 앞에 모아 쥐고 (0 ~ 4) → 허리로 힘껏 끌어내리며 발을 구름 (6) → 섬
+m = off_bare(Motion("black_hole_crush", 16, "블랙홀 붕괴 — 버티던 두 손을 앞에 모아 쥐고 허리로 힘껏 끌어내리며 발을 굴러 공허를 짓뭉갬", fade=(0.0, 0.12)))
+keyp(m, 0.0, P(BRACE_HOLD, body=[-10, -6, 0], root=[-0.2, -0.28]))
+keyp(m, 3.6, P(body=[-8, 0, 0], head=[-10, 0], ra=bent([0.1, 0.4, 0.9], 50, (-1, 0.3, 0)), la=L(bent([0.1, 0.4, 0.9], 50, (-1, 0.3, 0))), **LEGS_WIDE), "out")
+keyp(m, 6.2, P(P(body=[30, 0, 0], head=[12, 0], ra=K.A_PULL, la=L(K.A_PULL), **K.LEGS_STOMP), root=[-0.3, 0]), "in")
+keyp(m, 10.0, P(P(body=[24, 0, 0], head=[8, 0], ra=K.A_PULL, la=L(K.A_PULL), **K.LEGS_STOMP), root=[-0.26, 0]))
+keyp(m, 14.5, P(W_READY, body=[6, 0, 0]))
+fpw(m, 3.6, FPW_FWD, "out")
+fpw(m, 6.2, FPW_LOW, "in")
+fpl(m, 0.0, nudge(FP_PALM, (0.15, 0.1, 0.1)))
+fpl(m, 3.6, FP_PALM, "out")
+fpl(m, 6.2, FP_CHAMBER, "in")
+fpl(m, 14.5, FP_LOW)
+use(m, "blackHole:crush")
+
+# 백열권 (효과: 0 ~ 50 2틱마다 주먹 비 — 뒤의 3D 기의 화신도 함께 · 50 마지막 일격): 말을 탄 듯 낮고 넓게 서서 몸을 크게 좌우로 비틀며 주먹을 쉴 새 없이 퍼붓고
+# (점점 빨라지듯 비틀림이 커짐) → 오른 주먹을 허리 뒤로 깊이 당겨 몸을 끝까지 감았다가 → 크게 내디디며 쭉 뻗어 침
+m = K.fists(Motion("hundred_fists", 58, "백열권 — 낮고 넓게 서서 몸을 크게 비틀며 주먹을 쉴 새 없이 퍼붓다가, 오른 주먹을 깊이 당겨 크게 내디디며 마무리 일격",
+                   fade=(0.02, 0.08)))
+HORSE = dict(rl=[-24, 0, 16], ll=[-24, 0, -16], rk=58, lk=58, root=[-0.26, 0])
+GUARD2 = P(body=[12, 0, 0], head=[2, 0], ra=K.A_GUARD, la=L(K.A_GUARD), **HORSE)
+VAR = [(K.A_JAB, 0.0, 0.0), (K.A_JAB_HI, 0.08, 0.05), (K.A_JAB_LO, -0.08, -0.06), (K.A_JAB, 0.04, 0.08), (K.A_JAB_HI, 0.1, -0.05), (K.A_JAB_LO, -0.05, 0.03)]
+keyp(m, 0.0, GUARD2)
+for i in range(24):
+    tick = 1 + 2 * i
+    a, hi, side = VAR[i % len(VAR)]
+    right = i % 2 == 0
+    tw = 26 + min(10, i * 0.6)
+    if right:
+        keyp(m, tick, P(GUARD2, body=[14, -tw, 0], ra=a, la=L(K.A_CHAMBER)), "out")
+    else:
+        keyp(m, tick, P(GUARD2, body=[14, tw, 0], ra=K.A_CHAMBER, la=L(a)), "out")
+    pre = nudge(K.FP_JAB, (0, hi * 0.5, 0), (hi * 60, side * 60, 0))
+    if right:
+        K.fpr(m, tick, pre, "out3")
+        K.fpl(m, tick, K.FP_GUARD)
+    else:
+        K.fpl(m, tick, pre, "out3")
+        K.fpr(m, tick, K.FP_GUARD)
+keyp(m, 47.6, P(GUARD2, body=[4, 52, 0], ra=K.A_CHAMBER, la=L(arm([-0.1, 0.1, 1], 4)), rk=64, lk=60, root=[-0.3, -0.1]))
+keyp(m, 50.4, P(body=[18, -46, 0], head=[4, 0], ra=K.A_JAB, la=L(K.A_CHAMBER), root=[-0.3, 0.6], **LUNGE_DEEP), "out3")
+keyp(m, 54.5, P(body=[16, -42, 0], head=[4, 0], ra=K.A_JAB, la=L(K.A_CHAMBER), root=[-0.28, 0.58], **LUNGE_DEEP))
+K.fpr(m, 47.6, nudge(FP_CHAMBER, (0.05, -0.05, 0.1)))
+K.fpl(m, 47.6, K.FP_JAB)
+K.fpr(m, 50.4, nudge(K.FP_JAB2, (0, 0.03, -0.1), (3, 3, 0)), "out3")
+K.fpl(m, 50.4, FP_CHAMBER)
+K.fpr(m, 54.5, K.FP_JAB2)
+K.fpl(m, 54.5, K.FP_GUARD)
+use(m, "hundredFists")
+
+# 마그마 대지 (효과: 0 조준한 곳의 땅이 녹음 · 10틱마다 화상 · 40 대분출 — 용암 기둥 · 3D 화산탄): 오른 무릎을 높이 들었다 힘껏 땅을 구르며 두 손바닥으로 땅을
+# 내리침 → 손바닥으로 땅을 누른 채 열기에 떨며 버팀 → 대분출 직전 두 손을 가슴으로 끌어올렸다가 → 두 팔을 하늘로 확 펼치며 솟음
+m = off_bare(Motion("magma_field", 48, "마그마 대지 — 무릎을 들어 땅을 구르며 두 손바닥으로 땅을 내리쳐 녹이고, 누른 채 떨다가, 대분출 때 두 팔을 하늘로 확 펼치며 솟음",
+                    fade=(0.02, 0.08)))
+keyp(m, 0.0, P(body=[-6, 10, 0], head=[-4, 0], ra=K.A_RAISE_FIST, la=L(K.A_RAISE_FIST), **K.LEGS_STOMP_UP))
+PRESS = P(body=[34, 0, 0], head=[12, 0], ra=arm([0.25, -0.7, 0.66], 20, [0.1, -0.3, 0.95]), la=L(arm([0.2, -0.7, 0.68], 6, [0, 1, 0.3])), **K.LEGS_SQUAT)
+keyp(m, 2.4, P(PRESS, root=[-0.38, 0.05]), "in")
+for i in range(9):
+    tick = 6 + i * 3.6
+    s = 1 if i % 2 else -1
+    keyp(m, tick, P(PRESS, body=[34 + s * 1.5, s * 3, s * 1.0], root=[-0.36, 0.05]))
+keyp(m, 38.2, P(body=[14, 0, 0], head=[4, 0], ra=bent([0.2, -0.4, 0.6], 120, (0, 1, 0.3)), la=L(bent([0.2, -0.4, 0.6], 120, (0, 1, 0.3))), rk=50, lk=50,
+                 rl=[-30, 0, 10], ll=[-30, 0, -10], root=[-0.3, 0]), "out")
+ERUPT = P(body=[-20, 0, 0], head=[-28, 0], ra=K.A_SPREAD_UP, la=L(K.A_SPREAD_UP), rl=[0, 0, 12], ll=[0, 0, -12], rk=0, lk=0, root=[0.16, 0])
+keyp(m, 40.4, ERUPT, "out3")
+keyp(m, 44.0, P(ERUPT, body=[-14, 0, 0], root=[0.02, 0]))
+keyp(m, 47.0, P(W_READY, body=[6, 0, 0]))
+fpw(m, 0.0, FPW_UP)
+fpw(m, 2.4, FPW_DOWN, "in")
+fpw(m, 38.2, FPW_LOW)
+fpw(m, 40.4, FPW_SKY, "out3")
+fpw(m, 47.0, FPW_LOW)
+fpl(m, 0.0, nudge(FP_RAISE, (0, -0.2, 0)))
+fpl(m, 2.4, K.FP_GROUND, "in")
+fpl(m, 36.0, K.FP_GROUND)
+fpl(m, 38.2, FP_CHAMBER, "out")
+fpl(m, 40.4, K.FP_SPREAD_UP, "out3")
+fpl(m, 47.0, FP_LOW)
+use(m, "magmaField")
+
+# 대분화 (효과: 0 ~ 24 화산이 솟음 · 24 ~ 74 화산탄 · 90 대분화 — 대분화는 단계 동작 grand_eruption_burst 를 80 에 다시 보냄): 한쪽 무릎을 꿇고 두 손을
+# 땅에 꽂았다가 무거운 것을 들어 올리듯 천천히 일어서며 두 손을 끌어올림 (떨림) → 화산이 터지는 순간 두 팔을 하늘로 활짝 → 화산탄이 쏟아지는 동안 두 팔로 번갈아 겨눔
+m = off_bare(Motion("grand_eruption", 64, "대분화 — 무릎을 꿇고 두 손을 땅에 꽂았다가 무거운 것을 들듯 천천히 일어서며 화산을 끌어올리고, 터지는 순간 두 팔을 활짝 펴 "
+                    "쏟아지는 화산탄을 번갈아 겨눔", fade=(0.02, 0.05)))
+DIG = P(body=[36, 0, 0], head=[12, 0], ra=arm([0.2, -0.9, 0.4], 10, [0, -1, 0.2]), la=L(arm([0.2, -0.9, 0.4], 10)), **K.LEGS_KNEEL)
+keyp(m, 2.2, DIG, "out3")
+for i, tick in enumerate((6, 10, 14, 18)):
+    q = (i + 1) / 4.0
+    s = 1 if i % 2 else -1
+    keyp(m, tick, P(body=[36 - 40 * q, 0, s * 1.5], head=[12 - 30 * q, 0], ra=arm([0.25, -0.9 + 1.4 * q, 0.4 - 0.1 * q], 30 - 20 * q),
+                    la=L(arm([0.25, -0.9 + 1.4 * q, 0.4 - 0.1 * q], 30 - 20 * q)), rl=[2 - 2 * q, 0, 4 + 6 * q], rk=92 - 80 * q, ll=[-82 + 82 * q, 0, -4 - 6 * q],
+                    lk=88 - 76 * q, root=[-0.38 + 0.36 * q, 0]))
+ERUPT2 = P(body=[-18, 0, 0], head=[-28, 0], ra=K.A_SPREAD_UP, la=L(K.A_SPREAD_UP), rl=[0, 0, 12], ll=[0, 0, -12], rk=4, lk=4, root=[0.1, 0])
+keyp(m, 24.4, ERUPT2, "out3")
+for i in range(6):
+    tick = 30 + i * 5.5
+    right = i % 2 == 0
+    keyp(m, tick, P(body=[4, -20 if right else 20, 0], head=[-6, 0], ra=arm([-0.1, 0.25, 1], 0) if right else K.A_SPREAD_DOWN,
+                    la=L(K.A_SPREAD_DOWN) if right else L(arm([-0.1, 0.25, 1], 0)), **LEGS_WIDE), "out")
+keyp(m, 62.0, P(W_READY, body=[6, 0, 0]))
+fpw(m, 2.2, FPW_DOWN, "out3")
+fpw(m, 18, FPW_UP)
+fpw(m, 24.4, FPW_SKY, "out3")
+fpw(m, 30, FPW_FWD, "out")
+fpw(m, 62.0, FPW_LOW)
+fpl(m, 2.2, K.FP_GROUND, "out3")
+fpl(m, 18, FP_PALM)
+fpl(m, 24.4, K.FP_SPREAD_UP, "out3")
+fpl(m, 35.5, FP_PALM, "out")
+fpl(m, 62.0, FP_LOW)
+use(m, "grandEruption")
+
+# 대분화 터짐 (단계 — 효과 80 에 보냄 · 10 이 대분화): 두 팔을 가슴 앞에 엇갈려 모았다가 (8) 하늘로 확 펼치며 솟음 (10)
+m = off_bare(Motion("grand_eruption_burst", 20, "대분화 터짐 — 두 팔을 가슴 앞에 엇갈려 모아 힘을 끌어모았다가 하늘로 확 펼치며 솟음", fade=(0.08, 0.15)))
+keyp(m, 3.0, P(body=[16, 0, 0], head=[8, 0], ra=K.A_CROSS, la=L(K.A_CROSS), rk=40, lk=40, rl=[-24, 0, 10], ll=[-24, 0, -10], root=[-0.24, 0]), "out")
+keyp(m, 8.4, P(body=[22, 0, 0], head=[12, 0], ra=K.A_CROSS, la=L(K.A_CROSS), rk=56, lk=56, rl=[-32, 0, 10], ll=[-32, 0, -10], root=[-0.32, 0]))
+keyp(m, 10.4, P(ERUPT2, root=[0.18, 0]), "out3")
+keyp(m, 15.0, P(ERUPT2, body=[-12, 0, 0]))
+fpw(m, 3.0, FPW_LOW, "out")
+fpw(m, 10.4, FPW_SKY, "out3")
+fpl(m, 3.0, K.FP_CROSS, "out")
+fpl(m, 10.4, K.FP_SPREAD_UP, "out3")
+fpl(m, 18.0, FP_LOW)
+use(m, "grandEruption:burst")
+
+# 대지 가르기 (효과: 0 ~ 24 머리 위 대지의 대검이 커지며 뒤로 젖혀짐 · 24 앞으로 내려찍어 땅이 갈라짐 · 40 ~ 90 여진): 두 팔을 하늘로 쳐들어 대검을 부르고 →
+# 두 손을 모아 머리 위 뒤로 젖히며 몸을 활처럼 젖혀 떨며 버팀 (점점 더) → 깊이 내디디며 두 손으로 앞 땅까지 내려찍음 → 내려찍은 채 버팀
+m = Motion("earth_splitter", 34, "대지 가르기 — 두 팔을 쳐들어 대검을 부르고, 머리 위 뒤로 젖혀 몸을 활처럼 휘며 버티다가, 깊이 내디디며 두 손으로 앞 땅까지 내려찍음",
+           fade=(0.03, 0.08))
+keyp(m, 4.0, P(W_SKY, la=L(A_RAISE), body=[-10, 0, 0], head=[-26, 0]), "out3")
+keyp(m, 9.0, P(K.W_HIGH2, body=[-22, 4, 0], head=[-16, 0]))
+for i, tick in enumerate((12.5, 15.5, 18.5, 21.0)):
+    q = (i + 1) / 4.0
+    s = 1 if i % 2 else -1
+    keyp(m, tick, P(K.W_HIGH2, body=[-24 - 8 * q, 4, s * 1.2], head=[-16 - 6 * q, 0], ra=arm([0.12, 0.85 - 0.15 * q, -0.5 - 0.15 * q], 45, [0, 0.1, -1]),
+                    rk=8 + 10 * q, lk=8 + 10 * q, root=[0.05 - 0.04 * q, -0.05 * q]))
+strike_with(m, "slam", 21.6, 24.2, 27.0, a=P(body=[-32, 4, 0], head=[-22, 0], root=[0.0, -0.2], rl=[8, 0, 0], ll=[-8, 0, 0], rk=18, lk=18),
+            b=P(body=[44, 0, 0], head=[14, 0], root=[-0.42, 0.75], **LUNGE_DEEP))
+keyp(m, 30.0, P(body=[40, 0, 0], head=[12, 0], ra=arm([0.05, -0.8, 0.6], 10, [0, -0.95, 0.3]), la=L(arm([0.05, -0.8, 0.6], 10)), root=[-0.4, 0.72],
+                **LUNGE_DEEP))
+fpw(m, 4.0, FPW_SKY, "out3")
+fpw(m, 21.0, FPW_SKY, dp=(0.1, 0.1, 0.25))
+fpw(m, 30.0, FPW_DOWN)
+use(m, "earthSplitter")
+
+# 만년빙하 (효과: 0 ~ 16 조준한 곳에 얼음판 · 17 부터 14틱마다 거대한 얼음이 솟음 — 사용자 "잘나온거"): 몸째 오른쪽으로 한 바퀴 돌며 왼손으로 서리 빛을
+# 크게 흩뿌리고 → 낮게 웅크려 두 손바닥으로 땅을 내리쳐 얼음판을 퍼뜨림 → 손바닥을 땅에 댄 채 얼음이 솟을 때마다 조금씩 눌러 줌 → 일어섬
+m = off_bare(Motion("glacier_field", 40, "만년빙하 — 몸째 한 바퀴 돌며 왼손으로 서리 빛을 크게 흩뿌리고, 낮게 웅크려 두 손바닥으로 땅을 내리쳐 얼음판을 퍼뜨린 뒤 눌러 줌",
+                    fade=(0.03, 0.06)))
+keyp(m, 0.0, P(body=[4, 30, 0], ra=K.RA_READY, la=L(bent([-0.5, 0.05, 0.6], 80, (1, 0.3, 0.3))), rk=24, lk=24, root=[-0.1, 0]))
+keyp(m, 3.0, P(body=[6, -20, 0], ra=K.RA_READY, la=L(K.A_SPREAD), rk=24, lk=24, root=[-0.12, 0], spin=-180), "linear")
+keyp(m, 6.0, P(body=[8, -24, 0], ra=K.RA_READY, la=L(arm([-0.6, 0.1, 0.8], 4)), rk=24, lk=24, root=[-0.12, 0], spin=-360), "out")
+FREEZE = P(body=[36, 0, 0], head=[12, 0], ra=arm([0.25, -0.7, 0.66], 20, [0.1, -0.3, 0.95]), la=L(arm([0.2, -0.7, 0.68], 6, [0, 1, 0.3])), spin=-360,
+           **K.LEGS_SQUAT)
+keyp(m, 9.0, P(FREEZE, body=[24, 0, 0], root=[-0.2, 0]))
+keyp(m, 11.4, P(FREEZE, root=[-0.4, 0.05]), "in")
+for i, tick in enumerate((17.0, 31.0)):
+    keyp(m, tick - 1.5, P(FREEZE, body=[30, 0, 0], root=[-0.34, 0.05]))
+    keyp(m, tick, P(FREEZE, body=[40, 0, 0], root=[-0.42, 0.05]), "in")
+keyp(m, 37.0, P(W_READY, body=[6, 0, 0], spin=-360))
+m.keys[1.0] = {"spin": -360}
+fpw(m, 3.0, FPW_LOW)
+fpw(m, 11.4, FPW_DOWN, "in")
+fpw(m, 37.0, FPW_LOW)
+fpl(m, 0.0, nudge(FP_PALM, (0.2, 0, 0.1)))
+fpl(m, 3.0, K.FP_PUSH_OUT, "linear")
+fpl(m, 6.0, FP_PALM, "out")
+fpl(m, 11.4, K.FP_GROUND, "in")
+fpl(m, 31.0, K.FP_GROUND)
+fpl(m, 37.0, FP_LOW)
+use(m, "glacierField")

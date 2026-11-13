@@ -1689,8 +1689,56 @@ def rune_scythe():
     return m
 
 
+def boulder():
+    """2026-11-13 떠오르는 바위 덩이 (중력 역전 · 블랙홀 · 초인 각성): 가운데 (8, 8, 8) · 지름 약 16 — 크기가 다른 돌 덩이 넷을 엇갈려 겹친 울퉁불퉁한 바위,
+    금 사이 빛 = 계열 색 (tint 0 — 바위 가시와 같은 돌 · 빛 겹)"""
+    m = BModel("boulder", "떠오르는 바위 (2026-11-13 — 엇갈린 돌 덩이 넷 · 틈의 빛 = 계열 색)", d=2.0)
+    m.mat("rock", Mat(cobble(STONE, cell=18, glow_chains=1.6), animated=True, overlay_tint=0))
+    m.mat("dark", Mat(cobble(("#221C19", "#3F3631", "#51463F", "#665850", "#7A6A5F"), cell=16, glow_chains=1.0), animated=True, overlay_tint=0))
+    m.mat("chip", Mat(cobble(STONE, cell=12)))
+    m.box("rock", (1.5, 2.5, 2.0), (14.5, 13.0, 14.0), rot=("y", 22.5, (8, 8, 8)))
+    m.box("dark", (3.0, 0.5, 3.5), (12.5, 9.0, 13.0), rot=("x", 22.5, (8, 5, 8)))
+    m.box("rock", (4.0, 8.0, 3.0), (12.0, 15.5, 11.0), rot=("z", -22.5, (8, 12, 7)))
+    m.box("chip", (10.0, 4.0, 10.0), (15.5, 9.5, 15.5), rot=("y", 45.0, (12.75, 6.75, 12.75)))
+    m.box("chip", (0.5, 6.0, 5.0), (4.5, 10.0, 9.0), rot=("x", -22.5, (2.5, 8, 7)))
+    return m
+
+
+def void_paint():
+    """공허의 핵 (거의 검정 · 보랏빛 반짝임 · 테두리만 옅게 빛남 — 빛 겹은 계열 색)"""
+    def paint(w, h, face, rng, frame):
+        pl = pulse(frame)
+        ys, xs = np.mgrid[0:h, 0:w]
+        img = np.zeros((h, w, 3)) + np.array([0.03, 0.01, 0.05])
+        sp = rng.random((h, w)) < 0.04
+        img[sp] = np.array([0.35, 0.18, 0.5]) * (0.6 + 0.4 * pl)
+        base = np.concatenate([img, np.ones((h, w, 1))], -1)
+        ov = np.zeros((h, w, 4))
+        e = (xs == 0) | (ys == 0) | (xs == w - 1) | (ys == h - 1)
+        ov[e] = (0.9, 0.9, 0.9, 0.55 + 0.25 * pl)
+        return base, ov
+    return paint
+
+
+def void_orb():
+    """2026-11-13 블랙홀의 공허 핵: 가운데 (8, 8, 8) · 지름 약 19 — 계단 공 (운석과 같은 꼴) 의 검은 핵 · 면 테두리의 옅은 빛 (tint 0 — 계열 색)"""
+    m = BModel("void_orb", "공허의 핵 (2026-11-13 — 검은 계단 공 · 면 테두리 빛 = 계열 색)", d=1.5)
+    m.mat("void", Mat(void_paint(), animated=True, overlay_tint=0))
+    R, A, B, Cc, K = 9.5, 5.0, 7.0, 5.0, 6.2
+
+    def cb(hx, hy, hz):
+        m.box("void", (8 - hx, 8 - hy, 8 - hz), (8 + hx, 8 + hy, 8 + hz))
+    cb(R, A, A)
+    cb(A, R, A)
+    cb(A, A, R)
+    cb(B, B, Cc)
+    cb(B, Cc, B)
+    cb(Cc, B, B)
+    return m
+
+
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
-         "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe,
+         "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
@@ -1836,7 +1884,8 @@ def load_current(name):
 TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
          "cloud": [(0.42, 0.36, 0.62), (0.78, 0.62, 1.0)], "rune_sword": [(0.45, 0.62, 1.0), (0.86, 0.92, 1.0)],
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)],
-         "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
+         "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)],
+         "boulder": [(0.6, 0.24, 0.9)], "void_orb": [(0.6, 0.24, 0.9)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
          "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
 VIEWS_OF = {"fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}

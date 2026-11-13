@@ -50,6 +50,12 @@ public final class RuneProps {
     public static final double SCYTHE_LEN = 43;
     public static final double[] SCYTHE_MID = {8, 5, 12};
 
+    /** 2026-11-13 떠오르는 바위 (boulder — 중력 · 초인 각성): 가운데 (8, 8, 8) · 지름 약 16 · 틈의 빛 = 계열 색 (tint 0) */
+    public static final String BOULDER = "rpg:vfx/boulder";
+    public static final double BOULDER_D = 16;
+    /** 2026-11-13 블랙홀의 공허 핵 (void_orb): 가운데 (8, 8, 8) · 지름 약 19 · 면 테두리 빛 = 계열 색 (tint 0) */
+    public static final String VOID_ORB = "rpg:vfx/void_orb";
+
     /** 룬 전용 검: 칼끝 y 31 · 자루 끝 y −10.2 (길이 41.2 픽셀) · 날 가운데 (8, 17.5, 8) · 손잡이 가운데 (8, −3.5, 8) */
     public static final double SWORD_LEN = 41.2;
     public static final double[] SWORD_MID = {8, 10.4, 8};
@@ -216,6 +222,14 @@ public final class RuneProps {
         if (tints.length > 0) g.tint(tints);
         g.to(at, rot, scale, 0);
         return g;
+    }
+
+    /** 2026-11-13 아무 축 둘레로 조금씩 도는 회전 (구르는 바위) — 씨앗 seed · 나이 t · 도/틱 rate */
+    public static Quaternionf tumble(long seed, double t, double rate) {
+        java.util.Random rr = new java.util.Random(seed);
+        org.joml.Vector3f ax = new org.joml.Vector3f((float) (rr.nextDouble() - 0.5), (float) (rr.nextDouble() - 0.5), (float) (rr.nextDouble() - 0.5)).normalize();
+        float a0 = (float) (rr.nextDouble() * Math.PI * 2);
+        return new Quaternionf().rotateAxis(a0 + (float) Math.toRadians(t * rate), ax.x, ax.y, ax.z);
     }
 
     /** 길이 (칸) → 크기 (모델 길이 px) */

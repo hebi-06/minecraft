@@ -60,29 +60,6 @@ fpb(m, 31, FP_PALM, ease="out3")
 fpb(m, 35, FP_PALM)
 use(m, "chainFist")
 
-# 백열권: 두 틱마다 좌우 번갈아 주먹 (0 ~ 48 — 높이 · 옆을 조금씩 바꿔 퍼부음) → 오른 주먹을 크게 당겼다가 (47) 마무리 일격 (50)
-m = fists(Motion("hundred_fists", 58, "백열권 — 좌우 주먹을 쉴 새 없이 퍼붓다가 크게 당겨 마무리 일격", fade=(0.02, 0.08)))
-VAR = [(A_JAB, 0.0, 0.0), (A_JAB_HI, 0.08, 0.05), (A_JAB_LO, -0.08, -0.06), (A_JAB, 0.04, 0.08), (A_JAB_HI, 0.1, -0.05), (A_JAB_LO, -0.05, 0.03)]
-for i in range(24):
-    tick = 1 + 2 * i
-    a, hi, side = VAR[i % len(VAR)]
-    right = i % 2 == 0
-    sway = 4 if i % 4 < 2 else -4
-    if right:
-        keyp(m, tick, P(PUNCH_R, body=[10, -22 + sway, 0], ra=a), "out")
-    else:
-        keyp(m, tick, P(PUNCH_L, body=[10, 18 + sway, 0], la=L(a)), "out")
-    fp_jab(m, tick, right, hi, side, "out")
-keyp(m, 47.5, P(CHAMBER_R, body=[2, 38, 0], rk=30, lk=26, root=[-0.1, 0]))
-keyp(m, 50.5, P(PUNCH_R, body=[14, -40, 0], ll=[-40, 0, -2], lk=40, root=[-0.16, 0.4]), "out3")
-keyp(m, 54, P(PUNCH_R, body=[14, -38, 0], ll=[-40, 0, -2], lk=40, root=[-0.16, 0.4]))
-fpr(m, 47.5, nudge(FP_CHAMBER, (0.05, -0.05, 0.1)))
-fpl(m, 47.5, FP_GUARD)
-fpr(m, 50.5, nudge(FP_JAB2, (0, 0.03, -0.1), (3, 3, 0)), "out3")
-fpr(m, 54, FP_JAB2)
-fpl(m, 54, FP_GUARD)
-use(m, "hundredFists")
-
 # 붕권: 두 손을 오른 허리에 모아 기를 모으고 (0 ~ 9 — 조금씩 떨림) 10 에 두 손바닥을 앞으로 내지름
 m = fists(Motion("palm_blast", 22, "붕권 — 두 손을 허리에 모아 기를 모았다가 두 손바닥으로 크게 내지름", fade=(0.04, 0.12)))
 keyp(m, 2, GATHER, "out")

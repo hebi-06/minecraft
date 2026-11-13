@@ -289,6 +289,7 @@ public final class MotionsTest {
         weaponIds.removeIf(x -> x.startsWith("rune:"));
         int phases = 0;
         int weaponPhases = 0;
+        int runePhases = 0;
         for (String k : Motions.skillKeys()) {
             if (k.contains(":") && !k.startsWith("rune:")) {
                 String base = k.substring(0, k.indexOf(':'));
@@ -301,8 +302,16 @@ public final class MotionsTest {
                 check(jobIds.contains(base) && Motions.jobMotion(Motions.skillMotion(k)), "job phase key " + k + " → " + Motions.skillMotion(k));
                 continue;
             }
+            // 2026-11-13 룬 단계 열쇠 (rune:fn:단계 — 효과가 그 순간에 다시 보냄 MotionSystem.skill: 블랙홀 붕괴 · 대분화 터짐): 그 룬이 있어야 함 · 룬 동작 (rn_)
+            if (k.startsWith("rune:") && k.indexOf(':', 5) > 0 && !gradeKeys.contains(k)) {
+                String base = k.substring(0, k.indexOf(':', 5));
+                runePhases++;
+                check(want.contains(base) && Motions.runeMotion(Motions.skillMotion(k)), "rune phase key " + k + " → " + Motions.skillMotion(k));
+                continue;
+            }
             check(want.contains(k) || gradeKeys.contains(k), "no stray key " + k);
         }
+        check(runePhases >= 2, "rune phase keys " + runePhases);
         check(phases >= 18, "job phase keys " + phases);
         check(weaponPhases >= 18, "weapon phase keys " + weaponPhases);
         // 0.48.0 무기 스킬마다 그 스킬만의 동작 (wp_)

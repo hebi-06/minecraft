@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_rune_ki_avatar_emissive","particle":"rpg:item/vmob/allies_rune_ki_avatar_emissive"},"elements":[{"from":[5.48,5.48,4.98],"to":[10.52,10.52,11.02],"faces":{"down":{"uv":[2.0,7.5,1.375,9.0],"texture":"#0"}},"light_emission":15}]}

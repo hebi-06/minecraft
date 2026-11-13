@@ -28,6 +28,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 /**
  * 중력 룬 (runes.js v2.15.0 "중력" — 자줏빛 + 어두운 핵: 끌어모아 터뜨림 · 띄우고 내리꽂기): 중력탄 · 공중 부양 · 중력장 · 중력 역전 · 블랙홀.
@@ -523,6 +524,7 @@ final class RuneGravity {
         }
         SkillFx.play(level, "mob.warden.sonic_charge", c, 1.0, 1.1);
         SkillFx.play(level, "mob.breeze.charge", c, 1.2, 0.7);
+        liftBoulders(sp, life, c, f, radius, gap, glow);
         List<LivingEntity> hitList = new ArrayList<>();
         List<LivingEntity> floating = new ArrayList<>();
         for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
@@ -574,13 +576,101 @@ final class RuneGravity {
         return true;
     }
 
+    /**
+     * 2026-11-13 중력 역전의 3D 바위 (boulder · 틈의 빛 = 중력 색): 내 둘레 (내 앞을 비운 고리) 의 땅에서 바위 덩이 여덟이 솟아 (6틱) 2.4 ~ 4.6칸 높이에 떠서
+     * 천천히 구르며 오르내리다가, gap 틱 (내리꽂음) 에 한꺼번에 땅으로 내리꽂혀 (2틱 — 빨라짐) 부서지며 가라앉음
+     */
+    private static void liftBoulders(ServerPlayer sp, String life, Vec3 c, Vec3 f, double radius, int gap, double[] glow) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, gap + 16);
+        int n = 8;
+        long seed0 = (long) (Kit.rand() * 1e9);
+        for (int i = 0; i < n; i++) {
+            double a = (i + 0.5) / n * 360 + (Kit.rand() - 0.5) * 20;
+            double rr = Math.min(radius, 2.4 + Kit.rand() * 2.2);
+            Vec3 d = RuneKit.turn(f, a);
+            if (V.dot(d, f) > 0.75) rr = Math.max(rr, 3.6); // 내 앞 (1인칭 화면) 은 멀리
+            Vec3 base = V.add(c, d, rr);
+            double gy = RuneKit.groundAt(level, base, c.y);
+            final Vec3 ground = new Vec3(base.x, gy, base.z);
+            final double hgt = 2.4 + Kit.rand() * 2.2;
+            final double size = 0.9 + Kit.rand() * 0.8;
+            final long seed = seed0 + i * 7919L;
+            final double sc = RuneProps.scaleFor(size, RuneProps.BOULDER_D);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.BOULDER, V.up(ground, -0.6), new double[] {8, 8, 8}, RuneProps.tumble(seed, 0, 0), sc * 0.5,
+                    glow);
+            final int rise = 3 + (i % 3);
+            fx.on(1, () -> p.to(V.up(ground, hgt), RuneProps.tumble(seed, rise, 6), sc, rise));
+            for (int t = rise + 1; t < gap - 1; t += 3) {
+                final int tt = t;
+                fx.on(t, () -> p.to(V.up(ground, hgt + 0.18 * Math.sin(tt * 0.35 + seed % 7)), RuneProps.tumble(seed, tt, 6), -1, 3));
+            }
+            fx.on(gap - 1, () -> p.to(V.up(ground, 0.3), RuneProps.tumble(seed, gap + 4, 6), -1, 2));
+            fx.on(gap + 1, () -> {
+                SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.DUST_PLUME, V.up(ground, 0.3), 6, 0.4, 0.05);
+                p.to(V.up(ground, -0.5), null, sc * 0.6, 8);
+            });
+            fx.on(gap + 9, p::remove);
+        }
+    }
+
+    /**
+     * 2026-11-13 블랙홀의 3D 공허 핵 (void_orb) · 빨려 드는 바위 (boulder): 핵이 charge 틱 동안 0.4 → 1.7칸으로 자라고 (2D 원반 가운데) 빨아들이는 동안 맥동,
+     * 바위 열이 바깥 (5 ~ 7칸) 에서 돌며 나선으로 빨려 들어가 작아지고 (20틱마다 다시), 붕괴 (charge + T) 에 핵이 확 오그라든 뒤 사라짐
+     */
+    private static void voidCore(ServerPlayer sp, String life, Vec3 hole, int charge, int T, double sc, double[] glow) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, hole, charge + T + 10);
+        double d0 = 19.0 / 16.0;
+        mmorpg.fabric.vfx.Vfx.Prop core = RuneProps.prop(fx, RuneProps.VOID_ORB, hole, new double[] {8, 8, 8}, new Quaternionf(), 0.4 / d0 * sc, glow);
+        for (int t = 2; t <= charge; t += 2) {
+            final double s = (0.4 + 1.3 * t / (double) charge) / d0 * sc;
+            final int tt = t;
+            fx.on(t, () -> core.to(null, new Quaternionf().rotateY((float) Math.toRadians(tt * 9)), s, 2));
+        }
+        for (int t = charge + 2; t < charge + T; t += 2) {
+            final double s = (1.7 + 0.15 * Math.sin(t * 0.7)) / d0 * sc;
+            final int tt = t;
+            fx.on(t, () -> core.to(null, new Quaternionf().rotateY((float) Math.toRadians(tt * 9)), s, 2));
+        }
+        fx.on(charge + T, () -> core.size(0.25 / d0 * sc, 3));
+        fx.on(charge + T + 3, core::remove);
+        // 빨려 드는 바위 열 (20틱마다 바깥에서 다시)
+        int n = 10;
+        for (int i = 0; i < n; i++) {
+            final long seed = (long) (Kit.rand() * 1e9) + i;
+            final int phase = i * 2;
+            final double size = 0.5 + (i % 3) * 0.25;
+            final double bs = RuneProps.scaleFor(size, RuneProps.BOULDER_D);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.BOULDER, V.up(hole, -40), new double[] {8, 8, 8}, new Quaternionf(), 0.01, glow);
+            final int start = Math.max(2, charge / 2);
+            fx.each(start, charge + T - 1, 1, t -> {
+                int cyc = 20;
+                int u0 = (t - start + phase) % cyc;
+                double u = u0 / (double) cyc;
+                double a0 = (seed % 360) + 137.5 * ((t - start + phase) / cyc);
+                double r0 = 5.0 + (seed % 3);
+                double rr = r0 * (1 - Math.pow(u, 1.4));
+                double ang = Math.toRadians(a0 + 540 * u * u);
+                double h0 = ((seed >> 3) % 5 - 2) * 0.6;
+                Vec3 at = new Vec3(hole.x + Math.cos(ang) * rr, hole.y + h0 * (1 - u), hole.z + Math.sin(ang) * rr);
+                double s = bs * (1 - 0.85 * u);
+                // 다시 바깥으로 옮길 때는 작게 · 바로 (안에서 바깥으로 지나가는 줄이 보이지 않게) — 처음 나올 때도 바로 (땅속 숨긴 자리에서 솟는 줄이 보이지 않게)
+                boolean jump = u0 == 0 || t == start;
+                p.to(at, RuneProps.tumble(seed, t, 14), u0 == 0 ? 0.01 : s, jump ? 0 : 1);
+            });
+            fx.on(charge + T, () -> p.to(hole, null, 0.01, 2));
+            fx.on(charge + T + 2, p::remove);
+        }
+    }
+
     /** 원반이 이어 돌게 (240도/초) */
     private static double holeSpin(int t) {
         return (t * 12) % 360;
     }
 
     /**
-     * 블랙홀: 조준한 곳 (range 칸) 위 height 칸에 charge 틱 동안 블랙홀 (rpg:rfx_hole — 도는 빛 원반 + 어두운 핵) 이 자람 → hits × gap 틱 동안 pull 칸 안을
+     * 블랙홀: 조준한 곳 (range 칸) 위 height 칸에 charge 틱 동안 블랙홀 (rpg:rfx_hole — 도는 빛 원반 + 어두운 핵 · 2026-11-13 3D 공허 핵과 빨려 드는 3D 바위) 이 자람 → hits × gap 틱 동안 pull 칸 안을
      * 빨아들이고 (핵 가까이 3칸 안은 띄움 — 공격 못 함), gap 틱마다 radius 칸 위력 × mult → 붕괴 (radius 칸 위력 × crush, 떠 있던 적은 내리꽂힘)
      */
     static boolean blackHole(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -600,6 +690,7 @@ final class RuneGravity {
         double pull = k.num("pull");
         SkillFx.play(level, "mob.warden.sonic_charge", g, 1.0, 0.8);
         SkillFx.play(level, "conduit.activate", g, 1.0, 0.6);
+        voidCore(sp, life, hole, charge, T, sc, glow);
         // v2.27.0 2차 강화 — 예고: 공허의 하늘 (어둠) · 겨눈 땅의 거대한 비전 문양 (거꾸로 돌며 빨려 듦) · 뒤쪽 하늘의 검은 일식 (아래) · 핵이 다 열리면 빛을 삼키는 어두운 번쩍임
         RuneKit.ultSkyFor(sp, level, g, "blackHole", charge + T + 34, null);
         RuneKit.domainSigil(level, g, radius * 1.15, "arcane", glow, core, Opt.of("life", (charge + T + 1) / 20.0, "spinRate", -70.0, "grow", -0.25, "alpha", 0.75,
@@ -658,6 +749,10 @@ final class RuneGravity {
         Vec3 eclipse = RuneKit.skyPoint(sp, g, 8, 21, 6, 22);
         RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", 0.0, "spinRate", 50.0, "alpha", 0.85, "fade", 0.1));
         RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", (double) RuneKit.HOLE_CORE, "alpha", 0.95, "fade", 0.1));
+        // 2026-11-13 붕괴 6틱 앞에 단계 동작 (rn_black_hole_crush — 버티던 두 손을 모아 쥐고 허리로 끌어내리며 발을 구름: 6 이 붕괴)
+        RuneKit.later(charge + T - 6, () -> {
+            if (RuneKit.sameLife(sp, life)) mmorpg.fabric.motion.MotionSystem.skill(sp, "rune:blackHole:crush");
+        });
         RuneKit.later(charge + T, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             // 붕괴: 원반이 안으로 꺼지며 (커졌다 사라짐) 터짐

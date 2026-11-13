@@ -1025,6 +1025,124 @@ def rune_shade_anims():
     }
 
 
+# ================================================================== 기의 화신 (무투 영웅 — 백열권, 2026-11-13)
+
+KA_KI = (255, 190, 70)     # 무투 빛 (금빛 주황)
+KA_KI2 = (255, 214, 120)
+KA_CORE = (255, 248, 220)
+KA_DARK = (190, 110, 30)
+KA_WRAP = (250, 240, 214)
+
+
+def rune_ki_avatar():
+    """기의 화신: 쓴 사람 뒤에 솟는 반투명 금빛 무투가의 윗몸 (다리 대신 기의 소용돌이 꼬리) — 상투 · 붉은 머리띠 · 성난 눈썹 · 빛나는 눈 · 넓은 가슴 ·
+    둥근 어깨 · 굵은 팔 · 빛나는 마디의 붕대 주먹, 머리 뒤의 기 고리 (후광). 키 약 2.2칸 (크기 1 — 스킬이 1.7배로 띄움) · 앞 = −Z"""
+    m = Model("rune_ki_avatar", tex_w=128)
+    ki = see(Mat(KA_KI, "skin", noise=6, edge=0.82, seed=1201, accent=(230, 150, 50), rim=KA_CORE, rim_glow=0.6), 0.8)
+    ki2 = see(Mat(KA_KI2, "skin", noise=5, edge=0.86, seed=1202, accent=(240, 170, 70), rim=KA_CORE, rim_glow=0.45), 0.75)
+    dark = see(Mat(KA_DARK, "fur", noise=8, edge=0.85, seed=1203), 0.9)
+    wrap = Mat(KA_WRAP, "knit", noise=5, edge=0.86, seed=1204)
+    core = Mat(KA_CORE, "flat", noise=3, edge=1.0, glow=1.0, seed=1205)
+    swirl = see(Mat(KA_KI, "ice", noise=8, edge=0.95, seed=1206, accent=(255, 220, 140)), 0.55)
+    band = Mat((200, 40, 40), "knit", noise=4, edge=0.9, seed=1207)
+    brow = (120, 60, 20)
+
+    root = m.bone("root", [0, 0, 0])
+    sw = m.bone("swirl", [0, 6, 0], "root")
+    sw.box([-2, -2, -2], [4, 4, 4], swirl)
+    sw.box([-3.5, 2, -3.5], [7, 4, 7], swirl.with_(seed=1208))
+    sw.box([-5, 5, -5], [10, 3, 10], swirl.with_(seed=1209))
+    body = m.bone("body", [0, 8, 0], "root")
+    body.box([-5, 8, -3], [10, 6, 6], ki2)
+    body.box([-8, 14, -4.5], [16, 9, 9], ki, decals=[("north", 4, 5, KA_CORE, 0.5), ("north", 11, 5, KA_CORE, 0.5), ("north", 7, 2, KA_CORE, 0.4),
+                                                     ("north", 8, 2, KA_CORE, 0.4)])
+    ring = m.bone("ring", [0, 27, 6], "body")
+    import math as _m
+    for i in range(12):
+        a = i / 12 * 2 * _m.pi
+        ring.box([round(_m.cos(a) * 9 - 1, 1), round(27 + _m.sin(a) * 9 - 1, 1), 6], [2, 2, 1], core.with_(seed=1210 + i))
+    head = m.bone("head", [0, 23, 0], "body")
+    head.box([-3.5, 23, -3.5], [7, 7, 7], ki.with_(seed=1220), decals=[("north", 1, 3, KA_CORE, 1.0), ("north", 2, 3, KA_CORE, 1.0),
+                                                                     ("north", 4, 3, KA_CORE, 1.0), ("north", 5, 3, KA_CORE, 1.0),
+                                                                     ("north", 1, 2, brow), ("north", 2, 2, brow), ("north", 4, 2, brow),
+                                                                     ("north", 5, 2, brow)])
+    head.box([-3.7, 27.5, -3.7], [7, 1, 7], band, inflate=0.25)
+    head.box([-1.5, 30, -0.5], [3, 2, 3], dark)
+    head.box([-1, 32, 0], [2, 2, 2], dark.with_(seed=1221))
+    for side, sx in (("R", -1), ("L", 1)):
+        arm = m.bone("arm" + side, [8.5 * sx, 21, 0], "body")
+        ax = -12 if sx < 0 else 8
+        arm.box([ax, 18, -3], [4, 5, 6], ki2.with_(seed=1230 + sx))
+        arm.box([ax, 13, -2.5], [4, 6, 5], ki.with_(seed=1232 + sx))
+        fa = m.bone("forearm" + side, [10 * sx, 13, 0], "arm" + side)
+        fa.box([ax, 6, -2.5], [4, 7, 5], ki.with_(seed=1234 + sx))
+        fa.box([ax - 0.4, 6, -2.9], [4, 2, 5], wrap.with_(seed=1236 + sx), inflate=0.2)
+        fist = m.bone("fist" + side, [10 * sx, 6, 0], "forearm" + side)
+        fist.box([ax - 0.5, 1, -3], [5, 5, 6], wrap.with_(seed=1238 + sx), decals=[("down", 1, 1, KA_CORE, 1.0), ("down", 2, 1, KA_CORE, 1.0),
+                                                                                   ("down", 3, 1, KA_CORE, 1.0), ("down", 1, 3, KA_CORE, 0.8),
+                                                                                   ("down", 3, 3, KA_CORE, 0.8)])
+    return m
+
+
+KA_READY = {
+    "armR": {"rotation": [-60, 15, 10]}, "armL": {"rotation": [-60, -15, -10]},
+    "forearmR": {"rotation": [-70, 0, 0]}, "forearmL": {"rotation": [-70, 0, 0]},
+    "body": {"rotation": [10, 0, 0]},
+}
+
+
+def ka_rel(bones):
+    out = {}
+    for bone, chans in bones.items():
+        out[bone] = {}
+        for ch, frames in chans.items():
+            base = KA_READY.get(bone, {}).get(ch)
+            if base is None or ch == "scale":
+                out[bone][ch] = kf(frames)
+                continue
+            out[bone][ch] = kf([(t, [v - b for v, b in zip(vec, base)]) for t, vec in frames])
+    return out
+
+
+def rune_ki_avatar_anims():
+    R = KA_READY
+    return {
+        "idle": {"loop": True, "bones": {
+            "armR": R["armR"], "armL": R["armL"], "forearmR": R["forearmR"], "forearmL": R["forearmL"],
+            "body": {"rotation": [f"10 + math.sin({LT} * 120) * 2", f"math.sin({LT} * 70) * 5", 0], "position": [0, f"math.sin({LT} * 120) * 0.6", 0]},
+            "head": {"rotation": [f"math.sin({LT} * 90) * 3", f"math.sin({LT} * 50) * 6", 0]},
+            "swirl": {"rotation": [0, f"{LT} * 300", 0], "scale": [f"1 + math.sin({LT} * 400) * 0.1", 1, f"1 + math.sin({LT} * 400) * 0.1"]},
+            "ring": {"rotation": [0, 0, f"{LT} * 120"]},
+        }},
+        # 기에서 솟음 (0.35초)
+        "appear": {"animation_length": 0.35, "bones": {
+            "root": {"position": kf([(0, [0, -16, 0]), (0.25, [0, 1.5, 0]), (0.35, [0, 0, 0])]),
+                     "scale": kf([(0, [0.4, 0.4, 0.4]), (0.25, [1.08, 1.08, 1.08]), (0.35, [1, 1, 1])])},
+        }},
+        # 주먹 비 (되풀이 0.2초 — 오른 주먹 0.05 · 왼 주먹 0.15 에 쭉 뻗음, 몸이 좌우로 비틀림)
+        "barrage": {"loop": True, "animation_length": 0.2, "bones": ka_rel({
+            "armR": {"rotation": [(0, [-60, 15, 10]), (0.05, [-92, -6, 0]), (0.1, [-60, 15, 10]), (0.2, [-60, 15, 10])]},
+            "forearmR": {"rotation": [(0, [-70, 0, 0]), (0.05, [-4, 0, 0]), (0.1, [-70, 0, 0]), (0.2, [-70, 0, 0])]},
+            "armL": {"rotation": [(0, [-60, -15, -10]), (0.1, [-60, -15, -10]), (0.15, [-92, 6, 0]), (0.2, [-60, -15, -10])]},
+            "forearmL": {"rotation": [(0, [-70, 0, 0]), (0.1, [-70, 0, 0]), (0.15, [-4, 0, 0]), (0.2, [-70, 0, 0])]},
+            "body": {"rotation": [(0, [10, 0, 0]), (0.05, [12, 14, 0]), (0.1, [10, 0, 0]), (0.15, [12, -14, 0]), (0.2, [10, 0, 0])]},
+        })},
+        # 마무리 일격 (0.5초 — 0.15 오른 주먹을 크게 당김 · 0.25 쭉 뻗어 침 · 머묾)
+        "finisher": {"animation_length": 0.5, "bones": ka_rel({
+            "armR": {"rotation": [(0, [-60, 15, 10]), (0.15, [-20, 40, 30]), (0.25, [-95, -4, 0]), (0.42, [-93, -4, 0]), (0.5, [-60, 15, 10])]},
+            "forearmR": {"rotation": [(0, [-70, 0, 0]), (0.15, [-110, 0, 0]), (0.25, [0, 0, 0]), (0.42, [0, 0, 0]), (0.5, [-70, 0, 0])]},
+            "armL": {"rotation": [(0, [-60, -15, -10]), (0.15, [-80, -10, -10]), (0.25, [-20, -20, -30]), (0.5, [-60, -15, -10])]},
+            "body": {"rotation": [(0, [10, 0, 0]), (0.15, [4, 35, 0]), (0.25, [22, -30, 0]), (0.42, [20, -28, 0]), (0.5, [10, 0, 0])],
+                     "position": [(0, [0, 0, 0]), (0.15, [0, 0, 2]), (0.25, [0, -1, -4]), (0.5, [0, 0, 0])]},
+            "head": {"rotation": [(0, [0, 0, 0]), (0.15, [-8, -20, 0]), (0.25, [6, 20, 0]), (0.5, [0, 0, 0])]},
+        })},
+        # 기로 흩어짐 (0.45초)
+        "vanish": {"animation_length": 0.45, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.45, [0, 10, 0])]), "scale": kf([(0, [1, 1, 1]), (0.15, [1.1, 1.1, 1.1]), (0.45, [0.2, 0.2, 0.2])])},
+        }},
+    }
+
+
 def behavior(fam, health, move, box, fly=False):
     c = {
         "minecraft:type_family": {"family": ["rpg_ally", fam]},
@@ -1058,6 +1176,8 @@ MOBS = {
     "rune_spirit_king": (rune_spirit_king, rune_spirit_king_anims, dict(fam="rune_spirit_king", health=200, move=0.3, box=[1.0, 2.6], fly=True),
                          "entity_emissive", ["idle"], None),
     "rune_shade": (rune_shade, rune_shade_anims, dict(fam="rune_shade", health=40, move=0.4, box=[0.6, 1.8], fly=True), "entity_alphablend", ["idle"], True),
+    "rune_ki_avatar": (rune_ki_avatar, rune_ki_avatar_anims, dict(fam="rune_ki_avatar", health=40, move=0.4, box=[0.9, 2.0], fly=True), "entity_alphablend",
+                       ["idle"], True),
 }
 
 
@@ -1157,6 +1277,8 @@ PREVIEW_POSES = {
     "rune_sylph": ((["idle"], 0.0), (["idle", "attack"], 0.2)),
     "rune_gnome": ((["idle"], 0.0), (["idle", "attack"], 0.15), (["idle", "attack"], 0.25)),
     "rune_spirit_king": ((["idle"], 0.0), (["idle", "raise"], 0.5), (["idle", "cast"], 0.15)),
+    "rune_ki_avatar": ((["idle"], 0.0), (["idle", "barrage"], 0.05), (["idle", "barrage"], 0.15), (["idle", "finisher"], 0.15),
+                       (["idle", "finisher"], 0.25)),
     "rune_shade": ((["idle"], 0.0), (["idle", "slash"], 0.1), (["idle", "slash"], 0.2), (["idle", "stab"], 0.2), (["idle", "xcut"], 0.15),
                    (["idle", "xcut"], 0.25)),
 }

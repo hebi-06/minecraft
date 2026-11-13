@@ -476,45 +476,6 @@ fpl(m, 50.5, FP_CHAMBER, "out3")
 fpl(m, 53, FP_CHAMBER)
 use(m, "gravityWell")
 
-# 중력 역전: 두 팔을 하늘로 들어 올림 (3 — 주위 적이 모두 떠오름 · 머리 위 거꾸로 된 마법진) → 받침 → 한꺼번에 내리꽂음 (24) 두 주먹을 힘껏 내리며 쪼그려 앉음
-m = off_bare(Motion("gravity_reverse", 30, "중력 역전 — 두 팔을 하늘로 들어 적을 모두 띄웠다가 두 주먹을 힘껏 내리며 한꺼번에 내리꽂음", fade=(0.03, 0.1)))
-UP2 = P(body=[-12, 0, 0], head=[-28, 0], ra=RA_SKY, la=L(A_RAISE), **LEGS_WIDE)
-keyp(m, 3, UP2, "out3")
-keyp(m, 20.5, P(UP2, body=[-14, 0, 0], head=[-30, 0]))
-CRUSH = P(body=[28, 0, 0], head=[10, 0], ra=arm([0.25, -0.85, 0.45], 10, [0.1, -0.5, 0.85]), la=L(bent([0.25, -0.85, 0.45], 20, (0, 0, 1))), **LEGS_SQUAT)
-keyp(m, 24.4, CRUSH, "in")
-keyp(m, 27, P(CRUSH, body=[26, 0, 0]))
-fpw(m, 3, FPW_SKY, "out3")
-fpw(m, 20.5, FPW_SKY)
-fpw(m, 24.4, FPW_DOWN, "in")
-fpw(m, 27, FPW_DOWN)
-fpl(m, 3, FP_RAISE, "out3")
-fpl(m, 20.5, FP_RAISE)
-fpl(m, 24.4, FP_DOWN, "in")
-fpl(m, 27, FP_DOWN)
-use(m, "gravityReverse")
-
-# 블랙홀: 두 손을 앞 위로 들어 조준한 곳 위에 블랙홀을 빚음 (2.5 ~ 13 — 손을 벌리며 키움) → 다 자라면 (16) 두 주먹을 쥐어 당김 → 버팀
-m = off_bare(Motion("black_hole", 30, "블랙홀 — 두 손을 앞 위로 들어 블랙홀을 빚어 키우고, 다 자라면 두 주먹을 쥐어 당김", fade=(0.04, 0.1)))
-SHAPE = P(body=[-6, 0, 0], head=[-14, 0], ra=arm([0.15, 0.5, 0.85], 30, [0.0, 0.9, 0.45]), la=L(bent([0.05, 0.5, 0.86], 35, (-1, 0.4, 0))), **LEGS_WIDE)
-keyp(m, 2.5, SHAPE, "out3")
-for i, tick in enumerate((6, 9.5, 13)):
-    s = 0.5 + 0.25 * i
-    keyp(m, tick, P(SHAPE, ra=arm([0.15 + 0.15 * s, 0.5, 0.85], 30, [0.1, 0.9, 0.45]), la=L(bent([0.05 + 0.2 * s, 0.5, 0.86], 35 - 10 * s, (-1, 0.4, 0)))))
-HOLD = P(body=[10, 0, 0], head=[-6, 0], ra=bent([0.35, -0.2, 0.5], 110, (0, 1, 0.3)), la=L(A_PULL), rl=[-10, 0, 10], ll=[-10, 0, -10], rk=30, lk=30,
-         root=[-0.1, 0])
-keyp(m, 16.6, HOLD, "out3")
-keyp(m, 24, P(HOLD, body=[12, 0, 0]))
-fpw(m, 2.5, FPW_UP, "out3", dp=(0.05, 0.1, -0.2))
-fpw(m, 13, FPW_UP, dp=(0.2, 0.1, -0.2))
-fpw(m, 16.6, FPW_LOW, "out3")
-fpw(m, 24, FPW_LOW)
-fpl(m, 2.5, FP_PALM_UP, "out3")
-fpl(m, 13, nudge(FP_PALM_UP, (0.1, 0, 0), (0, -15, 0)))
-fpl(m, 16.6, FP_CHAMBER, "out3")
-fpl(m, 24, FP_CHAMBER)
-use(m, "blackHole")
-
 # ------------------------------------------------------------ 해류
 
 # 물의 창: 손 앞에 물이 모여 창이 되어 날아감 (틱 0) — 앞으로 곧게 내지르는 찌르기
