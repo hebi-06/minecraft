@@ -235,6 +235,7 @@ public final class VanillaCosmetics {
         if (h != null) h.destroy();
         PENDING.remove(sp.getUUID());
         HANDS_HIDDEN.remove(sp.getUUID());
+        OWN_HIDDEN.remove(sp.getUUID());
         for (Preview p : new ArrayList<>(PREVIEWS.values())) if (p.owner().equals(sp.getUUID())) endPreview(p, server);
     }
 
@@ -242,6 +243,14 @@ public final class VanillaCosmetics {
 
     /** 손에 든 것을 숨긴 사람 */
     private static final Set<UUID> HANDS_HIDDEN = ConcurrentHashMap.newKeySet();
+    /** 내 화면에서만 손에 든 것을 숨긴 사람 (뼈 몸 — 내 모션 보기) */
+    private static final Set<UUID> OWN_HIDDEN = ConcurrentHashMap.newKeySet();
+
+    /** 2026-11-13 뼈 몸 (VanillaRig — 내 모션 보기): 모드 없는 클라이언트의 내 화면에서만 무기를 손 자리 빈 그림으로 (가방을 다시 보냄) */
+    static void hideOwnHands(ServerPlayer sp, boolean hidden) {
+        boolean changed = hidden ? OWN_HIDDEN.add(sp.getUUID()) : OWN_HIDDEN.remove(sp.getUUID());
+        if (changed && !sp.isRemoved() && VanillaClients.isVanilla(sp)) sp.containerMenu.sendAllDataToRemote();
+    }
 
     /**
      * sp 의 손에 든 것을 보이지 않게 (hidden) / 다시 보이게: 다른 사람 (모드 · 모드 없는 클라이언트) 에게는 장비 패킷의 손 칸을 비우고 (바닐라는 투명이어도 손에
@@ -264,11 +273,47 @@ public final class VanillaCosmetics {
         return e != null && HANDS_HIDDEN.contains(e.getUUID());
     }
 
+    /** 2026-11-13 뼈 몸 (VanillaRig): 다른 사람에게 sp 의 장비 (손 · 갑옷 칸) 를 다시 보냄 (rewrite 가 받는 사람마다 숨김을 정함) */
+    static void refreshGear(ServerPlayer sp) {
+        List<Pair<EquipmentSlot, ItemStack>> all = new ArrayList<>();
+        for (EquipmentSlot s : EquipmentSlot.values()) {
+            if (s.getType() == EquipmentSlot.Type.HAND || s.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) all.add(Pair.of(s, sp.getItemBySlot(s).copy()));
+        }
+        ClientboundSetEquipmentPacket p = new ClientboundSetEquipmentPacket(sp.getId(), all);
+        for (ServerPlayer viewer : sp.level().players()) {
+            if (viewer != sp && viewer.distanceToSqr(sp) < 160 * 160) viewer.connection.send(p);
+        }
+    }
+
+    /**
+     * 2026-11-13 뼈 몸 (VanillaRig) 의 손에 드는 아이템: 그 사람의 모습 (무기 스킨) 으로 바꾼 바닐라 아이템 (보는 사람마다 다시 바꾸지 않음 — 받는 사람의 모습이
+     * 아니라 든 사람의 것)
+     */
+    static ItemStack handStack(ServerPlayer owner, ItemStack st) {
+        if (st.isEmpty()) return ItemStack.EMPTY;
+        if (!VanillaSupport.ours(BuiltInRegistries.ITEM.getKey(st.getItem()))) return st.copy();
+        Look own = LOOKS.get(owner.getUUID());
+        OVERRIDE.set(new View(own == null ? Look.EMPTY : own, false, true));
+        try {
+            return PolymerItemUtils.getPolymerItemStack(st, owner.getPacketContext(), owner.registryAccess());
+        } finally {
+            OVERRIDE.remove();
+        }
+    }
+
+    /** 2026-11-13 뼈 몸 (VanillaRig) 의 머리 장식: 그 사람의 머리 장식 (투구 칸에 그리던 것 — 없으면 빈 것) */
+    static ItemStack hatFor(Entity e) {
+        Visual v = visual(lookOf(e), "helmet", false);
+        if (v.kind() != HEAD_ITEM) return ItemStack.EMPTY;
+        Identifier m = HEAD.get(v.value());
+        return m == null ? ItemStack.EMPTY : stack(m);
+    }
+
     /** 장비 패킷의 손 칸을 비움 */
     private static ClientboundSetEquipmentPacket emptyHands(ClientboundSetEquipmentPacket p) {
         List<Pair<EquipmentSlot, ItemStack>> out = new ArrayList<>();
         for (Pair<EquipmentSlot, ItemStack> s : p.getSlots()) {
-            boolean hand = s.getFirst() == EquipmentSlot.MAINHAND || s.getFirst() == EquipmentSlot.OFFHAND;
+            boolean hand = s.getFirst() == EquipmentSlot.MAINHAND || s.getFirst() == EquipmentSlot.OFFHAND || s.getFirst() == EquipmentSlot.HEAD;
             out.add(hand ? Pair.of(s.getFirst(), ItemStack.EMPTY) : s);
         }
         return new ClientboundSetEquipmentPacket(p.getEntity(), out);
@@ -311,7 +356,14 @@ public final class VanillaCosmetics {
                 return;
             }
             Look own = LOOKS.get(receiver.getUUID());
-            view = new View(own == null ? Look.EMPTY : own, receiver.isInvisible(), true);
+            // 2026-11-13 뼈 몸 · 내 모션 보기 (hideOwnHands): 3인칭 손에서만 빈 그림 (뼈 몸이 무기를 듦) — 1인칭은 그대로 (스킨이면 스킨)
+            if (stack.getItem() instanceof RpgWeaponItem && OWN_HIDDEN.contains(receiver.getUUID())) {
+                String skin = own == null ? null : own.weaponSkin(weaponType(stack.getItem()));
+                out.set(DataComponents.CUSTOM_MODEL_DATA, cmd(skin != null && SKINS.contains(skin) ? "hide3p:" + skin : "hide3p"));
+                return;
+            }
+            // 뼈 몸 · 내 모션 보기 동안은 내 화면의 진짜 머리에도 장식을 그리지 않음 (뼈 몸의 머리가 씀 — 투명할 때와 같게)
+            view = new View(own == null ? Look.EMPTY : own, receiver.isInvisible() || OWN_HIDDEN.contains(receiver.getUUID()), true);
         }
         if (!view.person()) return;
         if (lookup == null) lookup = SERVER_LOOKUP;
@@ -425,8 +477,9 @@ public final class VanillaCosmetics {
     /** 장비 패킷 하나 (모드 없는 클라이언트에게): 그 엔티티의 모습으로 바닐라 아이템을 만들어 넣음 · 빈 칸에 장식 그림 */
     static Packet<?> equipment(ServerPlayer receiver, ClientboundSetEquipmentPacket p) {
         Entity e = receiver.level().getEntity(p.getEntity());
-        // 2026-11-13 드라군 변신 (hideHands): 다른 사람에게는 손 칸을 비움 — 모드 클라이언트도 (투명한 몸에 창만 떠 보이지 않게)
-        if (e != null && e != receiver && HANDS_HIDDEN.contains(e.getUUID())) p = emptyHands(p);
+        // 2026-11-13 드라군 변신 (hideHands): 다른 사람에게는 손 칸을 비움 — 모드 클라이언트도 (투명한 몸에 창만 떠 보이지 않게).
+        // 뼈 몸 (VanillaRig): 모드 없는 다른 사람에게는 손 · 머리 장식을 비움 (뼈 몸의 손이 듦)
+        if (e != null && e != receiver && (HANDS_HIDDEN.contains(e.getUUID()) || VanillaRig.hidesBodyFor(e, receiver))) p = emptyHands(p);
         if (!VanillaClients.isVanilla(receiver)) return p;
         Look look = lookOf(e);
         boolean person = person(e);

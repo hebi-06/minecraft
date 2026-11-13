@@ -10,7 +10,7 @@ import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.client.motion.BladeTrails;
 import mmorpg.fabric.client.motion.ClientMotions;
-import mmorpg.fabric.client.motion.MotionPoses;
+import mmorpg.fabric.motion.MotionPoses;
 import mmorpg.fabric.client.motion.MotionRender;
 import mmorpg.fabric.motion.MotionNet;
 import mmorpg.fabric.motion.MotionSystem;
@@ -747,7 +747,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             MotionPoses.Motion mo = MotionPoses.get(motion);
             if (mo == null) return false;
             ClientMotions.freeze(me, motion, tick / mo.ticks);
-            mmorpg.fabric.client.motion.Pose p = ClientMotions.localPose(0F, new mmorpg.fabric.client.motion.Pose());
+            mmorpg.fabric.motion.Pose p = ClientMotions.localPose(0F, new mmorpg.fabric.motion.Pose());
             boolean ok = p != null && p.mainBare() == mainBare && p.offBare() == offBare && p.propNow() == prop
                     && MotionRender.firstPersonBare(net.minecraft.world.InteractionHand.MAIN_HAND) == mainBare;
             ClientMotions.freeze(me, null, 0F);

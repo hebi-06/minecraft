@@ -8,19 +8,16 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.rune.RuneKit;
-import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
-import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Quaternionf;
 
 /**
  * 0.30.0 성기사 직업 스킬 (jobs.json paladin — 금빛 · 하늘빛 벼락, 특성 「심판」 · 수호 오라): 뇌격 강타 · 신념의 돌진 · 뇌진 · 수호의 맹세 · 천뢰의 대망치.
@@ -374,9 +371,6 @@ final class PaladinSkills {
                 if (tt == 8) SkillFx.play(lv, "entity.lightning_bolt.thunder", center, 0.75, 0.5);
             });
         }
-        // 2026-11-12 3D 대망치 (사용자 직업 도감 "망치 연출 3d로" — 룬 전용 망치 rpg:vfx/rune_hammer 를 크게 · 성기사 빛, 예전 2D rfx_jmaul2 대신): 먹구름 속에서
-        // 머리를 아래로 내려와 매달려 번개를 맞다가 떨어져 내리침 → 박힌 채 번쩍 → 다시 구름으로 끌어올려짐 (두 번) → 마지막은 더 크게 내리쳐 박힌 채 가라앉음
-        new Maul(level0, j, center, maulLean(sp), Kit.facingOf(sp), first, gap, last, endAt + 40);
         for (int i = 0; i <= last; i++) {
             int ii = i;
             double mult = ((Number) hitList.get(i)).doubleValue();
@@ -384,6 +378,10 @@ final class PaladinSkills {
             // 망치가 떨어짐 (6틱 — 머리가 땅에 닿을 때 내리침)
             RuneKit.later(at - 6, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
+                double size = ii == last ? 2.2 : 1.9;
+                double half = size * 2.67 / 2;
+                JobFx.maul(sp.level(), V.up(center, half + 10), size, j, 0.3, Opt.of("dir", V.DOWN, "speed", 10 / 0.3, "alpha", 0.95, "fade", 0.05, "lean", maulLean(
+                        sp)));
                 SkillFx.play(sp.level(), "item.trident.thunder", center, 0.9 + ii * 0.1, 0.5);
             });
             RuneKit.later(at, () -> {
@@ -405,84 +403,11 @@ final class PaladinSkills {
         return V.add(V.scale(V.DOWN, Math.cos(a)), V.rightOf(Kit.facingOf(sp)), -Math.sin(a));
     }
 
-    /**
-     * 2026-11-12 천뢰의 대망치 (3D — 룬 전용 망치 rune.RuneProps HAMMER, 빛 = 성기사 계열 색 · 속빛): 머리를 아래로 lean 쪽으로 세워 (자루가 오른쪽 위로 22°) 먹구름 속
-     * (가운데 위 sky 칸) 에서 작게 생겨나 커짐 → 내려칠 때마다 6틱에 떨어짐 (점점 빨리 — 세 토막) → 박힌 채 3틱 → 구름으로 끌어올려짐 · 마지막은 더 크게 → 박힌 채
-     * 가라앉으며 작아짐. 하늘에 매달린 동안 4틱마다 구름에서 망치로 벼락 · 불티
-     */
-    static final class Maul {
-        /** 망치 길이 (칸): 내려침 · 마지막 */
-        static final double LEN = 8.0;
-        static final double LEN_LAST = 9.6;
-        /** 하늘 (박힌 자리에서 위로 칸 — 머리 가운데) */
-        static final double SKY = 13;
-        final Vfx.Fx fx;
-        final Quaternionf q;
-        final Vec3 lean;
-        final Vec3 center;
-
-        Maul(ServerLevel level, Jobs.Job j, Vec3 center, Vec3 lean, Vec3 f, int first, int gap, int last, int life) {
-            this.center = center;
-            this.lean = lean;
-            this.q = RuneProps.along(lean, f);
-            double s = RuneProps.scaleFor(LEN, RuneProps.HAMMER_LEN);
-            double sLast = RuneProps.scaleFor(LEN_LAST, RuneProps.HAMMER_LEN);
-            this.fx = RuneProps.fx(level, center, life);
-            double[] glow = JobKit.glow(j);
-            double[] core = JobKit.core(j);
-            int appear = Math.max(1, first - 14);
-            Vfx.Prop[] hold = {null};
-            fx.on(appear, () -> {
-                Vec3 sky = V.up(impact(s), SKY);
-                hold[0] = RuneProps.prop(fx, RuneProps.HAMMER, sky, RuneProps.HAMMER_HEAD, q, s * 0.15, glow, core);
-                hold[0].size(s, 6);
-                JobFx.thunder(level, V.up(sky, -1.5), 6.0, j, 0.3, Opt.of("alpha", 0.9));
-                SkillFx.play(level, "entity.lightning_bolt.thunder", sky, 0.6, 1.3);
-            });
-            for (int i = 0; i <= last; i++) {
-                int at = first + gap * i;
-                double si = i == last ? sLast : s;
-                Vec3 hit = impact(si);
-                // 떨어짐: 점점 빨리 (세 토막 — 위에서 15% · 45% · 100%)
-                fx.on(at - 6, () -> to(hold, V.up(hit, SKY * 0.85), si, 2));
-                fx.on(at - 4, () -> to(hold, V.up(hit, SKY * 0.55), si, 2));
-                fx.on(at - 2, () -> to(hold, hit, si, 2));
-                if (i < last) {
-                    double sNext = i + 1 == last ? sLast : s;
-                    Vec3 skyNext = V.up(impact(sNext), SKY);
-                    // 박힌 채 3틱 → 끌어올려짐 (처음 빨리 → 느리게)
-                    fx.on(at + 3, () -> to(hold, V.up(hit, SKY * 0.6), sNext, 3));
-                    fx.on(at + 6, () -> to(hold, skyNext, sNext, Math.max(2, gap - 12)));
-                } else {
-                    fx.on(at + 14, () -> to(hold, V.add(hit, lean, 2.0), si * 0.55, 8));
-                    fx.on(at + 22, () -> {
-                        if (hold[0] != null) hold[0].remove();
-                    });
-                }
-            }
-            // 하늘에 매달린 동안: 구름에서 망치로 벼락 · 머리의 불티
-            fx.each(appear + 2, first + gap * last, 4, t -> {
-                if (hold[0] == null) return;
-                Vec3 head = hold[0].pos();
-                if (head == null || head.y < center.y + SKY * 0.5) return;
-                JobFx.thunder(level, head, 3.0 + Kit.rand() * 1.5, j, 0.2, Opt.of("alpha", 0.85));
-                SkillFx.sparks(level, head, glow, 5, 3.0);
-            });
-        }
-
-        /** 머리 끝 (가시 뿌리) 이 땅에 닿게 박힌 머리 가운데 (크기 s) */
-        Vec3 impact(double s) {
-            return V.sub(center, V.scale(lean, RuneProps.HAMMER_HEAD_END / 16.0 * s));
-        }
-
-        private static void to(Vfx.Prop[] p, Vec3 at, double s, int ticks) {
-            if (p[0] != null) p[0].to(at, null, s, ticks);
-        }
-    }
-
-    /** 대망치가 내리침: 큰 벼락 · 둘레 벼락 · 번개 고리 · 땅의 금 · 1인칭 큰 베기 — 둘레 radius 칸 (mult — 마법). 망치는 3D (Maul) */
+    /** 대망치가 내리침: 망치 · 큰 벼락 · 둘레 벼락 · 번개 고리 · 땅의 금 · 1인칭 큰 베기 — 둘레 radius 칸 (mult — 마법) */
     private static void slam(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 center, double radius, double mult, int i, boolean fin, String life) {
         ServerLevel level = sp.level();
+        double size = fin ? 2.2 : 1.9;
+        JobFx.maul(level, V.up(center, size * 2.67 / 2), size, j, 0.3, Opt.of("alpha", 0.9, "fade", 0.6, "grow", 0.1, "lean", maulLean(sp)));
         JobFx.thunder(level, center, fin ? 16 : 13, j, 0.5, Opt.empty());
         Vec3 me = sp.position();
         for (int b = 0; b < (fin ? 6 : 4); b++) {

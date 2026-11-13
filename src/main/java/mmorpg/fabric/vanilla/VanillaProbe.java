@@ -910,6 +910,12 @@ final class VanillaProbe {
                     jobList(k.substring(4)); // 2026-11-12 직업 스킬 (job:<직업> = 다섯 칸 · job:<스킬 id> = 하나)
                     continue;
                 }
+                if (k.startsWith("motion:")) {
+                    // 2026-11-13 뼈 몸 모션 (motion:<무기 종류> — 평타 연타 두 바퀴)
+                    FILM_RUNES.add(k);
+                    FILM_FRAMES.add(MOTION_FRAMES);
+                    continue;
+                }
                 if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(k + "_" + g);
                 else keys.add(k);
             }
@@ -958,6 +964,8 @@ final class VanillaProbe {
             mmorpg.fabric.RpgPlayers.checkLevelUp(p);
             for (String k : new String[]{"str", "dex", "vit", "int"}) mmorpg.fabric.RpgPlayers.setStat(p, k, 150);
             p.getInventory().clearContent();
+            // 2026-11-13 뼈 몸 모션 (VanillaRig): 사진기는 프로브 자신의 화면 — 내 모션 보기를 켬 (기본은 내 화면에 뼈 몸을 그리지 않음)
+            VanillaRig.selfView(p, true);
             Tasks.later(40, () -> film(p, 1));
             return;
         }
@@ -977,6 +985,10 @@ final class VanillaProbe {
         }
         if (FILM_RUNES.get(i).startsWith("job:")) {
             jobFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("motion:")) {
+            motionFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(FILM_RUNES.get(i));
@@ -1181,8 +1193,6 @@ final class VanillaProbe {
             case "dragoon_ult" -> new double[] {13.0, 4.0, 6.0, 0.5};
             // 2026-11-13 드라군 변신 (사람 대신 용 — 꼬리가 둘레 3칸을 휩쓺): 조금 멀리
             case "dragoon_tail" -> new double[] {7.5, 2.6, 1.4, 1.0};
-            // 디바인 썬더의 3D 대망치 (구름 속 13칸 위에서 떨어짐): 멀리서 올려다봄
-            case "paladin_ult" -> new double[] {11.5, 3.2, 4.6, 0.5};
             default -> new double[] {6.0, 2.1, 1.0, 1.0};
         };
     }
@@ -1230,6 +1240,7 @@ final class VanillaProbe {
         String name = "vanilla_job_" + id;
         int[] time = jobTime(j.id(), slot);
         mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
         double[] cam = jobView(id);
         // 모드 직업 영상 (RpgFilm) 과 같은 카메라: 보는 쪽에서 왼쪽 뒤 125° · 몸 앞 2.5칸을 봄
         say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
@@ -1248,6 +1259,61 @@ final class VanillaProbe {
                     Tasks.later(again, () -> log("film " + name + " again " + mmorpg.fabric.job.JobSkills.press(p, slot)));
                 }
                 if (time[1] > 0) Tasks.later(time[0], () -> jobBasic(p, j, foes));
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /** 2026-11-13 뼈 몸 모션 영상의 장 수 (평타 연타 두 바퀴 + 뼈 몸이 남아 있는 모습) */
+    static final int MOTION_FRAMES = 112;
+
+    /**
+     * 2026-11-13 뼈 몸 모션 영상 (VFILM motion:&lt;무기 종류&gt; — films/vanilla_motion_&lt;종류&gt;): 그 무기 (40렙 영웅) 를 들고 과녁 앞에서 평타 연타 (12틱마다 —
+     * 칼은 가로 · 세로 · 회전, 단계가 하나 · 둘이면 셋까지 되풀이) 두 바퀴 (사이 20틱 쉼). 내 모션 보기를 켠 3인칭 화면 (직업 영상과 같은 카메라).
+     * 첫 평타 뒤: 뼈 몸이 떴는지 (check) · 클라이언트의 둘레 엔티티 (뼈가 사람에게 탔는지 — ents)
+     */
+    private static void motionFilm(ServerPlayer p, int step, String type, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        run(server, "tick rate 20");
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
+        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:" + type + "_l40_hero");
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        mmorpg.fabric.RpgHealth.healFull(p);
+        List<net.minecraft.world.entity.LivingEntity> foes = new ArrayList<>();
+        for (double[] t : JOB_TARGETS) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                m.setHealth(m.getMaxHealth());
+                foes.add(m);
+            }
+            SPAWNED.add(e);
+        }
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+        String name = "vanilla_motion_" + type;
+        int per = Math.max(3, mmorpg.core.Motions.combo(type).size());
+        say(p, "cam film 125 6.00 2.10 1.00 2.5 1.00");
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            for (int r = 0; r < 2; r++) {
+                for (int k = 0; k < per; k++) {
+                    int at = 3 + r * (per * 12 + 20) + k * 12;
+                    Tasks.later(at, () -> {
+                        if (p.isRemoved()) return;
+                        var e = nearest(p.position(), foes);
+                        if (e != null) p.attack(e);
+                    });
+                }
+            }
+            Tasks.later(9, () -> {
+                check("rig shown " + type + " (" + VanillaRig.lastMotion + ")", VanillaRig.active(p));
+                say(p, "ents");
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });

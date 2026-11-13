@@ -165,6 +165,12 @@ public final class MotionSystem {
 
     /** 같은 것 — 0.41.0 평타 강화 모습과 함께 (평타만) */
     static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf, MotionNet.Look look) {
+        // 2026-11-13 모드 없는 클라이언트: 뼈 몸이 같은 동작을 함 (VanillaRig — 싸우는 동안)
+        try {
+            mmorpg.fabric.vanilla.VanillaRig.play(sp, motion, yaw);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] rig motion {}", motion, e);
+        }
         SENT.put(sp.getUUID(), motion);
         SENT_LOOK.put(sp.getUUID(), look != null ? look : MotionNet.Look.NONE);
         MotionNet.PlayPayload p = new MotionNet.PlayPayload(sp.getId(), motion, yaw, look != null ? look : MotionNet.Look.NONE);
@@ -186,6 +192,7 @@ public final class MotionSystem {
         if (sp == null || sp.isRemoved() || ticks <= 0) return;
         stops++;
         lastStop = ticks;
+        mmorpg.fabric.vanilla.VanillaRig.stop(sp, ticks);
         MotionNet.StopPayload p = new MotionNet.StopPayload(sp.getId(), ticks);
         for (ServerPlayer o : PlayerLookup.tracking(sp)) {
             if (o != sp && ServerPlayNetworking.canSend(o, MotionNet.StopPayload.TYPE)) ServerPlayNetworking.send(o, p);

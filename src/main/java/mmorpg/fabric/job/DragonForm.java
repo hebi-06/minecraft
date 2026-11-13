@@ -265,6 +265,7 @@ public final class DragonForm {
             sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, INVIS, 0, false, false, false));
         }
         VanillaCosmetics.hideHands(sp, true);
+        mmorpg.fabric.vanilla.VanillaRig.end(sp); // 2026-11-13 뼈 몸 모션 (모드 없는 클라이언트) 은 바로 거둠 — 사람 대신 용
     }
 
     /** 사람이 다시 보임 (이 변신이 건 투명만 지움) */

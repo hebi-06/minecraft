@@ -73,18 +73,37 @@ public final class VanillaPackets {
             return new ClientboundSetHealthPacket(scale(sp, p.getHealth()), p.getFood(), p.getSaturation());
         }
         if (packet instanceof ClientboundSetEntityDataPacket p) {
-            if (p.id() != sp.getId() || !VanillaClients.isVanilla(sp)) return packet;
-            int healthId = LivingEntityAccessor.mmorpg$healthId().id();
+            boolean self = p.id() == sp.getId();
+            if (!self && !VanillaRig.any()) return packet;
             List<SynchedEntityData.DataValue<?>> list = p.packedItems();
-            for (int i = 0; i < list.size(); i++) {
-                SynchedEntityData.DataValue<?> v = list.get(i);
-                if (v.id() == healthId && v.value() instanceof Float f) {
-                    List<SynchedEntityData.DataValue<?>> out = new ArrayList<>(list);
-                    out.set(i, new SynchedEntityData.DataValue<>(healthId, EntityDataSerializers.FLOAT, scale(sp, f)));
-                    return new ClientboundSetEntityDataPacket(p.id(), out);
+            List<SynchedEntityData.DataValue<?>> out = null;
+            // 2026-11-13 뼈 몸 (VanillaRig — 싸우는 동안 모션): 모드 없는 다른 사람 (내 모션 보기면 나도) 에게는 진짜 몸을 투명으로 (공유 상태 0번의 투명 칸)
+            if (VanillaRig.any()) {
+                net.minecraft.world.entity.Entity e = self ? sp : sp.level().getEntity(p.id());
+                if (e != null && VanillaRig.hidesBodyFor(e, sp)) {
+                    for (int i = 0; i < list.size(); i++) {
+                        SynchedEntityData.DataValue<?> v = list.get(i);
+                        if (v.id() == 0 && v.value() instanceof Byte b) {
+                            out = new ArrayList<>(list);
+                            out.set(i, new SynchedEntityData.DataValue<>(0, EntityDataSerializers.BYTE, (byte) (b | 0x20)));
+                            break;
+                        }
+                    }
                 }
             }
-            return packet;
+            if (self && VanillaClients.isVanilla(sp)) {
+                int healthId = LivingEntityAccessor.mmorpg$healthId().id();
+                List<SynchedEntityData.DataValue<?>> cur = out != null ? out : list;
+                for (int i = 0; i < cur.size(); i++) {
+                    SynchedEntityData.DataValue<?> v = cur.get(i);
+                    if (v.id() == healthId && v.value() instanceof Float f) {
+                        if (out == null) out = new ArrayList<>(list);
+                        out.set(i, new SynchedEntityData.DataValue<>(healthId, EntityDataSerializers.FLOAT, scale(sp, f)));
+                        break;
+                    }
+                }
+            }
+            return out == null ? packet : new ClientboundSetEntityDataPacket(p.id(), out);
         }
         if (packet instanceof ClientboundUpdateAttributesPacket p) {
             if (p.getEntityId() != sp.getId() || !VanillaClients.isVanilla(sp)) return packet;

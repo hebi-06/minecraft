@@ -30,6 +30,7 @@ public final class VanillaSupport {
         GachaCinematic.init();
         VanillaHud.init();
         VanillaCosmetics.init();
+        VanillaRig.init();
         VanillaProbe.init();
     }
 

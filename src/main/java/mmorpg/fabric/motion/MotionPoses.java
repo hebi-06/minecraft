@@ -1,4 +1,4 @@
-package mmorpg.fabric.client.motion;
+package mmorpg.fabric.motion;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -431,8 +431,8 @@ public final class MotionPoses {
     }
 
     /** 1인칭에서 세워 든 무기 (칼 · 단검 · 도끼 · 마검 · 창 · 낫 · 망치 · 홀 · 완드) 의 끝 · 날 방향 (화면 공간 +x 오른쪽 · +y 위 · -z 앞 — tools/weapon_models.py UPRIGHT_DIR · edge_forward) */
-    static final Vector3f FP_REST_BLADE = new Vector3f(-0.10004F, 0.97034F, -0.22008F);
-    static final Vector3f FP_REST_EDGE = new Vector3f(-0.35775F, -0.24147F, -0.90206F);
+    public static final Vector3f FP_REST_BLADE = new Vector3f(-0.10004F, 0.97034F, -0.22008F);
+    public static final Vector3f FP_REST_EDGE = new Vector3f(-0.35775F, -0.24147F, -0.90206F);
 
     /**
      * 1인칭 회전: 1인칭 자세의 무기 (끝 FP_REST_BLADE · 날 FP_REST_EDGE) 를 끝 blade · 날 edge 쪽으로 (화면 기준 [r 오른쪽, u 위, f 앞] — edge 가 없으면 앞에 가까운 쪽).

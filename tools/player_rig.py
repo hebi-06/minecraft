@@ -1,0 +1,431 @@
+#!/usr/bin/env python3
+"""2026-11-13 모드 없는 클라이언트의 플레이어 모션 (사용자 "모든 모션을 추천대로 만들고 있어봐" — 1번: 뼈마다 아이템 표시 + 픽셀마다 색, 셰이더 없음).
+
+싸우는 동안 진짜 몸 대신 보이는 뼈 몸 (서버 mmorpg.fabric.vanilla.VanillaRig): 뼈 10 (머리 · 몸통 · 오른팔 위 · 아래 · 왼팔 위 · 아래 · 오른다리 위 · 아래 ·
+왼다리 위 · 아래 — 팔꿈치 · 무릎에서 꺾임) 마다 아이템 모델 하나. 스킨 픽셀 하나 = 면 하나 (흰 그림 · tintindex) — 색은 서버가 그 사람의 스킨에서 읽어
+아이템의 custom_model_data colors 로 넣음 (아이템 정의의 tints = custom_model_data index i). 겉옷 층 (모자 · 재킷 · 소매 · 바지) 은 부풀린 상자 —
+투명한 칸은 색의 알파 0. 팔꿈치 · 무릎의 자른 면은 둘레 줄의 평균 색 한 칸.
+
+좌표: 자바 모델 공간 (ModelPart — 픽셀, +y 아래, 앞 −z) 의 뼈 자리 (pivot) 기준 점 v → 아이템 모델 m = F · v + 8 (F = diag(−1, −1, 1)).
+서버의 표시 변환 = 몸 (Ry(180 − 몸 방향) · S(−1, −1, 1) · S(0.9375) · T(0, −1.501, 0)) · 부위 (T(pivot / 16) · Rzyx) · Rx(180°)
+(F · 아이템 표시의 Y 180° = Rx(180°)).
+면 · 픽셀: 바닐라 ModelPart.Cube 의 면 (DOWN = 위로 보이는 면 …) 과 UV 모서리 (꼭짓점 0 ~ 3 → (u2, v1) (u1, v1) (u1, v2) (u2, v2)) 그대로.
+
+만드는 것 (src/main/resources — 손으로 고치지 않음):
+- assets/rpg/models/item/vrig/<wide|slim>/<뼈>.json · assets/rpg/items/vrig/<wide|slim>/<뼈>.json · assets/rpg/textures/item/vrig/white.png
+- mmorpg/vanilla_rig.json — 서버용 (뼈마다 아이템 · tint 순서의 픽셀 [u, v, 겉옷 층] · 평균 칸)
+- assets/mmorpg/rig/default_skin.png — 스킨이 없을 때 (우리 그림 — 모험가)
+
+  python3 tools/player_rig.py                 # 만들기
+  python3 tools/player_rig.py --preview 폴더   # 확인용 그림 (기본 스킨 · 자세 몇)
+"""
+import argparse
+import json
+import math
+import os
+import sys
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RES = os.path.join(ROOT, "src", "main", "resources")
+OUT_MODELS = os.path.join(RES, "assets", "rpg", "models", "item", "vrig")
+OUT_ITEMS = os.path.join(RES, "assets", "rpg", "items", "vrig")
+OUT_TEX = os.path.join(RES, "assets", "rpg", "textures", "item", "vrig")
+OUT_MANIFEST = os.path.join(RES, "mmorpg", "vanilla_rig.json")
+OUT_SKIN = os.path.join(RES, "assets", "mmorpg", "rig", "default_skin.png")
+
+# 자바 Direction 의 법선 (모델 공간 — +y 아래)
+NORMAL = {"down": (0, -1, 0), "up": (0, 1, 0), "west": (-1, 0, 0), "east": (1, 0, 0), "north": (0, 0, -1), "south": (0, 0, 1)}
+F = np.array([-1.0, -1.0, 1.0])
+# 아이템 모델 면 이름 (모델 공간: +y 위 · +x 동 · −z 북)
+MODEL_FACE = {(0, 1, 0): "up", (0, -1, 0): "down", (1, 0, 0): "east", (-1, 0, 0): "west", (0, 0, -1): "north", (0, 0, 1): "south"}
+
+
+def cube_faces(origin, size, uv, inflate):
+    """바닐라 ModelPart.Cube: 면 이름 → (꼭짓점 넷 — 모델 공간 v (뼈 자리 기준), UV 사각형 (u1, v1, u2, v2))"""
+    x, y, z = origin
+    w, h, d = size
+    u, v = uv
+    x2, y2, z2 = x + w, y + h, z + d
+    x, y, z = x - inflate, y - inflate, z - inflate
+    x2, y2, z2 = x2 + inflate, y2 + inflate, z2 + inflate
+    V = [(x, y, z), (x2, y, z), (x2, y2, z), (x, y2, z), (x, y, z2), (x2, y, z2), (x2, y2, z2), (x, y2, z2)]
+    j, k, l, m, n, o = u, u + d, u + d + w, u + d + w + w, u + d + w + d, u + d + w + d + w
+    p, q, r = v, v + d, v + d + h
+    return {
+        "down": ([V[5], V[4], V[0], V[1]], (k, p, l, q)),
+        "up": ([V[2], V[3], V[7], V[6]], (l, q, m, p)),
+        "west": ([V[0], V[4], V[7], V[3]], (j, q, k, r)),
+        "north": ([V[1], V[0], V[3], V[2]], (k, q, l, r)),
+        "east": ([V[5], V[1], V[2], V[6]], (l, q, n, r)),
+        "south": ([V[4], V[5], V[6], V[7]], (n, q, o, r)),
+    }
+
+
+def texels(face):
+    """면의 텍셀마다 (u, v (텍스처 픽셀), 네 꼭짓점 — 모델 공간 v) — 꼭짓점 0 ~ 3 의 UV = (u2, v1) (u1, v1) (u1, v2) (u2, v2)"""
+    verts, (u1, v1, u2, v2) = face
+    P0, P1, P2 = (np.array(verts[i], float) for i in (0, 1, 2))
+    du = (P0 - P1) / (u2 - u1) if u2 != u1 else np.zeros(3)
+    dv = (P2 - P1) / (v2 - v1) if v2 != v1 else np.zeros(3)
+    lo_u, hi_u = min(u1, u2), max(u1, u2)
+    lo_v, hi_v = min(v1, v2), max(v1, v2)
+    out = []
+    for tv in range(int(lo_v), int(hi_v)):
+        for tu in range(int(lo_u), int(hi_u)):
+            a = P1 + (tu - u1) * du + (tv - v1) * dv
+            b = P1 + (tu + 1 - u1) * du + (tv + 1 - v1) * dv
+            out.append((tu, tv, a, b))
+    return out
+
+
+def model_box(a, b):
+    """모델 공간 v 의 두 모서리 → 아이템 모델 좌표 (from, to)"""
+    ma = F * a + 8
+    mb = F * b + 8
+    lo = np.minimum(ma, mb)
+    hi = np.maximum(ma, mb)
+    return [round(float(c), 4) for c in lo], [round(float(c), 4) for c in hi]
+
+
+class Bone:
+    def __init__(self, name):
+        self.name = name
+        self.elements = []
+        self.src = []
+
+    def pixel(self, a, b, face_name, u, v, layer):
+        frm, to = model_box(a, b)
+        n = tuple(int(c) for c in F * np.array(NORMAL[face_name]))
+        self.elements.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [0, 0, 16, 16], "texture": "#0", "tintindex": len(self.src)}}})
+        self.src.append([int(u), int(v), layer])
+
+    def flat(self, a, b, face_name, avg):
+        """자른 면 (한 칸 — 둘레 줄의 평균 색)"""
+        frm, to = model_box(a, b)
+        n = tuple(int(c) for c in F * np.array(NORMAL[face_name]))
+        self.elements.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [0, 0, 16, 16], "texture": "#0", "tintindex": len(self.src)}}})
+        self.src.append({"avg": [[int(u), int(v)] for u, v in avg]})
+
+
+def add_box(bone, origin, size, uv, inflate, layer, rows=None, skip=()):
+    """상자 하나의 면 픽셀 (rows = 옆면의 위에서부터 줄 [from, to) — 팔다리를 위 · 아래로 자름, skip = 뺄 면)"""
+    faces = cube_faces(origin, size, uv, inflate)
+    w, h, d = size
+    for name, face in faces.items():
+        if name in skip:
+            continue
+        for tu, tv, a, b in texels(face):
+            if rows is not None and name in ("west", "north", "east", "south"):
+                row = tv - (uv[1] + d)
+                if not (rows[0] <= row < rows[1]):
+                    continue
+            bone.pixel(a, b, name, tu, tv, layer)
+
+
+def side_row(uv, size, row):
+    """옆면 넷의 그 줄 픽셀 (평균 색 — 자른 면)"""
+    u, v = uv
+    w, h, d = size
+    y = v + d + row
+    return [(x, y) for x in range(u, u + 2 * d + 2 * w)]
+
+
+def limb(prefix, origin, size, uv, ov, out):
+    """팔 · 다리 (높이 12): 위 (0 ~ 6 줄 · 윗면 · 아래 자른 면) · 아래 (6 ~ 12 줄 · 아랫면 · 위 자른 면), 겉옷 층 (ov — 부풀림 0.25) 도 같이 자름"""
+    x, y, z = origin
+    w, h, d = size
+    half = h / 2
+    up = Bone(prefix + "_u")
+    add_box(up, origin, size, uv, 0, 0, rows=(0, half), skip=("up",))
+    up.flat((x, y + half, z), (x + w, y + half, z + d), "up", side_row(uv, size, half - 1))
+    add_box(up, origin, size, ov, 0.25, 1, rows=(0, half), skip=("up",))
+    lo = Bone(prefix + "_l")
+    add_box(lo, origin, size, uv, 0, 0, rows=(half, h), skip=("down",))
+    lo.flat((x, y + half, z), (x + w, y + half, z + d), "down", side_row(uv, size, half))
+    add_box(lo, origin, size, ov, 0.25, 1, rows=(half, h), skip=("down",))
+    out += [up, lo]
+
+
+def build(slim):
+    bones = []
+    head = Bone("head")
+    add_box(head, (-4, -8, -4), (8, 8, 8), (0, 0), 0, 0)
+    add_box(head, (-4, -8, -4), (8, 8, 8), (32, 0), 0.5, 1)
+    body = Bone("body")
+    add_box(body, (-4, 0, -2), (8, 12, 4), (16, 16), 0, 0)
+    add_box(body, (-4, 0, -2), (8, 12, 4), (16, 32), 0.25, 1)
+    bones += [head, body]
+    aw = 3 if slim else 4
+    limb("rarm", (-2 if slim else -3, -2, -2), (aw, 12, 4), (40, 16), (40, 32), bones)
+    limb("larm", (-1, -2, -2), (aw, 12, 4), (32, 48), (48, 48), bones)
+    limb("rleg", (-2, 0, -2), (4, 12, 4), (0, 16), (0, 32), bones)
+    limb("lleg", (-2, 0, -2), (4, 12, 4), (16, 48), (0, 48), bones)
+    return bones
+
+
+# 뼈 자리 (자바 모델 — PlayerModel / HumanoidModel) · 팔꿈치 · 무릎 (뼈 자리 기준 — 모드 MotionRender 의 굽힘 자리)
+PIVOTS = {
+    "wide": {"head": [0, 0, 0], "body": [0, 0, 0], "rarm": [-5, 2, 0], "larm": [5, 2, 0], "rleg": [-1.9, 12, 0], "lleg": [1.9, 12, 0]},
+    "slim": {"head": [0, 0, 0], "body": [0, 0, 0], "rarm": [-5, 2.5, 0], "larm": [5, 2.5, 0], "rleg": [-1.9, 12, 0], "lleg": [1.9, 12, 0]},
+}
+JOINTS = {"rarm": [-1, 4, 0], "larm": [1, 4, 0], "rleg": [0, 6, 0], "lleg": [0, 6, 0]}
+
+
+def default_skin():
+    """스킨이 없을 때의 모험가 (우리 그림): 갈색 머리 · 남색 튜닉 · 가죽 띠 · 회색 바지 · 갈색 장화"""
+    im = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    px = im.load()
+    SKIN, SKIN_D = (205, 152, 112, 255), (176, 124, 88, 255)
+    HAIR, HAIR_D = (88, 56, 34, 255), (64, 40, 24, 255)
+    TUNIC, TUNIC_D = (54, 84, 140, 255), (40, 62, 108, 255)
+    BELT, BUCKLE = (96, 62, 36, 255), (212, 172, 72, 255)
+    PANTS, PANTS_D = (70, 70, 82, 255), (52, 52, 62, 255)
+    BOOT = (78, 50, 30, 255)
+
+    def rect(x0, y0, w, h, c):
+        for yy in range(y0, y0 + h):
+            for xx in range(x0, x0 + w):
+                px[xx, yy] = c
+
+    def box(u, v, w, h, d, fill):
+        """상자 펼침 전체를 fill(face, x, y) 로 (face: up · down · right · front · left · back)"""
+        regions = {"up": (u + d, v, w, d), "down": (u + d + w, v, w, d), "right": (u, v + d, d, h), "front": (u + d, v + d, w, h),
+                   "left": (u + d + w, v + d, d, h), "back": (u + 2 * d + w, v + d, w, h)}
+        for f, (x0, y0, ww, hh) in regions.items():
+            for yy in range(hh):
+                for xx in range(ww):
+                    px[x0 + xx, y0 + yy] = fill(f, xx, yy, ww, hh)
+
+    def head(f, x, y, w, h):
+        if f in ("up",):
+            return HAIR if (x + y) % 3 else HAIR_D
+        if f == "down":
+            return SKIN_D
+        if f == "back":
+            return HAIR if y < 7 or (x + y) % 4 else HAIR_D
+        if f in ("right", "left"):
+            return HAIR if y < 3 or (y < 5 and (x < 2 if f == "right" else x > 5)) else SKIN
+        # 앞: 앞머리 두 줄 · 눈 (흰자 · 눈동자) · 입
+        if y < 2 or (y == 2 and x in (0, 1, 6, 7)):
+            return HAIR
+        if y == 4 and x in (1, 2, 5, 6):
+            return (245, 245, 240, 255) if x in (1, 6) else (52, 72, 120, 255)
+        if y == 6 and x in (3, 4):
+            return (150, 92, 76, 255)
+        return SKIN
+
+    box(0, 0, 8, 8, 8, head)
+
+    def body(f, x, y, w, h):
+        if f in ("up", "down"):
+            return TUNIC_D
+        if f in ("front", "back") and y == 8:
+            return BUCKLE if f == "front" and x in (3, 4) else BELT
+        if f in ("right", "left") and y == 8:
+            return BELT
+        if f == "front" and y < 2 and 2 <= x <= 5:
+            return SKIN if y == 0 else TUNIC_D
+        return TUNIC if (x * 7 + y * 3) % 11 else TUNIC_D
+
+    box(16, 16, 8, 12, 4, body)
+
+    def arm(f, x, y, w, h):
+        if f == "down":
+            return SKIN_D
+        if f == "up":
+            return TUNIC_D
+        if y < 5:
+            return TUNIC if (x + y) % 5 else TUNIC_D
+        if y == 5:
+            return TUNIC_D
+        return SKIN if y < 11 else SKIN_D
+
+    box(40, 16, 4, 12, 4, arm)
+    box(32, 48, 4, 12, 4, arm)
+
+    def leg(f, x, y, w, h):
+        if f == "up":
+            return PANTS_D
+        if f == "down":
+            return BOOT
+        if y >= 9:
+            return BOOT
+        return PANTS if (x + 2 * y) % 7 else PANTS_D
+
+    box(0, 16, 4, 12, 4, leg)
+    box(16, 48, 4, 12, 4, leg)
+    return im
+
+
+def write(args):
+    os.makedirs(OUT_TEX, exist_ok=True)
+    Image.new("RGBA", (16, 16), (255, 255, 255, 255)).save(os.path.join(OUT_TEX, "white.png"))
+    manifest = {"_comment": "tools/player_rig.py 가 만듦 — 뼈마다 아이템 (rpg:vrig/<형>/<뼈>) · tint 순서의 픽셀 [u, v, 겉옷 층 (1 = 알파 그대로)] 또는 평균 칸 {avg}",
+                "pivots": PIVOTS, "joints": JOINTS, "variants": {}}
+    total = 0
+    for variant in ("wide", "slim"):
+        bones = build(variant == "slim")
+        vb = []
+        for b in bones:
+            mdir = os.path.join(OUT_MODELS, variant)
+            idir = os.path.join(OUT_ITEMS, variant)
+            os.makedirs(mdir, exist_ok=True)
+            os.makedirs(idir, exist_ok=True)
+            model = {"textures": {"0": "rpg:item/vrig/white", "particle": "rpg:item/vrig/white"}, "elements": b.elements}
+            with open(os.path.join(mdir, b.name + ".json"), "w", encoding="utf-8") as fp:
+                json.dump(model, fp, separators=(",", ":"))
+            tints = [{"type": "minecraft:custom_model_data", "index": i, "default": -1} for i in range(len(b.src))]
+            item = {"model": {"type": "minecraft:model", "model": "rpg:item/vrig/%s/%s" % (variant, b.name), "tints": tints}}
+            with open(os.path.join(idir, b.name + ".json"), "w", encoding="utf-8") as fp:
+                json.dump(item, fp, separators=(",", ":"))
+            vb.append({"name": b.name, "item": "vrig/%s/%s" % (variant, b.name), "src": b.src})
+            total += len(b.src)
+        manifest["variants"][variant] = {"bones": vb}
+    os.makedirs(os.path.dirname(OUT_MANIFEST), exist_ok=True)
+    with open(OUT_MANIFEST, "w", encoding="utf-8") as fp:
+        json.dump(manifest, fp, ensure_ascii=False, separators=(",", ":"))
+    os.makedirs(os.path.dirname(OUT_SKIN), exist_ok=True)
+    default_skin().save(OUT_SKIN)
+    size = 0
+    for d in (OUT_MODELS, OUT_ITEMS):
+        for r, _, fs in os.walk(d):
+            size += sum(os.path.getsize(os.path.join(r, f)) for f in fs)
+    print("rig: faces %d (wide + slim), models + items %.0f KB, manifest %.0f KB" % (total, size / 1024, os.path.getsize(OUT_MANIFEST) / 1024))
+
+
+# ------------------------------------------------------------------ 미리보기 (서버와 같은 변환으로 그림 — 면 · UV 확인)
+
+def rot_zyx(x, y, z):
+    cx, sx, cy, sy, cz, sz = math.cos(x), math.sin(x), math.cos(y), math.sin(y), math.cos(z), math.sin(z)
+    rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
+    ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+    rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+    return rz @ ry @ rx
+
+
+def preview(out_dir, skin_path=None):
+    skin = Image.open(skin_path).convert("RGBA") if skin_path else default_skin()
+    spx = skin.load()
+    os.makedirs(out_dir, exist_ok=True)
+    poses = {
+        "rest": {},
+        "swing": {"rarm": (-2.2, 0.0, 0.3), "rarm_bend": -0.9, "larm": (0.4, 0, -0.2), "head": (0.2, 0.3, 0), "rleg": (0.4, 0, 0), "lleg": (-0.4, 0, 0),
+                  "lleg_bend": 0.6},
+    }
+    for variant in ("wide", "slim"):
+        bones = {b.name: b for b in build(variant == "slim")}
+        for pname, pose in poses.items():
+            quads = []
+            for name, b in bones.items():
+                part = name.split("_")[0]
+                piv = np.array(PIVOTS[variant][part], float)
+                rot = pose.get(part, (0, 0, 0))
+                R = rot_zyx(rot[0], rot[1], rot[2])
+                bend = pose.get(part + "_bend", 0.0) if name.endswith("_l") else 0.0
+                jt = np.array(JOINTS.get(part, [0, 0, 0]), float)
+                Rb = rot_zyx(bend, 0, 0)
+                for e, s in zip(b.elements, b.src):
+                    lo = np.array(e["from"])
+                    hi = np.array(e["to"])
+                    # 아이템 모델 → 모델 공간 v (뼈 자리 기준)
+                    a = (lo - 8) / F
+                    c = (hi - 8) / F
+                    corners = []
+                    face = list(e["faces"].keys())[0]
+                    pts = box_face_points(a, c, face)
+                    for p in pts:
+                        q = p.copy()
+                        if bend:
+                            q = Rb @ (q - jt) + jt
+                        q = R @ q + piv
+                        # 몸 (S(−1, −1, 1) · 0.9375 · 1.501) → 세상 (위 = +y, 앞 = −z → 보는 쪽 +z 로 돌림)
+                        wv = np.array([-q[0], -q[1], q[2]]) / 16 * 0.9375 + np.array([0, 1.501 * 0.9375, 0])
+                        corners.append(np.array([-wv[0], wv[1], -wv[2]]))
+                    if isinstance(s, dict):
+                        cs = [spx[u, v] for u, v in s["avg"]]
+                        col = tuple(int(sum(c[i] for c in cs) / len(cs)) for i in range(3)) + (255,)
+                    else:
+                        col = spx[s[0], s[1]]
+                        if s[2] == 0:
+                            col = col[:3] + (255,)
+                    if col[3] == 0:
+                        continue
+                    quads.append((np.array(corners), col))
+            sheet = []
+            for dname, dv in (("front", (0.0, 0.25, 1.0)), ("back", (0.2, 0.3, -1.0)), ("side", (1.0, 0.2, 0.3))):
+                sheet.append(render(quads, np.array(dv), label="%s %s %s" % (variant, pname, dname)))
+            im = Image.new("RGB", (sum(s.size[0] for s in sheet), sheet[0].size[1]))
+            x = 0
+            for s in sheet:
+                im.paste(s, (x, 0))
+                x += s.size[0]
+            path = os.path.join(out_dir, "rig_%s_%s.png" % (variant, pname))
+            im.save(path)
+            print(path)
+
+
+def box_face_points(a, c, face):
+    """아이템 모델의 면 (한쪽 두께 0) → 모델 공간 v 의 네 꼭짓점"""
+    lo = np.minimum(a, c)
+    hi = np.maximum(a, c)
+    xs, ys, zs = (lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])
+    pts = []
+    for x in xs:
+        for y in ys:
+            for z in zs:
+                pts.append(np.array([x, y, z]))
+    # 두께 0 인 축을 뺀 네 점 (중복 제거) — 그리기 순서
+    uniq = []
+    for p in pts:
+        if not any(np.allclose(p, q) for q in uniq):
+            uniq.append(p)
+    if len(uniq) != 4:
+        return uniq[:4]
+    c0 = np.mean(uniq, axis=0)
+    n = np.cross(uniq[1] - uniq[0], uniq[2] - uniq[0])
+    ax = np.argmax(np.abs(n))
+    other = [i for i in range(3) if i != ax]
+    uniq.sort(key=lambda p: math.atan2(p[other[1]] - c0[other[1]], p[other[0]] - c0[other[0]]))
+    return uniq
+
+
+def render(quads, view, W=360, H=480, label=""):
+    view = view / np.linalg.norm(view)
+    up = np.array([0.0, 1.0, 0.0])
+    right = np.cross(up, view)
+    right /= np.linalg.norm(right)
+    up2 = np.cross(view, right)
+    center = np.array([0, 0.95, 0])
+    scale = 220
+    im = Image.new("RGB", (W, H), (150, 186, 232))
+    d = ImageDraw.Draw(im)
+    items = []
+    for corners, col in quads:
+        cen = corners.mean(axis=0)
+        n = np.cross(corners[1] - corners[0], corners[2] - corners[0])
+        depth = float(np.dot(cen - center, view))
+        pts = [(W / 2 + float(np.dot(p - center, right)) * scale, H / 2 - float(np.dot(p - center, up2)) * scale) for p in corners]
+        items.append((depth, pts, col))
+    items.sort(key=lambda t: t[0])
+    for _, pts, col in items:
+        d.polygon(pts, fill=tuple(col[:3]))
+    d.text((6, 4), label, fill=(20, 20, 30))
+    return im
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--preview", default=None)
+    ap.add_argument("--skin", default=None)
+    a = ap.parse_args()
+    if a.preview:
+        preview(a.preview, a.skin)
+        return
+    write(a)
+
+
+if __name__ == "__main__":
+    main()

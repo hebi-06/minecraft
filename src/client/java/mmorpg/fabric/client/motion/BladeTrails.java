@@ -1,5 +1,7 @@
 package mmorpg.fabric.client.motion;
 
+import mmorpg.fabric.motion.MotionPoses;
+import mmorpg.fabric.motion.Pose;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.ArrayList;

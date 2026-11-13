@@ -341,6 +341,8 @@ final class VanillaPack {
     }
 
     private static final String[] HANDS = {"firstperson_righthand", "firstperson_lefthand", "thirdperson_righthand", "thirdperson_lefthand"};
+    private static final String[] FIRST_HANDS = {"firstperson_righthand", "firstperson_lefthand"};
+    private static final String[] THIRD_HANDS = {"thirdperson_righthand", "thirdperson_lefthand"};
 
     /**
      * 2026-11-08 꾸미기 (VanillaCosmetics): RPG 무기 · 투구 아이템 정의를 custom_model_data 글자 (서버가 그 사람의 장식으로 넣음) 로 감쌈 —
@@ -383,6 +385,14 @@ final class VanillaPack {
                 com.google.gson.JsonObject none = new com.google.gson.JsonObject();
                 none.addProperty("type", "minecraft:empty");
                 cases.add(when("hide", context(HANDS, none, original)));
+                // 2026-11-13 뼈 몸 · 내 모션 보기 (VanillaCosmetics.hideOwnHands): "hide3p" 면 3인칭 손에서만 빈 그림 (뼈 몸이 무기를 듦 — 1인칭은 그대로,
+                // "hide3p:<스킨>" 이면 1인칭은 그 스킨)
+                cases.add(when("hide3p", context(THIRD_HANDS, none, original)));
+                if (skins != null) {
+                    for (String[] s : skins) {
+                        cases.add(when("hide3p:" + s[0], context(THIRD_HANDS, none, context(FIRST_HANDS, model(Mmorpg.NS + ":item/model/" + s[1]), original))));
+                    }
+                }
                 weapons++;
             } else if (item instanceof mmorpg.fabric.gear.RpgArmorItem) {
                 net.minecraft.world.item.equipment.Equippable eq = item.components().get(net.minecraft.core.component.DataComponents.EQUIPPABLE);

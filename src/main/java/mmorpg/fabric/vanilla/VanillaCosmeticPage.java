@@ -99,6 +99,19 @@ final class VanillaCosmeticPage {
                 VanillaMenu.MenuGui.left(() -> act(g, "clear", tab, "")));
         g.set(5, 6, VanillaGui.blank("§b미리보기", List.of("§7창을 닫고 내 앞에 지금 모습을 15초 동안 세움",
                 "§8(칭호 · 등 장식 · 오라는 내 화면에서 내 몸에는 그리지 않음 — 다른 사람에게 보임)")), VanillaMenu.MenuGui.left(() -> g.closeThen(VanillaCosmetics::preview)));
+        // 2026-11-13 내 모션 보기 (VanillaRig — 싸우는 동안 뼈 몸 모션을 내 화면 (3인칭) 에도, 저장됨 · 기본 끔): 켜면 금 ring
+        boolean self = VanillaRig.selfView(sp);
+        if (self) t.glyph(VanillaGui.cellX(7), 5, "ring", WORN);
+        g.set(5, 7, VanillaGui.blank((self ? "§a" : "§f") + "내 모션 보기", List.of(
+                "§7싸우는 동안의 몸 동작 (평타 · 스킬 · 룬) 을",
+                "§7내 화면 (3인칭 F5) 에도 그림",
+                "§8다른 사람에게는 켜고 끄는 것과 상관없이 보임",
+                "",
+                self ? "§a켜짐 §7— 누르면 끄기" : "§7꺼짐 §e— 누르면 켜기")), VanillaMenu.MenuGui.left(() -> {
+                    VanillaRig.selfView(sp, !VanillaRig.selfView(sp));
+                    SkillFx.playFor(sp, "ui.button.click", 1.6, 0.3);
+                    g.refresh();
+                }));
         g.set(5, 8, VanillaGui.blank("§b꾸미기", List.of(
                 "§f누르기 §7입기 · 벗기",
                 "§f두 번 누르기 §7사기 (골드 — 사면 바로 입음)",

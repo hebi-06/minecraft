@@ -1,5 +1,7 @@
 package mmorpg.fabric.client.motion;
 
+import mmorpg.fabric.motion.MotionPoses;
+import mmorpg.fabric.motion.Pose;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

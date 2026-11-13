@@ -1,4 +1,4 @@
-package mmorpg.fabric.client.motion;
+package mmorpg.fabric.motion;
 
 import org.joml.Quaternionf;
 
@@ -101,7 +101,7 @@ public final class Pose {
     }
 
     /** 왼손잡이 (주 손 = 왼손): 좌우를 뒤집음 */
-    void mirror() {
+    public void mirror() {
         Quaternionf r = new Quaternionf(ra);
         ra.set(-la.x, la.y, la.z, -la.w);
         la.set(-r.x, r.y, r.z, -r.w);
