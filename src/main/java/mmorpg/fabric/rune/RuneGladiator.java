@@ -554,6 +554,10 @@ final class RuneGladiator {
         Quaternionf q = PairKit.facing(f);
         PairKit.Rig m = mace(level, aim, end + 4, V.add(hover, V.UP, 6.0), q, 0.4);
         RuneKit.later(Math.max(2, slamAt - 18), () -> m.pose(hover, new Quaternionf(q).mul(PairKit.about(new Vec3(1, 0, 0), -24)), 1.6, 12));
+        // 2026-11-13 철퇴가 땅에 닿기 (crushAt) 8틱 앞에 단계 동작 (rn_war_chains_slam — 두 주먹을 머리 위로 모았다가 철퇴와 함께 내리침: 8 이 닿는 때)
+        RuneKit.later(crushAt - 8, () -> {
+            if (RuneKit.sameLife(sp, life)) mmorpg.fabric.motion.MotionSystem.skill(sp, "rune:warChains:slam");
+        });
         RuneKit.later(slamAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             m.pose(new Vec3(0, -0.4, 0), q, 1.6, 4);
