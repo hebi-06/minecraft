@@ -396,7 +396,7 @@ final class RuneStorm {
         int stunTicks = (int) k.num("stun");
         // 2026-11-13 3D 뇌신의 창 (thunder_spear — 2D 창 그림 대신): 오른손 위에서 커지며 겨눔 → 던짐 → 꽂힘 (spear3d)
         double wk0 = k.num("width") / 1.6;
-        Spear3d sp3 = new Spear3d(sp, (int) charge, 2.8 * wk0, glow, core);
+        Spear3d sp3 = new Spear3d(sp, (int) charge, 3.6 * wk0, glow, core); // 2026-11-13 영상: 2.8칸은 가늘고 작아 보임 → 3.6칸
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {

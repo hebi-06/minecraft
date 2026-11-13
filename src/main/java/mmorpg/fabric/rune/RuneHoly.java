@@ -408,14 +408,15 @@ final class RuneHoly {
     private static void wings3d(ServerPlayer sp, int total, int gap, int alive, double[] wingCol, double[] glow) {
         ServerLevel level = sp.level();
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), total + 16);
-        double ws = RuneProps.scaleFor(2.5, RuneProps.ANGEL_WING_SPAN);
+        double ws = RuneProps.scaleFor(3.2, RuneProps.ANGEL_WING_SPAN); // 2026-11-13 영상: 2.5칸은 몸만 해 보임 → 3.2칸
+        double[] featherCol = {1.0, 0.84, 0.42}; // 짙은 금빛 (날개 빛 wingCol 은 희게 보임)
         double hs = RuneProps.scaleFor(0.8, RuneProps.HALO_D);
         Vec3 c0 = sp.position();
         Vec3 f0 = Kit.facingOf(sp);
         mmorpg.fabric.vfx.Vfx.Group[] w = new mmorpg.fabric.vfx.Vfx.Group[2];
         for (int i = 0; i < 2; i++) {
             WingPose p = wingPose(c0, f0, i == 0 ? 1 : -1, 80, -40);
-            w[i] = RuneProps.shape(fx, RuneProps.ANGEL_WING, p.at(), p.rot(), ws * 0.25, wingCol, RuneKit.WHITE);
+            w[i] = RuneProps.shape(fx, RuneProps.ANGEL_WING, p.at(), p.rot(), ws * 0.25, featherCol, new double[] {1.0, 0.96, 0.8});
         }
         mmorpg.fabric.vfx.Vfx.Prop halo = RuneProps.prop(fx, RuneProps.HALO, V.up(c0, 2.3), new double[] {8, 8, 8}, haloRot(f0, 0), hs * 0.15, glow,
                 RuneKit.WHITE);
@@ -459,8 +460,8 @@ final class RuneHoly {
                 // 날갯짓 (gap 틱마다 — 회복 · 피해 틱에 아래 끝): 위 34° ~ 아래 −14°, 내려칠 때 조금 앞으로
                 double ph = 2 * Math.PI * ((t % g) / (double) g);
                 double cw = Math.cos(ph);
-                flap = 10 - 24 * cw;
-                sweep = 16 + 7 * cw;
+                flap = 18 - 22 * cw; // 들어 올린 채 (옆에서 보아도 어깨 위로 솟음)
+                sweep = 12 + 7 * cw;
                 k = t < 10 ? 1.06 - 0.06 * (t - 6) / 4.0 : 1.0;
             }
             for (int i = 0; i < 2; i++) {
