@@ -1865,9 +1865,248 @@ def thunder_spear():
     return m
 
 
+def dark_steel():
+    return Mat(bevel("#2C2F38", "#4F5462", "#15171C", speck=0.05))
+
+
+def shuriken():
+    """2026-11-13 독 표창 (암살자 희귀 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 가운데 (8, 8, 8) · 납작한 네 끝 별 (XZ 면 — 끝에서 끝 24) —
+    끝마다 ±22.5° 로 모인 두 짙은 강철 날개 (끝이 뾰족 · 끝 사이는 오목) · 바깥 가장자리의 빛나는 날 (계열 색 — 독빛) · 가운데 빛 홈 ·
+    가운데 금 판 (45°) · 보석"""
+    m = BModel("shuriken", "독 표창 (2026-11-13 — 뾰족한 네 끝 · 빛나는 날 · 빛 홈 · 금 판 · 보석, 계열 색은 서버가 물들임)", d=3.0)
+    weapon_mats(m)
+    m.mat("dark", dark_steel())
+    R, L = 12.0, 8.5
+
+    def local_box(mat, k, r0, r1, w0, w1, y0, y1, ang=0.0):
+        """끝 k (+X · +Z · −X · −Z) 의 (r 바깥 · w 옆) 상자 — ang ≠ 0 이면 끝 (R, 0) 을 축으로 Y 회전 (+ = 밑동이 +w 쪽으로)"""
+        c, sn = ((1, 0), (0, 1), (-1, 0), (0, -1))[k]
+        pts = [(8 + c * r - sn * w, 8 + sn * r + c * w) for r in (r0, r1) for w in (w0, w1)]
+        xs = [q[0] for q in pts]
+        zs = [q[1] for q in pts]
+        rot = ("y", ang, (8 + c * R, (y0 + y1) / 2, 8 + sn * R)) if ang else None
+        m.box(mat, (min(xs), y0, min(zs)), (max(xs), y1, max(zs)), rot=rot)
+
+    # 가운데 판 (네모 둘 — 팔각 별) · 금 판 · 보석
+    m.box("dark", (5.0, 7.5, 5.0), (11.0, 8.5, 11.0))
+    m.box("dark", (5.0, 7.5, 5.0), (11.0, 8.5, 11.0), rot=("y", 45, (8, 8, 8)))
+    m.box("gold", (6.4, 7.3, 6.4), (9.6, 8.7, 9.6), rot=("y", 45, (8, 8, 8)))
+    m.box("gem", (7.2, 7.1, 7.2), (8.8, 8.9, 8.8))
+    for k in range(4):
+        # 날개 둘 (바깥 가장자리가 끝을 지남) · 바깥의 빛나는 날
+        # (두께 t 날개는 끝에서 t 만큼 물러나야 반대편 바깥 가장자리 밖으로 삐지지 않음 — tan 45° = 1)
+        local_box("dark", k, R - L, R - 1.5, -1.5, 0.0, 7.6, 8.4, 22.5)
+        local_box("dark", k, R - L, R - 1.5, 0.0, 1.5, 7.6, 8.4, -22.5)
+        local_box("dark", k, R - 2.0, R - 0.5, -0.5, 0.0, 7.6, 8.4, 22.5)
+        local_box("dark", k, R - 2.0, R - 0.5, 0.0, 0.5, 7.6, 8.4, -22.5)
+        local_box("blade", k, R - L + 0.3, R, 0.0, 0.45, 7.7, 8.3, 22.5)
+        local_box("blade", k, R - L + 0.3, R, -0.45, 0.0, 7.7, 8.3, -22.5)
+        # 날개 사이 메움 (바깥 가장자리 안쪽) · 빛 홈
+        local_box("dark", k, 3.0, 9.0, -1.2, 1.2, 7.65, 8.35)
+        local_box("dark", k, 3.0, 6.5, -2.0, 2.0, 7.65, 8.35)
+        local_box("fuller", k, 4.6, 9.4, -0.3, 0.3, 7.55, 8.45)
+    return m
+
+
+def smoke_bomb():
+    """2026-11-13 연막탄 (암살자 고귀): 가운데 (8, 8, 8) · 지름 약 12 — 검은 쇠 공 (둥근 계단 공) · 금 띠 (팔각) · 위의 금 마개 · 심지 · 불붙은 끝 (빛 — 계열 색)"""
+    m = BModel("smoke_bomb", "연막탄 (2026-11-13 — 검은 쇠 공 · 금 띠 · 마개 · 불붙은 심지, 계열 색은 서버가 물들임)", d=2.0)
+    weapon_mats(m)
+    m.mat("iron", Mat(bevel("#25272F", "#3F4350", "#121318", speck=0.08)))
+    round_ball(m, "iron", (8, 8, 8), 6.0)
+    m.box("gold", (2.3, 7.3, 2.3), (13.7, 8.7, 13.7))
+    m.box("gold", (2.3, 7.3, 2.3), (13.7, 8.7, 13.7), rot=("y", 45, (8, 8, 8)))
+    m.box("gold", (6.4, 13.4, 6.4), (9.6, 15.0, 9.6))
+    m.box("grip", (7.5, 14.8, 7.5), (8.5, 18.2, 8.5), rot=("z", 22.5, (8, 15.0, 8)))
+    m.box("gem", (8.4, 17.6, 7.1), (10.2, 19.4, 8.9))
+    return m
+
+
+def spike_ball():
+    """2026-11-13 가시 철구 (투사 고귀 — 사슬 회전의 철퇴 머리): 가운데 (8, 8, 8) · 공 지름 11 · 가시 끝까지 지름 약 22 — 짙은 쇠 공 · 가시 열여덟
+    (축 여섯 + 모서리 쪽 열둘 — 45° 돌림, 밑동 굵고 끝 가늚 · 끝은 밝은 강철) · 적도의 빛 띠 (팔각 — 계열 색) · 위의 금 고리 (사슬을 매는 곳)"""
+    m = BModel("spike_ball", "가시 철구 (2026-11-13 — 쇠 공 · 가시 18 · 빛 띠 · 금 고리, 계열 색은 서버가 물들임)", d=2.0)
+    weapon_mats(m)
+    m.mat("iron", Mat(bevel("#25272F", "#3F4350", "#121318", speck=0.08)))
+    m.mat("dark", dark_steel())
+    c = (8.0, 8.0, 8.0)
+    R = 5.5
+    round_ball(m, "iron", c, R)
+    # 적도의 빛 띠 (팔각)
+    m.box("blade", (2.9, 7.4, 2.9), (13.1, 8.6, 13.1))
+    m.box("blade", (2.9, 7.4, 2.9), (13.1, 8.6, 13.1), rot=("y", 45, c))
+
+    def spike_up(rot=None, down=False):
+        """+Y (down 이면 −Y) 가시 하나 — rot 은 가운데를 축으로 (축, 각)"""
+        sg = -1 if down else 1
+        parts = (("dark", 1.0, R - 1.2, R + 1.6), ("steel", 0.62, R + 1.4, R + 3.6), ("edge", 0.32, R + 3.4, R + 5.0))
+        for mat, h, a, b in parts:
+            y0, y1 = sorted((c[1] + sg * a, c[1] + sg * b))
+            m.box(mat, (c[0] - h, y0, c[2] - h), (c[0] + h, y1, c[2] + h), rot=(rot[0], rot[1], c) if rot else None)
+
+    def spike_x(rot=None, neg=False):
+        sg = -1 if neg else 1
+        parts = (("dark", 1.0, R - 1.2, R + 1.6), ("steel", 0.62, R + 1.4, R + 3.6), ("edge", 0.32, R + 3.4, R + 5.0))
+        for mat, h, a, b in parts:
+            x0, x1 = sorted((c[0] + sg * a, c[0] + sg * b))
+            m.box(mat, (x0, c[1] - h, c[2] - h), (x1, c[1] + h, c[2] + h), rot=(rot[0], rot[1], c) if rot else None)
+
+    def spike_z(neg=False):
+        sg = -1 if neg else 1
+        parts = (("dark", 1.0, R - 1.2, R + 1.6), ("steel", 0.62, R + 1.4, R + 3.6), ("edge", 0.32, R + 3.4, R + 5.0))
+        for mat, h, a, b in parts:
+            z0, z1 = sorted((c[2] + sg * a, c[2] + sg * b))
+            m.box(mat, (c[0] - h, c[1] - h, z0), (c[0] + h, c[1] + h, z1))
+
+    # 축 여섯 (위는 금 고리가 있어 빼고 다섯)
+    spike_up(down=True)
+    spike_x()
+    spike_x(neg=True)
+    spike_z()
+    spike_z(neg=True)
+    # 모서리 쪽 열둘: (±1, ±1, 0) · (0, ±1, ±1) · (±1, 0, ±1)
+    for a in (45, -45):
+        spike_up(("z", a))
+        spike_up(("z", a), down=True)
+        spike_up(("x", a))
+        spike_up(("x", a), down=True)
+        spike_x(("y", a))
+        spike_x(("y", a), neg=True)
+    # 위의 금 고리 (사슬을 매는 곳 — 가로 고리)
+    m.box("gold", (6.2, 13.0, 7.3), (9.8, 14.2, 8.7))
+    m.box("gold", (6.2, 13.0, 7.3), (7.4, 17.4, 8.7))
+    m.box("gold", (8.6, 13.0, 7.3), (9.8, 17.4, 8.7))
+    m.box("gold", (6.2, 16.2, 7.3), (9.8, 17.4, 8.7))
+    return m
+
+
+def trap_jaw():
+    """2026-11-13 강철 덫의 턱 하나 (사냥꾼 일반): 경첩 = X 축 (y 0 · z 8 — (8, 0, 8) 를 지나는 줄) · 반원 (반지름 10) 이 +Z 쪽에 누움 — 이빨이 위 (+Y).
+    서버가 경첩 축으로 90° 세워 닫음 (반대쪽 턱은 Y 축으로 180° 돌린 같은 모델). 짙은 강철 반원 (22.5° 마디 아홉) · 마디마다 밝은 강철 이빨 ·
+    안쪽 가장자리의 빛 (계열 색) · 경첩 끝의 금 마개"""
+    m = BModel("trap_jaw", "강철 덫의 턱 (2026-11-13 — 반원 강철 턱 · 이빨 아홉 · 빛나는 안 테 · 금 경첩, 계열 색은 서버가 물들임)", d=2.5)
+    weapon_mats(m)
+    m.mat("dark", dark_steel())
+    import math as _m
+    R = 10.0
+    half = R * _m.sin(_m.radians(11.25)) * 1.12
+    for k in range(9):
+        ph = k * 22.5
+        cx = 8 + R * _m.cos(_m.radians(ph))
+        cz = 8 + R * _m.sin(_m.radians(ph))
+        # 접선이 X 쪽이면 X 로 긴 상자 (돌림 = 90 − ph), 아니면 Z 로 긴 상자 (돌림 = −ph) — 모두 ±45° 안
+        if 45 <= ph <= 135:
+            ang = 90 - ph
+            bar = ((cx - half, 0.0, cz - 0.7), (cx + half, 1.6, cz + 0.7))
+            glow = ((cx - half, 0.2, cz - 1.05), (cx + half, 1.2, cz - 0.6))
+            tooth = [((cx - 0.55, 1.4, cz - 0.55), (cx + 0.55, 3.0, cz + 0.55)), ((cx - 0.28, 2.8, cz - 0.28), (cx + 0.28, 4.4, cz + 0.28))]
+        else:
+            ang = -ph if ph < 45 else 180 - ph
+            bar = ((cx - 0.7, 0.0, cz - half), (cx + 0.7, 1.6, cz + half))
+            sg = 1 if ph < 45 else -1
+            glow = ((cx - 1.05 if sg > 0 else cx + 0.6, 0.2, cz - half), (cx - 0.6 if sg > 0 else cx + 1.05, 1.2, cz + half))
+            tooth = [((cx - 0.55, 1.4, cz - 0.55), (cx + 0.55, 3.0, cz + 0.55)), ((cx - 0.28, 2.8, cz - 0.28), (cx + 0.28, 4.4, cz + 0.28))]
+        rot = ("y", ang, (cx, 0.8, cz)) if ang else None
+        m.box("dark", bar[0], bar[1], rot=rot)
+        m.box("blade", glow[0], glow[1], rot=rot)
+        m.box("steel", tooth[0][0], tooth[0][1], rot=rot)
+        m.box("edge", tooth[1][0], tooth[1][1], rot=rot)
+    # 경첩 끝의 금 마개 (반원의 두 끝 — x = 8 ± R)
+    for x in (8 - R, 8 + R):
+        m.box("gold", (x - 1.1, -0.2, 6.9), (x + 1.1, 2.0, 9.1))
+    return m
+
+
+def trap_base():
+    """2026-11-13 강철 덫의 바닥 (사냥꾼 일반): 가운데 (8, 0, 8) · 땅에 누움 — 짙은 강철 판 (팔각 · 지름 약 9) · 가운데 빛나는 방아쇠 판 (계열 색) ·
+    경첩 막대 (X 축 — 양 끝 x = −2 · 18) · 양 끝의 감긴 용수철 · 말뚝 사슬 고리 (−Z)"""
+    m = BModel("trap_base", "강철 덫의 바닥 (2026-11-13 — 팔각 판 · 빛나는 방아쇠 · 경첩 막대 · 용수철, 계열 색은 서버가 물들임)", d=2.5)
+    weapon_mats(m)
+    m.mat("dark", dark_steel())
+    c = (8.0, 0.0, 8.0)
+    m.box("dark", (3.6, 0.0, 3.6), (12.4, 1.0, 12.4))
+    m.box("dark", (3.6, 0.0, 3.6), (12.4, 1.0, 12.4), rot=("y", 45, (8, 0.5, 8)))
+    m.box("gold", (5.4, 0.9, 5.4), (10.6, 1.3, 10.6), rot=("y", 45, (8, 1.1, 8)))
+    m.box("gem", (6.2, 1.0, 6.2), (9.8, 1.7, 9.8))
+    # 경첩 막대 · 용수철 (감긴 고리 — 판 셋)
+    m.box("steel", (-2.0, 0.3, 7.4), (18.0, 1.5, 8.6))
+    for x0 in (-1.6, 14.0):
+        for j in range(3):
+            xx = x0 + j * 1.3
+            m.box("steel", (xx, 0.0, 6.6), (xx + 0.8, 2.0, 9.4))
+    # 말뚝 사슬 고리 (−Z 쪽)
+    m.box("gold", (7.2, 0.2, 1.4), (8.8, 1.2, 3.8))
+    m.box("steel", (7.5, 0.3, -1.6), (8.5, 1.1, 1.6))
+    return m
+
+
+def tower_shield():
+    """2026-11-13 탑 방패 (투사 희귀 — 방패 돌진 · 체력 일반 — 수호의 외침): 앞 = +Z · 너비 16 (x 0 ~ 16) · 높이 약 26 (y −1 ~ 25) · 네모 — 짙은 강철 판 ·
+    금 테 · 앞의 빛나는 룬 십자 (속빛) · 가운데 보석 (빛) · 뒤의 손잡이. 쥔 곳 = 뒤 가운데 (8, 11, 6)"""
+    m = BModel("tower_shield", "탑 방패 (2026-11-13 — 강철 판 · 금 테 · 룬 십자 · 보석, 계열 색은 서버가 물들임)", d=2.0)
+    weapon_mats(m)
+    m.mat("dark", dark_steel())
+    m.mat("plate", Mat(rune_plate(), tint=1, glow=True, animated=True))
+    m.box("dark", (0.6, 0.0, 6.6), (15.4, 23.0, 8.0))
+    # 금 테 (네 변) · 위 모서리 장식
+    m.box("gold", (0.0, 22.6, 6.3), (16.0, 24.0, 8.4))
+    m.box("gold", (0.0, -1.0, 6.3), (16.0, 0.4, 8.4))
+    m.box("gold", (0.0, 0.0, 6.3), (1.2, 23.0, 8.4))
+    m.box("gold", (14.8, 0.0, 6.3), (16.0, 23.0, 8.4))
+    m.box("gold", (6.6, 23.6, 6.5), (9.4, 25.4, 8.2))
+    # 룬 십자 · 보석 · 손잡이
+    m.box("plate", (6.9, 3.0, 7.9), (9.1, 21.0, 8.7))
+    m.box("plate", (2.6, 12.9, 7.9), (13.4, 15.1, 8.7))
+    m.box("gem", (6.2, 11.8, 8.2), (9.8, 15.4, 9.6), rot=("z", 45, (8, 13.6, 8.9)))
+    m.box("gold", (5.6, 11.2, 8.0), (10.4, 16.0, 8.5), rot=("z", 45, (8, 13.6, 8.25)))
+    m.box("grip", (7.2, 7.0, 5.0), (8.8, 15.0, 6.6))
+    return m
+
+
+def grapple_hook():
+    """2026-11-13 사슬 갈고리 (투사 일반): 쥔 곳 = 꼬리 고리 (8, 0, 8) · 촉 +Y (끝 y 약 20) — 짙은 강철 자루 · 위의 촉 (빛나는 날) · 아래 바깥으로 굽은 갈고리 넷
+    (끝이 위로 젖혀진 미늘 — 빛) · 꼬리 금 고리"""
+    m = BModel("grapple_hook", "사슬 갈고리 (2026-11-13 — 강철 자루 · 촉 · 갈고리 넷 · 금 고리, 계열 색은 서버가 물들임)", d=3.0)
+    weapon_mats(m)
+    m.mat("dark", dark_steel())
+    m.box("gold", (6.4, -0.6, 7.4), (9.6, 0.6, 8.6))
+    m.box("gold", (6.4, -0.6, 7.4), (7.6, 2.6, 8.6))
+    m.box("gold", (8.4, -0.6, 7.4), (9.6, 2.6, 8.6))
+    m.box("dark", (7.1, 2.0, 7.1), (8.9, 14.0, 8.9))
+    m.box("gold", (6.7, 11.6, 6.7), (9.3, 12.8, 9.3))
+    m.box("dark", (6.8, 13.6, 6.8), (9.2, 15.6, 9.2), rot=("y", 45, (8, 14.6, 8)))
+    m.box("blade", (7.3, 15.4, 7.3), (8.7, 20.4, 8.7), rot=("y", 45, (8, 17.9, 8)))
+    m.box("edge", (7.6, 19.6, 7.6), (8.4, 21.0, 8.4))
+    for sx, sz, ax in ((1, 0, "z"), (-1, 0, "z"), (0, 1, "x"), (0, -1, "x")):
+        if ax == "z":
+            x0 = 8.9 if sx > 0 else 7.1 - 5.0
+            m.box("dark", (x0, 10.6, 7.3), (x0 + 5.0, 12.0, 8.7), rot=("z", -45 * sx, (8.9 if sx > 0 else 7.1, 11.3, 8)))
+            tx = 8 + sx * 5.6
+            m.box("blade", (tx - 0.7, 6.6, 7.4), (tx + 0.7, 10.6, 8.6), rot=("z", 22.5 * sx, (tx, 8.6, 8)))
+        else:
+            z0 = 8.9 if sz > 0 else 7.1 - 5.0
+            m.box("dark", (7.3, 10.6, z0), (8.7, 12.0, z0 + 5.0), rot=("x", 45 * sz, (8, 11.3, 8.9 if sz > 0 else 7.1)))
+            tz = 8 + sz * 5.6
+            m.box("blade", (7.4, 6.6, tz - 0.7), (8.6, 10.6, tz + 0.7), rot=("x", -22.5 * sz, (8, 8.6, tz)))
+    return m
+
+
+def chain_link():
+    """2026-11-13 사슬 고리 하나 (투사 — 갈고리 · 방패 사슬): 가운데 (8, 8, 8) · 긴 쪽 Y 9.6 · 너비 X 5 · 두께 Z 1.4 — 강철 테 넷 (가운데 구멍), 고리마다 90° 돌려 이음"""
+    m = BModel("chain_link", "사슬 고리 (2026-11-13 — 강철 테)", d=3.0)
+    m.mat("steel2", Mat(steel_paint()))
+    m.box("steel2", (5.5, 4.0, 7.3), (6.9, 12.0, 8.7))
+    m.box("steel2", (9.1, 4.0, 7.3), (10.5, 12.0, 8.7))
+    m.box("steel2", (6.2, 3.2, 7.3), (9.8, 4.6, 8.7))
+    m.box("steel2", (6.2, 11.4, 7.3), (9.8, 12.8, 8.7))
+    return m
+
+
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
-         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear}
+         "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear,
+         "shuriken": shuriken, "smoke_bomb": smoke_bomb, "tower_shield": tower_shield, "grapple_hook": grapple_hook, "chain_link": chain_link,
+         "spike_ball": spike_ball, "trap_jaw": trap_jaw, "trap_base": trap_base}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
 # 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
@@ -2018,7 +2257,7 @@ TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "met
          "halo": [(1.0, 0.86, 0.45), (1.0, 1.0, 0.9)], "hex_panel": [(1.0, 0.78, 0.35), (1.0, 0.95, 0.8)],
          "thunder_spear": [(0.62, 0.42, 1.0), (0.85, 0.95, 1.0)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
-VIEWS_OF = {"thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
+VIEWS_OF = {"trap_jaw": [(0.0, 1.0, 0.25), (1.0, 0.5, 0.6)], "trap_base": [(0.0, 1.0, 0.3), (1.0, 0.4, 0.6)], "tower_shield": [(0.4, 0.3, 1.0), (1.0, 0.3, 0.3)], "shuriken": [(0.0, 1.0, 0.0001), (1.0, 0.35, -0.6)], "thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
 
 def main():

@@ -150,8 +150,13 @@ final class RuneGolem {
                 RuneKit.bodyAura(sp, JADE, Opt.of("n", 3.0, "size", 0.8, "alpha", 0.55));
             });
         }
+        // 2026-11-13 3D 바위 넷 (boulder — 비취빛 틈): 몸 둘레에 솟아 나는 동안 몸을 따라 돌다가 착지에 발밑 둘레로 내리꽂힘 · 착지 자리에서 3D 바위가 솟아 바깥으로 튐
+        Runnable rocksDown = leapRocks(sp, air);
+        Vec3 f0 = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : Kit.facingOf(sp);
         RuneKit.leap(sp, land, 2.2 + V.hdist(land, start) * 0.12, air, JADE, CORE, () -> {
             Vec3 g = PairKit.onGround(level, sp.position());
+            rocksDown.run();
+            RuneSwing.erupt(level, g, f0, 7, 360, 0.9, radius * 0.75, 0.4, 0.8, 2.2, JADE);
             SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.5, "color", JADE, "alpha", 0.9, "rate", 220.0, "progress", 1.0));
             slamFx(sp, level, g, radius, 1.0);
             RuneBoost.impact(level, g, JADE, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 착지해 내리찍은 자리
@@ -173,6 +178,81 @@ final class RuneGolem {
         return true;
     }
 
+    /**
+     * 2026-11-13 바위 도약의 3D 바위 넷 (boulder · 비취빛 틈): 몸 둘레 (0.9칸 · 높이 0.7 ± 0.35) 에 솟아 (3틱) 틱마다 30° 씩 몸을 따라 돎 (air + 2 틱까지) →
+     * 돌려준 Runnable (착지) 을 부르면 발밑 둘레 1.1칸에 내리꽂혀 (1틱) 가라앉음
+     */
+    private static Runnable leapRocks(ServerPlayer sp, int air) {
+        ServerLevel level = sp.level();
+        String life = RuneKit.lifeToken(sp);
+        int n = 4;
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), air + 32);
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[n];
+        double[] sc = new double[n];
+        long[] seeds = new long[n];
+        for (int i = 0; i < n; i++) {
+            sc[i] = RuneProps.scaleFor(0.5 + 0.12 * (i % 2), RuneProps.BOULDER_D);
+            seeds[i] = (long) (Kit.rand() * 1e9) + i;
+            ps[i] = RuneProps.prop(fx, RuneProps.BOULDER, V.up(orbitAt(sp.position(), i, n, 0), -0.8), RuneProps.MID, RuneProps.tumble(seeds[i], 0, 0), sc[i] * 0.3,
+                    JADE);
+        }
+        boolean[] landed = {false};
+        fx.each(1, air + 2, 1, t -> {
+            if (landed[0] || !RuneKit.sameLife(sp, life)) return;
+            for (int i = 0; i < n; i++) ps[i].to(orbitAt(sp.position(), i, n, t), RuneProps.tumble(seeds[i], t, 20), t <= 3 ? sc[i] * (0.3 + 0.7 * t / 3.0) : -1, 1);
+        });
+        fx.on(air + 26, () -> {
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.remove();
+        });
+        return () -> {
+            if (landed[0]) return;
+            landed[0] = true;
+            Vec3 g = PairKit.onGround(level, sp.position());
+            int a = fx.age();
+            for (int i = 0; i < n; i++) {
+                double ang = i * Math.PI * 2 / n + 0.4;
+                Vec3 hit = new Vec3(g.x + Math.cos(ang) * 1.1, g.y + 0.15, g.z + Math.sin(ang) * 1.1);
+                final int ii = i;
+                ps[i].to(hit, RuneProps.tumble(seeds[i], a + 2, 20), sc[i] * 1.15, 1);
+                fx.on(a + 7, () -> ps[ii].to(V.up(hit, -0.6), null, sc[ii] * 0.4, 8));
+            }
+        };
+    }
+
+    /** 바위 도약의 바위 자리: 몸 둘레 0.9칸 · 틱마다 30° */
+    private static Vec3 orbitAt(Vec3 c, int i, int n, int t) {
+        double ang = i * Math.PI * 2 / n + Math.toRadians(t * 30.0);
+        return new Vec3(c.x + Math.cos(ang) * 0.9, c.y + 0.7 + 0.35 * Math.sin(t * 0.5 + i * 1.6), c.z + Math.sin(ang) * 0.9);
+    }
+
+    /**
+     * 2026-11-13 돌의 수호의 3D 비취빛 육각 판 여섯 (hex_panel — 2D 판 대신): 몸 둘레 1.15칸 (보는 쪽에서 30° + 60° 씩 — 바깥을 봄) 의 땅에서 솟아 (3틱)
+     * 몸을 따라오고, 4틱에 번쩍 → 16틱에 가라앉으며 작아짐
+     */
+    private static void wardPanels(ServerPlayer sp) {
+        ServerLevel level = sp.level();
+        String life = RuneKit.lifeToken(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 30);
+        double s = RuneProps.scaleFor(1.0, RuneProps.HEX_PANEL_H);
+        Vec3 f0 = Kit.facingOf(sp);
+        for (int j = 0; j < 6; j++) {
+            double deg = j * 60 + 30;
+            Vec3 d0 = RuneKit.turn(f0, deg);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(V.add(sp.position(), d0, 1.15), -0.4), RuneProps.MID, RuneProps.facing(d0, V.UP),
+                    s * 0.4, JADE, CORE);
+            fx.each(1, 16, 1, t -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 d = RuneKit.turn(f0, deg);
+                Vec3 at = V.up(V.add(sp.position(), d, 1.15), t <= 3 ? -0.4 + 1.4 * t / 3.0 : 1.0);
+                double sc = t <= 3 ? s * (0.4 + 0.6 * t / 3.0) : t == 4 ? s * 1.2 : s;
+                p.to(at, null, sc, 1);
+            });
+            fx.on(16, () -> p.to(V.up(V.add(sp.position(), d0, 1.15), -0.6), null, s * 0.3, 6));
+            fx.on(22, p::remove);
+        }
+    }
+
+    // ------------------------------------------------------------ 희귀: 돌의 수호
     // ------------------------------------------------------------ 희귀: 돌의 수호
 
     /** 돌기둥 넷의 방위 (보는 쪽에서 — 앞 양옆은 1인칭 화면 가장자리) */
@@ -193,10 +273,7 @@ final class RuneGolem {
         double amt = RpgHealth.maxOf(sp) * k.num("shield") * scale;
         RpgHealth.addShield(sp, amt, (int) k.num("ticks"), amt);
         RuneKit.shieldEmblem(sp, level, V.add(V.up(sp.getEyePosition(), 0.3), f, 2.2), 0.85, JADE, Opt.of("full", 3.0, "life", 0.7, "grow", 0.3, "core", CORE));
-        for (int j = 0; j < 6; j++) {
-            Vec3 d = RuneKit.turn(f, j * 60 + 30);
-            RuneKit.hexPlate(level, V.up(V.add(c, d, 1.15), 1.0), d, 0.5, JADE, Opt.of("life", 0.7, "grow", 0.25, "core", CORE, "alpha", 0.8));
-        }
+        wardPanels(sp); // 2026-11-13 3D 육각 판 여섯 (예전 2D 판 대신)
         RuneBoost.bloom(level, c, JADE, CORE, 3.0); // 0.50.0 2D 강화 (아래 등급 터짐): 보호막이 걸리는 자리 (수호 — 부드러운 터짐)
         SkillFx.play(level, "armor.equip_iron", c, 0.7, 1.0);
         SkillFx.play(level, "block.deepslate.break", c, 0.6, 1.0);
@@ -317,20 +394,9 @@ final class RuneGolem {
         RuneKit.domainSigil(level, g, radius, "arcane", JADE, CORE, Opt.of("life", (breakAt + 4) / 20.0, "spinRate", 40.0, "grow", 0.1, "alpha", 0.85, "fade", 0.2));
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", g, 0.7, 0.9);
         SkillFx.play(level, "beacon.activate", g, 1.4, 0.6);
-        // 결계 벽 (둘레의 육각 판 — 안쪽을 봄)
-        for (int t = 0; t < breakAt; t += 8) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                for (int j = 0; j < 10; j++) {
-                    double a = j / 10.0 * Math.PI * 2 + tt * 0.02;
-                    Vec3 p = PairKit.ring(g, radius, a);
-                    if (PairKit.nearCam(sp, V.up(p, 1.2), 2.4)) continue;
-                    Vec3 in = new Vec3(-Math.cos(a), 0, -Math.sin(a));
-                    RuneKit.hexPlate(level, V.up(p, 1.0), in, 0.55, JADE, Opt.of("life", 0.45, "fade", 0.3, "core", CORE, "alpha", 0.75, "coreAlpha", 0.6));
-                    if (j % 2 == 0) RuneKit.hexPlate(level, V.up(p, 2.0), in, 0.45, JADE, Opt.of("life", 0.45, "fade", 0.3, "core", CORE, "alpha", 0.6));
-                }
-            });
-        }
+        // 결계 벽 — 2026-11-13 3D 비취빛 육각 판 (hex_panel — 2D 판 대신, barrierPanels): 둘레 열 장 (안쪽을 봄) + 위 줄 다섯이 땅에서 차례로 솟아 결계가 깨질 때
+        // 바깥으로 튕겨 나가며 작아짐 (내 눈 · 카메라 가까이의 판은 세우지 않음)
+        barrierPanels(sp, g, radius, breakAt);
         // 펼쳐질 때
         Map<UUID, LivingEntity> inside = new LinkedHashMap<>();
         RuneKit.zonePulse(level, g, JADE, radius, 0.5);
@@ -368,7 +434,10 @@ final class RuneGolem {
                     continue;
                 }
                 RuneKit.stun(e, stun, JADE, true);
-                if (shells.size() < 8) shells.put(e.getUUID(), encase(level, e, breakAt - delay + 8));
+                if (shells.size() < 8) {
+                    shells.put(e.getUUID(), encase(level, e, breakAt - delay + 8));
+                    shellRocks(level, e, breakAt - delay); // 2026-11-13 3D 바위 셋이 껍데기에 달라붙음 → 깨질 때 튕겨 나감
+                }
                 debris(level, V.up(e.position(), 0.3), 10, 0.4, STONE);
             }
         });
@@ -402,6 +471,67 @@ final class RuneGolem {
         return true;
     }
 
+    /**
+     * 2026-11-13 석화 결계의 3D 결계 벽: 둘레 반지름 radius 의 육각 판 열 (높이 1.0 · 안쪽을 봄) + 위 줄 다섯 (높이 2.0 · 조금 작게) 이 판마다 1틱씩 늦게 땅에서
+     * 솟아 (4틱) 8틱마다 살짝 번쩍 → breakAt 틱에 바깥으로 튕겨 나가며 작아짐 (6틱). 내 눈 · 카메라 가까이 (2.4칸) 의 판은 세우지 않음 (1인칭 화면을 덮지 않게)
+     */
+    private static void barrierPanels(ServerPlayer sp, Vec3 g, double radius, int breakAt) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, breakAt + 12);
+        double s0 = RuneProps.scaleFor(1.15, RuneProps.HEX_PANEL_H);
+        for (int j = 0; j < 15; j++) {
+            boolean top = j >= 10;
+            double a = top ? (j - 10) / 5.0 * Math.PI * 2 + 0.31 : j / 10.0 * Math.PI * 2;
+            Vec3 ring = PairKit.ring(g, radius, a);
+            double y = top ? 2.0 : 1.0;
+            if (PairKit.nearCam(sp, V.up(ring, y + 0.2), 2.4)) continue;
+            Vec3 in = new Vec3(-Math.cos(a), 0, -Math.sin(a));
+            double s = top ? s0 * 0.8 : s0;
+            Vec3 at = V.up(ring, y);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(ring, -0.6), RuneProps.MID, RuneProps.facing(in, V.UP), s * 0.3, JADE, CORE);
+            int delayT = 1 + (j % 10);
+            fx.on(delayT, () -> p.to(at, null, s, 4));
+            for (int t = 8 + delayT; t < breakAt; t += 8) {
+                fx.on(t, () -> p.size(s * 1.08, 2));
+                fx.on(t + 2, () -> p.size(s, 3));
+            }
+            fx.on(breakAt, () -> p.to(V.add(V.up(at, 0.4), in, -1.6), null, s * 0.15, 6));
+            fx.on(breakAt + 6, p::remove);
+        }
+    }
+
+    /**
+     * 2026-11-13 석화된 적의 3D 바위 셋 (boulder · 비취빛 틈): 적 둘레 1.6칸의 땅에서 솟아 몸 (아래 · 가운데 · 위) 에 달라붙고 (4틱) hold 틱 뒤 바깥으로 튕겨 나가
+     * 떨어져 가라앉음 (껍데기가 깨질 때)
+     */
+    private static void shellRocks(ServerLevel level, LivingEntity e, int hold) {
+        Vec3 base = e.position();
+        double h = e.getBbHeight();
+        double w = e.getBbWidth() * 0.5 + 0.25;
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, base, hold + 30);
+        double a0 = Kit.rand() * Math.PI * 2;
+        for (int i = 0; i < 3; i++) {
+            double a = a0 + i * Math.PI * 2 / 3;
+            Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
+            Vec3 from = V.up(V.add(base, d, 1.6), -0.5);
+            Vec3 at = V.up(V.add(base, d, w), h * (0.25 + 0.3 * i));
+            double sc = RuneProps.scaleFor(0.55 + 0.1 * (i % 2), RuneProps.BOULDER_D);
+            long seed = (long) (Kit.rand() * 1e9) + i;
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.BOULDER, from, RuneProps.MID, RuneProps.tumble(seed, 0, 0), sc * 0.4, JADE);
+            fx.on(1, () -> p.to(at, RuneProps.tumble(seed, 4, 15), sc, 4));
+            Vec3 land = PairKit.onGround(level, V.add(base, d, 2.2 + Kit.rand()));
+            int fly = 6;
+            for (int t = 1; t <= fly; t++) {
+                final double u = t / (double) fly;
+                final int tt = t;
+                fx.on(hold + t, () -> p.to(V.add(V.lerp(at, V.up(land, 0.2), u), V.UP, 0.9 * 4 * u * (1 - u)), RuneProps.tumble(seed, 6 + tt, 30), -1, 1));
+            }
+            fx.on(hold + fly + 4, () -> p.to(V.up(land, -0.5), null, sc * 0.4, 7));
+            fx.on(hold + fly + 12, p::remove);
+        }
+    }
+
+    // ------------------------------------------------------------ 영웅: 골렘 소환
     // ------------------------------------------------------------ 영웅: 골렘 소환
 
     /**

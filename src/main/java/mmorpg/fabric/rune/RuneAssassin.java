@@ -150,8 +150,11 @@ final class RuneAssassin {
         shadowPuff(level, from, glow);
         SkillFx.play(level, "mob.endermen.portal", from, 1.5, 0.7);
         if (dest != null) {
-            // 떠난 자리의 그림자 잔상 (대상 쪽을 봄)
-            RuneKit.shadeClone(sp, level, from, V.flat(V.sub(target.position(), from)), 0, CLONE, glow, Opt.of("life", 0.45, "fade", 0.7, "alpha", 0.7));
+            // 떠난 자리의 그림자 잔상 (대상 쪽을 봄) — 2026-11-13 3D 그림자 분신이 흩어지며 사라짐 (못 세우면 예전 2D 잔상)
+            Vec3 tf0 = V.flat(V.sub(target.position(), from));
+            RuneMob ghost = RuneMob.spawn(RuneMob.SHADE, level, from, tf0, 24, 1.0, true);
+            if (ghost != null) ghost.leave("vanish", 8);
+            else RuneKit.shadeClone(sp, level, from, tf0, 0, CLONE, glow, Opt.of("life", 0.45, "fade", 0.7, "alpha", 0.7));
             SkillFx.beam(level, V.up(from, 1), V.up(dest, 1), SHADE, Opt.of("half", 0.3, "thick", 0.28, "life", 0.3, "alpha", 0.75));
             RuneKit.moveTo(sp, dest, target.getEyePosition()); // 못 옮기면 그 자리에서 찌름
             shadowPuff(level, dest, glow);
@@ -168,13 +171,28 @@ final class RuneAssassin {
         double S = 0.35;
         RuneKit.rfx2(level, "sword", V.add(hand, dv, Math.min(L, S + 0.15)), Opt.of("dir", dv, "speed", Math.max(0, L - 2 * S - 0.15) / 0.1, "size", S,
                 "life", 0.1), glow, core);
-        // 대상 옆 (내 쪽에서 ±100°) 에서 그림자 분신이 함께 찌름 (가까우면 작게)
+        // 대상 옆 (내 쪽에서 ±100°) 에서 그림자 분신이 함께 찌름 — 2026-11-13 3D 그림자 분신 (rpg:rune_shade): 옆에 솟아 찌르고 (stab — SHADE_STRIKE_AT 틱에 닿음,
+        // 닿을 때 베인 자국 · 불꽃) 그림자로 꺼짐. 못 세우면 예전 2D 분신 (가까우면 작게)
         Vec3 tf = V.flat(V.sub(target.position(), sp.position()));
         Vec3 flank = RuneKit.turn(tf, Kit.rand() < 0.5 ? 100 : -100);
         double pad = 0.9 + Kit.bodyPad(target);
         Vec3 cf = V.add(target.position(), flank, -pad);
-        RuneKit.shadeClone(sp, level, cf, flank, 3, CLONE, glow, Opt.of("life", 0.4, "fade", 0.5, "alpha", 0.9, "size",
-                0.95 * RuneKit.nearK(sp, V.up(cf, 1), 3.5, 0.55)));
+        RuneMob twin = RuneMob.spawn(RuneMob.SHADE, level, cf, flank, 30, 1.0, true);
+        if (twin != null) {
+            twin.anim("stab");
+            String life = RuneKit.lifeToken(sp);
+            Tasks.later(RuneMob.SHADE_STRIKE_AT, () -> {
+                if (!RuneKit.sameLife(sp, life) || target.isRemoved()) return;
+                Vec3 b = Kit.bodyPoint(target);
+                SkillFx.cutMark(level, b, flank, 60, 0.08, glow, core, 0.8);
+                SkillFx.sparks(level, b, core, 5, 4);
+                SkillFx.play(level, "item.trident.hit", b, 1.6, 0.5);
+            });
+            Tasks.later(10, () -> twin.leave("vanish", 7));
+        } else {
+            RuneKit.shadeClone(sp, level, cf, flank, 3, CLONE, glow, Opt.of("life", 0.4, "fade", 0.5, "alpha", 0.9, "size",
+                    0.95 * RuneKit.nearK(sp, V.up(cf, 1), 3.5, 0.55)));
+        }
         if (assassinHit(sp, target, P, k.num("mult")) > 0) {
             // 몸 앞 (보는 쪽 0.6칸) 에 그림: 바로 뒤에서 찌르므로 몸통 안에 그리면 몹에 가려짐 — 가까우면 작게 (1인칭 화면을 덮지 않게)
             double xs = RuneKit.nearK(sp, V.add(at, v, -0.6), 3, 0.2);
@@ -206,7 +224,6 @@ final class RuneAssassin {
         List<LivingEntity> cands = Kit.around(sp, sp.position(), range + 1, 4);
         int stars = (int) k.num("stars");
         double spread = k.num("spread");
-        int[] shuriken = RuneKit.RFX.get("shuriken");
         boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 처음 맞은 적에 한 번
         for (int i = 0; i < stars; i++) {
             double deg = -spread / 2 + (spread * i) / Math.max(1, stars - 1);
@@ -227,22 +244,15 @@ final class RuneAssassin {
             double L = Math.min(best != null ? bestT : range, RuneKit.rayLength(level, head, d, range));
             Vec3 from = V.add(head, d, 0.6);
             int ticks = RuneKit.flyStreak(level, from, V.add(head, d, L), k.num("speed"), POISON, core, 0.4, 0.14);
-            // 도는 표창 (날아가는 길, 2틱마다 한 장 — 손 앞 1칸 안은 그리지 않음)
-            for (int t = 0; t < ticks; t += 2) {
-                double s = ((t + 1.0) / ticks) * Math.max(0, L - 0.6);
-                if (s < 0.7) continue;
-                Vec3 pos = V.add(from, d, s);
-                double spin = t * 70.0;
-                RuneKit.later(t, () -> RuneKit.rfx2(level, "prop", pos, Opt.of("size", 0.3, "life", 0.12, "spin", spin), glow, core, shuriken, null));
-            }
+            // 2026-11-13 도는 3D 표창 (shuriken — 2D 표창 그림 대신): 손 앞에서 곧게 날며 틱마다 70° 돎 (조금 기운 채) → 맞으면 꽂혀 머물다 작아짐, 빗나가면 끝에서 작아짐
+            starFlight(level, from, d, Math.max(0.8, L - 0.6), ticks, best != null, i - (stars - 1) / 2.0, POISON, core);
             if (best != null && hit.add(best.getUUID())) {
                 LivingEntity target = best;
                 RuneKit.later(ticks, () -> {
                     if (sp.isRemoved() || target.isRemoved()) return;
                     if (assassinHit(sp, target, P, k.num("mult")) <= 0) return;
                     Vec3 at = Kit.bodyPoint(target);
-                    // 꽂힌 표창
-                    RuneKit.rfx2(level, "prop", V.add(at, d, -0.3), Opt.of("size", 0.34, "life", 0.5, "spin", 30.0, "fade", 0.4), POISON, core, shuriken, null);
+                    // 꽂힌 표창은 3D (starFlight)
                     SkillFx.fx(level, "rpg:slash_x", at, Opt.of("dir", d, "size", 0.8, "life", 0.22, "color", glow, "alpha", 1.0));
                     SkillFx.burst(level, at, POISON, 0.7, 0.3);
                     SkillFx.play(level, "item.trident.hit", at, 1.8, 0.5);
@@ -275,6 +285,34 @@ final class RuneAssassin {
     }
 
     /**
+     * 2026-11-13 독 표창의 3D 표창 (shuriken — 모델 XZ 면 = 별 면): from 에서 d 로 len 칸을 ticks 틱에 곧게 날며 틱마다 70° 돎 (별 면은 위에서 옆으로 lean 만큼 기욺 —
+     * 부채꼴 셋이 서로 다르게) → stick 이면 끝에 꽂혀 6틱 머물다 작아짐 (조금 기울어 박힘), 아니면 끝에서 바로 작아짐
+     */
+    private static void starFlight(ServerLevel level, Vec3 from, Vec3 d, double len, int ticks, boolean stick, double lean, double[] glow, double[] core) {
+        double s = RuneProps.scaleFor(0.6, RuneProps.SHURIKEN_D);
+        Vec3 side = V.unit(V.cross(d, V.UP).lengthSqr() < 1e-6 ? new Vec3(1, 0, 0) : V.cross(d, V.UP));
+        Vec3 n = V.unit(V.add(V.UP, side, 0.35 * lean + 0.15));
+        Vec3 a0 = V.add(from, d, 0.35);
+        Vec3 end = V.add(from, d, len);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, a0, ticks + 14);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.SHURIKEN, a0, RuneProps.MID, RuneProps.along(n, d), s * 0.7, glow, core);
+        for (int t = 1; t <= ticks; t++) {
+            final double u = t / (double) ticks;
+            final double spin = t * 70.0;
+            fx.on(t, () -> p.to(V.lerp(a0, end, u), RuneProps.along(n, RuneSwords.rot(d, n, spin)), u < 0.3 ? s * (0.7 + u) : s, 1));
+        }
+        if (stick) {
+            Vec3 tilt = V.unit(V.add(n, d, -0.8));
+            fx.on(ticks + 1, () -> p.to(V.add(end, d, 0.12), RuneProps.along(tilt, RuneSwords.rot(d, tilt, ticks * 70.0 + 20)), s, 1));
+            fx.on(ticks + 7, () -> p.size(s * 0.1, 5));
+            fx.on(ticks + 12, p::remove);
+        } else {
+            fx.on(ticks + 1, () -> p.size(s * 0.1, 3));
+            fx.on(ticks + 4, p::remove);
+        }
+    }
+
+    /**
      * 연막: 연막 속 적을 hits 번 베고 몸을 숨김 — v2.25.0 손에서 연막탄 (rpg:rfx_bomb) 이 발 앞에 떨어져 터지고, 짙은 연기 덩이 (rpg:rfx_cloud) 가
      * hide 틱 동안 피어오름. 벨 때마다 연기 속에서 그림자 분신이 나타나 벰 (3명까지)
      */
@@ -293,8 +331,8 @@ final class RuneAssassin {
         Vec3 hand = V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.6);
         Vec3 drop = V.up(V.add(c, f0, 1.8), 0.2);
         Vec3 dv = V.sub(drop, hand);
-        RuneKit.rfx(level, "bomb", hand, Opt.of("dir", V.unit(dv), "speed", V.len(dv) / 0.15, "size", 0.2, "life", 0.15, "spin", 0.0, "spinRate", 720.0,
-                "frames", 2.0, "fps", 20.0, "loop", true));
+        // 2026-11-13 3D 연막탄 (smoke_bomb — 2D 탄 그림 대신): 손에서 발 앞까지 낮은 포물선 (3틱 · 구르며) → 닿는 순간 터져 사라짐
+        bombFlight(level, hand, drop, 3, glow);
         for (int i = 1; i <= 2; i++) {
             Vec3 ember = V.add(hand, dv, i / 3.0); // 지나간 자리의 불티
             RuneKit.later(i, () -> SkillFx.fx(level, "rpg:arrow_spark", ember, Opt.of("dir", V.UP, "speed", 0.5, "size", 0.1, "grow", 0.5, "life", 0.3,
@@ -347,7 +385,29 @@ final class RuneAssassin {
             });
         }
         String life = RuneKit.lifeToken(sp);
-        SkillFx.every((int) k.num("hits"), (int) k.num("gap"), i -> {
+        int hits = (int) k.num("hits");
+        int gap = (int) k.num("gap");
+        // 2026-11-13 연기 속 3D 그림자 분신 (rpg:rune_shade — 2D 분신 그림 대신): 둘째 베기부터 베는 틱보다 SHADE_STRIKE_AT 틱 먼저 연기 속 적 둘 (가까운 순) 의
+        // 옆에 솟아 벰 (좌우 번갈아) → 그림자로 꺼짐. 첫 베기는 연막탄이 아직 날아가는 때라 분신 없음
+        for (int i = 1; i < hits; i++) {
+            final int ii = i;
+            RuneKit.later(Math.max(0, i * gap - RuneMob.SHADE_STRIKE_AT), () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                int n = 0;
+                for (LivingEntity e : RuneKit.nearestTo(Kit.around(sp, c, radius), c)) {
+                    if (n++ >= 2) break;
+                    Vec3 side = RuneKit.turn(V.flat(V.sub(e.position(), c)), (ii % 2 == 1 ? 1 : -1) * 70 + 180);
+                    Vec3 cf = V.add(e.position(), side, 0.9 + Kit.bodyPad(e));
+                    RuneMob m = RuneMob.spawn(RuneMob.SHADE, lv, cf, V.scale(side, -1), 30, 1.0, true);
+                    if (m == null) continue;
+                    m.anim(ii % 2 == 1 ? "slash" : "slash2");
+                    shadowPuff(lv, cf, glow);
+                    Tasks.later(9, () -> m.leave("vanish", 7));
+                }
+            });
+        }
+        SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.zonePulse(level, c, glow, radius, 0.35);
             int shown = 0;
@@ -355,14 +415,7 @@ final class RuneAssassin {
                 if (assassinHit(sp, e, P, k.num("mult")) <= 0) continue;
                 Vec3 at = Kit.bodyPoint(e);
                 Vec3 v = V.unit(V.sub(at, V.up(c, 1.2)));
-                if (shown < 16) SkillFx.cutMark(level, at, v, i % 2 == 1 ? 35 : -35, 0.08, glow, core, 0.8); // 베인 자국은 16명까지 (파티클 예산)
-                // 연기 속 그림자 분신이 벰 (3명까지 — 파티클 예산)
-                if (shown++ < 3) {
-                    Vec3 side = RuneKit.turn(V.flat(V.sub(e.position(), c)), (i % 2 == 1 ? 1 : -1) * 70 + 180);
-                    Vec3 cf = V.add(e.position(), side, 0.85 + Kit.bodyPad(e));
-                    RuneKit.shadeClone(sp, level, cf, V.scale(side, -1), 2, CLONE, glow, Opt.of("life", 0.3, "fade", 0.5, "alpha", 0.85, "size",
-                            0.95 * RuneKit.nearK(sp, V.up(cf, 1), 3.5, 0.55)));
-                }
+                if (shown++ < 16) SkillFx.cutMark(level, at, v, i % 2 == 1 ? 35 : -35, 0.08, glow, core, 0.8); // 베인 자국은 16명까지 (파티클 예산)
                 if (i == 0) {
                     RuneKit.effect(e, "slowness", (int) k.num("slowTicks"), 1);
                     RuneKit.effect(e, "weakness", (int) k.num("slowTicks"), 0);
@@ -371,6 +424,20 @@ final class RuneAssassin {
             SkillFx.play(level, "item.trident.hit", c, 1.5 + i * 0.1, 0.5);
         });
         return true;
+    }
+
+    /** 2026-11-13 3D 연막탄 (smoke_bomb): from → to 를 ticks 틱에 낮은 포물선 (높이 0.6칸) 으로 구르며 날아감 → 닿으면 사라짐 (터짐은 부르는 쪽) */
+    private static void bombFlight(ServerLevel level, Vec3 from, Vec3 to, int ticks, double[] glow) {
+        double s = RuneProps.scaleFor(0.42, RuneProps.SMOKE_BOMB_D);
+        long seed = (long) (Kit.rand() * 1e9);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, from, ticks + 4);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.SMOKE_BOMB, from, RuneProps.MID, RuneProps.tumble(seed, 0, 0), s, glow);
+        for (int t = 1; t <= ticks; t++) {
+            final double u = t / (double) ticks;
+            final int tt = t;
+            fx.on(t, () -> p.to(V.up(V.lerp(from, to, u), 0.6 * 4 * u * (1 - u)), RuneProps.tumble(seed, tt, 60), -1, 1));
+        }
+        fx.on(ticks + 1, p::remove);
     }
 
     /**

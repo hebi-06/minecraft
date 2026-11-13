@@ -134,6 +134,32 @@ final class RuneVolcano {
         });
     }
 
+    /**
+     * 2026-11-13 용암 분출의 3D 달아오른 바위 조각 n 개 (meteor): 가운데 땅 (g) 에서 기둥과 함께 솟구쳐 (꼭대기 3.5 ~ 5칸 · 구르며) 둘레 (반지름 0.5 ~ 1.0 × radius) 로
+     * 떨어져 (10 ~ 13틱) 가라앉음
+     */
+    static void geyserRocks(ServerLevel level, Vec3 g, double radius, int n) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, 34);
+        for (int i = 0; i < n; i++) {
+            double a = Kit.rand() * Math.PI * 2;
+            Vec3 land = PairKit.onGround(level, PairKit.ring(g, radius * (0.5 + 0.5 * Kit.rand()), a));
+            double top = 3.5 + Kit.rand() * 1.5;
+            int fly = 10 + (int) (Kit.rand() * 4);
+            double sc = RuneProps.scaleFor(0.4 + Kit.rand() * 0.3, RuneProps.METEOR_D);
+            long seed = (long) (Kit.rand() * 1e9) + i;
+            Vec3 from = V.up(g, 0.4);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.METEOR, from, RuneProps.MID, RuneProps.tumble(seed, 0, 0), sc * 0.5);
+            for (int t = 1; t <= fly; t++) {
+                final double u = t / (double) fly;
+                final int tt = t;
+                fx.on(t, () -> p.to(V.add(V.lerp(from, V.up(land, 0.2), u), V.UP, top * 4 * u * (1 - u)), RuneProps.tumble(seed, tt, 30), u < 0.25 ? sc : -1, 1));
+            }
+            fx.on(fly + 1, () -> splatter(level, V.up(land, 0.3), 3, 4));
+            fx.on(fly + 4, () -> p.to(V.up(land, -0.5), null, sc * 0.4, 7));
+            fx.on(fly + 12, p::remove);
+        }
+    }
+
     /** 화산탄 하나: from 에서 to 로 ticks 틱 포물선 (불타는 덩어리 rpg:glob · 연기 꼬리) */
     static void bomb(ServerLevel level, Vec3 from, Vec3 to, int ticks, double size) {
         bomb(null, level, from, to, ticks, size, 0);
@@ -218,6 +244,8 @@ final class RuneVolcano {
                     0.6, "color", LAVA, "alpha", 0.9));
         }
         splatter(level, V.up(hit, 0.3), 10, 6);
+        // 2026-11-13 3D 달아오른 바위 조각 (meteor — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 내리친 자리 앞 부채꼴의 땅에서 솟아 바깥으로 튀어 떨어짐
+        RuneSwing.erupt(level, RuneProps.METEOR, RuneProps.METEOR_D, c, f, 6, cone, 1.2, radius * 0.75, 0.35, 0.7, 2.4, LAVA);
         RuneBoost.impact(level, hit, LAVA, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 땅을 내리친 자리
         SkillFx.burst(level, V.up(V.add(c, f, 2.4), 0.4), LAVA, 0.9, 0.25);
         RuneKit.shakeAround(level, c, 8, 0.2, 0.2);
@@ -322,6 +350,7 @@ final class RuneVolcano {
                 if (!RuneKit.sameLife(sp, life)) return;
                 // 가운데의 큰 기둥 + 둘레의 작은 기둥 둘
                 geyser(sp, level, g, 1.5, 4.5 + ii * 0.4, 4);
+                geyserRocks(level, g, radius, 3); // 2026-11-13 3D 달아오른 바위 셋이 기둥과 함께 솟구쳐 둘레로 떨어짐
                 for (int j = 0; j < 2; j++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = PairKit.onGround(level, PairKit.ring(g, radius * (0.45 + 0.3 * Kit.rand()), a));

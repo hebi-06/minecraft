@@ -16,8 +16,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
@@ -63,30 +61,49 @@ final class RuneHunter {
 
     // ------------------------------------------------------------ 일반: 강철 덫
 
-    private static final BlockState IRON = Blocks.IRON_BLOCK.defaultBlockState();
-    private static final BlockState PLATE = Blocks.POLISHED_DEEPSLATE.defaultBlockState();
-    private static final BlockState TRIGGER = Blocks.VERDANT_FROGLIGHT.defaultBlockState();
-    /** 덫 크기 (모형 배 — 1인칭 5칸 앞에서도 턱이 보이게) */
-    private static final double TRAP_SCALE = 1.3;
+    /** 2026-11-13 3D 강철 덫 너비 (경첩 막대 — 칸: 1인칭 5칸 앞에서도 턱이 보이게) */
+    private static final double TRAP_BLOCKS = 1.7;
 
-    /** 강철 덫 모형 (닫히는 턱 둘 — 무리 1 은 +z 쪽에 눕고 -90° 로 섬, 무리 2 는 -z 쪽 · +90°) */
-    private static PairKit.Rig trap(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot) {
-        PairKit.Rig t = new PairKit.Rig(level, base, life);
-        t.offset = offset;
-        t.rot = rot;
-        t.scale = TRAP_SCALE;
-        t.add(PLATE, new Vec3(0, 0.03, 0), 1.3, 0.06, 1.75, PairKit.LIT);
-        t.add(TRIGGER, new Vec3(0, 0.07, 0), 0.45, 0.07, 0.45, PairKit.GLOW);
-        int a = t.group(new Vec3(0, 0.06, 0));
-        int b = t.group(new Vec3(0, 0.06, 0));
-        for (int s = 1; s >= -1; s -= 2) {
-            int grp = s > 0 ? a : b;
-            t.add(grp, IRON, new Vec3(0, 0.06, 0.8 * s), new Vec3(1.2, 0.08, 0.08), null, PairKit.LIT);
-            t.add(grp, IRON, new Vec3(0.6, 0.06, 0.4 * s), new Vec3(0.08, 0.08, 0.8), null, PairKit.LIT);
-            t.add(grp, IRON, new Vec3(-0.6, 0.06, 0.4 * s), new Vec3(0.08, 0.08, 0.8), null, PairKit.LIT);
-            for (int i = 0; i < 4; i++) t.add(grp, IRON, new Vec3(-0.42 + i * 0.28, 0.17, 0.78 * s), new Vec3(0.07, 0.22, 0.07), null, PairKit.LIT);
+    /**
+     * 2026-11-13 3D 강철 덫 (trap_base + trap_jaw 둘 — 블록 표시 덫 대신, 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 손에서 조준한 곳 g 까지 포물선
+     * (land 틱 · 돌며 — 턱은 펼친 채) 으로 날아가 내려앉고 → snap 틱에 두 턱이 경첩 축으로 84° 씩 솟아 철컥 닫힘 (2틱 — 이빨이 엇물림) → hold 틱에 턱이 다시 열리고
+     * 땅으로 가라앉으며 작아짐. 경첩 축 = 던진 쪽의 옆 (턱 하나는 내 쪽 · 하나는 먼 쪽)
+     */
+    private static void trap3d(ServerLevel level, Vec3 hand, Vec3 g, Vec3 f, int land, int snap, int hold) {
+        double s = RuneProps.scaleFor(TRAP_BLOCKS, RuneProps.TRAP_W);
+        double lift = 0.9 / 16.0 * s; // 턱의 경첩 = 바닥 경첩 막대 높이
+        Quaternionf q = RuneProps.along(V.UP, V.rightOf(f));
+        Quaternionf[] open = {q, new Quaternionf(q).rotateY((float) Math.PI)};
+        Quaternionf[] shut = {new Quaternionf(open[0]).rotateX((float) Math.toRadians(-84)), new Quaternionf(open[1]).rotateX((float) Math.toRadians(-84))};
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, hold + 16);
+        mmorpg.fabric.vfx.Vfx.Prop base = RuneProps.prop(fx, RuneProps.TRAP_BASE, hand, RuneProps.HINGE, q, s * 0.35, WILD);
+        mmorpg.fabric.vfx.Vfx.Prop[] jaws = new mmorpg.fabric.vfx.Vfx.Prop[2];
+        for (int i = 0; i < 2; i++) jaws[i] = RuneProps.prop(fx, RuneProps.TRAP_JAW, V.up(hand, lift * 0.35), RuneProps.HINGE, open[i], s * 0.35, WILD);
+        for (int t = 1; t <= land; t++) {
+            final double u = t / (double) land;
+            final float spin = (float) Math.toRadians((land - t) * 55.0);
+            fx.on(t, () -> {
+                Vec3 p = PairKit.arcAt(hand, g, 1.6, u);
+                double sc = s * (0.35 + 0.65 * u);
+                Quaternionf yaw = new Quaternionf().rotateY(spin);
+                base.to(p, new Quaternionf(yaw).mul(q), sc, 1);
+                for (int i = 0; i < 2; i++) jaws[i].to(V.up(p, lift * sc / s), new Quaternionf(yaw).mul(open[i]), sc, 1);
+            });
         }
-        return t;
+        fx.on(snap, () -> {
+            for (int i = 0; i < 2; i++) jaws[i].to(null, shut[i], -1, 2);
+        });
+        fx.on(hold, () -> {
+            for (int i = 0; i < 2; i++) jaws[i].to(null, open[i], -1, 3);
+        });
+        fx.on(hold + 4, () -> {
+            base.to(V.up(g, -0.3), null, s * 0.3, 7);
+            for (int i = 0; i < 2; i++) jaws[i].to(V.up(g, -0.3), null, s * 0.3, 7);
+        });
+        fx.on(hold + 11, () -> {
+            base.remove();
+            for (mmorpg.fabric.vfx.Vfx.Prop j : jaws) j.remove();
+        });
     }
 
     /**
@@ -100,7 +117,6 @@ final class RuneHunter {
         Vec3 f = V.flat(V.sub(g, sp.position()));
         double radius = k.num("radius");
         int root = (int) k.num("root");
-        Quaternionf q = PairKit.facing(RuneKit.turn(f, 90));
         Vec3 hand = V.add(V.up(sp.position(), 1.3), f, 0.8);
         // 던짐: 손에서 덫까지 연둣빛 포물선
         for (int i = 0; i < 6; i++) {
@@ -110,15 +126,12 @@ final class RuneHunter {
         }
         SkillFx.play(level, "entity.fishing_bobber.throw", sp.position(), 0.8, 1.0);
         SkillFx.play(level, "item.armor.equip_chain", sp.position(), 1.2, 0.8);
-        Quaternionf open = new Quaternionf();
-        PairKit.Rig t = trap(level, g, 8 + root + 6, new Vec3(0, 2.6, 0), new Quaternionf(q).mul(PairKit.about(new Vec3(0, 1, 0), 140)));
-        RuneKit.later(2, () -> t.pose(Vec3.ZERO, q, TRAP_SCALE, 3, open, open, open));
+        // 2026-11-13 3D 덫: 손에서 포물선으로 날아가 5틱에 내려앉고 → 6틱에 턱이 철컥 닫힘 (8틱 — 묾) → 8 + root 틱에 열리며 가라앉음
+        trap3d(level, hand, g, f, 5, 6, 8 + root);
         RuneKit.later(5, () -> {
             SkillFx.play(level, "block.chain.place", g, 1.0, 1.0);
             SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.35, "color", WILD, "alpha", 0.8, "rate", 200.0, "progress", 1.0));
         });
-        // 철컥 (턱이 닫힘)
-        RuneKit.later(6, () -> t.pose(Vec3.ZERO, q, TRAP_SCALE, 2, open, PairKit.about(new Vec3(1, 0, 0), -88), PairKit.about(new Vec3(1, 0, 0), 88)));
         RuneKit.later(8, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             claw(level, V.up(g, 0.6), 0.9);
@@ -137,7 +150,6 @@ final class RuneHunter {
                 });
             }
         });
-        RuneKit.later(8 + root, () -> t.crumble(5, 0.05, 0.3, 0.2));
         return true;
     }
 

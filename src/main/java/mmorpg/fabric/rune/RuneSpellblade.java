@@ -84,7 +84,7 @@ final class RuneSpellblade {
         String life = RuneKit.lifeToken(sp);
         double gap = k.num("gap");
         // 2026-11-13 3D 룬 검 (3칸 · 남보라 빛 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 오른쪽에서 왼쪽 끝까지 휩씀 (1틱에 앞을 지남 — rn_arcane_cut)
-        RuneSwing.sword(sp, life, 1.15, 0.6, 3.0, 6, 75, -125, 0, 3, 2, "out", glow, core);
+        RuneSwing.sword(sp, life, 1.15, 0.6, 3.0, 6, 75, -100, 0, 3, 2, "out", glow, core);
         List<LivingEntity> hit = new ArrayList<>();
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 10)) {
             if (RuneKit.swordHit(sp, e, P, k.num("mult")) <= 0) continue;
@@ -148,8 +148,9 @@ final class RuneSpellblade {
      */
     private static void blasterRings(ServerPlayer sp, String life, double range, int gap, int until, double[] glow, double[] core) {
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), until + 10);
-        double[] dist = {0.9, 1.55, 2.25};
-        double[] dia = {0.55, 0.8, 1.05};
+        // 2026-11-13 CI 43404783003 영상: 고리가 손바닥만 해 보임 → 포신 고리처럼 손 앞에서 바깥으로 커짐 (0.9 · 1.25 · 1.6칸)
+        double[] dist = {0.9, 1.75, 2.7};
+        double[] dia = {0.9, 1.25, 1.6};
         mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[dist.length];
         double[] sc = new double[dist.length];
         Beam b0 = beamNow(sp, range);

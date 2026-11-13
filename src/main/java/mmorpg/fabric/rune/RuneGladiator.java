@@ -96,17 +96,9 @@ final class RuneGladiator {
         String life = RuneKit.lifeToken(sp);
         LivingEntity e = ts.get(0);
         int fly = 3;
-        for (int t = 0; t <= fly; t++) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
-                Vec3 h = hand(sp);
-                Vec3 b = Kit.bodyPoint(e);
-                Vec3 tip = V.lerp(h, b, (tt + 1) / (double) (fly + 1));
-                chain(level, h, tip, 0.08, 0.95);
-                RuneKit.rfx2(level, "arrow", tip, Opt.of("dir", V.unit(V.sub(b, h)), "size", 0.35, "life", 0.08), STEEL, CORE);
-            });
-        }
+        // 2026-11-13 3D 사슬 갈고리 (grapple_hook + chain_link 고리 — 2D 사슬 · 화살촉 그림 대신, hookChain): 손에서 뻗어 꽂히고 끌어오는 동안 사슬이 짧아지며 →
+        // 다 끌어오면 손으로 감겨 돌아옴
+        hookChain(sp, e, life, fly, PairKit.boss(e) ? 0 : 3);
         SkillFx.play(level, "entity.fishing_bobber.throw", sp.position(), 0.7, 1.0);
         SkillFx.play(level, "block.chain.place", sp.position(), 1.2, 0.8);
         RuneKit.later(fly, () -> {
@@ -129,7 +121,6 @@ final class RuneGladiator {
                     if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
                     Vec3 p = V.lerp(from, to, u);
                     RuneKit.moveTo(e, new Vec3(p.x, RuneKit.groundAt(level, p, p.y), p.z), null);
-                    chain(level, hand(sp), Kit.bodyPoint(e), 0.1, 0.95);
                 });
             }
             RuneKit.later(4, () -> {
@@ -165,6 +156,8 @@ final class RuneGladiator {
         int dash = Math.max(1, (int) Math.ceil(reach / 2.5));
         Guards.set(sp, (int) k.num("ticks"), k.num("reduce"), null, null);
         Kit.noFall(sp, 30);
+        // 2026-11-13 3D 탑 방패 (tower_shield — 2D 방패 문장 대신, rushShield): 몸 앞 오른쪽에 들고 돌진 → 부딪힐 때 앞으로 밀쳐 번쩍 → 머리 위로 들었다가 앞 땅에 내려찍어 박힘
+        rushShield(sp, life, f, dash + 1, dash + 11);
         SkillFx.play(level, "item.shield.block", start, 0.8, 1.0);
         SkillFx.play(level, "mob.ravager.stun", start, 1.4, 0.5);
         for (int t = 0; t <= dash; t++) {
@@ -176,7 +169,6 @@ final class RuneGladiator {
                     RuneKit.moveTo(sp, new Vec3(p.x, RuneKit.groundAt(level, p, start.y), p.z), null);
                 }
                 Vec3 c = sp.position();
-                RuneKit.shieldEmblem(sp, level, V.add(V.up(c, 1.1), f, 1.3), 0.8, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.12, "core", CORE));
                 SkillFx.particle(level, ParticleTypes.CLOUD, V.up(c, 0.1), 3, 0.3, 0.02);
                 RuneKit.streak(level, V.up(V.add(c, f, -1.2), 0.9), V.up(c, 0.9), STEEL, 0.3, 0.25);
             });
@@ -186,7 +178,6 @@ final class RuneGladiator {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 c = sp.position();
             Vec3 front = V.add(V.up(c, 1.0), f, 1.3);
-            RuneKit.shieldEmblem(sp, level, front, 1.1, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.3, "grow", 0.4, "core", CORE));
             SkillFx.ring(level, front, f, CORE, 0.9, 0.3, 3.0);
             clang(level, V.add(front, f, 0.3), 1.0);
             SkillFx.play(level, "entity.goat.ram_impact", c, 0.8, 1.0);
@@ -207,7 +198,6 @@ final class RuneGladiator {
             Vec3 c = sp.position();
             Vec3 at = PairKit.onGround(level, V.add(c, f, 1.2));
             double radius = k.num("radius");
-            RuneKit.shieldEmblem(sp, level, V.up(at, 0.6), 0.9, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.25, "core", CORE));
             RuneKit.zonePulse(level, at, STEEL, radius, 0.4);
             RuneKit.glowCrack(level, at, radius * 0.8, STEEL, CORE, Opt.of("life", 1.0));
             RuneBoost.impact(level, at, STEEL, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 방패로 내려찍은 자리
@@ -243,34 +233,16 @@ final class RuneGladiator {
         int whirl = hits * gap;
         Guards.set(sp, (int) k.num("ticks"), k.num("reduce"), null, null);
         Vec3 base = sp.position();
-        // 철구 둘 (정육면체 + 45° 돌린 정육면체 = 가시 철구)
-        List<Display.BlockDisplay> balls = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            Display.BlockDisplay d = FxDisplays.block(level, base, IRON, PairKit.box(new Vec3(0, 1.1, 0), new Quaternionf(), 0.1, 0.1, 0.1), whirl + 6, PairKit.LIT);
-            balls.add(d);
-        }
-        double a0 = Math.atan2(Kit.facingOf(sp).z, Kit.facingOf(sp).x);
         double rr = Math.min(radius - 0.8, 3.2);
-        Quaternionf spiky = new Quaternionf().rotationXYZ(0.62F, 0.79F, 0.0F);
         SkillFx.play(level, "item.armor.equip_chain", base, 0.8, 1.0);
         SkillFx.play(level, "mob.breeze.whirl", base, 0.7, 0.9);
+        // 2026-11-13 3D 가시 철구 둘 + 사슬 고리 (spike_ball · chain_link — 블록 표시 철구 · 2D 사슬 대신, whirlFlails): 몸 둘레를 틱마다 24° 씩 돌며 사슬이 몸에서 뻗음
+        whirlFlails(sp, life, rr, whirl);
         for (int t = 2; t <= whirl; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 c = sp.position();
-                Vec3 rel = V.sub(c, base);
-                for (int j = 0; j < 2; j++) {
-                    double a = a0 + Math.PI / 2 + tt * 0.42 + j * Math.PI;
-                    Vec3 off = new Vec3(Math.cos(a) * rr, 1.1 + 0.15 * Math.sin(tt * 0.3 + j), Math.sin(a) * rr);
-                    Vec3 at = V.add(rel, off);
-                    FxDisplays.move(balls.get(j * 2), PairKit.box(at, new Quaternionf().rotationY((float) (tt * 0.5)), 0.6, 0.6, 0.6), 2);
-                    FxDisplays.move(balls.get(j * 2 + 1), PairKit.box(at, new Quaternionf(spiky).rotateY((float) (tt * 0.5)), 0.5, 0.5, 0.5), 2);
-                    Vec3 ball = V.add(c, off);
-                    chain(level, V.up(c, 1.1), ball, 0.12, 0.95);
-                    SkillFx.fx(level, "rpg:arrow_spark", ball, Opt.of("dir", new Vec3(-Math.sin(a), 0, Math.cos(a)), "speed", 2.0, "size", 0.14, "life", 0.25, "color",
-                            CORE, "alpha", 1.0));
-                }
                 if (tt % 4 == 0) SkillFx.fx(level, "rpg:whirlpool", V.up(c, 0.1), Opt.of("dir", V.ZERO, "size", radius * 0.85, "life", 0.3, "spin", tt * 30.0, "speed",
                         -700.0, "color", DARK, "alpha", 0.45));
             });
@@ -300,7 +272,6 @@ final class RuneGladiator {
         RuneKit.later(whirl, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 c = sp.position();
-            for (Display.BlockDisplay d : balls) FxDisplays.move(d, PairKit.box(V.up(V.sub(c, base), 1.0), new Quaternionf(), 0.3, 0.3, 0.3), 3);
             RuneKit.zonePulse(level, c, CORE, radius, 0.4);
             RuneBoost.impact(level, c, STEEL, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 사슬로 끌어모으는 마무리
             SkillFx.play(level, "block.chain.break", c, 0.6, 1.0);
@@ -319,6 +290,173 @@ final class RuneGladiator {
         return true;
     }
 
+    // ------------------------------------------------------------ 2026-11-13 3D 사슬 · 방패 · 철구
+
+    /** 사슬 고리 크기 (고리 간격 0.41칸 · 길이 0.6칸) · 한 줄의 고리 수 한도 */
+    private static final double LINK_SCALE = 1.0;
+    private static final int MAX_LINKS = 36;
+
+    /** 고리 i 의 회전 (긴 축 = dir, 짝 · 홀이 긴 축 둘레로 90° 엇갈림) */
+    private static Quaternionf linkRot(Vec3 dir, int i) {
+        Vec3 ref = Math.abs(dir.y) < 0.95 ? V.UP : new Vec3(1, 0, 0);
+        Vec3 side = V.unit(V.cross(dir, ref));
+        if (i % 2 == 1) side = V.unit(V.cross(dir, side));
+        return RuneProps.along(dir, side);
+    }
+
+    /** 사슬 고리들을 a → b 줄에 늘어놓음 (안 쓰는 고리는 a 에 작게 숨김) */
+    private static void layLinks(mmorpg.fabric.vfx.Vfx.Prop[] links, Vec3 a, Vec3 b, double scale, int ticks) {
+        Vec3 d = V.sub(b, a);
+        double len = V.len(d);
+        Vec3 u = len < 1e-4 ? V.UP : V.scale(d, 1 / len);
+        double step = RuneProps.CHAIN_STEP / 16.0 * scale;
+        int n = Math.min(links.length, (int) Math.ceil(len / step));
+        for (int i = 0; i < links.length; i++) {
+            if (i < n) links[i].to(V.add(a, u, Math.min(len, step * (i + 0.5))), linkRot(u, i), scale, ticks);
+            else links[i].to(a, linkRot(u, i), scale * 0.02, ticks);
+        }
+    }
+
+    /**
+     * 사슬 갈고리의 3D 갈고리 · 사슬: 0 ~ fly 틱 손에서 대상 몸까지 뻗고 (촉이 대상에 꽂힘) → pull 틱 동안 끌려오는 대상을 따라감 (사슬이 짧아짐) → 3틱에 손으로
+     * 감겨 돌아오며 작아짐. 손 · 대상은 틱마다 다시 잼
+     */
+    private static void hookChain(ServerPlayer sp, LivingEntity e, String life, int fly, int pull) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), fly + pull + 12);
+        double hs = RuneProps.scaleFor(0.9, RuneProps.GRAPPLE_HOOK_LEN);
+        double hookLen = RuneProps.GRAPPLE_HOOK_LEN / 16.0 * hs;
+        Vec3 h0 = hand(sp);
+        Vec3 u0 = V.unit(V.sub(Kit.bodyPoint(e), h0));
+        mmorpg.fabric.vfx.Vfx.Prop hook = RuneProps.prop(fx, RuneProps.GRAPPLE_HOOK, h0, RuneProps.GRAPPLE_HOOK_TAIL, RuneProps.along(u0, V.cross(u0, V.UP)), hs * 0.6,
+                STEEL, CORE);
+        mmorpg.fabric.vfx.Vfx.Prop[] links = new mmorpg.fabric.vfx.Vfx.Prop[MAX_LINKS];
+        for (int i = 0; i < MAX_LINKS; i++) links[i] = RuneProps.prop(fx, RuneProps.CHAIN_LINK, h0, RuneProps.MID, linkRot(u0, i), LINK_SCALE * 0.02, STEEL);
+        Vec3[] tipAt = {h0};
+        int back = fly + pull + 1;
+        fx.each(0, back + 3, 1, t -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 h = hand(sp);
+            Vec3 b = e.isRemoved() ? tipAt[0] : Kit.bodyPoint(e);
+            Vec3 tip;
+            if (t <= fly) tip = V.lerp(h, b, (t + 1) / (double) (fly + 1));
+            else if (t < back) tip = b;
+            else tip = V.lerp(tipAt[0], h, Math.min(1, (t - back + 1) / 3.0));
+            if (t < back) tipAt[0] = tip;
+            Vec3 u = V.sub(tip, h);
+            if (V.len(u) < 0.05) u = Kit.facingOf(sp);
+            u = V.unit(u);
+            Vec3 tail = V.add(tip, u, -hookLen);
+            boolean home = t >= back + 2;
+            hook.to(tail, RuneProps.along(u, V.cross(u, V.UP).lengthSqr() < 1e-6 ? new Vec3(1, 0, 0) : V.cross(u, V.UP)), home ? hs * 0.2 : hs, 1);
+            layLinks(links, h, tail, home ? LINK_SCALE * 0.2 : LINK_SCALE, 1);
+        });
+        fx.on(back + 5, () -> {
+            hook.remove();
+            for (mmorpg.fabric.vfx.Vfx.Prop l : links) l.remove();
+        });
+    }
+
+    /**
+     * 방패 돌진의 3D 탑 방패 (앞면 = 나아가는 쪽): 몸 앞 오른쪽 (0.75칸 앞 · 0.3칸 오른쪽 · 높이 0.95) 에 들고 몸을 따라옴 → bash 틱에 앞으로 밀쳐 커졌다 돌아옴 →
+     * slam − 5 틱에 머리 위로 들어 올림 → slam 틱에 앞 1.2칸 땅에 내려찍혀 박힘 (2틱) → 10틱 뒤 가라앉으며 작아짐
+     */
+    private static void rushShield(ServerPlayer sp, String life, Vec3 f, int bash, int slam) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), slam + 20);
+        double s = RuneProps.scaleFor(1.4, RuneProps.TOWER_SHIELD_H);
+        java.util.function.Supplier<Vec3> held = () -> V.up(V.add(V.add(sp.position(), f, 0.75), V.rightOf(f), 0.3), 0.95);
+        Quaternionf front = RuneProps.facing(f, V.UP);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.TOWER_SHIELD, held.get(), RuneProps.TOWER_SHIELD_MID, front, s * 0.4, STEEL, CORE);
+        boolean[] dead = {false};
+        fx.each(1, slam - 6, 1, t -> {
+            if (dead[0] || !RuneKit.sameLife(sp, life)) {
+                dead[0] = true;
+                return;
+            }
+            if (t == bash) p.to(V.add(held.get(), f, 0.45), front, s * 1.15, 1);
+            else if (t == bash + 1) p.to(V.add(held.get(), f, 0.3), front, s * 1.08, 1);
+            else p.to(held.get(), front, t <= 2 ? s * (0.4 + 0.3 * t) : s, 1);
+        });
+        // 머리 위로 들어 올림 (윗변이 뒤로 젖혀짐) → 앞 땅에 내려찍음 (아랫변이 땅에 박힘)
+        fx.on(slam - 5, () -> {
+            if (dead[0] || !RuneKit.sameLife(sp, life)) return;
+            Vec3 up = V.up(V.add(sp.position(), f, 0.35), 2.0);
+            p.to(up, RuneProps.facing(V.unit(V.add(f, V.UP, 0.9)), V.unit(V.add(V.UP, f, -0.7))), s, 4);
+        });
+        fx.on(slam - 1, () -> {
+            if (dead[0] || !RuneKit.sameLife(sp, life)) return;
+            Vec3 at = PairKit.onGround(level, V.add(sp.position(), f, 1.2));
+            double hBlocks = RuneProps.TOWER_SHIELD_H / 16.0 * s;
+            p.to(V.up(at, hBlocks * 0.38), RuneProps.facing(f, V.unit(V.add(V.UP, f, 0.12))), s, 2);
+        });
+        fx.on(slam + 10, () -> p.to(V.up(p.pos(), -1.2), null, s * 0.4, 7));
+        fx.on(slam + 17, p::remove);
+    }
+
+    /**
+     * 사슬 회전의 3D 가시 철구 둘 + 사슬 (고리 여섯씩): 몸 둘레 (반지름 rr · 높이 1.1 ± 0.15) 를 틱마다 24° 씩 돌고 사슬이 가슴 높이 몸 둘레 0.35칸에서 철구까지
+     * 뻗음 (철구도 굴러 돎) → whirl 틱에 몸으로 감겨 들며 작아짐
+     */
+    private static void whirlFlails(ServerPlayer sp, String life, double rr, int whirl) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), whirl + 12);
+        double bs = RuneProps.scaleFor(0.85, RuneProps.SPIKE_BALL_D);
+        int nl = 6;
+        double a0 = Math.atan2(Kit.facingOf(sp).z, Kit.facingOf(sp).x) + Math.PI / 2;
+        mmorpg.fabric.vfx.Vfx.Prop[] balls = new mmorpg.fabric.vfx.Vfx.Prop[2];
+        mmorpg.fabric.vfx.Vfx.Prop[][] links = new mmorpg.fabric.vfx.Vfx.Prop[2][nl];
+        Vec3 c0 = V.up(sp.position(), 1.1);
+        for (int j = 0; j < 2; j++) {
+            balls[j] = RuneProps.prop(fx, RuneProps.SPIKE_BALL, c0, RuneProps.MID, new Quaternionf(), bs * 0.2, STEEL);
+            for (int i = 0; i < nl; i++) links[j][i] = RuneProps.prop(fx, RuneProps.CHAIN_LINK, c0, RuneProps.MID, new Quaternionf(), LINK_SCALE * 0.02, STEEL);
+        }
+        boolean[] done = {false};
+        Runnable end = () -> {
+            if (done[0]) return;
+            done[0] = true;
+            int a = fx.age();
+            Vec3 c = V.up(sp.position(), 1.0);
+            for (int j = 0; j < 2; j++) {
+                balls[j].to(c, null, bs * 0.15, 3);
+                for (mmorpg.fabric.vfx.Vfx.Prop l : links[j]) l.to(c, null, LINK_SCALE * 0.05, 3);
+            }
+            fx.on(a + 4, () -> {
+                for (int j = 0; j < 2; j++) {
+                    balls[j].remove();
+                    for (mmorpg.fabric.vfx.Vfx.Prop l : links[j]) l.remove();
+                }
+            });
+        };
+        fx.each(1, whirl, 1, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                end.run();
+                return;
+            }
+            Vec3 c = sp.position();
+            for (int j = 0; j < 2; j++) {
+                double a = a0 + Math.toRadians(t * 24.0) + j * Math.PI;
+                Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
+                double r = t <= 3 ? rr * (0.3 + 0.7 * t / 3.0) : rr;
+                Vec3 ball = new Vec3(c.x + out.x * r, c.y + 1.1 + 0.15 * Math.sin(t * 0.3 + j), c.z + out.z * r);
+                Vec3 root = V.up(V.add(c, out, 0.35), 1.15);
+                Vec3 tan = new Vec3(-out.z, 0, out.x);
+                balls[j].to(ball, RuneProps.along(V.UP, RuneSwords.rot(tan, V.UP, t * 40.0)), t <= 3 ? bs * (0.2 + 0.8 * t / 3.0) : bs, 1);
+                // 사슬: 몸 → 철구 위 고리 (철구 지름의 반만큼 덜)
+                Vec3 u = V.unit(V.sub(ball, root));
+                Vec3 end2 = V.add(ball, u, -RuneProps.SPIKE_BALL_D / 32.0 * bs * 0.55);
+                double len = V.len(V.sub(end2, root));
+                for (int i = 0; i < nl; i++) {
+                    links[j][i].to(V.add(root, u, len * (i + 0.5) / nl), linkRot(u, i), LINK_SCALE * Math.min(1.0, len / nl / (RuneProps.CHAIN_STEP / 16.0)), 1);
+                }
+                if (t % 3 == 0) SkillFx.fx(level, "rpg:arrow_spark", ball, Opt.of("dir", tan, "speed", 2.0, "size", 0.14, "life", 0.25, "color", CORE, "alpha", 1.0));
+            }
+        });
+        fx.on(whirl, end);
+    }
+
+    // ------------------------------------------------------------ 영웅: 투기장
     // ------------------------------------------------------------ 영웅: 투기장
 
     /**

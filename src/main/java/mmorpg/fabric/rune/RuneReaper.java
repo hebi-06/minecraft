@@ -135,7 +135,7 @@ final class RuneReaper {
         RuneKit.arc(level, V.up(V.add(eye, f, 1.3), -0.25), f, Opt.of("shape", "heavy", "flip", true, "size", 2.2, "life", 0.22, "speed", 2.0, "spin", 12.0, "color",
                 glow, "aura", BLOOD));
         // 2026-11-13 3D 핏빛 낫 (rune_scythe 자루 3칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 왼쪽 뒤에서 앞을 지나 오른쪽 끝까지 휩씀 (rn_blood_crescent)
-        RuneSwing.scythe(sp, life, 1.15, 3.0, 4, -115, 100, 0, 3, 2, "out", glow, core);
+        RuneSwing.scythe(sp, life, 1.15, 3.0, 4, -115, 85, 0, 3, 2, "out", glow, core);
         // 날아가는 초승달 (손 앞 1.2칸부터 — 1인칭 화면을 덮지 않게) + 뒤를 잇는 얇은 초승달
         RuneKit.rfx2(level, "wave", V.add(from, d, 1.2), Opt.of("dir", d, "speed", speed, "size", 1.9, "life", Math.max(0.05, (len - 1.2) / speed), "fade", 0.2,
                 "spin", 0.0, "alpha", 1.0), glow, core);
@@ -193,7 +193,7 @@ final class RuneReaper {
             Vec3 f = V.flat(sp.getViewVector(1F));
             boolean back = i % 2 == 1;
             // 2026-11-13 3D 핏빛 낫 (자루 3.2칸): 첫째는 오른쪽에서 왼쪽 끝까지 · 둘째는 왼쪽에서 오른쪽 끝까지 휩씀 (rn_blood_harvest — 1틱에 앞을 지남)
-            RuneSwing.scythe(sp, life, 1.15, 3.2, 6, back ? -115 : 115, back ? 110 : -120, 0, 3, 2, "out", glow, core);
+            RuneSwing.scythe(sp, life, 1.15, 3.2, 6, back ? -115 : 115, back ? 90 : -95, 0, 3, 2, "out", glow, core);
             // 거대한 낫질 (두 겹) + 앞의 핏빛 초승달이 휩쓸며 커짐
             RuneKit.arc(level, V.up(V.add(c, f, 1.7), 1.15), f, Opt.of("shape", "heavy", "flip", back, "size", 3.8, "life", 0.3, "speed", 1.5, "spin",
                     back ? 70.0 : -70.0, "color", glow, "aura", BLOOD));

@@ -54,7 +54,7 @@ final class RuneBlade {
                 "spin", 20.0, "color", RuneKit.WHITE, "grow", 0.8, "fade", 0.6));
         // 2026-11-13 3D 룬 검 (3.2칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 왼 허리 뒤에서 뽑혀 앞을 지나 (1틱 — 동작 rn_quick_draw 와 같은 때)
         // 오른쪽 끝까지 휩쓸고 머물다 칼을 거둘 때 (5) 작아져 사라짐
-        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.05, 0.6, 3.2, 4, -130, 105, 0, 2, 3, "out", glow, core);
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.05, 0.6, 3.2, 4, -130, 92, 0, 2, 3, "out", glow, core);
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(head, f, 2.0), -0.25), Opt.of("dir", V.rightOf(f), "size", 2.8, "thick", 0.2, "life", 0.32, "delay", 0.04,
                 "color", core, "alpha", 1.0));
         RuneKit.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.7, "life", 0.24, "speed", 3.0, "spin", -6.0,

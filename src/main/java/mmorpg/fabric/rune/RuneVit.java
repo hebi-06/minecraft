@@ -1,6 +1,5 @@
 package mmorpg.fabric.rune;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,27 +77,15 @@ final class RuneVit {
         RuneKit.zonePulse(level, c, core, radius * 0.5, 0.4);
         SkillFx.rune(level, c, Opt.of("size", 1.6, "life", 1.0, "color", glow, "alpha", 0.85, "rate", 120.0, "grow", 0.3));
         RuneBoost.bloom(level, c, glow, core, 2.5); // 0.50.0 2D 강화 (아래 등급 터짐): 외치는 순간의 빛 (쓴 자리)
-        // 큰 방패 문장: 앞 1.8칸 · 머리 위쪽 (1인칭 화면 위쪽에 보이고, 3인칭에서는 몸 앞 위)
-        Vec3 em = V.up(V.add(c, Kit.facingOf(sp), 1.8), 2.35);
-        RuneKit.shieldEmblem(sp, level, em, 0.6, glow, Opt.of("life", 0.8, "grow", 0.35, "fade", 0.5, "alpha", 0.85, "vel", RuneKit.bodyVel(sp), "full", 3.0,
-                "min", 0.45));
+        // 2026-11-13 3D (사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 머리 위 앞의 탑 방패 문장 · 옆 · 뒤로 퍼지는 육각 판 · 버티는 동안 따라오는 작은 방패 둘
+        // (예전 2D 큰 방패 문장 · 10틱마다 다시 그린 2D 작은 방패 대신)
+        shoutShield(sp, glow, core);
+        shoutPanels(sp, radius, glow, core);
+        guardShields(sp, ticks, glow, core);
         SkillFx.sparks(level, V.up(c, 1), core, 8, 4);
         SkillFx.play(level, "mob.ravager.roar", eye, 1.4, 0.8);
         SkillFx.play(level, "random.anvil_land", c, 0.6, 0.4);
         Guards.set(sp, ticks, k.num("reduce"), null, null);
-        // 버티는 동안: 몸 양옆 뒤쪽 (보는 쪽에서 ±115°) 의 작은 방패 둘 (1인칭 화면 밖 · 3인칭에서 보임). 10틱마다 다시 그림 (몸을 따라옴)
-        for (int t = 4; t < ticks; t += 10) {
-            Tasks.later(t, () -> {
-                if (sp.isRemoved()) return;
-                Vec3 pc = sp.position();
-                Vec3 f = Kit.facingOf(sp);
-                Vec3 vel = RuneKit.bodyVel(sp);
-                for (int sd : new int[] {-1, 1}) {
-                    Vec3 d = RuneKit.turn(f, sd * 115);
-                    RuneKit.shieldEmblem(sp, sp.level(), V.up(V.add(pc, d, 0.8), 1.15), 0.3, glow, Opt.of("life", 0.55, "fade", 0.15, "alpha", 0.85, "vel", vel));
-                }
-            });
-        }
         int marked = 0;
         for (LivingEntity e : Kit.around(sp, c, radius)) {
             if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
@@ -111,6 +98,89 @@ final class RuneVit {
             }
         }
         return true;
+    }
+
+    /**
+     * 2026-11-13 수호의 외침의 3D 탑 방패 문장 (tower_shield — 앞면 (룬 십자) 이 나를 봄): 머리 위 앞 (1.4칸 앞 · 3.7 높이) 에 작게 나타나 2.95 높이로 내려오며
+     * 커지고 (2틱 — 외치는 때) 4틱에 번쩍 → 14틱에 위로 작아지며 사라짐. 1인칭에서는 화면 위쪽 가장자리에 걸침
+     */
+    private static void shoutShield(ServerPlayer sp, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, 24);
+        double s = RuneProps.scaleFor(1.3, RuneProps.TOWER_SHIELD_H);
+        Vec3 at = V.up(V.add(c, f, 1.5), 2.95);
+        Vec3 back = V.scale(f, -1);
+        org.joml.Quaternionf rot = RuneProps.facing(back, V.unit(V.add(V.UP, f, 0.25)));
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.TOWER_SHIELD, V.up(at, 0.75), RuneProps.TOWER_SHIELD_MID, RuneProps.facing(back, V.UP), s * 0.3,
+                glow, core);
+        fx.on(1, () -> p.to(at, rot, s * 1.18, 2));
+        fx.on(3, () -> p.size(s, 3));
+        fx.on(8, () -> p.size(s * 1.06, 2));
+        fx.on(10, () -> p.size(s, 3));
+        fx.on(14, () -> p.to(V.up(at, 0.9), null, s * 0.15, 6));
+        fx.on(20, p::remove);
+    }
+
+    /** 2026-11-13 외침의 물결: 3D 육각 판 여섯이 몸 옆 · 뒤 (보는 쪽에서 80° ~ 280° — 1인칭 화면 앞은 비움) 에서 바깥으로 퍼지며 작아짐 (10틱) */
+    private static void shoutPanels(ServerPlayer sp, double radius, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, c, 14);
+        double s = RuneProps.scaleFor(1.0, RuneProps.HEX_PANEL_H);
+        double far = Math.min(radius, 5.0) * 0.85;
+        for (int j = 0; j < 6; j++) {
+            Vec3 d = RuneKit.turn(f, 80 + j * 40);
+            Vec3 a1 = V.up(V.add(c, d, far), 1.35);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(V.add(c, d, 0.8), 1.0), RuneProps.MID, RuneProps.facing(d, V.UP), s * 0.45,
+                    j % 2 == 0 ? glow : core, core);
+            fx.on(1, () -> p.to(a1, null, s, 5));
+            fx.on(6, () -> p.size(s * 0.15, 4));
+            fx.on(10, p::remove);
+        }
+    }
+
+    /**
+     * 2026-11-13 버티는 동안 몸 양옆 뒤쪽 (보는 쪽에서 ±125° · 0.75칸) 의 작은 3D 탑 방패 둘 (바깥을 봄): 틱마다 몸을 따라오며 숨 쉬듯 오르내림 → ticks 틱에 작아지며
+     * 사라짐 (죽거나 나가면 바로)
+     */
+    private static void guardShields(ServerPlayer sp, int ticks, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        String life = RuneKit.lifeToken(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), ticks + 10);
+        double s = RuneProps.scaleFor(0.85, RuneProps.TOWER_SHIELD_H);
+        int[] sds = {-1, 1};
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[2];
+        java.util.function.BiFunction<Integer, Integer, Vec3> spot = (i, t) -> V.up(V.add(sp.position(), RuneKit.turn(Kit.facingOf(sp), sds[i] * 125), 0.75),
+                1.05 + 0.06 * Math.sin(t * 0.25 + i * 1.7));
+        for (int i = 0; i < 2; i++) {
+            Vec3 d = RuneKit.turn(Kit.facingOf(sp), sds[i] * 125);
+            ps[i] = RuneProps.prop(fx, RuneProps.TOWER_SHIELD, V.up(spot.apply(i, 0), -0.4), RuneProps.TOWER_SHIELD_MID, RuneProps.facing(d, V.UP), s * 0.2, glow, core);
+        }
+        boolean[] done = {false};
+        Runnable end = () -> {
+            if (done[0]) return;
+            done[0] = true;
+            int a = fx.age();
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.size(s * 0.1, 5);
+            fx.on(a + 5, () -> {
+                for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.remove();
+            });
+        };
+        fx.each(1, ticks, 1, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                end.run();
+                return;
+            }
+            for (int i = 0; i < 2; i++) {
+                Vec3 d = RuneKit.turn(Kit.facingOf(sp), sds[i] * 125);
+                ps[i].to(spot.apply(i, t), RuneProps.facing(d, V.UP), t <= 3 ? s * (0.2 + 0.8 * t / 3.0) : -1, 1);
+            }
+        });
+        fx.on(ticks, end);
     }
 
     /**
@@ -132,22 +202,21 @@ final class RuneVit {
         RuneBoost.bloom(level0, sp.position(), glow, core, 2.8); // 0.50.0 2D 강화 (아래 등급 터짐): 샘이 솟는 순간의 빛 (쓴 자리)
         SkillFx.play(level0, "beacon.power", sp.position(), 1.5, 0.8);
         SkillFx.play(level0, "bucket.empty_water", sp.position(), 1.2, 0.6);
+        springColumns(sp, pulses * gap, gap);
         SkillFx.every(pulses, gap, i -> {
             if (sp.isRemoved()) return;
             ServerLevel level = sp.level();
             Vec3 c = sp.position();
             Vec3 f = Kit.facingOf(sp);
-            Vec3 vel = RuneKit.bodyVel(sp);
             double healed = RpgHealth.healBy(sp, amountOf.applyAsDouble(sp));
             if (healed > 0) DamageNumbers.show(sp, healed, DamageNumbers.Style.HEAL, "", 0);
             RuneKit.selfCue(sp, green, glow, i == 0);
-            // 빛의 샘 둘 (보는 쪽에서 ±42°, 1.8칸 — 1인칭 화면 아래 양쪽): 다음 회복까지 이어짐 (+0.1초 겹침 — 깜빡임 없게), 마지막은 천천히 사라짐
             boolean last = i == pulses - 1;
+            // 샘 둘 (보는 쪽에서 ±42°, 1.8칸 — 1인칭 화면 아래 양쪽) 은 3D 물기둥 (springColumns) — 회복마다 물기둥 꼭대기에서 생명빛 물보라
             for (int sd : new int[] {-1, 1}) {
-                Vec3 at = V.add(c, RuneKit.turn(f, sd * 42), 1.8);
-                RuneKit.rfx(level, "fountain", at, Opt.of("size", 1.0, "life", last ? 0.8 : gap / 20.0 + 0.1, "color", sd > 0 ? green : core, "alpha", 0.95,
-                        "frames", 8.0, "fps", 16.0, "loop", true, "phase", (double) (i * 3 + (sd > 0 ? 4 : 0)), "fade", last ? 0.5 : 0.05, "grow",
-                        i == 0 ? 0.15 : 0.0, "vel", vel));
+                Vec3 top = V.up(V.add(c, RuneKit.turn(f, sd * 42), 1.8), 1.6);
+                SkillFx.sparks(level, top, sd > 0 ? green : glow, 5, 3);
+                SkillFx.burst(level, top, sd > 0 ? green : core, 0.5, 0.25);
             }
             for (int j = 0; j < 6; j++) {
                 double a = (j / 6.0) * Math.PI * 2 + i;
@@ -174,12 +243,54 @@ final class RuneVit {
         return true;
     }
 
-    /** 강철 피부의 판 하나: 몸에서의 방향 · 높이 · 돎 */
-    private record Plate(Vec3 d, double y, double spin) {}
+    /**
+     * 2026-11-13 생명의 샘의 3D 물기둥 둘 (water_column — 2D 빛의 샘 대신): 몸 앞 양옆 (보는 쪽에서 ±42° · 1.8칸 — 1인칭 화면 아래 양쪽) 땅에서 솟아 (3틱)
+     * 2틱마다 몸을 따라오며 소용돌이가 돎 (좌우 반대로), 회복 틱 (gap 마다) 에 번쩍 커졌다 돌아옴 → span 틱 뒤 무너져 가라앉음
+     */
+    private static void springColumns(ServerPlayer sp, int span, int gap) {
+        ServerLevel level = sp.level();
+        String life = RuneKit.lifeToken(sp);
+        double h = 1.7;
+        double s = RuneProps.scaleFor(h, RuneProps.WATER_H);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), span + 16);
+        int[] sds = {-1, 1};
+        java.util.function.IntFunction<Vec3> spot = i -> V.add(sp.position(), RuneKit.turn(Kit.facingOf(sp), sds[i] * 42), 1.8);
+        mmorpg.fabric.vfx.Vfx.Group[] cs = new mmorpg.fabric.vfx.Vfx.Group[2];
+        for (int i = 0; i < 2; i++) {
+            cs[i] = RuneProps.shape(fx, RuneProps.WATER_COLUMN, V.up(spot.apply(i), -h * 0.5), RuneProps.along(V.UP, new Vec3(1, 0, 0)), s * 0.4);
+        }
+        fx.on(1, () -> {
+            for (int i = 0; i < 2; i++) cs[i].to(spot.apply(i), RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), sds[i] * 24)), s, 3);
+        });
+        boolean[] done = {false};
+        Runnable end = () -> {
+            if (done[0]) return;
+            done[0] = true;
+            int a = fx.age();
+            for (int i = 0; i < 2; i++) cs[i].to(V.up(spot.apply(i), -h * 0.6), null, s * 0.5, 6);
+            fx.on(a + 6, () -> {
+                for (mmorpg.fabric.vfx.Vfx.Group g : cs) g.remove();
+            });
+        };
+        fx.each(4, span, 2, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                end.run();
+                return;
+            }
+            boolean pulse = t % gap == 0;
+            for (int i = 0; i < 2; i++) {
+                double a = sds[i] * (24 + (t - 2) * 12.0);
+                cs[i].to(spot.apply(i), RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), a)), pulse ? s * 1.15 : s, 2);
+            }
+        });
+        fx.on(span + 4, end);
+    }
 
     /**
-     * 강철 피부: 주위 충격 + ticks 동안 받는 피해 -reduce, 때린 몹에게 위력 × reflect 반사 — 쇳빛 육각 판 (rpg:rfx_hex, 분홍빛 테두리) 여덟 장이
-     * 몸 옆 · 뒤 (±100° ~ ±178° — 1인칭 화면에는 들지 않음) 에서 몸으로 모여들어 붙고 번쩍임 → 버티는 동안 몸 옆 · 뒤에서 판이 반짝임
+     * 강철 피부: 주위 충격 + ticks 동안 받는 피해 -reduce, 때린 몹에게 위력 × reflect 반사 —
+     * 2026-11-13 3D 쇳빛 육각 판 여덟 (hex_panel — 2D 판 대신, ironPlates): 몸 옆 · 뒤 (±100° ~ ±178° — 1인칭 화면에는 들지 않음) 1.9칸에서 돌며 몸으로 날아들어
+     * 붙는 순간 (4틱) 번쩍 → 몸속으로 작아지며 스며듦. 버티는 동안 몸 양옆 뒤의 작은 판 둘이 몸을 따라오며 20틱마다 번쩍 (ironGuard)
      */
     static boolean ironSkin(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -187,39 +298,17 @@ final class RuneVit {
         double[][] cs = RuneKit.colorOf("vit");
         double[] glow = cs[0];
         double[] core = cs[1];
-        double[] gun = {0.5, 0.56, 0.66}; // 쇳빛 판 + 분홍빛 흰 테두리 (체력 계열 색)
-        Vec3 f = Kit.facingOf(sp);
-        Vec3 vel = RuneKit.bodyVel(sp);
-        double gather = 0.2; // 모여드는 초
-        double r0 = 1.9;
-        double r1 = 0.55;
+        int gather = 4; // 모여드는 틱
         double radius = k.num("radius");
         int ticks = (int) k.num("ticks");
-        List<Plate> plates = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            double deg = (i % 2 == 1 ? 1 : -1) * (100 + (i / 2) * 26); // 옆 · 뒤 (±100° ~ ±178° — 1인칭 화면에는 들지 않음)
-            Vec3 d = RuneKit.turn(f, deg);
-            double y = 0.5 + (i % 3) * 0.55;
-            plates.add(new Plate(d, y, i * 20));
-            RuneKit.hexPlate(level, V.up(V.add(c, d, r0), y), d, 0.36, gun, Opt.of("speed", -(r0 - r1) / gather, "life", gather, "fade", 0.0, "alpha", 0.95,
-                    "spin", i * 20.0, "vel", vel, "core", core));
-        }
-        // 몸에 붙은 판 (모여든 자리 — 날아온 판이 끝나기 1틱 전에 나타남, 0.4초 남았다 사라짐)
-        Tasks.later(Math.max(1, (int) Math.round(gather * 20) - 1), () -> {
-            if (sp.isRemoved()) return;
-            Vec3 pc = sp.position();
-            Vec3 pv = RuneKit.bodyVel(sp);
-            for (Plate q : plates) {
-                RuneKit.hexPlate(sp.level(), V.up(V.add(pc, q.d(), r1), q.y()), q.d(), 0.36, gun, Opt.of("life", 0.4, "fade", 0.6, "alpha", 0.95, "spin", q.spin(),
-                        "vel", pv, "core", core));
-            }
-        });
+        ironPlates(sp, gather, glow);
+        ironGuard(sp, ticks, glow);
         SkillFx.play(level, "armor.equip_iron", c, 0.8, 1);
         SkillFx.play(level, "random.anvil_use", c, 1.2, 0.6);
         SkillFx.play(level, "mob.irongolem.repair", c, 1.0, 0.8);
         Guards.set(sp, ticks, k.num("reduce"), Guards.Reflect.amount(P * k.num("reflect"), DamageNumbers.Style.RUNE), null);
         // 판이 몸에 붙는 순간: 강철 빛 · 충격
-        Tasks.later((int) Math.round(gather * 20), () -> {
+        Tasks.later(gather, () -> {
             if (sp.isRemoved()) return;
             Vec3 pc = sp.position();
             SkillFx.burst(level, V.up(pc, 1), RuneKit.STEEL, 1.6, 0.35);
@@ -229,20 +318,9 @@ final class RuneVit {
             SkillFx.sparks(level, V.up(pc, 1), RuneKit.STEEL, 10, 4);
             SkillFx.play(level, "random.anvil_land", pc, 1.6, 0.5);
         });
-        for (int t = 10; t < ticks; t += 10) {
-            final int tt = t;
+        for (int t = 20; t < ticks; t += 20) {
             Tasks.later(t, () -> {
-                if (sp.isRemoved()) return;
-                Vec3 pc = sp.position();
-                Vec3 pf = Kit.facingOf(sp);
-                Vec3 pv = RuneKit.bodyVel(sp);
-                // 몸 옆 · 뒤의 작은 강철 판 둘 (번갈아 양쪽)
-                for (int j = 0; j < 2; j++) {
-                    Vec3 d = RuneKit.turn(pf, (j == 1 ? 1 : -1) * (100 + Kit.rand() * 60));
-                    RuneKit.hexPlate(sp.level(), V.up(V.add(pc, d, 0.45), 0.5 + Kit.rand() * 1.1), d, 0.3, gun, Opt.of("life", 0.45, "fade", 0.5, "alpha", 0.9,
-                            "grow", 0.2, "vel", pv, "core", core));
-                }
-                if (tt % 20 == 0) SkillFx.sparks(sp.level(), V.up(pc, 1), glow, 3, 2);
+                if (!sp.isRemoved()) SkillFx.sparks(sp.level(), V.up(sp.position(), 1), glow, 3, 2);
             });
         }
         Tasks.later(ticks, () -> {
@@ -252,6 +330,78 @@ final class RuneVit {
             if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.knock(e, V.sub(e.position(), c), 0.5, 0.2);
         }
         return true;
+    }
+
+    /** 2026-11-13 강철 피부의 3D 판 여덟: 몸 옆 · 뒤 1.9칸 → gather 틱에 몸 0.5칸까지 돌며 날아듦 (몸을 따라감) → 번쩍 → 몸속으로 작아짐 */
+    private static void ironPlates(ServerPlayer sp, int gather, double[] glow) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), gather + 14);
+        double s = RuneProps.scaleFor(0.72, RuneProps.HEX_PANEL_H);
+        Vec3 f0 = Kit.facingOf(sp);
+        for (int i = 0; i < 8; i++) {
+            double deg = (i % 2 == 1 ? 1 : -1) * (100 + (i / 2) * 26);
+            double y = 0.5 + (i % 3) * 0.55;
+            double spin0 = i * 40;
+            Vec3 d0 = RuneKit.turn(f0, deg);
+            mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HEX_PANEL, V.up(V.add(sp.position(), d0, 1.9), y), RuneProps.MID, RuneProps.facing(d0, V.UP), s * 0.6,
+                    RuneKit.STEEL, glow);
+            for (int t = 1; t <= gather; t++) {
+                final double u = t / (double) gather;
+                fx.on(t, () -> {
+                    Vec3 d = RuneKit.turn(Kit.facingOf(sp), deg);
+                    Vec3 at = V.up(V.add(sp.position(), d, 1.9 + (0.5 - 1.9) * u), y);
+                    Vec3 up = RuneSwords.rot(V.UP, d, spin0 + u * 160);
+                    p.to(at, RuneProps.facing(d, up), s * (0.6 + 0.4 * u), 1);
+                });
+            }
+            fx.on(gather + 1, () -> p.size(s * 1.3, 1));
+            fx.on(gather + 2, () -> {
+                Vec3 d = RuneKit.turn(Kit.facingOf(sp), deg);
+                p.to(V.up(V.add(sp.position(), d, 0.15), y), null, s * 0.1, 5);
+            });
+            fx.on(gather + 7, p::remove);
+        }
+    }
+
+    /** 2026-11-13 버티는 동안 몸 양옆 뒤 (보는 쪽에서 ±130° · 0.6칸 · 높이 1.15) 의 작은 3D 판 둘 (바깥을 봄 — 천천히 돎): 틱마다 몸을 따라오고 20틱마다 번쩍 → 끝에 작아짐 */
+    private static void ironGuard(ServerPlayer sp, int ticks, double[] glow) {
+        ServerLevel level = sp.level();
+        String life = RuneKit.lifeToken(sp);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), ticks + 10);
+        double s = RuneProps.scaleFor(0.55, RuneProps.HEX_PANEL_H);
+        int[] sds = {-1, 1};
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[2];
+        java.util.function.BiFunction<Integer, Integer, Vec3> spot = (i, t) -> V.up(V.add(sp.position(), RuneKit.turn(Kit.facingOf(sp), sds[i] * 130), 0.6),
+                1.15 + 0.07 * Math.sin(t * 0.2 + i * 2.1));
+        for (int i = 0; i < 2; i++) {
+            Vec3 d = RuneKit.turn(Kit.facingOf(sp), sds[i] * 130);
+            ps[i] = RuneProps.prop(fx, RuneProps.HEX_PANEL, spot.apply(i, 0), RuneProps.MID, RuneProps.facing(d, V.UP), s * 0.1, RuneKit.STEEL, glow);
+        }
+        boolean[] done = {false};
+        Runnable end = () -> {
+            if (done[0]) return;
+            done[0] = true;
+            int a = fx.age();
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.size(s * 0.1, 5);
+            fx.on(a + 5, () -> {
+                for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.remove();
+            });
+        };
+        fx.each(5, ticks, 1, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                end.run();
+                return;
+            }
+            boolean flash = t % 20 == 0;
+            for (int i = 0; i < 2; i++) {
+                Vec3 d = RuneKit.turn(Kit.facingOf(sp), sds[i] * 130);
+                Vec3 up = RuneSwords.rot(V.UP, d, t * 4.0 * sds[i]);
+                double sc = t <= 8 ? s * (0.1 + 0.9 * (t - 4) / 4.0) : flash ? s * 1.35 : s;
+                ps[i].to(spot.apply(i, t), RuneProps.facing(d, up), sc, 1);
+            }
+        });
+        fx.on(ticks, end);
     }
 
     /**

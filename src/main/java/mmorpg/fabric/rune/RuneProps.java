@@ -71,6 +71,35 @@ public final class RuneProps {
     /** 2026-11-13 대천사의 날개 (조각 물체 angel_wing — 쥔 곳 = 날개 뿌리 · 바깥 +Z · 위 +Y, 바깥 끝까지 약 50px · 물들임 깃 · 빛 깃) */
     public static final String ANGEL_WING = "angel_wing";
     public static final double ANGEL_WING_SPAN = 50;
+    /** 2026-11-13 독 표창 (tools/vfx_blocky.py shuriken — 가운데 (8, 8, 8) · XZ 면의 네 끝 별, 끝에서 끝 24 · 빛 날 = tint 0 · 빛 홈 = tint 1) */
+    public static final String SHURIKEN = "rpg:vfx/shuriken";
+    public static final double SHURIKEN_D = 24;
+    public static final double[] MID = {8, 8, 8};
+    /** 2026-11-13 연막탄 (smoke_bomb — 가운데 (8, 8, 8) · 지름 12 · 심지 끝 y 19.4 = 빛 tint 0) */
+    public static final String SMOKE_BOMB = "rpg:vfx/smoke_bomb";
+    public static final double SMOKE_BOMB_D = 12;
+    /** 2026-11-13 탑 방패 (tower_shield — 앞 = +Z · 너비 16 (x 0 ~ 16) · 높이 26 (y −1 ~ 25) · 판 가운데 (8, 12, 7.3) · 룬 십자 = tint 1 · 보석 = tint 0) */
+    public static final String TOWER_SHIELD = "rpg:vfx/tower_shield";
+    public static final double TOWER_SHIELD_H = 26;
+    public static final double[] TOWER_SHIELD_MID = {8, 12, 7.3};
+    /** 2026-11-13 사슬 갈고리 (grapple_hook — 꼬리 고리 (8, 0, 8) · 촉 +Y 끝 y 21 · 갈고리 넷은 촉 밑 (y 6.6 ~ 12) 에서 바깥 아래로) */
+    public static final String GRAPPLE_HOOK = "rpg:vfx/grapple_hook";
+    public static final double GRAPPLE_HOOK_LEN = 21.6;
+    public static final double[] GRAPPLE_HOOK_TAIL = {8, 0, 8};
+    /** 2026-11-13 사슬 고리 (chain_link — 가운데 (8, 8, 8) · 긴 쪽 Y 9.6 · 너비 X 5 · 두께 Z 1.4) — 고리 간격 CHAIN_STEP 픽셀 · 고리마다 긴 축 둘레 90° */
+    public static final String CHAIN_LINK = "rpg:vfx/chain_link";
+    public static final double CHAIN_LINK_LEN = 9.6;
+    public static final double CHAIN_STEP = 6.6;
+    /** 2026-11-13 가시 철구 (spike_ball — 가운데 (8, 8, 8) · 가시 끝까지 지름 22 · 사슬 고리 위 y 17.4 · 빛 띠 = tint 0) */
+    public static final String SPIKE_BALL = "rpg:vfx/spike_ball";
+    public static final double SPIKE_BALL_D = 22;
+    /** 2026-11-13 강철 덫의 턱 (trap_jaw — 경첩 = (8, 0, 8) 를 지나는 X 축 · 반원 (반지름 10) 이 +Z 쪽에 누움, 이빨 +Y · 안 테 = tint 0) */
+    public static final String TRAP_JAW = "rpg:vfx/trap_jaw";
+    /** 2026-11-13 강철 덫의 바닥 (trap_base — 가운데 (8, 0, 8) · 경첩 막대 X −2 ~ 18 · 방아쇠 판 = tint 0) */
+    public static final String TRAP_BASE = "rpg:vfx/trap_base";
+    /** 덫 모델 (턱 · 바닥) 의 너비 (경첩 막대 — 픽셀) */
+    public static final double TRAP_W = 20;
+    public static final double[] HINGE = {8, 0, 8};
 
     /** 룬 전용 검: 칼끝 y 31 · 자루 끝 y −10.2 (길이 41.2 픽셀) · 날 가운데 (8, 17.5, 8) · 손잡이 가운데 (8, −3.5, 8) */
     public static final double SWORD_LEN = 41.2;

@@ -189,7 +189,7 @@ final class RuneElement {
         flameFan(sp, glow, 96, 2.4, 5);
         // 2026-11-13 3D 불꽃 검 (룬 전용 검 3.3칸 · 불 색 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 오른쪽 뒤에서 앞을 지나 (1틱 — rn_flame_slash)
         // 왼쪽 끝까지 무겁게 휩씀
-        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.0, 0.65, 3.3, 8, 85, -130, 0, 3, 2, "out", glow, core);
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.0, 0.65, 3.3, 8, 85, -100, 0, 3, 2, "out", glow, core);
         SkillFx.play(level, "item.firecharge.use", head, 1.1, 0.9);
         SkillFx.play(level, "item.spear.attack_miss", head, 1.0, 0.9);
         int n = 0;
@@ -307,7 +307,7 @@ final class RuneElement {
         // 칼날을 따라 튀는 전기
         RuneKit.zap(level, V.up(V.add(head, RuneKit.turn(f, -45), 2.0), -0.45), V.up(V.add(head, RuneKit.turn(f, 45), 2.0), -0.45), glow, core, 0.12, 0.25);
         // 2026-11-13 3D 번개 검 (룬 전용 검 3.2칸 · 번개 색): 왼쪽 뒤에서 앞을 지나 (1틱 — rn_thunder_slash) 오른쪽 끝까지 되돌려 휩씀
-        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.1, 0.65, 3.2, 10, -100, 120, 0, 3, 2, "out", glow, core);
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.1, 0.65, 3.2, 10, -100, 100, 0, 3, 2, "out", glow, core);
         SkillFx.play(level, "item.spear.attack_miss", head, 1.1, 0.9);
         SkillFx.play(level, "item.trident.thunder", head, 1.8, 0.3);
         List<LivingEntity> cut = new ArrayList<>();

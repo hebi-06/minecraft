@@ -72,7 +72,7 @@ final class RuneDex {
         SkillFx.sparks(level, V.up(start, 0.5), glow, 6, 4);
         if (dist > 0.2) Kit.moveTo(sp, end); // 못 옮기면 (막힌 자리) 제자리에서 벰
         // 2026-11-13 3D 룬 검 (3칸): 내려선 자리 앞을 오른쪽에서 왼쪽 끝까지 휩씀 (1틱에 앞을 지남 — 동작 rn_gale_slash 와 같은 때)
-        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.15, 0.65, 3.0, 6, 80, -125, 0, 3, 2, "out", glow, core);
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.15, 0.65, 3.0, 6, 80, -100, 0, 3, 2, "out", glow, core);
         RuneKit.waveCard(level, V.up(V.add(end, f, 1.9), 1.0), f, V.UP, Opt.of("size", 1.2, "life", 0.22, "grow", 0.3, "fade", 0.6, "roll", 15.0), glow, core);
         // 0.50.0 2D 강화 (아래 등급 터짐): 돌진을 마치고 내려선 자리 (막혀 못 옮겼으면 제자리) — 반지름 = 지나간 길의 너비
         Vec3 land = sp.position();

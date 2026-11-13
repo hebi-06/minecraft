@@ -61,11 +61,6 @@ final class RuneMonk {
         return halfSize * 2 * 1.15 / (26.4 / 16.0);
     }
 
-    /** 펼친 손바닥 (장풍) */
-    static void palm(ServerLevel level, Vec3 at, Opt o) {
-        RuneKit.rfx2(level, "fist", at, o, GOLD, CORE, PALM, null);
-    }
-
     /** 손 자리 (눈앞 아래 — side +1 오른손 · -1 왼손) */
     static Vec3 hand(ServerPlayer sp, int side) {
         Vec3 f = V.flat(sp.getViewVector(1F));
@@ -96,16 +91,16 @@ final class RuneMonk {
             if (!last) {
                 int side = i % 2 == 0 ? 1 : -1;
                 Vec3 h = hand(sp, side);
-                punch(level, V.add(h, d, 0.6), d, 0.75, 14.0, 0.16, GOLD, CORE);
+                fistFlight(level, h, d); // 2026-11-13 3D 기의 주먹 (fist — 2D 주먹 그림 대신)
                 Vec3 end = V.add(V.up(c, 1.2), d, 2.6);
                 RuneKit.later(2, () -> impact(level, V.add(end, V.rightOf(f), 0.25 * side), 0.42));
                 SkillFx.ring(level, V.add(h, d, 1.6), d, GOLD, 0.3, 0.18, 2.0);
                 SkillFx.play(level, "entity.player.attack.strong", c, 1.1 + i * 0.1, 0.8);
                 SkillFx.play(level, "entity.player.attack.knockback", c, 1.3, 0.5);
             } else {
-                // 장풍: 펼친 손바닥이 앞으로 밀려나가며 커짐 · 기의 고리
+                // 장풍: 펼친 손바닥이 앞으로 밀려나가며 커짐 · 기의 고리 — 2026-11-13 3D 기의 손바닥 (palm 조각 물체 — 2D 손바닥 그림 대신, palmPush)
                 Vec3 at = V.add(V.up(c, 1.2), d, 2.2);
-                palm(level, at, Opt.of("dir", d, "speed", 6.0, "size", 0.75, "life", 0.32, "grow", 0.5, "fade", 0.55));
+                palmPush(level, V.add(V.up(c, 1.2), d, 1.1), d);
                 for (int j = 0; j < 3; j++) {
                     final int jj = j;
                     RuneKit.later(j, () -> SkillFx.ring(level, V.add(at, d, 0.8 + jj * 0.9), d, jj % 2 == 0 ? GOLD : CORE, 0.55 + jj * 0.25, 0.3, 3.0));
@@ -138,6 +133,32 @@ final class RuneMonk {
         return true;
     }
 
+    /**
+     * 2026-11-13 연환권의 3D 기의 주먹 (fist — 치는 면이 앞 · 손등이 위): 손 앞 0.3칸에서 작게 나타나 2틱에 2.5칸 앞까지 내질러지며 커짐 → 3틱 동안 조금 더 나아가며
+     * 작아져 사라짐
+     */
+    private static void fistFlight(ServerLevel level, Vec3 hand, Vec3 d) {
+        double s = RuneProps.scaleFor(1.0, RuneProps.FIST_H);
+        org.joml.Quaternionf q = RuneProps.along(V.scale(d, -1), V.cross(V.UP, d));
+        Vec3 a0 = V.add(hand, d, 0.3);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, a0, 10);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.FIST, a0, RuneProps.FIST_FACE, q, s * 0.45, GOLD, CORE);
+        fx.on(1, () -> p.to(V.add(hand, d, 2.6), null, s, 2));
+        fx.on(3, () -> p.to(V.add(hand, d, 3.1), null, s * 0.15, 3));
+        fx.on(6, p::remove);
+    }
+
+    /** 2026-11-13 연환권 마무리 장풍의 3D 기의 손바닥 (palm — 앞 (미는 면) = d): at 에서 작게 → 4틱에 2.4칸 밀려 나가며 커짐 → 작아지며 사라짐 */
+    private static void palmPush(ServerLevel level, Vec3 at, Vec3 d) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, 14);
+        org.joml.Quaternionf q = RuneProps.facing(d, V.UP);
+        mmorpg.fabric.vfx.Vfx.Group hand3d = RuneProps.shape(fx, RuneProps.PALM, at, q, palmScale(0.3), GOLD, CORE);
+        fx.on(1, () -> hand3d.to(V.add(at, d, 2.4), null, palmScale(1.0), 4));
+        fx.on(6, () -> hand3d.to(V.add(at, d, 3.0), null, palmScale(0.3), 4));
+        fx.on(10, hand3d::remove);
+    }
+
+    // ------------------------------------------------------------ 희귀: 비각
     // ------------------------------------------------------------ 희귀: 비각
 
     /**
