@@ -180,6 +180,128 @@ def build(slim):
     return bones
 
 
+# ------------------------------------------------------------------ 기본 스킨 (바닐라 그림을 그대로 — 2026-11-13)
+#
+# 사용자 "플레이어가 스킬을 쓰면 플레이어 스킨이 바뀌잖아 … 플레이어의 스킨을 그대로 유지시키고 싶은데": 스킨 그림을 받지 못한 사람 (오프라인 서버 ·
+# 프로필에 textures 없음 · 받기 실패 — CI 영상도) 은 뼈 몸이 우리 모험가 그림이 되어, 클라이언트가 그린 진짜 몸 (기본 스킨 — DefaultPlayerSkin 이
+# UUID 로 고름) 과 달랐음. → 기본 스킨 열여덟 (형 둘 × 아홉) 은 클라이언트에 있는 바닐라 그림 minecraft:entity/player/<형>/<이름> 을 그대로 쓰는 뼈 모델
+# (아이템 아틀라스에 그 그림을 넣음 — VanillaPack.rigAtlas, 모장 그림을 우리 팩에 담지 않음). 서버는 UUID 로 같은 것을 고름 (VanillaRig.defaultFor).
+DEFAULT_NAMES = ["alex", "ari", "efe", "kai", "makena", "noor", "steve", "sunny", "zuri"]
+# DefaultPlayerSkin.DEFAULT_SKINS 차례 (1.20.2 ~ — 가는 팔 아홉 다음 넓은 팔 아홉, UUID.hashCode() 를 18 로 나눈 나머지): CI 사진기가 클라이언트 값을 기록함
+DEFAULT_SKINS = ["slim/" + n for n in DEFAULT_NAMES] + ["wide/" + n for n in DEFAULT_NAMES]
+# 아이템 모델 면 방향 → (uv 앞 두 값을 받는 꼭짓점, 뒤 두 값을 받는 꼭짓점) — FaceBakery 의 기본 UV (면 방향마다 u · v 가 어느 축으로 가는지) 와 같은 꼴
+_AB = {
+    "down": (lambda lo, hi: (lo[0], lo[1], hi[2]), lambda lo, hi: (hi[0], lo[1], lo[2])),
+    "up": (lambda lo, hi: (lo[0], lo[1], lo[2]), lambda lo, hi: (hi[0], lo[1], hi[2])),
+    "north": (lambda lo, hi: (hi[0], hi[1], lo[2]), lambda lo, hi: (lo[0], lo[1], lo[2])),
+    "south": (lambda lo, hi: (lo[0], hi[1], lo[2]), lambda lo, hi: (hi[0], lo[1], lo[2])),
+    "west": (lambda lo, hi: (lo[0], hi[1], lo[2]), lambda lo, hi: (lo[0], lo[1], hi[2])),
+    "east": (lambda lo, hi: (lo[0], hi[1], hi[2]), lambda lo, hi: (lo[0], lo[1], lo[2])),
+}
+
+
+def tex_face(face_name, face, vrange=None):
+    """바닐라 상자 면 하나 → 그림을 쓰는 얇은 요소 하나 (아이템 모델 좌표 · 면 방향 · uv = 64 픽셀 그림의 칸 ÷ 4). vrange = 옆면의 v 범위 [v0, v1) (팔다리를 자름)"""
+    verts, (u1, v1, u2, v2) = face
+    P0, P1, P2 = (np.array(verts[i], float) for i in (0, 1, 2))
+    du = (P0 - P1) / (u2 - u1) if u2 != u1 else np.zeros(3)
+    dv = (P2 - P1) / (v2 - v1) if v2 != v1 else np.zeros(3)
+    lo_u, hi_u = min(u1, u2), max(u1, u2)
+    lo_v, hi_v = (min(v1, v2), max(v1, v2)) if vrange is None else vrange
+
+    def pos(u, v):
+        return F * (P1 + (u - u1) * du + (v - v1) * dv) + 8
+
+    corners = {(u, v): pos(u, v) for u in (lo_u, hi_u) for v in (lo_v, hi_v)}
+    pts = np.array(list(corners.values()))
+    lo, hi = pts.min(0), pts.max(0)
+    d = MODEL_FACE[tuple(int(c) for c in F * np.array(NORMAL[face_name]))]
+    uv = []
+    for corner in _AB[d]:
+        want = np.array(corner(lo, hi))
+        hit = [k for k, p in corners.items() if np.abs(p - want).max() < 1e-6]
+        if not hit:
+            raise SystemExit("rig: face %s needs a rotated uv" % face_name)
+        uv += [hit[0][0] / 4, hit[0][1] / 4]
+    return {"from": [round(float(c), 4) for c in lo], "to": [round(float(c), 4) for c in hi], "faces": {d: {"uv": [round(x, 4) for x in uv], "texture": "#skin"}}}
+
+
+def tex_box(els, origin, size, uv, inflate, rows=None, skip=()):
+    """add_box 의 그림 판: 상자의 면마다 요소 하나 (rows = 옆면의 위에서부터 줄 [from, to))"""
+    w, h, d = size
+    for name, face in cube_faces(origin, size, uv, inflate).items():
+        if name in skip:
+            continue
+        vr = None
+        if rows is not None and name in ("west", "north", "east", "south"):
+            vr = (uv[1] + d + rows[0], uv[1] + d + rows[1])
+        els.append(tex_face(name, face, vr))
+
+
+def tex_cut(els, a, b, face_name, uv, size, row):
+    """팔꿈치 · 무릎의 자른 면: 앞면의 그 줄 (한 픽셀 줄을 늘림)"""
+    u, v = uv
+    w, h, d = size
+    frm, to = model_box(np.array(a, float), np.array(b, float))
+    n = tuple(int(c) for c in F * np.array(NORMAL[face_name]))
+    els.append({"from": frm, "to": to, "faces": {MODEL_FACE[n]: {"uv": [(u + d) / 4, (v + d + row) / 4, (u + d + w) / 4, (v + d + row + 1) / 4],
+                                                                    "texture": "#skin"}}})
+
+
+def tex_build(slim):
+    """그림을 쓰는 뼈 열 (build 와 같은 상자 · 자름 — 몸 층 + 겉옷 층을 한 모델에, 겉옷의 투명 칸은 그림의 알파 그대로)"""
+    out = {}
+    head = []
+    tex_box(head, (-4, -8, -4), (8, 8, 8), (0, 0), 0)
+    tex_box(head, (-4, -8, -4), (8, 8, 8), (32, 0), 0.5)
+    body = []
+    tex_box(body, (-4, 0, -2), (8, 12, 4), (16, 16), 0)
+    tex_box(body, (-4, 0, -2), (8, 12, 4), (16, 32), 0.25)
+    out["head"], out["body"] = head, body
+    aw = 3 if slim else 4
+    for prefix, origin, size, uv, ov in (("rarm", (-2 if slim else -3, -2, -2), (aw, 12, 4), (40, 16), (40, 32)),
+                                         ("larm", (-1, -2, -2), (aw, 12, 4), (32, 48), (48, 48)),
+                                         ("rleg", (-2, 0, -2), (4, 12, 4), (0, 16), (0, 32)),
+                                         ("lleg", (-2, 0, -2), (4, 12, 4), (16, 48), (0, 48))):
+        x, y, z = origin
+        w, h, d = size
+        half = h // 2
+        up, lo = [], []
+        tex_box(up, origin, size, uv, 0, rows=(0, half), skip=("up",))
+        tex_cut(up, (x, y + half, z), (x + w, y + half, z + d), "up", uv, size, half - 1)
+        tex_box(up, origin, size, ov, 0.25, rows=(0, half), skip=("up",))
+        tex_box(lo, origin, size, uv, 0, rows=(half, h), skip=("down",))
+        tex_cut(lo, (x, y + half, z), (x + w, y + half, z + d), "down", uv, size, half)
+        tex_box(lo, origin, size, ov, 0.25, rows=(half, h), skip=("down",))
+        out[prefix + "_u"], out[prefix + "_l"] = up, lo
+    return out
+
+
+def write_defaults():
+    """기본 스킨 뼈: 모델 rpg:item/vrig/def/<형>/<뼈> (#skin) · 이름마다 자식 모델 · 아이템 rpg:vrig/def/<형>/<뼈> (custom_model_data 문자열 0 = 이름)"""
+    for variant in ("wide", "slim"):
+        bones = tex_build(variant == "slim")
+        mdir = os.path.join(OUT_MODELS, "def", variant)
+        idir = os.path.join(OUT_ITEMS, "def", variant)
+        os.makedirs(idir, exist_ok=True)
+        for bname, els in bones.items():
+            os.makedirs(mdir, exist_ok=True)
+            with open(os.path.join(mdir, bname + ".json"), "w", encoding="utf-8") as fp:
+                json.dump({"textures": {"particle": "#skin"}, "elements": els}, fp, separators=(",", ":"))
+            cases = []
+            for name in DEFAULT_NAMES:
+                cdir = os.path.join(mdir, name)
+                os.makedirs(cdir, exist_ok=True)
+                with open(os.path.join(cdir, bname + ".json"), "w", encoding="utf-8") as fp:
+                    json.dump({"parent": "rpg:item/vrig/def/%s/%s" % (variant, bname), "textures": {"skin": "minecraft:entity/player/%s/%s" % (variant, name)}},
+                              fp, separators=(",", ":"))
+                cases.append({"when": name, "model": {"type": "minecraft:model", "model": "rpg:item/vrig/def/%s/%s/%s" % (variant, name, bname)}})
+            item = {"model": {"type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0, "cases": cases,
+                              "fallback": {"type": "minecraft:model", "model": "rpg:item/vrig/def/%s/steve/%s" % (variant, bname)}}}
+            with open(os.path.join(idir, bname + ".json"), "w", encoding="utf-8") as fp:
+                json.dump(item, fp, separators=(",", ":"))
+
+
 # 뼈 자리 (자바 모델 — PlayerModel / HumanoidModel) · 팔꿈치 · 무릎 (뼈 자리 기준 — 모드 MotionRender 의 굽힘 자리)
 PIVOTS = {
     "wide": {"head": [0, 0, 0], "body": [0, 0, 0], "rarm": [-5, 2, 0], "larm": [5, 2, 0], "rleg": [-1.9, 12, 0], "lleg": [1.9, 12, 0]},
@@ -311,7 +433,9 @@ def write(args):
     os.makedirs(OUT_TEX, exist_ok=True)
     Image.new("RGBA", (16, 16), (255, 255, 255, 255)).save(os.path.join(OUT_TEX, "white.png"))
     manifest = {"_comment": "tools/player_rig.py 가 만듦 — 뼈마다 아이템 (rpg:vrig/<형>/<뼈>) · custom_model_data colors 순서의 픽셀: 몸 층 [u, v, 0] · 평균 칸 {avg} 다음 겉옷 층 [u, v, 1, 밑 u, 밑 v] (투명이면 밑 몸 칸의 색 — tint 는 알파를 쓰지 않음), flag 0 = 겉옷 층을 그림",
-                "pivots": PIVOTS, "joints": JOINTS, "variants": {}}
+                "pivots": PIVOTS, "joints": JOINTS, "variants": {},
+                "defaults": DEFAULT_SKINS,
+                "_defaults": "스킨 그림이 없는 사람: UUID.hashCode() 를 defaults 수로 나눈 나머지 → 바닐라 기본 스킨 (클라이언트와 같은 것) · 아이템 rpg:vrig/def/<형>/<뼈> + custom_model_data 문자열 0 = 이름"}
     total = 0
     for variant in ("wide", "slim"):
         bones = build(variant == "slim")
@@ -340,6 +464,7 @@ def write(args):
             vb.append({"name": b.name, "item": "vrig/%s/%s" % (variant, b.name), "src": b.src})
             total += len(b.src)
         manifest["variants"][variant] = {"bones": vb}
+    write_defaults()
     os.makedirs(os.path.dirname(OUT_MANIFEST), exist_ok=True)
     with open(OUT_MANIFEST, "w", encoding="utf-8") as fp:
         json.dump(manifest, fp, ensure_ascii=False, separators=(",", ":"))

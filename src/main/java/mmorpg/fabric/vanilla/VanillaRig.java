@@ -87,10 +87,29 @@ public final class VanillaRig {
     record BoneDef(String item, int[] u, int[] v, boolean[] outer, int[] bu, int[] bv, int[][] avg) {}
 
     private static final Map<String, BoneDef[]> VARIANTS = new HashMap<>();
+    /** 바닐라 기본 스킨 목록조차 없을 때만 (우리 그림 — 모험가) */
     private static Skin DEFAULT;
+    /**
+     * 2026-11-13 바닐라 기본 스킨 (사용자 "플레이어가 스킬을 쓰면 플레이어 스킨이 바뀌잖아 … 스킨을 그대로 유지시키고 싶은데"): 스킨 그림을 받지 못한 사람
+     * (오프라인 서버 · 프로필에 textures 없음 · 받기 실패) 은 클라이언트가 진짜 몸에 그리는 기본 스킨 (DefaultPlayerSkin — UUID.hashCode() 를 목록 수로 나눈
+     * 나머지) 과 같은 것을 뼈 몸에도 — 바닐라 그림을 그대로 쓰는 뼈 모델 (rpg:vrig/def/&lt;형&gt;/&lt;뼈&gt; — tools/player_rig.py, 그림은 클라이언트의 것) ·
+     * 목록 차례는 vanilla_rig.json defaults ("slim/alex" …)
+     */
+    private static final List<String> DEFAULTS = new ArrayList<>();
+    private static final Map<String, Skin> DEFAULT_SKINS = new HashMap<>();
 
-    /** 스킨 (64 × 64 ARGB) · 가는 팔 */
-    record Skin(int[] argb, boolean slim) {}
+    /** 스킨 (64 × 64 ARGB) · 가는 팔 · vanilla = 바닐라 기본 스킨 이름 (그림을 쓰는 뼈 모델 — argb 없음) */
+    record Skin(int[] argb, boolean slim, String vanilla) {}
+
+    /** 그 UUID 의 사람에게 클라이언트가 그리는 기본 스킨 (목록이 없으면 우리 그림) */
+    static Skin defaultFor(UUID id) {
+        if (DEFAULTS.isEmpty()) return DEFAULT;
+        String e = DEFAULTS.get(Math.floorMod(id.hashCode(), DEFAULTS.size()));
+        return DEFAULT_SKINS.computeIfAbsent(e, k -> {
+            int slash = k.indexOf('/');
+            return new Skin(null, "slim".equals(k.substring(0, Math.max(0, slash))), k.substring(slash + 1));
+        });
+    }
 
     private static final Map<UUID, Skin> SKINS = new ConcurrentHashMap<>();
     private static final Map<String, Skin> BY_URL = new ConcurrentHashMap<>();
@@ -334,15 +353,17 @@ public final class VanillaRig {
             return true;
         }
 
-        /** 스킨 색을 뼈마다 (가는 팔이면 그 모델) */
+        /** 스킨 색을 뼈마다 (가는 팔이면 그 모델 · 바닐라 기본 스킨이면 그 그림을 쓰는 뼈 모델) */
         void skin(Skin s) {
-            if (s == null) s = DEFAULT;
+            if (s == null) s = defaultFor(sp.getUUID());
             if (s == null || s == skin) return;
             skin = s;
             variant = s.slim() ? "slim" : "wide";
             BoneDef[] defs = VARIANTS.get(variant);
             if (defs == null) return;
-            for (int i = 0; i < BONES; i++) bones[i].setItem(stack(defs[i], s));
+            for (int i = 0; i < BONES; i++) bones[i].setItem(s.vanilla() != null ? vanillaStack(variant, i, s.vanilla()) : stack(defs[i], s));
+            Mmorpg.LOG.info("[vanilla] rig skin {}: {}", sp.getGameProfile().name(), s.vanilla() != null ? "default " + variant + "/" + s.vanilla()
+                    : s == DEFAULT ? "ours" : "profile " + variant);
         }
 
         void start(String name, MotionPoses.Motion mo, float y) {
@@ -818,14 +839,30 @@ public final class VanillaRig {
         return st;
     }
 
+    /** 바닐라 기본 스킨의 뼈 하나: rpg:vrig/def/&lt;형&gt;/&lt;뼈&gt; · custom_model_data 문자열 0 = 이름 (그림은 클라이언트의 minecraft:entity/player/…) */
+    private static ItemStack vanillaStack(String variant, int bone, String name) {
+        ItemStack st = new ItemStack(Items.PAPER);
+        st.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath(Mmorpg.NS, "vrig/def/" + variant + "/" + NAMES[bone]));
+        st.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(List.of(), List.of(), List.of(name), List.of()));
+        return st;
+    }
+
     // ------------------------------------------------------------ 스킨
 
-    /** 그 사람의 스킨 (받는 중이면 기본 — 받으면 바뀜) */
+    /** 그 사람의 스킨 (받는 중이면 클라이언트가 그리는 기본 스킨 — 받으면 바뀜) */
     static Skin skinOf(ServerPlayer sp) {
         Skin s = SKINS.get(sp.getUUID());
         if (s != null) return s;
         if (LOADING.add(sp.getUUID())) fetch(sp);
-        return DEFAULT;
+        return defaultFor(sp.getUUID());
+    }
+
+    /** 바닐라 기본 스킨 목록 (VanillaPack — 그 그림을 아이템 아틀라스에 넣음): "slim/alex" … */
+    public static List<String> defaultSkins() {
+        if (!DEFAULTS.isEmpty()) return List.copyOf(DEFAULTS);
+        List<String> out = new ArrayList<>();
+        if (read("/mmorpg/vanilla_rig.json").get("defaults") instanceof List<?> dl) for (Object o : dl) out.add(String.valueOf(o));
+        return out;
     }
 
     /** 프로필의 textures (base64 JSON — SKIN url · 가는 팔) → 텍스처 서버에서 PNG (비동기) */
@@ -848,7 +885,7 @@ public final class VanillaRig {
             Mmorpg.LOG.warn("[vanilla] rig skin profile {}: {}", sp.getGameProfile().name(), e.toString());
         }
         if (url == null || url.isEmpty() || "null".equals(url)) {
-            SKINS.put(id, DEFAULT);
+            SKINS.put(id, defaultFor(id)); // 오프라인 서버 등: 클라이언트도 기본 스킨 (같은 것)
             return;
         }
         String u = url.startsWith("http://") ? "https://" + url.substring(7) : url;
@@ -870,7 +907,7 @@ public final class VanillaRig {
                     } else {
                         Mmorpg.LOG.warn("[vanilla] rig skin fetch {}: {}", u, err != null ? err.toString() : resp == null ? "no response" : "HTTP " + resp.statusCode());
                     }
-                    Skin got = s != null ? s : DEFAULT;
+                    Skin got = s != null ? s : defaultFor(id);
                     if (s != null) BY_URL.put(u, s);
                     SKINS.put(id, got);
                 });
@@ -915,7 +952,7 @@ public final class VanillaRig {
                 }
             }
         }
-        return new Skin(px, slim);
+        return new Skin(px, slim, null);
     }
 
     // ------------------------------------------------------------ 읽기
@@ -966,12 +1003,13 @@ public final class VanillaRig {
                 if (all) VARIANTS.put(String.valueOf(v.getKey()), defs);
             }
         }
+        if (mf.get("defaults") instanceof List<?> dl) for (Object o : dl) DEFAULTS.add(String.valueOf(o));
         try (InputStream in = VanillaRig.class.getResourceAsStream("/assets/mmorpg/rig/default_skin.png")) {
             if (in != null) DEFAULT = decode(in.readAllBytes(), false);
         } catch (IOException e) {
             Mmorpg.LOG.warn("[vanilla] rig default skin: {}", e.toString());
         }
-        Mmorpg.LOG.info("[vanilla] rig variants {} (default skin {})", VARIANTS.keySet(), DEFAULT != null);
+        Mmorpg.LOG.info("[vanilla] rig variants {} (vanilla default skins {}, ours {})", VARIANTS.keySet(), DEFAULTS.size(), DEFAULT != null);
     }
 
     private static Map<String, Object> read(String resource) {

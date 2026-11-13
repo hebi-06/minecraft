@@ -32,9 +32,33 @@ final class VanillaPack {
                         guiFonts(builder, root);
                         cosmeticItems(builder, root);
                     }
+                    rigAtlas(builder);
                 }));
         // 전용 서버는 켬 · 클라이언트 (싱글 — 다른 사람이 들어오지 않음) 는 끔: 개발 환경 (화면 시험) 에서 Polymer 기본은 켜짐이라 세계를 열 때마다 팩을 다시 만듦
         autoHostDefault(FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER);
+    }
+
+    /**
+     * 2026-11-13 뼈 몸의 바닐라 기본 스킨 (VanillaRig.defaultFor — 사용자 "플레이어의 스킨을 그대로 유지시키고 싶은데"): 클라이언트에 있는 그림
+     * minecraft:entity/player/&lt;형&gt;/&lt;이름&gt; 을 아이템 모델이 쓰는 아틀라스에 넣음 (모장 그림을 팩에 담지 않고 가리키기만 — 판에 따라 아이템 그림이 blocks 또는
+     * items 아틀라스라 둘 다, 없는 아틀라스의 파일은 읽히지 않음)
+     */
+    private static void rigAtlas(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder) {
+        java.util.List<String> skins = VanillaRig.defaultSkins();
+        if (skins.isEmpty()) return;
+        com.google.gson.JsonArray sources = new com.google.gson.JsonArray();
+        for (String s : skins) {
+            com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+            o.addProperty("type", "single");
+            o.addProperty("resource", "minecraft:entity/player/" + s);
+            sources.add(o);
+        }
+        com.google.gson.JsonObject atlas = new com.google.gson.JsonObject();
+        atlas.add("sources", sources);
+        String json = atlas.toString();
+        builder.addStringData("assets/minecraft/atlases/blocks.json", json);
+        builder.addStringData("assets/minecraft/atlases/items.json", json);
+        Mmorpg.LOG.info("[vanilla] rig default skins in atlas: {}", skins.size());
     }
 
     /**

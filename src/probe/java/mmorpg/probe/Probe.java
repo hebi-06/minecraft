@@ -59,9 +59,48 @@ public final class Probe implements ClientModInitializer {
         QUEUE.add(text.substring("[probe] ".length()).trim());
     }
 
+    private static boolean skinsLogged;
+
+    /**
+     * 2026-11-13 기본 스킨 기록 (서버 VanillaRig.defaultFor 가 UUID 로 고르는 차례가 클라이언트 DefaultPlayerSkin 과 같은지 — CI 기록에서 맞춤):
+     * UUID(0, i) 의 hashCode 는 i 라 get(UUID(0, i)) = 목록 i 번째. 판마다 이름이 달라도 되게 리플렉션 · toString 만
+     */
+    private static void logSkins(Minecraft mc) {
+        try {
+            Class<?> c = Class.forName("net.minecraft.client.resources.DefaultPlayerSkin");
+            java.lang.reflect.Method get = null;
+            for (java.lang.reflect.Method m : c.getMethods()) {
+                if (m.getName().equals("get") && m.getParameterCount() == 1 && m.getParameterTypes()[0] == java.util.UUID.class) get = m;
+            }
+            if (get == null) {
+                log("default-skins: no get(UUID)");
+            } else {
+                for (int i = 0; i < 18; i++) log("default-skin " + i + " " + get.invoke(null, new java.util.UUID(0L, i)));
+                log("default-skin 18 " + get.invoke(null, new java.util.UUID(0L, 18)));
+            }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+            log("default-skins failed " + e);
+        }
+        if (mc.player == null) return;
+        log("own uuid " + mc.player.getUUID() + " hash " + mc.player.getUUID().hashCode() + " mod18 " + Math.floorMod(mc.player.getUUID().hashCode(), 18));
+        for (String name : new String[] {"getSkin", "skin"}) {
+            try {
+                java.lang.reflect.Method m = mc.player.getClass().getMethod(name);
+                log("own skin " + m.invoke(mc.player));
+                break;
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                // 다음 이름
+            }
+        }
+    }
+
     /** 클라이언트 틱 끝 */
     public static void tick(Minecraft mc) {
         ticks++;
+        if (!skinsLogged && mc.player != null && ticks > 40) {
+            skinsLogged = true;
+            logSkins(mc);
+        }
         if (quitIn >= 0 && --quitIn == 0) {
             log("quit");
             mc.stop();
