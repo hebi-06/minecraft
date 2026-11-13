@@ -212,7 +212,53 @@ public final class RuneStrike {
         }
         SkillFx.play(level, "mob.vex.charge", sp.position(), 0.7, 0.8);
         SkillFx.play(level, "mob.zombie.unfect", sp.position(), 1.4, 0.4);
+        bloodSword(sp, col);
         return true;
+    }
+
+    /**
+     * 2026-11-13 피의 칼날의 3D 검 (룬 전용 검 2판 · 핏빛 · 2.1칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 눈앞 가슴 높이에 가로로 나타나
+     * (넓은 면이 나를 봄) 바람개비처럼 한 바퀴 돌며 핏방울을 빨아들인 뒤 (1 ~ 9) 무기를 든 손으로 날아들어 작아지며 스밈 (11 ~ 14)
+     */
+    private static void bloodSword(ServerPlayer sp, double[] col) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 22);
+        Vec3 f = V.flat(sp.getViewVector(1F));
+        Vec3 rt = V.rightOf(f);
+        Vec3 mid = V.up(V.add(sp.position(), f, 1.8), 1.3);
+        double len = 2.1;
+        Vec3 back = V.scale(f, -1);
+        RuneSwords.Blade b = RuneSwords.blade(fx, V.add(mid, rt, -len * 0.42), rt, back, len, 0.2, col, RuneKit.BLOOD_CORE);
+        fx.on(1, () -> b.grow(1, 3));
+        for (int i = 1; i <= 8; i++) {
+            final Vec3 d = RuneSwords.rot(rt, f, -45.0 * i);
+            fx.on(1 + i, () -> b.pose(V.add(mid, d, -len * 0.42), d, back, 1));
+            if (i % 2 == 0) {
+                final int ii = i;
+                fx.on(1 + i, () -> {
+                    for (int k = 0; k < 3; k++) {
+                        double a = (ii * 40 + k * 120) * Math.PI / 180;
+                        Vec3 from = V.add(V.add(mid, rt, Math.cos(a) * 1.6), V.UP, Math.sin(a) * 1.1);
+                        Vec3 dv = V.sub(mid, from);
+                        SkillFx.fx(level, "rpg:arrow_spark", from, Opt.of("dir", V.unit(dv), "speed", V.len(dv) / 0.2, "size", 0.12, "grow", 0.5, "life", 0.2,
+                                "color", col, "alpha", 1.0));
+                    }
+                });
+            }
+        }
+        fx.on(11, () -> {
+            RuneKit.Hand h = RuneKit.handOf(sp);
+            Vec3 d = V.unit(V.add(V.UP, h.f(), 0.35));
+            b.pose(h.hand(), d, V.rightOf(h.f()), 3);
+            b.grow(0.22, 3);
+        });
+        fx.on(14, () -> {
+            RuneKit.Hand h = RuneKit.handOf(sp);
+            SkillFx.ring(level, h.hand(), h.f(), col, 0.7, 0.3, 0);
+            SkillFx.burst(level, h.hand(), col, 0.6, 0.25);
+            SkillFx.sparks(level, h.hand(), RuneKit.BLOOD_CORE, 6, 3);
+            b.remove();
+        });
     }
 
     /**
@@ -231,10 +277,10 @@ public final class RuneStrike {
         double[] white = RuneKit.WHITE;
         double len = 8; // 0.48.2 2D 강화: 7 → 8
         double rest = len / 2 - 1.2;
-        RuneBoost.rfx2a(level, "sword", V.up(at, 15), Opt.of("dir", V.DOWN, "size", len / 2, "life", 0.3, "speed", (15 - rest) / 0.3), col, white);
+        // 2026-11-13 거대한 금빛 검 = 3D 룬 검 (2D 빛의 검 대신): 하늘 13칸에서 칼끝을 아래로 떨어져 (빨라짐 · 5틱) 칼끝이 땅속 1.2칸 → 1.45초 꽂혀 있다가 가라앉음
+        godFall(level, at, len, 13, 5, 29, col, white);
         SkillFx.fx(level, "rpg:arrow_shot", V.up(at, 12), Opt.of("dir", V.UP, "speed", 0.0, "size", 12.0, "thick", 0.12, "life", 0.3, "color", col, "alpha", 0.7));
-        // 꽂힌 검: 떨어지는 검이 끝나기 1틱 전 (깜빡임 없게)
-        RuneKit.later(5, () -> RuneBoost.rfx2a(level, "sword", V.up(at, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.45, "fade", 0.45), col, white));
+        GodSwords.start(sp, (int) k.num("ticks"), col);
         RuneKit.later(6, () -> {
             RuneKit.rfx(level, "prop", V.up(at, rest + len / 2 - 0.3), Opt.of("size", 1.6, "life", 0.45, "cell", GLINT, "color", white, "grow", 0.6, "fade", 0.6));
             for (int i = 0; i < 3; i++) {
@@ -266,6 +312,126 @@ public final class RuneStrike {
             RuneKit.novaRing(level, at, 1.4, 3.6, col, white, Opt.of("life", 0.45));
         });
         return true;
+    }
+
+    /** 하늘에서 떨어져 꽂히는 3D 검: 칼끝이 땅 at 위 sky 칸 → 땅속 1.2칸 (fall 틱 — 빨라짐), stuck 틱 꽂혀 있다가 가라앉으며 작아져 사라짐 (10틱) */
+    static void godFall(ServerLevel level, Vec3 at, double len, double sky, int fall, int stuck, double[] col, double[] core) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, at, fall + stuck + 14);
+        double h2t = len * RuneSwords.HILT_TO_TIP / RuneProps.SWORD_LEN;
+        RuneSwords.Blade b = RuneSwords.blade(fx, V.up(at, sky + h2t), V.DOWN, new Vec3(1, 0, 0), len, 0.6, col, core);
+        fx.on(1, () -> b.grow(1, 2));
+        for (int i = 1; i <= fall; i++) {
+            double u = i / (double) fall;
+            final double tipY = sky - (sky + 1.2) * u * u;
+            fx.on(i, () -> b.pose(V.up(at, tipY + h2t), V.DOWN, new Vec3(1, 0, 0), 1));
+        }
+        fx.on(fall + stuck, () -> {
+            b.grow(0.7, 10);
+            b.prop.move(V.up(b.hilt(), -2.2), 10);
+        });
+        fx.on(fall + stuck + 10, b::remove);
+    }
+
+    /**
+     * 2026-11-13 검신 강림의 어깨 위 3D 금빛 검 둘 (룬 전용 검 2판 · 1.8칸 — 2D 빛의 검 대신): 칼끝을 아래로 양 어깨 위에 떠서 틱마다 몸을 따라옴
+     * (움직인 만큼 앞당김), 평타마다 번갈아 하나가 앞으로 찔러 날아갔다 돌아옴 (lunge). 검신 강림이 끝나면 (시간 · 횟수 · 죽음) 위로 솟으며 사라짐
+     */
+    static final class GodSwords {
+        private static final Map<UUID, GodSwords> ON = new HashMap<>();
+        final mmorpg.fabric.vfx.Vfx.Fx fx;
+        final RuneSwords.Blade[] b = new RuneSwords.Blade[2];
+        final int[] busy = {0, 0};
+        int next;
+        boolean done;
+        static final double LEN = 1.8;
+
+        private GodSwords(mmorpg.fabric.vfx.Vfx.Fx fx) {
+            this.fx = fx;
+        }
+
+        /** 어깨 위 자리 (검 가운데) · 칼끝 방향 */
+        private static Vec3[] shoulder(ServerPlayer sp, Vec3 c, int s, int t) {
+            Vec3 fc = Kit.facingOf(sp);
+            Vec3 sd = V.rightOf(fc);
+            Vec3 p = V.up(V.add(V.add(c, sd, s * 1.05), fc, -0.35), 2.25 + 0.12 * Math.sin(t * 0.2 + s));
+            Vec3 d = V.unit(new Vec3(sd.x * s * 0.15, -1, sd.z * s * 0.15));
+            return new Vec3[] {p, d, fc};
+        }
+
+        static void start(ServerPlayer sp, int ticks, double[] col) {
+            GodSwords old = ON.remove(sp.getUUID());
+            if (old != null) old.retire();
+            mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), ticks + 20);
+            GodSwords g = new GodSwords(fx);
+            ON.put(sp.getUUID(), g);
+            for (int i = 0; i < 2; i++) {
+                int s = i == 0 ? -1 : 1;
+                Vec3[] o = shoulder(sp, sp.position(), s, 0);
+                g.b[i] = RuneSwords.blade(fx, V.add(o[0], o[1], -LEN * 0.42), o[1], o[2], LEN, 0.15, col, RuneKit.WHITE);
+            }
+            fx.on(1, () -> {
+                for (RuneSwords.Blade x : g.b) x.grow(1, 4);
+            });
+            Vec3[] last = {sp.position()};
+            fx.each(1, ticks, 1, t -> {
+                if (g.done) return;
+                if (sp.isRemoved() || ON.get(sp.getUUID()) != g || !active(sp)) {
+                    g.retire();
+                    return;
+                }
+                Vec3 c = sp.position();
+                Vec3 lead = V.sub(c, last[0]);
+                last[0] = c;
+                if (V.len(lead) > 2) lead = Vec3.ZERO;
+                Vec3 cc = V.add(c, lead);
+                for (int i = 0; i < 2; i++) {
+                    if (g.busy[i] > t) continue;
+                    Vec3[] o = shoulder(sp, cc, i == 0 ? -1 : 1, t);
+                    g.b[i].pose(V.add(o[0], o[1], -LEN * 0.42), o[1], o[2], 1);
+                }
+            });
+            fx.on(ticks, g::retire);
+        }
+
+        private static boolean active(ServerPlayer sp) {
+            for (StrikeBuff st : buffsOf(sp)) if ("swordGod".equals(st.def.strOrNull("fn"))) return true;
+            return false;
+        }
+
+        /** 평타: 번갈아 하나가 앞으로 찔러 날아갔다 (3틱 — 4칸) 돌아옴 (4틱) */
+        static void lunge(ServerPlayer sp, Vec3 f) {
+            GodSwords g = ON.get(sp.getUUID());
+            if (g == null || g.done) return;
+            int i = g.next;
+            g.next = 1 - i;
+            RuneSwords.Blade x = g.b[i];
+            int t0 = g.fx.age();
+            g.busy[i] = t0 + 9;
+            int s = i == 0 ? -1 : 1;
+            Vec3 from = V.add(V.up(sp.position(), 1.5), V.rightOf(f), s * 0.55);
+            x.pose(V.add(from, f, -0.4), f, V.UP, 1);
+            g.fx.on(t0 + 1, () -> x.pose(V.add(from, f, 3.6), f, V.UP, 3));
+            g.fx.on(t0 + 5, () -> {
+                Vec3[] o = shoulder(sp, sp.position(), s, g.fx.age());
+                x.pose(V.add(o[0], o[1], -LEN * 0.42), o[1], o[2], 4);
+            });
+        }
+
+        void retire() {
+            if (done) return;
+            done = true;
+            ON.values().remove(this);
+            int age = fx.age();
+            for (RuneSwords.Blade x : b) {
+                if (x == null) continue;
+                x.grow(0.1, 6);
+                x.prop.move(V.up(x.hilt(), 2.4), 6);
+            }
+            fx.on(age + 7, () -> {
+                for (RuneSwords.Blade x : b) if (x != null) x.remove();
+                fx.end();
+            });
+        }
     }
 
     // ------------------------------------------------------------ 평타 훅 (RpgCombat)
@@ -452,6 +618,7 @@ public final class RuneStrike {
                 }
             }
             case "swordGod" -> {
+                GodSwords.lunge(sp, f); // 2026-11-13 어깨 위 3D 검이 번갈아 앞으로 찌름
                 // 거대한 금빛 검기: 근접 = 내 앞에서, 활 · 완드 = 맞은 적에서 그 너머로 (맞은 적은 평타에 이미 들어감).
                 // 8단계 6돌 (cross): X자로 두 줄 (양옆 16° — 줄마다 위력 × cross)
                 Vec3 from = melee ? V.up(V.add(sp.position(), f, 0.6), 1.1) : at;
@@ -496,8 +663,7 @@ public final class RuneStrike {
     }
 
     /**
-     * 평타 강화 동안 (홀수 틱 2틱마다 — 연출 횟수 n): 무기를 든 손에 그 룬의 빛 (4틱마다, 1인칭 화면 오른쪽 아래 · 다른 사람에게도 보임),
-     * 검신 강림은 양 어깨 위 금빛 검 둘 (2틱마다 짧게 — 몸을 따라옴)
+     * 평타 강화 동안 (홀수 틱 2틱마다 — 연출 횟수 n): 무기를 든 손에 그 룬의 빛 (4틱마다, 1인칭 화면 오른쪽 아래 · 다른 사람에게도 보임)
      */
     private static void strikeFx(ServerPlayer sp, List<StrikeBuff> list, long n) {
         if (list.isEmpty()) return;
@@ -517,22 +683,7 @@ public final class RuneStrike {
                         "spin", n * 12.0, "color", accent(top.def), "alpha", 0.95, "vel", vel));
             }
         }
-        StrikeBuff god = null;
-        for (StrikeBuff s : list) {
-            if ("swordGod".equals(s.def.strOrNull("fn"))) {
-                god = s;
-                break;
-            }
-        }
-        if (god == null) return;
-        Vec3 c = sp.position();
-        Vec3 fc = Kit.facingOf(sp);
-        Vec3 sd = V.rightOf(fc);
-        for (int s : new int[] {-1, 1}) {
-            Vec3 p = V.up(V.add(V.add(c, sd, s * 1.05), fc, -0.35), 2.2 + 0.12 * Math.sin(n * 0.2 + s));
-            RuneKit.rfx2(level, "sword", p, Opt.of("dir", V.unit(new Vec3(sd.x * s * 0.15, -1, sd.z * s * 0.15)), "size", 0.85, "life", RuneKit.BODY_LIFE,
-                    "alpha", 0.85, "vel", vel), accent(god.def), RuneKit.WHITE);
-        }
+        // 검신 강림의 어깨 위 검 둘은 2026-11-13 3D (GodSwords — 틱마다 몸을 따라옴)
     }
 
     // ------------------------------------------------------------ 신체 강화 · 평타 강화: 매 틱 · 상태 줄 (두 계열 함께 — 여기서 한 번만 등록)

@@ -1003,7 +1003,155 @@ def weapon_mats(m, glow_tint=0, core_tint=1):
     m.mat("gem", Mat(gem_paint(), tint=glow_tint, glow=True, animated=True))
 
 
+def light_blade(alpha=0.8):
+    """2026-11-13 룬 검의 빛 날 (회색 — 계열 색 물들임 · 반투명): 넓은 면은 날 끝 쪽이 밝고 가운데로 옅어짐 + 위로 흐르는 사선 빛 (프레임마다),
+    좁은 면 (날 · 위아래) 은 밝게"""
+    def paint(w, h, face, rng, frame):
+        pl = pulse(frame)
+        ys, xs = np.mgrid[0:h, 0:w]
+        if face in ("east", "west") and w >= 4:
+            c = (w - 1) / 2
+            r = np.abs(xs - c) / max(c, 1)
+            v = 0.62 + 0.36 * r ** 1.6
+            a = alpha * (0.72 + 0.28 * r)
+            band = ((ys * 2 - xs + frame * max(2, h // FRAMES)) % max(10, h // 2)) < 2
+            v = np.where(band, np.minimum(1.0, v + 0.28), v)
+            a = np.where(band, np.minimum(1.0, a + 0.15), a)
+            sp = rng.random((h, w)) < 0.025
+            v[sp] = 1.0
+        else:
+            v = np.full((h, w), 0.95)
+            a = np.full((h, w), min(1.0, alpha + 0.12))
+        v = v * (0.9 + 0.1 * pl)
+        img = np.repeat(np.clip(v, 0, 1)[..., None], 3, -1)
+        return np.concatenate([img, np.clip(a, 0, 1)[..., None]], -1), None
+    return paint
+
+
+def edge_light(alpha=0.92):
+    """빛 날의 날 (흰 · 조금 비침): 가운데 줄 밝게, 가장자리 옅게"""
+    W_, L_ = C("#FFFFFF"), C("#DCEBFF")
+
+    def paint(w, h, face, rng, frame):
+        img = np.tile(W_, (h, w, 1)).astype(float)
+        a = np.full((h, w), alpha)
+        if w >= 3:
+            img[:, 0] = L_
+            img[:, -1] = L_
+            a[:, 0] = a[:, -1] = alpha * 0.75
+        return np.concatenate([img, a[..., None]], -1), None
+    return paint
+
+
+def rune_channel():
+    """룬 검의 솟은 홈 (회색 — 속빛 물들임): 밝은 바탕에 일정한 간격의 룬 글자 (어둡게 새김), 밝은 띠가 프레임마다 위로"""
+    GLYPHS = [["010", "111", "010", "010"], ["101", "010", "101", "010"], ["110", "011", "010", "010"], ["010", "011", "110", "010"],
+              ["111", "010", "010", "111"], ["100", "110", "011", "001"]]
+
+    def paint(w, h, face, rng, frame):
+        v = np.full((h, w), 0.96)
+        if face in ("east", "west") and w >= 3 and h >= 8:
+            x0 = (w - 3) // 2
+            k = int(rng.integers(0, len(GLYPHS)))
+            y = 2
+            while y + 4 < h - 1:
+                g = GLYPHS[k % len(GLYPHS)]
+                for gy, row in enumerate(g):
+                    for gx, ch in enumerate(row):
+                        if ch == "1" and x0 + gx < w:
+                            v[h - 1 - (y + gy), x0 + gx] = 0.5
+                k += 1
+                y += 6
+            band = ((np.arange(h)[::-1, None] - frame * max(1, h // FRAMES)) % max(8, h // 3)) < 2
+            v = np.where(band & (v > 0.9), 1.0, v)
+            v = np.where(band & (v <= 0.9), 0.72, v)
+            if w >= 4:
+                v[:, 0] = np.minimum(v[:, 0], 0.8)
+                v[:, -1] = np.minimum(v[:, -1], 0.8)
+        img = np.repeat(np.clip(v, 0, 1)[..., None], 3, -1)
+        return np.concatenate([img, np.ones((h, w, 1))], -1), None
+    return paint
+
+
+def steel_rune():
+    """칼 목 (어두운 쇠 + 룬 홈 — 홈은 겹 그림이 아니라 같은 면의 밝은 획, 계열 속빛은 물들이지 않음)"""
+    B, H, S, R_ = C("#2B2C38"), C("#555A6E"), C("#15151C"), C("#9FB4D8")
+
+    def paint(w, h, face, rng, frame):
+        img = np.tile(B, (h, w, 1)).astype(float)
+        img *= (0.9 + 0.15 * rng.random((h, w)))[..., None]
+        if h >= 3:
+            img[0, :] = H
+            img[-1, :] = S
+        if w >= 3:
+            img[:, 0] = img[:, 0] * 0.4 + H * 0.6
+            img[:, -1] = img[:, -1] * 0.4 + S * 0.6
+        if w >= 5 and h >= 5:
+            cx = w // 2
+            img[1:-1, cx] = R_
+            for yy in range(2, h - 1, 3):
+                img[yy, max(1, cx - 1)] = R_
+                img[yy, min(w - 2, cx + 1)] = R_
+        return np.concatenate([np.clip(img, 0, 1), np.ones((h, w, 1))], -1), None
+    return paint
+
+
 def rune_sword():
+    """2026-11-13 룬 전용 검 2판 (초월 · 영웅 룬 연출 — 사용자 메모 "검 퀄이 너무 낮음 더 코퀄로"): 같은 길이 · 쥔 곳 (칼끝 y 31 · 자루 끝 y −10.2 ·
+    손잡이 (8, −3.5, 8)) 에서 — 넓은 반투명 빛 날 (계열 색 · 날 끝 밝게 · 흐르는 사선 빛) · 흰 날 · 가운데 솟은 룬 홈 (속빛) · 마름모 칼끝 ·
+    위로 젖힌 날개 코등이 (금 · 쇠 두 겹 · 끝의 보석) · 가운데 보석 · 룬 새긴 칼 목 · 가죽 손잡이 · 마름모 보석 자루 끝.
+    요소 차례: 불투명 (자루 · 코등이 · 홈) 을 먼저, 반투명 날 · 날을 뒤에 (아이템은 면을 거르지 않고 차례로 그림 — 날 뒤의 홈이 비쳐 보이게)"""
+    m = BModel("rune_sword", "룬 전용 검 2판 (2026-11-13 — 반투명 빛 날 · 솟은 룬 홈 · 마름모 칼끝 · 날개 코등이 · 보석, 계열 색은 서버가 물들임)", d=2.5)
+    weapon_mats(m)
+    m.mat("light", Mat(light_blade(0.78), tint=0, glow=True, animated=True))
+    m.mat("edge2", Mat(edge_light(0.9), glow=True))
+    m.mat("collar", Mat(steel_rune()))
+    m.mat("core", Mat(gem_paint(0.62), tint=1, glow=True, animated=True))
+    m.mat("channel", Mat(rune_channel(), tint=1, glow=True, animated=True))
+    # 자루 끝: 금 받침 · 마름모 보석 (Y 둘레 45°) · 금 테
+    m.box("gold", (7.3, -10.2, 7.3), (8.7, -9.5, 8.7))
+    m.box("gem", (7.05, -9.9, 7.05), (8.95, -7.9, 8.95), rot=("y", 45, (8, -8.9, 8)))
+    m.box("gold", (6.9, -8.0, 6.9), (9.1, -7.1, 9.1))
+    # 손잡이: 가죽 · 금 고리 둘
+    m.box("grip", (7.28, -7.1, 7.28), (8.72, 0.0, 8.72))
+    for y in (-5.2, -2.7):
+        m.box("gold", (7.1, y, 7.1), (8.9, y + 0.55, 8.9))
+    # 코등이 가운데: 쇠 덩이 · 금 테 · 양면의 보석 (X 둘레 45° — 마름모) · 손잡이로 내려온 금 판
+    m.box("steel", (6.75, 0.0, 5.5), (9.25, 3.0, 10.5))
+    m.box("gold", (6.6, 0.25, 6.2), (9.4, 2.75, 9.8))
+    m.box("core", (6.35, 0.6, 7.1), (9.65, 2.4, 8.9), rot=("x", 45, (8, 1.5, 8)))
+    m.box("gold", (6.95, -1.5, 7.45), (9.05, 0.0, 8.55))
+    # 날개 (양쪽 — 위로 22.5° 젖힘): 아래 쇠 · 위 금 · 끝의 보석 (마름모)
+    for s in (-1, 1):
+        z0, z1 = (-1.2, 5.6) if s < 0 else (10.4, 17.2)
+        oz = 5.6 if s < 0 else 10.4
+        ang = 22.5 if s < 0 else -22.5
+        m.box("steel", (7.2, 0.2, z0), (8.8, 1.5, z1), rot=("x", ang, (8, 1.5, oz)))
+        m.box("gold", (7.05, 1.3, z0 + (0.6 if s < 0 else 0)), (8.95, 2.5, z1 - (0 if s < 0 else 0.6)), rot=("x", ang, (8, 1.5, oz)))
+        d = 6.2  # 날개 끝 (안쪽 끝에서) — 돌린 자리 (y = 1.9 + d · sin 22.5 · z = d · cos 22.5)
+        tz = oz + s * d * math.cos(math.radians(22.5))
+        ty = 1.9 + d * math.sin(math.radians(22.5))
+        m.box("gem", (7.1, ty - 1.0, tz - 1.0), (8.9, ty + 1.0, tz + 1.0), rot=("x", 45, (8, ty, tz)))
+    # 칼 목 (룬 새긴 쇠 — 날보다 조금 넓게)
+    m.box("collar", (7.05, 3.0, 4.7), (8.95, 5.4, 11.3))
+    m.box("gold", (6.95, 4.9, 4.5), (9.05, 5.5, 11.5))
+    # 솟은 룬 홈 (불투명 · 속빛) — 날보다 두꺼워 양면에 솟음
+    m.box("channel", (7.3, 5.5, 7.2), (8.7, 25.0, 8.8))
+    # 반투명 빛 날: 아래 (넓게) · 가운데 · 위 · 마름모 칼끝 (X 둘레 45°)
+    m.box("light", (7.45, 5.5, 4.4), (8.55, 11.0, 11.6))
+    m.box("light", (7.45, 11.0, 4.6), (8.55, 17.0, 11.4))
+    m.box("light", (7.46, 17.0, 4.9), (8.54, 23.0, 11.1))
+    m.box("light", (7.47, 23.0, 5.3), (8.53, 27.6, 10.7))
+    m.box("light", (7.47, 25.2, 5.6), (8.53, 30.0, 10.4), rot=("x", 45, (8, 27.6, 8)))
+    # 흰 날 (양쪽 — 단마다) · 칼끝 테 (흰 마름모 — 빛 마름모보다 0.7 크게, 얇게)
+    for (y0, y1, zi) in ((5.5, 11.0, 4.4), (11.0, 17.0, 4.6), (17.0, 23.0, 4.9), (23.0, 27.6, 5.3)):
+        m.box("edge2", (7.62, y0, zi - 0.7), (8.38, y1, zi))
+        m.box("edge2", (7.62, y0, 16 - zi), (8.38, y1, 16 - zi + 0.7))
+    m.box("edge2", (7.62, 24.7, 5.1), (8.38, 30.5, 10.9), rot=("x", 45, (8, 27.6, 8)))
+    return m
+
+
+def rune_sword_v1():
     m = BModel("rune_sword", "룬 전용 검 (2026-11-12 사진 방식 — 빛나는 날 · 룬이 흐르는 홈 · 금 테 · 가죽 손잡이, 계열 색은 서버가 물들임)", d=1.5)
     weapon_mats(m)
     m.box("grip", (7.3, -7, 7.3), (8.7, 0, 8.7))

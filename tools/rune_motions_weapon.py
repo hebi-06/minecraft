@@ -18,6 +18,8 @@ W_POINT_FWD = P(body=[6, -14, 0], ra=arm([-0.05, 0.08, 1], 0, [0, 0.08, 1]), la=
 W_CHARGE_LOW = P(body=[10, 52, 0], ra=arm([0.7, -0.45, -0.55], 30, [0.35, -0.2, -0.9]), la=arm([0.45, -0.55, 0.4], 70), rl=[22, 0, 6], ll=[-30, 0, -4],
                  rk=36, lk=38, root=[-0.15, 0])  # 두 손으로 오른쪽 뒤 낮게 (모아 베기 준비)
 FPW_ZANSHIN = dict(p=(-0.95, 0.05, 0.05), blade=(-0.9, -0.1, 0.4), edge=(0, -1, 0))  # 1인칭: 가로로 벤 뒤 왼쪽에 멈춘 칼
+ZANSHIN = P(body=[14, -34, 0], ra=arm([-0.75, -0.2, 0.62], 14, [-0.85, -0.3, 0.4]), la=arm([-0.3, -0.75, 0.35], 35), rl=[18, 0, 4], ll=[-28, 0, -2],
+            rk=36, lk=40, root=[-0.14, 0.1])  # 가로로 벤 뒤 멈춘 자세 (발도 일섬 · 무간참역 — 2026-11-13 무영검 동작이 rune_motions_hero 로 옮겨 여기에 둠)
 def fp_slash_ready(m, tick):
     fpw(m, tick, FPW_BACK)
 
@@ -108,28 +110,6 @@ fpw(m, 8.5, FPW_LOW)
 fpl(m, 12.5, FP_GUARD)
 m.fp(12.5, (-0.25, 0.25, -0.42), None, (0.2, 0.08, 0.97), (0, -1, 0), "out3")
 use(m, "shadowRaid")
-
-# 칼바람 폭풍: 한 바퀴 크게 돌아 칼바람을 두르고 (0 ~ 8) 무기를 낮게 뻗은 채 내달릴 자세
-m = Motion("blade_storm", 18, "칼바람 폭풍 — 오른쪽으로 한 바퀴 돌아 칼바람을 두르고 낮게 내달릴 자세", fade=(0.03, 0.12))
-spin_right(m, (2,), 9)
-keyp(m, 12.5, P(body=[24, -10, 0], ra=arm([0.45, -0.55, 0.7], 10, [0.6, -0.2, 0.75]), la=arm([-0.4, -0.5, -0.75], 25), rl=[-30, 0, 4], ll=[20, 0, -4],
-                rk=45, lk=35, root=[-0.15, 0.1], spin=-360))
-fpw(m, 12.5, FPW_LOW)
-use(m, "bladeStorm")
-
-# 무영검: 발도 (0 ~ 2 — 가로로 한 번에) → 낮게 멈춘 자세로 기다림 (3 ~ 24) → 칼을 거두는 순간 (26) 칼자국이 터짐
-m = Motion("shadowless", 34, "무영검 — 한 번에 뽑아 베고 멈춰 기다리다가 칼을 거두는 순간 칼자국이 터짐", fade=(0.03, 0.1))
-strike(m, "slash_h", 0, 1.5, 3.5)
-ZANSHIN = P(body=[14, -34, 0], ra=arm([-0.75, -0.2, 0.62], 14, [-0.85, -0.3, 0.4]), la=arm([-0.3, -0.75, 0.35], 35), rl=[18, 0, 4], ll=[-28, 0, -2],
-            rk=36, lk=40, root=[-0.14, 0.1])
-keyp(m, 6, ZANSHIN)
-keyp(m, 22, P(ZANSHIN, body=[15, -35, 0]))
-keyp(m, 25, W_SHEATHE, "out3")
-keyp(m, 29, P(W_SHEATHE, body=[4, 8, 0]))
-fpw(m, 6, FPW_ZANSHIN)
-fpw(m, 22, FPW_ZANSHIN)
-m.fp(25, (-0.4, -0.35, 0.2), None, (-0.85, -0.3, -0.4), None, "out3")
-use(m, "shadowless")
 
 # ------------------------------------------------------------ 도끼
 
@@ -277,17 +257,7 @@ m = Motion("triple_cut", 28, "삼단베기 — 가로로 베고 세로로 내려
 strike(m, "slash_h", 0, 1.5)
 strike(m, "slash_v", 8.3, 10.5)
 strike(m, "thrust", 18.3, 20.6)
-use(m, "tripleCut", "triElement")
-
-# 천지개벽: 두 손으로 무기를 오른쪽 뒤 낮게 모아 기운을 모음 (0 ~ 19 — 점점 낮게) → 거대한 가로 베기 (20)
-m = Motion("heaven_split", 32, "천지개벽 — 두 손으로 무기를 뒤로 모아 검기를 모으다가 거대하게 가로로 벰", fade=(0.03, 0.1))
-keyp(m, 3, W_CHARGE_LOW, "out3")
-keyp(m, 11, P(W_CHARGE_LOW, rk=42, lk=44, root=[-0.18, 0]))
-keyp(m, 18, P(W_CHARGE_LOW, body=[12, 58, 0], rk=48, lk=50, root=[-0.22, 0]))
-strike(m, "skill_slash", 18.4, 20.6)
-fpw(m, 3, FPW_BACK, "out3")
-fpw(m, 18, FPW_BACK, dp=(0.1, -0.1, 0.05))
-use(m, "heavenSplit")
+use(m, "triElement")  # 2026-11-13 삼단베기는 새 동작 (rune_motions_hero blade_triple)
 
 # ------------------------------------------------------------ 마검사
 
@@ -328,20 +298,6 @@ fpw(m, 7, FPW_LOW)
 fpw(m, 10.5, FPW_UP)
 fpw(m, 12.5, FPW_DOWN, "out3")
 use(m, "riftSlash")
-
-# 마검 결계: 무기를 얼굴 앞에 세우고 (0 ~ 3) 왼손으로 둘레를 한 바퀴 그려 (3 ~ 10) 검 넷을 띄움
-m = Motion("orbit_blades", 16, "마검 결계 — 무기를 얼굴 앞에 세우고 왼손으로 둘레를 그려 마력 검을 띄움", fade=(0.04, 0.12))
-m.set(hands={"main": "weapon", "off": "fist"})
-keyp(m, 2.5, W_UP_FRONT, "out3")
-for tick, d in ((4.5, [-0.85, 0.2, 0.5]), (6.5, [-0.4, 0.4, -0.75]), (8.5, [0.35, 0.3, 0.85]), (10.5, [-0.95, 0.05, 0.3])):
-    keyp(m, tick, P(W_UP_FRONT, la=arm(d, 10)))
-fpw(m, 2.5, FPW_UP, "out3")
-fpw(m, 10.5, FPW_UP)
-fpl(m, 4.5, ((0.3, 0.1, -0.15), (20, -30, 0)))
-fpl(m, 6.5, ((0.25, 0.25, 0.0), (45, -20, 0)))
-fpl(m, 8.5, ((0.0, 0.1, -0.35), (20, 45, 0)))
-fpl(m, 10.5, ((0.35, 0.05, -0.15), (10, -35, 0)))
-use(m, "orbitBlades")
 
 # 마검 해방 (사용자 "마검 초월 같은거는 두손을 모으고 검을 위로 들고 기를 모으다가 아래로 내려찍는 모션으로"): 두 손을 모아 무기를 세우고 (1.5) →
 # 두 손으로 머리 위로 곧게 들어 기를 모음 (4.5 ~ 23 — 눈앞에 거대한 마력 검이 솟고, 16 에 그 검이 가로로 벰) → 거대한 검이 앞으로 쓰러지며 내려찍는 때 (26) 함께 내려찍음
@@ -500,30 +456,6 @@ use(m, "flurry")
 m = Motion("cleave", 12, "가르기 — 낮고 넓게 가로로 쓸어 벰", fade=(0.03, 0.12))
 strike(m, "lance_sweep", 0, 1.5)
 use(m, "cleave")
-
-# 피의 칼날: 무기를 얼굴 앞에 세우고 (0 ~ 7 — 피가 무기로 모임) 왼 주먹을 꽉 쥠 → 털어 내림
-m = Motion("blood_blade", 16, "피의 칼날 — 무기를 얼굴 앞에 세워 피의 기운을 모으고 주먹을 꽉 쥠", fade=(0.04, 0.12))
-m.set(hands={"main": "weapon", "off": "fist"})
-keyp(m, 2, P(W_UP_FRONT, la=L(A_CHEST)), "out3")
-keyp(m, 7, P(W_UP_FRONT, la=L(A_CHEST), body=[-8, 0, 0]))
-keyp(m, 10, P(W_READY, body=[10, -8, 0], ra=arm([0.3, -0.55, 0.65], 20, [0.4, -0.75, 0.5]), la=L(A_CHAMBER)), "out3")
-fpw(m, 2, FPW_UP, "out3")
-fpw(m, 7, FPW_UP)
-fpw(m, 10, FPW_DOWN, "out3")
-fpl(m, 2, ((-0.15, -0.05, 0.0), (20, 40, 0)), "out3")
-fpl(m, 7, ((-0.15, -0.05, 0.0), (20, 40, 0)))
-fpl(m, 10, FP_CHAMBER)
-use(m, "bloodBlade")
-
-# 검신 강림: 무기를 하늘로 치켜들어 (0 ~ 4) 하늘에서 떨어지는 거대한 검을 부르고 (6 에 박힘) 웅크려 버팀
-m = Motion("sword_god", 16, "검신 강림 — 무기를 하늘로 치켜들어 거대한 검을 부르고, 검이 박힐 때 웅크려 버팀", fade=(0.04, 0.12))
-keyp(m, 3, W_SKY, "out3")
-keyp(m, 6.5, P(body=[18, 0, 0], ra=arm([0.25, -0.55, 0.6], 85, [0, 0.6, 0.8]), la=L(A_GUARD), rl=[-30, 0, 8], ll=[-30, 0, -8], rk=55, lk=55,
-               root=[-0.22, 0]), "in")
-keyp(m, 11, P(W_READY, body=[10, 0, 0]))
-fpw(m, 3, FPW_SKY, "out3")
-fpw(m, 6.5, FPW_LOW, "in")
-use(m, "swordGod")
 
 # ------------------------------------------------------------ 무간 · 대지 (한정 초월)
 

@@ -1129,7 +1129,7 @@
       "rune:swordGod": "rn_sword_god", "rune:swordWave": "rn_sword_wave", "rune:thunderSlash": "rn_thunder_slash",
       "rune:thunderSpear": "rn_thunder_spear", "rune:thundercloud": "rn_thundercloud", "rune:tidalWave": "rn_tidal_wave",
       "rune:tideLance": "rn_tide_lance", "rune:titanSmash": "rn_titan_smash", "rune:triElement": "rn_triple_cut",
-      "rune:tripleCut": "rn_triple_cut", "rune:undyingPact": "rn_undying_pact", "rune:warChains": "rn_war_chains",
+      "rune:tripleCut": "rn_blade_triple", "rune:undyingPact": "rn_undying_pact", "rune:warChains": "rn_war_chains",
       "rune:warGod": "rn_war_god", "rune:whirlwind": "rn_whirlwind", "rune:wolfPack": "rn_wolf_pack",
       "rune:worldTreeGrace": "rn_world_tree"
     },
@@ -1137,12 +1137,11 @@
       "rn_chain_fist", "rn_hundred_fists", "rn_palm_blast", "rn_flying_kick", "rn_heaven_fist", "rn_stone_fist",
       "rn_stone_ward", "rn_petrify", "rn_golem_summon", "rn_colossus", "rn_ground_slam", "rn_whirlwind",
       "rn_fissure", "rn_titan_smash", "rn_heaven_fall", "rn_gale_slash", "rn_blade_fan", "rn_shadow_raid",
-      "rn_blade_storm", "rn_shadowless", "rn_axe_boomerang", "rn_blood_cleave", "rn_leap_slam", "rn_execute",
-      "rn_berserker", "rn_pierce_arrow", "rn_pin_arrow", "rn_backstep", "rn_snipe", "rn_sky_bow",
-      "rn_quick_draw", "rn_sword_wave", "rn_counter_stance", "rn_triple_cut", "rn_heaven_split", "rn_arcane_cut",
-      "rn_mana_blaster", "rn_rift_slash", "rn_orbit_blades", "rn_spellblade_release", "rn_flame_slash", "rn_frost_thrust",
-      "rn_thunder_slash", "rn_element_release", "rn_blood_crescent", "rn_blood_harvest", "rn_blood_whirl", "rn_blood_brand",
-      "rn_crimson_moon", "rn_edge_hone", "rn_flurry", "rn_cleave", "rn_blood_blade", "rn_sword_god",
+      "rn_axe_boomerang", "rn_blood_cleave", "rn_leap_slam", "rn_execute", "rn_berserker", "rn_pierce_arrow",
+      "rn_pin_arrow", "rn_backstep", "rn_snipe", "rn_sky_bow", "rn_quick_draw", "rn_sword_wave",
+      "rn_counter_stance", "rn_triple_cut", "rn_arcane_cut", "rn_mana_blaster", "rn_rift_slash", "rn_spellblade_release",
+      "rn_flame_slash", "rn_frost_thrust", "rn_thunder_slash", "rn_element_release", "rn_blood_crescent", "rn_blood_harvest",
+      "rn_blood_whirl", "rn_blood_brand", "rn_crimson_moon", "rn_edge_hone", "rn_flurry", "rn_cleave",
       "rn_endless_slash", "rn_earth_splitter", "rn_guard_shout", "rn_life_spring", "rn_iron_skin", "rn_bulwark",
       "rn_undying_pact", "rn_fireball", "rn_frost_nova", "rn_fire_storm", "rn_blizzard", "rn_meteor",
       "rn_light_barrier", "rn_purify", "rn_judge_hammer", "rn_divine_smite", "rn_archangel", "rn_chain_lightning",
@@ -1153,7 +1152,8 @@
       "rn_backstab", "rn_poison_stars", "rn_smoke_bomb", "rn_shadow_flurry", "rn_moon_assassin", "rn_steel_trap",
       "rn_falcon_strike", "rn_hunt_net", "rn_wolf_pack", "rn_beast_king", "rn_magma_slam", "rn_lava_bombs",
       "rn_magma_geyser", "rn_magma_field", "rn_grand_eruption", "rn_chain_hook", "rn_shield_rush", "rn_chain_whirl",
-      "rn_arena_domain", "rn_war_chains", "rn_world_tree", "rn_abyss_brand", "rn_glacier_field"
+      "rn_arena_domain", "rn_war_chains", "rn_world_tree", "rn_abyss_brand", "rn_glacier_field", "rn_blade_triple",
+      "rn_heaven_split", "rn_blade_storm", "rn_shadowless", "rn_orbit_blades", "rn_blood_blade", "rn_sword_god"
     ],
     "jobMotions": [
       "jb_swordsman_flurry", "jb_swordsman_flash", "jb_swordsman_moon", "jb_swordsman_mirror", "jb_swordsman_ult", "jb_warrior_crush",

@@ -252,7 +252,7 @@ final class RuneBlade {
 
     /**
      * 삼단베기: gap 틱마다 가로 베기 → 세로 베기 (앞 cone 도 · range 칸) → 찌르기 (앞 thrust 칸 직선) — 베기마다 가로 · 세로 초승달 검기 (rpg:rfx_wave),
-     * 찌르기는 빛의 칼 (rpg:rfx_sword) 이 앞으로 뻗어 나감. 0.49.0 찌르기까지 마치면 검세 (가하는 피해 + buff, buffTicks 틱)
+     * 2026-11-13 3D 검 (tripleSword) 이 베기마다 같은 길로 휘두르고 찌르기 끝까지 날아감. 0.49.0 찌르기까지 마치면 검세 (가하는 피해 + buff, buffTicks 틱)
      */
     static boolean tripleCut(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("blade");
@@ -260,6 +260,7 @@ final class RuneBlade {
         double[] core = cs[1];
         String life = RuneKit.lifeToken(sp);
         int hits = (int) k.num("hits");
+        tripleSword(sp, life, (int) k.num("gap"), k.num("thrust"), glow, core);
         SkillFx.every(hits, (int) k.num("gap"), i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -277,8 +278,7 @@ final class RuneBlade {
             } else {
                 Vec3 from = V.up(V.add(sp.position(), f, 0.5), 1.1);
                 double len = Math.max(1, RuneKit.rayLength(level, from, f, k.num("thrust")));
-                // 빛의 칼: 오른손에서 칼끝이 len 까지 뻗음 (3틱 — 1인칭에서 손에서 비스듬히 뻗어 보임)
-                thrust(level, from, f, len, glow, RuneKit.WHITE);
+                // 2026-11-13 찌르는 칼은 3D 검 (tripleSword — 2D 빛의 칼 thrust 대신)
                 SkillFx.fx(level, "rpg:light_cut", V.add(from, f, len / 2), Opt.of("dir", f, "size", len / 2, "thick", 0.18, "life", 0.3, "color", core, "alpha", 1.0));
                 SkillFx.ring(level, V.add(from, f, len), f, glow, 0.9, 0.3, 0);
                 // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 찌르기 — 칼끝이 닿은 자리의 땅 (벽에 막혔으면 벽면에서 0.4칸 앞 — 벽 위로 올라가지 않게)
@@ -304,21 +304,84 @@ final class RuneBlade {
         return true;
     }
 
+    /** 쓴 사람 둘레 (가슴 높이 h) 를 기준으로 휘두르는 틀 — 틱마다 지금 자리 · 보는 쪽 */
+    static RuneSwords.Frame bodyFrame(ServerPlayer sp, double h) {
+        return new RuneSwords.Frame() {
+            @Override
+            public Vec3 pivot() {
+                return V.up(sp.position(), h);
+            }
+
+            @Override
+            public Vec3 fwd() {
+                return V.flat(sp.getViewVector(1F));
+            }
+        };
+    }
+
     /**
-     * 찌르는 빛의 칼 (rpg:rfx_sword — runes.js elementThrust, 원소 검사 · 검사 색): 오른손 (몸 높이 from 의 오른쪽 위) 에서 찌르는 끝 (from + f × len) 까지
-     * 칼끝이 뻗음 (3틱) 뒤 잠깐 머묾. 1인칭에서 칼이 보는 쪽과 나란해 점으로 보이지 않게 손에서 비스듬히 뻗음.
-     * 머무는 칼은 2틱에 나타남 (뻗는 칼과 1틱 겹침 — 깜빡임 없게)
+     * 2026-11-13 삼단베기의 3D 검 (룬 전용 검 2판 · 3.4칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 베기마다 내 몸 둘레를 크게 같은 길로 —
+     * 가로 (0 — 오른쪽 앞에서 나타나 앞을 지나 왼쪽 뒤까지 휩씀) → 머리 위 뒤로 들림 → 세로 (gap — 하늘에서 앞 땅까지 내려침, 칼끝이 땅에 닿아 갈라짐) →
+     * 오른쪽 뒤로 당김 → 찌르기 (2 × gap — 칼끝이 찌르는 끝까지 날아감) → 작아지며 흩어짐. 피해 · 틱은 그대로 (2D 초승달 · 검기도 그대로)
      */
-    private static void thrust(ServerLevel level, Vec3 from, Vec3 f, double len, double[] glow, double[] core) {
-        double size = 0.9;
-        Vec3 hand = V.up(V.add(from, V.rightOf(f), 0.3), 0.15);
-        Vec3 end = V.add(from, f, len);
-        Vec3 dv = V.unit(V.sub(end, hand));
-        double lv = V.len(V.sub(end, hand));
-        double s0 = Math.min(0.6 + size, lv);
-        RuneKit.rfx2(level, "sword", V.add(hand, dv, s0), Opt.of("dir", dv, "speed", Math.max(0, lv - s0 - size) / 0.15, "size", size, "life", 0.15), glow, core);
-        Tasks.later(2, () -> RuneKit.rfx2(level, "sword", V.add(hand, dv, Math.max(s0, lv - size)), Opt.of("dir", dv, "size", size, "life", 0.25, "fade", 0.6), glow,
-                core));
+    private static void tripleSword(ServerPlayer sp, String life, int gap, double thrust, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 2 * gap + 12);
+        double len = 3.4;
+        RuneSwords.Frame chest = bodyFrame(sp, 1.15);
+        RuneSwords.Frame high = bodyFrame(sp, 1.55);
+        Vec3 f0 = chest.fwd();
+        Vec3 d0 = RuneSwords.flatDir(f0, 70, 8);
+        RuneSwords.Blade b = RuneSwords.blade(fx, V.add(chest.pivot(), d0, 0.7), d0, V.UP, len, 0.55, glow, core);
+        fx.on(1, () -> b.grow(1, 2));
+        // 가로: 오른쪽 앞 (70°) → 앞 (1틱) → 왼쪽 뒤 (−130°)
+        RuneSwords.swing(b, 0, 4, chest, 0.7, (f, a) -> RuneSwords.flatDir(f, a, 8), f -> V.UP, 70, -130, "out");
+        // 머리 위로 (왼쪽 위 → 하늘 뒤)
+        fx.on(5, () -> {
+            Vec3 f = chest.fwd();
+            Vec3 d = V.unit(V.add(V.scale(V.rightOf(f), -0.55), V.UP, 0.85));
+            b.pose(V.add(high.pivot(), d, 0.6), d, V.rightOf(f), 2);
+        });
+        fx.on(gap - 3, () -> {
+            Vec3 f = high.fwd();
+            Vec3 d = RuneSwords.upDir(f, 118);
+            b.pose(V.add(high.pivot(), d, 0.6), d, V.rightOf(f), 2);
+        });
+        // 세로: 하늘 뒤 (118°) → 앞 (gap) → 앞 땅 (−26° — 칼끝이 땅에 닿음)
+        RuneSwords.swing(b, gap - 1, 3, high, 0.6, RuneSwords::upDir, V::rightOf, 118, -26, null);
+        fx.on(gap + 2, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 tip = b.tip();
+            Vec3 g = new Vec3(tip.x, RuneKit.groundAt(level, tip, sp.getY()), tip.z);
+            RuneKit.glowCrack(level, g, 1.7, glow, RuneKit.WHITE, Opt.of("life", 1.0, "v", 1.0));
+            SkillFx.burst(level, V.up(g, 0.2), glow, 0.9, 0.25);
+            SkillFx.sparks(level, V.up(g, 0.3), core, 5, 4);
+        });
+        // 오른쪽 뒤로 당김 (칼끝은 앞)
+        fx.on(gap + 5, () -> {
+            Vec3 f = chest.fwd();
+            Vec3 d = V.unit(V.add(f, V.UP, 0.06));
+            b.pose(V.add(V.add(chest.pivot(), V.rightOf(f), 0.55), f, -0.9), d, V.UP, 3);
+        });
+        fx.on(2 * gap - 3, () -> {
+            Vec3 f = chest.fwd();
+            Vec3 d = V.unit(V.add(f, V.UP, 0.08));
+            b.pose(V.add(V.add(chest.pivot(), V.rightOf(f), 0.62), f, -1.7), d, V.UP, 2);
+        });
+        // 찌르기: 칼끝이 찌르는 끝까지 (2틱) → 머묾 → 앞으로 밀리며 작아져 흩어짐
+        fx.on(2 * gap - 1, () -> {
+            Vec3 f = chest.fwd();
+            Vec3 from = V.up(V.add(sp.position(), f, 0.5), 1.1);
+            double reach = Math.max(1, RuneKit.rayLength(level, from, f, thrust));
+            double h2t = len * RuneSwords.HILT_TO_TIP / RuneProps.SWORD_LEN;
+            b.pose(V.add(from, f, Math.max(0.3, reach - h2t)), f, V.UP, 2);
+        });
+        fx.on(2 * gap + 3, () -> {
+            b.grow(0.15, 4);
+            b.prop.move(V.add(b.hilt(), b.dir(), 1.6), 4);
+            SkillFx.sparks(level, b.tip(), core, 6, 5);
+        });
+        fx.on(2 * gap + 7, b::remove);
     }
 
     /**
@@ -326,6 +389,66 @@ final class RuneBlade {
      * (적마다 한 번), 밀쳐냄. 초월 2차 강화: 청백 하늘 · 발밑의 칼날 문양 · 앞쪽 하늘의 칼날 문양 → 청백 번쩍임 · 하늘이 둘로 갈라짐 · 하늘 문양의 섬광 ·
      * 검기가 지나간 땅이 갈라져 빛남
      */
+    /**
+     * 2026-11-13 천지개벽의 3D 거대한 검 (룬 전용 검 2판 · 9.5칸): 오른쪽 땅이 갈라지며 칼끝부터 솟아오름 (0 ~ 6) → 뒤로 눕혀 오른쪽 뒤로 당겨짐 (몸을 감는 동작과
+     * 함께 — 떨림) → charge 틱에 몸 앞을 가로로 크게 휩씀 (오른쪽 뒤 → 앞 → 왼쪽 뒤, 앞을 지나는 때 = 거대한 검기가 나가는 틱) → 작아지며 빛으로 흩어짐
+     */
+    private static void heavenBlade(ServerPlayer sp, String life, int charge, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), charge + 16);
+        double len = 9.5;
+        RuneSwords.Frame chest = bodyFrame(sp, 1.2);
+        Vec3 f0 = chest.fwd();
+        Vec3 rt0 = V.rightOf(f0);
+        Vec3 base = V.add(V.add(sp.position(), rt0, 2.2), f0, -0.6);
+        double gy = RuneKit.groundAt(level, base, sp.getY());
+        Vec3 foot = new Vec3(base.x, gy, base.z);
+        RuneSwords.Blade b = RuneSwords.blade(fx, V.up(foot, -6.0), V.UP, f0, len, 0.75, glow, core);
+        RuneKit.glowCrack(level, foot, 2.2, glow, RuneKit.WHITE, Opt.of("life", 1.2, "v", 0.0));
+        SkillFx.burst(level, V.up(foot, 0.3), glow, 1.6, 0.35);
+        // 솟아오름 (칼끝부터 — 빨리 솟다가 느려짐)
+        double[] ys = {-6.0, -3.4, -1.5, -0.3, 0.35};
+        for (int i = 1; i < ys.length; i++) {
+            final double y = ys[i];
+            final int t = i * 2 - 1;
+            fx.on(t, () -> {
+                b.grow(1, 2);
+                b.pose(V.up(foot, y), V.UP, f0, 2);
+                if (t <= 3) SkillFx.sparks(level, V.up(foot, 0.4), core, 6, 5);
+            });
+        }
+        // 뒤로 눕혀 오른쪽 뒤로 당겨짐 (넓은 면이 위 — 휩쓸 자세)
+        fx.on(9, () -> {
+            Vec3 f = chest.fwd();
+            Vec3 d = V.unit(V.add(V.add(V.scale(V.UP, 0.75), V.rightOf(f), 0.4), f, -0.5));
+            b.pose(V.add(V.up(sp.position(), 0.9), V.rightOf(f), 1.5), d, V.UP, 3);
+        });
+        fx.on(12, () -> {
+            Vec3 f = chest.fwd();
+            Vec3 d = RuneSwords.flatDir(f, 140, -12);
+            b.pose(V.add(chest.pivot(), d, 1.0), d, V.UP, 3);
+        });
+        for (int t = 15; t < charge - 2; t++) {
+            final int tt = t;
+            fx.on(t, () -> {
+                Vec3 f = chest.fwd();
+                double j = (tt % 2 == 0 ? 1 : -1);
+                Vec3 d = RuneSwords.flatDir(f, 140 + 3 * j, -12 + 2 * j);
+                b.pose(V.add(chest.pivot(), d, 1.0), d, V.UP, 1);
+            });
+        }
+        // 휩쓸기: 오른쪽 뒤 (140°) → 앞 (charge) → 왼쪽 뒤 (−150°) → 느려지며 −175°
+        RuneSwords.swing(b, charge - 2, 5, chest, 1.0, (f, a) -> RuneSwords.flatDir(f, a, -4), f -> V.UP, 140, -150, null);
+        RuneSwords.swing(b, charge + 3, 3, chest, 1.0, (f, a) -> RuneSwords.flatDir(f, a, -4), f -> V.UP, -150, -175, "out");
+        // 흩어짐: 작아지며 위로 · 칼날을 따라 불꽃
+        fx.on(charge + 7, () -> {
+            for (int i = 1; i <= 4; i++) SkillFx.sparks(level, V.add(b.hilt(), b.dir(), len * 0.2 * i), core, 4, 4);
+            b.grow(0.08, 6);
+            b.prop.move(V.up(b.hilt(), 1.6), 6);
+        });
+        fx.on(charge + 13, b::remove);
+    }
+
     static boolean heavenSplit(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("blade");
         double[] glow = cs[0];
@@ -335,6 +458,7 @@ final class RuneBlade {
         double charge = k.num("charge");
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", sp.position(), 1.2, 0.9);
         SkillFx.play(level0, "beacon.power", sp.position(), 1.4, 0.7);
+        heavenBlade(sp, RuneKit.lifeToken(sp), (int) charge, glow, core);
         // 2차 강화 — 예고: 청백 하늘 · 발밑의 칼날 문양 (빠르게 돎) · 앞쪽 하늘의 칼날 문양
         Vec3 c0 = sp.position();
         RuneKit.ultSkyFor(sp, level0, c0, "heavenSplit", (int) charge + 34, null);

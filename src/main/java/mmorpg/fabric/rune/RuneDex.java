@@ -227,7 +227,7 @@ final class RuneDex {
     }
 
     /**
-     * 칼바람 폭풍: 빨라지고, gap 틱마다 hits 번 주위 radius 칸을 벰 — 빛의 칼 셋이 몸 둘레 (반지름 2.1) 를 돌고 (앞을 지날 때는 흐리게),
+     * 칼바람 폭풍: 빨라지고, gap 틱마다 hits 번 주위 radius 칸을 벰 — 2026-11-13 3D 룬 검 넷이 몸 둘레 (반지름 2.1) 를 돌고 (벨 때마다 바깥으로 튐),
      * 벨 때마다 둘레에 작은 회오리 둘
      */
     static boolean bladeStorm(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -239,26 +239,21 @@ final class RuneDex {
         int gap = (int) k.num("gap");
         double radius = k.num("radius");
         int total = (hits - 1) * gap + 6;
+        // 2026-11-13 3D 검 넷 (룬 전용 검 2판 · 1.7칸): 몸 둘레 2.1칸을 한 틱에 12° 오른쪽으로 돌며 따라옴 (2D 빛의 칼 대신), 벨 때마다 바깥으로 튐 (1.2칸) →
+        // 끝에 바깥으로 날아가며 사라짐. 첫 칼 뒤를 따르는 초승달 (3틱마다) 은 그대로
+        String life = RuneKit.lifeToken(sp);
+        RuneSwords.orbit(sp, life, 4, 1.7, 2.1, 0.95, 12, 0, total, RuneSwords.flareAt(0, gap, hits, 1.2), 0.45, glow, core);
         for (int t = 0; t < total; t += 3) {
             final int tt = t;
             Tasks.later(t, () -> {
                 if (sp.isRemoved()) return;
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
-                Vec3 fc = Kit.facingOf(sp);
-                Vec3 vel = RuneKit.bodyVel(sp); // 빨라진 몸 (이동 속도 II) 을 따라옴
-                for (int j = 0; j < 3; j++) {
-                    // 한 틱에 12° (다시 그릴 때마다 36° — 120° 간격의 칼 셋이 멈춰 보이거나 뒤로 도는 것처럼 보이지 않게)
-                    double a = (tt * 12 + j * 120) * (Math.PI / 180);
-                    Vec3 tang = new Vec3(-Math.sin(a), 0, Math.cos(a));
-                    Vec3 at = new Vec3(c.x + Math.cos(a) * 2.1, c.y + 0.7 + j * 0.4, c.z + Math.sin(a) * 2.1);
-                    boolean ahead = V.dot(V.flat(V.sub(at, c)), fc) > 0.4; // 1인칭 화면 앞을 지나는 칼은 흐리게
-                    RuneKit.rfx2(level, "sword", at, Opt.of("dir", tang, "size", 0.5, "life", 0.17, "alpha", ahead ? 0.45 : 0.95, "vel", vel), glow, core);
-                    if (j == 0) {
-                        RuneKit.arc(level, at, tang, Opt.of("shape", "thin", "flip", false, "size", 1.8, "life", 0.2, "speed", 3.0, "spin", 90.0, "color", glow,
-                                "core", true));
-                    }
-                }
+                double a = (tt * 12) * (Math.PI / 180);
+                Vec3 tang = new Vec3(-Math.sin(a), 0, Math.cos(a));
+                Vec3 at = new Vec3(c.x + Math.cos(a) * 2.1, c.y + 0.95, c.z + Math.sin(a) * 2.1);
+                RuneKit.arc(level, V.add(at, tang, -0.9), tang, Opt.of("shape", "thin", "flip", false, "size", 1.8, "life", 0.2, "speed", 3.0, "spin", 90.0,
+                        "color", glow, "core", true));
             });
         }
         SkillFx.every(hits, gap, i -> {
@@ -288,7 +283,7 @@ final class RuneDex {
     }
 
     /**
-     * 무영검: 앞쪽 적을 멈추고 (freeze) 적마다 화면에서 그 적을 둘러싼 빛의 칼 (rpg:rfx_sword 작게, 칼끝이 적 쪽) 이 하나씩 나타남 →
+     * 무영검: 앞쪽 적을 멈추고 (freeze) 적마다 화면에서 그 적을 둘러싼 칼 (2026-11-13 3D 룬 검 · 칼끝이 적 쪽) 이 하나씩 나타남 →
      * delay 틱에 칼이 한꺼번에 꽂히며 터짐 (적마다 큰 X · 초승달 검기). 적이 많으면 칼 수를 줄이고 터지는 틱을 셋으로 나눔 (모바일 파티클).
      * 초월 2차 강화: 시간이 멈춤 (잿빛 하늘 · 짧은 흰 번쩍임) · 발밑의 칼날 문양 · 대상들 뒤 하늘에 멈춘 비전 문양 → 끝에 깨짐 · 섬광 · 충격 고리
      */
@@ -344,6 +339,10 @@ final class RuneDex {
         int blades = Math.max(2, Math.min(6, 24 / list.size()));
         double ringR = 1.45;
         Map<UUID, List<Vec3>> spots = new HashMap<>(); // 적 → 마지막에 꽂힐 칼의 방향 (적 둘레의 자리)
+        // 2026-11-13 3D 검 (룬 전용 검 2판 · 1.35칸 — 2D 빛의 칼 대신): 적 둘레에 하나씩 나타나 멈춰 있다가 (시간이 멈춤) 한꺼번에 꽂힘
+        mmorpg.fabric.vfx.Vfx.Fx swordFx = RuneProps.fx(level, mid0, delay + 14);
+        Map<UUID, List<RuneSwords.Blade>> blades3d = new HashMap<>();
+        double bladeLen = 1.35;
         for (int c = 0; c < blades; c++) {
             final int cc = c;
             int at0 = 2 + (int) Math.round((double) (c * (delay - 6)) / blades);
@@ -358,8 +357,10 @@ final class RuneDex {
                     double ang = (360.0 / blades) * cc + ei * 23 + 90;
                     Vec3 out = RuneKit.screenAngle(v, ang);
                     Vec3 pos = V.add(V.add(at, out, ringR), v, -0.3);
-                    double hold = (delay - at0) / 20.0 + 0.05 + (ei % 3) / 20.0; // 그 적을 찌르는 틱까지 (i % 3 틱 늦음)
-                    RuneBoost.rfx2a(level, "sword", pos, Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", hold), glow, white); // 0.50.0 2D 강화 (초월 나머지): 칼 후광
+                    Vec3 dir = V.scale(out, -1);
+                    RuneSwords.Blade b = RuneSwords.blade(swordFx, V.add(pos, dir, -bladeLen * 0.42), dir, V.scale(v, -1), bladeLen, 0.2, glow, white);
+                    swordFx.on(swordFx.age() + 1, () -> b.grow(1, 2));
+                    blades3d.computeIfAbsent(e.getUUID(), x -> new ArrayList<>()).add(b);
                     spots.computeIfAbsent(e.getUUID(), x -> new ArrayList<>()).add(out);
                 }
                 SkillFx.play(level, "chime.amethyst_block", eye, 1.2 + cc * 0.12, 0.45);
@@ -381,19 +382,24 @@ final class RuneDex {
                 }
             });
         }
-        int swordCell = RuneKit.RFX.get("sword")[0];
         for (int i = 0; i < list.size(); i++) {
             LivingEntity e = list.get(i);
             final int ii = i;
             RuneKit.later(delay + (i % 3), () -> {
+                // 3D 검이 한꺼번에 꽂힘 (칼끝 쪽으로 ringR — 2틱) → 작아지며 사라짐
+                for (RuneSwords.Blade b : blades3d.getOrDefault(e.getUUID(), List.of())) {
+                    b.prop.move(V.add(b.hilt(), b.dir(), ringR * 0.95), 2);
+                    swordFx.on(swordFx.age() + 3, () -> b.grow(0.1, 3));
+                    swordFx.on(swordFx.age() + 6, b::remove);
+                }
                 if (sp.isRemoved() || e.isRemoved()) return;
                 Vec3 eye = sp.getEyePosition();
                 Vec3 at = Kit.bodyPoint(e);
                 Vec3 v = V.unit(V.sub(at, eye));
                 for (Vec3 out : spots.getOrDefault(e.getUUID(), List.of())) {
-                    Opt so = Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", 0.1, "speed", ringR / 0.1, "color", glow, "cell", (double) swordCell);
-                    RuneBoost.aura(level, "sword", V.add(at, out, ringR), so.with("cell", null), glow, 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 꽂히는 칼 후광
-                    RuneKit.rfx(level, "sword", V.add(at, out, ringR), so);
+                    // 꽂히는 칼의 빛 (2D 후광만 — 칼은 3D)
+                    RuneBoost.aura(level, "sword", V.add(at, out, ringR * 0.5), Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", 0.1, "speed", ringR / 0.1),
+                            glow, 1.35, 0.42);
                 }
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) <= 0) return;
                 // 8단계 돌파 (3 · 6돌 — 멈춤이 꽂힌 뒤에도 남음): 머리 위에 멈춘 시간 문양 (돌지 않음) — 풀릴 때까지

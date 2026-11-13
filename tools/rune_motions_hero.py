@@ -1,0 +1,237 @@
+"""2026-11-13 영웅 · 초월 룬 동작 다시 (사용자 "걷기는 안할래 이재 다른 룬들도 모션하고 이펙트 추가하자" → 고른 것: 초월 · 영웅 먼저 ·
+"새 연출에 맞춰 다시 만듦"): 새 3D 연출 (룬 전용 검 2판 · 3D 물체 · 몹) 에 맞춘 큰 동작. 피해 틱은 그대로 (RpgRuneTimingTests).
+
+뻣뻣하지 않게 (직업 2차 동작 job_motions_d 와 같은 기준 — 그 파일은 jb_ 동작을 만들므로 가져오지 않고 쓰는 조각만 여기에 옮겨 둠):
+- 치기 전에 반대쪽으로 크게 감고 (몸을 비틀고 무릎을 굽혀 낮아짐) 치는 틱에 뿌리가 앞으로 나가며 (내디딤) 몸이 반대쪽까지 돌아감
+- 친 뒤 지나쳐 멈췄다가 조금 되돌아옴 · 왼팔은 반대로 흔들려 몸의 무게를 받음
+- 멈춘 자세도 숨 쉬듯 조금씩 움직임 (같은 자세를 오래 두지 않음)
+틱 0 = 룬이 나간 틱 (첫 피해가 0 인 룬은 감는 틈이 없음 — 0 에서 바로 감은 자세로 들어가 1틱 남짓에 벰).
+"""
+import copy
+
+import rune_motion_kit as K
+from rune_motion_kit import (A_CHEST, A_CROSS, A_GUARD, A_HIP, A_PALM, A_RAISE, A_SPREAD_DOWN, A_SPREAD_UP, BACK_END, BACK_HIT, BACK_WIND, FP_CHAMBER,
+                             FP_LOW, FP_PALM, FP_RAISE, FPW_BACK, FPW_DOWN, FPW_FWD, FPW_LOW, FPW_SKY, FPW_UP, L, LEGS_FIGHT, LEGS_WIDE, P, W_READY, W_SKY,
+                             W_UP_FRONT, arm, backhand, bent, fpl, fpw, keyp, lerpP, nudge, spin_right, strike, use)
+
+Motion = K.Motion
+
+# ------------------------------------------------------------ 큰 동작 조각 (job_motions_d 에서 옮김)
+
+LEG_KEYS = ("body", "rl", "ll", "rk", "lk", "root", "head")
+LUNGE_DEEP = dict(rl=[32, 0, 4], ll=[-48, 0, -2], rk=22, lk=54)  # 낮고 넓게 내디딘 다리 (왼발 앞)
+BRACE = dict(rl=[30, 0, 8], ll=[-26, 0, -8], rk=60, lk=54)  # 무릎을 깊이 굽혀 버팀
+
+
+def strike_with(m, name, wind_tick, hit_tick, end_tick, a, b):
+    """다듬어 둔 베기 name 을 옮겨 쓰고 (팔 · 1인칭 · 궤적 그대로) 새 열쇠의 몸 · 다리 · 뿌리 · 머리를 a (준비) → b (끝) 사이로 덮음 — 더 크게 감고 내디딤"""
+    before = set(m.keys)
+    strike(m, name, wind_tick, hit_tick, end_tick=end_tick)
+    t0, t1 = m.t(wind_tick), m.t(end_tick)
+    for t, k in m.keys.items():
+        if t in before or not (t0 - 1e-9 <= t <= t1 + 1e-9):
+            continue
+        s = 0.0 if t1 <= t0 else (t - t0) / (t1 - t0)
+        mix = lerpP(a, b, s)
+        for f in LEG_KEYS:
+            if f in mix:
+                k[f] = mix[f]
+
+
+def breathe(m, t0, t1, pose, step=2.5, lean=1.5, knee=3):
+    """t0 ~ t1 동안 같은 자세를 숨 쉬듯 (숙임 · 무릎이 조금씩 오르내림)"""
+    n = max(1, int((t1 - t0) / step))
+    for i in range(n + 1):
+        tick = t0 + (t1 - t0) * i / n
+        s = 1 if i % 2 else -1
+        b = list(pose.get("body", [0, 0, 0]))
+        q = P(pose, body=[b[0] + s * lean, b[1], b[2]])
+        if "rk" in pose:
+            q["rk"] = pose["rk"] + s * knee
+        if "lk" in pose:
+            q["lk"] = pose["lk"] + s * knee
+        keyp(m, tick, q)
+
+
+def fp_each(m, ticks, pre, dp_fn):
+    for i, tick in enumerate(ticks):
+        fpw(m, tick, pre, dp=dp_fn(i))
+
+
+# ------------------------------------------------------------ 검사 · 민첩 · 마검사 · 평타 강화 (룬 전용 검 2판)
+
+# 삼단베기 (효과: 0 가로 — 3D 검이 오른쪽 앞에서 왼쪽 뒤로 휩씀 · 10 세로 — 하늘 뒤에서 앞 땅까지 · 20 찌르기 — 칼끝이 찌르는 끝까지 날아감):
+# 0 에서 바로 오른쪽으로 감은 자세 → 크게 내디디며 가로로 휩쓸고 몸이 왼쪽 끝까지 → 일어서며 칼을 머리 위 뒤로 젖혀 발끝으로 섬 (몸이 뒤로 휨) →
+# 깊이 내디디며 세로로 내려침 (칼끝이 땅까지) → 칼을 오른 허리 뒤로 당기고 왼손으로 앞을 겨눔 (무게는 뒷발) → 몸을 던지듯 깊이 내디디며 찌름 → 뻗은 채 숨 → 거둠
+m = Motion("blade_triple", 32, "삼단베기 — 크게 내디디며 가로로 휩쓸고, 칼을 머리 위 뒤로 젖혔다가 깊이 내려치고, 칼을 허리 뒤로 당겨 왼손으로 겨눈 뒤 몸을 던지듯 찌름",
+           fade=(0.02, 0.1))
+strike_with(m, "slash_h", 0.0, 1.3, 3.6, a=P(body=[6, 48, 0], root=[-0.18, -0.05], rl=[22, 0, 4], ll=[-26, 0, -4], rk=36, lk=40),
+            b=P(body=[14, -52, 0], root=[-0.3, 0.5], **LUNGE_DEEP))
+keyp(m, 5.0, P(body=[10, -40, 0], ra=arm([-0.75, 0.1, 0.45], 25, [-0.8, 0.0, -0.4]), la=arm([-0.45, -0.7, -0.2], 30), root=[-0.24, 0.42], **LUNGE_DEEP))
+OVER_ARCH = P(body=[-20, 8, 0], head=[-14, 0], ra=arm([0.16, 0.95, -0.25], 40, [0.05, 0.4, -0.92]), la=arm([-0.35, 0.25, 0.9], 8), rl=[6, 0, 2], ll=[-8, 0, -2],
+              rk=6, lk=10, root=[0.08, 0.1])  # 칼을 머리 위 뒤로 젖히고 발끝으로 섬 (왼손은 앞을 겨눔)
+keyp(m, 7.6, OVER_ARCH, "out")
+strike_with(m, "slash_v", 8.3, 10.2, 12.6, a=P(body=[-22, 6, 0], head=[-14, 0], root=[0.08, 0.1], rl=[6, 0, 2], ll=[-8, 0, -2], rk=6, lk=10),
+            b=P(body=[38, -4, 0], head=[8, 0], root=[-0.36, 0.62], **LUNGE_DEEP))
+keyp(m, 14.0, P(body=[34, -6, 0], head=[6, 0], ra=arm([0.05, -0.75, 0.66], 10, [0.0, -0.9, 0.4]), la=arm([-0.5, -0.6, -0.1], 30), root=[-0.34, 0.6],
+                **LUNGE_DEEP))
+TH_WIND = P(body=[2, 44, 0], head=[0, -30], ra=arm([0.5, -0.3, -0.8], 100, [0.0, 0.08, 1.0]), la=arm([-0.2, 0.12, 1.0], 4, [0, 0.1, 1]), rl=[26, 0, 4],
+            ll=[-18, 0, -4], rk=44, lk=18, root=[-0.2, -0.2])  # 칼을 오른 허리 뒤로 당기고 왼손으로 앞을 겨눔 (무게는 뒷발)
+keyp(m, 16.6, TH_WIND, "out")
+keyp(m, 18.2, P(TH_WIND, body=[3, 50, 0], rk=50, root=[-0.24, -0.26]))
+strike_with(m, "thrust", 18.4, 20.1, 22.4, a=P(body=[3, 50, 0], root=[-0.24, -0.26], rl=[26, 0, 4], ll=[-18, 0, -4], rk=50, lk=18),
+            b=P(body=[26, -30, 0], head=[4, 0], root=[-0.34, 0.85], **LUNGE_DEEP))
+keyp(m, 25.0, P(body=[24, -28, 0], head=[4, 0], ra=arm([-0.1, 0.05, 1.0], 4, [0, 0.05, 1]), la=arm([-0.55, -0.45, -0.6], 25), root=[-0.32, 0.8],
+                **LUNGE_DEEP))
+keyp(m, 28.5, P(W_READY, body=[8, 0, 0], root=[-0.06, 0.3]))
+fpw(m, 5.0, FPW_LOW, dp=(-0.6, 0.1, 0))
+fpw(m, 7.6, FPW_SKY, "out")
+fpw(m, 14.0, FPW_DOWN)
+fpw(m, 16.6, FPW_BACK, "out")
+fpw(m, 18.2, FPW_BACK, dp=(0.08, -0.05, 0.1))
+fpw(m, 25.0, FPW_FWD)
+fpw(m, 28.5, FPW_LOW)
+use(m, "tripleCut")
+
+# 천지개벽 (효과: 0 ~ 7 오른쪽 땅에서 거대한 3D 검이 솟음 · 9 ~ 18 뒤로 눕혀 오른쪽 뒤로 당겨짐 (떨림) · 18 ~ 23 몸 앞을 가로로 휩씀 — 20 거대한 검기):
+# 오른발을 뒤로 빼며 두 손으로 무기를 오른쪽 뒤 낮게 끌어 (거대한 검과 함께) 몸을 끝까지 감고 낮아짐 → 떨리며 더 감김 → 폭발하듯 깊이 내디디며 가로로 휩쓸고
+# 몸이 왼쪽 끝까지 돌아감 → 뻗은 채 멈춤 (숨) → 일어섬
+COIL = P(body=[10, 62, 0], head=[2, -55], ra=arm([0.7, -0.45, -0.55], 30, [0.35, -0.2, -0.9]), la=arm([0.45, -0.55, 0.4], 70), rl=[26, 0, 6], ll=[-34, 0, -4],
+         rk=44, lk=46, root=[-0.2, -0.12])
+m = Motion("heaven_split", 34, "천지개벽 — 오른발을 빼며 두 손으로 무기를 오른쪽 뒤 낮게 끌어 몸을 끝까지 감고 떨며 기를 모으다가, 폭발하듯 깊이 내디디며 거대하게 "
+           "가로로 휩쓸어 몸이 왼쪽 끝까지 돎", fade=(0.03, 0.08))
+keyp(m, 3.0, COIL, "out3")
+for i, tick in enumerate((6.0, 8.5, 11.0, 13.5, 16.0)):
+    s = 1 if i % 2 else -1
+    q = i / 4.0
+    keyp(m, tick, P(COIL, body=[10 + 2 * q + s * 1.2, 62 + 12 * q, s * 1.0], rk=44 + 10 * q, lk=46 + 10 * q, root=[-0.2 - 0.1 * q, -0.12 - 0.04 * q]))
+keyp(m, 18.4, P(COIL, body=[13, 80, 0], rk=58, lk=60, root=[-0.32, -0.18]), "in")
+strike_with(m, "skill_slash", 18.6, 20.2, 22.8, a=P(body=[13, 80, 0], head=[2, -55], root=[-0.32, -0.18], rl=[26, 0, 6], ll=[-34, 0, -4], rk=58, lk=60),
+            b=P(body=[16, -74, 0], head=[4, 0], root=[-0.4, 0.8], **LUNGE_DEEP))
+FIN = P(body=[14, -70, 0], head=[4, 10], ra=arm([-0.85, 0.05, 0.4], 14, [-0.7, -0.1, -0.6]), la=arm([0.4, -0.45, -0.7], 25), root=[-0.38, 0.76], **LUNGE_DEEP)
+keyp(m, 24.4, FIN, "out")
+breathe(m, 25.5, 28.5, FIN, step=1.5, lean=1.2, knee=2)
+keyp(m, 31.5, P(W_READY, body=[8, -10, 0], root=[-0.08, 0.3]))
+fpw(m, 3.0, FPW_BACK, "out3")
+fp_each(m, (6.0, 8.5, 11.0, 13.5, 16.0), FPW_BACK, lambda i: (0.04 * i + (0.015 if i % 2 else -0.015), -0.03 * i, 0.03 * i))
+fpw(m, 18.4, FPW_BACK, "in", dp=(0.2, -0.14, 0.14))
+fpw(m, 24.4, FPW_LOW, dp=(-0.9, 0.05, 0))
+fpw(m, 31.5, FPW_LOW)
+use(m, "heavenSplit")
+
+# 칼바람 폭풍 (효과: 0 · 10 · 20 · 30 · 40 몸 둘레를 벰 — 3D 검 넷이 몸 둘레를 돌다가 벨 때마다 바깥으로 튐, 끝 46 에 날아감):
+# 벨 때마다 무기를 뻗은 채 몸째 오른쪽으로 한 바퀴씩 (다섯 바퀴 — 회오리) · 점점 낮게 → 마지막에 낮게 멈춰 무기를 털어냄
+m = Motion("blade_storm", 48, "칼바람 폭풍 — 무기를 뻗은 채 몸째 오른쪽으로 벨 때마다 한 바퀴씩 다섯 바퀴 휘돌며 점점 낮아지고, 낮게 멈춰 무기를 털어냄",
+           fade=(0.02, 0.08))
+SPIN_LOW = P(K.SPIN_FWD_R, body=[14, 4, 0], rk=40, lk=40, root=[-0.2, 0])
+spin_right(m, (1.0, 10.0, 20.0, 30.0, 40.0), 43.5, wind_tick=0.2, fwd=SPIN_LOW,
+           end_pose=P(K.SPIN_END_R, body=[18, 22, 0], rk=46, lk=40, root=[-0.24, 0.1]))
+keyp(m, 46.0, P(body=[12, 16, 0], ra=arm([0.55, -0.7, 0.45], 20, [0.4, -0.85, 0.35]), la=arm([-0.5, -0.6, -0.2], 30), rk=30, lk=26, root=[-0.14, 0.05],
+                spin=-1800))
+use(m, "bladeStorm")
+
+# 무영검 (효과: 0 시간이 멈춤 · 2 ~ 22 적 둘레에 3D 검이 하나씩 · 26 한꺼번에 꽂힘): 0 에서 바로 낮게 감은 발도 자세 → 크게 내디디며 왼쪽에서 오른쪽으로 뽑아 벰 →
+# 베어 낸 자세 (깊이 내디딘 채) 로 멈춰 숨을 고름 (시간이 멈춘 동안 — 아주 조금씩) → 천천히 일어서며 칼을 왼 허리 칼집으로 가져가 (23) 밀어 넣는 순간 (26 — 딸깍) 터짐
+# → 숨을 내쉬며 섬
+IAI_COIL = P(body=[28, -60, 0], ra=arm([-0.3, -0.7, 0.6], 70, [-0.6, -0.2, -0.75]), la=arm([-0.35, -0.8, 0.3], 40), rl=[24, 0, 4], ll=[-34, 0, -2], rk=60,
+             lk=78, root=[-0.42, -0.04])
+DRAW_HIT2 = P(body=[14, 30, 0], ra=arm([0.75, 0.05, 0.62], 4, [0.9, -0.05, 0.4]), la=arm([-0.6, -0.5, -0.4], 30), root=[-0.26, 0.55], **LUNGE_DEEP)
+DRAW_END2 = P(body=[12, 56, 0], ra=arm([0.85, -0.2, 0.25], 14, [0.55, -0.45, -0.7]), la=arm([-0.6, -0.5, -0.4], 30), root=[-0.28, 0.52], **LUNGE_DEEP)
+ZAN2 = P(body=[12, 54, 0], head=[2, -30], ra=arm([0.7, -0.45, 0.4], 20, [0.6, -0.6, -0.5]), la=arm([-0.5, -0.6, -0.2], 30), root=[-0.3, 0.5], **LUNGE_DEEP)
+NOTO_A = P(body=[6, -16, 0], head=[6, 0], ra=arm([-0.3, -0.6, 0.72], 62, [-0.25, -0.32, 0.91]), la=arm([-0.36, -0.86, 0.3], 30), rl=[10, 0, 4],
+           ll=[-12, 0, -4], rk=14, lk=16, root=[-0.08, 0.16])  # 칼끝을 왼 허리 칼집 어귀로
+NOTO_B = P(NOTO_A, body=[4, -20, 0], head=[2, 0], ra=arm([-0.45, -0.74, 0.36], 70, [-0.55, -0.16, -0.82]), root=[-0.06, 0.08])  # 밀어 넣음 (딸깍)
+FPW_SHEATHED = dict(p=(-0.75, -0.62, 0.35), blade=(-0.4, -0.3, -0.85))
+FPW_ZAN = dict(p=(0.4, -0.25, 0.2), blade=(0.7, -0.3, -0.6))
+m = Motion("shadowless", 36, "무영검 — 낮게 감았다가 크게 내디디며 뽑아 베고, 베어 낸 자세로 멈춰 숨을 고르다가, 천천히 일어서며 칼을 칼집에 밀어 넣는 순간 모든 칼이 꽂힘",
+           fade=(0.02, 0.08))
+backhand(m, 0.0, 1.3, 2.6, wind=IAI_COIL, hit=DRAW_HIT2, end=DRAW_END2)
+keyp(m, 4.5, ZAN2, "out")
+breathe(m, 6.0, 20.0, ZAN2, step=3.5, lean=0.8, knee=1.5)
+keyp(m, 23.2, NOTO_A, "inout")
+keyp(m, 25.8, NOTO_B, "in")
+keyp(m, 28.0, P(NOTO_B, body=[-4, -16, 0], head=[-6, 0], root=[-0.02, 0.06]), "out")
+keyp(m, 32.5, P(W_READY, body=[4, 0, 0]))
+fpw(m, 4.5, FPW_ZAN)
+fpw(m, 20.0, FPW_ZAN, dp=(0.02, -0.02, 0))
+fpw(m, 23.2, FPW_SHEATHED, "inout")
+fpw(m, 25.8, FPW_SHEATHED, "in", dp=(-0.05, -0.04, 0.05))
+fpw(m, 32.5, FPW_LOW)
+use(m, "shadowless")
+
+# 마검 결계 (효과: 0 ~ 80 3D 검 넷이 몸 둘레를 돎 · 10틱마다 바깥으로 튐): 한 발 물러서며 무기를 얼굴 앞에 세우고 (예) → 왼손을 뻗어 몸 둘레를 크게 한 바퀴 그리며
+# 몸도 손을 따라 돎 → 무기를 앞 위로 크게 내뻗어 검들에게 명령 · 왼손을 펴 내밂 → 싸울 자세
+m = Motion("orbit_blades", 22, "마검 결계 — 물러서며 무기를 얼굴 앞에 세우고, 왼손을 뻗어 몸 둘레를 크게 그리며 몸도 따라 돌고, 무기를 앞 위로 내뻗어 검들을 부림",
+           fade=(0.03, 0.1))
+m.set(hands={"main": "weapon", "off": "fist"})
+SALUTE = P(W_UP_FRONT, body=[-8, 0, 0], head=[-8, 0], rl=[14, 0, 4], ll=[-6, 0, -4], rk=24, lk=10, root=[-0.1, -0.2])
+keyp(m, 2.5, SALUTE, "out3")
+for tick, d, tw in ((4.5, [-0.95, 0.15, 0.25], -26), (6.5, [-0.45, 0.25, -0.85], -40), (8.5, [0.5, 0.3, -0.8], 10), (10.5, [0.9, 0.2, 0.35], 34),
+                    (12.0, [0.1, 0.25, 0.97], 10)):
+    keyp(m, tick, P(SALUTE, body=[-6, tw, 0], la=arm(d, 6)))
+COMMAND = P(body=[10, -18, 0], head=[-6, 0], ra=arm([-0.05, 0.45, 0.9], 2, [0, 0.55, 0.84]), la=arm([-0.35, 0.0, 0.94], 0, [0, 1, 0.1]), rl=[-8, 0, 4],
+            ll=[22, 0, -4], rk=10, lk=34, root=[-0.12, 0.3])  # 무기를 앞 위로 내뻗음 · 왼손을 펴 내밂
+keyp(m, 14.0, COMMAND, "out")
+keyp(m, 17.0, P(COMMAND, body=[8, -16, 0]))
+keyp(m, 20.5, P(W_READY, body=[8, 0, 0]))
+fpw(m, 2.5, FPW_UP, "out3")
+fpw(m, 12.0, FPW_UP)
+fpw(m, 14.0, FPW_FWD, "out", dp=(0, 0.25, 0))
+fpw(m, 17.0, FPW_FWD, dp=(0, 0.2, 0.05))
+fpw(m, 20.5, FPW_LOW)
+fpl(m, 2.5, FP_LOW)
+fpl(m, 4.5, ((0.35, 0.1, -0.1), (20, -35, 0)))
+fpl(m, 6.5, ((0.3, 0.3, 0.05), (50, -20, 0)))
+fpl(m, 8.5, ((-0.05, 0.25, -0.2), (40, 30, 0)))
+fpl(m, 10.5, ((-0.2, 0.08, -0.3), (20, 55, 0)))
+fpl(m, 14.0, FP_PALM, "out")
+fpl(m, 17.0, FP_PALM)
+fpl(m, 20.5, FP_LOW)
+use(m, "orbitBlades")
+
+# 피의 칼날 (효과: 0 ~ 9 눈앞의 핏빛 3D 검이 바람개비처럼 돌며 피를 빨아들임 · 11 ~ 14 손으로 날아들어 스밈): 무기를 가로로 눈앞에 들고 왼손바닥을 날에 대고 →
+# 날을 따라 손바닥을 그어 피를 냄 (피의 맹세) → 피 묻은 주먹을 꽉 쥐어 가슴으로 당기며 무기를 오른쪽 아래로 털고 고개를 숙임 → (검이 스밀 때) 웅크렸다가 고개를 들며 섬
+m = Motion("blood_blade", 20, "피의 칼날 — 무기를 가로로 들어 손바닥으로 날을 그어 피를 내고, 피 묻은 주먹을 가슴으로 당기며 고개를 숙였다가, 핏빛 검이 스밀 때 웅크렸다 일어섬",
+           fade=(0.03, 0.1))
+m.set(hands={"main": "weapon", "off": "fist"})
+OATH = P(body=[2, -10, 0], head=[10, 0], ra=arm([0.25, -0.2, 0.95], 85, [-0.95, 0.1, 0.2]), la=bent([0.25, -0.25, 0.92], 70, (0.3, 1, 0)), rl=[10, 0, 4],
+         ll=[-10, 0, -4], rk=12, lk=12)  # 무기를 가로로 눈앞에 · 왼손바닥을 날 밑에
+keyp(m, 2.5, OATH, "out3")
+keyp(m, 6.5, P(OATH, body=[4, -18, 0], la=bent([-0.45, -0.2, 0.86], 40, (0.3, 1, 0))), "inout")  # 손바닥이 날을 따라 칼끝 쪽으로
+keyp(m, 9.5, P(body=[14, 12, 0], head=[22, 0], ra=arm([0.55, -0.75, 0.3], 20, [0.4, -0.85, 0.3]), la=L(A_CHEST), rl=[16, 0, 4], ll=[-14, 0, -4], rk=24,
+                lk=20, root=[-0.08, 0]), "out3")
+keyp(m, 12.0, P(body=[22, 8, 0], head=[18, 0], ra=arm([0.55, -0.75, 0.3], 20, [0.4, -0.85, 0.3]), la=L(A_CHEST), rk=50, lk=50, root=[-0.24, 0]))
+keyp(m, 15.0, P(body=[-10, 6, 0], head=[-16, 0], ra=arm([0.6, -0.55, 0.45], 25, [0.5, -0.4, 0.75]), la=bent([-0.4, -0.55, 0.5], 110, (0.3, 1, 0.2)),
+                rl=[6, 0, 6], ll=[-6, 0, -6], rk=8, lk=8, root=[0.02, 0]), "out")
+keyp(m, 18.5, P(W_READY, body=[8, 0, 0]))
+fpw(m, 2.5, FPW_UP, "out3", dp=(-0.1, -0.2, 0))
+fpw(m, 6.5, FPW_UP, dp=(-0.1, -0.2, 0))
+fpw(m, 9.5, FPW_DOWN, "out3")
+fpw(m, 15.0, FPW_LOW)
+fpl(m, 2.5, ((-0.25, -0.05, -0.05), (20, 60, 0)), "out3")
+fpl(m, 6.5, ((-0.45, 0.0, -0.1), (25, 70, 0)))
+fpl(m, 9.5, FP_CHAMBER, "out3")
+fpl(m, 15.0, FP_LOW)
+use(m, "bloodBlade")
+
+# 검신 강림 (효과: 0 ~ 5 하늘 13칸에서 거대한 3D 금빛 검이 떨어짐 · 6 꽂힘 (충격) · 그 뒤 어깨 위에 3D 금빛 검 둘): 무기와 왼손을 하늘로 치켜들고 발끝으로 서서
+# 하늘을 봄 → 검이 꽂히는 순간 깊이 웅크려 왼팔로 얼굴을 막고 버팀 → 천천히 일어나며 가슴을 펴고 무기를 옆으로 늘어뜨린 채 앞을 봄 (검신)
+m = Motion("sword_god", 24, "검신 강림 — 무기와 왼손을 하늘로 치켜들어 거대한 검을 부르고, 검이 꽂히는 충격에 깊이 웅크려 버틴 뒤, 가슴을 펴고 천천히 일어섬",
+           fade=(0.03, 0.1))
+CALL_UP = P(W_SKY, body=[-16, 0, 0], head=[-32, 0], la=L(A_RAISE), rl=[0, 0, 8], ll=[0, 0, -8], rk=4, lk=4, root=[0.08, 0])
+keyp(m, 3.0, CALL_UP, "out3")
+keyp(m, 5.2, P(CALL_UP, body=[-18, 0, 0], root=[0.1, 0]))
+BRACED = P(body=[26, 0, 0], head=[14, 0], ra=arm([0.35, -0.55, 0.55], 70, [0.1, 0.6, 0.8]), la=bent([0.15, 0.1, 0.95], 120, (-1, 0.3, 0)), root=[-0.36, -0.1],
+           **BRACE)  # 깊이 웅크려 왼팔로 얼굴을 막고 버팀
+keyp(m, 6.6, BRACED, "in")
+keyp(m, 9.0, P(BRACED, body=[22, 0, 0], root=[-0.32, -0.08]))
+GODSTAND = P(body=[-8, 0, 0], head=[-6, 0], ra=arm([0.45, -0.85, 0.2], 10, [0.3, -0.9, 0.3]), la=arm([-0.4, -0.88, 0.1], 10), rl=[0, 0, 8], ll=[0, 0, -8],
+             rk=6, lk=6, root=[0.02, 0])  # 가슴을 펴고 무기를 옆으로 늘어뜨림
+keyp(m, 14.0, GODSTAND, "inout")
+keyp(m, 18.0, P(GODSTAND, body=[-10, 0, 0], head=[-8, 0]))
+keyp(m, 22.5, P(W_READY, body=[6, 0, 0]))
+fpw(m, 3.0, FPW_SKY, "out3")
+fpw(m, 5.2, FPW_SKY)
+fpw(m, 6.6, FPW_LOW, "in", dp=(0, -0.1, 0))
+fpw(m, 14.0, FPW_LOW)
+use(m, "swordGod")

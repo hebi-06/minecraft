@@ -297,7 +297,7 @@ final class RuneSpellblade {
     /**
      * 마검 결계: hits × gap 틱 동안 마력 검 swords 자루가 몸 둘레 orbit 칸을 돌고 (나를 따라옴),
      * gap 틱마다 주위 radius 칸의 적을 벰 — 짝수 번째 검 (공격 피해) · 홀수 번째 마력 (마법 피해).
-     * 도는 검 = 빛의 검 그림 (rpg:rfx_sword — 남보라 빛 · 청록 심지, 칼날이 도는 쪽으로 누움). 1인칭 화면 앞을 지날 때는 흐리게
+     * 도는 검 = 2026-11-13 3D 룬 검 (남보라 빛 · 청록 심지, 칼끝이 도는 쪽 · 벨 때마다 바깥으로 튐)
      */
     static boolean orbitBlades(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("spellblade");
@@ -313,25 +313,9 @@ final class RuneSpellblade {
         RuneKit.selfCue(sp, glow, core, true);
         SkillFx.play(sp.level(), "mob.evocation_illager.prepare_attack", sp.position(), 1.3, 0.8);
         SkillFx.play(sp.level(), "beacon.activate", sp.position(), 1.6, 0.6);
-        // 도는 검 (3틱마다 다시 그림, 한 틱에 0.16 라디안 — 약 2초에 한 바퀴)
-        for (int t = 0; t < total; t += 3) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel level = sp.level();
-                Vec3 c = V.up(sp.position(), 1.05);
-                Vec3 fc = Kit.facingOf(sp);
-                Vec3 vel = RuneKit.bodyVel(sp);
-                for (int i = 0; i < swords; i++) {
-                    double a = tt * 0.16 + ((double) i / swords) * Math.PI * 2;
-                    Vec3 rd = new Vec3(Math.cos(a), 0, Math.sin(a));
-                    Vec3 at = V.add(c, rd, orbit);
-                    Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
-                    boolean ahead = V.dot(rd, fc) > 0.45;
-                    RuneKit.rfx2(level, "sword", at, Opt.of("dir", tan, "size", 0.72, "life", 0.17, "alpha", ahead ? 0.45 : 0.95, "vel", vel), glow, core);
-                }
-            });
-        }
+        // 2026-11-13 도는 검 = 3D 룬 검 (룬 전용 검 2판 · 1.6칸 — 2D 빛의 검 대신): 한 틱에 0.16 라디안 (약 2초에 한 바퀴) · 몸을 따라옴 ·
+        // 벨 때마다 바깥으로 튐 (0.7칸) → 끝에 바깥으로 날아가며 사라짐
+        RuneSwords.orbit(sp, life, swords, 1.6, orbit, 1.0, Math.toDegrees(0.16), 0, total, RuneSwords.flareAt(0, gap, hits, 0.7), 0.35, glow, core);
         SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();

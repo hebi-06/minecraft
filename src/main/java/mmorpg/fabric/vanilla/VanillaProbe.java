@@ -1048,6 +1048,15 @@ final class VanillaProbe {
             Tasks.later(30, () -> census(p, r, name, step));
             return;
         }
+        // 2026-11-13 평타 강화 룬 (피의 칼날 · 검신 강림 …): 칼을 들고 쓴 뒤 평타 넷 (평타마다 붙는 연출 — 검신 강림의 어깨 위 검이 찌름)
+        boolean strikeRune = r.family().equals("strike");
+        if (strikeRune) {
+            run(server, "item replace entity " + NAME + " hotbar.0 with rpg:sword_l40_hero");
+            p.getInventory().setSelectedSlot(0);
+            p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        } else {
+            p.getInventory().clearContent();
+        }
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);
@@ -1057,6 +1066,24 @@ final class VanillaProbe {
                 log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active() + " fx · props " + mmorpg.fabric.vfx.Vfx.propsMade + " · sprites "
                         + mmorpg.fabric.vfx.Vfx.spritesMade);
             });
+            if (strikeRune) {
+                for (int a = 0; a < 4; a++) {
+                    Tasks.later(34 + a * 16, () -> {
+                        if (p.isRemoved()) return;
+                        net.minecraft.world.entity.Entity best = null;
+                        double bd = 1e9;
+                        for (net.minecraft.world.entity.Entity e : SPAWNED) {
+                            if (e == null || e.isRemoved()) continue;
+                            double d = e.distanceToSqr(p);
+                            if (d < bd) {
+                                bd = d;
+                                best = e;
+                            }
+                        }
+                        if (best != null) p.attack(best);
+                    });
+                }
+            }
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });
     }
