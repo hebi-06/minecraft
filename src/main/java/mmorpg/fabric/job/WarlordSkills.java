@@ -94,16 +94,19 @@ final class WarlordSkills {
     }
 
     /**
-     * 2026-11-13 3D 돌창 (RuneProps.rockSpike — 2D rfx_jspike 대신, 사용자 "곰과 땅 연출을 3d로"): size = 예전 2D 그림 크기 (높이 약 size × 1.7 칸),
+     * 2026-11-13 3D 돌창 (RuneProps.rockSpike — 2D rfx_jspike 대신, 사용자 "곰과 땅 연출을 3d로"): size = 예전 2D 그림 크기 (높이 약 size × 2.2 칸 — CI 43442895567
+     * 영상에서 1.7 배는 과녁보다 작았음),
      * rise + hold 초 서 있다가 가라앉음 · 금 사이 빛 = glow
      */
     static void spike3d(ServerLevel level, Vec3 ground, double size, double rise, double hold, double[] glow) {
-        RuneProps.rockSpike(level, ground, size * 1.7, Math.max(2, (int) Math.round((rise + hold) * 20)), Kit.rand() * 360, glow);
+        RuneProps.rockSpike(level, ground, size * 2.2, Math.max(2, (int) Math.round((rise + hold) * 20)), Kit.rand() * 360, glow);
     }
 
-    /** 2026-11-13 땅에서 솟아 튀는 3D 바위 (RuneSwing.erupt — 둘레 360°) */
-    private static void boulders(ServerLevel level, Vec3 c, int n, double r0, double r1, double s0, double s1, double out, double[] glow) {
-        RuneSwing.erupt(level, c, new Vec3(0, 0, 1), n, 360, r0, r1, s0, s1, out, glow);
+    /**
+     * 2026-11-13 땅에서 솟아 튀는 3D 바위 (RuneSwing.erupt): 앞 f 둘레 220° 만 (뒤 — 3인칭 카메라 쪽으로 날아오는 바위가 화면을 덮었음, CI 43442895567 카타클리즘 영상)
+     */
+    private static void boulders(ServerLevel level, Vec3 c, Vec3 f, int n, double r0, double r1, double s0, double s1, double out, double[] glow) {
+        RuneSwing.erupt(level, c, f, n, 220, r0, r1, s0, s1, out, glow);
     }
 
     static void register() {
@@ -381,7 +384,7 @@ final class WarlordSkills {
             });
             rift(level, g, d, r, JobKit.glow(j), 0.8, 30);
         }
-        boulders(level, g, 8, 1.4, 2.8, 0.5, 0.9, 3.0, JobKit.glow(j)); // 2026-11-13 굴이 무너지며 3D 바위가 튐
+        boulders(level, g, Kit.facingOf(sp), 7, 1.4, 2.8, 0.5, 0.85, 3.0, JobKit.glow(j)); // 2026-11-13 굴이 무너지며 3D 바위가 튐
         if (b == null) JobFx.bear(level, V.up(V.add(c, Kit.facingOf(sp), -0.5), 1.8), 2.2, 0.8, 3, 5, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp),
                 "alpha", 0.9), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         JobFx.eyeRing(sp, j, 2.3, 1.1, 0.45);
@@ -422,7 +425,7 @@ final class WarlordSkills {
         RpgCombat.setSteadfast(sp, slamAt + 6);
         // 2026-11-13 곰의 혼 (3D — 사용자 "곰과 땅 연출을 3d로"): 끌어모을 자리 너머 (2.2칸) 땅에서 솟아 일어서며 두 팔을 활짝 (rise_wide) → pullAt 에 두 팔로
         // 앞 가운데를 휩쓸어 껴안음 (hug — 적이 끌려옴) → slamAt 에 모은 자리를 내리찍음 (hugslam) → 흩어짐. 못 세우면 예전 2D 앞발 · 곰
-        RuneMob b = bear(level, ground(level, V.add(gather, f, 2.2)), V.scale(f, -1), slamAt + 40, 1.5);
+        RuneMob b = bear(level, ground(level, V.add(gather, f, 2.4)), V.scale(f, -1), slamAt + 40, 1.8); // 1.5 → 1.8 (영상에서 내리찍은 뒤 적 무리에 가렸음)
         if (b != null) {
             bearAnim(b, 0, "rise_wide", true);
             bearAnim(b, pullAt, "hug", true);
@@ -511,7 +514,7 @@ final class WarlordSkills {
                 double a = Math.toRadians(i * 60 + 15);
                 spike3d(lv, ground(lv, V.add(gather, new Vec3(Math.cos(a), 0, Math.sin(a)), rr * 0.8)), 0.75, 0.12, 0.35, JobKit.glow(j)); // 2026-11-13 3D 돌창
             }
-            boulders(lv, gather, 6, 0.8, 2.0, 0.45, 0.8, 2.8, JobKit.glow(j));
+            boulders(lv, gather, ff, 6, 0.8, 2.0, 0.45, 0.8, 2.8, JobKit.glow(j));
             for (LivingEntity e : Kit.around(sp, gather, rr, 2.5)) {
                 JobKit.strike(sp, e, j, P, k.total(), false, false, life, 0, d -> {
                     JobImpact.hit(sp, e, j, 1.7);
@@ -638,7 +641,7 @@ final class WarlordSkills {
             double a = Math.toRadians(q * 60 + 30);
             spike3d(level, ground(level, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), 2.4)), 0.85, 0.1, 0.45, JobKit.glow(j)); // 2026-11-13 3D 돌창
         }
-        boulders(level, g, 8, 1.2, 2.6, 0.5, 0.95, 3.4, JobKit.glow(j));
+        boulders(level, g, f, 7, 1.2, 2.6, 0.5, 0.85, 3.4, JobKit.glow(j));
         SkillFx.shock(level, V.up(g, 0.1), JobFx.outer(j), r * 1.1, 0.5);
         JobFx.slash(sp, j, 2.0, 0.3, 2.6, 95.0, 0.25);
         SkillFx.play(level, "mob.polarbear.warning", g, 0.5, 1.0);
@@ -664,7 +667,7 @@ final class WarlordSkills {
             Vec3 p = ground(level, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), rr));
             RuneKit.later(d, () -> spike3d(level, p, 0.95 + Kit.rand() * 0.25, 0.1, 0.5, JobKit.glow(j))); // 2026-11-13 3D 돌창
         }
-        boulders(level, g, 10, r * 0.55, r * 0.9, 0.55, 1.0, 3.6, JobKit.glow(j));
+        boulders(level, g, Kit.facingOf(sp), 9, r * 0.55, r * 0.9, 0.5, 0.9, 3.6, JobKit.glow(j));
         RuneKit.rockBurst(level, V.up(g, 0.3), 12, 6.0, 0.2);
         SkillFx.sparks(level, V.up(g, 0.3), DUST, 16, 4.0);
         SkillFx.play(level, "mace.heavy_smash_ground", g, 0.6, 0.9);
@@ -790,7 +793,7 @@ final class WarlordSkills {
             double a = Math.toRadians(i * 45 + 22.5);
             rift(level, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), edge), new Vec3(Math.cos(a), 0, Math.sin(a)), R - edge + 0.5, JobKit.glow(j), 0.8, 40);
         }
-        boulders(level, g, 12, edge * 0.8, R * 0.85, 0.7, 1.25, 4.0, JobKit.glow(j)); // 2026-11-13 바깥 고리에서 3D 바위가 솟아 튐
+        boulders(level, g, Kit.facingOf(sp), 10, edge * 0.8, R * 0.85, 0.6, 1.0, 4.0, JobKit.glow(j)); // 2026-11-13 바깥 고리에서 3D 바위가 솟아 튐
         RuneKit.godRays(sp, level, g, R * 0.7, 8, JobKit.glow(j), JobKit.core(j), Opt.of("h", 7.0, "life", 0.7, "alpha", 0.7, "skipNear", true));
         Ult.flash(level, c, JobKit.glow(j), Opt.empty(), sp);
         SkillFx.sparks(level, V.up(g, 0.6), JobKit.glow(j), 20, 7);

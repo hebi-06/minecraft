@@ -818,8 +818,8 @@ public final class JobTraits3 {
                 1.0));
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(10, () -> {
-            State st = STATES.get(sp.getUUID());
-            if (!RuneKit.sameLife(sp, life) || !JobTraits.stanceOn(sp, "reaper_avatar") || st == null || st.avatarSwingUntil > Tasks.now()) return;
+            State now = STATES.get(sp.getUUID());
+            if (!RuneKit.sameLife(sp, life) || !JobTraits.stanceOn(sp, "reaper_avatar") || now == null || now.avatarSwingUntil > Tasks.now()) return;
             avatarStand(sp, j);
         });
     }
