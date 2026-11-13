@@ -10,10 +10,12 @@ import mmorpg.core.Weapon;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.level.ServerLevel;
@@ -63,6 +65,54 @@ public final class JobTraits8 {
     record Grave(ServerLevel level, Vec3 at, float yaw, long born, long until) {}
 
     private static final List<Grave> GRAVES = new ArrayList<>();
+    /** 2026-11-13 무덤마다 3D 묘비 (같은 기록이 둘이어도 따로 — 신원으로) */
+    private static final Map<Grave, Vfx.Prop> STONES = new java.util.IdentityHashMap<>();
+
+    // ------------------------------------------------------------ 2026-11-13 3D 묘비
+
+    /** 3D 묘비 모델 (tools/vfx_blocky.py gravestone — 둥근 머리 돌 판 · 새긴 해골 · 녹색 빛 금 (물들임 0) · 받침돌, 밑 가운데 (8, 0, 8) · 높이 19 픽셀) */
+    static final String STONE3D = "rpg:vfx/gravestone";
+    private static final double STONE_H = 19;
+
+    /** 2D 묘비 크기 (너비 약 size × 2 칸 — rfx_jgrave) → 3D 묘비 크기 (높이 약 size × 2.4 칸) */
+    static double stoneScale(double size) {
+        return size * 2.0;
+    }
+
+    /**
+     * 3D 묘비 하나 (직업 도감 메모 "무덤 모델링 3d로" — 2D 묘비 판 대신): ground 의 땅속에서 rise 틱 동안 솟음 (앞 = face 쪽 · 조금 기울어짐 · 돌 조각이 튐) → life
+     * 틱 뒤 무너짐 ({@link #crumbleStone}). 소품
+     */
+    static Vfx.Prop stone(ServerLevel level, Vec3 ground, Vec3 face, double size, int rise, int life) {
+        Vfx.Fx fx = RuneProps.fx(level, ground, life + 16);
+        double s = stoneScale(size);
+        double h = STONE_H / 16.0 * s;
+        Vec3 f = V.flat(V.len(face) < 1e-3 ? new Vec3(0, 0, 1) : face);
+        Vec3 up = V.unit(V.add(V.add(V.UP, f, (Kit.rand() - 0.5) * 0.16), V.rightOf(f), (Kit.rand() - 0.5) * 0.2));
+        org.joml.Quaternionf q = RuneProps.facing(V.scale(f, -1), up);
+        Vfx.Prop p = RuneProps.prop(fx, STONE3D, V.up(ground, -h * 0.95), new double[] {8, 0, 8}, q, s, NecroCrew.FIRE);
+        p.move(V.up(ground, -0.04), Math.max(1, rise));
+        RuneKit.rockBurst(level, V.up(ground, 0.2), 6, 3.5, 0.18);
+        fx.on(life, () -> crumbleStone(level, p, ground, s));
+        return p;
+    }
+
+    /** 묘비가 무너짐: 6틱 동안 기울며 가라앉고 작아짐 · 돌 조각 · 먼지 (그 뒤 지움) */
+    static void crumbleStone(ServerLevel level, Vfx.Prop p, Vec3 ground, double s) {
+        if (p == null) return;
+        double h = STONE_H / 16.0 * s;
+        org.joml.Quaternionf tip = new org.joml.Quaternionf().rotateAxis((float) Math.toRadians(25), 1F, 0F, 0F).mul(p.rot());
+        p.to(V.up(ground, -h * 0.7), tip, s * 0.75, 6);
+        RuneKit.rockBurst(level, V.up(ground, h * 0.4), 10, 4.0, 0.22);
+        JobFx.smoke(level, V.up(ground, 0.5), s * 0.6, new double[] {0.42, 0.42, 0.46}, NecroCrew.FIRE, 0.6, Opt.of("alpha", 0.5));
+        RuneKit.later(7, p::remove);
+    }
+
+    /** 무덤의 3D 묘비가 무너짐 (그레이브 콜이 망자를 일으킴 — 없으면 아무것도 안 함) */
+    static void crumbleGrave(Grave g) {
+        Vfx.Prop p = STONES.remove(g);
+        if (p != null) crumbleStone(g.level(), p, g.at(), stoneScale(0.62));
+    }
 
     /** 그레이브야드 고리 (안의 적은 망자가 먼저 노림) */
     private record Yard(UUID owner, ServerLevel level, Vec3 c, double r, long until) {}
@@ -430,10 +480,14 @@ public final class JobTraits8 {
     /** 무덤 하나 (묘비가 솟음 — 녹색 혼불) */
     static void addGrave(ServerLevel level, Vec3 at, float yaw, int ticks, Jobs.Job j) {
         GRAVES.removeIf(g -> g.until() < Tasks.now());
-        if (GRAVES.size() > 48) GRAVES.remove(0);
+        STONES.keySet().removeIf(g -> g.until() < Tasks.now());
+        if (GRAVES.size() > 48) crumbleGrave(GRAVES.remove(0));
         Vec3 g = new Vec3(at.x, RuneKit.groundAt(level, V.up(at, 0.6), at.y), at.z);
-        GRAVES.add(new Grave(level, g, yaw, Tasks.now(), Tasks.now() + ticks));
-        JobFx.grave(level, g, 0.62, 0, 2, 0.12, false, Opt.empty(), j);
+        Grave grave = new Grave(level, g, yaw, Tasks.now(), Tasks.now() + ticks);
+        GRAVES.add(grave);
+        // 2026-11-13 3D 묘비 (쓰러진 적이 보던 쪽을 봄 — 무덤이 있는 동안 서 있다 끝에 무너짐)
+        double yr = Math.toRadians(yaw);
+        STONES.put(grave, stone(level, g, new Vec3(-Math.sin(yr), 0, Math.cos(yr)), 0.62, 5, ticks));
         JobFx.soul(level, V.up(g, 0.5), 0.3, j, 0.5, Opt.of("dir", V.UP, "speed", 0.8));
         SkillFx.sparks(level, V.up(g, 0.3), NecroCrew.FIRE, 5, 2);
         SkillFx.play(level, "block.rooted_dirt.place", g, 0.7, 1.0);
@@ -456,9 +510,19 @@ public final class JobTraits8 {
         GRAVES.remove(g);
     }
 
+    /** 2026-11-13 시험 · 직업 바꿈: 3D 묘비를 모두 지움 */
+    static void clearStones() {
+        for (Vfx.Prop p : STONES.values()) p.remove();
+        STONES.clear();
+    }
+
     /** 시험용: 무덤 하나를 둠 */
     public static void testGrave(ServerLevel level, Vec3 at, int ticks) {
-        GRAVES.add(new Grave(level, at, 0F, Tasks.now(), Tasks.now() + ticks));
+        Grave g = new Grave(level, at, 0F, Tasks.now(), Tasks.now() + ticks);
+        GRAVES.add(g);
+        // 2026-11-13 3D 묘비 (영상 · 사진첩에 보이게 — 가까운 사람 쪽을 봄)
+        net.minecraft.world.entity.player.Player near = level.getNearestPlayer(at.x, at.y, at.z, 32, false);
+        STONES.put(g, stone(level, at, near != null ? V.sub(near.position(), at) : new Vec3(0, 0, 1), 0.62, 4, ticks));
     }
 
     /** 시험용: 남은 무덤 수 */
@@ -472,6 +536,7 @@ public final class JobTraits8 {
     /** 시험용: 무덤을 모두 지움 */
     public static void clearGraves() {
         GRAVES.clear();
+        clearStones();
     }
 
     // ------------------------------------------------------------ 틱 · 태세 · 게이지
@@ -515,8 +580,8 @@ public final class JobTraits8 {
             int n = 0;
             for (Grave g : GRAVES) {
                 if (g.level() != level || g.at().distanceToSqr(sp.position()) > 32 * 32 || n++ >= 10) continue;
-                JobFx.grave(level, g.at(), 0.62, 2, 4, 0.85, true, Opt.of("fade", 0.15, "phase", (double) (n % 4)), j);
-                JobFx.soul(level, V.up(g.at(), 0.95), 0.2, j, 0.85, Opt.of("alpha", 0.85));
+                // 2026-11-13 묘비는 3D (stone — 무덤이 있는 동안 서 있음): 꼭대기의 녹색 혼불만
+                JobFx.soul(level, V.up(g.at(), 1.55), 0.2, j, 0.85, Opt.of("alpha", 0.85));
             }
         }
     }

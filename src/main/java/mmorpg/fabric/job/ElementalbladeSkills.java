@@ -623,7 +623,7 @@ final class ElementalbladeSkills {
 
     /**
      * 칼라미티의 쏜 검 하나가 땅에 꽂힘 (물결 w 의 m 번째 — 원소 el): 꽂힌 자리의 원소 빛 · 불티 · 돌 조각. 물결의 첫 검 (m 0) = 그 원소의 피해 한 번 (swords[w] —
-     * PER 줄로 쌓이는 숫자 · 무적 시간 없이) · 그 원소를 묻힘 · 칼날 빛 · 원소 연출 / 둘째 검 (m 1) = 다음 원소를 묻혀 반응 (위력 × REACT_K — 물결마다 반응 한 번)
+     * PER 줄로 쌓이는 숫자) · 이 물결의 두 원소를 묻힘 (반응 한 번 — 위력 × REACT_K) · 칼날 빛 · 원소 연출 / 둘째 검 (m 1) = 둘째 원소의 연출
      */
     private static void swordLands(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, String el, int w, int m, int n, List<String> order, List<Double> swords,
             double react, String life, LivingEntity[] cur, Vec3[] spot, Vec3 land) {
@@ -645,16 +645,18 @@ final class ElementalbladeSkills {
             return;
         }
         if (m == 0) {
-            double d = JobKit.hitSplit(sp, t, ej, P, swords.get(Math.min(w, swords.size() - 1)), PER, 1, true, false);
-            if (d > 0) {
+            // 물결의 피해 한 번 (무적 시간이면 끝난 뒤로 — strike 와 같음) → 들어간 틱에 이 물결의 두 원소를 차례로 묻힘 (반응 한 번 — 같은 틱이라 다음 물결의 무적
+            // 시간을 밀지 않음: CI 43449446277 — 다음 틱에 묻힌 반응 피해가 무적 시간을 늘려 다음 물결 피해가 막혔음)
+            String el2 = order.get((w + 1) % n);
+            JobKit.strikeSplit(sp, t, ej, P, swords.get(Math.min(w, swords.size() - 1)), PER, 1, true, false, life, 0, d -> {
                 ElementSystem.apply(sp, t, el, react * REACT_K, true, true);
+                if (w < n - 1) ElementSystem.apply(sp, t, el2, react * REACT_K, true, true); // 마지막 물결은 하나만 (바위가 남음)
                 JobImpact.hit(sp, t, ej, 1.3);
                 elementFx(sp, t, el, 1.0);
-            }
+            });
             if (w == n - 1) JobFx.aura(sp, j, 2.8, 0.5, 0.8);
             SkillFx.play(lv, "item.trident.hit", land, 0.8, 0.9);
         } else {
-            ElementSystem.apply(sp, t, el, react * REACT_K, true, true);
             elementFx(sp, t, el, 0.7);
         }
     }

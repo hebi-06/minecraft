@@ -149,7 +149,7 @@ final class NecromancerSkills {
             RuneKit.later(2 + i * 2, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
-                JobFx.grave(d, g.at(), 0.62, 6, 2, 0.45, false, Opt.of("fade", 0.3), j);
+                JobTraits8.crumbleGrave(g); // 2026-11-13 3D 묘비가 무너지며 망자가 솟음
                 NecroCrew.raise(sp, j, g.at(), g.yaw(), crewFor, NecroCrew.TRAIT);
                 if (ii == 0) SkillFx.play(d, "entity.zombie.ambient", g.at(), 0.6, 1.0);
             });
@@ -186,12 +186,13 @@ final class NecromancerSkills {
         JobFx.skull(level0, V.up(c, 2.6), 0.6, 0, 3, riseAt / 20.0 + 0.15, false, Opt.empty(), j);
         SkillFx.play(level0, "block.rooted_dirt.break", c, 0.6, 1.0);
         SkillFx.play(level0, "ambient.soul_sand_valley.mood", c, 1.0, 0.8);
-        // riseAt: 묘비가 솟음 (0 ~ 1, 5틱) → 서 있음 (2 ~ 5 이어 돌림) → endAt 무너짐 (6 ~ 7)
+        // riseAt: 3D 묘비가 솟음 (5틱 — 직업 도감 메모 "무덤 모델링 3d로": 앞이 쓴 사람 쪽) → endAt 에 무너짐 (JobTraits8.stone)
         RuneKit.later(riseAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             for (int i = 0; i < stones; i++) {
-                JobFx.grave(d, spots[i], 0.72, 0, 2, 0.3, false, Opt.of("fade", 0.0), j);
+                int ii = i;
+                RuneKit.later(i % 3, () -> JobTraits8.stone(d, spots[ii], V.sub(sp.position(), spots[ii]), 0.72, 5, endAt - riseAt - ii % 3));
                 SkillFx.sparks(d, V.up(spots[i], 0.3), BONE, 3, 2.5);
             }
             SkillFx.play(d, "block.deepslate_bricks.place", c, 0.6, 1.2);
@@ -201,13 +202,6 @@ final class NecromancerSkills {
                 JobKit.strike(sp, e, j, P, k.num("rise", 2.1), true, false, life, 0, x -> {
                     if (RuneKit.fxQuota("jobYardRise", 6)) JobFx.hit(e, j, 1.0);
                 });
-            }
-        });
-        RuneKit.later(riseAt + 5, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            ServerLevel d = sp.level();
-            for (int i = 0; i < stones; i++) {
-                JobFx.grave(d, spots[i], 0.72, 2, 4, (endAt - riseAt - 4) / 20.0, true, Opt.of("fade", 0.0, "phase", (double) (i % 4)), j);
             }
         });
         // 가둠 · 안개 (riseAt ~ endAt)
@@ -224,10 +218,7 @@ final class NecromancerSkills {
         RuneKit.later(endAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            for (int i = 0; i < stones; i++) {
-                JobFx.grave(d, spots[i], 0.72, 6, 2, 0.5, false, Opt.of("fade", 0.4), j);
-                SkillFx.sparks(d, V.up(spots[i], 0.6), BONE, 4, 3);
-            }
+            for (int i = 0; i < stones; i++) SkillFx.sparks(d, V.up(spots[i], 0.6), BONE, 4, 3); // 3D 묘비는 이 틱에 무너짐
             ghostfire(d, c, 2.2, 0.5, 0.85);
             SkillFx.shock(d, V.up(c, 0.08), FIRE, R, 0.35);
             SkillFx.play(d, "block.deepslate_bricks.break", c, 0.6, 1.2);

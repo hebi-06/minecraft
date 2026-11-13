@@ -1254,6 +1254,11 @@ final class VanillaProbe {
             case "elementalblade_ult" -> new double[] {13.5, 3.8, 4.4, 0.4};
             case "spellblade_ult" -> new double[] {11.5, 3.6, 4.0, 0.5};
             case "arcaneblade_ult" -> new double[] {12.5, 3.6, 4.6, 0.4};
+            // 2026-11-13 3D 심장 · 망치 · 묘비: 머리 위 심장 (2칸) · 하늘의 거대한 심장 (4칸 남짓 — 겨눈 곳 위 6칸) · 떨어지는 망치 (6.7칸) · 묘비 고리
+            case "warlock_nova" -> new double[] {8.0, 3.0, 2.4, 0.6};
+            case "warlock_ult" -> new double[] {12.5, 3.6, 4.6, 0.4};
+            case "tyrant_ult" -> new double[] {12.0, 3.6, 4.2, 0.4};
+            case "necromancer_yard" -> new double[] {9.0, 3.4, 1.4, 0.6};
             case "elementalblade_surge" -> new double[] {8.5, 3.0, 1.4, 0.5};
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};

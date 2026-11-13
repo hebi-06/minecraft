@@ -8,12 +8,14 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -334,6 +336,10 @@ final class TyrantSkills {
 
     // ------------------------------------------------------------ 스톨른 썬더
 
+    /** 2026-11-13 스톨른 썬더의 3D 망치 크기: 머리 위 (빨아들일 때마다 — 길이 약 2.3 · 3.0 · 3.6칸) · 떨어지는 거대한 망치 (약 6.7칸) */
+    private static final double[] HAMMER_UP = {0.9, 1.15, 1.4};
+    private static final double HAMMER_BIG = 2.6;
+
     /**
      * 스톨른 썬더 (롤 사일러스 R): 빼앗긴 하늘 (rpg:ult_usurp) — 망치를 하늘로 치켜들면 first 틱부터 every 틱마다 drains 번 둘레 radius 칸 적들 (targets 까지 — 가까운
      * 차례) 의 힘이 보랏빛 번개 줄을 타고 망치로 빨려 듦 (drain · 적마다 힘 +1 · 빨아들인 힘마다 최대 체력 × heal 회복 — 강화) · 몸과 머리 위의 거대한 망치가 자라남 →
@@ -366,6 +372,26 @@ final class TyrantSkills {
         JobFx.aura(sp, j, 3.2, 1.0, 1.0);
         SkillFx.play(level0, "entity.lightning_bolt.thunder", c0, 0.5, 0.8);
         SkillFx.play(level0, "entity.ravager.roar", c0, 0.7, 0.8);
+        // 2026-11-13 3D 망치 (직업 도감 메모 "머리 위 망치를 3d로" — 2D 망치 판 대신, rune_hammer · 보랏빛 룬): first 에 머리 위에 나타나 천천히 돌며 몸을 따라감 ·
+        // 빨아들일 때마다 커짐 → leapAt 에 겨눈 곳 하늘로 솟아 거대해짐 (머리가 아래) → slamAt − 6 에 떨어져 slamAt 에 땅에 박힘
+        Vfx.Fx hfx = RuneProps.fx(level0, c0, slamAt + 24);
+        Vfx.Prop[] ham = {null};
+        double[] hs = {HAMMER_UP[0]};
+        RuneKit.later(first, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 top = V.up(sp.position(), sp.getBbHeight() + 0.45);
+            ham[0] = RuneProps.prop(hfx, RuneProps.HAMMER, top, RuneProps.HAMMER_GRIP, RuneProps.along(V.UP, new Vec3(1, 0, 0)), hs[0] * 0.3, VIOLET);
+            ham[0].size(hs[0], 4);
+        });
+        hfx.each(first + 1, leapAt - 1, 1, a -> {
+            if (ham[0] == null) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                hfx.end();
+                return;
+            }
+            double yaw = Math.toRadians(a * 7.0);
+            ham[0].to(V.up(sp.position(), sp.getBbHeight() + 0.45), RuneProps.along(V.UP, new Vec3(Math.cos(yaw), 0, Math.sin(yaw))), hs[0], 1);
+        });
         // 빨아들임: 적마다 보랏빛 번개 줄 · 핏빛 기운이 망치로 · 머리 위 망치가 자라남
         int[] sucked = {0};
         for (int i = 0; i < drains; i++) {
@@ -379,8 +405,8 @@ final class TyrantSkills {
                 foes.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
                 if (foes.size() > targets) foes = new ArrayList<>(foes.subList(0, targets));
                 JobTraits13.ultGrow(sp, j, 0.15 + 0.15 * (ii + 1));
-                double hs = 0.9 + 0.35 * ii;
-                JobFx.maul(lv, V.up(top, hs * 2.67 / 2 + 0.3), hs, j, every / 20.0 + 0.1, Opt.of("lean", V.UP, "alpha", 0.9, "fade", 0.3, "vel", RuneKit.bodyVel(sp)));
+                hs[0] = HAMMER_UP[Math.min(ii, HAMMER_UP.length - 1)];
+                JobFx.glint(lv, V.up(top, 2.0 + hs[0]), 0.9 + 0.3 * ii, VIOLET, VIOLET_CORE, 0.3, Opt.empty());
                 SkillFx.play(lv, "entity.warden.heartbeat", sp.position(), 0.8 + 0.1 * ii, 1.0);
                 SkillFx.play(lv, "entity.lightning_bolt.impact", sp.position(), 1.6 - 0.15 * ii, 0.5);
                 for (LivingEntity e : foes) {
@@ -437,15 +463,21 @@ final class TyrantSkills {
             }
             JobFx.speed(sp, j, (slamAt - leapAt) / 20.0, 0.7);
             SkillFx.play(lv, "entity.ravager.roar", c, 1.0, 0.7);
-            // 거대한 망치가 떨어짐 (6틱 — 머리가 땅에 닿을 때 내리침)
+            // 3D 망치가 겨눈 곳 하늘로 솟아 거대해짐 (머리가 아래 · 22° 기움) → 6틱 동안 떨어져 slamAt 에 머리가 땅에 박힘
+            Vec3 lean = V.add(V.scale(V.DOWN, Math.cos(Math.toRadians(22))), V.rightOf(f), -Math.sin(Math.toRadians(22)));
+            org.joml.Quaternionf down = RuneProps.along(lean, f);
+            double reach = (RuneProps.HAMMER_HEAD[1] - RuneProps.HAMMER_GRIP[1]) / 16.0 * HAMMER_BIG;
+            Vec3 headSky = V.up(g, 10.0);
+            if (ham[0] != null) ham[0].to(V.add(headSky, lean, -reach), down, HAMMER_BIG, Math.max(2, slamAt - leapAt - 6));
             RuneKit.later(slamAt - leapAt - 6, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                double size = 2.5;
-                double half = size * 2.67 / 2;
                 Vec3 gg = spot[0];
-                double ang = Math.toRadians(22);
-                Vec3 lean = V.add(V.scale(V.DOWN, Math.cos(ang)), V.rightOf(Kit.facingOf(sp)), -Math.sin(ang));
-                JobFx.maul(sp.level(), V.up(gg, half + 9), size, j, 0.3, Opt.of("dir", V.DOWN, "speed", 9 / 0.3, "alpha", 0.95, "fade", 0.05, "lean", lean));
+                if (ham[0] != null) {
+                    ham[0].to(V.add(V.up(gg, 1.0), lean, -reach), down, HAMMER_BIG, 6);
+                    Vfx.Prop hp = ham[0];
+                    RuneKit.later(6 + 8, () -> hp.size(HAMMER_BIG * 0.08, 6));
+                    RuneKit.later(6 + 8 + 6, hp::remove);
+                }
                 SkillFx.play(sp.level(), "item.trident.thunder", gg, 0.7, 0.6);
             });
         });
@@ -455,9 +487,6 @@ final class TyrantSkills {
             ServerLevel lv = sp.level();
             Vec3 g = spot[0] != null ? spot[0] : sp.position();
             double r = k.num("slamRadius", 3);
-            double ang = Math.toRadians(22);
-            Vec3 lean = V.add(V.scale(V.DOWN, Math.cos(ang)), V.rightOf(Kit.facingOf(sp)), -Math.sin(ang));
-            JobFx.maul(lv, V.up(g, 2.5 * 2.67 / 2), 2.5, j, 0.35, Opt.of("alpha", 0.9, "fade", 0.6, "grow", 0.1, "lean", lean));
             JobFx.thunder(lv, g, 16, VIOLET, VIOLET_CORE, 0.5, Opt.empty());
             for (int i = 0; i < 4; i++) {
                 double a = i * Math.PI / 2 + Kit.rand();

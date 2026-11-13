@@ -6,12 +6,14 @@ import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -272,13 +274,22 @@ final class WarlockSkills {
         JobFx.aura(sp, j, 2.6, burstAt / 20.0, 0.8);
         SkillFx.play(level0, "entity.warden.heartbeat", sp.position(), 1.0, 1.0);
         SkillFx.play(level0, "block.bubble_column.whirlpool_inside", sp.position(), 0.7, 0.6);
+        // 2026-11-13 머리 위 3D 피의 심장 (직업 도감 메모 "머리 위 하트 3d로" — 3인칭 2D 심장 대신 · 1인칭 눈앞 작은 심장은 2D 그대로): 6틱에 맺혀 every 틱마다
+        // 고동치며 커짐 → 터지기 2틱 전 크게 부풂 → burstAt 에 터짐 (2D 터짐 장면)
+        double[] novaSize = {0.8};
+        Vfx.Prop[] h3 = {null};
+        RuneKit.later(6, () -> {
+            if (RuneKit.sameLife(sp, life)) h3[0] = heart3d(sp, life, orb, () -> novaSize[0], () -> every, 0, burstAt - 8, () -> V.scale(Kit.facingOf(sp), -1));
+        });
+        RuneKit.later(burstAt - 2, () -> {
+            if (h3[0] != null) h3[0].to(orb.get(), null, heartScale(novaSize[0]) * 1.3, 2);
+        });
         for (int t = 6; t < burstAt; t += every) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                double size = 0.8 + 0.35 * Math.min(3, (tt - 6) / every + 1);
-                JobFx14.heart(lv, orb.get(), size, 1, 4, every / 20.0 + 0.05, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), BLOOD, BLOOD_CORE);
+                novaSize[0] = 0.8 + 0.35 * Math.min(3, (tt - 6) / every + 1);
                 JobFx14.heart(lv, orb1p, 0.3 + 0.06 * Math.min(3, (tt - 6) / every + 1), 1, 4, every / 20.0 + 0.05, true, JobFx.only1p(sp), BLOOD, BLOOD_CORE);
             });
         }
@@ -309,7 +320,8 @@ final class WarlockSkills {
             ServerLevel lv = sp.level();
             Vec3 c = sp.position();
             Vec3 g = ground(lv, c);
-            JobFx14.heart(lv, orb.get(), 2.0, 5, 3, 0.45, false, JobFx.hide1p(sp), BLOOD, BLOOD_CORE);
+            if (h3[0] != null) h3[0].remove();
+            JobFx14.heart(lv, orb.get(), 2.0, 6, 2, 0.4, false, JobFx.hide1p(sp), BLOOD, BLOOD_CORE);
             JobFx14.heart(lv, orb1p, 0.5, 5, 3, 0.4, false, JobFx.only1p(sp), BLOOD, BLOOD_CORE);
             RuneKit.novaRing(lv, g, 0.8, r / 0.8 - 1, BLOOD, BLOOD_CORE, Opt.of("life", 0.5));
             RuneKit.novaRing(lv, V.up(g, 0.2), 0.6, r * 0.75 / 0.6 - 1, WGOLD, WGOLD_CORE, Opt.of("life", 0.4));
@@ -380,6 +392,49 @@ final class WarlockSkills {
         return true;
     }
 
+    // ------------------------------------------------------------ 2026-11-13 3D 피의 심장
+
+    /** 3D 피의 심장 모델 (tools/vfx_blocky.py blood_heart — ♥ 살 · 고동치는 핏줄 (속빛 물들임) · 핏줄 관 · 금빛 고리, 너비 15 픽셀 · 몸 가운데 (8, 9, 8)) */
+    static final String HEART3D = "rpg:vfx/blood_heart";
+    private static final double[] HEART_MID = {8, 9, 8};
+
+    /** 2D 심장 크기 (반지름 약 size × 0.55 칸) → 3D 심장 크기 */
+    static double heartScale(double size) {
+        return size * 1.1 / (15.0 / 16.0);
+    }
+
+    /**
+     * 3D 피의 심장: at 을 틱마다 따라감 · 앞 (♥ 이 보이는 면) 이 front 쪽을 보며 좌우로 30° 흔들림 · 크기 = size (2D 심장 크기 — 틱마다 읽음) · beat 틱마다 고동 (2틱 부풂
+     * × 1.18 → 4틱 줄어듦, 첫 고동은 firstBeat 틱) · 처음 5틱 동안 자라남 · ticks 틱 동안 (그 뒤는 부른 쪽이 옮기거나 지움 — fx 는 12틱 더). 소품
+     */
+    static Vfx.Prop heart3d(ServerPlayer sp, String life, java.util.function.Supplier<Vec3> at, java.util.function.DoubleSupplier size, java.util.function.IntSupplier beat,
+            int firstBeat, int ticks, java.util.function.Supplier<Vec3> front) {
+        Vfx.Fx fx = RuneProps.fx(sp.level(), at.get(), ticks + 12);
+        Vfx.Prop p = RuneProps.prop(fx, HEART3D, at.get(), HEART_MID, heartRot(front.get(), 0), heartScale(size.getAsDouble()) * 0.2, BLOOD, BLOOD_CORE);
+        int[] last = {firstBeat - Math.max(1, beat.getAsInt())};
+        fx.each(1, ticks, 1, a -> {
+            if (!RuneKit.sameLife(sp, life) || sp.isRemoved()) {
+                fx.end();
+                return;
+            }
+            int b = Math.max(1, beat.getAsInt());
+            if (a - last[0] >= b) last[0] = a;
+            int ph = a - last[0];
+            double k = ph < 2 ? 1 + 0.09 * (ph + 1) : Math.max(1, 1.18 - 0.045 * (ph - 1));
+            double grow = Math.min(1, a / 5.0);
+            p.to(at.get(), heartRot(front.get(), 30 * Math.sin(a * 0.11)), heartScale(size.getAsDouble()) * k * (0.2 + 0.8 * grow), 1);
+        });
+        fx.on(ticks + 11, p::remove);
+        return p;
+    }
+
+    /** 심장의 회전: 앞 (모델 −Z) 이 수평 front 쪽 (+ yaw 도 돌림) */
+    private static org.joml.Quaternionf heartRot(Vec3 front, double yaw) {
+        Vec3 f = V.flat(V.len(front) < 1e-3 ? new Vec3(0, 0, 1) : front);
+        Vec3 t = RuneKit.turn(f, yaw);
+        return RuneProps.facing(V.scale(t, -1), V.UP);
+    }
+
     // ------------------------------------------------------------ 블러드 뱅큇
 
     /** 블러드 뱅큇의 거대한 심장 solo 번호 (주인마다 한 장 — 고동마다 다시 그려도 겹친 두 장 없이) */
@@ -436,6 +491,15 @@ final class WarlockSkills {
             Vec3 from = V.add(V.up(mid, 0.2), new Vec3(Math.cos(a), 0, Math.sin(a)), r * (0.35 + 0.5 * Kit.rand()));
             JobFx.soulFly(level0, from, heartAt.apply(size[0]), 10 + q * 0.6, 0.24, BLOOD, BLOOD_CORE, Opt.empty());
         }
+        // 2026-11-13 거대한 3D 피의 심장 (직업 도감 메모 "하트 3d로" — 2D 심장 판 대신): 핏물이 모인 뒤 (first − 3) 맺혀 고동마다 커짐 (first + i × every 에 고동 —
+        // 잔치 뒤로는 6틱마다 빠르게) · 앞이 나를 봄 → 터지기 2틱 전 크게 부풂 → burstAt 에 터짐 (2D 터짐 장면)
+        Vfx.Prop[] h3 = {null};
+        int born = first - 3;
+        long cast = mmorpg.fabric.Tasks.now();
+        RuneKit.later(born, () -> {
+            if (RuneKit.sameLife(sp, life)) h3[0] = heart3d(sp, life, () -> heartAt.apply(size[0]), () -> size[0], () -> mmorpg.fabric.Tasks.now() - cast >= feastAt ? 6
+                    : every, 3, burstAt - 2 - born, () -> V.flat(V.sub(sp.position(), mid)));
+        });
         SkillFx.play(level0, "entity.warden.heartbeat", c0, 0.8, 1.0);
         SkillFx.play(level0, "entity.wither.ambient", mid, 0.6, 0.5);
         SkillFx.play(level0, "block.bubble_column.upwards_inside", mid, 0.7, 1.0);
@@ -452,12 +516,6 @@ final class WarlockSkills {
                 // 고동: 심장이 크게 부풀었다가 (5 장 — 2틱) 커진 채로 고동침 (1 ~ 4 이어 돌림) · 웅덩이가 금빛으로 맥동 · 땅을 타고 퍼지는 고리 · 가장자리에서 핏물 기둥 넷
                 size[0] = 1.8 + 0.8 * (ii + 1);
                 Vec3 hc = heartAt.apply(size[0]);
-                JobFx14.heart(lv, hc, size[0] * 1.15, 5, 1, 0.12, false, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.0, "spin", 0.0), BLOOD, BLOOD_CORE);
-                double sz = size[0];
-                RuneKit.later(2, () -> {
-                    if (RuneKit.sameLife(sp, life)) JobFx14.heart(sp.level(), hc, sz, 1, 4, (next - 2 + 1) / 20.0, true, Opt.of("solo", HEART_SOLO, "owner", owner, "fade",
-                            0.0, "spin", 0.0), BLOOD, BLOOD_CORE);
-                });
                 SkillFx.play(lv, "entity.warden.heartbeat", mid, 0.9 - ii * 0.05, 1.0);
                 SkillFx.play(lv, "entity.warden.heartbeat", hc, 0.7 - ii * 0.05, 0.7);
                 JobFx14.pool(lv, V.up(mid, 0.07), r, 5, 1, 0.3, false, Opt.of("alpha", 0.6), WGOLD, WGOLD_CORE);
@@ -495,9 +553,7 @@ final class WarlockSkills {
             // 잔치: 아군의 피를 먹고 심장이 가장 크게 (고동 셋 뒤 4.2 + 아군 하나당 0.5 — 넷까지) · 심장 아래 금빛 고리 · 핏빛 안개
             fed[0] = JobTraits14.feast(sp, j, heartAt.apply(size[0]), k.num("feastRadius", 10), k.num("feast", 0.15));
             size[0] = 1.8 + 0.8 * beats + 0.5 * Math.min(4, fed[0]);
-            Vec3 hc = heartAt.apply(size[0]);
-            JobFx14.heart(lv, hc, size[0], 1, 4, (burstAt - 2 - feastAt + 1) / 20.0, true, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.0, "spin", 0.0, "fps", 16.0),
-                    BLOOD, BLOOD_CORE); // 터지기 전 빠르게 고동침
+            Vec3 hc = heartAt.apply(size[0]); // 3D 심장은 잔치 뒤로 빠르게 고동침 (heart3d)
             JobFx.halo(lv, V.up(hc, -size[0] * 0.55), size[0] * 0.9, j, (burstAt - feastAt) / 20.0, Opt.of("alpha", 0.8));
             JobFx.smoke(lv, hc, size[0] * 0.8, BLOOD, BLOOD_CORE, 0.5, Opt.of("alpha", 0.55));
             JobFx.line(lv, tip(sp), hc, BLOOD, BLOOD_CORE, 0.3, Opt.of("alpha", 0.8));
@@ -505,10 +561,9 @@ final class WarlockSkills {
             SkillFx.play(lv, "entity.warden.heartbeat", hc, 0.5, 1.0);
             if (fed[0] > 0) JobSystem.note(sp, "§4블러드 뱅큇 §7— 아군 " + fed[0] + " · 터짐 +" + Math.round(fed[0] * JobUpgrades.num(sp, k, "feastUp", 0.15) * 100) + "%");
         });
-        // 터지기 직전 (burstAt − 2): 심장이 크게 부풂 (5 장)
+        // 터지기 직전 (burstAt − 2): 3D 심장이 크게 부풂
         RuneKit.later(burstAt - 2, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx14.heart(sp.level(), heartAt.apply(size[0]), size[0] * 1.2, 5, 1, 0.12, false, Opt.of("solo", HEART_SOLO, "owner", owner,
-                    "fade", 0.0, "spin", 0.0), BLOOD, BLOOD_CORE);
+            if (RuneKit.sameLife(sp, life) && h3[0] != null) h3[0].to(heartAt.apply(size[0]), null, heartScale(size[0]) * 1.3, 2);
         });
         JobKit.motionLater(sp, "warlock_ult:burst", burstAt - 4, life);
         RuneKit.later(burstAt, () -> {
@@ -517,7 +572,8 @@ final class WarlockSkills {
             double mult = k.num("burst", 18) * (1 + fed[0] * JobUpgrades.num(sp, k, "feastUp", 0.15));
             double big = size[0] * 1.45;
             Vec3 hc = heartAt.apply(size[0]);
-            // 터짐: 거대한 심장이 터짐 (6 · 7 장) · 하늘에서 터지는 핏빛 · 금빛 빛 · 땅을 휩쓰는 두 겹 고리 · 웅덩이가 빨려 듦 · 화면 번쩍임
+            // 터짐: 거대한 심장이 터짐 (3D 심장을 지우고 6 · 7 장) · 하늘에서 터지는 핏빛 · 금빛 빛 · 땅을 휩쓰는 두 겹 고리 · 웅덩이가 빨려 듦 · 화면 번쩍임
+            if (h3[0] != null) h3[0].remove();
             JobFx14.heart(lv, hc, big, 6, 2, 0.6, false, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.3, "spin", 0.0), BLOOD, BLOOD_CORE);
             JobFx.burst(lv, hc, size[0] * 1.3, BLOOD, BLOOD_CORE, 0.5, Opt.empty());
             JobFx.burst(lv, hc, size[0] * 0.9, WGOLD, WGOLD_CORE, 0.4, Opt.empty());

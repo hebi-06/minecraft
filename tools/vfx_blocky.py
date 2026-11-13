@@ -1759,6 +1759,120 @@ def frost_axe():
     return _axe("frost_axe", "빙하 도끼 (2026-11-13 프로스트 레이더 — 얼음 날 · 서리 결정 · 룬 홈 · 뒤 가시 · 창끝)", True)
 
 
+def heart_flesh(veins=3):
+    """2026-11-13 피의 심장 살 (진홍 — 위 · 왼쪽 밝고 아래로 짙어짐 · 젖은 윤기 점) + 빛 겹 = 고동치는 핏줄 (가지 치는 줄 — 맥동, 물들임 = 속빛)"""
+    D_, M_, L_, H_ = C("#4A0610"), C("#8E0F1E"), C("#C8243A"), C("#FF8A96")
+
+    def paint(w, h, face, rng, frame):
+        pl = pulse(frame)
+        ys, xs = np.mgrid[0:h, 0:w]
+        t = (ys / max(1, h - 1)) * 0.65 + (xs / max(1, w - 1)) * 0.35
+        img = (L_[None, None] * (1 - t)[..., None] + D_[None, None] * t[..., None]) * 0.55 + M_[None, None] * 0.45
+        if face == "up":
+            img = img * 1.12
+        elif face == "down":
+            img = img * 0.7
+        gl = rng.random((h, w)) < 0.006
+        img[gl] = H_
+        ov = np.zeros((h, w, 4))
+        if w >= 4 and h >= 4 and face not in ("down",):
+            for _ in range(veins):
+                y, x = float(rng.uniform(0, h)), float(rng.uniform(0, w))
+                dy, dx = rng.uniform(-1, 1), rng.uniform(-1, 1)
+                for i in range(int(max(w, h) * 0.9)):
+                    yi, xi = int(y), int(x)
+                    if not (0 <= yi < h and 0 <= xi < w):
+                        break
+                    ov[yi, xi] = (1, 1, 1, 0.75 + 0.25 * pl)
+                    if 0 <= yi + 1 < h:
+                        ov[yi + 1, xi, 3] = max(ov[yi + 1, xi, 3], 0.25 + 0.15 * pl)
+                    img[yi, xi] = img[yi, xi] * 0.6
+                    dy += rng.uniform(-0.5, 0.5)
+                    dx += rng.uniform(-0.5, 0.5)
+                    n = math.hypot(dy, dx) or 1
+                    y += dy / n
+                    x += dx / n
+        img = np.clip(img * (0.94 + 0.08 * pl), 0, 1)
+        return np.concatenate([img, np.ones((h, w, 1))], -1), ov
+    return paint
+
+
+def blood_heart():
+    """2026-11-13 워록의 피의 심장 (블러드 노바 · 블러드 뱅큇 — 직업 도감 메모 "하트 3d로"): 앞 (−Z) 에서 본 ♥ (가운데 x 8 · 두께 z 5 ~ 11) — 아래 마름모 (Z 둘레 45°) ·
+    둥근 두 봉우리 (22.5° 엇갈린 네모 둘씩) · 위 가운데 패인 곳에서 솟은 핏줄 관 둘 · 금빛 고리. 살 = 진홍 (빛 겹 = 고동치는 핏줄 — 물들임 1 · 속빛), 관 = 짙은 핏빛.
+    가운데 (8, 8, 8) · 너비 약 15 · 높이 약 17 (관 끝 y 17.5)"""
+    m = BModel("blood_heart", "피의 심장 (2026-11-13 — ♥ 살 · 고동치는 핏줄 · 핏줄 관 · 금빛 고리, 핏줄 빛은 서버가 물들임)", d=2.5)
+    m.mat("flesh", Mat(heart_flesh(2), glow=True, animated=True, overlay_tint=1))
+    m.mat("deep", Mat(heart_flesh(1), glow=True, animated=True, overlay_tint=1))
+    m.mat("tube", Mat(bevel("#5A0A14", "#9A2030", "#2A0408", grain="v")))
+    m.mat("gold", Mat(gold_paint()))
+    m.mat("glow", Mat(gem_paint(0.6), tint=0, glow=True, animated=True))
+    # 아래 마름모 (끝이 아래 · 두툼하게)
+    m.box("flesh", (3.7, 2.7, 4.8), (12.3, 11.3, 11.2), rot=("z", 45, (8, 7.0, 8)))
+    # 두 봉우리: 넓은 · 높은 네모 + 45° 네모 (둥글게)
+    for cx in (4.8, 11.2):
+        cy = 11.4
+        m.box("flesh", (cx - 3.5, cy - 2.3, 5.0), (cx + 3.5, cy + 2.3, 11.0))
+        m.box("flesh", (cx - 2.3, cy - 3.5, 5.0), (cx + 2.3, cy + 3.5, 11.0))
+        m.box("deep", (cx - 2.6, cy - 2.6, 4.6), (cx + 2.6, cy + 2.6, 11.4), rot=("z", 45, (cx, cy, 8)))
+    # 핏줄 관 둘 (위 가운데 패인 곳에서 비스듬히) · 관 끝 금빛 고리 · 빛
+    m.box("tube", (6.6, 12.6, 6.9), (8.4, 17.0, 8.7), rot=("z", 22.5, (7.5, 12.6, 7.8)))
+    m.box("tube", (8.0, 12.2, 7.4), (9.6, 16.0, 9.0), rot=("z", -22.5, (8.8, 12.2, 8.2)))
+    m.box("gold", (6.3, 16.4, 6.6), (8.7, 17.2, 9.0), rot=("z", 22.5, (7.5, 12.6, 7.8)))
+    m.box("glow", (6.8, 17.2, 7.1), (8.2, 17.8, 8.5), rot=("z", 22.5, (7.5, 12.6, 7.8)))
+    return m
+
+
+GRAVE_STONE = ("#2B2B30", "#4A4A52", "#5E5E68", "#74747E", "#8C8C96")  # 묘비 (푸른 회색 돌)
+
+
+def skull_paint():
+    """묘비에 새긴 해골 (뼈빛 · 눈 구멍 · 코 · 이빨 줄 — 앞면 (north) 만 그림, 나머지 면은 뼈빛) + 빛 겹 = 눈 구멍의 혼불 (물들임 0 — 녹색 불)"""
+    B_, S_, D_ = C("#D8D2BC"), C("#A39C84"), C("#26221C")
+
+    def paint(w, h, face, rng, frame):
+        pl = pulse(frame)
+        img = np.tile(B_, (h, w, 1)).astype(float)
+        img[-1, :] = S_
+        img[:, -1] = S_
+        ov = np.zeros((h, w, 4))
+        if face == "north" and w >= 8 and h >= 8:
+            ey = int(h * 0.42)
+            for ex in (int(w * 0.28), int(w * 0.62)):
+                img[ey - 1: ey + 2, ex: ex + max(2, w // 6)] = D_
+                ov[ey - 1: ey + 2, ex: ex + max(2, w // 6)] = (1, 1, 1, 0.75 + 0.25 * pl)
+            cx = w // 2
+            img[int(h * 0.62), cx - 1: cx + 1] = D_
+            for x in range(int(w * 0.25), int(w * 0.78), 2):
+                img[int(h * 0.82): h - 1, x] = D_
+        return np.concatenate([img, np.ones((h, w, 1))], -1), ov
+    return paint
+
+
+def gravestone():
+    """2026-11-13 네크로맨서의 3D 묘비 (그레이브 콜 · 그레이브야드 · 특성 「무덤」 — 직업 도감 메모 "무덤 모델링 3d로"): 앞 = −Z (north). 둥근 머리 (22.5° · 45° 돌린 돌)
+    의 푸른 회색 돌 판 (돌 테두리 · 녹색 빛 금 — 물들임 0) · 앞에 새긴 해골 (눈 구멍의 혼불) · 밑 받침돌 · 이끼. 밑 가운데 (8, 0, 8) · 높이 19 · 너비 11"""
+    m = BModel("gravestone", "묘비 (2026-11-13 — 둥근 머리 돌 판 · 새긴 해골 · 녹색 빛 금 · 받침돌 · 이끼, 빛은 서버가 물들임)", d=2.5)
+    m.mat("stone", Mat(cobble(GRAVE_STONE, cell=16, glow_chains=1.2), animated=True, overlay_tint=0))
+    m.mat("mossy", Mat(cobble(GRAVE_STONE, cell=16, moss=MOSS), animated=False))
+    m.mat("base", Mat(cobble(("#1E1E22", "#36363C", "#46464E", "#56565E", "#66666E"), cell=14)))
+    m.mat("skull", Mat(skull_paint(), animated=True, overlay_tint=0))
+    # 받침돌
+    m.box("base", (1.6, 0.0, 4.6), (14.4, 2.2, 11.4))
+    m.box("mossy", (2.6, 2.2, 5.4), (13.4, 3.4, 10.6))
+    # 돌 판 · 둥근 머리 (가운데 판 + 22.5° · 45° 돌린 머리 돌)
+    m.box("stone", (2.6, 3.4, 6.2), (13.4, 14.0, 9.8))
+    m.box("stone", (3.8, 12.0, 6.3), (12.2, 17.2, 9.7))
+    m.box("stone", (4.6, 11.6, 6.35), (11.4, 18.4, 9.65), rot=("z", 45, (8, 15.0, 8)))
+    m.box("stone", (5.6, 15.4, 6.4), (10.4, 19.0, 9.6))
+    # 새긴 해골 (앞에 조금 솟음)
+    m.box("skull", (5.0, 8.4, 5.7), (11.0, 13.6, 6.3))
+    m.box("skull", (6.2, 7.2, 5.8), (9.8, 8.6, 6.3))
+    # 금 간 모서리 · 떨어진 돌 조각
+    m.box("base", (12.6, 0.0, 3.0), (14.8, 1.4, 5.0), rot=("y", 22.5, (13.7, 0.7, 4.0)))
+    return m
+
+
 def boulder():
     """2026-11-13 떠오르는 바위 덩이 (중력 역전 · 블랙홀 · 초인 각성): 가운데 (8, 8, 8) · 지름 약 16 — 크기가 다른 돌 덩이 넷을 엇갈려 겹친 울퉁불퉁한 바위,
     금 사이 빛 = 계열 색 (tint 0 — 바위 가시와 같은 돌 · 빛 겹)"""
@@ -2177,7 +2291,7 @@ BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cl
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear,
          "shuriken": shuriken, "smoke_bomb": smoke_bomb, "tower_shield": tower_shield, "grapple_hook": grapple_hook, "chain_link": chain_link,
          "spike_ball": spike_ball, "trap_jaw": trap_jaw, "trap_base": trap_base,
-         "job_axe": job_axe, "frost_axe": frost_axe}
+         "job_axe": job_axe, "frost_axe": frost_axe, "blood_heart": blood_heart, "gravestone": gravestone}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
 # 핏빛 달 (moon) 은 뺌: 사용자 "적월 그냥 다시 2d로 바꾸고 초승달 떨어지는 연출을 없애자" — 적월 강림은 2D 달 (rpg:rfx_moon)
@@ -2327,9 +2441,9 @@ TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "met
          "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)],
          "halo": [(1.0, 0.86, 0.45), (1.0, 1.0, 0.9)], "hex_panel": [(1.0, 0.78, 0.35), (1.0, 0.95, 0.8)],
          "thunder_spear": [(0.62, 0.42, 1.0), (0.85, 0.95, 1.0)], "job_axe": [(1.0, 0.45, 0.25), (1.0, 0.85, 0.7)],
-         "frost_axe": [(0.6, 0.9, 1.0), (0.94, 0.99, 1.0)]}
+         "frost_axe": [(0.6, 0.9, 1.0), (0.94, 0.99, 1.0)], "blood_heart": [(0.95, 0.12, 0.18), (1.0, 0.75, 0.45)], "gravestone": [(0.36, 1.0, 0.5)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
-VIEWS_OF = {"job_axe": [(1.0, 0.25, 0.0001), (1.0, 0.45, -0.7)], "frost_axe": [(1.0, 0.25, 0.0001), (1.0, 0.45, -0.7)], "trap_jaw": [(0.0, 1.0, 0.25), (1.0, 0.5, 0.6)], "trap_base": [(0.0, 1.0, 0.3), (1.0, 0.4, 0.6)], "tower_shield": [(0.4, 0.3, 1.0), (1.0, 0.3, 0.3)], "shuriken": [(0.0, 1.0, 0.0001), (1.0, 0.35, -0.6)], "thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
+VIEWS_OF = {"gravestone": [(0.0001, 0.2, -1.0), (0.8, 0.45, -0.8)], "blood_heart": [(0.0001, 0.15, -1.0), (0.8, 0.4, -0.8)], "job_axe": [(1.0, 0.25, 0.0001), (1.0, 0.45, -0.7)], "frost_axe": [(1.0, 0.25, 0.0001), (1.0, 0.45, -0.7)], "trap_jaw": [(0.0, 1.0, 0.25), (1.0, 0.5, 0.6)], "trap_base": [(0.0, 1.0, 0.3), (1.0, 0.4, 0.6)], "tower_shield": [(0.4, 0.3, 1.0), (1.0, 0.3, 0.3)], "shuriken": [(0.0, 1.0, 0.0001), (1.0, 0.35, -0.6)], "thunder_spear": [(1.0, 0.2, 0.0), (0.6, 0.3, -1.0)], "halo": [(1.0, 0.45, -0.7), (0.0, 1.0, 0.01)], "hex_panel": [(0.0, 0.1, -1.0), (1.0, 0.3, -0.6)], "fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}
 
 
 def main():
