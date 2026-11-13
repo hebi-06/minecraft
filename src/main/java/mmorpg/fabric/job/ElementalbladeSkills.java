@@ -483,9 +483,10 @@ final class ElementalbladeSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 d = V.unit(V.sub(V.up(spot[0], 1.0), gates[gg]));
-                RuneKit.domainSigil(lv, gates[gg], 0.95, "blade", PRISM, PRISM_CORE, Opt.of("dir", d, "life", (lastLaunch - openAt[gg] + 8) / 20.0, "spin", rr.nextDouble() * 360,
+                // 금빛 문 1.5칸 (CI 43453046166 영상 — 0.95 는 검 손잡이 둘레의 작은 고리로만 보였음: 문에서 검이 나오는 느낌이 약함)
+                RuneKit.domainSigil(lv, gates[gg], 1.5, "blade", PRISM, PRISM_CORE, Opt.of("dir", d, "life", (lastLaunch - openAt[gg] + 8) / 20.0, "spin", rr.nextDouble() * 360,
                         "spinRate", 70.0, "grow", 0.15, "alpha", 0.95, "fade", 0.2));
-                JobFx.glint(lv, gates[gg], 0.7, PRISM, PRISM_CORE, 0.25, Opt.empty());
+                JobFx.glint(lv, gates[gg], 1.0, PRISM, PRISM_CORE, 0.25, Opt.empty());
                 if (gg % 2 == 0) JobFx.line(lv, tip0, gates[gg], tint(j, "prism", PRISM, PRISM_CORE), 0.3, Opt.of("alpha", 0.8));
                 if (gg % 4 == 0) SkillFx.play(lv, "block.amethyst_block.resonate", gates[gg], 0.9 + rr.nextDouble() * 0.4, 0.5);
             });

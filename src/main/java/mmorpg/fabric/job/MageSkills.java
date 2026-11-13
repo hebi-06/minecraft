@@ -364,9 +364,9 @@ final class MageSkills {
 
     // ------------------------------------------------------------ 금서 개방
 
-    /** 2026-11-13 3D 금서 (tools/job_mobs_art.py job_tome — 남색 가죽 · 금 등 · 룬 책장 · 넘어가는 책장 셋): 크기 (펼친 너비 약 2.5칸) · 뿌리에서 책 가운데까지 높이 */
+    /** 2026-11-13 3D 금서 (tools/job_mobs_art.py job_tome — 남색 가죽 · 금 등 · 룬 책장 · 넘어가는 책장 셋): 크기 (펼친 너비 약 4칸) · 뿌리에서 책 가운데까지 높이 */
     private static final String TOME = "rpg:job_tome";
-    private static final double TOME_SCALE = 1.25;
+    private static final double TOME_SCALE = 2.0; // 1.25 → 2.0 (CI 43453046166 영상 — 펼친 너비 2.5칸은 과녁 머리 곁의 작은 책으로 보였음: 펼친 너비 약 4칸)
     private static final double TOME_MID = 1.0 * TOME_SCALE;
 
     /**
@@ -387,7 +387,8 @@ final class MageSkills {
         // 금서 자리: 과녁 가운데 위 — 가까우면 조금 더 뒤로 · 낮게 (1인칭 화면 위쪽에 책이 들어오게), 멀면 조금 더 높이
         double distH = Math.hypot(center.x - sp.getX(), center.z - sp.getZ());
         Vec3 back = distH > 0.1 ? V.flat(V.sub(center, sp.position())) : Kit.facingOf(sp);
-        Vec3 bookAt = V.up(V.add(center, back, Math.max(0, 7 - distH) * 0.6), 3.4 + Math.max(0, Math.min(1.2, (distH - 7) * 0.15)));
+        // 2026-11-13 3D 금서를 크게 (TOME_SCALE 2) 하며 3.4 → 4.0 (책 아래 끝이 과녁 머리 위로)
+        Vec3 bookAt = V.up(V.add(center, back, Math.max(0, 7 - distH) * 0.6), 4.0 + Math.max(0, Math.min(1.2, (distH - 7) * 0.15)));
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);

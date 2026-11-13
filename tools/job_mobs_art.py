@@ -702,8 +702,9 @@ def job_reaper_anims():
 
 
 # ================================================================== 왕의 손 (2026-11-13 — 직업 도감 메모 타이런트 킹스 그립 "왕의 손을 3d로"): 보랏빛 망령 거인 왕의
-# 갑주 손 (비침) — 금 테 · 손등의 핏빛 왕관 룬 · 손가락 넷 (두 마디 + 핏빛 발톱) · 엄지 · 팔목 갑주. 손바닥이 아래 · 손가락이 앞 (−Z) — 쥐면 아래로 감김.
-# 손바닥 높이 약 20 ~ 28 픽셀 (크기 1) — 몹 자리 = 쥘 적의 발
+# 갑주 손 (비침) — 금 테 · 손등의 핏빛 왕관 룬 · 손가락 넷 (두 마디 + 핏빛 발톱) · 엄지 · 팔목 갑주. 모델은 손바닥이 아래 · 손가락이 앞 (−Z) 이고, 늘 트는 idle 이
+# 팔목을 −90° 세움 (2판 — CI 43453046166: 누운 손은 3인칭 카메라에서 판처럼 보였음) → 손바닥이 앞 (몹이 보는 쪽 = 쓴 사람) · 손가락이 위 · 팔목 갑주가 아래.
+# 쥐면 손가락이 앞으로 감김 (그 적을 등 뒤에서 움켜쥠). 손바닥 가운데 높이 31 픽셀 · 손가락 끝 60 픽셀 (크기 1)
 
 HD_METAL = (86, 52, 132)
 HD_DARK = (40, 22, 64)
@@ -769,10 +770,11 @@ def _hd_pose(kind):
     """손의 자세: spread = 활짝 (손가락이 조금 젖혀짐 · 벌어짐) · grip = 쥠 (손가락이 아래로 감김 — 뿌리 70° · 끝 75°) · crush = 꽉 쥠 (더 감김 · 손바닥이 내려앉음) ·
     slam = 쥔 채 앞으로 내리꽂음 (팔목이 앞으로 숙음)"""
     if kind == "spread":
-        p = {"palm": [-6, 0, 0], "thumbA": [0, -18, -10], "thumbB": [0, -10, 0]}
+        # 2판: 손가락을 더 벌림 (세운 손을 앞에서 볼 때 네 손가락이 붙어 한 덩이로 보였음)
+        p = {"palm": [-6, 0, 0], "thumbA": [0, -30, -14], "thumbB": [0, -12, 0]}
         for i in range(4):
-            p[f"f{i}a"] = [-14, (i - 1.5) * 7, 0]
-            p[f"f{i}b"] = [-6, 0, 0]
+            p[f"f{i}a"] = [-18, (1.5 - i) * 13, 0]  # 바깥으로 (i − 1.5 는 안으로 모였음)
+            p[f"f{i}b"] = [-8, 0, 0]
         return p
     if kind in ("grip", "crush"):
         k = 1.0 if kind == "grip" else 1.18
@@ -785,7 +787,7 @@ def _hd_pose(kind):
         return p
     if kind == "slam":
         p = _hd_pose("crush")
-        p["arm"] = [28, 0, 0]
+        p["arm"] = [60, 0, 0]  # idle 의 −90° 에 더함 → −30° (쥔 주먹이 앞 아래로 숙음)
         return p
     return {}
 
@@ -807,9 +809,10 @@ def _hd_move(times, poses, extra=None, length=None):
 def job_hand_anims():
     wob = f"math.sin({LT} * 90)"
     out = {
-        # 늘 (작게): 손가락이 꿈틀 · 손이 떠 흔들림
+        # 늘 (작게): 팔목을 −90° 세움 (손바닥이 앞 · 손가락이 위 — 다른 동작은 이 위에 더함) · 손가락이 꿈틀 · 손이 떠 흔들림
         "idle": {"loop": True, "bones": {
             "root": {"position": [0, f"{wob} * 0.6", 0]},
+            "arm": {"rotation": [-90, 0, 0]},
             "f0b": {"rotation": [f"math.sin({LT} * 120) * 4", 0, 0]},
             "f2b": {"rotation": [f"math.sin({LT} * 120 + 90) * 4", 0, 0]},
             "thumbB": {"rotation": [0, f"math.sin({LT} * 80) * 5", 0]},
@@ -1185,7 +1188,7 @@ R.PREVIEW_POSES["job_dragon"] = ((["idle"], 0.0), (["idle", "fly"], 0.15), (["id
                                  (["idle", "bite"], 0.3), (["idle", "rear"], 0.5), (["idle", "slam"], 0.15), (["idle", "stomp"], 0.1), (["idle", "stomp"], 0.2))
 R.MOBS["job_hand"] = (job_hand, job_hand_anims, dict(fam="job_hand", health=40, move=0.4, box=[1.6, 1.8], fly=True), "entity_alphablend", ["idle"], True)
 R.PREVIEW_POSES["job_hand"] = ((["idle"], 0.0), (["idle", "spread"], 0.0), (["idle", "grab"], 0.1), (["idle", "grab"], 0.18), (["idle", "squeeze"], 0.08),
-                               (["idle", "slam"], 0.25), (["idle", "release"], 0.3), (["summon"], 0.15), (["idle", "vanish"], 0.2))
+                               (["idle", "slam"], 0.25), (["idle", "release"], 0.3), (["idle", "summon"], 0.15), (["idle", "vanish"], 0.2))
 R.MOBS["job_maw"] = (job_maw, job_maw_anims, dict(fam="job_maw", health=40, move=0.4, box=[1.4, 1.8], fly=True), "entity_emissive", ["idle"], None)
 R.PREVIEW_POSES["job_maw"] = ((["idle"], 0.0), (["idle", "open"], 0.25), (["idle", "wide"], 0.3), (["idle", "snap"], 0.12), (["idle", "roar"], 0.4),
                               (["idle", "pit_rise"], 0.2), (["idle", "pit_wide"], 0.0), (["idle", "pit_snap"], 0.12), (["idle", "pit_chew"], 0.15))

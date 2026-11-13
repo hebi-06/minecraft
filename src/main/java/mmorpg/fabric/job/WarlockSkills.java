@@ -422,7 +422,8 @@ final class WarlockSkills {
             int ph = a - last[0];
             double k = ph < 2 ? 1 + 0.09 * (ph + 1) : Math.max(1, 1.18 - 0.045 * (ph - 1));
             double grow = Math.min(1, a / 5.0);
-            p.to(at.get(), heartRot(front.get(), 30 * Math.sin(a * 0.11)), heartScale(size.getAsDouble()) * k * (0.2 + 0.8 * grow), 1);
+            // 흔들림 ±10° (CI 43453046166 영상 — ±30° 에 영상 카메라 (옆 뒤) 의 각이 더해져 심장의 옆면 (두툼한 판) 이 보였음)
+            p.to(at.get(), heartRot(front.get(), 10 * Math.sin(a * 0.11)), heartScale(size.getAsDouble()) * k * (0.2 + 0.8 * grow), 1);
         });
         fx.on(ticks + 11, p::remove);
         return p;

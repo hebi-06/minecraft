@@ -1282,6 +1282,9 @@ final class VanillaProbe {
             // 2026-11-13 3D 망령 사신 (키 3칸 남짓 — 몸 뒤 오른쪽) · 페일 하베스트의 거대한 사신 (2.4배): 멀리 · 위를 봄 (CI 43445225021 — 머리가 화면 위로 잘림)
             case "reaper_avatar" -> new double[] {8.5, 3.0, 2.0, 0.5};
             case "soulreaper_ult" -> new double[] {12.5, 3.6, 4.4, 0.4};
+            // 2026-11-13 직업 도감 메모 손질: 미러 블레이드 · 문라이트 서클 등 뒤 커다란 날개 (1.7 배 — 날개 끝이 머리 위로) · 세이비어 러시 빛의 다리 (몸에서 과녁까지)
+            case "swordsman_mirror", "swordsman_moon" -> new double[] {7.5, 2.8, 1.8, 0.8};
+            case "guardian_rush" -> new double[] {8.0, 3.0, 1.4, 0.7};
             default -> new double[] {6.0, 2.1, 1.0, 1.0};
         };
     }
