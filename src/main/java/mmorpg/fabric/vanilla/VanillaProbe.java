@@ -781,6 +781,12 @@ final class VanillaProbe {
                 String info = VanillaCosmetics.holderInfo(p);
                 log("holder " + info);
                 check("title and wings ride the player", info.startsWith("title") && !info.endsWith("bones 0"));
+                check("self motion view off by default", !VanillaRig.selfView(p));
+                say(p, "slot 52"); // 2026-11-13 내 모션 보기 단추 (5, 7)
+                next(p, 183, 8);
+            }
+            case 183 -> {
+                check("self motion view toggles on", VanillaRig.selfView(p));
                 say(p, "slot 51"); // 미리보기 (창을 닫고 마네킹)
                 next(p, 177, 14);
             }
@@ -816,7 +822,25 @@ final class VanillaProbe {
                 say(p, "shot 21d_hand_skin");
                 next(p, 182, 10);
             }
-            case 182 -> {
+            case 182 -> { // 2026-11-13 뼈 몸 (내 모션 보기 — 왕관 · 벚꽃 검 스킨): 3인칭에서 평타 한 번
+                say(p, "cam back");
+                next(p, 184, 12);
+            }
+            case 184 -> {
+                mmorpg.fabric.motion.MotionSystem.swung(p, mmorpg.fabric.RpgCombat.weaponOf(p.getMainHandItem()));
+                next(p, 185, 5);
+            }
+            case 185 -> {
+                check("rig on self with the crown", VanillaRig.active(p) && !VanillaCosmetics.hatFor(p).isEmpty());
+                check("wings follow the rig torso", VanillaRig.frames(p) != null);
+                say(p, "ents");
+                say(p, "shot 22_rig_self");
+                next(p, 186, 14);
+            }
+            case 186 -> {
+                say(p, "shot 22b_rig_self_later");
+                VanillaRig.selfView(p, false);
+                check("self view off removes the rig", !VanillaRig.active(p) && !VanillaRig.selfView(p));
                 mmorpg.fabric.cosmetic.Cosmetics.reset(p);
                 next(p, 57, 15);
             }
