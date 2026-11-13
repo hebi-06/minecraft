@@ -227,6 +227,20 @@ public final class Vfx {
         /** 입체 소품 (아이템 모델 — 아이템 정의 id, 예: rpg:vfx/rune_axe) */
         public Prop prop(String itemModel, Vec3 at) {
             Prop p = new Prop(this, itemModel, at);
+            p.show();
+            props.add(p);
+            propsMade++;
+            return p;
+        }
+
+        /**
+         * 2026-11-13 처음 모습을 정한 뒤 띄움: init (쥔 곳 · 빛 · 물들임 · 자리 · 회전 · 크기) 을 마친 다음에 홀더에 넣음 — 띄우는 패킷에 처음 모습이 담김
+         * (예전: 띄운 뒤에 준 회전 · 물들임이 다음 틱에 가서 첫 1 ~ 2틱 동안 물들지 않은 채 곧게 선 모델이 보였음 — CI 43386949877 삼단베기)
+         */
+        public Prop prop(String itemModel, Vec3 at, java.util.function.Consumer<Prop> init) {
+            Prop p = new Prop(this, itemModel, at);
+            if (init != null) init.accept(p);
+            p.show();
             props.add(p);
             propsMade++;
             return p;
@@ -314,6 +328,14 @@ public final class Vfx {
             this.pos = at;
             e.setOffset(at.subtract(fx.origin));
             apply();
+        }
+
+        private boolean shown;
+
+        /** 홀더에 넣음 (보는 사람에게 띄움 — 지금의 모습으로) */
+        void show() {
+            if (shown) return;
+            shown = true;
             fx.addElement(e);
         }
 

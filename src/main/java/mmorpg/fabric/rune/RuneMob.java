@@ -30,6 +30,11 @@ public final class RuneMob {
     public static final String SYLPH = "rpg:rune_sylph";
     public static final String GNOME = "rpg:rune_gnome";
     public static final String SPIRIT_KING = "rpg:rune_spirit_king";
+    /** 2026-11-13 그림자 분신 (암살자 — 그림자 난도질 · 월광 암살): 동작 appear · slash · slash2 · stab · xcut (치는 때 SHADE_STRIKE_AT 틱) · vanish */
+    public static final String SHADE = "rpg:rune_shade";
+    /** 그림자 분신의 slash · slash2 · stab 이 닿는 때 (동작을 튼 뒤 틱 — 0.2초), xcut 은 5틱 */
+    public static final int SHADE_STRIKE_AT = 4;
+    public static final int SHADE_XCUT_AT = 5;
     public static final String WOLF = TyrfingWarrior.WOLF_ID;
 
     /** 빠르기 곡선: 고르게 · 빨리 시작해 느려짐 · 느리게 시작해 빨라짐 · 부드럽게 */

@@ -225,8 +225,8 @@ public final class RuneStrike {
         mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), 22);
         Vec3 f = V.flat(sp.getViewVector(1F));
         Vec3 rt = V.rightOf(f);
-        Vec3 mid = V.up(V.add(sp.position(), f, 1.8), 1.3);
-        double len = 2.1;
+        Vec3 mid = V.up(V.add(sp.position(), f, 2.4), 1.55);
+        double len = 2.9;
         Vec3 back = V.scale(f, -1);
         RuneSwords.Blade b = RuneSwords.blade(fx, V.add(mid, rt, -len * 0.42), rt, back, len, 0.2, col, RuneKit.BLOOD_CORE);
         fx.on(1, () -> b.grow(1, 3));

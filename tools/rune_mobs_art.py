@@ -860,6 +860,171 @@ def spirit_wolf_extra():
 BEHAVIORS = {}
 
 
+# ================================================================== 그림자 분신 (암살자 영웅 · 초월 — 그림자 난도질 · 월광 암살, 2026-11-13)
+
+SH_CLOTH = (36, 22, 48)
+SH_CLOTH2 = (56, 32, 72)
+SH_TRIM = (214, 46, 245)   # 암살자 빛 (자홍)
+SH_CORE = (255, 214, 255)
+SH_VOID = (8, 4, 12)
+SH_STEEL = (70, 58, 92)
+
+
+def rune_shade():
+    """그림자 분신: 두건을 쓴 검보라 그림자 암살자 — 얼굴은 어둠 · 자홍 눈 둘, 자홍 테의 망토 · 목도리 두 가닥 (뒤로 날림), 두 손에 자홍 날의 단검 (앞으로),
+    발밑은 그림자 연기 (비침). 키 약 1.9칸 (사람과 같음) · 앞 = −Z"""
+    m = Model("rune_shade", tex_w=128)
+    cloth = Mat(SH_CLOTH, "knit", noise=5, edge=0.8, seed=1101, accent=(26, 14, 34), seam=SH_TRIM, seam_glow=0.7, seam_band=6, seam_dir="v", seam_gap=0.6)
+    cloth2 = Mat(SH_CLOTH2, "knit", noise=5, edge=0.82, seed=1102, accent=(40, 22, 52))
+    trim = Mat(SH_TRIM, "flat", noise=4, edge=1.0, glow=0.85, seed=1103)
+    void = Mat(SH_VOID, "flat", noise=2, edge=1.0, seed=1104)
+    steel = Mat(SH_STEEL, "metal", noise=5, edge=0.86, seed=1105)
+    edge = Mat(SH_CORE, "flat", noise=3, edge=1.0, glow=1.0, seed=1106)
+    wrap = Mat((44, 28, 40), "knit", noise=4, edge=0.85, seed=1107)
+    smoke = see(Mat((60, 30, 80), "ice", noise=8, edge=0.95, seed=1108, accent=(90, 40, 120)), 0.5)
+    tail = see(Mat(SH_CLOTH2, "knit", noise=5, edge=0.85, seed=1109, rim=SH_TRIM, rim_glow=0.6), 0.9)
+    eye = SH_CORE
+
+    root = m.bone("root", [0, 0, 0])
+    sm = m.bone("smoke", [0, 0, 0], "root")
+    sm.box([-5, 0, -5], [10, 2, 10], smoke)
+    sm.box([-3, 2, -3], [6, 2, 6], smoke.with_(seed=1110))
+    body = m.bone("body", [0, 12, 0], "root")
+    body.box([-4, 12, -2], [8, 12, 4], cloth, decals=[("north", 3, 5, SH_TRIM, 0.8), ("north", 4, 5, SH_TRIM, 0.8)])
+    body.box([-4, 13, -2], [8, 1, 4], trim, inflate=0.2)
+    cloak = m.bone("cloak", [0, 23, 2], "body")
+    cloak.box([-4.5, 8, 2], [9, 15, 1], tail)
+    cloak.box([-4.5, 8, 2.6], [9, 1, 1], trim.with_(seed=1111))
+    head = m.bone("head", [0, 24, 0], "body")
+    head.box([-4, 24, -4], [8, 8, 8], cloth2, faces={"north": void}, decals=[("north", 2, 4, eye, 1.0), ("north", 5, 4, eye, 1.0),
+                                                                          ("north", 2, 3, SH_TRIM, 0.7), ("north", 5, 3, SH_TRIM, 0.7)])
+    head.box([-4.5, 31, -4.5], [9, 1, 9], cloth.with_(seed=1112))
+    hood = m.bone("hood", [0, 32, 2], "head", [-20, 0, 0])
+    hood.box([-2, 32, 0], [4, 3, 4], cloth2.with_(seed=1113))
+    hood.box([-1, 35, 1], [2, 2, 3], cloth.with_(seed=1114))
+    for side, sx in (("R", -1), ("L", 1)):
+        sc = m.bone("scarf" + side, [1.5 * sx, 23, 2.5], "body", [20, 0, 10 * sx])
+        sc.box([1.5 * sx - 1, 16, 2.5], [2, 7, 1], see(cloth2.with_(seed=1115 + sx), 0.92))
+        sc2 = m.bone("scarf2" + side, [1.5 * sx, 16, 3], "scarf" + side, [15, 0, 0])
+        sc2.box([1.5 * sx - 1, 10, 2.5], [2, 6, 1], see(cloth2.with_(seed=1117 + sx), 0.75))
+        sc2.box([1.5 * sx - 1, 9, 2.5], [2, 1, 1], trim.with_(seed=1118 + sx))
+        arm = m.bone("arm" + side, [5 * sx, 22, 0], "body")
+        ax = -7 if sx < 0 else 4
+        arm.box([ax, 16, -1.5], [3, 7, 3], cloth.with_(seed=1119 + sx))
+        fa = m.bone("forearm" + side, [5.5 * sx, 16, 0], "arm" + side)
+        fa.box([ax, 10, -1.5], [3, 6, 3], wrap.with_(seed=1121 + sx))
+        fa.box([ax - 0.2, 14, -1.7], [3, 1, 3], trim.with_(seed=1123 + sx), inflate=0.2)
+        # 단검: 아래팔을 따라 손 너머로 (팔을 앞으로 뻗으면 칼끝도 앞) — 자루 · 자홍 코등이 · 날 (안쪽 날이 빛남)
+        dg = m.bone("dagger" + side, [5.5 * sx, 10.5, 0], "forearm" + side)
+        dx = -6 if sx < 0 else 5
+        dg.box([dx, 8.5, -0.5], [1, 2, 1], wrap.with_(seed=1125 + sx))
+        dg.box([dx - 0.5, 8, -1.5], [2, 1, 3], trim.with_(seed=1127 + sx))
+        dg.box([dx, 1, -1], [1, 7, 2], steel.with_(seed=1129 + sx), faces={"north": edge})
+        dg.box([dx, 0, -0.5], [1, 1, 1], edge.with_(seed=1131 + sx))
+        leg = m.bone("leg" + side, [2 * sx, 12, 0], "body")
+        lx = -4 if sx < 0 else 0
+        leg.box([lx, 2, -2], [4, 10, 4], cloth2.with_(seed=1133 + sx))
+        leg.box([lx, 0, -2.5], [4, 2, 5], wrap.with_(seed=1135 + sx))
+    return m
+
+
+# 쉬는 자세 (idle 이 늘 켜져 있고 동작은 더해짐 — 베드락 동작은 같은 뼈의 값을 더함): 단검을 앞으로 낮게 든 팔 · 조금 숙인 몸 · 벌린 다리
+SH_READY = {
+    "armR": {"rotation": [-40, 10, 8]}, "armL": {"rotation": [-40, -10, -8]},
+    "forearmR": {"rotation": [-50, 0, 0]}, "forearmL": {"rotation": [-50, 0, 0]},
+    "body": {"rotation": [8, 0, 0], "position": [0, -1, 0]}, "head": {"rotation": [-6, 0, 0]},
+    "legR": {"rotation": [-18, 0, 4]}, "legL": {"rotation": [14, 0, -4]}, "cloak": {"rotation": [12, 0, 0]},
+}
+
+
+def sh_rel(bones):
+    """동작 열쇠 (그 뼈의 실제 자세) → 쉬는 자세에서 더할 값 (idle 과 더해져 그 자세가 됨)"""
+    out = {}
+    for bone, chans in bones.items():
+        out[bone] = {}
+        for ch, frames in chans.items():
+            base = SH_READY.get(bone, {}).get(ch)
+            if base is None or ch == "scale":
+                out[bone][ch] = kf(frames)
+                continue
+            out[bone][ch] = kf([(t, [v - b for v, b in zip(vec, base)]) for t, vec in frames])
+    return out
+
+
+def rune_shade_anims():
+    sway = f"math.sin({LT} * 120)"
+    R = SH_READY
+    return {
+        "idle": {"loop": True, "bones": {
+            "armR": R["armR"], "armL": R["armL"], "forearmR": R["forearmR"], "forearmL": R["forearmL"],
+            "body": {"rotation": [f"8 + {sway} * 2", f"math.sin({LT} * 70) * 6", 0], "position": [0, f"-1 + {sway} * 0.3", 0]},
+            "head": {"rotation": [f"-6 + math.sin({LT} * 90) * 3", f"math.sin({LT} * 50) * 8", 0]},
+            "cloak": {"rotation": [f"12 + math.sin({LT} * 160) * 8", 0, f"math.sin({LT} * 110) * 4"]},
+            "scarfR": {"rotation": [f"35 + math.sin({LT} * 200) * 12", 0, f"-12 + math.sin({LT} * 150) * 6"]},
+            "scarfL": {"rotation": [f"35 + math.sin({LT} * 200 + 60) * 12", 0, f"12 + math.sin({LT} * 150 + 40) * 6"]},
+            "scarf2R": {"rotation": [f"20 + math.sin({LT} * 200 - 60) * 16", 0, 0]},
+            "scarf2L": {"rotation": [f"20 + math.sin({LT} * 200) * 16", 0, 0]},
+            "legR": R["legR"], "legL": R["legL"],
+            "smoke": {"rotation": [0, f"{LT} * 90", 0], "scale": [f"1 + {sway} * 0.08", 1, f"1 + {sway} * 0.08"]},
+        }},
+        # 그림자에서 솟음 (0.3초)
+        "appear": {"animation_length": 0.3, "bones": {
+            "root": {"position": kf([(0, [0, -18, 0]), (0.2, [0, 1, 0]), (0.3, [0, 0, 0])]),
+                     "scale": kf([(0, [0.6, 0.6, 0.6]), (0.2, [1.05, 1.05, 1.05]), (0.3, [1, 1, 1])])},
+        }},
+        # 오른 단검으로 크게 비스듬히 벰 (0.45초 — 0.1 머리 위 오른쪽으로 감음 · 0.2 왼쪽 아래로 벰 (서버 SHADE_STRIKE_AT 4틱) · 지나쳐 멈춤)
+        "slash": {"animation_length": 0.45, "bones": sh_rel({
+            "armR": {"rotation": [(0, [-40, 10, 8]), (0.1, [-165, -20, 40]), (0.2, [-70, 40, -30]), (0.32, [-40, 50, -40]), (0.45, [-40, 10, 8])]},
+            "forearmR": {"rotation": [(0, [-50, 0, 0]), (0.1, [-20, 0, 0]), (0.2, [-10, 0, 0]), (0.45, [-50, 0, 0])]},
+            "armL": {"rotation": [(0, [-40, -10, -8]), (0.1, [-20, -30, -20]), (0.2, [10, -20, -30]), (0.45, [-40, -10, -8])]},
+            "body": {"rotation": [(0, [8, 0, 0]), (0.1, [-6, 30, 0]), (0.2, [22, -35, 0]), (0.32, [24, -40, 0]), (0.45, [8, 0, 0])],
+                     "position": [(0, [0, -1, 0]), (0.2, [0, -2.5, -3]), (0.45, [0, -1, 0])]},
+            "legR": {"rotation": [(0, [-18, 0, 4]), (0.2, [-40, 0, 6]), (0.45, [-18, 0, 4])]},
+            "legL": {"rotation": [(0, [14, 0, -4]), (0.2, [30, 0, -6]), (0.45, [14, 0, -4])]},
+            "cloak": {"rotation": [(0, [12, 0, 0]), (0.2, [45, 0, 10]), (0.45, [12, 0, 0])]},
+        })},
+        # 왼 단검으로 (거울)
+        "slash2": {"animation_length": 0.45, "bones": sh_rel({
+            "armL": {"rotation": [(0, [-40, -10, -8]), (0.1, [-165, 20, -40]), (0.2, [-70, -40, 30]), (0.32, [-40, -50, 40]), (0.45, [-40, -10, -8])]},
+            "forearmL": {"rotation": [(0, [-50, 0, 0]), (0.1, [-20, 0, 0]), (0.2, [-10, 0, 0]), (0.45, [-50, 0, 0])]},
+            "armR": {"rotation": [(0, [-40, 10, 8]), (0.1, [-20, 30, 20]), (0.2, [10, 20, 30]), (0.45, [-40, 10, 8])]},
+            "body": {"rotation": [(0, [8, 0, 0]), (0.1, [-6, -30, 0]), (0.2, [22, 35, 0]), (0.32, [24, 40, 0]), (0.45, [8, 0, 0])],
+                     "position": [(0, [0, -1, 0]), (0.2, [0, -2.5, -3]), (0.45, [0, -1, 0])]},
+            "legL": {"rotation": [(0, [14, 0, -4]), (0.2, [-40, 0, -6]), (0.45, [14, 0, -4])]},
+            "legR": {"rotation": [(0, [-18, 0, 4]), (0.2, [30, 0, 6]), (0.45, [-18, 0, 4])]},
+            "cloak": {"rotation": [(0, [12, 0, 0]), (0.2, [45, 0, -10]), (0.45, [12, 0, 0])]},
+        })},
+        # 두 단검으로 깊이 찌름 (0.4초 — 0.08 당김 · 0.2 찌름 · 머묾)
+        "stab": {"animation_length": 0.4, "bones": sh_rel({
+            "armR": {"rotation": [(0, [-40, 10, 8]), (0.08, [-20, 20, 20]), (0.2, [-84, -6, 0]), (0.34, [-82, -6, 0]), (0.4, [-60, 0, 4])]},
+            "armL": {"rotation": [(0, [-40, -10, -8]), (0.08, [-20, -20, -20]), (0.2, [-84, 6, 0]), (0.34, [-82, 6, 0]), (0.4, [-60, 0, -4])]},
+            "forearmR": {"rotation": [(0, [-50, 0, 0]), (0.08, [-80, 0, 0]), (0.2, [-4, 0, 0]), (0.4, [-20, 0, 0])]},
+            "forearmL": {"rotation": [(0, [-50, 0, 0]), (0.08, [-80, 0, 0]), (0.2, [-4, 0, 0]), (0.4, [-20, 0, 0])]},
+            "body": {"rotation": [(0, [8, 0, 0]), (0.08, [-4, 0, 0]), (0.2, [26, 0, 0]), (0.4, [18, 0, 0])],
+                     "position": [(0, [0, -1, 0]), (0.08, [0, 0, 2]), (0.2, [0, -3, -5]), (0.4, [0, -2, -4])]},
+            "legR": {"rotation": [(0, [-18, 0, 4]), (0.2, [-50, 0, 6]), (0.4, [-40, 0, 6])]},
+            "legL": {"rotation": [(0, [14, 0, -4]), (0.2, [40, 0, -6]), (0.4, [32, 0, -6])]},
+            "cloak": {"rotation": [(0, [12, 0, 0]), (0.2, [55, 0, 0]), (0.4, [40, 0, 0])]},
+        })},
+        # X 베기 (0.5초 — 0.15 두 단검을 머리 위로 엇갈려 듦 · 0.25 바깥 아래로 크게 벰)
+        "xcut": {"animation_length": 0.5, "bones": sh_rel({
+            "armR": {"rotation": [(0, [-40, 10, 8]), (0.15, [-170, 30, -25]), (0.25, [-50, 20, 60]), (0.4, [-30, 10, 50]), (0.5, [-40, 10, 8])]},
+            "armL": {"rotation": [(0, [-40, -10, -8]), (0.15, [-170, -30, 25]), (0.25, [-50, -20, -60]), (0.4, [-30, -10, -50]), (0.5, [-40, -10, -8])]},
+            "forearmR": {"rotation": [(0, [-50, 0, 0]), (0.15, [-30, 0, 0]), (0.25, [-6, 0, 0]), (0.5, [-50, 0, 0])]},
+            "forearmL": {"rotation": [(0, [-50, 0, 0]), (0.15, [-30, 0, 0]), (0.25, [-6, 0, 0]), (0.5, [-50, 0, 0])]},
+            "body": {"rotation": [(0, [8, 0, 0]), (0.15, [-14, 0, 0]), (0.25, [28, 0, 0]), (0.5, [10, 0, 0])],
+                     "position": [(0, [0, -1, 0]), (0.15, [0, 1, 1]), (0.25, [0, -3, -3]), (0.5, [0, -1, 0])]},
+            "head": {"rotation": [(0, [-6, 0, 0]), (0.15, [-16, 0, 0]), (0.25, [12, 0, 0]), (0.5, [-6, 0, 0])]},
+            "cloak": {"rotation": [(0, [12, 0, 0]), (0.25, [60, 0, 0]), (0.5, [14, 0, 0])]},
+        })},
+        # 그림자로 꺼짐 (0.35초)
+        "vanish": {"animation_length": 0.35, "bones": {
+            "root": {"position": kf([(0, [0, 0, 0]), (0.1, [0, 1, 0]), (0.35, [0, -16, 0])]),
+                     "scale": kf([(0, [1, 1, 1]), (0.1, [1.06, 0.94, 1.06]), (0.35, [0.3, 0.3, 0.3])])},
+        }},
+    }
+
+
 def behavior(fam, health, move, box, fly=False):
     c = {
         "minecraft:type_family": {"family": ["rpg_ally", fam]},
@@ -892,6 +1057,7 @@ MOBS = {
     "rune_gnome": (rune_gnome, rune_gnome_anims, dict(fam="rune_gnome", health=40, move=0.3, box=[0.7, 1.1]), "entity_emissive", ["idle", "walk"], None),
     "rune_spirit_king": (rune_spirit_king, rune_spirit_king_anims, dict(fam="rune_spirit_king", health=200, move=0.3, box=[1.0, 2.6], fly=True),
                          "entity_emissive", ["idle"], None),
+    "rune_shade": (rune_shade, rune_shade_anims, dict(fam="rune_shade", health=40, move=0.4, box=[0.6, 1.8], fly=True), "entity_alphablend", ["idle"], True),
 }
 
 
@@ -991,6 +1157,8 @@ PREVIEW_POSES = {
     "rune_sylph": ((["idle"], 0.0), (["idle", "attack"], 0.2)),
     "rune_gnome": ((["idle"], 0.0), (["idle", "attack"], 0.15), (["idle", "attack"], 0.25)),
     "rune_spirit_king": ((["idle"], 0.0), (["idle", "raise"], 0.5), (["idle", "cast"], 0.15)),
+    "rune_shade": ((["idle"], 0.0), (["idle", "slash"], 0.1), (["idle", "slash"], 0.2), (["idle", "stab"], 0.2), (["idle", "xcut"], 0.15),
+                   (["idle", "xcut"], 0.25)),
 }
 
 

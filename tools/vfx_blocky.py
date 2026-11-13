@@ -1546,7 +1546,151 @@ def guillotine_blade():
     return m
 
 
+def _seg(m, mat, a, angle, L, t, h, side, x0=8.0):
+    """2026-11-13 활 · 낫의 마디 하나: a = (z, y) 에서 바깥 (side +1 = +Z, −1 = −Z) 으로 수평에서 angle 도 (− = 아래 · 22.5 단위) 기운 길이 L ·
+    두께 t (x) · 높이 h (y) 상자 → 끝 (z, y)"""
+    az, ay = a
+    if side > 0:
+        f, t2 = (x0 - t / 2, ay - h / 2, az), (x0 + t / 2, ay + h / 2, az + L)
+        rho = -angle
+    else:
+        f, t2 = (x0 - t / 2, ay - h / 2, az - L), (x0 + t / 2, ay + h / 2, az)
+        rho = angle
+    m.box(mat, f, t2, rot=("x", rho, (x0, ay, az)) if rho else None)
+    r = math.radians(angle)
+    return (az + side * L * math.cos(r), ay + L * math.sin(r))
+
+
+def rune_arrow():
+    """2026-11-13 룬의 거대한 빛 화살 (저격 · 천궁 — 칼끝 +Y): 빛나는 속대 (속빛) 를 감싼 반투명 빛 대 · 안으로 기운 두 판의 화살촉 (빛) + 가운데 마름모 (속빛) ·
+    흰 날 · 뒤로 젖힌 가시 둘 · 꼬리의 빛 깃 넷 (+ 자 — 뒤로 젖힘) · 보석 오늬. 촉 끝 y 31 · 오늬 끝 y −14 (길이 45)"""
+    m = BModel("rune_arrow", "룬 빛 화살 (2026-11-13 — 빛나는 속대 · 기운 두 판의 촉 · 빛 깃 넷 · 보석 오늬, 계열 색은 서버가 물들임)", d=2.5)
+    weapon_mats(m)
+    m.mat("light", Mat(light_blade(0.72), tint=0, glow=True, animated=True))
+    m.mat("edge2", Mat(edge_light(0.9), glow=True))
+    m.mat("core", Mat(gem_paint(0.7), tint=1, glow=True, animated=True))
+    m.mat("channel", Mat(rune_channel(), tint=1, glow=True, animated=True))
+    # 오늬 (보석) · 금 고리
+    m.box("gem", (7.1, -14.0, 7.1), (8.9, -12.2, 8.9), rot=("y", 45, (8, -13.1, 8)))
+    m.box("gold", (7.25, -12.4, 7.25), (8.75, -11.4, 8.75))
+    # 속대 (불투명 · 속빛) — 촉 안까지
+    m.box("channel", (7.55, -11.4, 7.55), (8.45, 26.0, 8.45))
+    for y in (-3.0, 17.2):
+        m.box("gold", (7.3, y, 7.3), (8.7, y + 0.8, 8.7))
+    # 가운데 마름모 (촉의 속빛)
+    m.box("core", (7.45, 22.2, 5.8), (8.55, 26.6, 10.2), rot=("x", 45, (8, 24.4, 8)))
+    # 반투명 빛 대
+    m.box("light", (7.3, -11.4, 7.3), (8.7, 21.5, 8.7))
+    # 촉: 안으로 기운 두 판 (위에서 만나 뾰족) · 흰 날 · 뒤로 젖힌 가시
+    for side in (-1, 1):
+        zc = 8 + side * 3.1
+        rho = 22.5 if side < 0 else -22.5  # 위 끝이 가운데로 (X 둘레 + = 위가 +Z 쪽)
+        m.box("light", (7.5, 20.8, zc - 1.3), (8.5, 31.0, zc + 1.3), rot=("x", rho, (8, 20.8, zc)))
+        ze = zc + side * 1.3
+        m.box("edge2", (7.62, 20.8, ze - 0.35), (8.38, 31.2, ze + 0.35), rot=("x", rho, (8, 20.8, zc)))
+        bz = 8 + side * 4.4
+        m.box("edge2", (7.6, 18.6, bz - 0.5), (8.4, 22.0, bz + 0.5), rot=("x", 45 if side < 0 else -45, (8, 21.0, bz)))
+    # 빛 깃 넷 (+ 자 — 꼬리 쪽 끝이 바깥으로 22.5° 젖힘)
+    for side in (-1, 1):
+        zc = 8 + side * 2.2
+        rz = 22.5 if side < 0 else -22.5
+        m.box("light", (7.75, -11.0, zc - 1.6), (8.25, -2.5, zc + 1.6), rot=("x", rz, (8, -2.5, 8 + side * 0.8)))
+        m.box("edge2", (7.82, -11.6, zc + side * 1.4 - 0.25), (8.18, -2.5, zc + side * 1.4 + 0.25), rot=("x", rz, (8, -2.5, 8 + side * 0.8)))
+        xc = 8 + side * 2.2
+        m.box("light", (xc - 1.6, -11.0, 7.75), (xc + 1.6, -2.5, 8.25), rot=("z", -rz, (8 + side * 0.8, -2.5, 8)))
+    return m
+
+
+def sky_bow():
+    """2026-11-13 천궁의 하늘의 활 (쏘는 쪽 +Y · 활 면 = YZ · 앞 (보는 사람 쪽) = ±X): 금 활대 (마디 셋 — 뒤로 휘다가 끝이 앞으로 젖혀짐) · 활대의 룬 홈 (빛) ·
+    손잡이의 해 원반 (빛) 과 보석 (속빛) · 활대 위의 빛 깃털 날개 · 끝의 빛 결정. 시위는 그리지 않음 (서버가 2D 빛줄로). 가운데 (8, 8, 8) · 끝 z −14 / 30"""
+    m = BModel("sky_bow", "하늘의 활 (2026-11-13 — 금 활대 · 룬 홈 · 해 원반 · 빛 깃털 날개 · 끝의 결정, 계열 색은 서버가 물들임)", d=2.0)
+    weapon_mats(m)
+    m.mat("light", Mat(light_blade(0.75), tint=0, glow=True, animated=True))
+    m.mat("edge2", Mat(edge_light(0.9), glow=True))
+    m.mat("core", Mat(gem_paint(0.62), tint=1, glow=True, animated=True))
+    m.mat("rune", Mat(rune_plate(), tint=0, glow=True, animated=True))
+    # 손잡이: 가죽 · 금 테 · 해 원반 (빛 — 뒤) · 가운데 보석 (속빛 — 앞뒤로 솟음)
+    m.box("grip", (7.0, 4.0, 6.6), (9.0, 12.0, 9.4))
+    m.box("gold", (6.8, 11.2, 6.2), (9.2, 12.6, 9.8))
+    m.box("gold", (6.8, 3.4, 6.2), (9.2, 4.8, 9.8))
+    m.box("light", (7.4, 3.0, 3.6), (8.6, 13.0, 12.4), rot=("x", 45, (8, 8, 8)))
+    m.box("core", (6.4, 6.8, 6.8), (9.6, 9.2, 9.2), rot=("x", 45, (8, 8, 8)))
+    for side in (-1, 1):
+        # 활대: 손잡이 위에서 바깥으로 — 평평 → 뒤로 (아래) 휨 → 더 휨 → 끝이 앞 (위) 으로 젖혀짐 (∩ 모양 · 시위는 아래)
+        a0 = (8 + side * 1.4, 11.2)
+        segs = ((0.0, 4.5, 2.0, 2.6), (-22.5, 6.0, 1.9, 2.4), (-45.0, 5.4, 1.8, 2.2), (-22.5, 3.2, 1.7, 2.0), (22.5, 3.6, 1.6, 1.8))
+        a = a0
+        pts = [a]
+        for ang, L, t, h in segs:
+            a = _seg(m, "gold", a, ang, L, t, h, side)
+            pts.append(a)
+        # 룬 홈 (활대 앞뒤의 빛 띠 — 처음 넷)
+        for (ang, L, t, h), p0 in zip(segs[:4], pts[:4]):
+            _seg(m, "rune", p0, ang, L, t + 0.3, h * 0.38, side)
+        # 끝의 빛 결정 (마름모) · 흰 가시
+        tz, ty = a
+        m.box("core", (7.3, ty - 1.1, tz - 1.1), (8.7, ty + 1.1, tz + 1.1), rot=("x", 45, (8, ty, tz)))
+        m.box("edge2", (7.55, ty, tz - 0.25), (8.45, ty + 3.4, tz + 0.25), rot=("x", -22.5 if side > 0 else 22.5, (8, ty, tz)))
+        # 빛 깃털 날개 (손잡이 둘레에서 위 바깥으로 펼침 — 바깥 깃이 길게)
+        for bz, by, L, ang in ((8 + side * 2.6, 12.2, 5.5, 22.5), (8 + side * 4.4, 12.0, 7.5, 45.0), (8 + side * 6.4, 11.4, 8.5, 45.0),
+                               (8 + side * 8.6, 10.6, 7.0, 45.0)):
+            rot = ang if side > 0 else -ang  # 위 끝이 바깥으로 (X 둘레 + = 위가 +Z 쪽)
+            m.box("light", (7.7, by, bz - 0.95), (8.3, by + L, bz + 0.95), rot=("x", rot, (8, by, bz)))
+            m.box("edge2", (7.78, by + 0.3, bz + side * 0.95 - 0.2), (8.22, by + L, bz + side * 0.95 + 0.2), rot=("x", rot, (8, by, bz)))
+    return m
+
+
+def blood_steel():
+    """낫 날 (검붉은 강철): 등 쪽 어둡게 · 날 쪽 밝게 · 핏빛 룬 줄 (빛이 아님 — 날 끝 빛은 따로)"""
+    def paint(w, h, face, rng, frame):
+        ys, xs = np.mgrid[0:h, 0:w]
+        t = ys / max(1, h - 1)
+        base = C("#3A2A30") * (0.85 + 0.35 * t)[..., None]
+        glint = ((xs * 2 + ys + int(rng.integers(0, 5))) % 13) == 0
+        base[glint] = np.minimum(1.0, base[glint] * 1.5)
+        if h >= 4:
+            base[0, :] = C("#1C1216")
+            mid = h // 2
+            base[mid, ::2] = C("#9A1C24")
+        if w >= 3:
+            base[:, 0] = base[:, 0] * 0.7
+        return np.concatenate([np.clip(base, 0, 1), np.ones((h, w, 1))], -1), None
+    return paint
+
+
+def rune_scythe():
+    """2026-11-13 피의 낙인의 핏빛 낫 (자루 +Y — 자루 가운데 x 8 · z 12, 날은 자루 끝에서 −Z 로 뻗어 아래로 휨): 검은 나무 자루 · 핏빛 띠 (빛) · 금 고리 ·
+    날 이음의 속빛 보석 · 마디 넷의 검붉은 날 (등은 어둡게) · 날 아래쪽의 빛나는 날 (빛) · 뾰족한 날 끝. 자루 끝 y −15 · 날 위 y ~31 · 날 끝 z ~−12"""
+    m = BModel("rune_scythe", "핏빛 낫 (2026-11-13 — 검은 자루 · 핏빛 띠 · 금 고리 · 마디 넷의 검붉은 날 · 빛나는 날, 계열 색은 서버가 물들임)", d=2.0)
+    weapon_mats(m)
+    m.mat("haft", Mat(bevel("#22181A", "#3A2A2C", "#100A0B", grain="v")))
+    m.mat("band", Mat(gem_paint(0.7), tint=0, glow=True, animated=True))
+    m.mat("bsteel", Mat(blood_steel()))
+    m.mat("edge2", Mat(edge_light(0.95), tint=0, glow=True))
+    m.mat("core", Mat(gem_paint(0.62), tint=1, glow=True, animated=True))
+    zc = 12.0
+    m.box("haft", (7.25, -14.0, zc - 0.75), (8.75, 25.0, zc + 0.75))
+    for y in (-11.0, -2.0, 7.0, 15.0):
+        m.box("band", (7.05, y, zc - 0.95), (8.95, y + 0.9, zc + 0.95))
+    m.box("gold", (6.9, -15.0, zc - 1.1), (9.1, -13.6, zc + 1.1))
+    m.box("core", (7.2, -16.0, zc - 0.8), (8.8, -14.8, zc + 0.8), rot=("y", 45, (8, -15.4, zc)))
+    # 날 이음: 금 덩이 · 속빛 보석 (앞뒤)
+    m.box("gold", (6.7, 23.0, zc - 1.6), (9.3, 27.0, zc + 1.6))
+    m.box("core", (6.4, 23.8, zc - 0.8), (9.6, 26.2, zc + 0.8), rot=("x", 45, (8, 25.0, zc)))
+    # 날: 마디 넷 (−Z 로 뻗어 아래로 휨 — 높이가 줄어듦) · 아래쪽 빛나는 날
+    a = (zc - 1.4, 26.6)
+    for ang, L, h in ((22.5, 6.0, 6.4), (0.0, 7.0, 5.6), (-22.5, 7.0, 4.4), (-45.0, 5.5, 3.2)):
+        a0 = a
+        a = _seg(m, "bsteel", a, ang, L, 1.2, h, -1)
+        _seg(m, "edge2", (a0[0], a0[1] - h / 2 + 0.3), ang, L, 1.5, 0.7, -1)
+    tz, ty = a
+    m.box("edge2", (7.4, ty - 1.3, tz - 1.3), (8.6, ty + 1.3, tz + 1.3), rot=("x", 45, (8, ty, tz)))
+    return m
+
+
 BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
+         "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe,
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade}
 # 손바닥 · 파도 · 물기둥은 뺌: 사용자 "구지 마크 느낌살려서 각지게 할 필요가 없을거 같다 만년빙하처럼" — tools/vfx_shapes.py (기울인 조각 물체)
 # 그물은 예전 (tools/vfx_props.py — 꼰 줄 격자 덮개) 그대로: 판을 쌓은 모양은 쟁반처럼 보여 덮개 모양이 나지 않음 (2026-11-12 미리보기)
@@ -1691,7 +1835,8 @@ def load_current(name):
 
 TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
          "cloud": [(0.42, 0.36, 0.62), (0.78, 0.62, 1.0)], "rune_sword": [(0.45, 0.62, 1.0), (0.86, 0.92, 1.0)],
-         "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
+         "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)],
+         "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)], "palm": [(1.0, 0.8, 0.35), (1.0, 0.95, 0.75)], "fist": [(1.0, 0.75, 0.3), (1.0, 0.95, 0.75)],
          "net": [(0.5, 1.0, 0.5)], "guillotine": [(1.0, 0.62, 0.3), (0.78, 0.45, 1.0)], "guillotine_blade": [(1.0, 0.78, 0.4), (0.78, 0.45, 1.0)]}
 VIEWS = [(1.0, 0.45, -0.7), (-0.6, 0.25, -1.0)]
 VIEWS_OF = {"fist": [(0.35, -0.35, -1.0), (0.6, 0.3, 1.0)], "wave": [(0.6, 0.35, -1.0), (1.0, 0.12, 0.0)], "palm": [(0.25, 0.25, -1.0), (0.3, 0.2, 1.0)]}

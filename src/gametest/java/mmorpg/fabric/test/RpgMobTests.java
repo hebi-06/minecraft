@@ -26,9 +26,9 @@ public final class RpgMobTests {
 
     @GameTest(maxTicks = 20)
     public void mobsRegistered(GameTestHelper h) {
-        h.assertTrue(RpgEntities.types().size() == 55, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1 + 0.50.0 티르빙 전사 1 + 0.51.0 망자 선원 1"
+        h.assertTrue(RpgEntities.types().size() == 56, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1 + 0.50.0 티르빙 전사 1 + 0.51.0 망자 선원 1"
                 + " + 2026-11-06 피에로 소환물 2 + 2026-11-07 늑대 정령 1 + 2026-11-11 불의 정령 샐러맨더 1"
-                + " + 2026-11-12 룬 스킬 몹 6 — 매 · 야수왕 · 운디네 · 실프 · 노움 · 정령왕 + 직업 스킬 몹 1 — 드라군의 붉은 용) "
+                + " + 2026-11-12 룬 스킬 몹 6 — 매 · 야수왕 · 운디네 · 실프 · 노움 · 정령왕 + 직업 스킬 몹 1 — 드라군의 붉은 용 + 2026-11-13 그림자 분신 1) "
                 + RpgEntities.types().size());
         h.assertTrue(RpgEntities.eggs().size() == 19, "eggs (몬스터 6 + 8 + 공허 5) " + RpgEntities.eggs().size());
         for (MobData.Def d : MobData.all().values()) {

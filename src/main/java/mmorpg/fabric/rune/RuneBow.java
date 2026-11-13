@@ -197,7 +197,8 @@ final class RuneBow {
     }
 
     /**
-     * 저격: 대상 (range 칸, cone 도 안) 을 charge 틱 동안 조준 — 손에 빛나는 화살 (rpg:rfx_arrow) 이 모이고 조준선 · 조여드는 고리 → 강한 한 발 (거대한 화살), 밀쳐냄.
+     * 저격: 대상 (range 칸, cone 도 안) 을 charge 틱 동안 조준 — 손에 3D 빛 화살 (2026-11-13 룬 빛 화살) 이 길어지며 당겨지고 조준선 · 조여드는 고리 →
+     * 강한 한 발 (3D 화살이 날아가 꽂힘), 밀쳐냄.
      * 그 사이 벽 뒤로 숨으면 벽에 막힘
      */
     static boolean snipe(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -209,6 +210,11 @@ final class RuneBow {
         double[] core = cs[1];
         double charge = k.num("charge");
         double glint = RuneKit.RFX.get("glint")[0];
+        // 2026-11-13 3D 빛 화살 (룬 빛 화살 — 2D 화살 그림 대신): 손 앞에 시위에 걸린 채 점점 길어지며 (0.7 → 2.0칸) 대상을 겨눔 (2틱마다) →
+        // 쏘면 대상까지 날아가 꽂혀 몇 틱 붙어 있다가 흩어짐
+        mmorpg.fabric.vfx.Vfx.Fx afx = RuneProps.fx(level, sp.position(), (int) charge + 40);
+        Vec3 d00 = V.unit(V.sub(Kit.bodyPoint(target), RuneKit.bowHand(sp)));
+        RuneSwords.Blade arrow3d = RuneSwords.arrow(afx, V.add(RuneKit.bowHand(sp), d00, 0.1), d00, V.rightOf(V.flat(d00)), 2.0, 0.35, glow, core);
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(tt, () -> {
@@ -219,9 +225,10 @@ final class RuneBow {
                 double q = (tt + 2) / charge;
                 RuneKit.streak(level, V.add(from, d, 0.4), to, glow, 0.035, 0.12, 0.75, 0);
                 SkillFx.ring(level, V.add(to, d, -0.4), d, core, Math.max(0.35, 1.2 - tt * 0.05), 0.12, 0);
-                // 손 앞에 모이는 화살 (조준선 위, 1.6칸 앞 — 점점 밝게) + 촉의 반짝임
-                RuneKit.rfx2(level, "arrow", V.add(from, d, 1.6), Opt.of("dir", d, "size", 0.75, "life", 0.13, "alpha", 0.4 + 0.6 * q), glow, RuneKit.WHITE);
-                RuneKit.rfx(level, "prop", V.add(from, d, 2.3), Opt.of("size", 0.12 + 0.18 * q, "life", 0.13, "cell", glint, "spin", tt * 20.0, "color", core,
+                // 손 앞의 3D 화살 (시위를 당길수록 길어지고 뒤로 당겨짐) + 촉의 반짝임
+                arrow3d.grow(0.35 + 0.65 * q, 2);
+                arrow3d.pose(V.add(from, d, 0.1 - 0.35 * q), d, V.rightOf(V.flat(d)), 2);
+                RuneKit.rfx(level, "prop", arrow3d.tip(), Opt.of("size", 0.12 + 0.18 * q, "life", 0.13, "cell", glint, "spin", tt * 20.0, "color", core,
                         "alpha", 0.9));
             });
         }
@@ -240,11 +247,16 @@ final class RuneBow {
             Vec3 end = open ? to : V.add(from, d, ray);
             int ticks = RuneKit.flyStreak(level, from, end, 90, glow, core, 1.6, 0.5);
             double len2 = V.len(V.sub(end, from));
-            double life = Math.max(0.05, ticks / 20.0);
-            if (len2 > 2) {
-                RuneKit.rfx2(level, "arrow", V.add(from, d, 1.6), Opt.of("dir", d, "speed", Math.max(0, len2 - 2.2) / life, "size", 1.2, "life", life), glow,
-                        RuneKit.WHITE);
-            }
+            // 3D 화살이 날아가 꽂힘 (촉이 끝 — ticks 틱) → 대상에 붙어 따라감 (10틱) → 작아지며 흩어짐
+            arrow3d.grow(1, 1);
+            arrow3d.pose(V.add(end, d, -arrow3d.len * 0.82), d, V.rightOf(V.flat(d)), Math.max(1, ticks));
+            int at0 = afx.age();
+            afx.each(at0 + ticks + 1, at0 + ticks + 10, 1, tt -> {
+                if (!open || target.isRemoved()) return;
+                arrow3d.pose(V.add(Kit.bodyPoint(target), d, -arrow3d.len * 0.62), d, V.rightOf(V.flat(d)), 1);
+            });
+            afx.on(at0 + ticks + 11, () -> arrow3d.grow(0.1, 4));
+            afx.on(at0 + ticks + 15, arrow3d::remove);
             SkillFx.fx(level, "rpg:light_cut", V.add(from, V.sub(end, from), 0.5), Opt.of("dir", d, "size", len2 / 2, "thick", 0.3, "life", 0.7, "delay", 0.45,
                     "color", glow, "alpha", 0.9));
             SkillFx.ring(level, V.add(from, d, 0.9), d, glow, 0.6, 0.28, 2);
@@ -276,8 +288,8 @@ final class RuneBow {
     }
 
     /**
-     * 천궁: 앞쪽 하늘에 하늘의 활 (rpg:rfx_bow) 이 나타나 시위를 당긴 뒤 (draw 틱) 하늘로 쏘고, 주위 range 칸의 적 targets 명에게 차례로
-     * 거대한 화살 (rpg:rfx_arrow) 이 떨어져 꽂힘 (맞은 곳 splash 칸, 적마다 한 번).
+     * 천궁: 앞쪽 하늘에 하늘의 활 (2026-11-13 3D 하늘의 활 · 빛 화살) 이 나타나 시위를 당긴 뒤 (draw 틱) 하늘로 쏘고, 주위 range 칸의 적 targets 명에게 차례로
+     * 거대한 3D 빛 화살이 떨어져 꽂힘 (맞은 곳 splash 칸, 적마다 한 번).
      * 초월 2차 강화: 새벽빛 하늘 · 활 뒤 하늘의 성광 문양 · 발밑 문양 → 번쩍임 · 하늘 문양에서 퍼지는 고리 · 꽂힌 자리의 빛기둥
      */
     static boolean skyBow(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -294,15 +306,7 @@ final class RuneBow {
         Vec3 center = V.up(V.add(c0, f0, 4.6), 2.9); // 앞쪽 하늘 (1인칭 화면 위쪽 — 활 그림은 손잡이가 위쪽이라 가운데를 조금 낮게)
         double draw = k.num("draw");
         double gap = k.num("gap");
-        for (int t = 0; t <= draw; t += 4) {
-            final int tt = t;
-            // 시위를 당긴 정도 (빛 0~3)
-            RuneKit.later(tt, () -> {
-                Opt bo = Opt.of("size", 2.1, "life", tt >= draw ? 0.32 : 0.24, "cell", Math.min(3, Math.floor(tt / draw * 4)));
-                RuneBoost.auraCell(level, "bow", center, bo, glow, 0, 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 하늘의 활 후광
-                RuneKit.rfx2(level, "bow", center, bo, glow, gold, new int[] {0, RuneKit.BOW_CORE}, null);
-            });
-        }
+        skyBow3d(sp, level, center, f0, (int) draw, glow, gold);
         SkillFx.rune(level, c0, Opt.of("size", 2.0, "life", draw / 20 + 0.3, "color", glow, "alpha", 0.8, "rate", 90.0, "grow", 0.2));
         SkillFx.play(level, "beacon.power", center, 1.6, 0.8);
         SkillFx.play(level, "crossbow.loading.start", c0, 0.5, 1);
@@ -314,7 +318,6 @@ final class RuneBow {
         RuneKit.domainSigil(level, c0, 4.2, "holy", glow, gold, Opt.of("life", (draw + 6) / 20, "spinRate", -40.0, "grow", 0.2, "alpha", 0.75));
         Set<UUID> hit = new HashSet<>();
         RuneKit.later(draw, () -> {
-            RuneBoost.rfx2a(level, "arrow", V.up(center, 1.2), Opt.of("dir", V.UP, "speed", 40.0, "size", 1.4, "life", 0.3), glow, gold); // 0.50.0 2D 강화 (초월 나머지)
             RuneKit.rfx(level, "prop", V.up(center, 0.4), Opt.of("size", 1.3, "life", 0.3, "cell", (double) RuneKit.RFX.get("glint")[0], "color", RuneKit.WHITE,
                     "grow", 0.6, "fade", 0.6));
             SkillFx.burst(level, center, core, 1.6, 0.3);
@@ -331,11 +334,8 @@ final class RuneBow {
                     Vec3 g = e.position();
                     int drop = 5;
                     RuneKit.streak(level, V.up(g, 14), V.up(g, 0.1), core, 0.05, drop / 20.0, 0.6, 0); // 떨어질 자리 빛줄기
-                    // 0.50.0 2D 강화 (초월 나머지): 떨어지는 · 꽂힌 거대한 화살 후광 (rfx2a)
-                    RuneBoost.rfx2a(level, "arrow", V.up(g, 14), Opt.of("dir", V.DOWN, "speed", 12.6 / (drop / 20.0), "size", 1.9, "life", drop / 20.0), glow, gold);
-                    // 꽂힌 화살 (촉이 땅속): 떨어지는 화살이 끝나기 1틱 전 (깜빡임 없게)
-                    RuneKit.later(drop - 1, () -> RuneBoost.rfx2a(level, "arrow", V.up(g, 1.5), Opt.of("dir", V.DOWN, "size", 1.9, "life", 0.95, "fade", 0.45), glow,
-                            gold));
+                    // 2026-11-13 떨어져 꽂히는 3D 빛 화살 (2D 화살 그림 대신 — 촉이 땅속 0.6칸, 0.95초 꽂혀 있다가 가라앉음)
+                    fallArrow(level, g, 3.6, 14, drop, 19, glow, gold);
                     RuneKit.later(drop, () -> {
                         if (sp.isRemoved()) return;
                         Vec3 at = V.up(g, 0.9);
@@ -362,5 +362,76 @@ final class RuneBow {
             }
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 천궁의 3D 하늘의 활 (sky_bow · 너비 6칸 — 2D 활 그림 대신): 앞쪽 하늘 center 에 보는 사람 쪽을 보고 나타나 (커짐) 3D 빛 화살 (3.2칸 —
+     * 하늘을 겨눔) 이 시위에 걸려 draw 틱 동안 당겨짐 (시위 = 활 끝에서 오늬까지 2D 빛줄 둘) → 쏘면 화살이 하늘로 날아가고 활은 잠시 남았다 작아지며 사라짐
+     */
+    private static void skyBow3d(ServerPlayer sp, ServerLevel level, Vec3 center, Vec3 f0, int draw, double[] glow, double[] gold) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, center, draw + 26);
+        double width = 6.0;
+        double sc = RuneProps.scaleFor(width, RuneProps.SKY_BOW_W);
+        Vec3 face = V.scale(f0, -1);
+        org.joml.Quaternionf rot = RuneProps.along(V.UP, face);
+        mmorpg.fabric.vfx.Vfx.Prop bow = RuneProps.prop(fx, RuneProps.SKY_BOW, center, new double[] {8, 8, 8}, rot, sc * 0.3, mmorpg.fabric.vfx.Vfx.mix(glow, gold, 0.55),
+                RuneKit.WHITE);
+        fx.on(1, () -> bow.size(sc, 4));
+        Vec3 side = V.cross(face, V.UP); // 모델 +Z (활 끝 쪽)
+        double px = sc / 16.0;
+        Vec3 tipA = V.up(V.add(center, side, RuneProps.BOW_TIP[0] * px), RuneProps.BOW_TIP[1] * px);
+        Vec3 tipB = V.up(V.add(center, side, -RuneProps.BOW_TIP[0] * px), RuneProps.BOW_TIP[1] * px);
+        double rest = RuneProps.BOW_TIP[1] * px;
+        double alen = 3.2;
+        RuneSwords.Blade ar = RuneSwords.arrow(fx, V.up(center, rest), V.UP, face, alen, 0.25, glow, gold);
+        fx.on(2, () -> ar.grow(1, 3));
+        for (int t = 2; t <= draw; t += 2) {
+            final int tt = t;
+            fx.on(t, () -> {
+                double q = Math.min(1, tt / (double) draw);
+                double pull = rest - 2.1 * (1 - (1 - q) * (1 - q));
+                Vec3 nock = V.up(center, pull);
+                ar.pose(nock, V.UP, face, 2);
+                // 시위: 활 끝 → 오늬 (빛줄 둘)
+                for (Vec3 tip : new Vec3[] {tipA, tipB}) {
+                    Vec3 dv = V.sub(nock, tip);
+                    double L = V.len(dv);
+                    SkillFx.fx(level, "rpg:light_cut", V.add(tip, dv, 0.5), Opt.of("dir", V.unit(dv), "size", L / 2, "thick", 0.07, "life", 0.13, "color", gold,
+                            "alpha", 1.0));
+                }
+            });
+        }
+        // 쏨: 화살이 하늘로 (4틱 — 22칸) · 시위가 튕김 · 활이 남았다 작아지며 사라짐
+        fx.on(draw + 1, () -> {
+            ar.pose(V.up(center, rest + 22), V.UP, face, 4);
+            Vec3 dv = V.sub(tipB, tipA);
+            SkillFx.fx(level, "rpg:light_cut", V.add(tipA, dv, 0.5), Opt.of("dir", V.unit(dv), "size", V.len(dv) / 2, "thick", 0.1, "life", 0.3, "color", gold,
+                    "alpha", 1.0));
+        });
+        fx.on(draw + 5, ar::remove);
+        fx.on(draw + 12, () -> {
+            bow.size(sc * 0.1, 7);
+            bow.move(V.up(center, 1.4), 7);
+        });
+        fx.on(draw + 19, bow::remove);
+    }
+
+    /** 2026-11-13 하늘에서 떨어져 꽂히는 3D 빛 화살: 촉이 땅 g 위 sky 칸 → 땅속 0.6칸 (drop 틱 — 빨라짐), stuck 틱 꽂혀 있다가 가라앉으며 작아짐 (6틱) */
+    static void fallArrow(ServerLevel level, Vec3 g, double len, double sky, int drop, int stuck, double[] glow, double[] core) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, drop + stuck + 10);
+        double reach = len * (31 - RuneProps.ARROW_NOCK[1]) / RuneProps.ARROW_LEN;
+        Vec3 face = new Vec3(1, 0, 0);
+        RuneSwords.Blade ar = RuneSwords.arrow(fx, V.up(g, sky + reach), V.DOWN, face, len, 0.6, glow, core);
+        fx.on(1, () -> ar.grow(1, 2));
+        for (int i = 1; i <= drop; i++) {
+            double u = i / (double) drop;
+            final double tipY = sky - (sky + 0.6) * u * u;
+            fx.on(i, () -> ar.pose(V.up(g, tipY + reach), V.DOWN, face, 1));
+        }
+        fx.on(drop + stuck, () -> {
+            ar.grow(0.5, 6);
+            ar.prop.move(V.up(ar.hilt(), -1.4), 6);
+        });
+        fx.on(drop + stuck + 6, ar::remove);
     }
 }

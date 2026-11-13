@@ -242,7 +242,7 @@ final class RuneDex {
         // 2026-11-13 3D 검 넷 (룬 전용 검 2판 · 1.7칸): 몸 둘레 2.1칸을 한 틱에 12° 오른쪽으로 돌며 따라옴 (2D 빛의 칼 대신), 벨 때마다 바깥으로 튐 (1.2칸) →
         // 끝에 바깥으로 날아가며 사라짐. 첫 칼 뒤를 따르는 초승달 (3틱마다) 은 그대로
         String life = RuneKit.lifeToken(sp);
-        RuneSwords.orbit(sp, life, 4, 1.7, 2.1, 0.95, 12, 0, total, RuneSwords.flareAt(0, gap, hits, 1.2), 0.45, glow, core);
+        RuneSwords.orbit(sp, life, 4, 2.1, 2.2, 0.95, 12, 0, total, RuneSwords.flareAt(0, gap, hits, 1.2), 0.45, glow, core);
         for (int t = 0; t < total; t += 3) {
             final int tt = t;
             Tasks.later(t, () -> {
@@ -337,12 +337,12 @@ final class RuneDex {
             RuneKit.effect(e, "weakness", freeze, 2);
         }
         int blades = Math.max(2, Math.min(6, 24 / list.size()));
-        double ringR = 1.45;
+        double ringR = 1.75;
         Map<UUID, List<Vec3>> spots = new HashMap<>(); // 적 → 마지막에 꽂힐 칼의 방향 (적 둘레의 자리)
         // 2026-11-13 3D 검 (룬 전용 검 2판 · 1.35칸 — 2D 빛의 칼 대신): 적 둘레에 하나씩 나타나 멈춰 있다가 (시간이 멈춤) 한꺼번에 꽂힘
         mmorpg.fabric.vfx.Vfx.Fx swordFx = RuneProps.fx(level, mid0, delay + 14);
         Map<UUID, List<RuneSwords.Blade>> blades3d = new HashMap<>();
-        double bladeLen = 1.35;
+        double bladeLen = 1.9;
         for (int c = 0; c < blades; c++) {
             final int cc = c;
             int at0 = 2 + (int) Math.round((double) (c * (delay - 6)) / blades);

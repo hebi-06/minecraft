@@ -375,7 +375,8 @@ final class RuneAssassin {
 
     /**
      * 그림자 난도질: 대상 (range 칸) 에게 달라붙어 gap 틱마다 hits 번 벰 (대상이 쓰러지면 4칸 안의 가장 가까운 적), 마지막은 큰 X —
-     * v2.25.0 벨 때마다 대상 둘레의 다른 쪽에서 그림자 분신이 나타나 베고 (내 쪽 ±55° 는 비움), 마지막은 분신 셋이 한꺼번에 찌름
+     * v2.25.0 벨 때마다 대상 둘레의 다른 쪽에서 그림자 분신이 나타나 베고 (내 쪽 ±55° 는 비움), 마지막은 분신 셋이 한꺼번에 찌름 —
+     * 2026-11-13 분신은 3D 몹 (rpg:rune_shade — 둘째 베기부터)
      */
     static boolean shadowFlurry(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         LivingEntity target = Kit.pickTarget(sp, k.num("range"), k.num("cone"));
@@ -405,7 +406,31 @@ final class RuneAssassin {
         LivingEntity[] cur = {target};
         String life = RuneKit.lifeToken(sp);
         int hits = (int) k.num("hits");
-        SkillFx.every(hits, (int) k.num("gap"), i -> {
+        int gap = (int) k.num("gap");
+        // 2026-11-13 3D 그림자 분신 (rpg:rune_shade — 2D 분신 그림 대신, 첫 베기는 내가 벰): 베기마다 대상 둘레의 다른 쪽에 솟아 (치는 때보다
+        // SHADE_STRIKE_AT 틱 먼저) 단검으로 벰 (좌우 번갈아) → 마지막은 셋이 둘레에서 한꺼번에 찌름 → 그림자로 꺼짐
+        for (int i = 1; i < hits; i++) {
+            final int ii = i;
+            boolean last = i == hits - 1;
+            RuneKit.later(Math.max(0, i * gap - RuneMob.SHADE_STRIKE_AT), () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                LivingEntity e = cur[0];
+                if (e == null || e.isRemoved()) return;
+                ServerLevel lv = sp.level();
+                Vec3 mine = V.flat(V.sub(sp.position(), e.position()));
+                double pad = 0.9 + Kit.bodyPad(e);
+                for (int deg : last ? new int[] {90, 180, 270} : new int[] {FLURRY_DEG[ii % 5]}) {
+                    Vec3 sd = RuneKit.turn(mine, deg);
+                    Vec3 cf = V.add(e.position(), sd, pad);
+                    RuneMob m = RuneMob.spawn(RuneMob.SHADE, lv, cf, V.scale(sd, -1), 40, 1.0, true);
+                    if (m == null) continue;
+                    m.anim(last ? "stab" : ii % 2 == 1 ? "slash" : "slash2");
+                    shadowPuff(lv, cf, glow);
+                    Tasks.later(last ? 12 : 9, () -> m.leave("vanish", 7));
+                }
+            });
+        }
+        SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             if (cur[0] == null || cur[0].isRemoved() || !Kit.canHit(sp, cur[0])) {
                 List<LivingEntity> near = RuneKit.nearestTo(Kit.around(sp, sp.position(), 4), sp.position());
@@ -420,11 +445,14 @@ final class RuneAssassin {
             // 그림자 분신: 대상 둘레 (내 쪽에서 본 각 — 내 쪽 ±55° 는 비움), 대상을 보고 벰 (마지막은 셋이 찌름)
             Vec3 mine = V.flat(V.sub(sp.position(), e.position()));
             double pad = 0.9 + Kit.bodyPad(e);
-            for (int deg : last ? new int[] {90, 180, 270} : new int[] {FLURRY_DEG[i % 5]}) {
-                Vec3 sd = RuneKit.turn(mine, deg);
-                Vec3 cf = V.add(e.position(), sd, pad);
-                RuneKit.shadeClone(sp, level, cf, V.scale(sd, -1), last ? 3 : 2, CLONE, glow, Opt.of("life", last ? 0.4 : 0.28, "fade", 0.5, "alpha", 0.9,
-                        "size", 0.95 * RuneKit.nearK(sp, V.up(cf, 1), 3.5, 0.55)));
+            if (i == 0) {
+                // 첫 베기 (내가 달라붙어 벰): 2D 분신 하나 (3D 분신은 둘째 베기부터 — 위)
+                for (int deg : new int[] {FLURRY_DEG[0]}) {
+                    Vec3 sd = RuneKit.turn(mine, deg);
+                    Vec3 cf = V.add(e.position(), sd, pad);
+                    RuneKit.shadeClone(sp, level, cf, V.scale(sd, -1), 2, CLONE, glow, Opt.of("life", 0.28, "fade", 0.5, "alpha", 0.9,
+                            "size", 0.95 * RuneKit.nearK(sp, V.up(cf, 1), 3.5, 0.55)));
+                }
             }
             double as = RuneKit.nearK(sp, V.add(at, v, -0.6), 3, 0.45); // 달라붙어 베는 참격도 가까우면 작게
             SkillFx.arc(level, V.add(at, v, -0.6), v, Opt.of("shape", "thin", "flip", i % 2 == 1, "size", 1.5 * as, "life", 0.2, "speed", 2.0, "spin",
@@ -453,7 +481,8 @@ final class RuneAssassin {
 
     /**
      * 월광 암살: 대상 (range 칸) 에 달빛 표식 delay 틱 (대상 둔화, 나는 사라짐) — 대상 머리 위에 거대한 초승달 (rpg:rfx_moon) 이 차오름 →
-     * 대상 뒤에 나타나 거대한 X 와 달빛 검기: 대상 mult, 대상 주위 splash 칸 splashMult.
+     * 대상 뒤에 나타나 거대한 X 와 달빛 검기: 대상 mult, 대상 주위 splash 칸 splashMult. 2026-11-13 그 사이 3D 그림자 분신 셋이 대상 둘레를 돌다가
+     * 함께 달려들어 X 로 벰 (moonShades).
      * v2.27.0 초월 2차 강화: 한밤의 하늘 · 하늘의 초승달 · 칼날 문양 → 자홍 번쩍임 · 달이 갈라지며 섬광 · 충격 고리
      */
     static boolean moonAssassin(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -483,6 +512,7 @@ final class RuneAssassin {
         // 달빛 표식: 대상 머리 위 초승달이 커지며 차오르고 (달 그림 + 자홍 무리), 발밑에 자홍 룬
         SkillFx.rune(level, target.position(), Opt.of("size", 1.6, "life", delay / 20.0 + 0.2, "color", glow, "alpha", 0.85, "rate", 120.0, "progress", 1.0,
                 "grow", 0.3));
+        moonShades(sp, target, life, delay, glow);
         for (int t = 0; t < delay; t += 4) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -542,6 +572,67 @@ final class RuneAssassin {
             }
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 월광 암살의 3D 그림자 분신 셋 (rpg:rune_shade): 쓸 때 대상 둘레 (반지름 2.6 — 내 쪽 ±60° 는 비움) 에 그림자에서 솟아 대상을 보며
+     * 천천히 둘레를 돌다가 (2틱마다), delay − SHADE_XCUT_AT − 3 틱에 대상에게 달려들어 내 X 베기와 같은 틱에 X 로 벰 → 그림자로 꺼짐
+     */
+    private static void moonShades(ServerPlayer sp, LivingEntity target, String life, int delay, double[] glow) {
+        ServerLevel level = sp.level();
+        Vec3 c = target.position();
+        Vec3 mine = V.flat(V.sub(sp.position(), c));
+        if (V.len(mine) < 1e-3) mine = new Vec3(0, 0, 1);
+        double r = 2.6;
+        double[] base = {120, 180, 240};
+        RuneMob[] ms = new RuneMob[base.length];
+        for (int j = 0; j < base.length; j++) {
+            Vec3 sd = RuneKit.turn(mine, base[j]);
+            Vec3 at = V.add(c, sd, r);
+            ms[j] = RuneMob.spawn(RuneMob.SHADE, level, at, V.scale(sd, -1), delay + 30, 1.0, true);
+            if (ms[j] != null) {
+                ms[j].anim("appear");
+                shadowPuff(level, at, glow);
+            }
+        }
+        final Vec3 mine0 = mine;
+        int dash = Math.max(4, delay - RuneMob.SHADE_XCUT_AT - 3);
+        for (int t = 2; t < dash; t += 2) {
+            final double turn = t * 2.2;
+            RuneKit.later(t, () -> {
+                if (target.isRemoved()) return;
+                Vec3 cc = target.position();
+                for (int j = 0; j < ms.length; j++) {
+                    RuneMob m = ms[j];
+                    if (m == null || !m.alive()) continue;
+                    Vec3 sd = RuneKit.turn(mine0, base[j] + turn);
+                    m.moveTo(V.add(cc, sd, r), 2, 0, RuneMob.LINEAR, false);
+                    m.face(V.scale(sd, -1));
+                }
+            });
+        }
+        RuneKit.later(dash, () -> {
+            for (int j = 0; j < ms.length; j++) {
+                RuneMob m = ms[j];
+                if (m == null || !m.alive()) continue;
+                if (target.isRemoved() || !RuneKit.sameLife(sp, life)) {
+                    m.leave("vanish", 7);
+                    continue;
+                }
+                Vec3 cc = target.position();
+                Vec3 sd = V.flat(V.sub(m.pos(), cc));
+                if (V.len(sd) < 1e-3) sd = mine0;
+                Vec3 to = V.add(cc, V.unit(sd), 0.9 + Kit.bodyPad(target));
+                m.moveTo(to, 3, 0.3, RuneMob.OUT, false);
+                m.face(V.scale(V.unit(sd), -1));
+            }
+        });
+        RuneKit.later(delay - RuneMob.SHADE_XCUT_AT, () -> {
+            for (RuneMob m : ms) if (m != null && m.alive()) m.anim("xcut");
+        });
+        RuneKit.later(delay + 8, () -> {
+            for (RuneMob m : ms) if (m != null && m.alive()) m.leave("vanish", 7);
+        });
     }
 
     // ------------------------------------------------------------ 암살 표식 · 이어 쓰기 콤보 (RUNE_COMBO)

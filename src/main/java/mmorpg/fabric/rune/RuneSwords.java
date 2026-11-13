@@ -25,20 +25,31 @@ public final class RuneSwords {
         /** 칸 — 자루 끝에서 칼끝까지 */
         public final double len;
         final double s;
+        /** 쥔 곳 → 끝 (모델 픽셀) */
+        final double gripToTip;
+        final double modelLen;
         Vec3 hilt;
         Vec3 dir;
         Vec3 face;
         double k = 1;
 
         Blade(Vfx.Fx fx, Vec3 hilt, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
+            this(fx, RuneProps.SWORD, HILT, HILT_TO_TIP, RuneProps.SWORD_LEN, hilt, dir, face, len, k0, glow, core);
+        }
+
+        /** 다른 긴 물체 (화살 — 쥔 곳 = 오늬): model · 쥔 곳 grip · 쥔 곳에서 끝까지 gripToTip · 모델 길이 modelLen (모두 픽셀) */
+        Blade(Vfx.Fx fx, String model, double[] grip, double gripToTip, double modelLen, Vec3 hilt, Vec3 dir, Vec3 face, double len, double k0, double[] glow,
+                double[] core) {
             this.fx = fx;
             this.len = len;
-            this.s = RuneProps.scaleFor(len, RuneProps.SWORD_LEN);
+            this.modelLen = modelLen;
+            this.gripToTip = gripToTip;
+            this.s = RuneProps.scaleFor(len, modelLen);
             this.hilt = hilt;
             this.dir = V.unit(dir);
             this.face = face;
             this.k = k0;
-            this.prop = RuneProps.prop(fx, RuneProps.SWORD, hilt, HILT, RuneProps.along(this.dir, face), s * k0, glow, core);
+            this.prop = RuneProps.prop(fx, model, hilt, grip, RuneProps.along(this.dir, face), s * k0, glow, core);
         }
 
         /** 칼자루 hilt · 칼끝 방향 dir · 넓은 면이 보는 쪽 face 로 (ticks 틱 보간) */
@@ -59,7 +70,12 @@ public final class RuneSwords {
 
         /** 지금 칼끝 자리 */
         public Vec3 tip() {
-            return V.add(hilt, dir, len * k * (HILT_TO_TIP / RuneProps.SWORD_LEN));
+            return V.add(hilt, dir, len * k * (gripToTip / modelLen));
+        }
+
+        /** 쥔 곳에서 끝까지 (칸 — 지금 크기) */
+        public double reach() {
+            return len * k * (gripToTip / modelLen);
         }
 
         public Vec3 hilt() {
@@ -78,6 +94,11 @@ public final class RuneSwords {
     /** 검 하나를 hilt 에 (처음 크기 몫 k0 — 0.2 면 다음 틱부터 grow 로 커짐) */
     public static Blade blade(Vfx.Fx fx, Vec3 hilt, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
         return new Blade(fx, hilt, dir, face, len, k0, glow, core);
+    }
+
+    /** 2026-11-13 룬 빛 화살 하나 (쥔 곳 = 오늬 nock · 촉 방향 dir · 촉 두 판의 넓은 면 face · 길이 len 칸) */
+    public static Blade arrow(Vfx.Fx fx, Vec3 nock, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
+        return new Blade(fx, RuneProps.ARROW, RuneProps.ARROW_NOCK, 31 - RuneProps.ARROW_NOCK[1], RuneProps.ARROW_LEN, nock, dir, face, len, k0, glow, core);
     }
 
     /** v 를 axis 둘레로 deg 도 (오른손 — axis 가 위면 위에서 보아 반시계) */

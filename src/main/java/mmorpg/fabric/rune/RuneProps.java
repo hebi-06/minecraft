@@ -30,6 +30,26 @@ public final class RuneProps {
     public static final String WAVE = "wave";
     public static final String WATER_COLUMN = "water_column";
 
+    /**
+     * 2026-11-13 룬 빛 화살 (저격 · 천궁 — tools/vfx_blocky.py rune_arrow): 촉 끝 y 31 · 오늬 끝 y −14 (길이 45) · 가운데 (8, 8.5, 8) · 오늬 (8, −13, 8).
+     * 촉의 두 판 · 깃 넷 (+ 자)
+     */
+    public static final String ARROW = "rpg:vfx/rune_arrow";
+    public static final double ARROW_LEN = 45;
+    public static final double[] ARROW_MID = {8, 8.5, 8};
+    public static final double[] ARROW_NOCK = {8, -13, 8};
+    /**
+     * 2026-11-13 천궁의 하늘의 활 (sky_bow): 쏘는 쪽 +Y · 활 면 YZ (보는 쪽 ±X) · 가운데 (8, 8, 8) · 너비 (z) 약 43 (끝 z −13.6 ~ 29.6 · y 5.2) — 시위는 서버가
+     * 끝 (BOW_TIP — 가운데에서 ±21.6, −2.8 픽셀) 에서 오늬까지 2D 빛줄로
+     */
+    public static final String SKY_BOW = "rpg:vfx/sky_bow";
+    public static final double SKY_BOW_W = 43.2;
+    public static final double[] BOW_TIP = {21.6, -2.8};
+    /** 2026-11-13 피의 낙인의 핏빛 낫 (rune_scythe): 자루 x 8 · z 12 (y −16 ~ 25), 날은 자루 끝 (y ~27) 에서 −Z 로 약 24 픽셀 · 자루 가운데 (8, 5, 12) */
+    public static final String SCYTHE = "rpg:vfx/rune_scythe";
+    public static final double SCYTHE_LEN = 43;
+    public static final double[] SCYTHE_MID = {8, 5, 12};
+
     /** 룬 전용 검: 칼끝 y 31 · 자루 끝 y −10.2 (길이 41.2 픽셀) · 날 가운데 (8, 17.5, 8) · 손잡이 가운데 (8, −3.5, 8) */
     public static final double SWORD_LEN = 41.2;
     public static final double[] SWORD_MID = {8, 10.4, 8};
@@ -91,10 +111,12 @@ public final class RuneProps {
 
     /** 물체 하나: model 을 at 에 (grip = 이 모델 점이 at), 회전 · 크기 · 빛 · 물들임 */
     public static Vfx.Prop prop(Vfx.Fx fx, String model, Vec3 at, double[] grip, Quaternionf rot, double scale, double[]... tints) {
-        Vfx.Prop p = fx.prop(model, at).grip(grip[0], grip[1], grip[2]).bright();
-        if (tints.length > 0) p.tint(tints);
-        p.to(at, rot, scale, 0);
-        return p;
+        // 2026-11-13 처음 모습 (쥔 곳 · 빛 · 물들임 · 회전 · 크기) 을 정한 뒤 띄움 (Vfx.Fx.prop init)
+        return fx.prop(model, at, p -> {
+            p.grip(grip[0], grip[1], grip[2]).bright();
+            if (tints.length > 0) p.tint(tints);
+            p.to(at, rot, scale, 0);
+        });
     }
 
     /**

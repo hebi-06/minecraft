@@ -60,25 +60,6 @@ fpw(m, 4.5, FPW_LOW, "out", dp=(-0.1, 0.1, 0))
 fpw(m, 14, FPW_LOW, dp=(-0.1, 0.1, 0))
 use(m, "smokeBomb")
 
-# 그림자 난도질: 대상에게 달라붙어 0 · 10 · 20 · 30 에 베고 (가로 · 세로 · X · 되돌려) 40 에 마무리 찌르기
-m = Motion("shadow_flurry", 48, "그림자 난도질 — 대상에게 달라붙어 가로 · 세로 · X 자 · 크게 베고 마지막에 깊이 찌름", fade=(0.03, 0.08))
-strike(m, "slash_h", 0.2, 1.4)
-strike(m, "slash_v", 8.4, 10.5)
-graft(m, "dagger_x", 18.6, 4.4, t_from=0.16, t_to=0.72)
-strike(m, "skill_slash", 28.4, 30.6)
-strike(m, "thrust", 38.6, 40.6)
-use(m, "shadowFlurry")
-
-# 월광 암살: 낮게 웅크려 단검을 거꾸로 쥐고 사라짐 (2 ~ 18 — 대상 머리 위에 초승달이 차오름) → 대상 뒤에 나타나 거대한 X (20)
-m = Motion("moon_assassin", 30, "월광 암살 — 낮게 웅크려 몸을 감췄다가 대상 뒤에 나타나 거대한 X 자로 벰", fade=(0.03, 0.1))
-CROUCH = P(body=[30, 10, 0], head=[-8, 0], ra=arm([0.3, -0.55, 0.6], 70, [-0.2, -0.6, 0.75]), la=L(A_GUARD), **LEGS_SQUAT)
-keyp(m, 2.5, CROUCH, "out3")
-keyp(m, 16, P(CROUCH, body=[32, 10, 0]))
-graft(m, "dagger_x", 18.2, 5.0, t_from=0.16, t_to=0.72)
-fpw(m, 2.5, FPW_LOW, "out3", dp=(0, -0.1, 0.1))
-fpw(m, 16, FPW_LOW, dp=(0, -0.1, 0.1))
-use(m, "moonAssassin")
-
 # ------------------------------------------------------------ 사냥꾼
 
 # 강철 덫: 왼손에 쥔 덫을 아래에서 앞 위로 던져 올림 (0.3 → 1.3 — 포물선으로 조준한 곳에) → 턱이 닫히는 때 (8) 주먹을 쥐어 당김

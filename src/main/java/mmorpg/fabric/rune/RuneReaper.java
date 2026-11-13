@@ -294,7 +294,8 @@ final class RuneReaper {
     // ------------------------------------------------------------ 영웅: 피의 낙인
 
     /**
-     * 피의 낙인: 앞 range 칸 · cone 도의 적 targets 명에게 핏빛 초승달을 던져 낙인 (머리 위 초승달 · 발밑 룬 · 0.49.0 vulnTicks 동안 받는 피해 + vuln) → delay 틱 뒤 낙인이 터짐
+     * 피의 낙인: 앞 range 칸 · cone 도의 적 targets 명에게 핏빛 초승달을 던져 낙인 (머리 위 초승달 · 발밑 룬 · 0.49.0 vulnTicks 동안 받는 피해 + vuln ·
+     * 2026-11-13 머리 위 뒤에 3D 핏빛 낫) → delay 틱 뒤 낙인이 터짐
      * (거대한 핏빛 X · 초승달 — 위력 × mult), 터진 적은 출혈, 피가 나에게로 (흡혈). 대상이 없으면 쓰지 않음 (재사용 대기 없음)
      */
     static boolean bloodBrand(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -336,6 +337,7 @@ final class RuneReaper {
                 RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), BLOOD, core, true);
                 drops(level, Kit.bodyPoint(e), 6, 0.3);
                 SkillFx.play(level, "mob.phantom.bite", e.position(), 1.5, 0.5);
+                brandScythe(sp, e, left, glow, core);
             });
         }
         // 낙인이 터짐
@@ -367,6 +369,42 @@ final class RuneReaper {
             }
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 피의 낙인의 3D 핏빛 낫 (rune_scythe · 3.2칸): 낙인이 찍히면 대상 머리 위 뒤에 나타나 (날이 나를 봄 — 커짐) 흔들리며 떠 있다가, 낙인이 터지는 틱
+     * (left) 에 내 쪽으로 크게 내리그어 대상을 베고 (3틱 — 150°) 작아지며 사라짐
+     */
+    private static void brandScythe(ServerPlayer sp, LivingEntity e, int left, double[] glow, double[] core) {
+        ServerLevel level = (ServerLevel) e.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, e.position(), left + 16);
+        Vec3 cdir = V.flat(V.sub(sp.position(), e.position()));
+        if (V.len(cdir) < 1e-3) cdir = new Vec3(0, 0, 1);
+        final Vec3 cd = V.unit(cdir);
+        Vec3 side = V.rightOf(cd);
+        double sc = RuneProps.scaleFor(3.2, RuneProps.SCYTHE_LEN);
+        java.util.function.Supplier<Vec3> grip = () -> V.add(V.up(e.position(), e.getBbHeight() + 0.9), cd, -0.75);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.SCYTHE, grip.get(), RuneProps.SCYTHE_MID, RuneProps.along(V.UP, side), sc * 0.2, glow, core);
+        fx.on(1, () -> p.size(sc, 3));
+        int strike = Math.max(3, left - 2);
+        for (int t = 2; t < strike; t += 2) {
+            final int tt = t;
+            fx.on(t, () -> {
+                double sway = Math.sin(tt * 0.45) * 9;
+                Vec3 up = RuneSwords.rot(V.UP, side, sway);
+                p.to(V.up(grip.get(), 0.08 * Math.sin(tt * 0.6)), RuneProps.along(up, side), -1, 2);
+            });
+        }
+        // 내리긋기: 위 → 내 쪽 → 아래 (3틱 — 틱마다 50°)
+        for (int i = 1; i <= 3; i++) {
+            final double a = -50.0 * i;
+            fx.on(strike + i - 1, () -> p.to(grip.get(), RuneProps.along(RuneSwords.rot(V.UP, side, a), side), -1, 1));
+        }
+        fx.on(strike + 3, () -> {
+            p.to(null, RuneProps.along(RuneSwords.rot(V.UP, side, -165), side), sc * 0.15, 5);
+            SkillFx.sparks(level, Kit.bodyPoint(e), core, 6, 5);
+        });
+        fx.on(strike + 9, p::remove);
     }
 
     // ------------------------------------------------------------ 초월: 적월 강림
