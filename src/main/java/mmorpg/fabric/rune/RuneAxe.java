@@ -30,8 +30,6 @@ final class RuneAxe {
 
     /** 피 (핏빛 초승달 · 흡혈 · 처형 · 광폭화) */
     private static final double[] BLOOD = {0.85, 0.06, 0.08};
-    /** 도끼 그림 칸 {빛, 심지} (rpg:rfx_prop) */
-    private static final int[] AXE = RuneKit.RFX.get("axe");
 
     static void register() {
         RuneCast.register("axeBoomerang", RuneAxe::axeBoomerang);
@@ -259,19 +257,9 @@ final class RuneAxe {
         double[][] cs = RuneKit.colorOf("axe");
         double[] glow = cs[0];
         double[] core = cs[1];
-        Vec3 side = V.rightOf(f);
-        // 휘두르는 도끼 (3틱): 오른쪽 위 → 가운데 → 왼쪽 아래, 날이 도는 쪽으로 기움 (그림은 날이 위)
-        for (int t = 0; t < 3; t++) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                if (sp.isRemoved()) return;
-                double q = tt / 2.0;
-                Vec3 at = V.up(V.add(V.add(sp.position(), f, 2.1), side, 1.3 - 2.6 * q), 2.5 - 1.9 * q);
-                double sz = 0.95 * RuneKit.nearK(sp, at, 3, 0.55);
-                RuneKit.rfx2(level, "prop", at, Opt.of("size", sz, "life", tt == 2 ? 0.2 : 0.1, "spin", -40.0 - 60 * tt, "fade", tt == 2 ? 0.6 : 0.0,
-                        "alpha", 0.95), glow, core, AXE, null);
-            });
-        }
+        // 2026-11-13 3D 룬 도끼 (2.4칸 — 2D 도끼 그림 대신, 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 오른 어깨 위 뒤에서 대각선으로 휘둘러져 (2틱에 앞을
+        // 지남 — 동작 rn_blood_cleave 와 같은 때) 왼쪽 아래 앞 땅까지 찍혀 박힌 채 머물다 가라앉음 (날이 휘두르는 쪽)
+        RuneSwing.axe(sp, RuneKit.lifeToken(sp), 1.45, 0.25, RuneProps.scaleFor(2.4, RUNE_AXE_LEN), 58, 150, -58, 0, 3, 7, null, glow, core);
         RuneKit.arc(level, V.up(V.add(head, f, 1.6), -0.1), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.26, "speed", 2.0, "spin", -80.0,
                 "color", glow, "aura", core));
         RuneKit.later(2, () -> RuneKit.arc(level, V.up(V.add(head, f, 1.9), -0.4), f, Opt.of("shape", "heavy", "flip", true, "size", 2.0, "life", 0.22, "speed",

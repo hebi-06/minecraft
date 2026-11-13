@@ -134,6 +134,8 @@ final class RuneReaper {
         // 낫을 가로로 휘두름 (왼쪽 → 오른쪽) + 핏빛 기운
         RuneKit.arc(level, V.up(V.add(eye, f, 1.3), -0.25), f, Opt.of("shape", "heavy", "flip", true, "size", 2.2, "life", 0.22, "speed", 2.0, "spin", 12.0, "color",
                 glow, "aura", BLOOD));
+        // 2026-11-13 3D 핏빛 낫 (rune_scythe 자루 3칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 왼쪽 뒤에서 앞을 지나 오른쪽 끝까지 휩씀 (rn_blood_crescent)
+        RuneSwing.scythe(sp, life, 1.15, 3.0, 4, -115, 100, 0, 3, 2, "out", glow, core);
         // 날아가는 초승달 (손 앞 1.2칸부터 — 1인칭 화면을 덮지 않게) + 뒤를 잇는 얇은 초승달
         RuneKit.rfx2(level, "wave", V.add(from, d, 1.2), Opt.of("dir", d, "speed", speed, "size", 1.9, "life", Math.max(0.05, (len - 1.2) / speed), "fade", 0.2,
                 "spin", 0.0, "alpha", 1.0), glow, core);
@@ -190,6 +192,8 @@ final class RuneReaper {
             Vec3 c = sp.position();
             Vec3 f = V.flat(sp.getViewVector(1F));
             boolean back = i % 2 == 1;
+            // 2026-11-13 3D 핏빛 낫 (자루 3.2칸): 첫째는 오른쪽에서 왼쪽 끝까지 · 둘째는 왼쪽에서 오른쪽 끝까지 휩씀 (rn_blood_harvest — 1틱에 앞을 지남)
+            RuneSwing.scythe(sp, life, 1.15, 3.2, 6, back ? -115 : 115, back ? 110 : -120, 0, 3, 2, "out", glow, core);
             // 거대한 낫질 (두 겹) + 앞의 핏빛 초승달이 휩쓸며 커짐
             RuneKit.arc(level, V.up(V.add(c, f, 1.7), 1.15), f, Opt.of("shape", "heavy", "flip", back, "size", 3.8, "life", 0.3, "speed", 1.5, "spin",
                     back ? 70.0 : -70.0, "color", glow, "aura", BLOOD));
@@ -240,6 +244,7 @@ final class RuneReaper {
         Map<UUID, LivingEntity> bled = new LinkedHashMap<>();
         RuneKit.selfCue(sp, glow, BLOOD, true);
         SkillFx.play(sp.level(), "mob.breeze.whirl", sp.position(), 0.8, 1.0);
+        whirlScythes(sp, life, (hits - 1) * gap + 4, radius, glow, core); // 2026-11-13 몸 둘레를 도는 3D 핏빛 낫 둘
         SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -289,6 +294,58 @@ final class RuneReaper {
             }
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 피의 회오리의 3D 핏빛 낫 둘 (자루 min(3, radius × 0.9) 칸): 자루가 몸 (높이 1.05) 에서 바깥으로 뻗은 채 마주 보며 몸 둘레를 돎 (틱에 36° — 위에서 보아
+     * 시계, 몸의 회전과 같은 쪽 · 날이 도는 쪽 앞) — 틱마다 몸을 따라옴 → until 에 바깥으로 날아가며 작아져 사라짐. 죽거나 나가면 그때
+     */
+    private static void whirlScythes(ServerPlayer sp, String life, int until, double radius, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), until + 12);
+        double len = Math.min(3.0, radius * 0.9);
+        double s = RuneProps.scaleFor(len, RuneProps.SCYTHE_LEN);
+        Vec3 f0 = Kit.facingOf(sp);
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[2];
+        for (int j = 0; j < 2; j++) {
+            double a = 90 + j * 180;
+            ps[j] = RuneProps.prop(fx, RuneProps.SCYTHE, V.add(V.up(sp.position(), 1.05), RuneSwing.planeDir(f0, 0, a), len * 0.5 + 0.3), RuneProps.SCYTHE_MID,
+                    RuneSwing.scytheRot(f0, 0, a, 1), s * 0.2, glow, core);
+        }
+        fx.on(1, () -> {
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.size(s, 3);
+        });
+        boolean[] done = {false};
+        java.util.function.IntConsumer end = age -> {
+            if (done[0]) return;
+            done[0] = true;
+            Vec3 c = V.up(sp.position(), 1.05);
+            for (int j = 0; j < 2; j++) {
+                double a = 90 + j * 180 + age * 36;
+                ps[j].to(V.add(c, RuneSwing.planeDir(f0, 0, a), len * 0.5 + 2.6), null, s * 0.1, 5);
+            }
+            fx.on(age + 6, () -> {
+                for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.remove();
+            });
+        };
+        Vec3[] last = {sp.position()};
+        fx.each(1, until, 1, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                end.accept(t);
+                return;
+            }
+            Vec3 c0 = sp.position();
+            Vec3 lead = V.sub(c0, last[0]);
+            last[0] = c0;
+            if (V.len(lead) > 2) lead = Vec3.ZERO;
+            Vec3 c = V.up(V.add(c0, lead), 1.05 + 0.08 * Math.sin(t * 0.5));
+            for (int j = 0; j < 2; j++) {
+                double a = 90 + j * 180 + t * 36;
+                ps[j].to(V.add(c, RuneSwing.planeDir(f0, 0, a), len * 0.5 + 0.3), RuneSwing.scytheRot(f0, 0, a, 1), -1, 1);
+            }
+        });
+        fx.on(until, () -> end.accept(until));
     }
 
     // ------------------------------------------------------------ 영웅: 피의 낙인

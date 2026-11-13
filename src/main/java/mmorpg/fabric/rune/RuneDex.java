@@ -24,8 +24,6 @@ import net.minecraft.world.phys.Vec3;
 final class RuneDex {
     private RuneDex() {}
 
-    /** 그림자 분신 몸 (그림자보다 밝게 — 풀밭 위에서도 사람 모양이 보이게) */
-    private static final double[] CLONE = {0.12, 0.45, 0.24};
     /** 무영검의 멈춘 시간 빛 (ULT_FX.runes.shadowless.still — 돌파로 늘어난 멈춤 표시) */
     private static final double[] STILL = {0.86, 0.9, 0.96};
 
@@ -60,16 +58,21 @@ final class RuneDex {
             SkillFx.fx(level, "rpg:arrow_trail", V.up(V.add(start, f, s), 1.0), Opt.of("dir", f, "size", 0.4, "thick", 0.2, "life", 0.45, "color", glow,
                     "alpha", 0.85));
         }
-        // 잔상: 지나간 길에 돌진하는 그림자 분신 셋 (뒤로 갈수록 흐림 — 1인칭에서는 등 뒤라 안 보임)
-        double[] qs = {0.2, 0.45, 0.7};
+        // 잔상: 2026-11-13 지나간 길에 3D 그림자 분신 둘 (rpg:rune_shade — 2D 분신 그림 대신): 베는 자세로 남았다가 그림자로 꺼짐 (1인칭에서는 등 뒤라 안 보임)
+        double[] qs = {0.3, 0.65};
         for (int j = 0; j < qs.length; j++) {
-            if (dist * qs[j] < 0.4) continue;
-            RuneKit.shadeClone(sp, level, V.add(start, f, dist * qs[j]), f, 1, CLONE, glow, Opt.of("life", 0.3 + j * 0.08, "alpha", 0.4 + j * 0.2, "fade", 0.7));
+            if (dist * qs[j] < 0.8) continue;
+            RuneMob sh = RuneMob.spawn(RuneMob.SHADE, level, V.add(start, f, dist * qs[j]), f, 24, 1.0, true);
+            if (sh == null) continue;
+            sh.anim(j == 0 ? "slash" : "slash2");
+            Tasks.later(4 + j * 2, () -> sh.leave("vanish", 7));
         }
         RuneKit.arc(level, V.up(V.add(start, f, 1.2), 1.1), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.24, "speed", 4.0, "spin", -20.0,
                 "color", glow, "aura", core));
         SkillFx.sparks(level, V.up(start, 0.5), glow, 6, 4);
         if (dist > 0.2) Kit.moveTo(sp, end); // 못 옮기면 (막힌 자리) 제자리에서 벰
+        // 2026-11-13 3D 룬 검 (3칸): 내려선 자리 앞을 오른쪽에서 왼쪽 끝까지 휩씀 (1틱에 앞을 지남 — 동작 rn_gale_slash 와 같은 때)
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.15, 0.65, 3.0, 6, 80, -125, 0, 3, 2, "out", glow, core);
         RuneKit.waveCard(level, V.up(V.add(end, f, 1.9), 1.0), f, V.UP, Opt.of("size", 1.2, "life", 0.22, "grow", 0.3, "fade", 0.6, "roll", 15.0), glow, core);
         // 0.50.0 2D 강화 (아래 등급 터짐): 돌진을 마치고 내려선 자리 (막혀 못 옮겼으면 제자리) — 반지름 = 지나간 길의 너비
         Vec3 land = sp.position();
@@ -122,9 +125,8 @@ final class RuneDex {
             double len = best != null ? bestT : range;
             double life = Math.max(0.05, len / 28);
             Vec3 from = V.add(V.up(head, -0.25), d, 1.0);
-            double speed = Math.max(0, (len - 1.2) / life);
-            // 칼끝이 날아가는 쪽 (손잡이 뒤) — 눈에서 1칸 앞부터
-            RuneKit.rfx2(level, "sword", from, Opt.of("dir", d, "speed", speed, "size", 0.42, "life", life), glow, core);
+            // 2026-11-13 3D 룬 검 (1.3칸 — 2D 빛의 칼 대신): 칼끝이 날아가는 쪽 · 날아가며 칼 축 둘레로 돎 → 닿은 자리에 꽂혀 머물다 작아짐
+            fanBlade(level, from, d, len, i, glow, core);
             for (double s2 = 1.0; s2 < len; s2 += 1.6) {
                 double delay = (s2 / len) * life;
                 SkillFx.fx(level, "rpg:arrow_trail", V.add(from, d, s2), Opt.of("dir", d, "size", 0.5, "thick", 0.1, "life", delay + 0.22, "delay", delay,
@@ -155,6 +157,27 @@ final class RuneDex {
     }
 
     /**
+     * 2026-11-13 칼날 부채의 3D 룬 검 하나 (1.3칸): from (칼자루) 에서 d 쪽으로 칼끝이 len 칸에 닿을 때까지 날아감 (28칸/초 — 피해 틱과 같음) · 날아가며 넓은 면이
+     * 칼 축 둘레로 돎 (틱에 70°) → 꽂힌 채 4틱 → 작아져 사라짐
+     */
+    private static void fanBlade(ServerLevel level, Vec3 from, Vec3 d, double len, int i, double[] glow, double[] core) {
+        int ticks = Math.max(1, (int) Math.round(Math.max(0.05, len / 28) * 20));
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, from, ticks + 14);
+        double blade = 1.3;
+        double reach = blade * 34.5 / RuneProps.SWORD_LEN; // 칼자루 → 칼끝 (RuneSwords.HILT_TO_TIP)
+        RuneSwords.Blade b = RuneSwords.blade(fx, from, d, RuneSwords.rot(V.UP, d, i * 25), blade, 0.5, glow, core);
+        fx.on(1, () -> b.grow(1, 2));
+        Vec3 to = V.add(from, d, Math.max(0, len - reach));
+        for (int t = 1; t <= ticks; t++) {
+            final double u = t / (double) ticks;
+            final Vec3 face = RuneSwords.rot(V.UP, d, i * 25 + t * 70);
+            fx.on(t, () -> b.pose(V.lerp(from, to, u), d, face, 1));
+        }
+        fx.on(ticks + 4, () -> b.grow(0.1, 5));
+        fx.on(ticks + 10, b::remove);
+    }
+
+    /**
      * 그림자 습격: 앞쪽 cone 도 · range 칸의 적 targets 명에게 그림자 분신이 차례로 날아가 벰 — 분신 그림 (rpg:rfx_shade):
      * 내 옆에서 돌진하는 분신이 적의 옆으로 미끄러져 가서 → 그 자리에서 베는 분신 + X (가까운 적의 X 는 작게)
      */
@@ -178,6 +201,7 @@ final class RuneDex {
             LivingEntity e = list.get(i);
             int side = i % 2 == 1 ? 1 : -1;
             boolean last = i == list.size() - 1; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 마지막 분신의 베기에만
+            final int nth = i;
             Tasks.later(i * gap, () -> {
                 if (sp.isRemoved() || e.isRemoved()) return;
                 Vec3 fv = V.flat(sp.getViewVector(1F));
@@ -191,18 +215,18 @@ final class RuneDex {
                 double l0 = V.len(V.sub(Kit.bodyPoint(e), V.up(V.add(sp.position(), V.rightOf(fv), side * 0.8), 1.0)));
                 double life = Math.max(0.05, l0 / 30);
                 int hitT = Math.max(1, (int) Math.round(life * 20));
-                RuneKit.shadeClone(sp, level, fromFeet, toward, 1, CLONE, glow, Opt.of("life", life, "fade", 0.15, "alpha", 0.85, "size",
-                        1.1 * RuneKit.nearK(sp, V.up(fromFeet, 1), 3.5, 0.55), "vel", V.scale(V.sub(toFeet, fromFeet), 1 / life)));
+                // 2026-11-13 3D 그림자 분신 (rpg:rune_shade — 2D 분신 그림 대신): 내 곁에서 솟아 적의 옆으로 미끄러져 가서 (hitT 틱 — 움직이는 적을 따라감) 적을 보고
+                // 벰 (치는 때 SHADE_STRIKE_AT 틱 먼저 동작) → 그림자로 꺼짐
+                RuneMob sh = RuneMob.spawn(RuneMob.SHADE, level, fromFeet, toward, hitT + 24, 1.0, true);
+                if (sh != null) {
+                    sh.moveTo(() -> e.isRemoved() ? toFeet : V.add(e.position(), flank, 0.9 + Kit.bodyPad(e)), hitT, 0.25, RuneMob.OUT, true);
+                    Tasks.later(Math.max(0, hitT - RuneMob.SHADE_STRIKE_AT), () -> sh.anim(nth % 2 == 0 ? "slash" : "slash2"));
+                    Tasks.later(hitT, () -> sh.face(V.scale(flank, -1)));
+                    Tasks.later(hitT + 6, () -> sh.leave("vanish", 7));
+                }
                 SkillFx.beam(level, V.up(fromFeet, 1.0), Kit.bodyPoint(e), shade, Opt.of("half", 0.32, "thick", 0.25, "life", 0.35, "sweep", life,
                         "alpha", 0.6));
                 SkillFx.play(level, "mob.endermen.portal", V.up(fromFeet, 1), 1.6, 0.6);
-                // 도착: 적 옆에서 베는 분신 (돌진 분신이 끝나기 1틱 전에 나타남 — 이어지게)
-                Tasks.later(Math.max(1, hitT - 1), () -> {
-                    if (sp.isRemoved() || e.isRemoved()) return;
-                    Vec3 at2 = V.add(e.position(), flank, 0.9 + Kit.bodyPad(e));
-                    RuneKit.shadeClone(sp, level, at2, V.scale(flank, -1), 2, CLONE, glow, Opt.of("life", 0.42, "fade", 0.5, "size",
-                            1.1 * RuneKit.nearK(sp, V.up(at2, 1), 3.5, 0.55)));
-                });
                 Tasks.later(hitT, () -> {
                     if (sp.isRemoved() || e.isRemoved()) return;
                     Vec3 at = Kit.bodyPoint(e);

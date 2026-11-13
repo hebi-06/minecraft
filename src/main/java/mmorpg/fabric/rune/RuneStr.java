@@ -41,8 +41,13 @@ final class RuneStr {
         RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.2, "life", 0.26, "speed", 2.0,
                 "spin", -8.0, "color", glow, "aura", new double[] {1.0, 0.72, 0.3}));
         SkillFx.play(level, "mace.smash_air", sp.position(), 0.8, 0.8);
+        // 2026-11-13 3D 룬 망치 (사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 머리 위 뒤에서 (0) 앞 땅에 내려찍혀 (2 — 동작 rn_ground_slam 과 같은 때)
+        // 박힌 채 머물다 가라앉음 · 박힌 자리 둘레에서 3D 바위 다섯이 솟아 바깥으로 튐
+        RuneHammer.Held held = RuneHammer.overhead(sp, level, f, 1, 2.2, glow, core, 24);
+        RuneHammer.smash(held, c, f, 2.6, 0.35, 8);
         Tasks.later(2, () -> {
             if (sp.isRemoved()) return;
+            RuneSwing.erupt(level, c, f, 5, 200, 0.9, 1.6, 0.45, 0.8, 2.2, glow);
             double radius = k.num("radius");
             RuneKit.zonePulse(level, c, glow, radius, 0.45);
             RuneKit.zonePulse(level, c, core, radius * 0.55, 0.3);
@@ -77,6 +82,8 @@ final class RuneStr {
         double[] core = cs[1];
         double[] dust = {0.86, 0.56, 0.3};
         double radius = k.num("radius");
+        // 2026-11-13 흙먼지 회오리에 3D 바위 여섯이 떠서 몸 둘레를 돌다가 마지막 휘몰아침에 바깥으로 날아감
+        whirlRocks(sp, RuneKit.lifeToken(sp), radius, ((int) k.num("hits") - 1) * (int) k.num("gap") + 1, glow);
         SkillFx.every((int) k.num("hits"), (int) k.num("gap"), i -> {
             if (sp.isRemoved()) return;
             ServerLevel level = sp.level();
@@ -119,6 +126,77 @@ final class RuneStr {
             }
         });
         return true;
+    }
+
+    /**
+     * 2026-11-13 회오리 베기의 3D 바위 (boulder — 틈의 빛 = 힘 색): 몸 둘레 (반지름 0.75 ~ 0.95 × radius) 의 땅에서 여섯이 솟아 (6틱) 떠서 몸을 따라 돌고
+     * (틱에 36° — 위에서 보아 시계, 몸의 회전과 같은 쪽 · 오르내림) until 틱에 도는 쪽 바깥으로 날아가 떨어져 가라앉음. 쓴 사람이 죽으면 그때 떨어짐
+     */
+    private static void whirlRocks(ServerPlayer sp, String life, double radius, int until, double[] glow) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), until + 34);
+        int n = 6;
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[n];
+        double[] rr = new double[n];
+        double[] hh = new double[n];
+        double[] sc = new double[n];
+        long[] seed = new long[n];
+        double ph0 = Math.toDegrees(Math.atan2(Kit.facingOf(sp).z, Kit.facingOf(sp).x));
+        for (int j = 0; j < n; j++) {
+            rr[j] = radius * (0.75 + Kit.rand() * 0.2);
+            hh[j] = 0.7 + Kit.rand() * 1.1;
+            sc[j] = RuneProps.scaleFor(0.4 + Kit.rand() * 0.3, RuneProps.BOULDER_D);
+            seed[j] = (long) (Kit.rand() * 1e9) + j;
+            double th = Math.toRadians(ph0 + j * 60);
+            Vec3 b = sp.position().add(Math.cos(th) * rr[j], 0, Math.sin(th) * rr[j]);
+            ps[j] = RuneProps.prop(fx, RuneProps.BOULDER, V.up(new Vec3(b.x, RuneKit.groundAt(level, b, sp.getY()), b.z), -0.3), new double[] {8, 8, 8},
+                    RuneProps.tumble(seed[j], 0, 0), sc[j] * 0.3, glow);
+        }
+        boolean[] done = {false};
+        Vec3[] last = new Vec3[n];
+        java.util.function.IntConsumer fling = age -> {
+            if (done[0]) return;
+            done[0] = true;
+            for (int j = 0; j < n; j++) {
+                if (last[j] == null) {
+                    ps[j].remove();
+                    continue;
+                }
+                final int jj = j;
+                Vec3 out = V.flat(V.sub(last[j], sp.position()));
+                Vec3 d = V.len(out) < 1e-3 ? new Vec3(1, 0, 0) : V.unit(out);
+                final Vec3 from = last[j];
+                final Vec3 land = PairKit.onGround(level, V.add(from, d, 2.5 + Kit.rand() * 2));
+                final int fly = 8 + (int) (Kit.rand() * 4);
+                final double arc = 0.8 + Kit.rand() * 0.8;
+                for (int t = 1; t <= fly; t++) {
+                    final double u = t / (double) fly;
+                    final int tt = t;
+                    fx.on(age + t, () -> ps[jj].to(V.add(V.lerp(from, V.up(land, 0.2), u), V.UP, arc * 4 * u * (1 - u)), RuneProps.tumble(seed[jj], 30 + tt, 30),
+                            -1, 1));
+                }
+                fx.on(age + fly + 1, () -> SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.DUST_PLUME, V.up(land, 0.3), 4, 0.3, 0.05));
+                fx.on(age + fly + 5, () -> ps[jj].to(V.up(land, -0.5), null, sc[jj] * 0.4, 7));
+                fx.on(age + fly + 13, ps[jj]::remove);
+            }
+        };
+        fx.each(1, until, 1, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                fling.accept(t);
+                return;
+            }
+            Vec3 c = sp.position();
+            double rise = Math.min(1, t / 6.0);
+            for (int j = 0; j < n; j++) {
+                double th = Math.toRadians(ph0 + j * 60 + t * 36);
+                double r = rr[j] * (0.75 + 0.25 * rise);
+                Vec3 at = c.add(Math.cos(th) * r, hh[j] * rise + 0.15 * Math.sin(t * 0.45 + j * 1.3), Math.sin(th) * r);
+                last[j] = at;
+                ps[j].to(at, RuneProps.tumble(seed[j], t, 16), t == 1 ? sc[j] : -1, 1);
+            }
+        });
+        fx.on(until, () -> fling.accept(until));
     }
 
     /** 대지 균열: 앞으로 length 칸 땅이 갈라지며 바위가 솟구침 (선 가까이 width 칸 안의 적) — 바위 가시 · 갈라진 땅 · 끝에서 바위가 터짐. 0.49.0 맞은 적 방어 깨짐 (받는 피해 + vuln) */
@@ -170,6 +248,7 @@ final class RuneStr {
                     RuneBoost.impact(level, p, glow, core, width * 1.8, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 균열 끝에서 바위가 터지는 자리
                     RuneKit.rockRing(sp, level, p, 1.3, 5, 0.75, glow, Opt.of("life", 1.0));
                     RuneKit.rockBurst(level, V.up(p, 0.5), 5, 6, 0.24);
+                    RuneSwing.erupt(level, p, f, 4, 260, 0.4, 1.0, 0.5, 0.85, 2.4, glow); // 2026-11-13 균열 끝에서 3D 바위가 솟아 튐
                     SkillFx.sparks(level, V.up(p, 0.4), core, 8, 5);
                     SkillFx.play(level, "random.explode", p, 1.2, 0.5);
                 }

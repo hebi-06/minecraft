@@ -187,6 +187,9 @@ final class RuneElement {
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(head, f, 2.0), -0.25), Opt.of("dir", V.rightOf(f), "size", 2.6, "thick", 0.2, "life", 0.32, "delay", 0.04,
                 "color", glow, "alpha", 1.0));
         flameFan(sp, glow, 96, 2.4, 5);
+        // 2026-11-13 3D 불꽃 검 (룬 전용 검 3.3칸 · 불 색 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 오른쪽 뒤에서 앞을 지나 (1틱 — rn_flame_slash)
+        // 왼쪽 끝까지 무겁게 휩씀
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.0, 0.65, 3.3, 8, 85, -130, 0, 3, 2, "out", glow, core);
         SkillFx.play(level, "item.firecharge.use", head, 1.1, 0.9);
         SkillFx.play(level, "item.spear.attack_miss", head, 1.0, 0.9);
         int n = 0;
@@ -265,6 +268,28 @@ final class RuneElement {
     }
 
     /**
+     * 2026-11-13 뇌광 베기의 3D 번개 창 (thunder_spear 2.2칸 — 촉이 아래): 적 발밑 위 7칸에서 delay 틱 뒤 2틱에 떨어져 촉이 땅에 박힘 (적을 따라감) → 떨며 4틱 →
+     * 작아져 사라짐
+     */
+    private static void skySpear(ServerLevel level, LivingEntity e, int delay, double[] glow, double[] core) {
+        double len = 2.2;
+        double reach = len * (31.6 - RuneProps.THUNDER_SPEAR_GRIP[1]) / RuneProps.THUNDER_SPEAR_LEN;
+        java.util.function.Supplier<Vec3> grip = () -> V.up(e.position(), reach - 0.35);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, e.position(), delay + 16);
+        Vec3 face = RuneKit.turn(new Vec3(1, 0, 0), Kit.rand() * 180);
+        RuneSwords.Blade s = RuneSwords.spear(fx, V.up(grip.get(), 7), V.DOWN, face, len, delay > 0 ? 0.02 : 0.8, glow, core);
+        fx.on(delay, () -> s.grow(1, 1));
+        fx.on(delay + 1, () -> s.prop.move(V.up(grip.get(), 3.2), 1));
+        fx.on(delay + 2, () -> s.prop.move(grip.get(), 1));
+        for (int t = 3; t <= 6; t++) {
+            final int tt = t;
+            fx.on(delay + t, () -> s.prop.move(V.add(grip.get(), RuneKit.turn(new Vec3(0.04, 0, 0), tt * 77.0), 1), 1));
+        }
+        fx.on(delay + 7, () -> s.grow(0.1, 4));
+        fx.on(delay + 12, s::remove);
+    }
+
+    /**
      * 뇌광 베기: 앞 cone 도 · range 칸 베기 (검, 공격 피해) → gap 틱 뒤 벤 적마다 하늘에서 번개 (번개, 마법 피해)
      * → 그 적의 chain 칸 안 아직 맞지 않은 적 하나에게 튐 (위력 × chainMult, 마법 — 적마다 한 번) —
      * 번개빛 초승달 검기, 하늘에서 내리치는 번개 그림 (rpg:rfx_bolt) · 몸에 번개 구슬. 적이 많으면 그림을 두 명씩 한 틱 늦게 (피해는 같은 틱)
@@ -281,6 +306,8 @@ final class RuneElement {
         elementWave(sp, "thunder", false, 1.6);
         // 칼날을 따라 튀는 전기
         RuneKit.zap(level, V.up(V.add(head, RuneKit.turn(f, -45), 2.0), -0.45), V.up(V.add(head, RuneKit.turn(f, 45), 2.0), -0.45), glow, core, 0.12, 0.25);
+        // 2026-11-13 3D 번개 검 (룬 전용 검 3.2칸 · 번개 색): 왼쪽 뒤에서 앞을 지나 (1틱 — rn_thunder_slash) 오른쪽 끝까지 되돌려 휩씀
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.1, 0.65, 3.2, 10, -100, 120, 0, 3, 2, "out", glow, core);
         SkillFx.play(level, "item.spear.attack_miss", head, 1.1, 0.9);
         SkillFx.play(level, "item.trident.thunder", head, 1.8, 0.3);
         List<LivingEntity> cut = new ArrayList<>();
@@ -290,6 +317,15 @@ final class RuneElement {
             SkillFx.sparks(level, Kit.bodyPoint(e), core, 4, 5);
         }
         String life = RuneKit.lifeToken(sp);
+        // 2026-11-13 하늘에서 내리꽂히는 3D 번개 창 (뇌신의 창 2.2칸): 벤 적 넷까지 — 번개가 떨어지는 틱 (gap) 에 발밑에 박히게 2틱 먼저 떨어지기 시작
+        RuneKit.later(Math.max(0, k.num("gap") - 2), () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            int n = 0;
+            for (LivingEntity e : cut) {
+                if (e.isRemoved() || n >= 4) continue;
+                skySpear((ServerLevel) e.level(), e, n++ / 2, glow, core);
+            }
+        });
         RuneKit.later(k.num("gap"), () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Set<UUID> hit = new HashSet<>();

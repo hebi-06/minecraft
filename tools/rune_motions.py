@@ -93,6 +93,7 @@ import rune_motions_weapon  # noqa: E402,F401
 import rune_motions_magic  # noqa: E402,F401
 import rune_motions_misc  # noqa: E402,F401
 import rune_motions_hero  # noqa: E402,F401 — 2026-11-13 영웅 · 초월 룬 동작 다시 (새 3D 연출에 맞춘 큰 동작)
+import rune_motions_low  # noqa: E402,F401 — 2026-11-13 일반 · 희귀 · 고귀 룬 동작 다시 (묶음마다)
 
 MOTIONS = K.MOTIONS
 TABLE = K.TABLE

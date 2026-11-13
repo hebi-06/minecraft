@@ -52,6 +52,9 @@ final class RuneBlade {
         // 칼집에서 뽑는 빛
         RuneKit.rfx(level, "prop", V.add(V.up(head, -0.55), V.rightOf(f), 0.45), Opt.of("size", 0.35, "life", 0.18, "cell", (double) RuneKit.RFX.get("glint")[0],
                 "spin", 20.0, "color", RuneKit.WHITE, "grow", 0.8, "fade", 0.6));
+        // 2026-11-13 3D 룬 검 (3.2칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 왼 허리 뒤에서 뽑혀 앞을 지나 (1틱 — 동작 rn_quick_draw 와 같은 때)
+        // 오른쪽 끝까지 휩쓸고 머물다 칼을 거둘 때 (5) 작아져 사라짐
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.05, 0.6, 3.2, 4, -130, 105, 0, 2, 3, "out", glow, core);
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(head, f, 2.0), -0.25), Opt.of("dir", V.rightOf(f), "size", 2.8, "thick", 0.2, "life", 0.32, "delay", 0.04,
                 "color", core, "alpha", 1.0));
         RuneKit.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.7, "life", 0.24, "speed", 3.0, "spin", -6.0,
@@ -108,6 +111,8 @@ final class RuneBlade {
                 glow, RuneKit.WHITE);
         RuneKit.arc(level, V.add(from, dir, 1.0), dir, Opt.of("shape", "heavy", "flip", false, "size", 1.7, "life", 0.16, "speed", 0.0, "spin", -90.0, "color",
                 glow, "aura", core)); // 휘두르는 순간
+        // 2026-11-13 3D 룬 검 (3.4칸): 오른쪽 위 뒤에서 대각선으로 왼쪽 아래 앞까지 크게 휩쓸며 (2틱에 앞을 지남 — 동작 rn_sword_wave 와 같은 때) 검기를 날림
+        RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.25, 0.6, 3.4, 48, 140, -75, 0, 3, 2, null, glow, core);
         for (int s = 2; s < len; s += 2) {
             double delay = (s / len) * (len / speed);
             SkillFx.fx(level, "rpg:light_cut", V.add(from, dir, s), Opt.of("dir", dir, "size", 1.1, "thick", 0.16, "life", delay + 0.3, "delay", delay, "color",
@@ -156,10 +161,12 @@ final class RuneBlade {
         String life = RuneKit.lifeToken(sp);
         Map<Long, Integer> perTick = new HashMap<>(); // 틱 → 그 틱의 반격 수 (여럿이 한꺼번에 때리면 분신 · 참격은 둘까지 — 파티클 예산)
         boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 반격이 처음 들어간 적에 한 번
+        GuardSword guard = guardSword(sp, life, ticks, glow, core);
         Guards.set(sp, ticks, k.num("reduce"), Guards.Reflect.fn((pl, attacker) -> {
             if (!RuneKit.sameLife(pl, life) || attacker == null || attacker.isRemoved() || countered.contains(attacker.getUUID()) || Tasks.now() > until) return;
             if (!Kit.canHit(pl, attacker)) return;
             countered.add(attacker.getUUID());
+            guard.flash();
             ServerLevel d = pl.level();
             Vec3 eye = pl.getEyePosition();
             Vec3 at = Kit.bodyPoint(attacker);
@@ -211,19 +218,12 @@ final class RuneBlade {
         RuneKit.selfCue(sp, glow, core, true);
         SkillFx.play(level, "random.anvil_land", sp.position(), 1.8, 0.4);
         SkillFx.play(level, "armor.equip_iron", sp.position(), 1.2, 0.8);
-        // 자세: 오른손 앞에 세운 빛의 칼 (칼끝 위 — 1인칭 조준점을 가리지 않게) + 10틱마다 발밑 검진
-        for (int t = 0; t < ticks; t += 5) {
+        // 자세: 2026-11-13 몸 앞에 가로로 뜬 3D 룬 검 (guardSword — 2D 빛의 칼 대신) + 10틱마다 발밑 검진
+        for (int t = 0; t < ticks; t += 10) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 eye = sp.getEyePosition();
-                Vec3 f = V.flat(sp.getViewVector(1F));
-                Vec3 at = V.up(V.add(V.add(eye, f, 1.5), V.rightOf(f), 0.5), -0.45);
-                RuneKit.rfx2(sp.level(), "sword", at, Opt.of("dir", V.UP, "size", 0.42, "life", 0.3, "alpha", 0.6, "vel", RuneKit.bodyVel(sp)), glow, RuneKit.WHITE,
-                        RuneKit.RFX.get("sword"), 0.75);
-                if (tt % 10 == 0) {
-                    SkillFx.rune(sp.level(), sp.position(), Opt.of("size", 1.3, "life", 0.55, "color", glow, "alpha", 0.7, "rate", 0.0, "spin", tt * 3.0));
-                }
+                SkillFx.rune(sp.level(), sp.position(), Opt.of("size", 1.3, "life", 0.55, "color", glow, "alpha", 0.7, "rate", 0.0, "spin", tt * 3.0));
             });
         }
         // 끝: 모은 기운으로 앞을 벰 (반격한 적은 제외 → 적마다 한 번)
@@ -305,6 +305,52 @@ final class RuneBlade {
     }
 
     /** 쓴 사람 둘레 (가슴 높이 h) 를 기준으로 휘두르는 틀 — 틱마다 지금 자리 · 보는 쪽 */
+    /** 2026-11-13 반격 자세의 3D 룬 검 (몸 앞에 가로로 떠서 막음) — 반격마다 번쩍 (flash) */
+    static final class GuardSword {
+        RuneSwords.Blade b;
+        mmorpg.fabric.vfx.Vfx.Fx fx;
+        boolean swinging;
+
+        void flash() {
+            if (b == null || swinging) return;
+            b.grow(1.2, 1);
+            int a = fx.age();
+            fx.on(a + 2, () -> {
+                if (!swinging) b.grow(1, 2);
+            });
+        }
+    }
+
+    /**
+     * 반격 자세의 3D 룬 검 (2.6칸): 몸 앞 (0.85칸) 가슴 높이에 가로로 떠서 (칼끝 왼쪽 · 넓은 면이 앞 — 막는 방패처럼) 틱마다 몸을 따라옴 (조금 오르내림) →
+     * ticks − 3 에 오른쪽으로 감기고 → ticks − 1 부터 크게 가로로 휩씀 (ticks 에 앞을 지남 — 끝 베기와 같은 때) → 머물다 사라짐
+     */
+    private static GuardSword guardSword(ServerPlayer sp, String life, int ticks, double[] glow, double[] core) {
+        GuardSword g = new GuardSword();
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), ticks + 16);
+        g.fx = fx;
+        RuneSwords.Frame fr = bodyFrame(sp, 1.15);
+        java.util.function.Function<Vec3, Vec3> hilt = f -> V.add(V.add(fr.pivot(), f, 0.85), V.rightOf(f), 1.05);
+        Vec3 f0 = fr.fwd();
+        g.b = RuneSwords.blade(fx, hilt.apply(f0), V.scale(V.rightOf(f0), -1), f0, 2.6, 0.2, glow, core);
+        fx.on(1, () -> g.b.grow(1, 3));
+        fx.each(1, ticks - 4, 1, t -> {
+            if (g.swinging || !RuneKit.sameLife(sp, life)) return;
+            Vec3 f = fr.fwd();
+            g.b.pose(V.up(hilt.apply(f), 0.05 * Math.sin(t * 0.3)), V.scale(V.rightOf(f), -1), f, 1);
+        });
+        fx.on(ticks - 3, () -> {
+            g.swinging = true;
+            g.b.grow(1, 1);
+            Vec3 f = fr.fwd();
+            Vec3 d = RuneSwing.planeDir(f, 4, 100);
+            g.b.pose(V.add(fr.pivot(), d, 0.6), d, RuneSwing.planeFace(f, 4), 2);
+        });
+        RuneSwords.swing(g.b, ticks - 1, 3, fr, 0.6, (f, a) -> RuneSwing.planeDir(f, 4, a), f -> RuneSwing.planeFace(f, 4), 100, -125, "out");
+        RuneSwing.retire(fx, g.b, sp, life, ticks + 4);
+        return g;
+    }
+
     static RuneSwords.Frame bodyFrame(ServerPlayer sp, double h) {
         return new RuneSwords.Frame() {
             @Override

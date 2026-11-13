@@ -83,9 +83,12 @@ final class RuneSpellblade {
         SkillFx.play(level, "mob.evocation_illager.cast_spell", head, 1.7, 0.4);
         String life = RuneKit.lifeToken(sp);
         double gap = k.num("gap");
+        // 2026-11-13 3D 룬 검 (3칸 · 남보라 빛 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 오른쪽에서 왼쪽 끝까지 휩씀 (1틱에 앞을 지남 — rn_arcane_cut)
+        RuneSwing.sword(sp, life, 1.15, 0.6, 3.0, 6, 75, -125, 0, 3, 2, "out", glow, core);
         List<LivingEntity> hit = new ArrayList<>();
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 10)) {
             if (RuneKit.swordHit(sp, e, P, k.num("mult")) <= 0) continue;
+            if (hit.size() < 4) arcaneRing(e, (int) gap, glow, core); // 벤 적 둘레의 3D 빛 고리 (4명까지) — 돌며 조이다 터짐
             hit.add(e);
             Vec3 at = Kit.bodyPoint(e);
             SkillFx.cutMark(level, at, V.unit(V.sub(at, head)), -8, 0.1, core, RuneKit.WHITE, 1.0);
@@ -115,6 +118,105 @@ final class RuneSpellblade {
     }
 
     /** 지금의 광선: 피해는 눈 → 보는 방향 (조준점과 같은 줄, 길이 len), 그림은 오른손 앞 (hand) → 그 끝 (end) */
+    /**
+     * 2026-11-13 마력 베기의 3D 빛 고리 (halo — 남보라 빛 · 청록 속빛): 벤 적의 허리 둘레에 몸 너비의 1.5배로 나타나 돌며 (틱에 24°) 조여 (0.95배) gap 틱에 확
+     * 커지며 터짐 → 사라짐 (적을 따라감)
+     */
+    private static void arcaneRing(LivingEntity e, int gap, double[] glow, double[] core) {
+        ServerLevel level = (ServerLevel) e.level();
+        double w = Math.max(0.9, e.getBbWidth() * 1.9);
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, e.position(), gap + 10);
+        double s0 = RuneProps.scaleFor(w * 1.5, RuneProps.HALO_D);
+        double s1 = RuneProps.scaleFor(w * 0.95, RuneProps.HALO_D);
+        java.util.function.Supplier<Vec3> at = () -> V.up(e.position(), e.getBbHeight() * 0.5);
+        mmorpg.fabric.vfx.Vfx.Prop p = RuneProps.prop(fx, RuneProps.HALO, at.get(), new double[] {8, 8, 8}, RuneProps.along(V.UP, new Vec3(1, 0, 0)), s0 * 0.3,
+                glow, core);
+        fx.on(1, () -> p.size(s0, 2));
+        fx.each(3, Math.max(3, gap - 1), 1, t -> {
+            double u = (t - 3) / (double) Math.max(1, gap - 4);
+            Vec3 tilt = V.unit(V.add(V.UP, RuneKit.turn(new Vec3(1, 0, 0), t * 40.0), 0.18));
+            p.to(e.isRemoved() ? null : at.get(), RuneProps.along(tilt, RuneKit.turn(new Vec3(0, 0, 1), t * 24.0)), s0 + (s1 - s0) * u, 1);
+        });
+        fx.on(gap, () -> p.size(s0 * 1.6, 2));
+        fx.on(gap + 2, () -> p.size(s0 * 0.1, 3));
+        fx.on(gap + 5, p::remove);
+    }
+
+    /**
+     * 2026-11-13 마나 블라스터의 3D 빛 고리 셋 (halo — 포신처럼): 손 앞 광선을 따라 0.9 · 1.55 · 2.25칸에 지름 0.55 · 0.8 · 1.05칸, 광선 축 둘레로 서로 반대로 돎
+     * (틱마다 조준을 따라감 · 굵어지는 틱 (gap) 마다 1.2배로 번쩍) → until 에 작아져 사라짐. 죽거나 나가면 그때
+     */
+    private static void blasterRings(ServerPlayer sp, String life, double range, int gap, int until, double[] glow, double[] core) {
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), until + 10);
+        double[] dist = {0.9, 1.55, 2.25};
+        double[] dia = {0.55, 0.8, 1.05};
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[dist.length];
+        double[] sc = new double[dist.length];
+        Beam b0 = beamNow(sp, range);
+        Vec3 u0 = V.unit(V.sub(b0.end(), b0.hand()));
+        for (int i = 0; i < dist.length; i++) {
+            sc[i] = RuneProps.scaleFor(dia[i], RuneProps.HALO_D);
+            ps[i] = RuneProps.prop(fx, RuneProps.HALO, V.add(b0.hand(), u0, dist[i]), new double[] {8, 8, 8}, RuneProps.along(u0, V.UP), sc[i] * 0.2, glow,
+                    core);
+        }
+        boolean[] done = {false};
+        Runnable end = () -> {
+            if (done[0]) return;
+            done[0] = true;
+            int age = fx.age();
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.size(0.01, 4);
+            fx.on(age + 5, () -> {
+                for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.remove();
+            });
+        };
+        fx.each(1, until, 1, t -> {
+            if (done[0]) return;
+            if (!RuneKit.sameLife(sp, life)) {
+                end.run();
+                return;
+            }
+            Beam b = beamNow(sp, range);
+            Vec3 u = V.sub(b.end(), b.hand());
+            if (V.len(u) < 0.3) return;
+            u = V.unit(u);
+            Vec3 ref = Math.abs(u.y) < 0.9 ? V.UP : new Vec3(1, 0, 0);
+            boolean pulse = (t - 1) % gap == 0;
+            for (int i = 0; i < ps.length; i++) {
+                Vec3 side = RuneSwords.rot(V.unit(V.cross(u, ref)), u, t * (16 + 6 * i) * (i % 2 == 0 ? 1 : -1));
+                ps[i].to(V.add(b.hand(), u, dist[i]), RuneProps.along(u, side), sc[i] * (t <= 2 ? 0.6 + 0.2 * t : pulse ? 1.2 : 1.0), 1);
+            }
+        });
+        fx.on(until, end);
+    }
+
+    /**
+     * 2026-11-13 차원 베기의 3D 룬 검 (2.6칸): 하늘에서 내리꽂혀 (2틱) 갈라진 길 한가운데 땅에 비스듬히 박힘 (칼끝이 길 앞쪽으로 기움) → 빛나며 머물다 틈이 터질 때
+     * (delay) 위로 튀며 작아져 사라짐
+     */
+    private static void riftSword(ServerLevel level, Vec3 mid, Vec3 f, int delay, double[] glow, double[] core) {
+        Vec3 g = new Vec3(mid.x, RuneKit.groundAt(level, mid, mid.y), mid.z);
+        Vec3 dir = V.unit(V.add(V.DOWN, f, 0.35));
+        double len = 2.6;
+        double reach = len * 34.5 / RuneProps.SWORD_LEN;
+        Vec3 hilt = V.sub(V.add(g, dir, 0.45), V.scale(dir, reach));
+        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, g, delay + 14);
+        RuneSwords.Blade b = RuneSwords.blade(fx, V.up(hilt, 5), dir, V.rightOf(f), len, 0.6, glow, core);
+        fx.on(1, () -> {
+            b.grow(1, 2);
+            b.prop.move(hilt, 2);
+        });
+        fx.on(3, () -> {
+            SkillFx.burst(level, V.up(g, 0.3), glow, 1.0, 0.25);
+            SkillFx.sparks(level, V.up(g, 0.3), core, 6, 4);
+            RuneKit.glowCrack(level, g, 1.2, glow, RuneKit.WHITE, Opt.of("life", 0.9, "v", 1.0));
+        });
+        fx.on(Math.max(4, delay), () -> {
+            b.prop.move(V.up(hilt, 2.6), 4);
+            b.grow(0.1, 4);
+        });
+        fx.on(Math.max(4, delay) + 5, b::remove);
+    }
+
     private record Beam(Vec3 eye, Vec3 dir, double len, Vec3 end, Vec3 hand) {}
 
     private static Beam beamNow(ServerPlayer sp, double range) {
@@ -143,6 +245,7 @@ final class RuneSpellblade {
         ServerLevel level0 = sp.level();
         SkillFx.play(level0, "beacon.activate", sp.position(), 1.6, 0.9);
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", sp.position(), 1.4, 0.6);
+        blasterRings(sp, life, range, gap, lastHit + 4, glow, core); // 2026-11-13 광선 둘레 3D 빛 고리 셋 (포신)
         // 광선 (2틱마다 다시 그림 — 굵은 남보라 빛 + 청록 심지, 피해가 들어가는 순간은 더 굵게, 끝나는 4틱은 가늘어짐)
         //   빛줄기 조각 (rpg:arrow_trail) 은 양 끝 15% 가 흐려지므로 두 조각을 겹쳐 잇고 끝을 0.8칸 더 늘림 (조준점 · 맞은 적에서 흐려지지 않게)
         // · 손 앞 작게 도는 마법진 · 끝에서 튀는 빛과 마력 구슬 · 광선을 타고 나가는 고리
@@ -269,6 +372,7 @@ final class RuneSpellblade {
         for (Rift g2 : segs) {
             RuneKit.rfx2(level, "rift", g2.at(), Opt.of("dir", g2.dir(), "size", g2.size(), "life", delay / 20 + 0.05, "grow", 0.15, "alpha", 0.95), glow, core);
         }
+        riftSword(level, V.add(start, f, len * 0.5), f, (int) delay, glow, core); // 2026-11-13 갈라진 길 한가운데 박히는 3D 룬 검
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
