@@ -19,7 +19,8 @@ import net.minecraft.world.phys.Vec3;
  * 모델, 모드 없는 클라이언트는 글자 표시 (vfx.PBridge · 글자 256픽셀). 전에는 궤적 평타가 모드 클라이언트의 칼 궤적 (BladeTrails) 뿐이라 모드 없는 클라이언트에서
  * 참격이 보이지 않았음.
  * <ul>
- *   <li>up (가로 베기 · 반대 가로 · 창 휘두르기): 몸 둘레에 누운 판 — 반지름 = 무기 종류 · 등급의 궤적 거리 (MOTION.area.reach) × radius (모든 사람에게 위에서 보임)</li>
+ *   <li>up (가로 베기 · 반대 가로 · 창 휘두르기 · 방패 밀치기): 몸 둘레에 땅과 나란히 누운 판 — 반지름 = 무기 종류 · 등급의 궤적 거리 (MOTION.area.reach)
+ *       × radius, 둘레 사람 · 3인칭에는 위아래 옅은 겹 (layers — 같은 높이 눈에서 가는 옆선이 되지 않게)</li>
  *   <li>front (세로 베기 · 내려찍기 · 올려 베기 · X자): 쓴 사람 쪽을 보는 선 판 — 휘두름 시작 쪽 start (화면 도: 0 오른쪽 · 90 위), 볼록한 쪽은 그 90° 반시계
  *       (mirror 면 시계), squash = 볼록한 쪽 납작하게. 쓴 사람의 1인칭에는 조금 멀리 · 옅게 따로</li>
  *   <li>때: 동작의 궤적 구간 (window) 이 시작할 때 나타나 휘두름 동안 머리가 나아가고 (판의 움직임 0 ~ sweepShare) 남은 동안 잔상이 거둬짐 —
@@ -31,8 +32,9 @@ import net.minecraft.world.phys.Vec3;
 public final class BasicSlash {
     private BasicSlash() {}
 
-    /** 시험: 띄운 판 수 · 마지막 모델 · 반지름 (칸) · 삶 (초) · 늦춤 (초) */
+    /** 시험: 띄운 판 수 · 마지막 휘두름의 판 수 (겹 포함) · 마지막 모델 · 반지름 (칸) · 삶 (초) · 늦춤 (초) */
     public static int spawned;
+    public static int lastCards;
     public static String lastModel = "";
     public static double lastRadius;
     public static double lastLife;
@@ -102,6 +104,7 @@ public final class BasicSlash {
         Opt card = Opt.of("scale", radius, "life", life, "delay", delay, "grow", c.numOr("grow", 0.05), "vel", vel, "anim", "play", "animSpeed", 1.0 / life,
                 "fadeIn", 0.0, "fadeOut", life * 0.08, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", c.numOr("alpha", 0.95), "shine", 0.1);
         int owner = sp.getId();
+        int extra = 0;
         String kind = s.strOr("face", "up");
         if ("thrust".equals(kind)) {
             // 2026-11-14 창 찌르기 판 (slash_thrust — +Y = 찌르는 쪽 · 원점 = 손): 보는 쪽 (위아래 ±25° 까지) 으로 뻗고, 판은 그 축 둘레로 보는 사람을 봄 (faceCam).
@@ -123,20 +126,34 @@ public final class BasicSlash {
             mmorpg.fabric.Fx3d.spawn(level, model, fp, front(card, f, s, mirror).with("stretch", stretch, "view", 2.0, "owner", (double) owner, "alpha",
                     c.numOr("fpAlpha", 0.7)));
         } else {
-            // 몸 둘레에 누운 판 (그림 위 = 앞 · +X = 오른쪽). 둘레 사람 · 3인칭: 앞쪽을 tilt 도 듦 (몸 높이의 카메라에서도 넓은 면 — 누우면 옆선) /
-            // 쓴 사람 1인칭: 누운 그대로 (화면 아래로 띠가 지나감 — 눈높이를 가리지 않게)
-            double tilt = Math.toRadians(s.numOr("tilt", c.numOr("tilt", 28)));
+            // 몸 둘레에 누운 판 (그림 위 = 앞 · +X = 오른쪽). 2026-11-14 사용자 "가로로 평행하게 베는 걸로 하자 대각선 별로다": 땅과 나란히 (tilt 0 —
+            // 앞쪽을 들면 옆 · 뒤 옆 카메라에서 대각선). 둘레 사람 · 3인칭: 같은 높이의 눈에서는 누운 판이 가는 옆선이라, 위아래로 옅은 겹 (layers —
+            // [위 칸, 투명 몫, 반지름 몫]) 을 더해 두께 있는 칼빛으로 보이게. 쓴 사람 1인칭: 눈에서 낮게 (fpHeight — 발 위 칸) 한 장 (화면 아래로 띠가
+            // 지나감 — 수평선 위는 가리지 않음)
+            double tilt = Math.toRadians(s.numOr("tilt", c.numOr("tilt", 0)));
             Vec3 dir = V.add(V.scale(f, Math.cos(tilt)), V.UP, Math.sin(tilt));
             Vec3 face = V.add(V.scale(V.UP, Math.cos(tilt)), f, -Math.sin(tilt));
             mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", dir, "face", face, "roll", 0.0, "view", 1.0, "owner", (double) owner));
-            // 2026-11-14 2판 1인칭: 눈에서 더 낮게 (fpHeight — 발 위 칸) · 앞쪽을 fpTilt 도 듦 — 가슴 높이에 누우면 화면 아래 가는 줄로만 보였음 (미리보기 —
-            // 눈 1.62 · 판 1.2 면 앞 2.3칸이 아래 10° 라 띠가 얇음). 화면 가운데 (수평선 위) 는 가리지 않음
-            double ft = Math.toRadians(c.numOr("fpTilt", 15));
+            List<Object> layers = s.has("layers") ? s.listOrNull("layers") : c.listOrNull("layers");
+            if (layers != null) {
+                for (Object o : layers) {
+                    if (!(o instanceof List<?> l) || l.isEmpty()) continue;
+                    @SuppressWarnings("unchecked")
+                    List<Object> lo = (List<Object>) l;
+                    double al = lo.size() > 1 ? num(lo, 1) : 1;
+                    double rs = lo.size() > 2 ? num(lo, 2) : 1;
+                    mmorpg.fabric.Fx3d.spawn(level, model, V.add(p, V.UP, num(lo, 0)), card.with("dir", dir, "face", face, "roll", 0.0, "view", 1.0, "owner",
+                            (double) owner, "alpha", c.numOr("alpha", 0.95) * al, "scale", radius * rs));
+                    extra++;
+                }
+            }
+            double ft = Math.toRadians(s.numOr("fpTilt", c.numOr("fpTilt", 0)));
             Vec3 pf = V.add(V.add(V.add(feet, r, num(at, 0)), V.UP, s.numOr("fpHeight", c.numOr("fpHeight", 0.95))), f, num(at, 2));
             mmorpg.fabric.Fx3d.spawn(level, model, pf, card.with("dir", V.add(V.scale(f, Math.cos(ft)), V.UP, Math.sin(ft)), "face",
                     V.add(V.scale(V.UP, Math.cos(ft)), f, -Math.sin(ft)), "roll", 0.0, "view", 2.0, "owner", (double) owner));
         }
-        spawned += 2;
+        spawned += 2 + extra;
+        lastCards = 2 + extra;
         lastModel = model;
         lastRadius = radius;
         lastLife = life;

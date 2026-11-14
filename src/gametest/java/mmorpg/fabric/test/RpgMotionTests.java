@@ -105,14 +105,15 @@ public final class RpgMotionTests {
         floor(h);
         ServerPlayer sp = player(h);
         Weapon sword = Weapons.weaponFrom("sword", 20, "rare");
+        Weapon lance = Weapons.weaponFrom("lance", 20, "rare");
         Weapon bow = Weapons.weaponFrom("bow", 20, "rare");
-        hold(sp, sword);
-        // 2026-11-14 칼 = 가로 → 반대 가로 (회전 없음)
-        String[] want = {"slash_h", "slash_hb", "slash_h", "slash_hb"};
+        hold(sp, lance);
+        // 연타 단계는 창 (찌르기 → 가로 휘두르기 — 회전 없음). 2026-11-14 칼은 왼쪽 → 오른쪽 가로 베기 하나 (사용자 "검사 평타 그냥 왼쪽에서 오른쪽으로 베는 걸로")
+        String[] want = {"thrust", "lance_sweep", "thrust", "lance_sweep"};
         for (int i = 0; i < want.length; i++) {
             int n = i;
             h.runAfterDelay(2 + i * 3, () -> {
-                MotionSystem.Swing s = MotionSystem.swung(sp, sword);
+                MotionSystem.Swing s = MotionSystem.swung(sp, lance);
                 h.assertTrue(s != null && s.motion().equals(want[n]) && s.step() == n % 2 + 1, "swing " + n + " " + s);
                 h.assertTrue(want[n].equals(MotionSystem.lastSent(sp)), "sent " + MotionSystem.lastSent(sp));
                 h.assertFalse(MotionSystem.spinNow(sp), "no spin " + n);
@@ -122,20 +123,30 @@ public final class RpgMotionTests {
             });
         }
         // 2단 뒤에는 1단 · comboWindow 를 넘기면 처음
-        h.runAfterDelay(15, () -> h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "after step 2 → 1"));
+        h.runAfterDelay(15, () -> h.assertTrue(MotionSystem.swung(sp, lance).step() == 1, "after step 2 → 1"));
         h.runAfterDelay(15 + Motions.comboWindow() + 1, () -> {
-            h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "window passed → 1");
+            h.assertTrue(MotionSystem.swung(sp, lance).step() == 1, "window passed → 1");
             h.assertFalse(MotionSystem.spinNow(sp), "no spin");
         });
         // 클라이언트가 보낸 단계 (공격보다 먼저 옴) — 범위 밖은 무시
         h.runAfterDelay(45, () -> {
             MotionSystem.testRequest(sp, "basic", 2, 0);
-            MotionSystem.Swing s = MotionSystem.swung(sp, sword);
-            h.assertTrue(s.motion().equals("slash_hb") && s.step() == 2, "client step 2 → slash_hb " + s);
+            MotionSystem.Swing s = MotionSystem.swung(sp, lance);
+            h.assertTrue(s.motion().equals("lance_sweep") && s.step() == 2, "client step 2 → lance_sweep " + s);
             MotionSystem.testRequest(sp, "basic", 3, 0);
-            h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "bad client step ignored (2 → 1)");
+            h.assertTrue(MotionSystem.swung(sp, lance).step() == 1, "bad client step ignored (2 → 1)");
         });
-        h.runAfterDelay(50, () -> {
+        // 칼: 평타마다 왼쪽 → 오른쪽 가로 베기 (단계 하나 — 2단을 보내도 범위 밖)
+        h.runAfterDelay(48, () -> {
+            hold(sp, sword);
+            for (int i = 0; i < 3; i++) {
+                MotionSystem.Swing s = MotionSystem.swung(sp, sword);
+                h.assertTrue(s != null && s.motion().equals("slash_hb") && s.step() == 1, "sword swing " + i + " = slash_hb " + s);
+            }
+            MotionSystem.testRequest(sp, "basic", 2, 0);
+            h.assertTrue(MotionSystem.swung(sp, sword).motion().equals("slash_hb"), "sword: client step 2 ignored");
+        });
+        h.runAfterDelay(52, () -> {
             h.assertTrue(MotionSystem.swung(sp, bow) == null, "bow: no combo");
             h.assertTrue(MotionSystem.swung(sp, null) == null, "bare hand: no combo");
             done(h, sp);
@@ -160,7 +171,7 @@ public final class RpgMotionTests {
     }
 
     @GameTest(environment = ENV, maxTicks = 60)
-    public void slashAreaFrontArcBothWays(GameTestHelper h) {
+    public void slashAreaFrontArcRepeats(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
         Weapon w = Weapons.weaponFrom("sword", 20, "rare");
@@ -177,24 +188,26 @@ public final class RpgMotionTests {
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
             main[0] = TestDummies.dealt(a);
-            h.assertTrue(oneHit(main[0], sp, w), "slash_h aimed hit full " + main[0] + " vs " + full(sp, w));
+            h.assertTrue(oneHit(main[0], sp, w), "slash_hb aimed hit full " + main[0] + " vs " + full(sp, w));
+            h.assertTrue("slash_hb".equals(MotionSystem.lastSent(sp)), "sword step 1 = slash_hb (left → right) " + MotionSystem.lastSent(sp));
             h.assertTrue(TestDummies.dealt(e) == 0, "area lands one tick later (after the aimed hit)");
         });
         h.runAfterDelay(4, () -> {
             eHit[0] = TestDummies.dealt(e);
-            h.assertTrue(oneHit(eHit[0], sp, w), "slash_h arc: front-left 100% " + eHit[0] + " vs " + full(sp, w));
+            h.assertTrue(oneHit(eHit[0], sp, w), "slash_hb arc: front-left 100% " + eHit[0] + " vs " + full(sp, w));
             h.assertTrue(near(TestDummies.dealt(a), main[0]), "aimed target hit once " + TestDummies.dealt(a));
             h.assertTrue(TestDummies.dealt(b) == 0 && TestDummies.dealt(c) == 0 && TestDummies.dealt(d) == 0,
-                    "slash_h: behind · side · far not hit " + TestDummies.dealt(b) + " " + TestDummies.dealt(c) + " " + TestDummies.dealt(d));
+                    "slash_hb: behind · side · far not hit " + TestDummies.dealt(b) + " " + TestDummies.dealt(c) + " " + TestDummies.dealt(d));
             h.assertTrue(SwingArea.lastCount(sp) == 1, "one area victim " + SwingArea.lastCount(sp));
         });
-        // 2026-11-14 칼 2타 = 반대 가로 베기 (회전 없음): 같은 앞 부채꼴 — 앞 왼쪽은 다시 100%, 뒤 · 옆 · 먼 적은 그대로 0
+        // 2026-11-14 칼 평타는 왼쪽 → 오른쪽 가로 베기 하나 (사용자 "검사 평타 그냥 왼쪽에서 오른쪽으로 베는 걸로"): 다음 평타도 같은 앞 부채꼴 —
+        // 앞 왼쪽은 다시 100%, 뒤 · 옆 · 먼 적은 그대로 0
         h.runAfterDelay(16, () -> {
-            MotionSystem.testRequest(sp, "basic", 2, 0);
+            MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
             main[1] = TestDummies.dealt(a) - main[0];
             h.assertTrue(oneHit(main[1], sp, w), "slash_hb aimed hit full " + main[1] + " vs " + full(sp, w));
-            h.assertTrue("slash_hb".equals(MotionSystem.lastSent(sp)), "step 2 = slash_hb " + MotionSystem.lastSent(sp));
+            h.assertTrue("slash_hb".equals(MotionSystem.lastSent(sp)), "next swing = slash_hb again " + MotionSystem.lastSent(sp));
         });
         h.runAfterDelay(18, () -> {
             h.assertTrue(oneHit(TestDummies.dealt(e) - eHit[0], sp, w), "slash_hb arc: front-left again " + (TestDummies.dealt(e) - eHit[0]));
@@ -248,7 +261,7 @@ public final class RpgMotionTests {
             Slash.onPunch(sp); // 허공 휘두르기 (조준한 몹 없음)
             t0[0] = Tasks.now();
             MotionSystem.Swing s = MotionSystem.last(sp);
-            h.assertTrue(s != null && s.tick() == t0[0] && s.motion().equals("slash_h"), "air swing registered " + s);
+            h.assertTrue(s != null && s.tick() == t0[0] && s.motion().equals("slash_hb"), "air swing registered " + s);
             // 같은 틱 (같은 누름) 의 공격 패킷 하나는 받음 → 그 적은 범위에서 빠지고 바닐라 공격으로 한 번
             h.assertTrue(Slash.admit(sp, true), "same press: one attack packet admitted");
             sp.attack(a);
@@ -317,9 +330,12 @@ public final class RpgMotionTests {
         int[] n0 = new int[1];
         h.runAfterDelay(2, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
-            Slash.onPunch(sp); // 가로 베기 (허공)
-            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic"),
-                    "slash_h → a tilted card (others · 3rd person) + a flat card (1st person) " + mmorpg.fabric.BasicSlash.lastModel);
+            Slash.onPunch(sp); // 2026-11-14 칼 = 왼쪽 → 오른쪽 가로 베기 (허공 — 거울 그림)
+            // 땅과 나란한 판 (둘레 사람 · 3인칭) + 위아래 옅은 겹 둘 + 1인칭 판 (사용자 "가로로 평행하게 베는 걸로 하자 대각선 별로다")
+            h.assertTrue(mmorpg.fabric.BasicSlash.lastCards == 4 && mmorpg.fabric.BasicSlash.spawned == n0[0] + 4
+                    && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_l"),
+                    "slash_hb → a flat card + 2 layers (others · 3rd person) + a flat card (1st person) " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    + mmorpg.fabric.BasicSlash.lastCards);
             Double reach = Motions.reach("sword", sword.gradeIndex());
             h.assertTrue(reach != null && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - reach) < 1e-6, "radius = sword reach " + mmorpg.fabric.BasicSlash.lastRadius);
             // 공속 ×2 → 동작 ×1.5: 휘두름 구간 (0.3 ~ 0.68 × 6틱) ÷ 0.4
@@ -329,9 +345,9 @@ public final class RpgMotionTests {
         });
         h.runAfterDelay(2 + Motions.attackInterval(2.0) + 1, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
-            Slash.onPunch(sp); // 반대 가로 베기 (거울 그림)
-            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_l"),
-                    "slash_hb → mirrored card " + mmorpg.fabric.BasicSlash.lastModel);
+            Slash.onPunch(sp); // 다음 평타도 같은 왼쪽 → 오른쪽 (단계 하나)
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 4 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_l"),
+                    "next swing → the same mirrored card " + mmorpg.fabric.BasicSlash.lastModel);
             hold(sp, gs);
         });
         h.runAfterDelay(4 + 2 * Motions.attackInterval(2.0) + Motions.comboWindow(), () -> {
@@ -368,8 +384,8 @@ public final class RpgMotionTests {
         });
         h.runAfterDelay(4 + Motions.attackInterval(1.0) + Motions.comboWindow(), () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
-            Slash.onPunch(sp); // 방패 밀치기 (허공)
-            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_bash")
+            Slash.onPunch(sp); // 방패 밀치기 (허공 — 누운 판이라 위아래 겹 둘도)
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 4 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_bash")
                     && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 2.6) < 1e-6, "shield bash → slash_bash 2.6 " + mmorpg.fabric.BasicSlash.lastModel + " "
                     + mmorpg.fabric.BasicSlash.lastRadius);
             done(h, sp);

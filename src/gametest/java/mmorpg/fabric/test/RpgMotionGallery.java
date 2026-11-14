@@ -228,18 +228,18 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.waitTicks(3);
     }
 
-    // ------------------------------------------------------------ 3. 공격 키 두 번 (2026-11-14 칼: 가로 → 반대 가로)
+    // ------------------------------------------------------------ 3. 공격 키 두 번 (연타 단계 — 창: 찌르기 → 가로 휘두르기. 2026-11-14 칼은 왼쪽 → 오른쪽 가로 베기 하나)
 
     private void attack(ClientGameTestContext ctx, TestServerContext server) {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
-            sp.getInventory().setItem(0, weapon("sword"));
+            sp.getInventory().setItem(0, weapon("lance"));
             sp.getInventory().setSelectedSlot(0);
         });
         ctx.getInput().lookAt(180F, -35F); // 하늘 (블록을 캐지 않게)
         ctx.waitTicks(12);
         int me = ctx.computeOnClient(mc -> mc.player.getId());
-        String[] want = {"slash_h", "slash_hb"};
+        String[] want = {"thrust", "lance_sweep"};
         for (int i = 0; i < want.length; i++) {
             ctx.getInput().pressKey(o -> o.keyAttack);
             ctx.waitTicks(3);
@@ -294,11 +294,11 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 3-1. 0.40.0 참격 궤적 (칼이 지나간 자리에 띠)
 
     /**
-     * {종류, 등급, 동작 · 찍는 틱 …} — 평타를 실제로 눌러 그 동작이 진행된 틱에 찍음 (2026-11-14 칼은 가로 → 반대 가로, 마검 · 낫은 셋째 마무리까지 —
+     * {종류, 등급, 동작 · 찍는 틱 …} — 평타를 실제로 눌러 그 동작이 진행된 틱에 찍음 (2026-11-14 칼은 왼쪽 → 오른쪽 가로 베기 하나, 마검 · 낫은 셋째 마무리까지 —
      * 민첩 150 의 공속 ×2 면 동작이 ×1.5 빨라 찍는 틱을 줄임: 낫 마무리 10 → 7틱 · 단검 8 → 5틱)
      */
     private static final String[][] TRAILS = {
-        {"sword", "rare", "slash_h:4", "slash_hb:4"},
+        {"sword", "rare", "slash_hb:4"}, // 2026-11-14 칼 = 왼쪽 → 오른쪽 가로 베기 하나
         {"scythe", "hero", "slash_h:4", "slash_v:4", "reap_up:4"},
         {"greatsword", "transcend", "slash_h:4", "slash_v:4", "gs_slam:5"},
         {"dagger", "rare", "dagger_x:4"},
