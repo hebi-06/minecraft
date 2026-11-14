@@ -138,6 +138,17 @@ public final class JobsTest {
         List<String> names = List.of("검사", "전사", "마검사", "매지션", "궁수", "암살자", "창술사", "사신", "성기사", "사제", "수호기사");
         check(Jobs.order().equals(ids), "order " + Jobs.order());
         for (int i = 0; i < ids.size(); i++) check(Jobs.job(ids.get(i)).name().equals(names.get(i)), "name " + ids.get(i));
+        // 2026-11-14 숨긴 직업 (jobs.json hidden — 사용자 "직업을 줄이자" · "궁수, 스나이퍼, 배틀아처, 워로드, 피닉스 가드를 없애라고" · "둘 다 숨김"):
+        // 1차 숨김이면 2차까지 · 2차만 숨김 (워로드 · 피닉스 가드) — 데이터는 그대로 (order · all · job)
+        check(Jobs.visibleOrder().equals(List.of("swordsman", "warrior", "mage", "assassin", "priest", "guardian")), "visible order " + Jobs.visibleOrder());
+        for (String id : List.of("spellblade", "lancer", "reaper", "paladin", "archer", "arcaneblade", "elementalblade", "stormlancer", "dragoon", "soulreaper",
+                "executioner", "thunderlord", "tyrant", "sniper", "battlearcher", "warlord", "phoenix")) check(Jobs.hidden(id) && Jobs.job(id) != null, "hidden " + id);
+        for (String id : List.of("swordsman", "swordmaster", "bloodknight", "warrior", "frostraider", "mage", "arcmage", "necromancer", "assassin", "trickster",
+                "pierrot", "priest", "saint", "warlock", "guardian", "darkknight")) check(!Jobs.hidden(id), "shown " + id);
+        check(!Jobs.hidden("") && !Jobs.hidden(null) && !Jobs.hidden("nope"), "hidden(unknown) false");
+        check(Jobs.visibleAdvance("warrior", "awaken") == null && Jobs.visibleAdvance("warrior", "invert") == Jobs.job("frostraider")
+                && Jobs.visibleAdvancedOf("warrior").equals(List.of(Jobs.job("frostraider"))) && Jobs.visibleAdvancedOf("archer").isEmpty()
+                && Jobs.visibleAdvancedOf("guardian").equals(List.of(Jobs.job("darkknight"))) && Jobs.visibleAdvancedOf("swordsman").size() == 2, "visible advanced");
         Set<String> firstWeapons = new HashSet<>();
         for (Jobs.Job j : Jobs.all()) {
             check(!j.weapons().isEmpty(), j.id() + " has weapons");

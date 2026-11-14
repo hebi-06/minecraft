@@ -103,6 +103,7 @@ public final class JobSystem {
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             SENT.remove(handler.player.getUUID());
+            dropHidden(handler.player);
             JobTraits.sendGauge(handler.player, true);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -136,6 +137,21 @@ public final class JobSystem {
     /** 직업 (없으면 null) */
     public static Jobs.Job job(ServerPlayer sp) {
         return sp == null ? null : Jobs.job(jobOf(sp));
+    }
+
+    /**
+     * 2026-11-14 숨긴 직업 (jobs.json hidden — 사용자 "직업을 줄이자" · "둘 다 숨김") 이면 들어올 때 바꿈: 숨긴 2차 직업이고 1차 직업은 그대로면 1차로
+     * (워로드 → 전사 · 피닉스 가드 → 수호기사), 1차 직업이 숨겨졌으면 직업 없음 (첫 전직처럼 무료로 다시 고름). 바꿨으면 true
+     */
+    public static boolean dropHidden(ServerPlayer sp) {
+        Jobs.Job had = job(sp);
+        if (had == null || !Jobs.hidden(had.id())) return false;
+        Jobs.Job base = Jobs.baseOf(had);
+        boolean keepBase = had.advanced() && base != null && !Jobs.hidden(base.id());
+        setJob(sp, keepBase ? base.id() : null);
+        Notify.say(sp, "§7" + had.display() + " 은(는) 준비 중이라 " + (keepBase ? "1차 직업 " + base.name() + " (으)로 되돌렸습니다."
+                : "직업을 비웠습니다 — 직업 교관에서 다시 고르세요 (무료)."));
+        return true;
     }
 
     /** 직업을 바꿈 (null · 빈 id = 없앰): 자원 · 태세 · 각인 · 직업 스킬 재사용 대기를 지우고 칸을 다시 보냄. 값 · 연출은 JobTrainer */

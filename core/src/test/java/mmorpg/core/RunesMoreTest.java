@@ -46,8 +46,13 @@ public final class RunesMoreTest {
 
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
-        List<String> order = Runes.FAMILY_ORDER;
-        check(order.size() == 23 && order.indexOf("reaper") == order.indexOf("gravity") + 1, "family order " + order);
+        List<String> order = Runes.DATA_ORDER;
+        check(order.size() == 23 && order.indexOf("reaper") == order.indexOf("gravity") + 1, "family order (data) " + order);
+        // 2026-11-14 숨긴 계열 (RUNE_HIDDEN — 사용자 "룬도 줄이자" · "둘 다 숨김"): 뽑기 계열은 아홉 (힘 · 민첩 · 체력 · 마력 · 도끼 · 궁수 · 암살자 · 검사 · 정령사)
+        check(Runes.HIDDEN.equals(List.of("holy", "storm", "spellblade", "element", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike")), "hidden families " + Runes.HIDDEN);
+        check(Runes.FAMILY_ORDER.equals(List.of("str", "dex", "vit", "int", "axe", "bow", "assassin", "blade", "spirit")), "draw families " + Runes.FAMILY_ORDER);
+        for (String f : Runes.HIDDEN) check(Runes.hidden(f) && Runes.parseRune(Runes.runeId(f, "hero")) != null && Runes.ALL_FAMILIES.contains(f)
+                && !Runes.ACTIVE_FAMILIES.contains(f), f + " hidden but kept (data · item)");
 
         // 사신 다섯 등급
         String[] fns = {"bloodCrescent", "bloodHarvest", "bloodWhirl", "bloodBrand", "crimsonMoon"};
@@ -98,13 +103,14 @@ public final class RunesMoreTest {
         check(holy.obj("coef").keys().size() == 2 && holy.obj("coef").num("str") == 0.5 && holy.str("stat").equals("vit"), "holy coef");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_holy_common"), false)).contains("체력 1.0 + 힘 0.5"), "holy lore coef");
 
-        // 뽑기: 계열은 23개에서 같은 확률 — 사신 자리
-        int at = order.indexOf("reaper");
-        double[] seq = {0.0, (at + 0.5) / order.size()};
+        // 뽑기: 계열은 뽑기 계열 (2026-11-14 아홉 — 숨긴 열넷 빼고) 에서 같은 확률 — 정령사 자리
+        List<String> draw = Runes.FAMILY_ORDER;
+        int at = draw.indexOf("spirit");
+        double[] seq = {0.0, (at + 0.5) / draw.size()};
         int[] k = {0};
         Runes.Roll roll = Runes.rollRune(() -> seq[k[0]++], false);
-        check(roll.family().equals("reaper") && roll.grade().equals("common"), "roll reaper " + roll);
-        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("계열 23개"), "ticket lore 23");
+        check(roll.family().equals("spirit") && roll.grade().equals("common"), "roll spirit " + roll);
+        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("계열 9개"), "ticket lore 9");
         check(Rules.get().obj("RUNE").obj("color").has("reaper"), "reaper color");
 
         // 적월 강림 돌파

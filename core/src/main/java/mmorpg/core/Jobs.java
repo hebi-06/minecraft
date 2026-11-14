@@ -151,7 +151,7 @@ public final class Jobs {
             Map<String, Double> jobDps) {}
 
     private record Data(int changeLevel, double changeSilver, double perPoint, int[] unlock, List<String> slotRoles, Map<String, Job> jobs, Upgrade upgrade,
-            Map<String, List<UpKey>> upKeys, Advance advance) {}
+            Map<String, List<UpKey>> upKeys, Advance advance, List<String> hidden) {}
 
     private static final Data DATA = load();
 
@@ -160,6 +160,37 @@ public final class Jobs {
     /** 직업 순서 (전직 창) */
     public static List<String> order() {
         return List.copyOf(DATA.jobs().keySet());
+    }
+
+    /**
+     * 2026-11-14 숨긴 직업인지 (jobs.json hidden — 사용자 "직업을 줄이자" · "둘 다 숨김"): 1차 직업이 숨겨졌으면 그 2차 직업도. 코드 · 데이터는 그대로 —
+     * 직업 교관 (카드 · 2차 전직 창) 에서만 빠지고, 그 직업인 사람은 들어올 때 직업을 비움
+     */
+    public static boolean hidden(String id) {
+        Job j = job(id);
+        if (j == null) return false;
+        return DATA.hidden().contains(j.id()) || j.advanced() && DATA.hidden().contains(j.base());
+    }
+
+    /** 숨긴 직업 id (jobs.json hidden 그대로) */
+    public static List<String> hiddenIds() {
+        return DATA.hidden();
+    }
+
+    /** 2026-11-14 직업 교관에 나오는 1차 직업 (order − 숨긴 직업) */
+    public static List<String> visibleOrder() {
+        return order().stream().filter(id -> !hidden(id)).toList();
+    }
+
+    /** 2026-11-14 직업 교관에 나오는 2차 직업 (숨긴 것 빼고 — 없으면 null) */
+    public static Job visibleAdvance(String baseId, String path) {
+        Job a = advance(baseId, path);
+        return a == null || hidden(a.id()) ? null : a;
+    }
+
+    /** 2026-11-14 이 1차 직업의 직업 교관에 나오는 2차 직업들 (숨긴 것 빼고) */
+    public static List<Job> visibleAdvancedOf(String baseId) {
+        return advancedOf(baseId).stream().filter(a -> !hidden(a.id())).toList();
     }
 
     /** 모든 직업 (순서대로) */
@@ -710,8 +741,10 @@ public final class Jobs {
             jobs.put(id, parseJob(id, js.obj(id), null, upKeys));
         }
         Advance advance = advance(root, jobs, upKeys);
+        List<String> hidden = new ArrayList<>();
+        if (root.has("hidden")) for (Object o : root.list("hidden")) hidden.add(String.valueOf(o));
         return new Data((int) root.num("changeLevel"), root.num("changeSilver"), root.num("perPoint"), unlock, List.copyOf(roles), jobs, upgrade(root),
-                Map.copyOf(upKeys), advance);
+                Map.copyOf(upKeys), advance, List.copyOf(hidden));
     }
 
     /**

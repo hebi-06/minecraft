@@ -182,7 +182,7 @@ public final class RpgGachaTests {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("name", "시험 축제");
         m.put("featured5", List.of("spirit"));
-        m.put("featured4", List.of("axe", "bow", "holy"));
+        m.put("featured4", List.of("axe", "bow", "blade"));
         m.put("days", 1.0);
         m.put("price", 15.0);
         h.assertTrue(GachaSystem.saveLimited(server, m, null) == null, "save");

@@ -309,7 +309,7 @@ public final class GachaAdminScreen extends Screen {
 
     /** 픽업 줄의 계열: 초월 = 모든 계열 (0.16.0 한정 계열 셋이 뒤에), 영웅 = 뽑기 계열 (한정 계열에는 영웅 룬이 없음) */
     static List<String> rowFamilies(String grade) {
-        return "hero".equals(grade) ? Runes.FAMILY_ORDER : Runes.ALL_FAMILIES;
+        return "hero".equals(grade) ? Runes.FAMILY_ORDER : Runes.ACTIVE_FAMILIES; // 2026-11-14 숨긴 계열 빼고
     }
 
     /** 줄의 칸 간격 (창 넓이 안에 들어가게 — 기본 21) · 칸 크기 (간격보다 크지 않게, 최대 19) */

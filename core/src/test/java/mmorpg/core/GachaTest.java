@@ -56,7 +56,8 @@ public final class GachaTest {
         near(std.rate("transcend"), 0.015, 1e-12, "standard transcend 1.5%");
         near(std.rate("hero"), 0.065, 1e-12, "standard hero 6.5%");
         near(std.rate("common"), 0.5, 1e-12, "standard common 50%");
-        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 23, "standard: all 23 families (0.25.0 두 스탯 계열 여섯 더함) " + std.families().size());
+        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 9, "standard: 9 families (2026-11-14 열넷 숨김) " + std.families().size());
+        for (String f : Runes.HIDDEN) check(!std.families().contains(f) && !Gacha.advanced().families().contains(f), "hidden family not drawn " + f);
         check(!std.pickup(), "standard has no pickup");
 
         // ---------------------------------------------------------- 확률 곡선
@@ -107,7 +108,7 @@ public final class GachaTest {
 
         // ---------------------------------------------------------- 반천장 · 확천장 (한정)
         long now = 1_800_000_000_000L;
-        Gacha.Spec spec = Gacha.Spec.defaults("lim1", "불꽃 축제", List.of("spirit"), List.of("axe", "bow", "holy"), now);
+        Gacha.Spec spec = Gacha.Spec.defaults("lim1", "불꽃 축제", List.of("spirit"), List.of("axe", "bow", "blade"), now);
         check(spec.problems().isEmpty(), "default spec valid " + spec.problems());
         Gacha.Banner lim = spec.banner();
         check(lim.pickup() && lim.featured5().equals(List.of("spirit")), "limited pickup");
@@ -129,10 +130,10 @@ public final class GachaTest {
         // 영웅 픽업 (0.02 → 영웅 자리: p5 0.015 ≤ x < 0.08)
         Gacha.Result d = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.02, 0.2, 0.7));
         Gacha.Pull d0 = d.pulls().get(0);
-        check(d0.grade().equals("hero") && d0.featured() && List.of("axe", "bow", "holy").contains(d0.family()), "hero pickup " + d0);
+        check(d0.grade().equals("hero") && d0.featured() && List.of("axe", "bow", "blade").contains(d0.family()), "hero pickup " + d0);
         Gacha.Result e = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.02, 0.8, 0.0));
         Gacha.Pull e0 = e.pulls().get(0);
-        check(e0.grade().equals("hero") && !e0.featured() && !List.of("axe", "bow", "holy").contains(e0.family()) && e.counter().g4(), "hero lost → others · guarantee " + e0);
+        check(e0.grade().equals("hero") && !e0.featured() && !List.of("axe", "bow", "blade").contains(e0.family()) && e.counter().g4(), "hero lost → others · guarantee " + e0);
         // 놓친 결과는 픽업 계열이 아님 (모든 계열 굴림 값으로)
         Set<String> lostFamilies = new HashSet<>();
         for (int i = 0; i < 40; i++) {
@@ -140,7 +141,7 @@ public final class GachaTest {
             Gacha.Pull x = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.0, 0.9, f)).pulls().get(0);
             lostFamilies.add(x.family());
         }
-        check(!lostFamilies.contains("spirit") && lostFamilies.size() == 22, "lost pool = 22 others " + lostFamilies.size());
+        check(!lostFamilies.contains("spirit") && lostFamilies.size() == 8 && lostFamilies.stream().noneMatch(Runes::hidden), "lost pool = 8 others (2026-11-14 숨김) " + lostFamilies);
 
         // ---------------------------------------------------------- 고급 · 한 계열
         Gacha.Banner adv = Gacha.advanced();
@@ -230,7 +231,7 @@ public final class GachaTest {
         check(!problems("a", List.of("int"), List.of(), 1.5, 6.5, 70, 74, now, now + 1, 15).isEmpty(), "soft start after hard refused");
         check(!problems("a", List.of("int"), List.of(), 1.5, 6.5, 90, 74, now, now - 1, 15).isEmpty(), "end before start refused");
         check(!problems("a", List.of("int"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, -1).isEmpty(), "negative price refused");
-        check(problems("a", List.of("int", "dex", "vit"), List.of("axe", "bow", "holy"), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "valid spec");
+        check(problems("a", List.of("int", "dex", "vit"), List.of("axe", "bow", "blade"), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "valid spec");
         check(!problems("a", List.of("int", "dex", "vit", "str"), List.of(), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "too many featured transcend");
         // 기본 기간 (gacha.json days 14)
         near((spec.end() - spec.start()) / 86_400_000.0, 14, 1e-9, "default 14 days");

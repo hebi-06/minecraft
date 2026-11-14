@@ -534,7 +534,7 @@ final class VanillaProbe {
                 p.getAbilities().invulnerable = true; // 플레이어 무적 (창작 모드와 같은 능력 — 26.3 에는 setInvulnerable 이 없음)
                 p.onUpdateAbilities();
                 // 한정 뽑기를 엶 (관리자 설정과 같은 것 — 초월 픽업 1 · 영웅 픽업 3) + 한정 룬 뽑기권
-                List<String> all = mmorpg.core.Runes.ALL_FAMILIES;
+                List<String> all = mmorpg.core.Runes.ACTIVE_FAMILIES;
                 String err = mmorpg.fabric.gacha.GachaSystem.saveLimited(p.level().getServer(), new java.util.LinkedHashMap<>(java.util.Map.of(
                         "name", "불꽃의 축제", "featured5", List.of(all.get(all.size() - 1)),
                         "featured4", mmorpg.core.Runes.FAMILY_ORDER.subList(0, 3), "days", 14.0)), null);
@@ -923,7 +923,7 @@ final class VanillaProbe {
         census = spec.equals("census");
         List<String> keys = new ArrayList<>();
         if (census) {
-            for (String fam : mmorpg.core.Runes.ALL_FAMILIES) {
+            for (String fam : mmorpg.core.Runes.ACTIVE_FAMILIES) { // 2026-11-14 숨긴 계열 빼고
                 for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(fam + "_" + g);
             }
         } else {

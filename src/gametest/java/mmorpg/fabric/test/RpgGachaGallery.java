@@ -132,17 +132,17 @@ public final class RpgGachaGallery implements FabricClientGameTest {
         if (!waitScreen(ctx, s -> s instanceof GachaAdminScreen, "admin")) return;
         ctx.runOnClient(mc -> ((GachaAdminScreen) mc.gui.screen()).nameBox().setValue("불꽃 정령의 축제"));
         click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("transcend", "spirit"));
-        for (String f : List.of("str", "axe", "holy")) click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("hero", f));
+        for (String f : List.of("str", "axe", "blade")) click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("hero", f));
         List<String> f5 = ctx.computeOnClient(mc -> new ArrayList<>(((GachaAdminScreen) mc.gui.screen()).featured("transcend")));
         List<String> f4 = ctx.computeOnClient(mc -> new ArrayList<>(((GachaAdminScreen) mc.gui.screen()).featured("hero")));
-        check(f5.equals(List.of("spirit")) && f4.equals(List.of("str", "axe", "holy")), "picked by clicking icons " + f5 + " " + f4);
+        check(f5.equals(List.of("spirit")) && f4.equals(List.of("str", "axe", "blade")), "picked by clicking icons " + f5 + " " + f4);
         hover(ctx, sc -> ((GachaAdminScreen) sc).iconCenter("transcend", "spirit"));
         shot(ctx, "g_admin");
         click(ctx, conn, sc -> ((GachaAdminScreen) sc).saveCenter());
         boolean opened = waitServer(ctx, server, s -> GachaSystem.activeLimited(s) != null, 60);
         check(opened, "saving opens the limited banner");
         Gacha.Spec spec = server.computeOnServer(GachaSystem::activeLimited);
-        check(spec != null && spec.name().equals("불꽃 정령의 축제") && spec.featured5().equals(List.of("spirit")) && spec.featured4().equals(List.of("str", "axe", "holy"))
+        check(spec != null && spec.name().equals("불꽃 정령의 축제") && spec.featured5().equals(List.of("spirit")) && spec.featured4().equals(List.of("str", "axe", "blade"))
                 && spec.hard() == 90 && spec.price() == 15, "limited spec " + spec);
         boolean back = waitScreen(ctx, s -> s instanceof GachaScreen g && "limited".equals(g.tab()), "gacha (limited tab) after saving");
         if (!back) return;

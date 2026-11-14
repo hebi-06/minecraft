@@ -40,15 +40,24 @@ public final class Runes {
     private static final double[] LEVEL_KEYS = LEVEL_DAMAGE.keys().stream().mapToDouble(Double::parseDouble)
             .filter(l -> l <= R.root().numOr("RUNE_BASE_MAX_LEVEL", Double.POSITIVE_INFINITY)).sorted().toArray();
 
-    /** RUNE_FAMILY_ORDER (the draw picks one of these with equal chance). */
-    public static final List<String> FAMILY_ORDER = R.strings("RUNE_FAMILY_ORDER");
+    /** 데이터의 계열 순서 (RUNE_FAMILY_ORDER 그대로 — 숨긴 계열 포함) */
+    public static final List<String> DATA_ORDER = R.strings("RUNE_FAMILY_ORDER");
+    /**
+     * 2026-11-14 숨긴 계열 (RUNE_HIDDEN — 사용자 "룬도 줄이자 … 나머지 다 없애고" · "둘 다 숨김"): 정의 · 코드 · 아이템은 그대로 (이미 가진 룬은 씀),
+     * 뽑기 계열 · 한정 픽업 · 창작 탭에서만 빠짐. 대조 시험 (rules.json 만) 이면 빈 목록
+     */
+    public static final List<String> HIDDEN = R.root().has("RUNE_HIDDEN") ? R.strings("RUNE_HIDDEN") : List.of();
+    /** RUNE_FAMILY_ORDER − RUNE_HIDDEN (the draw picks one of these with equal chance). */
+    public static final List<String> FAMILY_ORDER = DATA_ORDER.stream().filter(f -> !HIDDEN.contains(f)).toList();
     /**
      * 0.16.0 (자바 전용): 한정 뽑기 전용 계열 (RUNE_LIMITED_ORDER — 초월 하나씩). 룬 뽑기권 · 고급 · 스탯 뽑기권의 계열 (FAMILY_ORDER) 에는 없고
      * 관리자가 한정 뽑기의 초월 픽업으로 고를 때만 나옴. 대조 시험 (rules.json 만 — 애드온 그대로) 이면 빈 목록
      */
     public static final List<String> LIMITED_ORDER = R.root().has("RUNE_LIMITED_ORDER") ? R.strings("RUNE_LIMITED_ORDER") : List.of();
-    /** 모든 계열 (뽑기 계열 다음에 한정 계열) — 아이템 · 이름 풀이 · 명령어 · 정렬 */
-    public static final List<String> ALL_FAMILIES = joined(FAMILY_ORDER, LIMITED_ORDER);
+    /** 모든 계열 (뽑기 계열 · 숨긴 계열 (데이터 순서) · 한정 계열) — 아이템 · 이름 풀이 · 명령어 · 정렬 */
+    public static final List<String> ALL_FAMILIES = joined(joined(FAMILY_ORDER, DATA_ORDER.stream().filter(HIDDEN::contains).toList()), LIMITED_ORDER);
+    /** 2026-11-14 게임에 나오는 계열 (뽑기 계열 다음에 한정 계열 — 숨긴 계열 빼고): 한정 픽업 · 창작 탭 · 영상 셈 */
+    public static final List<String> ACTIVE_FAMILIES = joined(FAMILY_ORDER, LIMITED_ORDER);
     /** runes.js GRADE_ORDER. */
     public static final List<String> GRADE_ORDER = List.of("common", "rare", "noble", "hero", "transcend");
 
@@ -66,6 +75,11 @@ public final class Runes {
     /** 0.16.0: 한정 뽑기 전용 계열인지 (초월 하나 — 한정 뽑기의 초월 픽업으로만 나옴) */
     public static boolean limited(String family) {
         return LIMITED_ORDER.contains(family);
+    }
+
+    /** 2026-11-14 숨긴 계열인지 (RUNE_HIDDEN) */
+    public static boolean hidden(String family) {
+        return HIDDEN.contains(family);
     }
     /** runes.js STRIKE_BONUS_FNS: strike runes that add power × bonus to each of {@code hits} basic attacks. */
     private static final Set<String> STRIKE_BONUS_FNS = Set.of("edgeHone", "cleave", "bloodBlade", "swordGod");

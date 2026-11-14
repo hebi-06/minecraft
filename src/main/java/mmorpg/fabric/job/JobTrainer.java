@@ -95,7 +95,7 @@ public final class JobTrainer {
 
     /** 직업 카드 칸 번호 (jobs.json order 의 i 번째 — 없으면 -1) */
     public static int slotOf(String jobId) {
-        List<String> order = Jobs.order();
+        List<String> order = Jobs.visibleOrder(); // 2026-11-14 숨긴 직업 빼고
         int i = order.indexOf(jobId);
         return i >= 0 && i < CARD_SLOTS.length ? CARD_SLOTS[i] : -1;
     }
@@ -140,7 +140,7 @@ public final class JobTrainer {
             }
             if (sel == ADV_SLOT && JobSystem.job(sp) != null) {
                 Jobs.Job base = Jobs.baseOf(JobSystem.job(sp));
-                if (base == null || Jobs.advancedOf(base.id()).isEmpty()) list(sp, "§8" + (base == null ? "" : base.name() + " 의 ") + "2차 전직은 아직 준비 중입니다.§r", done);
+                if (base == null || Jobs.visibleAdvancedOf(base.id()).isEmpty()) list(sp, "§8" + (base == null ? "" : base.name() + " 의 ") + "2차 전직은 아직 준비 중입니다.§r", done);
                 else advanceList(sp, "", done); // 0.51.0 2차 전직
                 return;
             }
@@ -168,7 +168,7 @@ public final class JobTrainer {
 
     /** 칸 번호의 직업 (카드가 아니면 null) */
     static Jobs.Job jobAt(int slot) {
-        List<String> order = Jobs.order();
+        List<String> order = Jobs.visibleOrder(); // 2026-11-14 숨긴 직업 빼고
         for (int i = 0; i < Math.min(order.size(), CARD_SLOTS.length); i++) if (CARD_SLOTS[i] == slot) return Jobs.job(order.get(i));
         return null;
     }
@@ -180,7 +180,7 @@ public final class JobTrainer {
         ChestForm form = new ChestForm("직업 교관 §8· §7" + (now == null ? "전직" : "직업 바꾸기"));
         form.set(BALANCE_SLOT, Shop.balanceSlot(sp));
         if (now != null) form.set(MINE_SLOT, mineSlot(now));
-        List<String> order = Jobs.order();
+        List<String> order = Jobs.visibleOrder(); // 2026-11-14 숨긴 직업 빼고
         for (int i = 0; i < Math.min(order.size(), CARD_SLOTS.length); i++) {
             Jobs.Job j = Jobs.job(order.get(i));
             if (j == null) continue;
@@ -413,7 +413,7 @@ public final class JobTrainer {
     /** 2차 전직 단추 (위 줄): 그 1차 직업의 각성 · 반전 이름 · 레벨 · 값 — 2차 직업이 없거나 50렙 전이면 흐림 (누르면 미리 보기) */
     static Slot advButton(ServerPlayer sp, Jobs.Job now) {
         Jobs.Job base = Jobs.baseOf(now);
-        List<Jobs.Job> advs = base == null ? List.of() : Jobs.advancedOf(base.id());
+        List<Jobs.Job> advs = base == null ? List.of() : Jobs.visibleAdvancedOf(base.id()); // 2026-11-14 숨긴 2차 직업 빼고
         int lv = Jobs.advanceLevel();
         boolean levelOk = RpgCombat.reqLevelOf(sp) >= lv;
         List<String> lore = new ArrayList<>();
@@ -465,8 +465,8 @@ public final class JobTrainer {
     static Jobs.Job advanceAt(ServerPlayer sp, int slot) {
         Jobs.Job base = Jobs.baseOf(JobSystem.job(sp));
         if (base == null) return null;
-        if (slot == AWAKEN_SLOT) return Jobs.advance(base.id(), "awaken");
-        if (slot == INVERT_SLOT) return Jobs.advance(base.id(), "invert");
+        if (slot == AWAKEN_SLOT) return Jobs.visibleAdvance(base.id(), "awaken"); // 2026-11-14 숨긴 2차 직업 빼고
+        if (slot == INVERT_SLOT) return Jobs.visibleAdvance(base.id(), "invert");
         return null;
     }
 
@@ -482,7 +482,7 @@ public final class JobTrainer {
             form.set(ADV_BASE_SLOT, Slot.of(cardItem(base), "§71차 직업 §8· " + code(base) + "§l" + base.name()).lore("§7" + base.role(), "§8특성 「" + (base.trait() == null
                     ? "" : base.trait().name()) + "」", "", "§8← 각성 §7(같은 컨셉 · 더 센 스킬)", "§8→ 반전 §7(새 스킬 · 뒤집힌 특성)").deco());
             for (String path : Jobs.paths()) {
-                Jobs.Job a = Jobs.advance(base.id(), path);
+                Jobs.Job a = Jobs.visibleAdvance(base.id(), path); // 2026-11-14 숨긴 2차 직업 빼고
                 int slot = "awaken".equals(path) ? AWAKEN_SLOT : "invert".equals(path) ? INVERT_SLOT : -1;
                 if (a == null || slot < 0) continue;
                 boolean mine = now.id().equals(a.id());

@@ -40,7 +40,7 @@ public final class GachaCommands {
     private GachaCommands() {}
 
     /** 초월 픽업: 모든 계열 (0.16.0 한정 계열 — 초월 하나 — 도) */
-    private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.ALL_FAMILIES, b);
+    private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.ACTIVE_FAMILIES, b); // 2026-11-14 숨긴 계열 빼고
     /** 영웅 픽업: 뽑기 계열만 (한정 계열에는 영웅 룬이 없음) */
     private static final SuggestionProvider<CommandSourceStack> HERO_FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.FAMILY_ORDER, b);
 

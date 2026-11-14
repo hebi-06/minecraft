@@ -350,10 +350,10 @@ public final class Gacha {
             return w;
         }
 
-        /** 뽑기 (2026-11-11: 없어진 계열 — 지운 한정 룬 만상 · 칠성 · 천공 — 이 저장된 픽업에 남아 있으면 빼고 뽑음) */
+        /** 뽑기 (2026-11-11: 없어진 계열 — 지운 한정 룬 만상 · 칠성 · 천공 — 이 저장된 픽업에 남아 있으면 빼고 뽑음 · 2026-11-14 숨긴 계열도) */
         public Banner banner() {
-            List<String> f5 = featured5.stream().filter(Runes.ALL_FAMILIES::contains).toList();
-            List<String> f4 = featured4.stream().filter(Runes.ALL_FAMILIES::contains).toList();
+            List<String> f5 = featured5.stream().filter(Runes.ACTIVE_FAMILIES::contains).toList();
+            List<String> f4 = featured4.stream().filter(Runes.ACTIVE_FAMILIES::contains).toList();
             return new Banner(weights(), defaultPity().with(hard, softStart, heroEvery), f5, f4, share / 100.0, Runes.FAMILY_ORDER);
         }
 
@@ -367,9 +367,13 @@ public final class Gacha {
             if (featured5.size() > (int) d.num("maxFeatured5")) out.add("픽업 초월 룬은 " + (int) d.num("maxFeatured5") + "개까지");
             if (featured4.size() > (int) d.num("maxFeatured4")) out.add("픽업 영웅 룬은 " + (int) d.num("maxFeatured4") + "개까지");
             // 0.16.0: 한정 계열 (초월 하나) 은 초월 픽업으로만 — 픽업이 아닌 몫 (놓친 결과 · 다른 등급) 은 뽑기 계열 (FAMILY_ORDER) 에서만 나옴
-            for (String f : featured5) if (!Runes.ALL_FAMILIES.contains(f)) out.add("모르는 계열: " + f);
+            for (String f : featured5) {
+                if (Runes.hidden(f)) out.add("숨긴 계열 (준비 중): " + f);
+                else if (!Runes.ACTIVE_FAMILIES.contains(f)) out.add("모르는 계열: " + f);
+            }
             for (String f : featured4) {
                 if (Runes.limited(f)) out.add("한정 룬은 초월 픽업만: " + f);
+                else if (Runes.hidden(f)) out.add("숨긴 계열 (준비 중): " + f);
                 else if (!Runes.FAMILY_ORDER.contains(f)) out.add("모르는 계열: " + f);
             }
             if (featured5.stream().distinct().count() != featured5.size() || featured4.stream().distinct().count() != featured4.size()) out.add("같은 계열을 두 번 골랐습니다");

@@ -63,9 +63,10 @@ public final class LimitedRunesTest {
         for (String gone : List.of("arcana", "dipper", "skyeye")) {
             check(Runes.parseRune(Runes.runeId(gone, "transcend")) == null && !Runes.ALL_FAMILIES.contains(gone), gone + " removed (2026-11-11)");
         }
-        check(Runes.FAMILY_ORDER.size() == 23, "draw families 23 (0.25.0 두 스탯 계열 여섯) " + Runes.FAMILY_ORDER.size());
+        check(Runes.FAMILY_ORDER.size() == 9, "draw families 9 (2026-11-14 열넷 숨김) " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
         check(Runes.ALL_FAMILIES.size() == 28 && Runes.ALL_FAMILIES.subList(23, 28).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ACTIVE_FAMILIES.size() == 14 && Runes.ACTIVE_FAMILIES.subList(9, 14).equals(lim), "active families " + Runes.ACTIVE_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("endless"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 (36초, 2026-11-11 만년빙하 32초 — 룬의 cd)
@@ -134,7 +135,7 @@ public final class LimitedRunesTest {
 
         // 한정 뽑기 설정: 초월 픽업만 (영웅 픽업이면 까닭)
         long now = 1_000_000L;
-        Gacha.Spec ok5 = Gacha.Spec.defaults("t", "칼의 축제", List.of("endless"), List.of("storm"), now);
+        Gacha.Spec ok5 = Gacha.Spec.defaults("t", "칼의 축제", List.of("endless"), List.of("blade"), now);
         check(ok5.problems().isEmpty(), "limited family as transcend pickup ok " + ok5.problems());
         Gacha.Spec mixed = Gacha.Spec.defaults("t", "섞음", List.of("terra", "int"), List.of(), now);
         check(mixed.problems().isEmpty(), "limited + normal pickup ok " + mixed.problems());
@@ -145,7 +146,7 @@ public final class LimitedRunesTest {
         check(ok5.banner().families().equals(Runes.FAMILY_ORDER), "limited banner pool = draw families");
 
         // 한정 뽑기 모의 (시드 고정): 한정 계열은 초월 · 픽업일 때만, 놓친 결과 · 다른 등급에는 없음
-        Gacha.Banner b = Gacha.Spec.defaults("t", "무간", List.of("endless", "glacier"), List.of("int", "storm"), now).banner();
+        Gacha.Banner b = Gacha.Spec.defaults("t", "무간", List.of("endless", "glacier"), List.of("int", "blade"), now).banner();
         // 2026-11-11 지운 계열이 저장된 픽업에 남아 있으면 뽑을 때 뺌
         check(Gacha.Spec.defaults("t", "옛", List.of("arcana", "terra"), List.of(), now).banner().featured5().equals(List.of("terra")), "removed family dropped from saved pickup");
         Random rnd = new Random(7);

@@ -69,7 +69,7 @@ public final class RuneItems {
                     output.accept(ADV_TICKET);
                     output.accept(LIMITED_TICKET);
                     for (TicketItem t : STAT_TICKETS.values()) output.accept(t);
-                    for (RuneItem r : RUNES) output.accept(r);
+                    for (RuneItem r : RUNES) if (!Runes.hidden(r.rune().family())) output.accept(r); // 2026-11-14 숨긴 계열 빼고
                 })
                 .build());
     }

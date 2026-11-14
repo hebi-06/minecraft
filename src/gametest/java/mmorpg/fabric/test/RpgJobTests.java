@@ -285,6 +285,27 @@ public final class RpgJobTests {
         });
     }
 
+    /**
+     * 2026-11-14 숨긴 직업 (jobs.json hidden): 들어올 때 (JobSystem.dropHidden) 숨긴 2차 직업은 1차로 (워로드 → 전사), 숨긴 1차 직업 (창술사) 이나
+     * 숨긴 1차의 2차 (드라군) 는 직업 없음, 보이는 직업 (블러드 나이트) 은 그대로
+     */
+    @GameTest(environment = ENV, maxTicks = 20)
+    public void hiddenJobsDropped(GameTestHelper h) {
+        ServerPlayer sp = jobPlayer(h, "warlord", Map.of("str", 20), 50);
+        try {
+            h.assertTrue(JobSystem.dropHidden(sp) && "warrior".equals(JobSystem.jobOf(sp)), "warlord → warrior: " + JobSystem.jobOf(sp));
+            for (String id : List.of("lancer", "dragoon", "archer", "sniper")) {
+                JobSystem.setJob(sp, id);
+                h.assertTrue(JobSystem.dropHidden(sp) && JobSystem.jobOf(sp).isEmpty(), id + " → no job: " + JobSystem.jobOf(sp));
+            }
+            JobSystem.setJob(sp, "bloodknight");
+            h.assertTrue(!JobSystem.dropHidden(sp) && "bloodknight".equals(JobSystem.jobOf(sp)), "shown job stays");
+        } finally {
+            cleanup(sp);
+        }
+        RpgGearTests.done(h, sp);
+    }
+
     /** 전직 창 (Forms.HEADLESS): 10렙 전 대사 → 카드 창 → 확인 → 첫 전직 무료 · 같은 직업 · 준비 중 · 은화 부족 · 바꾸기 300 */
     @GameTest(environment = ENV, maxTicks = 20)
     public void trainerFlow(GameTestHelper h) {
@@ -304,8 +325,11 @@ public final class RpgJobTests {
             h.assertTrue(list != null && list.slots().size() == 27, "card window");
             int sw = JobTrainer.slotOf("swordsman");
             boolean allReady = true;
-            for (Jobs.Job jj : Jobs.all()) allReady &= list.slots().get(JobTrainer.slotOf(jj.id())).kind() != 3;
-            h.assertTrue(list.slots().get(sw).name().contains("검사") && allReady, "cards: all 11 jobs ready (0.30.0 — none dim)");
+            for (String id : Jobs.visibleOrder()) allReady &= list.slots().get(JobTrainer.slotOf(id)).kind() != 3;
+            // 2026-11-14 숨긴 직업 (jobs.json hidden) 은 카드가 없음 — 여섯 직업만
+            boolean noHidden = Jobs.visibleOrder().size() == 6;
+            for (String id : Jobs.hiddenIds()) noHidden &= JobTrainer.slotOf(id) == -1;
+            h.assertTrue(list.slots().get(sw).name().contains("검사") && allReady && noHidden, "cards: 6 shown jobs ready, hidden jobs have no card");
             // 검사 → 확인 → 전직 (무료)
             Forms.answer(sp, sw, null);
             h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c3 && c3.title().contains("전직 확인"), "confirm window");
@@ -315,8 +339,8 @@ public final class RpgJobTests {
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, sw, null);
             h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c4 && c4.body().contains("이미"), "same job");
-            // 마검사 (은화 0) → 확인 → 모자람 → 창 그대로
-            int sb = JobTrainer.slotOf("spellblade");
+            // 전사 (은화 0) → 확인 → 모자람 → 창 그대로 (2026-11-14 마검사는 숨김 — 전사로)
+            int sb = JobTrainer.slotOf("warrior");
             Forms.answer(sp, sb, null);
             h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c5 && c5.title().contains("바꾸기"), "change confirm");
             Forms.answer(sp, 11, null);
@@ -325,7 +349,7 @@ public final class RpgJobTests {
             Wallet.set(sp, Economy.Kind.SILVER, 350);
             Forms.answer(sp, sb, null);
             Forms.answer(sp, 11, null);
-            h.assertTrue("spellblade".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 50, "changed for 300: silver " + Wallet.get(sp,
+            h.assertTrue("warrior".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 50, "changed for 300: silver " + Wallet.get(sp,
                     Economy.Kind.SILVER));
             // 닫기 → done
             JobTrainer.open(sp, () -> done[0] += 10);

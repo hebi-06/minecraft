@@ -19,6 +19,8 @@
     ]
   },
   "order": ["swordsman", "warrior", "spellblade", "mage", "archer", "assassin", "lancer", "reaper", "paladin", "priest", "guardian"],
+  "_hidden": "2026-11-14 숨긴 직업 (사용자 \"직업을 줄이자 검사, 전사, 매지션, 궁수, 암살자, 사제, 탱커 이렇게만 만들자 나머지 마검사 창술사 사신 성기사는 나중에 업데이트\" · \"궁수, 스나이퍼, 배틀아처, 워로드, 피닉스 가드를 없애라고 애네가 마음에 안들고 나머지가 맘에 든다고\" · 처리는 \"둘 다 숨김\" — \"직업하고 룬은 나중에 퀄이 높아지고 안정화 되면 추가할 거임\"): 1차 직업 id 면 그 2차 직업까지, 2차 직업 id 면 그것만. 코드 · 데이터 · 시험은 그대로 두고 직업 교관 (카드 · 2차 전직 창) 에서만 빠짐 (Jobs.hidden · visibleOrder · visibleAdvance), 그 직업인 사람은 들어올 때 직업을 비움 (JobSystem). 운영자 /job set 은 그대로 (시험용)",
+  "hidden": ["spellblade", "lancer", "reaper", "paladin", "archer", "warlord", "phoenix"],
   "jobs": {
     "swordsman": {
       "name": "검사", "weapons": ["sword"], "stats": ["str"], "rune": "blade", "ready": true, "scale": 1.0,

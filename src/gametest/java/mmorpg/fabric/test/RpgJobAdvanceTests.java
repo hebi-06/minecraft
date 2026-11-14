@@ -226,31 +226,18 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(wa != null && wa.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "warrior: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload wadv = chest(sp);
-            h.assertTrue(wadv != null && wadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("워로드")
-                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("프로스트 레이더"), "warrior advance cards");
+            // 2026-11-14 워로드 (전사 각성) 는 숨김 — 각성 칸이 비고 누르면 그대로
+            h.assertTrue(wadv != null && !wadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("워로드")
+                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("프로스트 레이더"), "warrior advance cards (warlord hidden)");
+            Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
+            h.assertTrue("warrior".equals(JobSystem.jobOf(sp)) && chest(sp) != null && chest(sp).title().contains("2차 전직"), "hidden awaken slot does nothing");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "warrior advance confirm");
             Forms.answer(sp, 11, null);
             h.assertTrue("frostraider".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("프로스트 레이더"), "frostraider free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 마검사의 2차 전직 (아케인 블레이드 · 2026-11-07 엘리멘탈 블레이드) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
-            Wallet.set(sp, Economy.Kind.SILVER, 300);
-            JobTrainer.open(sp, () -> done[0]++);
-            Forms.answer(sp, JobTrainer.slotOf("spellblade"), null);
-            Forms.answer(sp, 11, null);
-            h.assertTrue("spellblade".equals(JobSystem.jobOf(sp)), "changed to spellblade: " + JobSystem.jobOf(sp));
-            JobTrainer.open(sp, () -> done[0]++);
-            FormNet.ChestPayload sb = chest(sp);
-            h.assertTrue(sb != null && sb.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "spellblade: 2차 전직 open");
-            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
-            FormNet.ChestPayload sadv = chest(sp);
-            h.assertTrue(sadv != null && sadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("아케인 블레이드")
-                    && sadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("엘리멘탈 블레이드"), "spellblade advance cards");
-            Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
-            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "spellblade advance confirm");
-            Forms.answer(sp, 11, null);
-            h.assertTrue("arcaneblade".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("아케인 블레이드"),
-                    "arcaneblade free from the first job: " + JobSystem.jobOf(sp));
+            // 2026-11-14 마검사는 숨김 (jobs.json hidden — 직업 교관에 카드 없음)
+            h.assertTrue(JobTrainer.slotOf("spellblade") == -1, "spellblade hidden: no card");
             // 0.51.0 매지션의 2차 전직 (아크메이지 · 네크로맨서) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
@@ -269,24 +256,8 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("necromancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("네크로맨서"),
                     "necromancer free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 궁수의 2차 전직 (스나이퍼 · 배틀 아처 — 재설계안 2판) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
-            Wallet.set(sp, Economy.Kind.SILVER, 300);
-            JobTrainer.open(sp, () -> done[0]++);
-            Forms.answer(sp, JobTrainer.slotOf("archer"), null);
-            Forms.answer(sp, 11, null);
-            h.assertTrue("archer".equals(JobSystem.jobOf(sp)), "changed to archer: " + JobSystem.jobOf(sp));
-            JobTrainer.open(sp, () -> done[0]++);
-            FormNet.ChestPayload ar = chest(sp);
-            h.assertTrue(ar != null && ar.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "archer: 2차 전직 open");
-            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
-            FormNet.ChestPayload aadv = chest(sp);
-            h.assertTrue(aadv != null && aadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("스나이퍼")
-                    && aadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("배틀 아처"), "archer advance cards");
-            Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
-            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "archer advance confirm");
-            Forms.answer(sp, 11, null);
-            h.assertTrue("sniper".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("스나이퍼"),
-                    "sniper free from the first job: " + JobSystem.jobOf(sp));
+            // 2026-11-14 궁수 (스나이퍼 · 배틀 아처) 는 숨김 — 카드 없음
+            h.assertTrue(JobTrainer.slotOf("archer") == -1, "archer hidden: no card");
             // 0.51.0 암살자의 2차 전직 (트릭스터 · 피에로 — 2026-11-06 블레이드 댄서 대신) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
@@ -305,60 +276,8 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("pierrot".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("피에로"), "pierrot free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 창술사의 2차 전직 (스톰 랜서 · 드라군 — 2026-11-06) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
-            Wallet.set(sp, Economy.Kind.SILVER, 300);
-            JobTrainer.open(sp, () -> done[0]++);
-            Forms.answer(sp, JobTrainer.slotOf("lancer"), null);
-            Forms.answer(sp, 11, null);
-            h.assertTrue("lancer".equals(JobSystem.jobOf(sp)), "changed to lancer: " + JobSystem.jobOf(sp));
-            JobTrainer.open(sp, () -> done[0]++);
-            FormNet.ChestPayload la = chest(sp);
-            h.assertTrue(la != null && la.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "lancer: 2차 전직 open");
-            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
-            FormNet.ChestPayload ladv = chest(sp);
-            h.assertTrue(ladv != null && ladv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("스톰 랜서")
-                    && ladv.slots().get(JobTrainer.INVERT_SLOT).name().contains("드라군"), "lancer advance cards");
-            Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
-            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "lancer advance confirm");
-            Forms.answer(sp, 11, null);
-            h.assertTrue("dragoon".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("드라군"), "dragoon free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 사신의 2차 전직 (소울 리퍼 · 엑시큐셔너 — 2026-11-06) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
-            Wallet.set(sp, Economy.Kind.SILVER, 300);
-            JobTrainer.open(sp, () -> done[0]++);
-            Forms.answer(sp, JobTrainer.slotOf("reaper"), null);
-            Forms.answer(sp, 11, null);
-            h.assertTrue("reaper".equals(JobSystem.jobOf(sp)), "changed to reaper: " + JobSystem.jobOf(sp));
-            JobTrainer.open(sp, () -> done[0]++);
-            FormNet.ChestPayload re = chest(sp);
-            h.assertTrue(re != null && re.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "reaper: 2차 전직 open");
-            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
-            FormNet.ChestPayload readv = chest(sp);
-            h.assertTrue(readv != null && readv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("소울 리퍼")
-                    && readv.slots().get(JobTrainer.INVERT_SLOT).name().contains("엑시큐셔너"), "reaper advance cards");
-            Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
-            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "reaper advance confirm");
-            Forms.answer(sp, 11, null);
-            h.assertTrue("executioner".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("엑시큐셔너"), "executioner free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 성기사의 2차 전직 (썬더로드 · 타이런트 — 2026-11-06) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
-            Wallet.set(sp, Economy.Kind.SILVER, 300);
-            JobTrainer.open(sp, () -> done[0]++);
-            Forms.answer(sp, JobTrainer.slotOf("paladin"), null);
-            Forms.answer(sp, 11, null);
-            h.assertTrue("paladin".equals(JobSystem.jobOf(sp)), "changed to paladin: " + JobSystem.jobOf(sp));
-            JobTrainer.open(sp, () -> done[0]++);
-            FormNet.ChestPayload pa = chest(sp);
-            h.assertTrue(pa != null && pa.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "paladin: 2차 전직 open");
-            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
-            FormNet.ChestPayload padv = chest(sp);
-            h.assertTrue(padv != null && padv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("썬더로드")
-                    && padv.slots().get(JobTrainer.INVERT_SLOT).name().contains("타이런트"), "paladin advance cards");
-            Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
-            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "paladin advance confirm");
-            Forms.answer(sp, 11, null);
-            h.assertTrue("thunderlord".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("썬더로드"), "thunderlord free from the first job: " + JobSystem.jobOf(sp));
+            // 2026-11-14 창술사 · 사신 · 성기사는 숨김 — 카드 없음
+            for (String hid : List.of("lancer", "reaper", "paladin")) h.assertTrue(JobTrainer.slotOf(hid) == -1, hid + " hidden: no card");
             // 2026-11-06 사제의 2차 전직 (세인트 · 워록) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
@@ -388,8 +307,9 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(gu != null && gu.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "guardian: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload guadv = chest(sp);
-            h.assertTrue(guadv != null && guadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("피닉스 가드")
-                    && guadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("다크 나이트"), "guardian advance cards");
+            // 2026-11-14 피닉스 가드 (수호기사 각성) 는 숨김
+            h.assertTrue(guadv != null && !guadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("피닉스 가드")
+                    && guadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("다크 나이트"), "guardian advance cards (phoenix hidden)");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "guardian advance confirm");
             Forms.answer(sp, 11, null);
