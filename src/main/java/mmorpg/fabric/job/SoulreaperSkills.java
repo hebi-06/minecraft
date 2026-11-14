@@ -444,6 +444,27 @@ final class SoulreaperSkills {
     /** 2026-11-13 3D 망령 사신 spin2 의 첫 바퀴 가운데 (동작을 튼 뒤 7틱 — 다음 바퀴 +10) · reap 의 날이 땅에 박히는 때 (8틱) */
     static final int REAPER_SPIN_AT = 7;
     static final int REAPER_REAP_AT = 8;
+    /**
+     * 2026-11-14 spin2 의 낫날 자리 (크기 2.4 — 모델 job_reaper: 어깨 높이 29 픽셀 · 옆으로 뻗은 팔과 자루 끝까지 약 37 픽셀, 영상 CI 43447815978 의 낫 끝): 땅 위 높이 ·
+     * 사신 가운데에서의 거리 · 도는 빠르기 (한 틱에 40° — 위에서 보면 시계 방향 = x · z 평면의 각이 커지는 쪽)
+     */
+    static final double REAPER_SCYTHE_H = 4.4;
+    static final double REAPER_SCYTHE_R = 5.0;
+    static final double REAPER_SPIN_RATE = 800;
+
+    /**
+     * 2026-11-14 직업 도감 메모 "2d 참격이 없음" (페일 하베스트 — 3D 사신이 두 바퀴 도는 동안 낫에 2D 참격이 없었음): 낫날 자리를 사신과 함께 도는 사신 참격 판 넷
+     * (slash_job_rp — 불룩한 날이 도는 쪽 · 넓은 면은 보는 사람 쪽 · 칸이 한 번 그려짐, 쓴 사람 1인칭에서는 숨김 — 낫이 머리 위를 지나감). ang = 처음 각 (x · z 평면)
+     */
+    private static void scytheTrail(ServerPlayer sp, Jobs.Job j, Vec3 center, double ang, double life) {
+        Opt v = JobFx.hide1p(sp);
+        for (int q = 0; q < 4; q++) {
+            mmorpg.fabric.Fx3d.spawn(sp.level(), JobFx.slashModel(j), center, Opt.of("orbit", REAPER_SCYTHE_R, "orbitSpeed", REAPER_SPIN_RATE, "orbitAngle",
+                    ang + q * 90.0, "align", 1.0, "faceCam", 1.0, "scale", 3.0, "life", life, "grow", 0.1, "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.04,
+                    "fadeOut", life * 0.35, "glowAlpha", 0.0, "color", JobFx.cardColor(j), "glow", JobFx.inner(j), "alpha", 0.95, "shine", 0.15, "view",
+                    v.num("view", 0), "owner", v.num("owner", 0)));
+        }
+    }
 
     /**
      * 페일 하베스트 (롤 요릭 R · 다리우스 Q): 영혼의 밤 (rpg:ult_souls) — 낫을 치켜들고, riseAt 틱부터 몸 너머로 (3인칭 카메라는 왼쪽 뒤 — 등 뒤에 세우면 화면을 덮음)
@@ -528,6 +549,14 @@ final class SoulreaperSkills {
                     if (RuneKit.sameLife(sp, life)) JobFx.reaper(sp.level(), mid, size, j, 1, 0.3, ghost.with("fade", 0.05));
                 });
                 standLater(sp, life, j, mid, size, ghost, at + 6, next - at - 6);
+            } else {
+                // 3D 사신의 한 바퀴 (휩쓸기 틱 앞뒤 4틱 — 9틱) 동안 낫날을 따라 도는 2D 참격 (휩쓸기 틱에 판 하나가 쓴 사람 쪽)
+                int lead = 4;
+                RuneKit.later(Math.max(0, at - lead), () -> {
+                    if (!RuneKit.sameLife(sp, life) || gm[0] == null || !gm[0].alive()) return;
+                    double ang = Math.toDegrees(Math.atan2(-f0.z, -f0.x)) - lead * REAPER_SPIN_RATE / 20.0;
+                    scytheTrail(sp, j, V.up(base, REAPER_SCYTHE_H), ang, (lead * 2 + 1) / 20.0);
+                });
             }
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
@@ -569,6 +598,17 @@ final class SoulreaperSkills {
         RuneKit.later(finalAt - 3, () -> {
             if (RuneKit.sameLife(sp, life) && !mob3d) JobFx.reaper(sp.level(), mid, size, j, 1, 0.3, ghost.with("fade", 0.1));
         });
+        // 2026-11-14 (메모 "2d 참격이 없음") 3D 사신이 낫을 머리 위에서 앞 땅으로 내리찍는 길 (reap 0.25 → 0.4초) 의 세로 참격 — 사신이 보는 쪽 (쓴 사람 쪽) 으로 불룩
+        if (mob3d) {
+            RuneKit.later(finalAt - 2, () -> {
+                if (!RuneKit.sameLife(sp, life) || gm[0] == null || !gm[0].alive()) return;
+                Vec3 fwd = V.scale(f0, -1);
+                JobFx.slashCard(sp.level(), V.up(V.add(base, fwd, 2.2), 3.0), V.unit(V.add(fwd, new Vec3(0, -0.35, 0))), 90.0, 5.0, 0.3, Vec3.ZERO, j,
+                        JobFx.hide1p(sp), JobFx.CardFace.SWING);
+                JobFx.slashCard(sp.level(), V.up(V.add(base, fwd, 2.4), 2.8), V.unit(V.add(fwd, new Vec3(0, -0.35, 0))), 97.0, 5.6, 0.27, Vec3.ZERO, j,
+                        JobFx.hide1p(sp).with("alpha", 0.45), JobFx.CardFace.SWING);
+            });
+        }
         RuneKit.later(finalAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
