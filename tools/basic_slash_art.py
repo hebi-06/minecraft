@@ -85,8 +85,9 @@ def render(k, thick=False):
     body_a = a_out * a_in * a_head * a_tail * ga * inside
     # 밝기: 날 쪽 · 머리 쪽이 밝고 안쪽 · 꼬리 쪽이 어두움 (무기 색 → 짙은 색)
     along = _ss(0.0, 1.0, phic / max(L, 70.0))
-    lum = (1 - 0.42 * np.clip(rho, 0, 1) ** 0.9) * (1 - 0.5 * along) * (1 - dark)
-    lum = np.clip(lum + 0.25 * np.exp(-phic / 10.0) * (1 - np.clip(rho, 0, 1)), 0.16, 1.0)
+    # 2026-11-14 영상 (CI 43594058613): 짙게 (꼬리 0.16) 하면 붉은 · 주황 무기의 잔상이 풀밭 위에서 흙빛으로 보였음 → 짙어지는 몫을 줄이고 (꼬리 약 0.45) 대신 알파로 사라짐
+    lum = (1 - 0.3 * np.clip(rho, 0, 1) ** 0.9) * (1 - 0.35 * along) * (1 - 0.6 * dark)
+    lum = np.clip(lum + 0.25 * np.exp(-phic / 10.0) * (1 - np.clip(rho, 0, 1)), 0.4, 1.0)
     # 날 (흰 줄): 바깥 가장자리를 따라 — 머리 가까이 굵고 밝음, 뒤로 옅어짐
     t_rim = RIM + (RIM_HEAD - RIM) * np.exp(-phic / 14.0)
     d = r_out - r  # 바깥 가장자리에서 안쪽으로
