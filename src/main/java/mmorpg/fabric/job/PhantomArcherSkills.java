@@ -294,7 +294,8 @@ final class PhantomArcherSkills {
         SkillFx.play(level0, "item.trident.riptide_1", sp.position(), 1.4, 0.8);
         SkillFx.play(level0, "block.amethyst_block.resonate", center, 1.2, 1.0);
         // 땅: 과녁 문양 · 하늘: 투영 고리 (칼이 나오는 곳)
-        SkillFx.rune(level0, V.up(center, 0.05), Opt.of("size", r, "life", (burstAt + 8) / 20.0, "color", glow, "alpha", 0.7, "rate", 30.0, "grow", 0.0));
+        // 2026-11-15 영상: 오각별 마법진 (SkillFx.rune) 대신 땅에 눕는 칼날 고리 (rfx_jbladering — 칼 컨셉과 맞춤)
+        JobFx.bladeRing(level0, V.up(center, 0.06), r, j, (burstAt + 8) / 20.0, 6, Opt.of("alpha", 0.85));
         RuneKit.zonePulse(level0, center, glow, r, 0.45);
         JobFx.ring(level0, V.up(center, sky), r * 0.8, j, false, (burstAt - 4) / 20.0, Opt.of("alpha", 0.75));
         for (int w = 0; w < waves; w++) {
@@ -494,6 +495,11 @@ final class PhantomArcherSkills {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
+        // 2026-11-15 영상: 바닐라는 하늘이 바뀌지 않음 → 보는 쪽 지평선에 지는 진홍 해 (rfx_sun) · 둘레 노을 빛
+        Vec3 fs = Kit.facingOf(sp);
+        SkillFx.fx(level0, "rpg:rfx_sun", V.add(V.up(c0, 6.5), fs, 34), Opt.of("size", 15.0, "life", (finalAt + 20) / 20.0, "color", new double[] {1.0, 0.3, 0.16}, "alpha", 0.85));
+        for (int q = -2; q <= 2; q++) SkillFx.fx(level0, "rpg:rfx_jaura", V.add(V.up(c0, 4.0), RuneKit.turn(fs, q * 28), 30), Opt.of("size", 12.0, "life", (finalAt + 20) / 20.0,
+                "color", new double[] {1.0, 0.36, 0.2}, "alpha", 0.35));
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.2, 0.9);
         SkillFx.play(level0, "item.firecharge.use", c0, 0.6, 1.0);
@@ -507,10 +513,10 @@ final class PhantomArcherSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 JobFx.ring(level, V.up(c0, 0.08), ri, j, false, 0.35, Opt.of("alpha", 0.95));
-                for (int q = 0; q < 12; q++) {
+                for (int q = 0; q < 8; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
-                    SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 0.8, "life", 0.45, "color", PhantomArcher.FIRE, "alpha", 0.85, "spin", Kit.rand() * 360));
+                    JobFx.flame(level, p, 0.5 + Kit.rand() * 0.25, 0.45, Opt.empty(), PhantomArcher.FIRE, PhantomArcher.FIRE_CORE); // 2026-11-15 영상: fire_wall 이 주황 원뿔로 보였음
                 }
             });
         }
@@ -519,17 +525,17 @@ final class PhantomArcherSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                for (int q = 0; q < 16; q++) {
+                for (int q = 0; q < 10; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.8));
-                    SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 1.0 + Kit.rand() * 0.5, "life", 0.5, "color", PhantomArcher.FIRE, "alpha", 0.9, "spin", Kit.rand() * 360));
+                    JobFx.flame(level, p, 0.6 + Kit.rand() * 0.35, 0.55, Opt.empty(), PhantomArcher.FIRE, PhantomArcher.FIRE_CORE);
                 }
             });
         }
         RuneKit.later(ringTicks, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
-            SkillFx.rune(level, V.up(c0, 0.05), Opt.of("size", R, "life", (finalAt - ringTicks + 10) / 20.0, "color", glow, "alpha", 0.5, "rate", 8.0, "grow", 0.0));
+            JobFx.bladeRing(level, V.up(c0, 0.06), R, j, (finalAt - ringTicks + 10) / 20.0, 6, Opt.of("alpha", 0.8)); // 2026-11-15 오각별 마법진 대신 칼날 고리
             SkillFx.play(level, "block.fire.ambient", c0, 0.8, 1.0);
         });
         // 칼이 솟음 (가까운 데부터 — 번지는 고리를 따라)
