@@ -459,6 +459,12 @@ public final class Monsters {
     /** 싸우는 몬스터: 몬스터 UUID → 싸움 */
     private static final Map<UUID, Fight> FIGHTS = new LinkedHashMap<>();
 
+    /**
+     * 2026-11-14 영상 과녁 꼬리표 (VanillaProbe 직업 · 무기 스킬 · 평타 영상의 드라우그): 맞아도 공격하지 않음 — 영상마다 쓴 사람 발밑에 붉은 예고 고리 · 서리 불티 ·
+     * 눈송이가 끼었음 (1인칭 영상에서는 눈앞을 크게 가림). 시험의 제자리 몬스터 (setNoAi — 스크립트 공격은 그대로) 와 따로
+     */
+    public static final String FILM_TARGET_TAG = "mmorpg_film_target";
+
     /** 다친 몬스터 (회복 · 재생용): 몬스터, 마지막으로 맞은 틱 */
     private record Hurt(RpgMonster m, Kind k, long t) {}
 
@@ -938,6 +944,10 @@ public final class Monsters {
         Kind k = f.k;
         if (m.isRemoved() || Kit.hasNoHealth(m)) {
             FIGHTS.remove(m.getUUID(), f);
+            return;
+        }
+        if (m.entityTags().contains(FILM_TARGET_TAG)) {
+            f.windup = null;
             return;
         }
         Pick pick = pickTarget(f);

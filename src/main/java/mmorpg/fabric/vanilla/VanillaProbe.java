@@ -1367,6 +1367,7 @@ final class VanillaProbe {
             net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {
                 m.setNoAi(true);
+                m.addTag(Monsters.FILM_TARGET_TAG); // 2026-11-14 과녁은 공격하지 않음 (영상에 붉은 예고 고리 · 서리 불티가 끼었음)
                 var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
                 if (hp != null) hp.setBaseValue(200_000);
                 m.setHealth(m.getMaxHealth());
@@ -1379,7 +1380,8 @@ final class VanillaProbe {
         String name = (fp ? "vanilla_jobfp_" : "vanilla_job_") + id;
         int[] time = jobTime(j.id(), slot);
         if (fp) {
-            // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임)
+            // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임). 2026-11-14 내 뼈 몸 보기는 끔 (기본값)
+            if (VanillaRig.selfView(p)) VanillaRig.selfView(p, false);
             mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
             mmorpg.fabric.vfx.PBridge.filmCamOff(p);
             say(p, "cam off");
@@ -1514,6 +1516,7 @@ final class VanillaProbe {
             net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {
                 m.setNoAi(true);
+                m.addTag(Monsters.FILM_TARGET_TAG); // 2026-11-14 과녁은 공격하지 않음 (영상에 붉은 예고 고리 · 서리 불티가 끼었음)
                 var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
                 if (hp != null) hp.setBaseValue(200_000);
                 m.setHealth(m.getMaxHealth());
@@ -1615,6 +1618,7 @@ final class VanillaProbe {
             net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {
                 m.setNoAi(true);
+                m.addTag(Monsters.FILM_TARGET_TAG); // 2026-11-14 과녁은 공격하지 않음 (영상에 붉은 예고 고리 · 서리 불티가 끼었음)
                 var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
                 if (hp != null) hp.setBaseValue(200_000);
                 m.setHealth(m.getMaxHealth());
@@ -1627,7 +1631,8 @@ final class VanillaProbe {
         int[][] plan = motionPlan(type);
         mmorpg.fabric.RpgPlayers.setStat(p, "dex", plan[0][0]);
         if (fp) {
-            // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 1인칭 판 · 눈앞 그림)
+            // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 1인칭 판 · 눈앞 그림). 2026-11-14 내 뼈 몸 보기는 끔 (기본값 — 켜 두면 1인칭 눈앞을 뼈 몸의 팔 · 칼이 가림)
+            if (VanillaRig.selfView(p)) VanillaRig.selfView(p, false);
             mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
             mmorpg.fabric.vfx.PBridge.filmCamOff(p);
             say(p, "cam off");

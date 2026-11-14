@@ -322,9 +322,20 @@ public final class VanillaRig {
             e.setInterpolationDuration(1);
             // 크기 0 = 가려짐 판정 없음 (표시 엔티티의 판정 상자는 제자리 (머리 위) 에서 위로만 — 다리만 보이는 화면에서 사라지지 않게)
             e.setDisplaySize(0F, 0F);
+            // 2026-11-14 처음 2틱은 보이지 않게 (보는 거리 0): 붙는 패킷 (태우기) 보다 먼저 그려진 한 틱 동안 뼈가 발 높이에 무너진 채 보였음 (영상 CI 43605774503
+            // 칼 첫 평타) — attach 뒤 reveal
+            e.setViewRange(0F);
             e.ignorePositionUpdates();
             addPassengerElement(e);
             return e;
+        }
+
+        /** 붙은 뒤 보이게 (보는 거리 1 — 바닐라 기본) */
+        void reveal() {
+            for (ItemDisplayElement b : bones) b.setViewRange(1F);
+            main.setViewRange(1F);
+            off.setViewRange(1F);
+            hat.setViewRange(1F);
         }
 
         void attach() {
@@ -343,6 +354,7 @@ public final class VanillaRig {
                 for (ServerGamePacketListenerImpl c : to) c.send(mount);
             }
             pushBody(sp);
+            mmorpg.fabric.Tasks.later(2, this::reveal);
         }
 
         @Override
