@@ -980,6 +980,10 @@ final class VanillaProbe {
         if (step == 0) {
             run(server, "gamerule advance_time false");
             run(server, "gamerule advance_weather false");
+            // 2026-11-14 영상 (CI 43533817567): 평지 세계에 슬라임 · 동물이 생겨 과녁 앞을 가렸음 → 몹이 생기지 않게 (26.x 이름 · 옛 이름 둘 다 — 없는 이름은 무시됨)
+            run(server, "gamerule spawn_mobs false");
+            run(server, "gamerule doMobSpawning false");
+            clearStrays(server);
             run(server, "time set noon");
             run(server, "weather clear");
             p.getAbilities().invulnerable = true;
@@ -1223,6 +1227,11 @@ final class VanillaProbe {
         return new int[] {Integer.parseInt(c.substring(0, cut)), 1, Integer.parseInt(c.substring(cut + 1))};
     }
 
+    /** 2026-11-14 영상 세계에 저절로 생긴 슬라임 · 동물 (영상 과녁 앞을 가림 — CI 43533817567) 을 지움. RPG 몹 · 과녁은 건드리지 않음 */
+    private static void clearStrays(MinecraftServer server) {
+        for (String t : new String[] {"slime", "pig", "cow", "sheep", "chicken", "horse", "donkey", "rabbit"}) run(server, "kill @e[type=minecraft:" + t + "]");
+    }
+
     /** 영상 카메라 (RpgJobGallery.filmView — 거리 · 높이 · 보는 높이 · 따라가는 몫, 그 밖은 RpgFilm 처음 값) */
     private static double[] jobView(String id) {
         return switch (id) {
@@ -1233,15 +1242,15 @@ final class VanillaProbe {
             // 스톰 아이: 머리 위 먹구름 (발에서 3.6칸)
             case "archer_focus" -> new double[] {8.0, 3.0, 2.2, 0.6};
             // 스톰 레인: 과녁 위 7.2칸의 3D 먹구름 · 떨어지는 번개 화살
-            case "archer_rain" -> new double[] {10.5, 3.4, 3.4, 0.4};
+            case "archer_rain" -> new double[] {8.5, 2.8, 3.0, 0.5};
             // 2026-11-14 디바인 펀니시먼트: 과녁 머리 위 5.5칸의 하늘의 문 · 거대한 심판의 화살 (8.5칸)
-            case "sniper_ult" -> new double[] {10.0, 3.6, 3.6, 0.5};
+            case "sniper_ult" -> new double[] {8.0, 3.0, 3.0, 0.5};
             // 헤븐즈 게이트: 과녁 머리 위 3.3칸의 하늘의 문
-            case "sniper_trick" -> new double[] {9.0, 3.4, 2.6, 0.5};
+            case "sniper_trick" -> new double[] {6.8, 2.6, 1.9, 0.6};
             // 세라핌: 등의 날개 여섯 (몸 위 3칸 남짓)
-            case "sniper_mark" -> new double[] {8.0, 3.2, 1.8, 0.6};
+            case "sniper_mark" -> new double[] {6.5, 2.6, 1.6, 0.8};
             // 섀도 레기온: 양옆의 분신 여덟 (3칸 둘레) 너머로 — 높이 봄 · 내리꽂히는 거대한 그림자 화살
-            case "battlearcher_ult" -> new double[] {11.5, 5.2, 2.0, 0.4};
+            case "battlearcher_ult" -> new double[] {8.5, 4.2, 1.6, 0.5};
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};
             case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35};
@@ -1318,6 +1327,7 @@ final class VanillaProbe {
             return;
         }
         run(server, "tick rate 20");
+        clearStrays(server);
         run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
         String type = j.weapons().isEmpty() ? "sword" : j.weapons().get(0);
         run(server, "item replace entity " + NAME + " hotbar.0 with rpg:" + type + "_l40_hero");
