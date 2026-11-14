@@ -644,6 +644,9 @@ public final class RpgCombat {
      * 활 · 완드 발사: 바라보는 대상 (또는 forced = 눌러서 때린 몹) 에 명중. 재사용 대기는 종류마다.
      * 활은 빛줄기가 닿는 순간 (초당 arrowSpeed 칸), 완드는 마법진을 다 그린 뒤 (castTicks) 맞음.
      */
+    /** 시험: 마지막 활 · 완드 재사용 대기 (틱 — 2026-11-14 공속) */
+    public static int lastRangedCd;
+
     public static void fireRanged(ServerPlayer sp, ItemStack stack, Weapon w, LivingEntity forced) {
         if (mmorpg.fabric.mount.Riding.blocked(sp, "attack")) return; // 탈것에 탄 동안 활 · 완드 평타 없음
         Obj cfg = w.type().equals("bow") ? BOW : WAND;
@@ -661,6 +664,7 @@ public final class RpgCombat {
         int cd = (int) Math.max(w.type().equals("wand") ? WAND.num("castTicks") + 1 : 2,
                 Math.round(cfg.num("cooldownTicks") * rangedCdScale(sp, w) * mmorpg.core.AttackSpeed.rangedSlow() / speed));
         RANGED_READY.put(k, now + cd);
+        lastRangedCd = cd;
         sp.getCooldowns().addCooldown(stack, cd);
         if (w.type().equals("wand")) {
             if (!CASTING.containsKey(sp.getUUID())) startWandCast(sp, w, forced);

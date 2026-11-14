@@ -160,7 +160,7 @@ public final class RpgMotionTests {
     }
 
     @GameTest(environment = ENV, maxTicks = 60)
-    public void slashAreaFrontArcAndSpinRing(GameTestHelper h) {
+    public void slashAreaFrontArcBothWays(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
         Weapon w = Weapons.weaponFrom("sword", 20, "rare");
@@ -188,17 +188,18 @@ public final class RpgMotionTests {
                     "slash_h: behind · side · far not hit " + TestDummies.dealt(b) + " " + TestDummies.dealt(c) + " " + TestDummies.dealt(d));
             h.assertTrue(SwingArea.lastCount(sp) == 1, "one area victim " + SwingArea.lastCount(sp));
         });
+        // 2026-11-14 칼 2타 = 반대 가로 베기 (회전 없음): 같은 앞 부채꼴 — 앞 왼쪽은 다시 100%, 뒤 · 옆 · 먼 적은 그대로 0
         h.runAfterDelay(16, () -> {
-            MotionSystem.testRequest(sp, "basic", 3, 0);
+            MotionSystem.testRequest(sp, "basic", 2, 0);
             sp.attack(a);
             main[1] = TestDummies.dealt(a) - main[0];
-            h.assertTrue(oneHit(main[1], sp, w), "spin aimed hit full " + main[1] + " vs " + full(sp, w));
+            h.assertTrue(oneHit(main[1], sp, w), "slash_hb aimed hit full " + main[1] + " vs " + full(sp, w));
+            h.assertTrue("slash_hb".equals(MotionSystem.lastSent(sp)), "step 2 = slash_hb " + MotionSystem.lastSent(sp));
         });
         h.runAfterDelay(18, () -> {
-            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "spin ring: behind 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
-            h.assertTrue(oneHit(TestDummies.dealt(c), sp, w), "spin ring: side 100% " + TestDummies.dealt(c) + " vs " + full(sp, w));
-            h.assertTrue(oneHit(TestDummies.dealt(e) - eHit[0], sp, w), "spin ring: front-left again " + (TestDummies.dealt(e) - eHit[0]));
-            h.assertTrue(TestDummies.dealt(d) == 0, "far not hit " + TestDummies.dealt(d));
+            h.assertTrue(oneHit(TestDummies.dealt(e) - eHit[0], sp, w), "slash_hb arc: front-left again " + (TestDummies.dealt(e) - eHit[0]));
+            h.assertTrue(TestDummies.dealt(b) == 0 && TestDummies.dealt(c) == 0 && TestDummies.dealt(d) == 0,
+                    "slash_hb: behind · side · far not hit " + TestDummies.dealt(b) + " " + TestDummies.dealt(c) + " " + TestDummies.dealt(d));
             done(h, sp);
         });
     }
@@ -295,11 +296,13 @@ public final class RpgMotionTests {
             ItemStack st = sp.getMainHandItem();
             RpgCombat.fireRanged(sp, st, bow, null);
             h.assertTrue(sp.getCooldowns().isOnCooldown(st), "bow cooldown started");
+            // 재사용 18틱 (예전 바탕 20틱 · 민첩 0 이면 32틱) — 시험 사람은 아이템 재사용 대기가 흐르지 않아 서버가 정한 값을 봄
+            h.assertTrue(RpgCombat.lastRangedCd == 18, "bow cooldown 18 ticks at dex 80 " + RpgCombat.lastRangedCd);
+            RpgPlayers.setStat(sp, "dex", 60); // 공속 ×1.6 → 32 ÷ 1.6 = 20 (예전과 같음)
         });
-        // 18틱 대기: 16틱 뒤에는 아직 · 20틱 뒤에는 끝 (예전 바탕 20틱 · 민첩 0 이면 32틱)
-        h.runAfterDelay(4 + 16, () -> h.assertTrue(sp.getCooldowns().isOnCooldown(sp.getMainHandItem()), "bow still cooling at 16 ticks (18 at dex 80)"));
-        h.runAfterDelay(4 + 20, () -> {
-            h.assertFalse(sp.getCooldowns().isOnCooldown(sp.getMainHandItem()), "bow ready after 18 ticks");
+        h.runAfterDelay(4 + 22, () -> {
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), bow, null);
+            h.assertTrue(RpgCombat.lastRangedCd == 20, "bow cooldown 20 ticks at dex 60 " + RpgCombat.lastRangedCd);
             done(h, sp);
         });
     }
@@ -315,8 +318,8 @@ public final class RpgMotionTests {
         h.runAfterDelay(2, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
             Slash.onPunch(sp); // 가로 베기 (허공)
-            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 1 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic"),
-                    "slash_h → one flat card " + mmorpg.fabric.BasicSlash.lastModel);
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic"),
+                    "slash_h → a tilted card (others · 3rd person) + a flat card (1st person) " + mmorpg.fabric.BasicSlash.lastModel);
             Double reach = Motions.reach("sword", sword.gradeIndex());
             h.assertTrue(reach != null && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - reach) < 1e-6, "radius = sword reach " + mmorpg.fabric.BasicSlash.lastRadius);
             // 공속 ×2 → 동작 ×1.5: 휘두름 구간 (0.3 ~ 0.68 × 6틱) ÷ 0.4
@@ -327,7 +330,7 @@ public final class RpgMotionTests {
         h.runAfterDelay(2 + Motions.attackInterval(2.0) + 1, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
             Slash.onPunch(sp); // 반대 가로 베기 (거울 그림)
-            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 1 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_l"),
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_l"),
                     "slash_hb → mirrored card " + mmorpg.fabric.BasicSlash.lastModel);
             hold(sp, gs);
         });

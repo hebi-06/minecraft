@@ -93,28 +93,43 @@ public final class BasicSlash {
         Vec3 feet = sp.position();
         Vec3 p = V.add(V.add(V.add(feet, r, num(at, 0)), V.UP, num(at, 1)), f, num(at, 2));
         Vec3 vel = mmorpg.fabric.rune.RuneKit.bodyVel(sp);
+        // 2026-11-14 둘 (둘레 사람 · 3인칭 판 + 쓴 사람 1인칭 판) — spawned 는 판 수
         Opt card = Opt.of("scale", radius, "life", life, "delay", delay, "grow", c.numOr("grow", 0.05), "vel", vel, "anim", "play", "animSpeed", 1.0 / life,
                 "fadeIn", 0.0, "fadeOut", life * 0.08, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", c.numOr("alpha", 0.95), "shine", 0.1);
+        int owner = sp.getId();
         if ("front".equals(s.strOr("face", "up"))) {
-            // 쓴 사람 쪽을 보는 선 판: 시작 쪽 start · 볼록한 쪽 (반시계 90° · mirror 면 시계 90°) · 볼록한 쪽 납작하게 (stretch y)
-            double a = Math.toRadians(s.numOr("start", 90));
-            double b = a + (mirror ? -Math.PI / 2 : Math.PI / 2);
-            Vec3 bulge = V.add(V.scale(r, Math.cos(b)), V.UP, Math.sin(b));
-            Opt front = card.with("dir", bulge, "face", V.scale(f, -1), "roll", 0.0, "stretch", new Vec3(1, s.numOr("squash", 0.45), 1));
-            mmorpg.fabric.Fx3d.spawn(level, model, p, front.with("view", 1.0, "owner", (double) sp.getId()));
-            // 1인칭: 조금 멀리 · 옅게 (화면 가운데를 덜 가림)
+            // 쓴 사람 쪽을 보는 선 판: 시작 쪽 start · 볼록한 쪽 (반시계 90° · mirror 면 시계 90°) · 휘두름 쪽 길이 length · 볼록한 쪽 납작하게 squash.
+            // 둘레 사람 · 3인칭: 면을 turn 도 왼쪽으로 돌림 (뒤 · 옆 카메라 모두에서 넓은 면) / 쓴 사람 1인칭: 눈을 봄 · 조금 멀리 · 옅게 (화면 가운데를 덜 가림)
+            Vec3 stretch = new Vec3(s.numOr("length", 1), s.numOr("squash", 0.45), 1);
+            double turn = Math.toRadians(s.numOr("turn", c.numOr("turn", 40)));
+            Vec3 f2 = V.add(V.scale(f, Math.cos(turn)), r, Math.sin(turn));
+            mmorpg.fabric.Fx3d.spawn(level, model, p, front(card, f2, s, mirror).with("stretch", stretch, "view", 1.0, "owner", (double) owner));
             Vec3 fp = V.add(p, f, c.numOr("fpAhead", 0.6));
-            mmorpg.fabric.Fx3d.spawn(level, model, fp, front.with("view", 2.0, "owner", (double) sp.getId(), "alpha", c.numOr("fpAlpha", 0.7)));
-            spawned += 2;
+            mmorpg.fabric.Fx3d.spawn(level, model, fp, front(card, f, s, mirror).with("stretch", stretch, "view", 2.0, "owner", (double) owner, "alpha",
+                    c.numOr("fpAlpha", 0.7)));
         } else {
-            // 몸 둘레에 누운 판 (그림 위 = 앞 · +X = 오른쪽): 모든 사람 (쓴 사람 1인칭 포함 — 화면 아래쪽으로 띠가 지나감)
-            mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", f, "face", V.UP, "roll", 0.0));
-            spawned++;
+            // 몸 둘레에 누운 판 (그림 위 = 앞 · +X = 오른쪽). 둘레 사람 · 3인칭: 앞쪽을 tilt 도 듦 (몸 높이의 카메라에서도 넓은 면 — 누우면 옆선) /
+            // 쓴 사람 1인칭: 누운 그대로 (화면 아래로 띠가 지나감 — 눈높이를 가리지 않게)
+            double tilt = Math.toRadians(s.numOr("tilt", c.numOr("tilt", 28)));
+            Vec3 dir = V.add(V.scale(f, Math.cos(tilt)), V.UP, Math.sin(tilt));
+            Vec3 face = V.add(V.scale(V.UP, Math.cos(tilt)), f, -Math.sin(tilt));
+            mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", dir, "face", face, "roll", 0.0, "view", 1.0, "owner", (double) owner));
+            mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", f, "face", V.UP, "roll", 0.0, "view", 2.0, "owner", (double) owner));
         }
+        spawned += 2;
         lastModel = model;
         lastRadius = radius;
         lastLife = life;
         lastDelay = delay;
+    }
+
+    /** 선 판의 방향: 앞 fwd 의 반대를 봄 · 볼록한 쪽 = 시작 쪽 start 에서 반시계 90° (mirror 면 시계 90° — 그림이 거울) */
+    private static Opt front(Opt card, Vec3 fwd, Obj s, boolean mirror) {
+        Vec3 r = V.cross(fwd, V.UP);
+        double a = Math.toRadians(s.numOr("start", 90));
+        double b = a + (mirror ? -Math.PI / 2 : Math.PI / 2);
+        Vec3 bulge = V.add(V.scale(r, Math.cos(b)), V.UP, Math.sin(b));
+        return card.with("dir", bulge, "face", V.scale(fwd, -1), "roll", 0.0);
     }
 
     /** 내려찍기의 땅 충격 (휘두름이 끝나는 때): 땅 고리 · 튀는 불티 */
