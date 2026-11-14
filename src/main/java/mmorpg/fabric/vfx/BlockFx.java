@@ -156,6 +156,39 @@ public final class BlockFx {
         }
     }
 
+    /**
+     * 머무는 고리 (예고 · 테두리 — 가운데 c · 반지름 r · 마디 segs · 굵기 thick): grow 틱 동안 마디가 돌아가며 솟아 hold 틱 머문 뒤 4틱에 얇아져 사라짐.
+     * 흰 심지 줄 (안쪽 · 가늘게) 을 함께
+     */
+    public static void ringHold(ServerLevel level, Vec3 c, double r, int segs, double thick, double[] color, int grow, int hold) {
+        int n = Math.max(8, segs);
+        int G = Math.max(1, grow);
+        int H = Math.max(1, hold);
+        Vfx.Fx fx = RuneProps.fx(level, c, G + H + 8);
+        for (int i = 0; i < n; i++) {
+            double a = Math.PI * 2 * i / n;
+            Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
+            Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
+            Quaternionf rot = Vfx.basis(radial, tan, V.UP);
+            double seg = Math.PI * 2 * r / n * 1.1;
+            int at = G * i / n;
+            fx.on(at, () -> {
+                Vfx.Prop o = box(fx, V.add(c, radial, r), rot, 0.02, seg * 0.3, 0.02, color);
+                Vfx.Prop k = box(fx, V.up(V.add(c, radial, r - thick * 0.15), thick * 0.12), rot, 0.01, seg * 0.3, 0.01, WHITE);
+                o.stretch(thick, seg, thick * 0.3, 2);
+                k.stretch(thick * 0.28, seg * 1.02, thick * 0.12, 2);
+                fx.on(G + H, () -> {
+                    o.stretch(0.0, seg, 0.0, 4);
+                    k.stretch(0.0, seg, 0.0, 4);
+                });
+                fx.on(G + H + 5, () -> {
+                    o.remove();
+                    k.remove();
+                });
+            });
+        }
+    }
+
     // ------------------------------------------------------------ 조각
 
     /** 조각 n 개 (가운데 c 에서 사방으로 dist 칸 · 길이 size): 길쭉한 상자가 돌며 날아가 작아져 사라짐 (life 틱) */

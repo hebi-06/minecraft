@@ -293,9 +293,10 @@ final class PhantomArcherSkills {
         SkillFx.play(level0, "block.amethyst_block.resonate", center, 1.2, 1.0);
         // 땅: 과녁 문양 · 하늘: 투영 고리 (칼이 나오는 곳)
         // 2026-11-15 영상: 오각별 마법진 (SkillFx.rune) 대신 땅에 눕는 칼날 고리 (rfx_jbladering — 칼 컨셉과 맞춤)
-        JobFx.bladeRing(level0, V.up(center, 0.06), r, j, (burstAt + 8) / 20.0, 6, Opt.of("alpha", 0.85));
-        RuneKit.zonePulse(level0, center, glow, r, 0.45);
-        JobFx.ring(level0, V.up(center, sky), r * 0.8, j, false, (burstAt - 4) / 20.0, Opt.of("alpha", 0.75));
+        // 2026-11-15 사용자 "남은 2D 고리 블록으로 바꿔": 땅 예고 고리 · 퍼지는 고리 · 하늘 고리 = 단색 블록 (BlockFx)
+        mmorpg.fabric.vfx.BlockFx.ringHold(level0, V.up(center, 0.04), r, 30, 0.24, glow, 5, burstAt);
+        mmorpg.fabric.vfx.BlockFx.ring(level0, V.up(center, 0.05), r * 0.3, r, 24, 0.3, glow, 8);
+        mmorpg.fabric.vfx.BlockFx.ringHold(level0, V.up(center, sky), r * 0.8, 26, 0.28, glow, 4, burstAt - 8);
         for (int w = 0; w < waves; w++) {
             int ww = w;
             int hitAt = first + w * gap;
@@ -332,7 +333,7 @@ final class PhantomArcherSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 SkillFx.play(level, "item.trident.hit_ground", center, 1.0 + ww * 0.06, 1.0);
-                RuneKit.zonePulse(level, center, glow, r, 0.25);
+                mmorpg.fabric.vfx.BlockFx.ring(level, V.up(center, 0.05), r * 0.85, r * 1.05, 24, 0.22, glow, 5);
                 for (LivingEntity e : Kit.around(sp, center, r, 4)) {
                     boolean pin = rooted.add(e.getUUID());
                     JobKit.strikeSplit(sp, e, j, P, k.num("wave", 2.0), 2, 2, false, false, life, 0, d -> {
@@ -356,7 +357,7 @@ final class PhantomArcherSkills {
             stuck.clear();
             if (!RuneKit.sameLife(sp, life)) return;
             PhantomArcher.blast(level, j, V.up(center, 0.8), r * 0.7);
-            RuneKit.zonePulse(level, center, PhantomArcher.FIRE, r + 0.5, 0.45);
+            mmorpg.fabric.vfx.BlockFx.ring(level, V.up(center, 0.05), r * 0.4, r + 1.2, 28, 0.4, PhantomArcher.FIRE, 10);
             for (LivingEntity e : Kit.around(sp, center, r, 4)) JobKit.strike(sp, e, j, P, k.num("burst", 2.6), false, false, life, 0, d -> JobFx.hit(e, j, 1.0));
         });
         return true;
@@ -445,7 +446,6 @@ final class PhantomArcherSkills {
                     double rad = k.num("radius", 4);
                     PhantomArcher.blast(l2, j, c, rad * 0.9);
                     JobFx.burst(l2, c, rad * 1.1, j, 0.5, Opt.of("alpha", 0.8));
-                    RuneKit.zonePulse(l2, ground(l2, c), PhantomArcher.FIRE, rad, 0.5);
                     PhantomArcher.shards(l2, c, 14, 9.0, 0.5);
                     Ult.flash(l2, c, PhantomArcher.FIRE, Opt.of("radius", 6.0, "time", new double[] {0.02, 0.04, 0.25}), sp);
                     SkillFx.play(l2, "entity.generic.explode", c, 0.8, 1.2);
@@ -509,7 +509,7 @@ final class PhantomArcherSkills {
             RuneKit.later(i, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                JobFx.ring(level, V.up(c0, 0.08), ri, j, false, 0.35, Opt.of("alpha", 0.95));
+                mmorpg.fabric.vfx.BlockFx.ring(level, V.up(c0, 0.06), Math.max(0.5, ri - 1.8), ri, 30, 0.35, glow, 4);
                 for (int q = 0; q < 8; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
@@ -532,7 +532,7 @@ final class PhantomArcherSkills {
         RuneKit.later(ringTicks, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
-            JobFx.bladeRing(level, V.up(c0, 0.06), R, j, (finalAt - ringTicks + 10) / 20.0, 6, Opt.of("alpha", 0.8)); // 2026-11-15 오각별 마법진 대신 칼날 고리
+            mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.04), R, 48, 0.32, glow, 4, finalAt - ringTicks + 6); // 2026-11-15 2D 칼날 고리 대신 단색 블록 테두리
             SkillFx.play(level, "block.fire.ambient", c0, 0.8, 1.0);
         });
         // 칼이 솟음 (가까운 데부터 — 번지는 고리를 따라)
@@ -579,7 +579,7 @@ final class PhantomArcherSkills {
             RuneKit.later(hitAt, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                JobFx.ring(level, V.up(c0, 0.08), R, j, false, 0.3, Opt.of("alpha", 0.6));
+                mmorpg.fabric.vfx.BlockFx.ring(level, V.up(c0, 0.05), R - 0.6, R + 0.4, 40, 0.25, glow, 5);
                 SkillFx.play(level, "item.trident.hit", c0, 0.9 + ww * 0.06, 0.9);
                 for (LivingEntity e : Kit.around(sp, c0, R, 5)) {
                     JobKit.strikeSplit(sp, e, j, P, k.num("wave", 7), 2, 2, false, false, life, 0, d -> {
@@ -613,7 +613,7 @@ final class PhantomArcherSkills {
                 p.b.pose(top, d, PhantomArcher.faceOf(d), 6 + (q % 4));
                 rain.add(p.b);
             }
-            JobFx.ring(level, V.up(spot[0], 7.5), 4.5, j, true, 0.7, Opt.of("alpha", 0.9));
+            mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(spot[0], 7.5), 4.5, 26, 0.3, glow, 3, 12);
             SkillFx.play(level, "block.amethyst_block.resonate", spot[0], 0.7, 1.2);
             SkillFx.play(level, "item.trident.riptide_3", spot[0], 1.2, 0.8);
         });
@@ -631,7 +631,6 @@ final class PhantomArcherSkills {
             double fr = k.num("finalRadius", 4);
             PhantomArcher.blast(level, j, V.up(spot[0], 1.0), fr * 0.9);
             JobFx.burst(level, V.up(spot[0], 1.2), fr * 1.2, j, 0.55, Opt.of("alpha", 0.85));
-            RuneKit.zonePulse(level, spot[0], PhantomArcher.FIRE, fr + 0.5, 0.5);
             PhantomArcher.shards(level, V.up(spot[0], 0.8), 16, 9.0, 0.5);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             if (!RuneKit.sameLife(sp, life)) return;

@@ -298,7 +298,7 @@ public final class PhantomArcher {
         clear(l, level);
         if (e.isRemoved() || !RuneKit.sameLife(sp, life)) return;
         blast(level, j, at, 1.4 + Kit.bodyPad(e) * 0.6);
-        RuneKit.zonePulse(level, e.position(), JobKit.glow(j), trait(j, "radius", 2), 0.3);
+        mmorpg.fabric.vfx.BlockFx.ring(level, V.up(e.position(), 0.05), 0.4, trait(j, "radius", 2), 16, 0.25, JobKit.glow(j), 7); // 2026-11-15 2D 고리 대신 단색 블록
         Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
         Weapon w = held != null && "bow".equals(held.type()) ? held : w0;
         if (w == null || !"bow".equals(w.type())) return;
