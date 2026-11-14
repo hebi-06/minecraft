@@ -96,6 +96,11 @@ public final class RuneSwords {
         return new Blade(fx, hilt, dir, face, len, k0, glow, core);
     }
 
+    /** 2026-11-15 팬텀 아처의 투영 장검 하나 (blade 와 같은 쥔 곳 · 길이 — 불투명 밝은 강철 날 · 진홍 홈) */
+    public static Blade phantom(Vfx.Fx fx, Vec3 hilt, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
+        return new Blade(fx, RuneProps.PHANTOM_SWORD, HILT, HILT_TO_TIP, RuneProps.SWORD_LEN, hilt, dir, face, len, k0, glow, core);
+    }
+
     /** 2026-11-13 룬 빛 화살 하나 (쥔 곳 = 오늬 nock · 촉 방향 dir · 촉 두 판의 넓은 면 face · 길이 len 칸) */
     public static Blade arrow(Vfx.Fx fx, Vec3 nock, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
         return new Blade(fx, RuneProps.ARROW, RuneProps.ARROW_NOCK, 31 - RuneProps.ARROW_NOCK[1], RuneProps.ARROW_LEN, nock, dir, face, len, k0, glow, core);

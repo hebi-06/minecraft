@@ -170,11 +170,12 @@ final class PhantomArcherSkills {
         Vec3 right = V.rightOf(f);
         RuneSwords.Blade[] bl = new RuneSwords.Blade[2];
         Vec3[] start = new Vec3[2];
+        Vec3[] prev = new Vec3[2]; // 2026-11-15 컨셉아트: 휘어 나는 쌍검 뒤의 이어진 빛 띠 (틱마다 앞 자리 → 지금 자리)
         for (int s = 0; s < 2; s++) {
             double side = s == 0 ? -1 : 1;
             start[s] = V.add(V.up(c0, 1.15), right, side * 0.45);
             PhantomArcher.traceLines(level0, start[s], f, V.UP, len, 0.25);
-            bl[s] = RuneSwords.blade(fx, start[s], f, V.UP, len, 0.05, PhantomArcher.BLADE, PhantomArcher.GEM);
+            bl[s] = RuneSwords.phantom(fx, start[s], f, V.UP, len, 0.05, PhantomArcher.BLADE, PhantomArcher.GEM);
             int ss = s;
             fx.on(1, () -> bl[ss].grow(1, 2));
         }
@@ -192,6 +193,8 @@ final class PhantomArcherSkills {
                     Vec3 p = bez(start[s], ctl, spot[0], u);
                     Vec3 d = RuneSwords.rot(f, V.UP, side * tt * 62);
                     bl[s].pose(V.add(p, d, -len * 0.45), d, V.UP, 1);
+                    if (prev[s] != null) RuneKit.flyStreak(sp.level(), prev[s], p, 20 * V.len(V.sub(p, prev[s])) + 1, glow, core, 0.7, 0.22);
+                    prev[s] = p;
                 }
             });
         }
@@ -230,6 +233,8 @@ final class PhantomArcherSkills {
                     Vec3 p = bez(spot[0], ctl, V.add(hand, V.rightOf(f), side * 0.45), u);
                     Vec3 d = RuneSwords.rot(f, V.UP, side * tt * 62);
                     bl[s].pose(V.add(p, d, -len * 0.45), d, V.UP, 1);
+                    if (prev[s] != null) RuneKit.flyStreak(sp.level(), prev[s], p, 20 * V.len(V.sub(p, prev[s])) + 1, glow, core, 0.5, 0.16);
+                    prev[s] = p;
                 }
             });
         }
@@ -309,7 +314,7 @@ final class PhantomArcherSkills {
                     Vec3 g = ground(level, s0);
                     Vec3 tilt = V.unit(V.add(V.DOWN, new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 0.35));
                     Vec3 top = V.add(V.up(g, sky), new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 1.2);
-                    RuneSwords.Blade b = RuneSwords.blade(fx, top, tilt, PhantomArcher.faceOf(tilt), len, 0.05, PhantomArcher.BLADE, PhantomArcher.GEM);
+                    RuneSwords.Blade b = RuneSwords.phantom(fx, top, tilt, PhantomArcher.faceOf(tilt), len, 0.05, PhantomArcher.BLADE, PhantomArcher.GEM);
                     b.grow(1, 2);
                     if (RuneKit.fxQuota("bladeRainTrace", 8)) JobFx.glint(level, V.add(top, tilt, len * 0.5), 0.35, PhantomArcher.TRACE, PhantomArcher.TRACE_CORE, 0.18,
                             Opt.empty());
@@ -502,10 +507,22 @@ final class PhantomArcherSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 JobFx.ring(level, V.up(c0, 0.08), ri, j, false, 0.35, Opt.of("alpha", 0.95));
-                for (int q = 0; q < 6; q++) {
+                for (int q = 0; q < 12; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
                     SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 0.8, "life", 0.45, "color", PhantomArcher.FIRE, "alpha", 0.85, "spin", Kit.rand() * 360));
+                }
+            });
+        }
+        // 2026-11-15 컨셉아트: 고리 테두리의 불꽃이 끝까지 타오름 (6틱마다 열여섯)
+        for (int t = ringTicks; t < finalAt; t += 6) {
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel level = sp.level();
+                for (int q = 0; q < 16; q++) {
+                    double a = Kit.rand() * Math.PI * 2;
+                    Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.8));
+                    SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 1.0 + Kit.rand() * 0.5, "life", 0.5, "color", PhantomArcher.FIRE, "alpha", 0.9, "spin", Kit.rand() * 360));
                 }
             });
         }
@@ -635,9 +652,9 @@ final class PhantomArcherSkills {
         double a = Kit.rand() * Math.PI * 2;
         Vec3 g = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), rad));
         Vec3 d = V.unit(V.add(V.DOWN, new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 0.5));
-        double len = 1.5 + Kit.rand() * 0.6;
+        double len = 1.8 + Kit.rand() * 0.8; // 2026-11-15 컨셉아트: 들판 칼 크게
         Vec3 face = PhantomArcher.faceOf(d);
-        RuneSwords.Blade b = RuneSwords.blade(fx, V.add(g, d, -len * 0.15), d, face, len, 0.7, PhantomArcher.BLADE, PhantomArcher.GEM);
+        RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(g, d, -len * 0.15), d, face, len, 0.7, PhantomArcher.BLADE, PhantomArcher.GEM);
         b.pose(V.add(g, d, -len * 0.62), d, face, 3);
         b.grow(1, 3);
         field.add(new Planted(b, g));

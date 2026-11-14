@@ -17,6 +17,8 @@ public final class RuneProps {
     private RuneProps() {}
 
     public static final String SWORD = "rpg:vfx/rune_sword";
+    /** 2026-11-15 팬텀 아처의 투영 장검 (tools/vfx_blocky.py phantom_sword — rune_sword 와 같은 쥔 곳 · 칼끝 · 길이, 물들임 0 = 날 · 1 = 홈 · 보석) */
+    public static final String PHANTOM_SWORD = "rpg:vfx/phantom_sword";
     public static final String HAMMER = "rpg:vfx/rune_hammer";
     public static final String ICE_SPIKE = "rpg:vfx/ice_spike";
     public static final String ICE_BLADE = "rpg:vfx/ice_blade";

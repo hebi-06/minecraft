@@ -113,7 +113,7 @@ public final class PhantomArcher {
         Vec3 face = faceOf(d);
         if (lines) traceLines(level, hilt, d, face, len, Math.max(0.15, (appear + 3) / 20.0));
         Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 4, life));
-        RuneSwords.Blade b = RuneSwords.blade(fx, hilt, d, face, len, 0.05, BLADE, GEM);
+        RuneSwords.Blade b = RuneSwords.phantom(fx, hilt, d, face, len, 0.05, BLADE, GEM);
         fx.on(Math.max(1, appear), () -> b.grow(1, 2));
         return b;
     }
@@ -194,7 +194,7 @@ public final class PhantomArcher {
         Vec3 in = V.sub(body, from);
         Vec3 base = V.len(in) > 0.1 ? V.unit(in) : Kit.facingOf(sp);
         double pad = Kit.bodyPad(e);
-        double len = 0.95 + pad * 0.25;
+        double len = 1.15 + pad * 0.3; // 2026-11-15 컨셉아트: 꽂힌 칼이 몸에서 잘 보이게
         for (int i = 0; i < add; i++) {
             Vec3 d = V.unit(V.add(base, new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.5 - 0.35, Kit.rand() - 0.5), 0.55));
             Vec3 tip = V.add(body, new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.8 - 0.3, Kit.rand() - 0.5), 0.3 + pad * 0.4);
@@ -203,7 +203,7 @@ public final class PhantomArcher {
             Vec3 off = V.sub(hilt, body);
             Vec3 face = faceOf(d);
             Vfx.Fx fx = RuneProps.fx(level, hilt, life + 12);
-            RuneSwords.Blade b = RuneSwords.blade(fx, V.add(hilt, d, -0.35), d, face, len, 0.6, BLADE, GEM);
+            RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(hilt, d, -0.35), d, face, len, 0.6, BLADE, GEM);
             Stuck s = new Stuck(b, now + life);
             fx.on(1, () -> {
                 b.grow(1, 1);
@@ -307,12 +307,12 @@ public final class PhantomArcher {
     static void onFired(ServerPlayer sp, Jobs.Job j, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
         ServerLevel level = sp.level();
         Vec3 d = V.unit(dir);
-        double len = 1.15;
+        double len = 1.45; // 2026-11-15 컨셉아트: 평타 칼 크게
         int ticks = Math.max(1, (int) Math.round(RpgCombat.arrowShot(dist).life() * 20));
         Vec3 start = V.add(from, d, 0.2);
         Vfx.Fx fx = RuneProps.fx(level, start, ticks + 14);
         Vec3 face = faceOf(d);
-        RuneSwords.Blade b = RuneSwords.blade(fx, start, d, face, len, 0.35, BLADE, GEM);
+        RuneSwords.Blade b = RuneSwords.phantom(fx, start, d, face, len, 0.35, BLADE, GEM);
         double reach = b.reach() / 0.35;
         Vec3 end = V.add(from, d, Math.max(0.6, dist - reach * (target != null ? 0.75 : 1.0)));
         fx.on(1, () -> {

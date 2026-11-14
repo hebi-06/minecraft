@@ -1151,6 +1151,43 @@ def rune_sword():
     return m
 
 
+def phantom_sword():
+    """2026-11-15 팬텀 아처의 투영 장검 (궁수 리메이크 — 사용자 "컨셉아트지? 너무 저퀄인데" → 컨셉아트 1판 확인 뒤 "다음 작업"): rune_sword 와 같은 쥔 곳
+    (손잡이 (8, −3.5, 8) · 칼끝 y 31) — 불투명 밝은 강철 날 (스스로 빛남 · 여섯 단으로 좁아지는 블록 날) · 흰 날 · 진홍 빛 홈 (물들임 1) · 곧은 금 코등이 ·
+    가운데 진홍 보석 · 쇠 칼 목 · 가죽 손잡이 (금 고리 둘) · 금 자루 끝. 날 = 물들임 0 (서버가 강철 흰빛으로)"""
+    m = BModel("phantom_sword", "팬텀 아처 투영 장검 (2026-11-15 — 밝은 강철 단 날 · 진홍 빛 홈 · 곧은 금 코등이, 컨셉아트 1판)", d=2.5)
+    weapon_mats(m)
+    m.mat("pblade", Mat(bevel("#E4ECF6", "#FFFFFF", "#AEBCD2", speck=0.02), tint=0, glow=True))
+    m.mat("pedge", Mat(edge_paint(), glow=True))
+    m.mat("pfuller", Mat(rune_flow(0.6), tint=1, glow=True, animated=True))
+    m.mat("pgem", Mat(gem_paint(0.62), tint=1, glow=True, animated=True))
+    # 자루 끝 · 손잡이
+    m.box("gold", (7.2, -10.4, 7.2), (8.8, -8.8, 8.8))
+    m.box("pgem", (7.5, -10.0, 6.9), (8.5, -9.2, 9.1))
+    m.box("grip", (7.35, -8.8, 7.35), (8.65, -0.5, 8.65))
+    for y in (-6.6, -3.2):
+        m.box("gold", (7.15, y, 7.15), (8.85, y + 0.6, 8.85))
+    # 곧은 금 코등이 · 끝 마디 · 가운데 진홍 보석 (마름모 — X 둘레 45°)
+    m.box("gold", (7.0, -0.5, 2.6), (9.0, 1.3, 13.4))
+    m.box("gold", (6.8, -0.9, 2.0), (9.2, 1.7, 3.2))
+    m.box("gold", (6.8, -0.9, 12.8), (9.2, 1.7, 14.0))
+    m.box("pgem", (6.7, -0.4, 7.1), (9.3, 1.2, 8.9), rot=("x", 45, (8, 0.4, 8)))
+    # 칼 목
+    m.box("steel", (7.2, 1.3, 5.4), (8.8, 3.2, 10.6))
+    # 진홍 빛 홈 (날보다 두꺼워 양면에 솟음)
+    m.box("pfuller", (7.28, 3.2, 7.35), (8.72, 24.0, 8.65))
+    # 여섯 단으로 좁아지는 날 · 칼끝
+    steps = ((3.2, 9.0, 4.6), (9.0, 14.0, 4.8), (14.0, 19.0, 5.0), (19.0, 23.5, 5.4), (23.5, 27.0, 6.1), (27.0, 29.5, 6.8))
+    for (y0, y1, zi) in steps:
+        m.box("pblade", (7.4, y0, zi), (8.6, y1, 16 - zi))
+    m.box("pblade", (7.42, 29.5, 7.4), (8.58, 31.0, 8.6))
+    # 흰 날 (단마다 양쪽)
+    for (y0, y1, zi) in steps:
+        m.box("pedge", (7.55, y0, zi - 0.55), (8.45, y1, zi))
+        m.box("pedge", (7.55, y0, 16 - zi), (8.45, y1, 16 - zi + 0.55))
+    return m
+
+
 def rune_sword_v1():
     m = BModel("rune_sword", "룬 전용 검 (2026-11-12 사진 방식 — 빛나는 날 · 룬이 흐르는 홈 · 금 테 · 가죽 손잡이, 계열 색은 서버가 물들임)", d=1.5)
     weapon_mats(m)
@@ -2286,7 +2323,7 @@ def chain_link():
     return m
 
 
-BUILD = {"rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
+BUILD = {"phantom_sword": phantom_sword, "rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear,
          "shuriken": shuriken, "smoke_bomb": smoke_bomb, "tower_shield": tower_shield, "grapple_hook": grapple_hook, "chain_link": chain_link,
@@ -2433,7 +2470,7 @@ def load_current(name):
     return js["elements"], np.asarray(im.crop((0, 0, w, w)))
 
 
-TINTS = {"rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
+TINTS = {"phantom_sword": [(0.9, 0.95, 1.0), (1.0, 0.3, 0.22)], "rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
          "cloud": [(0.42, 0.36, 0.62), (0.78, 0.62, 1.0)], "rune_sword": [(0.45, 0.62, 1.0), (0.86, 0.92, 1.0)],
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)],
          "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)],
