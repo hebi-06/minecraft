@@ -129,7 +129,12 @@ public final class BasicSlash {
             Vec3 dir = V.add(V.scale(f, Math.cos(tilt)), V.UP, Math.sin(tilt));
             Vec3 face = V.add(V.scale(V.UP, Math.cos(tilt)), f, -Math.sin(tilt));
             mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", dir, "face", face, "roll", 0.0, "view", 1.0, "owner", (double) owner));
-            mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", f, "face", V.UP, "roll", 0.0, "view", 2.0, "owner", (double) owner));
+            // 2026-11-14 2판 1인칭: 눈에서 더 낮게 (fpHeight — 발 위 칸) · 앞쪽을 fpTilt 도 듦 — 가슴 높이에 누우면 화면 아래 가는 줄로만 보였음 (미리보기 —
+            // 눈 1.62 · 판 1.2 면 앞 2.3칸이 아래 10° 라 띠가 얇음). 화면 가운데 (수평선 위) 는 가리지 않음
+            double ft = Math.toRadians(c.numOr("fpTilt", 15));
+            Vec3 pf = V.add(V.add(V.add(feet, r, num(at, 0)), V.UP, s.numOr("fpHeight", c.numOr("fpHeight", 0.95))), f, num(at, 2));
+            mmorpg.fabric.Fx3d.spawn(level, model, pf, card.with("dir", V.add(V.scale(f, Math.cos(ft)), V.UP, Math.sin(ft)), "face",
+                    V.add(V.scale(V.UP, Math.cos(ft)), f, -Math.sin(ft)), "roll", 0.0, "view", 2.0, "owner", (double) owner));
         }
         spawned += 2;
         lastModel = model;

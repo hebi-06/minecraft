@@ -951,6 +951,12 @@ final class VanillaProbe {
                     FILM_FRAMES.add(motionFrames(k.substring(7)));
                     continue;
                 }
+                if (k.startsWith("motionfp:")) {
+                    // 2026-11-14 평타 1인칭 (motionfp:<무기 종류> — 쓴 사람의 눈: films/vanilla_motionfp_<종류>)
+                    FILM_RUNES.add("motion:" + k.substring(9) + ":fp");
+                    FILM_FRAMES.add(motionFrames(k.substring(9)));
+                    continue;
+                }
                 if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(k + "_" + g);
                 else keys.add(k);
             }
@@ -1593,7 +1599,9 @@ final class VanillaProbe {
      * (Motions.attackInterval(공속)) 마다 ({@link #motionPlan}). 내 모션 보기를 켠 3인칭 화면 (직업 영상과 같은 카메라).
      * 첫 평타 뒤: 뼈 몸이 떴는지 (check) · 클라이언트의 둘레 엔티티 (뼈가 사람에게 탔는지 — ents)
      */
-    private static void motionFilm(ServerPlayer p, int step, String type, int frames, int y) {
+    private static void motionFilm(ServerPlayer p, int step, String spec, int frames, int y) {
+        final boolean fp = spec.endsWith(":fp"); // 2026-11-14 1인칭 (motionfp:)
+        final String type = fp ? spec.substring(0, spec.length() - 3) : spec;
         ServerLevel level = p.level();
         MinecraftServer server = level.getServer();
         run(server, "tick rate 20");
@@ -1614,14 +1622,22 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
-        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
-        String name = "vanilla_motion_" + type;
+        String name = (fp ? "vanilla_motionfp_" : "vanilla_motion_") + type;
         int per = motionPer(type);
         int[][] plan = motionPlan(type);
         mmorpg.fabric.RpgPlayers.setStat(p, "dex", plan[0][0]);
-        say(p, "cam film 125 6.00 2.10 1.00 2.5 1.00");
-        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, 6.0, 2.1, 1.0, 2.5, 1.0);
+        if (fp) {
+            // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 1인칭 판 · 눈앞 그림)
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
+            mmorpg.fabric.vfx.PBridge.filmCamOff(p);
+            say(p, "cam off");
+            say(p, "cam first");
+        } else {
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+            if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+            say(p, "cam film 125 6.00 2.10 1.00 2.5 1.00");
+            mmorpg.fabric.vfx.PBridge.filmCam(p, 125, 6.0, 2.1, 1.0, 2.5, 1.0);
+        }
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);
@@ -1640,7 +1656,7 @@ final class VanillaProbe {
             }
             Tasks.later(frames, () -> mmorpg.fabric.RpgPlayers.setStat(p, "dex", 150));
             Tasks.later(9, () -> {
-                check("rig shown " + type + " (" + VanillaRig.lastMotion + ")", VanillaRig.active(p));
+                if (!fp) check("rig shown " + type + " (" + VanillaRig.lastMotion + ")", VanillaRig.active(p));
                 say(p, "ents");
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
