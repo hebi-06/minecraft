@@ -453,17 +453,20 @@ final class SoulreaperSkills {
     static final double REAPER_SPIN_RATE = 800;
 
     /**
-     * 2026-11-14 직업 도감 메모 "2d 참격이 없음" (페일 하베스트 — 3D 사신이 두 바퀴 도는 동안 낫에 2D 참격이 없었음): 낫날 자리를 사신과 함께 도는 사신 참격 판 넷
-     * (slash_job_rp — 불룩한 날이 도는 쪽 · 넓은 면은 보는 사람 쪽 · 칸이 한 번 그려짐, 쓴 사람 1인칭에서는 숨김 — 낫이 머리 위를 지나감). ang = 처음 각 (x · z 평면)
+     * 2026-11-14 직업 도감 메모 "2d 참격이 없음" (페일 하베스트 — 3D 사신이 두 바퀴 도는 동안 낫에 2D 참격이 없었음): 사신 둘레에 누운 큰 참격 띠 하나 —
+     * 기본 평타 참격 판 (tools/basic_slash_art.py · 두꺼운 거울 그림 slash_basic_wl: 위에서 보아 x · z 평면의 각이 커지는 쪽으로 휩씀 = 3D 사신이 도는 쪽).
+     * 머리 (가늘고 날카로운 끝) 가 낫날 각 ang 에서 236° 를 낫과 같은 빠르기로 지나고 뒤로 두꺼운 잔상이 거둬짐. 허리 높이 (3인칭 카메라 · 둘레 사람이 위에서 봄 —
+     * 낫 높이 4.4 에 두면 아래에서 보여 모드 없는 클라이언트의 한쪽 면 글자가 뒤집혀 거꾸로 돎). 전에는 낫날을 따라 도는 사신 참격 판 넷이 카메라를 보며 서서
+     * 세로 초승달 둘로 보였음 (영상 CI 43588780734)
      */
-    private static void scytheTrail(ServerPlayer sp, Jobs.Job j, Vec3 center, double ang, double life) {
-        Opt v = JobFx.hide1p(sp);
-        for (int q = 0; q < 4; q++) {
-            mmorpg.fabric.Fx3d.spawn(sp.level(), JobFx.slashModel(j), center, Opt.of("orbit", REAPER_SCYTHE_R, "orbitSpeed", REAPER_SPIN_RATE, "orbitAngle",
-                    ang + q * 90.0, "align", 1.0, "faceCam", 1.0, "scale", 3.0, "life", life, "grow", 0.1, "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.04,
-                    "fadeOut", life * 0.35, "glowAlpha", 0.0, "color", JobFx.cardColor(j), "glow", JobFx.inner(j), "alpha", 0.95, "shine", 0.15, "view",
-                    v.num("view", 0), "owner", v.num("owner", 0)));
-        }
+    private static void scytheTrail(ServerPlayer sp, Jobs.Job j, Vec3 base, double ang) {
+        double sweep = 236.0 / REAPER_SPIN_RATE;
+        double life = sweep / 0.4;
+        double a = Math.toRadians(ang + 118); // 판 +Y (앞) — 머리 시작 = 앞 − 118°
+        Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
+        mmorpg.fabric.Fx3d.spawn(sp.level(), "slash_basic_wl", V.up(base, 1.1), Opt.of("dir", d, "face", V.UP, "roll", 0.0, "scale", REAPER_SCYTHE_R + 0.6,
+                "life", life, "grow", 0.06, "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.0, "fadeOut", life * 0.08, "glowAlpha", 0.0, "color",
+                JobFx.cardColor(j), "glow", JobFx.inner(j), "alpha", 0.95, "shine", 0.1));
     }
 
     /**
@@ -555,7 +558,7 @@ final class SoulreaperSkills {
                 RuneKit.later(Math.max(0, at - lead), () -> {
                     if (!RuneKit.sameLife(sp, life) || gm[0] == null || !gm[0].alive()) return;
                     double ang = Math.toDegrees(Math.atan2(-f0.z, -f0.x)) - lead * REAPER_SPIN_RATE / 20.0;
-                    scytheTrail(sp, j, V.up(base, REAPER_SCYTHE_H), ang, (lead * 2 + 1) / 20.0);
+                    scytheTrail(sp, j, base, ang);
                 });
             }
             RuneKit.later(at, () -> {
