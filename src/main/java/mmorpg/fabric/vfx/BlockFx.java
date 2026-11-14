@@ -15,7 +15,10 @@ import org.joml.Quaternionf;
 public final class BlockFx {
     private BlockFx() {}
 
-    public static final String CUBE = "rpg:vfx/flat_cube";
+    /** 2026-11-15 사용자 "큐브들에 그라데이션 · 명암 · 그림": 줄 상자 (가로 그라데이션 · 흰 심 — tools/vfx_blocky.py fx_bar) — 모든 상자의 바탕 */
+    public static final String CUBE = "rpg:vfx/fx_bar";
+    /** 그림 상자 (그라데이션 · 깎은 테두리 + 마술 회로 겹 무늬 — 물들임 0 = 몸 · 1 = 무늬, fx_cube): 불덩이 · 불꽃 · 연기 · 금빛 문 판 */
+    public static final String GLYPH = "rpg:vfx/fx_cube";
     public static final double[] WHITE = {1.0, 1.0, 1.0};
     /** 연기 (짙은 붉은 잿빛 — 폭발의 번쩍임 뒤 대비) */
     public static final double[] SMOKE = {0.32, 0.17, 0.17};
@@ -25,6 +28,16 @@ public final class BlockFx {
         return fx.prop(CUBE, c, p -> {
             p.grip(8, 8, 8).bright();
             p.tint(color);
+            p.to(c, rot, 1, 0);
+            p.stretch(sx, sy, sz, 0);
+        });
+    }
+
+    /** 그림 상자 하나 (몸 색 color · 무늬 색 glyph — 흰빛에 가깝게) */
+    public static Vfx.Prop boxG(Vfx.Fx fx, Vec3 c, Quaternionf rot, double sx, double sy, double sz, double[] color, double[] glyph) {
+        return fx.prop(GLYPH, c, p -> {
+            p.grip(8, 8, 8).bright();
+            p.tint(color, glyph);
             p.to(c, rot, 1, 0);
             p.stretch(sx, sy, sz, 0);
         });
@@ -150,7 +163,8 @@ public final class BlockFx {
             Quaternionf rq = new Quaternionf().rotateXYZ((float) (Kit.rand() * 3), (float) (Kit.rand() * 3), (float) (Kit.rand() * 3));
             Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6 - 0.2, Kit.rand() - 0.5), size * 0.45);
             double sz = Math.min(1.1, size * (0.3 + Kit.rand() * 0.25));
-            Vfx.Prop f = box(fx, V.add(c, off), rq, 0.05, 0.05, 0.05, k < 2 ? core : color);
+            double[] fc = k < 2 ? core : color;
+            Vfx.Prop f = boxG(fx, V.add(c, off), rq, 0.05, 0.05, 0.05, fc, lighten(fc, 0.8));
             Vec3 axis = V.unit(new Vec3(Kit.rand() + 0.01, Kit.rand(), Kit.rand()));
             Quaternionf rq2 = new Quaternionf(rq).rotateAxis(1.4F, (float) axis.x, (float) axis.y, (float) axis.z);
             fx.on(1, () -> f.stretch(sz, sz, sz, 3).move(V.add(c, off, 1.6), 3));
@@ -164,7 +178,7 @@ public final class BlockFx {
             Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.4, Kit.rand() - 0.5), size * 0.7);
             double sz = size * (0.26 + Kit.rand() * 0.14);
             fx.on(3, () -> {
-                Vfx.Prop m = box(fx, V.add(c, off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE);
+                Vfx.Prop m = boxG(fx, V.add(c, off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE, lighten(SMOKE, 0.35));
                 m.stretch(sz, sz, sz, 3).move(V.up(V.add(c, off, 1.4), size * 0.3), 3);
                 // 2026-11-15 게임 영상: 오래 떠 있던 짙은 상자가 흙 덩이처럼 보였음 → 짧게 · 낮게
                 int sl = Math.max(4, L / 2);
@@ -368,14 +382,15 @@ public final class BlockFx {
         // 2026-11-15 게임 영상: 아래를 보는 문 (하늘의 문) 은 아래에서 보면 판 · 고리의 아랫면이 어둡게 (마크 면 밝기 0.4 ~ 0.5) 그려져 검은 흙빛이었음 →
         // 빛 판을 빼고 고리를 세운 띠로 (옆면이 보임 — 하늘 고리 halo 와 같은 까닭)
         boolean down = f.y < -0.45;
-        // 안을 채운 빛 판 (네모 셋을 30° 씩 돌려 겹침)
-        for (int q = 0; q < (down ? 0 : 3); q++) {
-            double b = Math.PI / 6 * q;
+        // 안을 채운 빛 판 (2026-11-15 그림 상자 둘을 45° 돌려 겹침 — 판마다 마술 회로 무늬 · 겹 판이 같은 면에서 깜빡이지 않게 앞뒤로 조금 띄움)
+        for (int q = 0; q < (down ? 0 : 2); q++) {
+            double b = Math.PI / 4 * q;
             Vec3 x = V.add(V.scale(u, Math.cos(b)), v, Math.sin(b));
             Vec3 y = V.add(V.scale(u, -Math.sin(b)), v, Math.cos(b));
             Quaternionf rot = Vfx.basis(x, y, back);
-            Vfx.Prop d = box(fx, c, rot, r * 0.2, r * 0.2, 0.01, hot);
-            fx.on(1, () -> d.stretch(r * 1.18, r * 1.18, 0.012, G));
+            Vec3 cq = V.add(c, f, (q - 0.5) * 0.05);
+            Vfx.Prop d = boxG(fx, cq, rot, r * 0.2, r * 0.2, 0.12, q == 0 ? color : hot, WHITE);
+            fx.on(1, () -> d.stretch(r * 1.12, r * 1.12, 0.12, G));
             fx.on(1 + G + H, () -> d.stretch(0.0, 0.0, 0.0, 4));
             fx.on(G + H + 6, d::remove);
         }
@@ -489,7 +504,7 @@ public final class BlockFx {
             Quaternionf q1 = new Quaternionf(q0).rotateY(1.6F);
             Vec3 top = V.add(foot, new Vec3((Kit.rand() - 0.5) * h * 0.35, h * rk[i], (Kit.rand() - 0.5) * h * 0.35));
             fx.on(dl[i], () -> {
-                Vfx.Prop o = box(fx, V.up(foot, sz * 0.5), q0, sz * 0.4, sz * 0.4, sz * 0.4, col);
+                Vfx.Prop o = boxG(fx, V.up(foot, sz * 0.5), q0, sz * 0.4, sz * 0.4, sz * 0.4, col, lighten(col, 0.75));
                 o.stretch(sz, sz, sz, 2).move(V.up(foot, sz * 0.7 + h * 0.1), 2);
                 fx.on(fx.age + 2, () -> o.move(top, li - 2).turn(q1, li - 2).stretch(0.0, 0.0, 0.0, li - 2));
                 fx.on(fx.age + li + 1, o::remove);

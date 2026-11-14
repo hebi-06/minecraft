@@ -26,7 +26,7 @@ import sys
 import zlib
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "src", "main", "resources", "assets", "rpg")
@@ -322,12 +322,13 @@ def flat_glow(lo=0.7, hi=1.0, ring=True):
 # ------------------------------------------------------------------ 모델
 
 class Mat:
-    def __init__(self, paint, tint=None, glow=False, animated=False, overlay_tint=0, alpha=False):
+    def __init__(self, paint, tint=None, glow=False, animated=False, overlay_tint=0, alpha=False, overlay_pad=0.08):
         self.paint = paint
         self.tint = tint
         self.glow = glow
         self.animated = animated
         self.overlay_tint = overlay_tint
+        self.overlay_pad = overlay_pad  # 2026-11-15 겹 그림이 뜨는 거리 (모델 픽셀 — 얇게 늘인 상자에서 겹치지 않게 키울 수 있음)
 
 
 class BModel:
@@ -421,8 +422,8 @@ class BModel:
                 f = list(p["from"])
                 t = list(p["to"])
                 if overlay:
-                    f = [v - 0.08 for v in f]
-                    t = [v + 0.08 for v in t]
+                    f = [v - m.overlay_pad for v in f]
+                    t = [v + m.overlay_pad for v in t]
                 faces = {}
                 for fn, fr in faces_src.items():
                     x0, y0 = pos[(k, fn, overlay)]
@@ -1177,6 +1178,97 @@ def flat_cube():
     m = BModel("flat_cube", "BlockFx 단색 상자 (2026-11-15 — 무늬 없는 흰 면 · 물들임 0 · 스스로 빛남)", d=1.0)
     m.mat("flat", Mat(flat_white(), tint=0, glow=True))
     m.box("flat", (0, 0, 0), (16, 16, 16))
+    return m
+
+
+def fx_glyph(w, h):
+    """2026-11-15 상자 면의 그림 (사용자 "큐브 하나들에 그림 같은 것"): 마술 회로 무늬 — 안쪽 네모 틀 · 원 · 마름모 · 마디 · 모서리 회로 · 옆 면으로 이어지는 줄.
+    흰 선 (알파 — 4배로 그려 줄여 매끈하게)"""
+    S = 4
+    W, H = w * S, h * S
+    im = Image.new("L", (W, H), 0)
+    dr = ImageDraw.Draw(im)
+
+    def P(a, b):
+        return (a * W, b * H)
+
+    def lw(k):
+        return max(1, int(round(k * W)))
+    i0, i1, r = 0.17, 0.83, 0.27
+    dr.rectangle([P(i0, i0), P(i1, i1)], outline=235, width=lw(0.03))
+    dr.ellipse([P(0.5 - r, 0.5 - r), P(0.5 + r, 0.5 + r)], outline=255, width=lw(0.028))
+    dia = [P(0.5, 0.5 - r), P(0.5 + r, 0.5), P(0.5, 0.5 + r), P(0.5 - r, 0.5), P(0.5, 0.5 - r)]
+    dr.line(dia, fill=225, width=lw(0.022), joint="curve")
+    for (a, b) in ((0.5, 0.5 - r), (0.5 + r, 0.5), (0.5, 0.5 + r), (0.5 - r, 0.5)):
+        dr.ellipse([P(a - 0.04, b - 0.04), P(a + 0.04, b + 0.04)], fill=255)
+    dr.ellipse([P(0.44, 0.44), P(0.56, 0.56)], fill=255)
+    for (a, b, sa, sb) in ((i0, i0, 1, 1), (i1, i0, -1, 1), (i0, i1, 1, -1), (i1, i1, -1, -1)):
+        e = (a + sa * 0.1, b + sb * 0.1)
+        dr.line([P(a, b), P(*e)], fill=230, width=lw(0.022))
+        dr.ellipse([P(e[0] - 0.025, e[1] - 0.025), P(e[0] + 0.025, e[1] + 0.025)], fill=255)
+    for (a0, b0, a1, b1) in ((0.5, i0, 0.5, 0.04), (0.5, i1, 0.5, 0.96), (i0, 0.5, 0.04, 0.5), (i1, 0.5, 0.96, 0.5)):
+        dr.line([P(a0, b0), P(a1, b1)], fill=215, width=lw(0.022))
+    a = np.asarray(im.resize((w, h), Image.LANCZOS), float) / 255.0
+    one = np.ones_like(a)
+    return np.stack([one, one, one, a], -1)
+
+
+def fx_body(glyph):
+    """2026-11-15 상자 면 (사용자 "큐브들에 그라데이션 · 명암 · 그림"): 흰 ~ 회색 (물들임 색에 곱해짐) — 가운데 밝고 가장자리로 어두워짐 · 비스듬한 윤 · 깎은 테두리
+    (위 · 왼쪽 밝게, 아래 · 오른쪽 어둡게 · 안쪽 밝은 줄). glyph 면 겹 그림 (마술 회로 — 물들임 1)"""
+
+    def paint(w, h, face, rng, frame):
+        y, x = np.mgrid[0:h, 0:w].astype(float)
+        u = (x + 0.5) / w
+        v = (y + 0.5) / h
+        r = np.sqrt((u - 0.5) ** 2 + (v - 0.5) ** 2) / np.sqrt(0.5)
+        d = np.maximum(np.abs(u - 0.5), np.abs(v - 0.5)) * 2
+        val = 1.0 - 0.36 * (0.55 * r + 0.45 * d) ** 1.6
+        val = val + 0.07 * np.exp(-((u + v - 0.7) / 0.16) ** 2)
+        bw = max(2, int(round(w / 13)))
+        top, left, bottom, right = y, x, h - 1 - y, w - 1 - x
+        near = np.minimum(np.minimum(top, left), np.minimum(bottom, right))
+        band = near < bw
+        light = band & (np.minimum(top, left) <= np.minimum(bottom, right))
+        dark = band & ~light
+        val = np.where(light, np.minimum(1.0, val + 0.14), val)
+        val = np.where(dark, val * 0.58, val)
+        val = np.where((near >= bw) & (near < bw + 1), np.maximum(val, 0.95), val)
+        val = np.clip(val, 0, 1)
+        base = np.stack([val, val, val, np.ones_like(val)], -1)
+        return base, (fx_glyph(w, h) if glyph else None)
+    return paint
+
+
+def fx_bar_paint():
+    """2026-11-15 길게 늘이는 상자 면 (빛 줄 · 고리 마디 · 호 · 베인 줄): 가로 그라데이션 — 가운데 흰 심 · 가장자리로 어두워짐 (세로 = 긴 축은 그대로라 늘여도
+    무늬가 늘어지지 않음)"""
+
+    def paint(w, h, face, rng, frame):
+        y, x = np.mgrid[0:h, 0:w].astype(float)
+        u = (x + 0.5) / w
+        t = np.abs(2 * u - 1)
+        val = 0.56 + 0.44 * (1 - t ** 1.7)
+        val = np.where(t < 0.12, np.maximum(val, 0.99), val)
+        val = np.where(t > 0.86, val * 0.82, val)
+        return np.stack([val, val, val, np.ones_like(val)], -1), None
+    return paint
+
+
+def fx_cube():
+    """2026-11-15 BlockFx 그림 상자 (사용자 "큐브들에 그라데이션 좀 넣고 명암 좀 너고 큐브 하나들에 그림 같은 것 좀"): 0 ~ 16 상자 · 그라데이션 · 깎은 테두리 (물들임 0)
+    + 2% 떠 있는 겹 상자에 마술 회로 무늬 (흰 선 · 물들임 1) — 불덩이 · 불꽃 · 연기 · 금빛 문 판"""
+    m = BModel("fx_cube", "BlockFx 그림 상자 (2026-11-15 — 그라데이션 · 깎은 테두리 · 마술 회로 겹 무늬)", d=6.0)
+    m.mat("body", Mat(fx_body(True), tint=0, glow=True, overlay_tint=1, overlay_pad=0.32))
+    m.box("body", (0, 0, 0), (16, 16, 16))
+    return m
+
+
+def fx_bar():
+    """2026-11-15 BlockFx 줄 상자: 0 ~ 16 상자 · 가로 그라데이션 (가운데 흰 심 · 가장자리 어둡게 — 물들임 0) — 빛 줄 · 고리 · 호 · 가시 · 베인 줄 · 사슬 · 조각"""
+    m = BModel("fx_bar", "BlockFx 줄 상자 (2026-11-15 — 가로 그라데이션 · 흰 심)", d=4.0)
+    m.mat("body", Mat(fx_bar_paint(), tint=0, glow=True))
+    m.box("body", (0, 0, 0), (16, 16, 16))
     return m
 
 
@@ -2355,7 +2447,7 @@ def chain_link():
     return m
 
 
-BUILD = {"flat_cube": flat_cube, "phantom_sword": phantom_sword, "rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
+BUILD = {"flat_cube": flat_cube, "fx_cube": fx_cube, "fx_bar": fx_bar, "phantom_sword": phantom_sword, "rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear,
          "shuriken": shuriken, "smoke_bomb": smoke_bomb, "tower_shield": tower_shield, "grapple_hook": grapple_hook, "chain_link": chain_link,
@@ -2502,7 +2594,7 @@ def load_current(name):
     return js["elements"], np.asarray(im.crop((0, 0, w, w)))
 
 
-TINTS = {"flat_cube": [(1.0, 0.3, 0.22)], "phantom_sword": [(0.9, 0.95, 1.0), (1.0, 0.3, 0.22)], "rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
+TINTS = {"flat_cube": [(1.0, 0.3, 0.22)], "fx_cube": [(1.0, 0.36, 0.12), (1.0, 0.95, 0.8)], "fx_bar": [(0.92, 0.12, 0.14)], "phantom_sword": [(0.9, 0.95, 1.0), (1.0, 0.3, 0.22)], "rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
          "cloud": [(0.42, 0.36, 0.62), (0.78, 0.62, 1.0)], "rune_sword": [(0.45, 0.62, 1.0), (0.86, 0.92, 1.0)],
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)],
          "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)],
