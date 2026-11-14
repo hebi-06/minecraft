@@ -4,9 +4,11 @@ CI (약 15분) 대신 몇 초 — 크기 · 밀도 · 겹 · 색을 여기서 �
 
   cd tools/blockfx_preview && npm install          # 처음 한 번 (three)
   python3 tools/blockfx_preview/render.py burst blades
+  python3 tools/blockfx_preview/render.py "volley&cam=1.2,2.3,4.6,-0.6,1.5,0"   # 카메라 바꿔 보기 (자리 · 보는 곳)
 """
 import http.server
 import os
+import re
 import shutil
 import socketserver
 import subprocess
@@ -39,7 +41,8 @@ def main(names):
         logs = []
         pg.on("pageerror", lambda e: logs.append("ERR " + str(e)))
         for n in names:
-            pg.goto(f"http://127.0.0.1:{port}/index.html?s={n}")
+            pg.goto(f"http://127.0.0.1:{port}/index.html?s={n}")  # n 에 &cam=x,y,z,lx,ly,lz · &smoke=0 처럼 덧붙일 수 있음
+            n = re.sub(r"[^A-Za-z0-9_-]+", "_", n)
             pg.wait_for_function("window.READY === true", timeout=60000)
             ticks = pg.evaluate("window.TICKS")
             tmp = tempfile.mkdtemp()

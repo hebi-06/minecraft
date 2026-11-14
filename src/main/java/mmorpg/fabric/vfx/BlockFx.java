@@ -17,6 +17,8 @@ public final class BlockFx {
 
     public static final String CUBE = "rpg:vfx/flat_cube";
     public static final double[] WHITE = {1.0, 1.0, 1.0};
+    /** 연기 (짙은 붉은 잿빛 — 폭발의 번쩍임 뒤 대비) */
+    public static final double[] SMOKE = {0.32, 0.17, 0.17};
 
     /** 상자 하나: 가운데 c · 회전 rot (모델 y = 긴 축) · 크기 (칸) · 색 — 처음부터 그 모습 */
     public static Vfx.Prop box(Vfx.Fx fx, Vec3 c, Quaternionf rot, double sx, double sy, double sz, double[] color) {
@@ -143,16 +145,30 @@ public final class BlockFx {
         fx.on(4, () -> w.turn(new Quaternionf(wq).rotateY(0.8F), 4).stretch(0.0, 0.0, 0.0, 5));
         fx.on(10, w::remove);
         // 불덩이
-        for (int k = 0; k < 4; k++) {
+        // 2026-11-15 3판: 불덩이 여섯 · 작게 (1.1칸까지 — 큰 폭발에서 큰 상자로 보였음) · 둘은 속 색
+        for (int k = 0; k < 6; k++) {
             Quaternionf rq = new Quaternionf().rotateXYZ((float) (Kit.rand() * 3), (float) (Kit.rand() * 3), (float) (Kit.rand() * 3));
-            Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6 - 0.2, Kit.rand() - 0.5), size * 0.35);
-            double sz = size * (0.55 + Kit.rand() * 0.35);
-            Vfx.Prop f = box(fx, V.add(c, off), rq, 0.05, 0.05, 0.05, k < 2 ? hot : color);
+            Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6 - 0.2, Kit.rand() - 0.5), size * 0.45);
+            double sz = Math.min(1.1, size * (0.3 + Kit.rand() * 0.25));
+            Vfx.Prop f = box(fx, V.add(c, off), rq, 0.05, 0.05, 0.05, k < 2 ? core : color);
             Vec3 axis = V.unit(new Vec3(Kit.rand() + 0.01, Kit.rand(), Kit.rand()));
             Quaternionf rq2 = new Quaternionf(rq).rotateAxis(1.4F, (float) axis.x, (float) axis.y, (float) axis.z);
             fx.on(1, () -> f.stretch(sz, sz, sz, 3).move(V.add(c, off, 1.6), 3));
             fx.on(4, () -> f.turn(rq2, L - 3).move(V.up(V.add(c, off, 2.2), size * 0.25), L - 3).stretch(0.0, 0.0, 0.0, L - 3));
             fx.on(L + 2, f::remove);
+        }
+        // 2026-11-15 연기 넷 (짙은 색 — 번쩍임 뒤 대비, 큰 폭발만): 3틱에 가운데서 솟으며 부풀었다 돌며 줄어듦
+        if (size >= 1.5) for (int k = 0; k < 4; k++) {
+            Quaternionf rq = new Quaternionf().rotateXYZ((float) (Kit.rand() * 3), (float) (Kit.rand() * 3), (float) (Kit.rand() * 3));
+            Quaternionf rq2 = new Quaternionf(rq).rotateY(1.2F);
+            Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.4, Kit.rand() - 0.5), size * 0.7);
+            double sz = size * (0.26 + Kit.rand() * 0.14);
+            fx.on(3, () -> {
+                Vfx.Prop m = box(fx, V.add(c, off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE);
+                m.stretch(sz, sz, sz, 3).move(V.up(V.add(c, off, 1.4), size * 0.3), 3);
+                fx.on(6, () -> m.move(V.up(V.add(c, off, 1.7), size * 0.75), L - 2).stretch(0.0, 0.0, 0.0, L - 2).turn(rq2, L - 2));
+                fx.on(L + 5, m::remove);
+            });
         }
         // 가시 열둘
         for (int k = 0; k < 12; k++) {
@@ -190,19 +206,25 @@ public final class BlockFx {
         }
     }
 
-    /** 번쩍 별 (가운데 c · 크기 size — 흰 가는 긴 상자 셋이 1틱에 뻗었다 2틱에 사라짐 · 겉 색 작은 상자 하나): 쏠 때 · 꽂힐 때의 가벼운 번쩍임 */
+    /**
+     * 번쩍 별 2판 (가운데 c · 크기 size — 쏠 때 · 꽂힐 때의 가벼운 번쩍임): 흰 가는 긴 상자 셋 (1틱에 뻗었다 2틱에 사라짐) · 겉 색 가는 긴 상자 둘 · 작은 흰
+     * 마름모 (2026-11-15 미리보기: 겉 색 큰 상자는 상자로 보였음)
+     */
     public static void star(ServerLevel level, Vec3 c, double size, double[] color) {
         Vfx.Fx fx = RuneProps.fx(level, c, 8);
-        Vec3[] axes = {V.unit(new Vec3(1, 0.25, 0.1)), V.unit(new Vec3(-0.25, 1, 0.3)), V.unit(new Vec3(0.3, -0.15, 1))};
-        for (Vec3 ax : axes) {
-            Vfx.Prop st = box(fx, c, along(ax, null), size * 0.06, size * 0.3, size * 0.06, WHITE);
-            fx.on(1, () -> st.stretch(size * 0.05, size * 2.0, size * 0.05, 1));
-            fx.on(2, () -> st.stretch(0.0, size * 2.4, 0.0, 2));
+        Object[][] rays = {{new Vec3(1, 0.25, 0.1), WHITE, 0.035, 2.2}, {new Vec3(-0.25, 1, 0.3), WHITE, 0.035, 2.2}, {new Vec3(0.3, -0.15, 1), WHITE, 0.035, 2.2},
+                {new Vec3(1, 1, 0.2), color, 0.05, 1.4}, {new Vec3(-1, 1, -0.3), color, 0.05, 1.4}};
+        for (Object[] r : rays) {
+            double th = (double) r[2];
+            double ln = (double) r[3];
+            Vfx.Prop st = box(fx, c, along(V.unit((Vec3) r[0]), null), size * th, size * 0.3, size * th, (double[]) r[1]);
+            fx.on(1, () -> st.stretch(size * th, size * ln, size * th, 1));
+            fx.on(2, () -> st.stretch(0.0, size * ln * 1.2, 0.0, 2));
             fx.on(5, st::remove);
         }
         Quaternionf q = new Quaternionf().rotateXYZ(0.785F, 0.615F, 0F);
-        Vfx.Prop k = box(fx, c, q, size * 0.1, size * 0.1, size * 0.1, color);
-        fx.on(1, () -> k.stretch(size * 0.45, size * 0.45, size * 0.45, 1));
+        Vfx.Prop k = box(fx, c, q, size * 0.05, size * 0.05, size * 0.05, WHITE);
+        fx.on(1, () -> k.stretch(size * 0.2, size * 0.2, size * 0.2, 1));
         fx.on(2, () -> k.turn(new Quaternionf(q).rotateY(0.9F), 3).stretch(0.0, 0.0, 0.0, 3));
         fx.on(6, k::remove);
     }

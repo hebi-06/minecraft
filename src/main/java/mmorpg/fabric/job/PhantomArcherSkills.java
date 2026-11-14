@@ -106,9 +106,7 @@ final class PhantomArcherSkills {
                 Vec3 d = V.unit(V.sub(to, from));
                 int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
                 b.pose(V.add(to, d, -b.reach() * 0.75), d, PhantomArcher.faceOf(d), t);
-                // 2026-11-15 쏘는 번쩍임 · 뒤따르는 진홍 잔상 둘 (1 · 2틱 늦게 같은 길)
-                mmorpg.fabric.vfx.BlockFx.star(level, from, 0.9 + ii * 0.25, glow);
-                PhantomArcher.afterimages(level, from, V.add(to, d, -b.reach() * 0.75), d, len, t, glow);
+                mmorpg.fabric.vfx.BlockFx.star(level, from, 0.9 + ii * 0.25, glow); // 2026-11-15 쏘는 번쩍임 (잔상은 미리보기에서 빛 줄과 겹쳐 안 보여 뺌)
                 PhantomArcher.streak2d(level, from, to, Math.max(0.2, t / 20.0 + 0.15), glow, core);
                 SkillFx.play(level, "item.trident.throw", from, 1.25 + ii * 0.1, 0.8);
                 if (ii == 0) JobKit.strikeSplit(sp, target, j, P, total, n, every, wts, false, false, life, t, dd -> {});

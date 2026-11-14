@@ -138,15 +138,27 @@ const BlockFx = {
     w.stretch(size * 0.62, size * 0.62, size * 0.62, 2);
     at(t0 + 3, () => w.turn(wq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 0.8)), 4).stretch(0, 0, 0, 5));
     at(t0 + 9, () => w.remove());
-    for (let k = 0; k < 4; k++) {
+    for (let k = 0; k < 6; k++) {
       const rq = new THREE.Quaternion().setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
-      const off = V3(rand() - 0.5, rand() * 0.6 - 0.2, rand() - 0.5).multiplyScalar(size * 0.35);
-      const sz = size * (0.55 + rand() * 0.35);
-      const f = box(c.clone().add(off), rq, 0.05, 0.05, 0.05, k < 2 ? hot : color);
+      const off = V3(rand() - 0.5, rand() * 0.6 - 0.2, rand() - 0.5).multiplyScalar(size * 0.45);
+      const sz = Math.min(1.1, size * (0.3 + rand() * 0.25));
+      const f = box(c.clone().add(off), rq, 0.05, 0.05, 0.05, k < 2 ? core : color);
       at(t0 + 1, () => f.stretch(sz, sz, sz, 3).move(c.clone().add(off.clone().multiplyScalar(1.6)), 3));
       at(t0 + 4, () => f.turn(rq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(V3(rand(), rand(), rand()).normalize(), 1.4)), L - 3)
         .move(c.clone().add(off.clone().multiplyScalar(2.2)).add(V3(0, size * 0.25, 0)), L - 3).stretch(0, 0, 0, L - 3));
       at(t0 + L + 2, () => f.remove());
+    }
+    // 2026-11-15 연기 넷 (짙은 색 — 번쩍임 뒤 대비): 3틱에 가운데서 솟으며 부풀었다 줄어듦
+    if (SMOKE && size >= 1.5) for (let k = 0; k < 4; k++) {
+      const rq = new THREE.Quaternion().setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
+      const off = V3(rand() - 0.5, rand() * 0.4, rand() - 0.5).multiplyScalar(size * 0.7), sz = size * (0.26 + rand() * 0.14);
+      at(t0 + 3, () => {
+        const m = box(c.clone().add(off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE_C);
+        m.stretch(sz, sz, sz, 3).move(c.clone().add(off.clone().multiplyScalar(1.4)).add(V3(0, size * 0.3, 0)), 3);
+        at(t0 + 6, () => m.move(c.clone().add(off.clone().multiplyScalar(1.7)).add(V3(0, size * 0.75, 0)), L - 2).stretch(0, 0, 0, L - 2)
+          .turn(rq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 1.2)), L - 2));
+        at(t0 + L + 5, () => m.remove());
+      });
     }
     // 가시 여덟 (뻗음 → 끝으로 줄어듦)
     for (let k = 0; k < 12; k++) {
@@ -170,6 +182,23 @@ const BlockFx = {
       at(t0 + 4, () => em.move(end, L).stretch(0, 0, 0, L));
       at(t0 + L + 5, () => em.remove());
     }
+  },
+  // 2026-11-15 번쩍 별 2판: 흰 가는 긴 상자 셋 (1틱에 뻗었다 2틱에 사라짐) · 겉 색 가는 긴 상자 둘 (조금 늦게 · 짧게) · 작은 흰 마름모 (진홍 큰 상자는 상자로 보였음)
+  star(c, size, color) {
+    const t0 = NOW;
+    const rays = [[V3(1, 0.25, 0.1), WHITE, 0.035, 2.2], [V3(-0.25, 1, 0.3), WHITE, 0.035, 2.2], [V3(0.3, -0.15, 1), WHITE, 0.035, 2.2],
+      [V3(1, 1, 0.2), color, 0.05, 1.4], [V3(-1, 1, -0.3), color, 0.05, 1.4]];
+    for (const [ax, col, th, ln] of rays) {
+      const st = box(c, along(ax.clone().normalize()), size * th, size * 0.3, size * th, col);
+      at(t0 + 1, () => st.stretch(size * th, size * ln, size * th, 1));
+      at(t0 + 2, () => st.stretch(0, size * ln * 1.2, 0, 2));
+      at(t0 + 5, () => st.remove());
+    }
+    const q0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.785, 0.615, 0));
+    const k = box(c, q0, size * 0.05, size * 0.05, size * 0.05, WHITE);
+    at(t0 + 1, () => k.stretch(size * 0.2, size * 0.2, size * 0.2, 1));
+    at(t0 + 2, () => k.turn(q0.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 0.9)), 3).stretch(0, 0, 0, 3));
+    at(t0 + 6, () => k.remove());
   },
   ring(c, r0, r1, segs, thick, color, life) {
     const n = Math.max(6, segs), L = Math.max(3, life), t0 = NOW;
@@ -248,28 +277,60 @@ function draugr(x, z, yaw) {
   add(0x6ff0ff, -2, 28, -4.2, 1.5, 1.5, 1); add(0x6ff0ff, 2, 28, -4.2, 1.5, 1.5, 1); add(0x56606c, -6.5, 17, 0, 4, 12, 4); add(0x56606c, 6.5, 17, 0, 4, 12, 4);
   return g;
 }
-/** 투영 장검 (phantom_sword 꼴 — 칼 축 +y · 자루 끝 at · 길이 len): 상자 묶음 (같이 움직임) */
-function sword(hilt, dir, len, side) {
-  const rot = along(dir, side), s = len / 2.6;
+/** 투영 장검 (phantom_sword 꼴 — 칼 축 +y · 자루 at · 길이 len · 넓은 면의 법선 side): 상자 묶음 (같이 움직임) — opt.k0 처음 크기 몫 · opt.blade 날 색 · opt.fuller 홈 색 */
+function sword(hilt, dir, len, side, opt = {}) {
+  const s = len / 2.6, bladeC = opt.blade || [0.83, 0.89, 0.97], fullC = opt.fuller || [0.92, 0.12, 0.14];
   const parts = [ // [색, y 가운데, 크기 x(두께) y z(너비)] — 모델 픽셀 → 칸 (×s/16)
     [[0.24, 0.13, 0.1], -0.45, 1.3, 8.3, 1.3], [[0.88, 0.68, 0.28], 0.4, 2, 1.8, 10.8], [[0.62, 0.66, 0.74], 1.45, 1.6, 1.9, 5.2],
-    [[0.91, 0.94, 0.98], 7.6, 1.2, 12.0, 6.8], [[0.91, 0.94, 0.98], 16.8, 1.2, 6.5, 5.6], [[0.91, 0.94, 0.98], 23.2, 1.2, 6.2, 3.8], [[0.95, 0.97, 1.0], 27.8, 1.16, 3.0, 1.6],
-    [[1.0, 0.3, 0.22], 13.6, 1.44, 20.8, 1.3],
+    [bladeC, 7.6, 1.2, 12.0, 6.8], [bladeC, 16.8, 1.2, 6.5, 5.6], [bladeC, 23.2, 1.2, 6.2, 3.8], [[0.95, 0.97, 1.0], 27.8, 1.16, 3.0, 1.6],
+    [fullC, 13.6, 1.44, 20.8, 1.3],
   ];
-  const boxes = [];
-  for (const [c, y, sx, sy, sz] of parts) {
-    const off = V3(0, (y + 10.4) * s / 16, 0).applyQuaternion(rot);
-    boxes.push({ b: box(hilt.clone().add(off), rot, sx * s / 16, sy * s / 16, sz * s / 16, c), y: (y + 10.4) * s / 16, sz: [sx * s / 16, sy * s / 16, sz * s / 16] });
-  }
+  let H = hilt.clone(), D = dir.clone().normalize(), SIDE = side, K = opt.k0 ?? 1;
+  const ps = parts.filter((_, i) => !opt.bladeOnly || i >= 3).map(([c, y, sx, sy, sz]) => ({ c, y: (y + 10.4) * s / 16, sz: [sx * s / 16, sy * s / 16, sz * s / 16] }));
+  { const r = along(D, SIDE); for (const p of ps) p.b = box(H.clone().add(V3(0, p.y * K, 0).applyQuaternion(r)), r, p.sz[0] * K, p.sz[1] * K, p.sz[2] * K, p.c); }
+  const place = (dur) => { const r = along(D, SIDE); for (const p of ps) p.b.move(H.clone().add(V3(0, p.y * K, 0).applyQuaternion(r)), dur).turn(r, dur).stretch(p.sz[0] * K, p.sz[1] * K, p.sz[2] * K, dur); };
   return {
-    to(h, d, dur, side2) { const r = along(d, side2 || side); for (const p of boxes) p.b.move(h.clone().add(V3(0, p.y, 0).applyQuaternion(r)), dur).turn(r, dur); return this; },
-    remove() { for (const p of boxes) p.b.remove(); },
+    to(h, d, dur, side2) { H = h.clone(); D = d.clone().normalize(); if (side2) SIDE = side2; place(dur); return this; },
+    grow(k, dur) { K = k; place(dur); return this; },
+    remove() { for (const p of ps) p.b.remove(); },
+    hilt() { return H.clone(); },
     reach: len,
   };
 }
+/** 자바 PhantomArcher.faceOf: 넓은 면의 법선 = 오른쪽 + 위 0.6 */
+function faceOf(d) {
+  const f = V3(d.x, 0, d.z);
+  if (Math.abs(d.y) > 0.95 || f.length() < 1e-4) return V3(1, 0.6, 0).normalize();
+  f.normalize();
+  return V3(-f.z, 0, f.x).add(V3(0, 0.6, 0)).normalize();
+}
+/** 자바 PhantomArcher.afterimages: 진홍 잔상 둘 (1 · 2틱 늦게 같은 길) */
+function afterimages(from, end, d, len, t) {
+  for (let g = 1; g <= 2; g++) {
+    const k = 1 - 0.12 * g, t0 = NOW;
+    const sw = sword(from, d, len * k, faceOf(d), { k0: 0.05, blade: [0.84, 0.11, 0.14], fuller: WHITE, bladeOnly: true });
+    at(t0 + g, () => { sw.grow(1, 1); sw.to(end.clone().sub(d.clone().multiplyScalar(0.15 * g)), d, Math.max(1, t)); });
+    at(t0 + g + t, () => sw.grow(0.05, 3));
+    at(t0 + g + t + 4, () => sw.remove());
+  }
+}
+/** 자바 PhantomArcher.lodge: 몸에 칼 n 자루가 꽂힘 (0.35칸 뒤에서 0.6 크기로 → 1틱에 박힘) · 번쩍 별 */
+const LODGED = [];
+function lodgeFx(body, from, n) {
+  const base = body.clone().sub(from).normalize(), pad = 0.3, len = 1.15 + pad * 0.3;
+  for (let i = 0; i < n; i++) {
+    const d = base.clone().add(V3(rand() - 0.5, rand() * 0.5 - 0.35, rand() - 0.5).multiplyScalar(0.55)).normalize();
+    const tip = body.clone().add(V3(rand() - 0.5, rand() * 0.8 - 0.3, rand() - 0.5).multiplyScalar(0.3 + pad * 0.4));
+    const hilt = tip.clone().sub(d.clone().multiplyScalar(len * 0.9 * 0.72));
+    const sw = sword(hilt.clone().sub(d.clone().multiplyScalar(0.35)), d, len, faceOf(d), { k0: 0.6 });
+    at(NOW + 1, () => { sw.grow(1, 1); sw.to(hilt, d, 1); });
+    LODGED.push(sw);
+  }
+  BlockFx.star(body, 0.8 + pad * 0.4, CRIMSON);
+}
 
 // ---------------------------------------------------------------- 장면 (자바 PhantomArcherSkills 의 틱을 따라감)
-const CRIMSON = [0.92, 0.12, 0.14], CORE = [0.92, 0.96, 1.0], FIRE = [1.0, 0.36, 0.12], FIRE_CORE = [1.0, 0.86, 0.5], TRACE = [0.42, 0.78, 1.0], BLADE = [0.9, 0.95, 1.0], GEM = [1.0, 0.3, 0.22];
+const CRIMSON = [0.92, 0.12, 0.14], CORE = [0.92, 0.96, 1.0], FIRE = [1.0, 0.36, 0.12], FIRE_CORE = [1.0, 0.82, 0.3], TRACE = [0.42, 0.78, 1.0], BLADE = [0.9, 0.95, 1.0], GEM = [1.0, 0.3, 0.22];
 const PL = V3(3, 0, 0), FWD = V3(-1, 0, 0), RIGHT = V3(0, 0, -1);
 function crowd() { person(PL.x, PL.z, Math.PI / 2); draugr(-3, 0, -Math.PI / 2); draugr(-4.6, -1.5, -Math.PI / 2); draugr(-4.4, 1.6, -Math.PI / 2); draugr(-6.2, 0.2, -Math.PI / 2); }
 function trace(hilt, dir, len, life) {
@@ -354,6 +415,54 @@ const SCENES = {
       });
     },
   },
+  volley: { // 소드 볼트: 0 투영 (선 → 1 · 2 · 3틱 칼) · 5 · 8 · 11 쏨 → 2틱 뒤 꽂힘
+    cam: [[7.2, 3.1, -1.6], [-1.5, 1.4, 0.2]], ticks: 32,
+    run() {
+      crowd();
+      const hand = V3(PL.x - 0.6, 1.42, PL.z - 0.25), body = V3(-3, 1.1, 0), n = 3;
+      for (let i = 0; i < n; i++) {
+        const u = i - (n - 1) / 2, len = 1.7 * (i === n - 1 ? 1.5 : 1);
+        const h0 = hand.clone().add(FWD.clone().multiplyScalar(0.7)).add(V3(0, 0.6 + 0.12 * Math.abs(u) + (i === n - 1 ? 0.15 : 0), 0)).add(RIGHT.clone().multiplyScalar(u * 0.55));
+        const d0 = body.clone().sub(h0).normalize();
+        trace(h0, d0, len, Math.max(4, 1 + i + 3));
+        const sw = sword(h0, d0, len, faceOf(d0), { k0: 0.05 });
+        at(1 + i, () => sw.grow(1, 2));
+        at(5 + i * 3, () => {
+          const to = body.clone().add(V3(0, u * 0.18, 0)), from = sw.hilt(), d = to.clone().sub(from).normalize();
+          const t = Math.max(1, Math.round(Math.max(0.05, to.distanceTo(from) / 60) * 20));
+          const end = to.clone().sub(d.clone().multiplyScalar(len * 0.75));
+          sw.to(end, d, t, faceOf(d));
+          BlockFx.star(from, 0.9 + i * 0.25, CRIMSON);
+          afterimages(from, end, d, len, t);
+          BlockFx.beam(from, to, 0.16, CRIMSON, Math.max(3, Math.round(Math.max(0.2, t / 20 + 0.15) * 20)));
+          at(NOW + t, () => {
+            sw.remove(); lodgeFx(body, from, 1);
+            const sz = i === n - 1 ? 1.2 : 0.75;
+            BlockFx.burst(body, sz * 0.8, CRIMSON, WHITE, 6); BlockFx.shards(body, 6, sz * 1.4, sz * 0.4, BLADE, 8);
+          });
+        });
+      }
+    },
+  },
+  basic: { // 활 평타 다섯 (6틱마다 — 게임은 더 느림): 칼이 날아가 꽂힘 → 다섯째 10틱 뒤 터짐 (폭발 · 고리)
+    cam: [[7.2, 3.1, -1.6], [-1.5, 1.4, 0.2]], ticks: 50,
+    run() {
+      crowd();
+      const from = V3(PL.x - 0.3, 1.5, PL.z - 0.2), body = V3(-3, 1.1, 0);
+      for (let s2 = 0; s2 < 5; s2++) at(s2 * 6, () => {
+        const d = body.clone().sub(from).normalize(), dist = body.distanceTo(from), ticks = Math.max(1, Math.round(dist / 50 * 20));
+        const start = from.clone().add(d.clone().multiplyScalar(0.2)), len = 1.45;
+        const sw = sword(start, d, len, faceOf(d), { k0: 0.35 });
+        const end = from.clone().add(d.clone().multiplyScalar(Math.max(0.6, dist - len * 0.75)));
+        at(NOW + 1, () => { sw.grow(1, 1); sw.to(end, d, Math.max(1, ticks - 1)); });
+        at(NOW + ticks, () => { sw.remove(); lodgeFx(body, from, 1); });
+      });
+      at(24 + 2 + 10, () => {
+        for (const l of LODGED) l.remove();
+        blast(body, 1.4 + 0.3 * 0.6); BlockFx.ring(V3(body.x, 0.05, body.z), 0.4, 2, 16, 0.25, CRIMSON, 7);
+      });
+    },
+  },
   ult: { // 소드 생추어리: 0 ~ 12 불꽃 고리가 번짐 · 칼 들판 → 24 ~ 74 물결 → 72 하늘로 → 86 내리꽂힘
     cam: [[11, 8.5, 12], [-1.5, 0.5, 0]], ticks: 100,
     run() {
@@ -380,10 +489,13 @@ const SCENES = {
 };
 
 const NAME = q.get('s') || 'burst';
+var SMOKE = q.get('smoke') !== '0';
+var SMOKE_C = (q.get('smokec') || '0.32,0.17,0.17').split(',').map(Number);
 const S = SCENES[NAME];
 world();
 S.run();
-cam.position.set(...S.cam[0]); cam.lookAt(...S.cam[1]);
+const CAM = q.get('cam') ? q.get('cam').split(',').map(Number) : null; // ?cam=x,y,z,lx,ly,lz
+cam.position.set(...(CAM ? CAM.slice(0, 3) : S.cam[0])); cam.lookAt(...(CAM ? CAM.slice(3, 6) : S.cam[1]));
 window.TICKS = S.ticks;
 window.renderTick = (t) => {
   runEvents(t);
