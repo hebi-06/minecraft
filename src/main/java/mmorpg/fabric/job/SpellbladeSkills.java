@@ -419,7 +419,7 @@ final class SpellbladeSkills {
                 ServerLevel level = sp.level();
                 Vec3 f = Kit.facingOf(sp);
                 double q = Math.min(1, (tt + 2.0) / rise);
-                Vec3 mid = V.add(behindAt(sp, 0, c0.y), V.scale(V.unit(V.sub(passEnd(sp, 0, range, c0.y), behindAt(sp, 0, c0.y))), JobSword3d.REACH * CLAY * 0.45));
+                Vec3 mid = V.lerp(behindAt(sp, 0, range, c0.y), tipStart(sp, 0, c0.y), 0.5); // 등 뒤 거검의 가운데
                 for (int sd : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.up(mid, 1.5 - q), V.rightOf(f), sd * (3.0 - q * 2.0));
                     SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.scale(V.rightOf(f), -sd), "speed", 3.0, "size", 0.18, "grow", 0.5, "life", 0.25,
@@ -460,12 +460,34 @@ final class SpellbladeSkills {
     /** 돌진에 걸리는 틱 (등 뒤 → 앞 끝 — 이 틱 뒤에 피해: 돌진을 rise + i × gap − PASS_T 에 떠남) */
     private static final int PASS_T = 3;
 
-    /** 돌진 i 의 떠나는 자리 (쥔 곳): 몸 뒤 3.2칸 · 옆 · 머리 위 (돌진마다 조금 높게) — 땅 높이 groundY 기준 */
-    private static Vec3 behindAt(ServerPlayer sp, int i, double groundY) {
+    /**
+     * 돌진의 처음 크기 몫 — 등 뒤에서는 작게 (4.3칸) 떠나 앞으로 날아가며 제 크기 (6.9칸) 로 커짐. CI 43562041300 영상: 등 뒤 높이 (머리 위 4.2칸) 의 쥔 곳에서 앞을 겨눈 6.9칸
+     * 거검은 몸 위를 덮어 "머리 위에 뜬 칼" 로 보였음 (뒤에서 오는 것으로 안 보임) · 눕힌 날 (넓은 면이 위) 은 옆 카메라에서 막대처럼 얇았음
+     */
+    private static final double PASS_S0 = 0.62;
+
+    /** 돌진 i 의 칼끝이 떠나는 자리: 몸 뒤 0.8칸 · 옆 (오른쪽 · 가운데 · 왼쪽) · 발 위 2.4칸 (돌진마다 0.3칸 높게) — 땅 높이 groundY 기준 */
+    private static Vec3 tipStart(ServerPlayer sp, int i, double groundY) {
         Vec3 f = Kit.facingOf(sp);
         double side = PASS_SIDE[Math.floorMod(i, PASS_SIDE.length)];
-        Vec3 p = V.add(V.add(sp.position(), f, -3.2), V.rightOf(f), side);
-        return new Vec3(p.x, Math.max(sp.getY(), groundY) + 4.2 + 0.4 * Math.floorMod(i, 3), p.z);
+        Vec3 p = V.add(V.add(sp.position(), f, -0.8), V.rightOf(f), side);
+        return new Vec3(p.x, Math.max(sp.getY(), groundY) + 2.4 + 0.3 * Math.floorMod(i, 3), p.z);
+    }
+
+    /** 돌진 i 의 처음 쥔 곳: 칼끝이 tipStart 에서 앞 끝 (passEnd) 을 겨눔 · 크기 CLAY × PASS_S0 (쥔 곳이 몸 뒤 약 5칸) */
+    private static Vec3 behindAt(ServerPlayer sp, int i, double range, double groundY) {
+        Vec3 t = tipStart(sp, i, groundY);
+        return V.add(t, passDir(sp, i, range, groundY), -JobSword3d.REACH * CLAY * PASS_S0);
+    }
+
+    /** 돌진 i 의 쪽 (칼끝 떠나는 자리 → 앞 끝) */
+    private static Vec3 passDir(ServerPlayer sp, int i, double range, double groundY) {
+        return V.unit(V.sub(passEnd(sp, i, range, groundY), tipStart(sp, i, groundY)));
+    }
+
+    /** 돌진하는 칼의 모습: 칼끝이 d 쪽 · 날이 위아래 (넓은 면이 옆 — 옆 · 뒤 카메라에서 칼의 너비가 보임) */
+    private static org.joml.Quaternionf lunge(Vec3 d) {
+        return JobSword3d.pose(d, V.UP);
     }
 
     /** 돌진 i 의 칼끝이 닿는 앞 끝: 앞 range × 0.9칸 · 반대쪽 옆 · 땅 위 1.0칸 (벽까지) */
@@ -490,44 +512,47 @@ final class SpellbladeSkills {
         double L = JobSword3d.REACH * CLAY;
         int end = thrustTick + 16;
         int dive = thrustTick - 4;
-        Vec3 h0 = behindAt(sp, 0, c0.y);
+        Vec3 h0 = behindAt(sp, 0, range, c0.y);
         Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), end + 4);
-        Vfx.Prop p = JobSword3d.sword(fx, h0, JobSword3d.HILT, JobSword3d.aim(V.sub(passEnd(sp, 0, range, c0.y), h0)), CLAY * 0.3, glow, core);
+        Vfx.Prop p = JobSword3d.sword(fx, h0, JobSword3d.HILT, lunge(passDir(sp, 0, range, c0.y)), CLAY * PASS_S0 * 0.4, glow, core);
         Vec3[] point = {null};
         fx.each(1, end, 1, a -> {
             if (!RuneKit.sameLife(sp, life) || sp.isRemoved()) {
                 fx.end();
                 return;
             }
-            // 솟음: 등 뒤 하늘에서 커짐 (주인을 따라감)
+            // 솟음: 등 뒤에서 앞 끝을 겨눈 채 커짐 (주인을 따라감)
             if (a < rise - PASS_T) {
                 double q = 1 - Math.pow(1 - a / (double) Math.max(1, rise - PASS_T - 1), 2);
-                Vec3 b = behindAt(sp, 0, c0.y);
-                p.to(V.up(b, -1.5 * (1 - q)), JobSword3d.aim(V.sub(passEnd(sp, 0, range, c0.y), b)), CLAY * (0.3 + 0.7 * q), 1);
+                Vec3 b = behindAt(sp, 0, range, c0.y);
+                p.to(V.up(b, -1.0 * (1 - q)), lunge(passDir(sp, 0, range, c0.y)), CLAY * PASS_S0 * (0.4 + 0.6 * q), 1);
                 return;
             }
             if (a < dive - 6) {
                 int i = Math.min(n - 1, Math.max(0, (a - (rise - PASS_T)) / Math.max(1, gap)));
                 int t = a - (rise - PASS_T + i * Math.max(1, gap));
-                Vec3 b = behindAt(sp, i, c0.y);
+                Vec3 b = behindAt(sp, i, range, c0.y);
                 Vec3 e = passEnd(sp, i, range, c0.y);
-                Vec3 d = V.unit(V.sub(e, b));
+                Vec3 d = passDir(sp, i, range, c0.y);
                 if (t == 0) {
-                    // 돌진: 칼끝이 앞 끝 e 까지 (쥔 곳 = e − 칼 길이)
-                    p.to(b, JobSword3d.aim(d), CLAY, 1);
-                    fx.on(a + 1, () -> p.to(V.add(e, d, -L), JobSword3d.aim(d), CLAY, PASS_T - 1));
+                    // 돌진: 등 뒤 (작게) → 칼끝이 앞 끝 e 까지 날아가며 제 크기로 (쥔 곳 = e − 칼 길이)
+                    p.to(b, lunge(d), CLAY * PASS_S0, 1);
+                    fx.on(a + 1, () -> p.to(V.add(e, d, -L), lunge(d), CLAY, PASS_T - 1));
                     return;
                 }
                 if (t == PASS_T + 1) {
                     // 앞 하늘로 솟음 → 다음 돌진 자리 (마지막 돌진 뒤에는 하늘 높이 — 폭발 자리를 겨눔)
                     Vec3 up = V.up(V.add(e, d, -L * 0.6), 4.5);
-                    p.to(up, JobSword3d.aim(V.add(d, V.UP, 0.8)), CLAY, 3);
+                    p.to(up, lunge(V.unit(V.add(d, V.UP, 0.8))), CLAY, 3);
                     boolean last = i + 1 >= n;
                     int back = last ? 6 : Math.max(2, gap - PASS_T - 4);
                     fx.on(a + 3, () -> {
-                        Vec3 nb = last ? finalAt(sp, k, c0) : behindAt(sp, i + 1, c0.y);
-                        Vec3 aimAt = last ? thrustPoint(sp, k, c0) : passEnd(sp, i + 1, range, c0.y);
-                        p.to(nb, JobSword3d.aim(V.sub(aimAt, nb)), CLAY * (last ? 1.15 : 1.0), back);
+                        if (last) {
+                            Vec3 nb = finalAt(sp, k, c0);
+                            p.to(nb, JobSword3d.aim(V.sub(thrustPoint(sp, k, c0), nb)), CLAY * 1.15, back);
+                        } else {
+                            p.to(behindAt(sp, i + 1, range, c0.y), lunge(passDir(sp, i + 1, range, c0.y)), CLAY * PASS_S0, back);
+                        }
                     });
                 }
                 return;
@@ -562,7 +587,7 @@ final class SpellbladeSkills {
             Set<UUID> marked, double groundY) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 b = behindAt(sp, i, groundY);
+        Vec3 b = tipStart(sp, i, groundY);
         Vec3 e = passEnd(sp, i, range, groundY);
         Vec3 d = V.unit(V.sub(e, b));
         RuneKit.flyStreak(level, b, e, V.len(V.sub(e, b)) * 7, glow, core, 1.4, 0.55);

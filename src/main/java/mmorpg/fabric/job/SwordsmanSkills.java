@@ -88,8 +88,10 @@ final class SwordsmanSkills {
                 waveSlash(sp, j, P, mult, wave, reach, arc, life);
                 return;
             }
-            // 눈앞 큰 베기: 가로 → 되돌려 가로 (뒤집힘) → 크게 (조금 기욺)
-            JobFx.slash(sp, j, 2.2, 0.35, last ? 2.1 : 1.65, TILT[i % 3], last ? 0.3 : 0.26);
+            // 눈앞 큰 베기: 가로 → 되돌려 가로 (뒤집힘) → 크게 (조금 기욺). 2026-11-14 사용자 도감 메모 "참격이 잘 안보임" (영상 — 옅은 하늘빛 판이 하늘 · 풀에
+            // 묻혔음): 1.65 → 1.9 (마지막 2.1 → 2.4) · 베기마다 같은 모양의 검기가 앞으로 뻗어 나감 (닿는 거리 reach + 0.8칸)
+            JobFx.slash(sp, j, 2.2, 0.35, last ? 2.4 : 1.9, TILT[i % 3], last ? 0.3 : 0.26);
+            JobFx.slashWave(sp, j, TILT[i % 3], last ? 1.9 : 1.4, reach + 0.8, 24);
             if (last) SkillFx.play(level, "entity.player.attack.sweep", eye, 1.1, 0.8);
             SkillFx.play(level, "item.spear.attack_miss", eye, 1.15 + i * 0.12, 0.9);
             int[] cnt = {0};
