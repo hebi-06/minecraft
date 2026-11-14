@@ -343,6 +343,39 @@ public final class RpgMotionTests {
         });
     }
 
+    /**
+     * 2026-11-14 2판: 궤적이 없는 창 찌르기 · 방패 밀치기도 판 (slash_thrust 4칸 · slash_bash 2.6칸 — 예전 빛줄기 · 흰 고리 대신), 판이 나간 휘두르기가 맞힌 적에 맞은 자리 섬광
+     */
+    @GameTest(environment = ENV, maxTicks = 60)
+    public void thrustBashCardsAndSpark(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon lance = Weapons.weaponFrom("lance", 20, "rare");
+        Weapon shield = Weapons.weaponFrom("shield", 20, "rare");
+        hold(sp, lance);
+        Husk a = dummy(h, 1.5, 2, 3.5);
+        int[] n0 = new int[2];
+        h.runAfterDelay(2, () -> {
+            n0[0] = mmorpg.fabric.BasicSlash.spawned;
+            n0[1] = mmorpg.fabric.BasicSlash.sparks;
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a); // 창 1타 = 찌르기
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_thrust")
+                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.0) < 1e-6, "lance thrust → slash_thrust 4 " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    + mmorpg.fabric.BasicSlash.lastRadius);
+            h.assertTrue(TestDummies.dealt(a) > 0 && mmorpg.fabric.BasicSlash.sparks > n0[1], "hit spark on the thrust hit " + mmorpg.fabric.BasicSlash.sparks);
+            hold(sp, shield);
+        });
+        h.runAfterDelay(4 + Motions.attackInterval(1.0) + Motions.comboWindow(), () -> {
+            n0[0] = mmorpg.fabric.BasicSlash.spawned;
+            Slash.onPunch(sp); // 방패 밀치기 (허공)
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_bash")
+                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 2.6) < 1e-6, "shield bash → slash_bash 2.6 " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    + mmorpg.fabric.BasicSlash.lastRadius);
+            done(h, sp);
+        });
+    }
+
     @GameTest(environment = ENV, maxTicks = 40)
     public void noAttackCooldownFullDamage(GameTestHelper h) {
         floor(h);

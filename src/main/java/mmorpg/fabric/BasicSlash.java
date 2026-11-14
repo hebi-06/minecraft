@@ -56,7 +56,7 @@ public final class BasicSlash {
     public static void swing(ServerPlayer sp, Weapon w, Obj style, String motion) {
         if (sp == null || w == null || !has(motion)) return;
         MotionPoses.Motion mo = MotionPoses.get(motion);
-        if (mo == null || mo.trail == null || mo.trail.length == 0) return;
+        if (mo == null) return;
         Obj c = cfg();
         double speed = Motions.playSpeed(RpgCombat.attackSpeed.applyAsDouble(sp));
         int ticks = Motions.playTicks(mo.ticks, speed);
@@ -69,13 +69,18 @@ public final class BasicSlash {
         List<Obj> specs = c.obj("motions").objsOrNull(motion);
         if (specs == null) return;
         for (Obj s : specs) {
-            int win = Math.max(0, Math.min(mo.trail.length - 1, (int) s.numOr("window", 0)));
-            float[] tw = mo.trail[win];
+            // 휘두름 구간: 궤적 구간 (window) — 2026-11-14 궤적이 없는 동작 (찌르기 · 밀치기) 은 판의 time [시작, 끝] (동작 길이의 몫)
+            float[] tw;
+            List<Object> tl = s.listOrNull("time");
+            if (tl != null && tl.size() >= 2) tw = new float[] {(float) num(tl, 0), (float) num(tl, 1)};
+            else if (mo.trail != null && mo.trail.length > 0) tw = mo.trail[Math.max(0, Math.min(mo.trail.length - 1, (int) s.numOr("window", 0)))];
+            else continue;
             // 동작은 다음 틱에 시작 (ClientMotions · VanillaRig 의 start = 지금 + 1)
             double delay = (1 + tw[0] * ticks) / 20.0;
             double sweep = Math.max(0.05, (tw[1] - tw[0]) * ticks / 20.0);
             double life = Math.max(c.numOr("minLife", 0.3), sweep / c.numOr("sweepShare", 0.4));
-            double radius = Math.max(c.numOr("minRadius", 1.4), base * s.numOr("radius", 1));
+            // 2026-11-14 reach = 판이 정한 거리 (창 찌르기 줄 4칸 · 방패 밀치기 2.6칸 — 궤적 거리 표가 아님)
+            double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1));
             spawn(sp, s, thick, radius, delay, life, glow, core);
             if (s.has("impact")) impact(sp, s, radius, delay + sweep, glow, core);
         }
@@ -85,7 +90,7 @@ public final class BasicSlash {
         Obj c = cfg();
         ServerLevel level = sp.level();
         boolean mirror = s.truthy("mirror");
-        String model = "slash_basic" + (thick ? "_w" : "") + (mirror ? "_l" : "");
+        String model = s.has("model") ? s.str("model") : "slash_basic" + (thick ? "_w" : "") + (mirror ? "_l" : "");
         double yaw = Math.toRadians(sp.getYRot());
         Vec3 f = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
         Vec3 r = V.cross(f, V.UP); // 오른쪽
@@ -97,7 +102,17 @@ public final class BasicSlash {
         Opt card = Opt.of("scale", radius, "life", life, "delay", delay, "grow", c.numOr("grow", 0.05), "vel", vel, "anim", "play", "animSpeed", 1.0 / life,
                 "fadeIn", 0.0, "fadeOut", life * 0.08, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", c.numOr("alpha", 0.95), "shine", 0.1);
         int owner = sp.getId();
-        if ("front".equals(s.strOr("face", "up"))) {
+        String kind = s.strOr("face", "up");
+        if ("thrust".equals(kind)) {
+            // 2026-11-14 창 찌르기 판 (slash_thrust — +Y = 찌르는 쪽 · 원점 = 손): 보는 쪽 (위아래 ±25° 까지) 으로 뻗고, 판은 그 축 둘레로 보는 사람을 봄 (faceCam).
+            // 둘레 사람 · 3인칭 = 손 자리, 쓴 사람 1인칭 = 조금 앞 · 옅게
+            Vec3 look = sp.getViewVector(1F);
+            double pitch = Math.max(-0.42, Math.min(0.42, look.y));
+            Vec3 dir = V.add(V.scale(f, Math.sqrt(1 - pitch * pitch)), V.UP, pitch);
+            mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", dir, "faceCam", 1.0, "roll", 0.0, "view", 1.0, "owner", (double) owner));
+            mmorpg.fabric.Fx3d.spawn(level, model, V.add(p, dir, c.numOr("fpAhead", 0.6)), card.with("dir", dir, "faceCam", 1.0, "roll", 0.0, "view", 2.0, "owner",
+                    (double) owner, "alpha", c.numOr("fpAlpha", 0.7)));
+        } else if ("front".equals(kind)) {
             // 쓴 사람 쪽을 보는 선 판: 시작 쪽 start · 볼록한 쪽 (반시계 90° · mirror 면 시계 90°) · 휘두름 쪽 길이 length · 볼록한 쪽 납작하게 squash.
             // 둘레 사람 · 3인칭: 면을 turn 도 왼쪽으로 돌림 (뒤 · 옆 카메라 모두에서 넓은 면) / 쓴 사람 1인칭: 눈을 봄 · 조금 멀리 · 옅게 (화면 가운데를 덜 가림)
             Vec3 stretch = new Vec3(s.numOr("length", 1), s.numOr("squash", 0.45), 1);
@@ -146,8 +161,38 @@ public final class BasicSlash {
             mmorpg.fabric.skill.SkillFx.shock(sp.level(), p, glow, size, 0.42);
             mmorpg.fabric.skill.SkillFx.shock(sp.level(), p, core, size * 0.6, 0.3);
             mmorpg.fabric.skill.SkillFx.sparks(sp.level(), V.up(p, 0.2), core, 10, 4.5);
+            // 2026-11-14 그림체 "섞음" (3D 는 블록 픽셀): 내려찍은 자리에서 3D 바위 조각이 솟아 앞으로 튐 (RuneSwing.erupt — 틈의 빛 = 무기 색)
+            int debris = (int) s.numOr("debris", 0);
+            if (debris > 0) mmorpg.fabric.rune.RuneSwing.erupt(sp.level(), p, f, debris, s.numOr("debrisSpread", 150), 0.3, size * 0.5, 0.3, 0.55, size * 0.6, glow);
         });
     }
+
+    /**
+     * 2026-11-14 맞은 자리 섬광 (hit_spark — 빛살 여덟 · 가운데 섬광 · 퍼지는 고리, 판이 보는 사람을 봄): 판이 나간 휘두르기가 맞힌 적마다 (Slash.hit) —
+     * 예전 흰 고리 (bashHit · thrustHit) 대신. 적 몸 가운데에서 쓴 사람 쪽으로 조금 앞, 치명타는 크게 · 치명타 색
+     */
+    public static void hitSpark(ServerPlayer attacker, net.minecraft.world.entity.LivingEntity victim, Obj style, boolean crit) {
+        Obj c = cfg();
+        if (c == null || !c.truthy("enabled") || victim == null || !(victim.level() instanceof ServerLevel level)) return;
+        Obj k = c.objOrNull("spark");
+        if (k == null) return;
+        Vec3 head = victim.getEyePosition();
+        Vec3 mid = new Vec3(head.x, head.y - 0.45, head.z);
+        Vec3 to = V.sub(attacker.getEyePosition(), mid);
+        double len = Math.max(1e-6, to.length());
+        Vec3 at = V.add(mid, V.scale(to, 1 / len), Math.min(k.numOr("ahead", 0.45), len * 0.5));
+        double[] glow = color(style, "glow", new double[] {0.8, 0.9, 1});
+        double[] col = crit ? color(style, "critColor", new double[] {1.0, 0.85, 0.3}) : glow;
+        double[] core = whiten(col, 0.8);
+        double life = k.numOr("life", 0.25);
+        double size = k.numOr("size", 0.8) * (crit ? k.numOr("crit", 1.4) : 1);
+        mmorpg.fabric.Fx3d.spawn(level, "hit_spark", at, Opt.of("scale", size, "life", life, "anim", "play", "animSpeed", 1.0 / life, "faceCam", 1.0,
+                "fadeIn", 0.0, "fadeOut", life * 0.1, "glowAlpha", 0.0, "color", col, "glow", core, "alpha", 1.0, "roll", attacker.getRandom().nextDouble() * 90));
+        sparks++;
+    }
+
+    /** 시험: 띄운 맞은 자리 섬광 수 */
+    public static int sparks;
 
     // ------------------------------------------------------------ 도움
 

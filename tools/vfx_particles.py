@@ -67,10 +67,10 @@ CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heav
          "slash_job", "slash_job_sw", "slash_job_wa", "slash_job_rp", "slash_job_sb",
          "card_sword", "card_greatsword", "card_axe", "card_spear", "card_arrow", "card_dagger", "card_bolt", "card_orb", "card_tome", "card_page",
          "card_maul", "card_bell", "card_buckler", "card_aegis", "card_bow",
-         "slash_basic", "slash_basic_l", "slash_basic_w", "slash_basic_wl"]
+         "slash_basic", "slash_basic_l", "slash_basic_w", "slash_basic_wl", "slash_thrust", "slash_bash", "hit_spark"]
 # 2026-11-14 기본 평타 참격 판 (몸 둘레 큰 초승달 — 칼 반지름 2.3칸 · 마검 4.1칸): 글자 한 장의 긴 변을 글꼴 판 (256) 까지 — 128 이면 큰 판에서 픽셀이 보임
 # (사용자 "그렇다고 도트로 하지말고")
-CARD_CAP = {"slash_basic": 256, "slash_basic_l": 256, "slash_basic_w": 256, "slash_basic_wl": 256}
+CARD_CAP = {"slash_basic": 256, "slash_basic_l": 256, "slash_basic_w": 256, "slash_basic_wl": 256, "slash_thrust": 256, "slash_bash": 256, "hit_spark": 128}
 
 
 def wanted(pid):

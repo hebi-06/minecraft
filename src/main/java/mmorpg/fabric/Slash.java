@@ -283,8 +283,10 @@ public final class Slash {
         boolean ok = RpgCombat.lackOf(sp, w).isEmpty();
         String motion = m != null ? m.motion() : "";
         boolean trail = ok && mmorpg.core.Motions.trailBasic(motion);
-        // 2026-11-14 기본 평타 참격 판 (모드 없는 클라이언트에도 — 궤적 평타는 모드의 칼 궤적뿐이라 참격이 보이지 않았음): 몸 둘레 · 앞 큰 초승달
-        if (trail) {
+        // 2026-11-14 기본 평타 참격 판 (모드 없는 클라이언트에도 — 궤적 평타는 모드의 칼 궤적뿐이라 참격이 보이지 않았음): 몸 둘레 · 앞 큰 초승달.
+        // 2판: 궤적이 없는 창 찌르기 · 방패 밀치기도 판 (slash_thrust · slash_bash — 예전 빛줄기 · 흰 고리 대신)
+        boolean card = ok && BasicSlash.has(motion);
+        if (trail || card) {
             try {
                 BasicSlash.swing(sp, w, style, motion);
             } catch (RuntimeException e) {
@@ -292,7 +294,7 @@ public final class Slash {
             }
         }
         if (style.truthy("bash")) {
-            if (trail) sound(sp.level(), eye(sp), SoundEvents.SPEAR_ATTACK.value(), 0.7, 0.6);
+            if (trail || card) sound(sp.level(), eye(sp), SoundEvents.SPEAR_ATTACK.value(), 0.7, 0.6);
             else bashSwing(sp, w, style, ok);
             if (ok && style.truthy("holy")) holySwing(sp, w, style);
             return;
@@ -302,7 +304,8 @@ public final class Slash {
             if (trail) {
                 sound(sp.level(), eye(sp), SoundEvents.PLAYER_ATTACK_SWEEP, 0.8, 0.75);
                 sound(sp.level(), eye(sp), SoundEvents.SPEAR_ATTACK.value(), 0.75, 0.5);
-            } else thrustSwing(sp, w, style, ok);
+            } else if (card) sound(sp.level(), eye(sp), SoundEvents.TRIDENT_THROW.value(), 1.3, 0.45); // 2026-11-14 찌르기 판 (빛줄기 대신)
+            else thrustSwing(sp, w, style, ok);
             return;
         }
         if (motion.equals("spin")) {
@@ -452,8 +455,11 @@ public final class Slash {
         // 모드 없는 클라이언트에서 흰 네모 원판으로 참격을 덮었음 (영상 CI 43595133077 창 · 홀). 치명타 · 발밑 충격 · 홀 빛 십자 · 소리는 그대로
         MotionSystem.Swing sw = MotionSystem.last(attacker);
         boolean card = sw != null && Tasks.now() - sw.tick() <= 3 && BasicSlash.has(sw.motion());
+        // 2026-11-14 2판: 판이 나간 휘두르기가 맞힌 적마다 맞은 자리 섬광 (hit_spark — 고해상도 빛살 · 고리, 예전 흰 도트 고리 대신)
+        if (card && style != null) BasicSlash.hitSpark(attacker, victim, style, crit);
         if (style != null && style.truthy("bash")) {
             if (!card) bashHit(level, attacker, mid, w, crit, style, rnd);
+            else sound(level, mid, SoundEvents.SHIELD_BLOCK.value(), crit ? 0.7 : 0.85, 0.9); // 판이 나간 밀치기 · 내려치기도 맞은 소리는 그대로
             if (style.truthy("holy")) holyHit(level, attacker, victim, mid, w, crit, style);
             if (crit) sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
             return;

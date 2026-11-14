@@ -32,7 +32,7 @@ FRAMES = 5
 def add(mod):
     global fx
     fx = mod
-    fns = [slash_wave] + [_job_slash_fn(n) for n in JOB_SLASHES] + [slash_basic, slash_basic_l, slash_basic_w, slash_basic_wl]
+    fns = [slash_wave] + [_job_slash_fn(n) for n in JOB_SLASHES] + [slash_basic, slash_basic_l, slash_basic_w, slash_basic_wl, slash_thrust, slash_bash, hit_spark]
     for shape in SLASH_SHAPES:
         fns.append(_slash_fn(shape, False))
         fns.append(_slash_fn(shape, True))
@@ -210,6 +210,42 @@ def slash_basic_w():
 
 def slash_basic_wl():
     return _basic_slash("slash_basic_wl", True, True)
+
+
+def _basic_card(name, kind):
+    """2026-11-14 기본 평타 판 2판의 다른 판 (tools/basic_slash_art.py KINDS — thrust 창 찌르기 · bash 방패 밀치기 · spark 맞은 자리 섬광):
+    _basic_slash 와 같은 겹 (몸 TINT + 날 GLOW 앞 · 뒤) · 칸마다 부분 f0 ~ f(n-1) · 움직임 play"""
+    import basic_slash_art as art
+    kd = art.KINDS[kind]
+    m = fx.Model(name, tex=1024, cell=16)
+    m.emissive = True
+    cw, ch = kd["W"] // 16, kd["H"] // 16
+    x0, x1, y0, y1 = kd["XL"], kd["XR"], kd["YB"], kd["YT"]
+    frames = art.kind_frames(kind)
+    for k, (lum, a, c) in enumerate(frames):
+        m.part("f%d" % k)
+        buv = m.atlas.swatch("b%d" % k, art.painter((lum, a)), cw, ch)
+        cuv = m.atlas.swatch("c%d" % k, art.painter((np.ones_like(c), c)), cw, ch)
+        for uv, mat, z in ((cuv, fx.GLOW, -0.01), (buv, fx.TINT, 0.0), (cuv, fx.GLOW, 0.01)):
+            u0, v0, u1, v1 = uv
+            ps = [v3(x0, y1, z), v3(x0, y0, z), v3(x1, y0, z), v3(x1, y1, z)]
+            m.quad(ps, [(u0, v0), (u0, v1), (u1, v1), (u1, v0)], mat, [v3(0, 0, 1)] * 4)
+    m.part("main")
+    n = len(frames)
+    m.anims["play"] = {"len": 1.0, "tracks": {"f%d" % k: {"scale": _steps(k, n)} for k in range(n)}}
+    return m
+
+
+def slash_thrust():
+    return _basic_card("slash_thrust", "thrust")
+
+
+def slash_bash():
+    return _basic_card("slash_bash", "bash")
+
+
+def hit_spark():
+    return _basic_card("hit_spark", "spark")
 
 
 def _job_slash_fn(name):
