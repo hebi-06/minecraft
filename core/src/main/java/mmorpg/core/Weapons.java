@@ -404,16 +404,32 @@ public final class Weapons {
         } else {
             lines.add("§r" + L + label + " " + V + Js.str(w.damage()) + kind);
         }
+        // 2026-11-14 민첩 = 공속 (자바 전용 ATTACK_SPEED): 활 · 완드 재사용 대기도 공속 바탕 배율 (rangedSlow) — 공속으로 빨라짐
+        double slow = AttackSpeed.enabled() ? AttackSpeed.rangedSlow() : 1;
+        String bySpeed = AttackSpeed.enabled() ? L + " (공속으로 빨라짐)" : "";
         if (w.type().equals("wand")) {
-            lines.add("§r" + L + "사거리 " + V + WAND.text("range") + "칸" + L + " · 재사용 " + V + Js.str(WAND.num("cooldownTicks") / 20) + "초");
+            lines.add("§r" + L + "사거리 " + V + WAND.text("range") + "칸" + L + " · 재사용 " + V + Js.str(round1(WAND.num("cooldownTicks") * slow / 20)) + "초"
+                    + bySpeed);
             lines.add("§r" + L + "시전 " + V + Js.str(WAND.num("castTicks") / 20) + "초" + L + " (선딜레이)");
         }
-        if (w.type().equals("bow")) lines.add("§r" + L + "사거리 " + V + BOW.text("range") + "칸" + L + " · 재사용 " + V + Js.str(BOW.num("cooldownTicks") / 20) + "초");
+        if (w.type().equals("bow")) lines.add("§r" + L + "사거리 " + V + BOW.text("range") + "칸" + L + " · 재사용 " + V
+                + Js.str(round1(BOW.num("cooldownTicks") * slow / 20)) + "초" + bySpeed);
+        if (AttackSpeed.enabled() && Combat.isMeleeWeapon(w)) lines.add("§r" + L + "평타 " + V + Js.str(round1(Motions.attackInterval() / 20.0)) + "초마다"
+                + bySpeed);
         lines.add("§r" + L + "치명타 " + V + pct(w.critChance()) + L + " · 배율 " + V + "×" + Js.str(w.critMult()));
         for (Scaling b : w.scaling()) {
             if (b.per() <= 0) continue;
+            if (AttackSpeed.enabled() && b.stat().equals(AttackSpeed.stat())) {
+                // 민첩 계수: 요구 민첩만큼은 늘 공격력 (예전 세기) · max(공속 상한, 요구) 를 넘은 1당 공격력 — 그 사이는 공속
+                double req = AttackSpeed.reqOf(w);
+                lines.add("§r" + L + Stats.info(b.stat()).str("name") + " 요구만큼 공격력 " + V + "+" + Js.str(flatPer(base0 * b.per() * req)) + L + " · "
+                        + Js.str(Math.max(AttackSpeed.cap(), req)) + " 넘은 1당 " + V + "+" + Js.str(flatPer(base0 * b.per())));
+                continue;
+            }
             lines.add("§r" + L + Stats.info(b.stat()).str("name") + " 1당 공격력 " + V + "+" + Js.str(flatPer(base0 * b.per())));
         }
+        if (AttackSpeed.enabled()) lines.add("§r" + L + Stats.info(AttackSpeed.stat()).str("name") + " 1당 공속 " + V + "+" + pct(AttackSpeed.perPoint()) + L + " (" + Js.str(
+                AttackSpeed.cap()) + "까지 ×" + Js.str(AttackSpeed.maxSpeed()) + ")");
         if (w.type().equals("greatsword")) {
             Obj tyrfing = SKILLS.objOrNull("tyrfing");
             lines.add("§r" + L + "스킬: 검(공격) + " + (dark ? "§1" : "§9") + "마력(마법)");

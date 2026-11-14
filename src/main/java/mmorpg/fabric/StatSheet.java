@@ -75,9 +75,8 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
     double scaleSum(Weapon w, Map<String, Double> e) {
         Jobs.Job j = Jobs.job(job);
         Map<String, Double> de = j == null || w == null ? e : Jobs.damageStats(j, w.type(), e);
-        double sum = 0;
-        if (w != null) for (Weapons.Scaling b : w.scaling()) sum += Stats.get(de, b.stat()) * b.per();
-        return sum;
+        // 2026-11-14 민첩 = 공속 (core.AttackSpeed — 민첩 계수는 요구 민첩 + 상한을 넘은 몫)
+        return w == null ? 0 : mmorpg.core.AttackSpeed.statSum(de, w);
     }
 
     /** 무기 공격력 (강화 포함 — 대장장이 창 · 무기 설명의 "공격력" 과 같은 값, 반올림 없이) */
@@ -260,9 +259,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         double atk = 1 + tree("atk") / 100;
         double critChance = mmorpg.core.Combat.critChanceOf(w, tree("crit") / 100);
         double critMult = w.critMult() + tree("critDmg") / 100;
-        double sum = 0;
-        Map<String, Double> de = dmgEff(w);
-        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(de, b.stat()) * b.per();
+        double sum = mmorpg.core.AttackSpeed.statSum(dmgEff(w), w); // 2026-11-14 민첩 = 공속
         boolean ok = Weapons.weaponLack(w, reqLevel, reqBase(w)).isEmpty();
         return new double[] {ok ? base0 * (1 + sum) * atk : 0, critChance, critMult, ok ? 1 : 0};
     }
@@ -291,12 +288,20 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         double critChance = mmorpg.core.Combat.critChanceOf(w, tree("crit") / 100);
         double critMult = w.critMult() + tree("critDmg") / 100;
         double critAvg = 1 + critChance * (critMult - 1);
-        double sum = 0;
-        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(de, b.stat()) * b.per();
+        double sum = mmorpg.core.AttackSpeed.statSum(de, w); // 2026-11-14 민첩 = 공속
         double now = base0 * (1 + sum) * atk;
         lines.add(L + "피해 " + V + num(now) + L + " · 치명타 " + V + num(critChance * 100) + "%" + L + " ×" + num(critMult));
         Weapons.Scaling main = w.scaling().get(0);
-        lines.add(L + "평균 " + V + num(now * critAvg) + L + " · " + Stats.info(main.stat()).str("name") + " 1당 " + V + "+" + num(base0 * main.per() * atk * critAvg));
+        // 2026-11-14 민첩 = 공속: 민첩 계수 무기의 민첩 1 은 상한 (max(100, 요구)) 을 넘은 뒤에만 공격력 — 그 전에는 공속
+        boolean dexNow = mmorpg.core.AttackSpeed.enabled() && main.stat().equals(mmorpg.core.AttackSpeed.stat())
+                && mmorpg.core.AttackSpeed.overflow(Stats.get(de, main.stat()), w) <= 0;
+        lines.add(L + "평균 " + V + num(now * critAvg) + L + " · " + Stats.info(main.stat()).str("name") + " 1당 " + V + (dexNow ? "공속 +" + num(
+                mmorpg.core.AttackSpeed.perPoint() * 100) + "%" : "+" + num(base0 * main.per() * atk * critAvg)));
+        if (mmorpg.core.AttackSpeed.enabled()) {
+            double spd = mmorpg.core.AttackSpeed.speed(eff);
+            lines.add(L + "공속 " + V + "×" + num(spd) + L + " · 평타 " + V + num(mmorpg.core.Motions.attackInterval(spd) / 20.0) + "초" + L + " (민첩 " + Js.str(
+                    mmorpg.core.AttackSpeed.cap()) + "까지 ×" + Js.str(mmorpg.core.AttackSpeed.maxSpeed()) + ")");
+        }
         for (int i = 1; i < w.scaling().size(); i++) {
             Weapons.Scaling b = w.scaling().get(i);
             String hp = b.stat().equals("vit") ? L + " · 최대 체력 " + V + "+" + CONFIG.text("HP_PER_VIT") : "";
@@ -308,8 +313,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             Map<String, Double> plus = new LinkedHashMap<>(eff);
             plus.put("int", Stats.get(eff, "int") + 1);
             Map<String, Double> dp = Jobs.damageStats(j, w.type(), plus);
-            double per = 0;
-            for (Weapons.Scaling b : w.scaling()) per += (Stats.get(dp, b.stat()) - Stats.get(de, b.stat())) * b.per();
+            double per = mmorpg.core.AttackSpeed.statSum(dp, w) - mmorpg.core.AttackSpeed.statSum(de, w);
             lines.add(L + "「마력 검술」 마력 1당 피해 " + V + "+" + num(base0 * per * atk * critAvg) + L + " · 요구 힘 = 힘 + 마력");
         }
         if (w.type().equals("shield")) {

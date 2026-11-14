@@ -93,8 +93,13 @@ public final class MotionsTest {
     public static void main(String[] argv) throws Exception {
         Rules r = Rules.get();
         // 연타 차례
-        List<String> three = List.of("slash_h", "slash_v", "spin");
-        for (String t : List.of("sword", "greatsword", "scythe")) check(Motions.combo(t).equals(three), "combo " + t + " " + Motions.combo(t));
+        // 2026-11-14 평타에서 회전을 뺌 (사용자 — 칼 = 가로 → 반대 가로, 마검 · 낫 = 무기마다 새 마무리)
+        check(Motions.combo("sword").equals(List.of("slash_h", "slash_hb")), "combo sword " + Motions.combo("sword"));
+        check(Motions.combo("greatsword").equals(List.of("slash_h", "slash_v", "gs_slam")), "combo greatsword " + Motions.combo("greatsword"));
+        check(Motions.combo("scythe").equals(List.of("slash_h", "slash_v", "reap_up")), "combo scythe " + Motions.combo("scythe"));
+        for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
+            check(!Motions.combo(t).contains("spin") && !Motions.combo(t).contains("spin2"), "no spin in basic combo " + t);
+        }
         check(Motions.combo("dagger").equals(List.of("dagger_x")), "dagger");
         check(Motions.combo("axe").equals(List.of("chop")) && Motions.combo("hammer").equals(List.of("chop")), "axe · hammer chop");
         check(Motions.combo("lance").equals(List.of("thrust", "lance_sweep")) && Motions.combo("shield").equals(List.of("bash"))
@@ -125,12 +130,31 @@ public final class MotionsTest {
         for (int i = 1; i < v.length; i++) check(v[i] < v[i - 1], "roll slows " + i);
         check(v[0] < 1.0, "first tick under 1 block/tick (moved-too-quickly safe) " + v[0]);
         // 0.39.0 평타 사이 · 참격 범위
-        check(Motions.attackInterval() == 10 && Motions.serverInterval() == 8, "interval 10 · server 8");
-        // 0.51.0 공격 속도 배율: 1.04 → 10 · 1.06 ~ 1.16 → 9 · 1.18 · 1.2 → 8, 서버는 2틱 여유 · 재설계안 2판 거인의 무게 ×0.75 → 13 · 불사의 분노 ×1.4 → 7
-        check(Motions.attackInterval(1.0) == 10 && Motions.attackInterval(1.04) == 10 && Motions.attackInterval(1.06) == 9 && Motions.attackInterval(1.16) == 9
-                && Motions.attackInterval(1.18) == 8 && Motions.attackInterval(1.2) == 8 && Motions.serverInterval(1.2) == 6 && Motions.attackInterval(0) == 10
-                && Motions.attackInterval(0.75) == 13 && Motions.serverInterval(0.75) == 11 && Motions.attackInterval(1.4) == 7 && Motions.serverInterval(1.4) == 5,
+        // 2026-11-14 민첩 = 공속: 기본 평타 사이 10 → 16틱 (0.8초)
+        check(Motions.attackInterval() == 16 && Motions.serverInterval() == 14, "interval 16 · server 14");
+        // 공격 속도 배율 (민첩 · 직업 태세): 16 ÷ 배율 반올림, 서버는 2틱 여유 — 민첩 100 (×2) → 8 · 거인의 무게 ×0.75 → 21 · 불사의 분노 ×1.4 → 11
+        check(Motions.attackInterval(1.0) == 16 && Motions.attackInterval(1.04) == 15 && Motions.attackInterval(1.16) == 14 && Motions.attackInterval(1.2) == 13
+                && Motions.serverInterval(1.2) == 11 && Motions.attackInterval(0) == 16 && Motions.attackInterval(2.0) == 8 && Motions.serverInterval(2.0) == 6
+                && Motions.attackInterval(0.75) == 21 && Motions.serverInterval(0.75) == 19 && Motions.attackInterval(1.4) == 11 && Motions.serverInterval(1.4) == 9,
                 "attack speed intervals");
+        // 민첩 = 공속 (ATTACK_SPEED): 1 + 1% × min(민첩, 100), 무기 공격력의 민첩 계수 = 요구 민첩 + max(100, 요구) 를 넘은 몫
+        check(AttackSpeed.enabled() && Math.abs(AttackSpeed.speedOf(0) - 1) < 1e-9 && Math.abs(AttackSpeed.speedOf(50) - 1.5) < 1e-9
+                && Math.abs(AttackSpeed.speedOf(100) - 2) < 1e-9 && Math.abs(AttackSpeed.speedOf(180) - 2) < 1e-9 && Math.abs(AttackSpeed.maxSpeed() - 2) < 1e-9, "dex speed");
+        Weapon dag = Weapons.weaponFrom("dagger", 40, "transcend");
+        Weapon swd = Weapons.weaponFrom("sword", 40, "transcend");
+        double req = AttackSpeed.reqOf(dag);
+        check(req == 110 && AttackSpeed.reqOf(swd) == 0, "dagger 40 req dex 110 · sword none " + req);
+        java.util.Map<String, Double> st = new java.util.HashMap<>(java.util.Map.of("str", 0.0, "dex", 110.0, "int", 0.0, "vit", 0.0));
+        check(Math.abs(Combat.statMultiplier(st, dag) - (1 + 0.01 * 110)) < 1e-9, "dagger at req = old strength " + Combat.statMultiplier(st, dag));
+        st.put("dex", 130.0);
+        check(Math.abs(Combat.statMultiplier(st, dag) - (1 + 0.01 * 130)) < 1e-9, "dagger over req · over 100 = +1%/pt " + Combat.statMultiplier(st, dag));
+        st.put("dex", 60.0);
+        check(Math.abs(Combat.statMultiplier(st, swd) - 1) < 1e-9, "sword dex 60 → speed only");
+        st.put("dex", 150.0);
+        check(Math.abs(Combat.statMultiplier(st, swd) - 1.5) < 1e-9, "sword dex 150 → +50% (over 100)");
+        Weapon scy = Weapons.weaponFrom("scythe", 40, "transcend");
+        st.put("dex", 89.0);
+        check(Math.abs(Combat.statMultiplier(st, scy) - (1 + 0.01 * AttackSpeed.reqOf(scy))) < 1e-9, "scythe dex between req and 100 → req only");
         check(Motions.areaEnabled() && Motions.areaMax() == 6, "area on · max 6");
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) {
@@ -180,7 +204,9 @@ public final class MotionsTest {
         check(Motions.inArea(rg, -1.8, 1, 0.5, 0.3) && !Motions.inArea(rg, 0, 0, 4.5, 0.3) && !Motions.inArea(rg, 3.5, 0, 0.5, 0.3), "ring around · not far · not high");
         // 0.40.0 참격 궤적 규칙: 평타 여섯은 궤적이 참격을 대신 (창 찌르기 · 방패 밀치기는 예전 참격)
         check(Motions.trailEnabled(), "trail on");
-        for (String m : List.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "smite", "lance_sweep")) check(Motions.trailBasic(m), "trail basic " + m);
+        for (String m : List.of("slash_h", "slash_hb", "slash_v", "spin", "gs_slam", "reap_up", "dagger_x", "chop", "smite", "lance_sweep")) {
+            check(Motions.trailBasic(m), "trail basic " + m);
+        }
         check(!Motions.trailBasic("thrust") && !Motions.trailBasic("bash") && !Motions.trailBasic("cast") && !Motions.trailBasic(null), "no trail for thrust · bash");
         // 그리기 설정 (클라이언트 BladeTrails 가 읽음): 겹 몫 0 ~ 1 · 1인칭 너비 · 가까이 옅어짐 [가까운, 먼]
         Obj trail = Rules.get().root().obj("TRAIL");

@@ -16,7 +16,9 @@ public final class Motions {
     /** 평타 · 무기 스킬 · 직업 스킬 · 가게 동작 이름 (poses.json 에 손으로 쓴 것) */
     public static final Set<String> BASE = Set.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "thrust", "lance_sweep", "bash", "smite", "skill_slash",
             "skill_flurry", "slam", "leap_slam", "dash", "throw", "throw_weapon", "cast", "cast_up", "guard", "shoot", "shoot_up", "spin2", "roll",
-            "smith_hammer", "rune_channel", "rune_merge", "shop_hand", "shop_count");
+            "smith_hammer", "rune_channel", "rune_merge", "shop_hand", "shop_count",
+            // 2026-11-14 평타 (회전 대신): 칼 반대 가로 베기 · 마검 크게 내려찍기 · 낫 거꾸로 베어 올리기
+            "slash_hb", "gs_slam", "reap_up");
 
     /**
      * 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인): BASE + 0.46.0 룬 동작 (rules_more MOTION.runeMotions — tools/rune_motions.py 가 poses.json 과 함께

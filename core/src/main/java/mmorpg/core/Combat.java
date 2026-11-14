@@ -22,8 +22,12 @@ public final class Combat {
         return w != null && (MELEE.contains(w.type()) || (w.typeDef() != null && w.typeDef().truthy("melee")));
     }
 
-    /** combat.js statMultiplier: 1 + Σ stat × per over the weapon's damage scaling (skills use it too). */
+    /**
+     * combat.js statMultiplier: 1 + Σ stat × per over the weapon's damage scaling (skills use it too). 2026-11-14 자바 전용 규칙 ATTACK_SPEED 가 있으면
+     * 민첩 몫은 {@link AttackSpeed#damageTerm} (요구 민첩 + 상한을 넘은 몫 — 나머지 민첩은 공속)
+     */
     public static double statMultiplier(Map<String, Double> s, Weapon w) {
+        if (AttackSpeed.enabled()) return 1 + AttackSpeed.statSum(s, w);
         double sum = 0;
         for (Weapons.Scaling b : w.scaling()) sum = sum + Stats.get(s, b.stat()) * b.per();
         return 1 + sum;

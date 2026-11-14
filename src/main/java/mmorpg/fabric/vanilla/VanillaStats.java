@@ -108,6 +108,16 @@ public final class VanillaStats {
         }
         double n = s.statAttack(w, enh, k);
         double per = s.statAttackPer(w, enh, k);
+        boolean speedStat = mmorpg.core.AttackSpeed.enabled() && k.equals(mmorpg.core.AttackSpeed.stat());
+        if (speedStat) {
+            // 2026-11-14 민첩 = 공속: 공속 · 평타 사이, 상한을 넘은 민첩만 공격력 (민첩 계수 무기는 요구 민첩만큼은 무기 공격력에 늘 들어감)
+            double spd = mmorpg.core.AttackSpeed.speed(s.eff());
+            out.add("§7공속 §f×" + two(spd) + " §7· 평타 §f" + two(mmorpg.core.Motions.attackInterval(spd) / 20.0) + "초 §7(" + one(mmorpg.core.AttackSpeed.cap())
+                    + "까지 1당 +" + one(mmorpg.core.AttackSpeed.perPoint() * 100) + "%)");
+            out.add("§7넘은 민첩 공격력 §f+" + one(n) + (per > 0 ? " §7(1당 +" + (per >= 1 ? one(per) : two(per)) + ")" : ""));
+            out.add("§7든 " + w.typeLabel() + " 기준");
+            return out;
+        }
         out.add("§7공격력 §f+" + one(n) + (per > 0 ? " §7(1당 +" + (per >= 1 ? one(per) : two(per)) + ")" : " §7(" + w.typeLabel() + "에는 붙지 않음)"));
         out.add("§7" + info.str("weapons") + " · 든 " + w.typeLabel() + " 기준");
         return out;

@@ -66,6 +66,9 @@ public final class CombatPowers {
         double attack = usable ? (weaponAttack + statAttack) * (1 + atkPct / 100) : 0;
         double reduction = CombatPower.combineReduction(s.tree("def") / 100, shield);
         CombatPower.Spec spec = new CombatPower.Spec(attack, critChance, critMult, s.tree("rune"), s.tree("cdr"), s.maxHp(), reduction, armor, s.tree("speed"));
-        return new Sheet(CombatPower.of(spec), spec, w, enh, usable, weaponAttack, statAttack, atkPct, s);
+        // 2026-11-14 민첩 = 공속: 전투력의 공격에 공속을 반만 (평타가 공격의 일부 — ATTACK_SPEED.cpWeight). 보이는 공격력 (spec) 은 그대로
+        double spd = 1 + (mmorpg.core.AttackSpeed.speed(s.eff()) - 1) * mmorpg.core.AttackSpeed.cpWeight();
+        CombatPower.Spec forCp = new CombatPower.Spec(attack * spd, critChance, critMult, s.tree("rune"), s.tree("cdr"), s.maxHp(), reduction, armor, s.tree("speed"));
+        return new Sheet(CombatPower.of(forCp), spec, w, enh, usable, weaponAttack, statAttack, atkPct, s);
     }
 }
