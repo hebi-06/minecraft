@@ -200,6 +200,17 @@ const BlockFx = {
     at(t0 + 2, () => k.turn(q0.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 0.9)), 3).stretch(0, 0, 0, 3));
     at(t0 + 6, () => k.remove());
   },
+  // 2026-11-15 베인 줄: 한쪽 끝에서 1틱에 그어짐 → 2틱 뒤 길어지며 가늘어짐 (겉 색 납작한 긴 상자 + 흰 심) — 맞은 자리
+  slash(c, dir, normal, len, color, delay) {
+    const d = dir.clone().normalize(), nrm = normal.clone().normalize(), rot = along(d, nrm), w = len * 0.09;
+    const a = c.clone().sub(d.clone().multiplyScalar(len * 0.5)), front = nrm.clone().multiplyScalar(-0.03), t0 = NOW;
+    at(t0 + delay, () => {
+      const o = box(a, rot, 0.03, 0.05, w, color), k = box(a.clone().add(front), rot, 0.035, 0.05, w * 0.35, WHITE);
+      o.move(c, 1).stretch(0.03, len, w, 1); k.move(c.clone().add(front), 1).stretch(0.035, len * 1.02, w * 0.35, 1);
+      at(NOW + 2, () => { o.stretch(0, len * 1.12, 0, 4); k.stretch(0, len * 1.14, 0, 3); });
+      at(NOW + 7, () => { o.remove(); k.remove(); });
+    });
+  },
   ring(c, r0, r1, segs, thick, color, life) {
     const n = Math.max(6, segs), L = Math.max(3, life), t0 = NOW;
     for (let i = 0; i < n; i++) {
@@ -316,6 +327,16 @@ function afterimages(from, end, d, len, t) {
 }
 /** 자바 PhantomArcher.lodge: 몸에 칼 n 자루가 꽂힘 (0.35칸 뒤에서 0.6 크기로 → 1틱에 박힘) · 번쩍 별 */
 const LODGED = [];
+/** 자바 PhantomArcher.hitMark: X 베인 줄 둘 (둘째 1틱 늦게) · 작은 번쩍 별 — 판은 보는 사람 (eye) 쪽 */
+function hitMark(b, eye, size) {
+  const f = b.clone().sub(eye).normalize(), u = V3(-f.z, 0, f.x).normalize(), v = u.clone().cross(f).normalize();
+  const a0 = (30 + rand() * 25) * Math.PI / 180, atp = b.clone().sub(f.clone().multiplyScalar(0.35));
+  for (let s2 = 0; s2 < 2; s2++) {
+    const a = s2 === 0 ? a0 : Math.PI - a0 + (rand() - 0.5) * 0.3;
+    BlockFx.slash(atp, u.clone().multiplyScalar(Math.cos(a)).add(v.clone().multiplyScalar(Math.sin(a))), f, size * 1.35, [0.92, 0.12, 0.14], s2);
+  }
+  BlockFx.star(atp, size * 0.75, [0.92, 0.12, 0.14]);
+}
 function lodgeFx(body, from, n) {
   const base = body.clone().sub(from).normalize(), pad = 0.3, len = 1.15 + pad * 0.3;
   for (let i = 0; i < n; i++) {
@@ -405,7 +426,8 @@ const SCENES = {
         at(20, () => sw.remove());
       }
       at(8, () => {
-        const u = RIGHT.clone(), v = UP.clone(), size = 1.9, Rc = size * 2.2, span = size * 1.15 / Rc;
+        const u = RIGHT.clone(), v = UP.clone(), size = 2.4, Rc = size * 2.2, span = size * 1.15 / Rc;
+        BlockFx.star(tgt, 2.2, CRIMSON);
         for (let s2 = 0; s2 < 2; s2++) {
           const dd = (s2 === 0 ? u.clone().sub(v) : u.clone().negate().sub(v)).normalize();
           const n = (s2 === 0 ? u.clone().add(v) : u.clone().sub(v)).normalize();
@@ -461,6 +483,14 @@ const SCENES = {
         for (const l of LODGED) l.remove();
         blast(body, 1.4 + 0.3 * 0.6); BlockFx.ring(V3(body.x, 0.05, body.z), 0.4, 2, 16, 0.25, CRIMSON, 7);
       });
+    },
+  },
+  hit: { // 맞은 자리 (평타 · 스킬): 4틱마다 한 번
+    cam: [[1.0, 1.9, 1.2], [-3, 1.2, 0]], ticks: 24,
+    run() {
+      crowd();
+      const eye = V3(1.0, 1.9, 1.2);
+      for (let i = 0; i < 3; i++) at(1 + i * 7, () => hitMark(V3(-3, 1.1, 0), eye, 0.93 * (i === 2 ? 1.3 : 1.0)));
     },
   },
   ult: { // 소드 생추어리: 0 ~ 12 불꽃 고리가 번짐 · 칼 들판 → 24 ~ 74 물결 → 72 하늘로 → 86 내리꽂힘

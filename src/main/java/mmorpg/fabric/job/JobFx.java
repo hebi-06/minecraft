@@ -300,6 +300,11 @@ final class JobFx {
         Object[] snd = j == null ? null : JobTraits14.WK.equals(j.id()) ? new Object[] {"entity.player.hurt_sweet_berry_bush", 0.85, 0.45} : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
+        if (j != null && "archer".equals(j.id())) { // 2026-11-15 팬텀 아처: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark)
+            PhantomArcher.hitMark(level, e, size);
+            mmorpg.fabric.skill.SkillFx.sparks(level, Kit.bodyPoint(e), inner(j), 5, 3.5 + scale);
+            return;
+        }
         Vec3 b = Kit.bodyPoint(e);
         // 0.50.0 직업마다 다른 맞은 자리 (rfx_jhits — 재설계표 "맞은 자리": 검사 은빛 베인 줄 · 전사 곰 발톱 세 줄 · 마검사 룬 균열 · 매지션 별 터짐 ·
         // 궁수 깃털 바람 · 암살자 자홍 X · 창술사 원뿔 충격 · 사신 빠져나가는 혼 · 성기사 번개 갈래 · 사제 빛 꽃 · 수호기사 육각 판 금속 섬광 — 처음 두 장 번쩍 → 흩어짐)

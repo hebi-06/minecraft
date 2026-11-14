@@ -229,6 +229,34 @@ public final class BlockFx {
         fx.on(6, k::remove);
     }
 
+    /**
+     * 베인 줄 (가운데 c · 방향 dir · 판의 법선 normal = 보는 쪽 · 길이 len): 겉 색 납작한 긴 상자 + 흰 심 — delay 틱에 한쪽 끝에서 1틱 동안 그어짐 → 2틱 뒤 길어지며
+     * 가늘어져 사라짐 (2026-11-15 맞은 자리 — 2D 베인 그림 대신)
+     */
+    public static void slash(ServerLevel level, Vec3 c, Vec3 dir, Vec3 normal, double len, double[] color, int delay) {
+        Vfx.Fx fx = RuneProps.fx(level, c, delay + 12);
+        Vec3 d = V.unit(dir);
+        Vec3 nrm = V.unit(normal);
+        Quaternionf rot = along(d, nrm); // x = 법선 (두께) · y = 줄 · z = 보이는 너비
+        double w = len * 0.09;
+        Vec3 a = V.add(c, d, -len * 0.5);
+        Vec3 front = V.scale(nrm, -0.03); // 흰 심은 보는 쪽으로 조금 앞
+        fx.on(delay, () -> {
+            Vfx.Prop o = box(fx, a, rot, 0.03, 0.05, w, color);
+            Vfx.Prop k = box(fx, V.add(a, front), rot, 0.035, 0.05, w * 0.35, WHITE);
+            o.move(c, 1).stretch(0.03, len, w, 1);
+            k.move(V.add(c, front), 1).stretch(0.035, len * 1.02, w * 0.35, 1);
+            fx.on(fx.age + 2, () -> {
+                o.stretch(0.0, len * 1.12, 0.0, 4);
+                k.stretch(0.0, len * 1.14, 0.0, 3);
+            });
+            fx.on(fx.age + 7, () -> {
+                o.remove();
+                k.remove();
+            });
+        });
+    }
+
     // ------------------------------------------------------------ 고리 (충격파 · 예고)
 
     /** 땅의 고리 (가운데 c · 반지름 r0 → r1 · 마디 segs · 굵기 thick): 판이 바깥으로 퍼지며 얇아져 사라짐 (life 틱) */

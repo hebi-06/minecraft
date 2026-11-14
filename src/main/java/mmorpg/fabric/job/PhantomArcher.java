@@ -14,7 +14,6 @@ import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.RuneSwords;
 import mmorpg.fabric.skill.Kit;
-import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
 import mmorpg.fabric.vfx.Vfx;
@@ -96,6 +95,30 @@ public final class PhantomArcher {
     // ------------------------------------------------------------ 2026-11-15 단색 블록 볼륨 (사용자 "그냥 위르드처럼" · "도트처럼 보이는게 문제" — BlockFx)
     // (같은 날 그린 2D rfx_jp* 는 바닐라 글꼴에서 픽셀이 그대로 커져 도트로 보였음 → 본체를 무늬 없는 단색 상자 볼륨으로)
 
+    /**
+     * 맞은 자리 (2026-11-15 — JobFx.hit 의 2D 깃털 바람 그림 대신 단색 블록): 진홍 베인 줄 둘 (흰 심) 이 X 로 그어졌다 (둘째는 1틱 늦게) 가늘어짐 · 작은 번쩍 별.
+     * 판은 가장 가까운 사람 (쏜 사람 — 32칸) 쪽을 봄
+     */
+    static void hitMark(ServerLevel level, LivingEntity e, double size) {
+        Vec3 b = Kit.bodyPoint(e);
+        net.minecraft.world.entity.player.Player p = level.getNearestPlayer(e, 32);
+        Vec3 f = p != null ? V.sub(b, p.getEyePosition()) : new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5);
+        if (V.len(f) < 1e-3) f = new Vec3(1, 0, 0);
+        f = V.unit(f);
+        Vec3 u = V.rightOf(V.flat(f));
+        if (V.len(u) < 1e-3) u = new Vec3(1, 0, 0);
+        u = V.unit(u);
+        Vec3 v = V.unit(V.cross(u, f));
+        double a0 = Math.toRadians(30 + Kit.rand() * 25);
+        Vec3 at = V.add(b, f, -0.35);
+        for (int s = 0; s < 2; s++) {
+            double a = s == 0 ? a0 : Math.PI - a0 + (Kit.rand() - 0.5) * 0.3;
+            Vec3 dir = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
+            mmorpg.fabric.vfx.BlockFx.slash(level, at, dir, f, size * 1.35, GEM, s);
+        }
+        mmorpg.fabric.vfx.BlockFx.star(level, at, size * 0.75, GEM);
+    }
+
     /** 투영 선: 칼 윤곽 (자루 · 코등이 · 날 양쪽 · 칼끝) 을 가는 푸른 흰빛 줄 다섯으로 — life 초 동안 가늘어지며 사라짐 */
     static void trace2d(ServerLevel level, Vec3 hilt, Vec3 dir, double len, double life) {
         Vec3 d = V.unit(dir);
@@ -171,19 +194,14 @@ public final class PhantomArcher {
     /** 칼이 부서짐 (빛 조각 · 작은 섬광 — 칼은 지움) */
     static void shatter(ServerLevel level, RuneSwords.Blade b, double size) {
         Vec3 mid = V.lerp(b.hilt(), b.tip(), 0.5);
-        JobFx.glint(level, mid, 0.35 * size, BLADE, TRACE_CORE, 0.2, Opt.empty());
+        mmorpg.fabric.vfx.BlockFx.star(level, mid, 0.6 * size, TRACE); // 2026-11-15 2D 반짝임 대신 단색 블록 별
         if (RuneKit.fxQuota("phantomShard", 10)) shards(level, mid, 3, 5.0, 0.3 * size);
         b.remove();
     }
 
-    /** 칼 파편 (rfx_icicle — 강철빛 조각이 사방으로) */
+    /** 칼 파편 (2026-11-15 2D rfx_icicle 대신 단색 블록 조각 — 강철빛 납작한 상자가 돌며 사방으로): speed = 예전 빠르기 (칸/초 → 날아가는 거리 × 0.25) */
     static void shards(ServerLevel level, Vec3 at, int n, double speed, double size) {
-        for (int i = 0; i < n; i++) {
-            double a = (double) i / n * Math.PI * 2 + Kit.rand() * 0.5;
-            Vec3 d = V.unit(new Vec3(Math.cos(a), 0.2 + Kit.rand() * 0.7, Math.sin(a)));
-            RuneKit.rfx2(level, "icicle", V.add(at, d, 0.25), Opt.of("dir", d, "speed", speed * (0.7 + Kit.rand() * 0.6), "size", size, "life", 0.3, "fade", 0.3),
-                    BLADE, TRACE_CORE);
-        }
+        mmorpg.fabric.vfx.BlockFx.shards(level, at, n, speed * 0.25, size * 1.6, BLADE, 8);
     }
 
     /** 진홍 폭발 (칼이 터짐 — 크기 size 칸) */
@@ -374,7 +392,7 @@ public final class PhantomArcher {
             fx.on(ticks + 8, () -> b.grow(0.1, 4));
             fx.on(ticks + 13, b::remove);
         }
-        if (RuneKit.fxQuota("phantomShotGlint", 6)) JobFx.glint(level, V.add(from, d, 0.5), 0.3, TRACE, TRACE_CORE, 0.14, Opt.empty());
+        if (RuneKit.fxQuota("phantomShotGlint", 6)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 0.5), 0.55, TRACE);
         SkillFx.play(level, "item.trident.throw", from, 1.5 + Kit.rand() * 0.2, 0.3);
     }
 
