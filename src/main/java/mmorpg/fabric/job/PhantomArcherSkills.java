@@ -516,7 +516,7 @@ final class PhantomArcherSkills {
                 for (int q = 0; q < 8; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
-                    PhantomArcher.flame2d(level, p, 0.6 + Kit.rand() * 0.3, 0.45); // 2026-11-15 전용 불꽃 (rfx_jpflame)
+                    PhantomArcher.flame2d(level, p, 0.6 + Kit.rand() * 0.3, 0.45); // 2026-11-15 단색 블록 불꽃 (BlockFx.flame 4판 — 2D rfx_jpflame 은 안 씀)
                 }
             });
         }
