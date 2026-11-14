@@ -1428,12 +1428,16 @@ final class VanillaProbe {
     /**
      * 무기 스킬 영상의 장 수 (쓰기 전 3 + 끝 + 8 — 모드 영상 RpgSkillGallery.CASES 의 total 둘레, 없는 것은 초월 2번 100 · 그 밖 70)
      */
+    // 2026-11-14 둘째: 모드 영상 (filmout2 weapon_skills_NNN) 길이 × 20 + 6 보다 짧던 것을 늘림 — 첫 영상 (CI 43577665879) 에서 묠니르의 뇌우 (5초 · 모드 7.8초) ·
+    // 한낮의 성역 (5초 · 모드 7.1초) · 작은 태양 · 운명의 물레 · 오딘의 눈 · 만월의 사냥 이 마지막 폭발 전에 끝났음
     private static final java.util.Map<String, Integer> WP_TIMES = java.util.Map.ofEntries(java.util.Map.entry("gram_charge", 44),
-            java.util.Map.entry("gram_descent", 64), java.util.Map.entry("solas_rush", 54), java.util.Map.entry("solas_halo", 78),
-            java.util.Map.entry("ygg_seed", 58), java.util.Map.entry("ygg_tree", 92), java.util.Map.entry("svalinn_charge", 54),
-            java.util.Map.entry("svalinn_dome", 120), java.util.Map.entry("artemis_pierce", 50), java.util.Map.entry("artemis_moon", 88),
-            java.util.Map.entry("odin_ravens", 72), java.util.Map.entry("odin_eye", 90), java.util.Map.entry("tyrfing_fire", 54),
-            java.util.Map.entry("tyrfing_waking", 104));
+            java.util.Map.entry("gram_descent", 72), java.util.Map.entry("solas_rush", 54), java.util.Map.entry("solas_halo", 86),
+            java.util.Map.entry("ygg_seed", 58), java.util.Map.entry("ygg_tree", 102), java.util.Map.entry("svalinn_charge", 54),
+            java.util.Map.entry("svalinn_dome", 132), java.util.Map.entry("artemis_pierce", 58), java.util.Map.entry("artemis_moon", 106),
+            java.util.Map.entry("odin_ravens", 82), java.util.Map.entry("odin_eye", 110), java.util.Map.entry("tyrfing_fire", 54),
+            java.util.Map.entry("tyrfing_waking", 112), java.util.Map.entry("durand_smite", 86), java.util.Map.entry("kronos_clock", 114),
+            java.util.Map.entry("mjolnir_throw", 76), java.util.Map.entry("mjolnir_storm", 162), java.util.Map.entry("caduceus_serpents", 88),
+            java.util.Map.entry("apollo_sun", 102), java.util.Map.entry("apollo_sanctuary", 148));
 
     /** 무기 스킬 영상의 카메라 {거리, 높이, 보는 높이, 따라가는 몫} — 큰 하늘 물체 (세계수 · 오딘의 눈 · 작은 태양 · 먹구름) 는 멀리 · 위를 봄 */
     private static double[] wpView(String skill) {
