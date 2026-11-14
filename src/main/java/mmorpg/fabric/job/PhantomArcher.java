@@ -90,19 +90,48 @@ public final class PhantomArcher {
      * 투영 선: 칼 모양 (자루 hilt → 칼끝, 길이 len 칸 · 넓은 면 face) 을 빛의 선 다섯으로 그림 (칼끝 ← 날 어깨 둘 · 코등이 · 자루) — life 초 뒤 사라짐
      */
     static void traceLines(ServerLevel level, Vec3 hilt, Vec3 dir, Vec3 face, double len, double life) {
+        trace2d(level, hilt, dir, len, Math.max(0.3, life));
+    }
+
+    // ------------------------------------------------------------ 2026-11-15 전용 2D (사용자 "아니 2d 그리라고" — tools/job_fx_art_phantom.py rfx_jp*)
+
+    /** 투영 선 (rfx_jptrace — 칼 윤곽이 손잡이부터 그어짐 → 번쩍): 그림의 칼 = 칸 x 18 ~ 240 (256) → 칸 가운데는 자루에서 len × 110 / 222 */
+    static void trace2d(ServerLevel level, Vec3 hilt, Vec3 dir, double len, double life) {
         Vec3 d = V.unit(dir);
-        Vec3 side = V.unit(V.cross(d, face));
-        if (V.len(side) < 1e-3) side = V.rightOf(V.flat(d));
-        Vec3 guard = V.add(hilt, d, len * 0.22);
-        Vec3 tip = V.add(hilt, d, len);
-        Vec3 sa = V.add(V.add(guard, d, len * 0.06), side, len * 0.09);
-        Vec3 sb = V.add(V.add(guard, d, len * 0.06), side, -len * 0.09);
-        Opt o = Opt.of("alpha", 0.95);
-        JobFx.line(level, sa, tip, TRACE, TRACE_CORE, life, o);
-        JobFx.line(level, sb, tip, TRACE, TRACE_CORE, life, o);
-        JobFx.line(level, V.add(guard, side, len * 0.2), V.add(guard, side, -len * 0.2), TRACE, TRACE_CORE, life, o);
-        JobFx.line(level, hilt, guard, TRACE, TRACE_CORE, life * 0.8, o);
-        JobFx.glint(level, tip, 0.25 + len * 0.08, TRACE, TRACE_CORE, life, Opt.empty());
+        JobFx.two(level, "jptrace", 8, V.add(hilt, d, len * 110 / 222.0), life, Opt.of("dir", d, "size", len * 128 / 222.0), TRACE, TRACE_CORE);
+    }
+
+    /** 칼 궤적 (rfx_jpstreak — 앞이 굵고 밝은 리본): from → to */
+    static void streak2d(ServerLevel level, Vec3 from, Vec3 to, double life, double[] glow, double[] core) {
+        Vec3 dv = V.sub(to, from);
+        double L = V.len(dv);
+        if (L < 0.3) return;
+        JobFx.two(level, "jpstreak", 6, V.lerp(from, to, 0.5), life, Opt.of("dir", V.scale(dv, 1 / L), "size", L * 0.55), glow, core);
+    }
+
+    /** 착탄 섬광 (rfx_jpimpact — 번쩍 → 고리 · 칼 조각 여덟) */
+    static void impact2d(ServerLevel level, Vec3 at, double size, double[] glow, double[] core) {
+        JobFx.two(level, "jpimpact", 8, at, 0.4, Opt.of("size", size, "spin", Kit.rand() * 360), glow, core);
+    }
+
+    /** X 베기 (rfx_jpcross) */
+    static void cross2d(ServerLevel level, Vec3 at, double size, double[] glow, double[] core) {
+        JobFx.two(level, "jpcross", 8, at, 0.45, Opt.of("size", size), glow, core);
+    }
+
+    /** 폭발 (rfx_jpblast — 불덩이 · 충격파 고리 · 칼 조각) */
+    static void blast2d(ServerLevel level, Vec3 at, double size) {
+        JobFx.two(level, "jpblast", 10, at, 0.6, Opt.of("size", size, "spin", Kit.rand() * 360), FIRE, FIRE_CORE);
+    }
+
+    /** 불꽃 (rfx_jpflame — 이어 돌림): 아래 끝 foot */
+    static void flame2d(ServerLevel level, Vec3 foot, double size, double life) {
+        JobFx.loop(level, "jpflame", 8, V.up(foot, size * 0.75), life, 14, Opt.of("size", size, "phase", Kit.rand() * 8), FIRE, FIRE_CORE);
+    }
+
+    /** 노을 배경판 (rfx_jpdusk — 지평선 띠 · 지는 해 · 구름 띠) */
+    static void dusk2d(ServerLevel level, Vec3 at, double size, double life) {
+        JobFx.two(level, "jpdusk", 1, at, life, Opt.of("size", size, "fade", 0.12), new double[] {1.0, 0.24, 0.14}, new double[] {1.0, 0.8, 0.52});
     }
 
     /**
@@ -138,8 +167,8 @@ public final class PhantomArcher {
 
     /** 진홍 폭발 (칼이 터짐 — 크기 size 칸) */
     static void blast(ServerLevel level, Jobs.Job j, Vec3 at, double size) {
-        JobFx.burst(level, at, size, j, 0.32 + size * 0.04, Opt.of("alpha", 0.95));
-        SkillFx.burst(level, at, FIRE, size * 0.9, 0.24);
+        blast2d(level, at, size * 1.1);
+        impact2d(level, at, size * 0.8, JobKit.glow(j), JobKit.core(j));
         SkillFx.sparks(level, at, FIRE_CORE, 6 + (int) (size * 3), 5);
         shards(level, at, 4 + (int) (size * 2), 6.0, 0.25 + size * 0.06);
         SkillFx.play(level, "entity.generic.explode", at, 1.5 - Math.min(0.6, size * 0.12), 0.35 + size * 0.1);
@@ -223,7 +252,7 @@ public final class PhantomArcher {
         }
         LAST.put(sp.getUUID(), e);
         if (add > 0) {
-            JobFx.glint(level, body, 0.4 + pad * 0.3, BLADE, GEM, 0.18, Opt.empty());
+            impact2d(level, body, 0.55 + pad * 0.3, JobKit.glow(j), JobKit.core(j));
             SkillFx.play(level, "item.trident.hit", body, 1.3 + Kit.rand() * 0.3, 0.45);
         }
         if (l.swords.size() >= max) {

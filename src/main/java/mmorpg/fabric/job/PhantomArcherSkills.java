@@ -106,7 +106,7 @@ final class PhantomArcherSkills {
                 Vec3 d = V.unit(V.sub(to, from));
                 int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
                 b.pose(V.add(to, d, -b.reach() * 0.75), d, PhantomArcher.faceOf(d), t);
-                RuneKit.flyStreak(level, from, to, speed, glow, core, 0.6 + len * 0.2, 0.18);
+                PhantomArcher.streak2d(level, from, to, Math.max(0.2, t / 20.0 + 0.15), glow, core);
                 SkillFx.play(level, "item.trident.throw", from, 1.25 + ii * 0.1, 0.8);
                 if (ii == 0) JobKit.strikeSplit(sp, target, j, P, total, n, every, wts, false, false, life, t, dd -> {});
                 RuneKit.later(t, () -> {
@@ -115,7 +115,7 @@ final class PhantomArcherSkills {
                     Vec3 at = Kit.bodyPoint(target);
                     PhantomArcher.lodge(sp, j, target, 1, from);
                     JobFx.hit(target, j, ii == n - 1 ? 1.1 : 0.8);
-                    JobFx.glint(lv, at, ii == n - 1 ? 0.9 : 0.5, glow, core, 0.22, Opt.empty());
+                    PhantomArcher.impact2d(lv, at, ii == n - 1 ? 1.2 : 0.75, glow, core);
                     SkillFx.sparks(lv, at, core, ii == n - 1 ? 10 : 5, 4);
                     if (ii == n - 1) {
                         SkillFx.burst(lv, at, glow, 1.1, 0.22);
@@ -193,7 +193,7 @@ final class PhantomArcherSkills {
                     Vec3 p = bez(start[s], ctl, spot[0], u);
                     Vec3 d = RuneSwords.rot(f, V.UP, side * tt * 62);
                     bl[s].pose(V.add(p, d, -len * 0.45), d, V.UP, 1);
-                    if (prev[s] != null) RuneKit.flyStreak(sp.level(), prev[s], p, 20 * V.len(V.sub(p, prev[s])) + 1, glow, core, 0.7, 0.22);
+                    if (prev[s] != null) PhantomArcher.streak2d(sp.level(), prev[s], p, 0.3, glow, core);
                     prev[s] = p;
                 }
             });
@@ -206,9 +206,7 @@ final class PhantomArcherSkills {
             Vec3 r = V.rightOf(V.flat(V.sub(c, sp.position())));
             Vec3 a = V.unit(V.add(r, V.UP, 1));
             Vec3 b = V.unit(V.add(r, V.UP, -1));
-            JobFx.line(level, V.add(c, a, 1.6), V.add(c, a, -1.6), glow, core, 0.32, Opt.of("alpha", 1.0));
-            JobFx.line(level, V.add(c, b, 1.6), V.add(c, b, -1.6), glow, core, 0.32, Opt.of("alpha", 1.0));
-            JobFx.glint(level, c, 1.0, glow, core, 0.25, Opt.empty());
+            PhantomArcher.cross2d(level, c, 1.9, glow, core); // 2026-11-15 전용 X 베기 (rfx_jpcross)
             SkillFx.sparks(level, c, core, 10, 5);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
             SkillFx.play(level, "item.trident.hit", c, 1.1, 0.8);
@@ -233,7 +231,7 @@ final class PhantomArcherSkills {
                     Vec3 p = bez(spot[0], ctl, V.add(hand, V.rightOf(f), side * 0.45), u);
                     Vec3 d = RuneSwords.rot(f, V.UP, side * tt * 62);
                     bl[s].pose(V.add(p, d, -len * 0.45), d, V.UP, 1);
-                    if (prev[s] != null) RuneKit.flyStreak(sp.level(), prev[s], p, 20 * V.len(V.sub(p, prev[s])) + 1, glow, core, 0.5, 0.16);
+                    if (prev[s] != null) PhantomArcher.streak2d(sp.level(), prev[s], p, 0.25, glow, core);
                     prev[s] = p;
                 }
             });
@@ -417,7 +415,8 @@ final class PhantomArcherSkills {
             int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
             double reach = b.reach();
             b.pose(V.add(to, d, -reach * 0.7), d, PhantomArcher.faceOf(d), t);
-            RuneKit.flyStreak(level, from, to, speed, glow, core, 1.6, 0.34);
+            PhantomArcher.streak2d(level, from, to, Math.max(0.25, t / 20.0 + 0.2), glow, core);
+            PhantomArcher.streak2d(level, from, to, Math.max(0.25, t / 20.0 + 0.3), glow, core);
             SkillFx.play(level, "item.crossbow.shoot", from, 0.6, 1.0);
             SkillFx.play(level, "item.trident.riptide_2", from, 1.2, 0.8);
             Vec3 off = hitE != null ? V.sub(V.add(to, d, -reach * 0.7), Kit.bodyPoint(hitE)) : null;
@@ -497,9 +496,7 @@ final class PhantomArcherSkills {
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
         // 2026-11-15 영상: 바닐라는 하늘이 바뀌지 않음 → 보는 쪽 지평선에 지는 진홍 해 (rfx_sun) · 둘레 노을 빛
         Vec3 fs = Kit.facingOf(sp);
-        SkillFx.fx(level0, "rpg:rfx_sun", V.add(V.up(c0, 6.5), fs, 34), Opt.of("size", 15.0, "life", (finalAt + 20) / 20.0, "color", new double[] {1.0, 0.3, 0.16}, "alpha", 0.85));
-        for (int q = -2; q <= 2; q++) SkillFx.fx(level0, "rpg:rfx_jaura", V.add(V.up(c0, 4.0), RuneKit.turn(fs, q * 28), 30), Opt.of("size", 12.0, "life", (finalAt + 20) / 20.0,
-                "color", new double[] {1.0, 0.36, 0.2}, "alpha", 0.35));
+        for (int q = -1; q <= 1; q++) PhantomArcher.dusk2d(level0, V.add(V.up(c0, 6.0), RuneKit.turn(fs, q * 40), 32), 20.0, (finalAt + 20) / 20.0); // 전용 노을 판 (rfx_jpdusk)
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.2, 0.9);
         SkillFx.play(level0, "item.firecharge.use", c0, 0.6, 1.0);
@@ -516,7 +513,7 @@ final class PhantomArcherSkills {
                 for (int q = 0; q < 8; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
-                    JobFx.flame(level, p, 0.5 + Kit.rand() * 0.25, 0.45, Opt.empty(), PhantomArcher.FIRE, PhantomArcher.FIRE_CORE); // 2026-11-15 영상: fire_wall 이 주황 원뿔로 보였음
+                    PhantomArcher.flame2d(level, p, 0.6 + Kit.rand() * 0.3, 0.45); // 2026-11-15 전용 불꽃 (rfx_jpflame)
                 }
             });
         }
@@ -528,7 +525,7 @@ final class PhantomArcherSkills {
                 for (int q = 0; q < 10; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.8));
-                    JobFx.flame(level, p, 0.6 + Kit.rand() * 0.35, 0.55, Opt.empty(), PhantomArcher.FIRE, PhantomArcher.FIRE_CORE);
+                    PhantomArcher.flame2d(level, p, 0.7 + Kit.rand() * 0.4, 0.55);
                 }
             });
         }
@@ -568,7 +565,7 @@ final class PhantomArcherSkills {
                     b.pose(lift, b.dir(), PhantomArcher.faceOf(b.dir()), 1);
                     Vec3 d = V.unit(V.sub(to, lift));
                     RuneKit.later(1, () -> b.pose(V.add(to, d, -b.reach() * 0.75), d, PhantomArcher.faceOf(d), fly - 1));
-                    if (RuneKit.fxQuota("sanctuaryStreak", 10)) RuneKit.flyStreak(level, lift, to, V.len(V.sub(to, lift)) / (fly / 20.0), glow, core, 0.7, 0.16);
+                    if (RuneKit.fxQuota("sanctuaryStreak", 10)) PhantomArcher.streak2d(level, lift, to, 0.3, glow, core);
                     RuneKit.later(fly, () -> {
                         b.remove();
                         if (e == null && RuneKit.fxQuota("sanctuaryMiss", 6)) JobFx.glint(sp.level(), to, 0.4, glow, core, 0.15, Opt.empty());
