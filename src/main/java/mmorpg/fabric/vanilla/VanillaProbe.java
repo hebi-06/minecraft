@@ -1265,9 +1265,10 @@ final class VanillaProbe {
             // 블레이드 레인: 과녁 위 7칸 하늘의 칼 물결
             case "archer_blades" -> new double[] {9.0, 3.4, 3.0, 0.5};
             // 2026-11-15 가까이 (사용자 "너무 저퀄" — 멀리서 작게 보였음): 소드 볼트 · 크로스 팽 · 팬텀 버스트
-            case "archer_volley" -> new double[] {6.0, 2.2, 1.7, 0.6};
-            case "archer_cross" -> new double[] {7.0, 2.6, 1.4, 0.45};
-            case "archer_burst" -> new double[] {6.2, 2.2, 1.6, 0.6};
+            // (2026-11-15 처음 값 6.0 ~ 7.0 은 기본 6.0 과 거의 같아 그대로 멀었음 → 4 ~ 5칸)
+            case "archer_volley" -> new double[] {4.2, 1.8, 1.5, 0.7};
+            case "archer_cross" -> new double[] {5.0, 2.0, 1.4, 0.5};
+            case "archer_burst" -> new double[] {4.4, 1.9, 1.5, 0.7};
             // 2026-11-14 디바인 펀니시먼트: 과녁 머리 위 5.5칸의 하늘의 문 · 거대한 심판의 화살 (8.5칸)
             case "sniper_ult" -> new double[] {8.0, 3.0, 3.0, 0.5};
             // 헤븐즈 게이트: 과녁 머리 위 3.3칸의 하늘의 문
