@@ -491,6 +491,7 @@ const SCENES = {
         const sw = sword(start, d, len, faceOf(d), { k0: 0.35 });
         const end = from.clone().add(d.clone().multiplyScalar(Math.max(0.6, dist - len * 0.75)));
         at(NOW + 1, () => { sw.grow(1, 1); sw.to(end, d, Math.max(1, ticks - 1)); });
+        BlockFx.beam(from.clone().add(d.clone().multiplyScalar(0.6)), end.clone().add(d.clone().multiplyScalar(len * 0.5)), 0.07, CRIMSON, ticks + 3);
         at(NOW + ticks, () => { sw.remove(); lodgeFx(body, from, 1); });
       });
       at(24 + 2 + 10, () => {
