@@ -190,6 +190,23 @@ public final class BlockFx {
         }
     }
 
+    /** 번쩍 별 (가운데 c · 크기 size — 흰 가는 긴 상자 셋이 1틱에 뻗었다 2틱에 사라짐 · 겉 색 작은 상자 하나): 쏠 때 · 꽂힐 때의 가벼운 번쩍임 */
+    public static void star(ServerLevel level, Vec3 c, double size, double[] color) {
+        Vfx.Fx fx = RuneProps.fx(level, c, 8);
+        Vec3[] axes = {V.unit(new Vec3(1, 0.25, 0.1)), V.unit(new Vec3(-0.25, 1, 0.3)), V.unit(new Vec3(0.3, -0.15, 1))};
+        for (Vec3 ax : axes) {
+            Vfx.Prop st = box(fx, c, along(ax, null), size * 0.06, size * 0.3, size * 0.06, WHITE);
+            fx.on(1, () -> st.stretch(size * 0.05, size * 2.0, size * 0.05, 1));
+            fx.on(2, () -> st.stretch(0.0, size * 2.4, 0.0, 2));
+            fx.on(5, st::remove);
+        }
+        Quaternionf q = new Quaternionf().rotateXYZ(0.785F, 0.615F, 0F);
+        Vfx.Prop k = box(fx, c, q, size * 0.1, size * 0.1, size * 0.1, color);
+        fx.on(1, () -> k.stretch(size * 0.45, size * 0.45, size * 0.45, 1));
+        fx.on(2, () -> k.turn(new Quaternionf(q).rotateY(0.9F), 3).stretch(0.0, 0.0, 0.0, 3));
+        fx.on(6, k::remove);
+    }
+
     // ------------------------------------------------------------ 고리 (충격파 · 예고)
 
     /** 땅의 고리 (가운데 c · 반지름 r0 → r1 · 마디 segs · 굵기 thick): 판이 바깥으로 퍼지며 얇아져 사라짐 (life 틱) */

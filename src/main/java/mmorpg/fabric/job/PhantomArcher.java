@@ -96,6 +96,22 @@ public final class PhantomArcher {
     // ------------------------------------------------------------ 2026-11-15 단색 블록 볼륨 (사용자 "그냥 위르드처럼" · "도트처럼 보이는게 문제" — BlockFx)
     // (같은 날 그린 2D rfx_jp* 는 바닐라 글꼴에서 픽셀이 그대로 커져 도트로 보였음 → 본체를 무늬 없는 단색 상자 볼륨으로)
 
+    /** 날아가는 칼의 진홍 잔상 둘 (1 · 2틱 늦게 같은 길 — 날 = 진홍 · 홈 = 흰빛, 닿으면 작아져 사라짐) */
+    static void afterimages(ServerLevel level, Vec3 from, Vec3 hiltEnd, Vec3 d, double len, int ticks, double[] glow) {
+        for (int g = 1; g <= 2; g++) {
+            int delay = g;
+            double k = 1.0 - 0.12 * g;
+            Vfx.Fx fx = RuneProps.fx(level, from, ticks + delay + 8);
+            RuneSwords.Blade b = RuneSwords.phantom(fx, from, d, faceOf(d), len * k, 0.05, glow, mmorpg.fabric.vfx.BlockFx.WHITE);
+            fx.on(delay, () -> {
+                b.grow(1, 1);
+                b.pose(V.add(hiltEnd, d, -0.15 * delay), d, faceOf(d), Math.max(1, ticks));
+            });
+            fx.on(delay + ticks, () -> b.grow(0.05, 3));
+            fx.on(delay + ticks + 4, b::remove);
+        }
+    }
+
     /** 투영 선: 칼 윤곽 (자루 · 코등이 · 날 양쪽 · 칼끝) 을 가는 푸른 흰빛 줄 다섯으로 — life 초 동안 가늘어지며 사라짐 */
     static void trace2d(ServerLevel level, Vec3 hilt, Vec3 dir, double len, double life) {
         Vec3 d = V.unit(dir);
@@ -273,7 +289,7 @@ public final class PhantomArcher {
         }
         LAST.put(sp.getUUID(), e);
         if (add > 0) {
-            impact2d(level, body, 0.55 + pad * 0.3, JobKit.glow(j), JobKit.core(j));
+            mmorpg.fabric.vfx.BlockFx.star(level, body, 0.8 + pad * 0.4, JobKit.glow(j)); // 2026-11-15 꽂힐 때 가벼운 번쩍 (평타마다라 폭발 대신)
             SkillFx.play(level, "item.trident.hit", body, 1.3 + Kit.rand() * 0.3, 0.45);
         }
         if (l.swords.size() >= max) {
