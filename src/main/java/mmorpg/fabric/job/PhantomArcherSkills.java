@@ -397,7 +397,8 @@ final class PhantomArcherSkills {
                 Vec3 h = V.add(V.add(RuneKit.bowHand(sp), V.rightOf(V.flat(f)), 0.3), f, pull);
                 if (tt > draw - 5) h = V.add(h, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.04);
                 b.pose(h, f, PhantomArcher.faceOf(f), 1);
-                if (tt % 3 == 0) mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.tip(), 0.4 + tt * 0.03, glow); // 칼끝에 모이는 빛 (2026-11-15 단색 블록 별 — 1인칭에서 크지 않게)
+                // 칼끝에 모이는 빛 (2026-11-15 단색 블록 별 — 1인칭 영상: 칼이 커지기 전 (6틱 전) 칼끝은 손 자리라 별이 화면을 덮었음 → 9틱부터)
+                if (tt % 3 == 0 && tt >= 9) mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.tip(), 0.4 + tt * 0.03, glow);
             });
         }
         RuneKit.later(draw, () -> {
