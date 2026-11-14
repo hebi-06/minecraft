@@ -612,6 +612,7 @@ public final class JobTraitsMore {
         double[] core = JobKit.core(j);
         RuneKit.zap(level, from, end, glow, core, 0.1, shot.life() + 0.12);
         RuneKit.flyStreak(level, from, end, speed, glow, core, 0.8, 0.22);
+        JobFx.arrow(level, from, end, speed, 0.8, Opt.of("alpha", 0.95), glow, core); // 2026-11-14 2D 바람 화살 (번개빛)
         RuneKit.plasmaOrb(level, from, 0.3, glow, Opt.of("life", 0.2, "vel", RuneKit.bodyVel(sp)));
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(Math.max(1, (int) Math.round(shot.life() * 20)), () -> {

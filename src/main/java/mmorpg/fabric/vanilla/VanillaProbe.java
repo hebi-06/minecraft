@@ -1015,6 +1015,7 @@ final class VanillaProbe {
         if (i >= FILM_RUNES.size()) {
             run(server, "tick rate 20");
             mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
+            mmorpg.fabric.vfx.PBridge.filmCamOff(p);
             if (census) log("census total seen " + mmorpg.fabric.vfx.PBridge.SEEN + " made " + mmorpg.fabric.vfx.PBridge.made + " dust "
                     + mmorpg.fabric.vfx.PBridge.dusts + " dropped " + mmorpg.fabric.vfx.PBridge.dropped + " noGlyph " + mmorpg.fabric.vfx.PBridge.noGlyph
                     + " cards " + mmorpg.fabric.vfx.PBridge.cards + " solo " + mmorpg.fabric.vfx.PBridge.soloReused);
@@ -1061,6 +1062,7 @@ final class VanillaProbe {
         // 카메라: 모드 영상과 같은 자리 (RpgRuneGallery.film — 영웅 · 초월은 넓게), 사진기가 지금 (옮긴 뒤) 몸 자리를 기준으로 삼음
         boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
         say(p, "cam film 105 " + (big ? "7.6 4.2 1.9" : "7.0 3.6 1.1") + " 3.0 0.6");
+        mmorpg.fabric.vfx.PBridge.filmCam(p, 105, big ? 7.6 : 7.0, big ? 4.2 : 3.6, big ? 1.9 : 1.1, 3.0, 0.6);
         if (census) {
             Tasks.later(30, () -> census(p, r, name, step));
             return;
@@ -1357,6 +1359,7 @@ final class VanillaProbe {
         double[] cam = jobView(id);
         // 모드 직업 영상 (RpgFilm) 과 같은 카메라: 보는 쪽에서 왼쪽 뒤 125° · 몸 앞 2.5칸을 봄
         say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
+        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, cam[0], cam[1], cam[2], 2.5, cam[3]);
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             jobPrepare(p, j, id, foes, y);
@@ -1428,6 +1431,7 @@ final class VanillaProbe {
         String name = "vanilla_motion_" + type;
         int per = Math.max(3, mmorpg.core.Motions.combo(type).size());
         say(p, "cam film 125 6.00 2.10 1.00 2.5 1.00");
+        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, 6.0, 2.1, 1.0, 2.5, 1.0);
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);

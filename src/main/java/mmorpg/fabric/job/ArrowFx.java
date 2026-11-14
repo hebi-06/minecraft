@@ -15,15 +15,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 2026-11-14 궁수 계열 다시 만들기 (사용자 컨셉 — 폭풍 궁수 · 천벌의 사수 · 그림자 사수): 세 직업이 함께 쓰는 그림. 모드 없는 클라이언트에도 보이는 것만 — 3D 빛 화살 ·
- * 번개 창 (RuneSwords) · 구름 · 날개 · 빛 고리 (RuneProps) · 룬 그림 (번개 · 번개 구슬 · 빛줄 · 반짝임 · 빛기둥). 직업 2D 그림 (rfx_j*) 은 모드 없는 클라이언트에
- * 거의 보이지 않으므로 이 셋의 새 연출에는 쓰지 않음 (맞은 자리 JobFx.hit · 터짐 JobFx.burst 만 — 룬 묶음에 들어 있음)
+ * 2026-11-14 궁수 계열 다시 만들기 (사용자 컨셉 — 폭풍 궁수 · 천벌의 사수 · 그림자 사수): 세 직업이 함께 쓰는 그림 — 3D 빛 화살 · 번개 창 (RuneSwords) · 구름 · 날개 ·
+ * 빛 고리 (RuneProps) · 룬 그림 (번개 구슬 · 빛줄 · 반짝임 · 빛기둥). 같은 날 직업 2D 그림 (rfx_j* 182종) 을 모드 없는 클라이언트 글꼴로 옮긴 뒤 (사용자 "우리가 만든
+ * 이펙트는 어디 가고 왜 다 파티클로") 3D 화살마다 2D 빛 화살 (바람 · 해 · 거대한 화살 — {@link #art}) 을 두르고 벼락은 2D 번개 기둥 · 번개 고리 ({@link #skyBolt})
  */
 final class ArrowFx {
     private ArrowFx() {}
-
-    /** 번개 그림 (rpg:rfx_bolt) 칸 {빛, 심지} */
-    static final int[] BOLT = {0, RuneKit.BOLT_CORE};
 
     /** 날아가는 틱 (JobFx.arrow 와 같은 셈 — 스킬의 피해 틱이 예전과 같게): from → to 를 speed 칸/초 */
     static int flyTicks(Vec3 from, Vec3 to, double speed) {
@@ -79,11 +76,65 @@ final class ArrowFx {
         return t;
     }
 
-    /** 하늘에서 땅으로 벼락 (번개 그림 한 장 — 키 height · 지그재그 줄기 · 땅의 번쩍임 · 불티): ground = 떨어지는 땅 */
+    /** 같은 것 + 3D 화살에 두르는 2D 빛 화살 (a): 촉이 닿는 틱 */
+    static int shot(ServerLevel level, Vec3 from, Vec3 to, double speed, double len, int stick, LivingEntity follow, double[] glow, double[] core, Art a) {
+        int t = shot(level, from, to, speed, len, stick, follow, glow, core);
+        art(level, from, to, t, len, a, glow, core, Opt.empty());
+        return t;
+    }
+
+    // ------------------------------------------------------------ 2026-11-14 직업 2D 그림 (모드 없는 클라이언트 글꼴로 옮김)
+
+    /** 3D 화살에 두르는 2D 빛 화살: 바람 화살 (rfx_jarrow2 — 살대를 감아 도는 띠 둘) · 해 화살 (rfx_jsunarrow — 빛나는 해 촉) · 거대한 화살 (rfx_jgreatarrow) */
+    enum Art {
+        WIND("jarrow2", JobFx.ARROW2, 0.97, 0.62),
+        SUN("jsunarrow", JobFx.SUNARROW, JobFx.SUNARROW_HEAD, 0.62),
+        GREAT("jgreatarrow", JobFx.GREATARROW, JobFx.GREATARROW_HEAD, 0.56);
+
+        final String sprite;
+        final int frames;
+        final double head;
+        /** 그림 크기 / 3D 화살 길이 (그림 길이 = 크기 × 2 — 3D 화살을 조금 길게 감쌈) */
+        final double per;
+
+        Art(String sprite, int frames, double head, double per) {
+            this.sprite = sprite;
+            this.frames = frames;
+            this.head = head;
+            this.per = per;
+        }
+    }
+
+    /**
+     * 3D 화살 (오늬 from → 촉 to, ticks 틱 — arrow3d 와 같은 길 · 같은 틱, 길이 len) 에 두르는 2D 빛 화살: 머리가 3D 화살촉 자리에서 나와 같은 틱에 to 에 닿음 (꼬리는
+     * 3D 화살 뒤로 조금 — 날아가는 빛). o: alpha · view · owner
+     */
+    static void art(ServerLevel level, Vec3 from, Vec3 to, int ticks, double len, Art a, double[] glow, double[] core, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double dist = V.len(d);
+        if (dist < 0.4) return;
+        Vec3 u = V.scale(d, 1 / dist);
+        double r = Math.min(reach(len), dist * 0.85);
+        double rem = dist - r;
+        double speed = rem / Math.max(0.05, Math.max(1, ticks) / 20.0);
+        JobFx.flyHead(level, a.sprite, a.frames, a.head, V.add(from, u, r), to, speed, len * a.per, o.with("alpha", o.num("alpha", 0.95)), glow, core);
+    }
+
+    /** 하늘에서 땅으로 벼락: ground = 떨어지는 땅, 키 height */
     static void skyBolt(ServerLevel level, Vec3 ground, double height, double[] glow, double[] core) {
-        RuneKit.rfx2(level, "bolt", V.up(ground, height / 2), Opt.of("size", height / 2, "life", 0.26, "cell", Math.floor(Kit.rand() * 4)), glow, RuneKit.WHITE, BOLT, null);
+        skyBolt(level, ground, height, glow, core, Opt.empty());
+    }
+
+    /**
+     * 하늘에서 땅으로 벼락 (2026-11-14 직업 2D 그림 — 룬 번개 그림 한 장 대신): 2D 번개 기둥 (rfx_jpillar 0 ~ 6 — 길잡이 번개 → 굵은 기둥 → 땅에 튀는 빛 → 지직임 →
+     * 사그라짐 · 너비 키 / 4) · 땅에 눕는 번개 고리 (rfx_jvolt2) · 지그재그 줄기 · 땅의 번쩍임 · 불티. o (view · owner) 는 2D 그림에만 — 시전자 자리에 떨어지면
+     * JobFx.hide1p (1인칭 화면을 덮지 않게)
+     */
+    static void skyBolt(ServerLevel level, Vec3 ground, double height, double[] glow, double[] core, Opt o) {
+        JobFx.pillar(level, ground, height, 0, 7, 0.42, false, o, glow, core);
+        JobFx.volt(level, V.up(ground, 0.06), 0.9 + height * 0.09, glow, core, 0.4, o);
         SkillFx.bolt(level, new Vec3(ground.x + (Kit.rand() - 0.5) * 0.8, ground.y + height, ground.z + (Kit.rand() - 0.5) * 0.8), V.up(ground, 0.1), core,
-                Opt.of("jag", 0.45, "thick", 0.12, "life", 0.22));
+                Opt.of("jag", 0.45, "thick", 0.1, "life", 0.22));
         SkillFx.burst(level, V.up(ground, 0.5), core, 1.2, 0.22);
         SkillFx.sparks(level, V.up(ground, 0.3), core, 6, 5);
     }
@@ -115,10 +166,9 @@ final class ArrowFx {
                 "grow", o.num("grow", 0.5), "fade", o.num("fade", 0.5)));
     }
 
-    /** 깃털 한 장 (rfx prop feather — 천천히 떨어짐) */
+    /** 깃털 한 장 (2026-11-14 직업 2D 깃털 rfx_jfeather — 나풀거리며 천천히 떨어짐 · 흰 깃 결) */
     static void feather(ServerLevel level, Vec3 at, double size, double life, double[] color) {
-        RuneKit.rfx(level, "prop", at, Opt.of("size", size, "life", life, "cell", (double) RuneKit.RFX.get("feather")[0], "spin", Kit.rand() * 360, "spinRate",
-                (Kit.rand() - 0.5) * 120, "dir", V.DOWN, "speed", 0.5 + Kit.rand() * 0.4, "color", color, "fade", 0.5));
+        JobFx.feathers(level, at, 1, 0.0, size * 1.15, color, RuneKit.WHITE, life, Opt.empty());
     }
 
     /** 몸에서 bowHand 쪽 (1인칭 오른쪽 아래 활) 의 화살 나가는 자리 */

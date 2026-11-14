@@ -30,7 +30,8 @@ import net.minecraft.world.phys.Vec3;
  * JobTraitsMore · JobTraits9): 저지먼트 (끝까지 당겨 큰 한 발 — 다시 눌러 놓음 · 맞은 자리에 하늘의 빛기둥) · 윙 스텝 (빛의 고리 화살 · 빛의 날개로 뒤로 날아 물러남 ·
  * 심판 +3) · 헤븐즈 게이트 (빛의 화살 → 둘레 적 위 하늘의 문에서 하늘의 화살 두 번 — 치명) · 세라핌 (태세 — 빛의 날개 여섯 · 세 번째 화살마다 심판의 화살) ·
  * 디바인 펀니시먼트 (조준 — 하늘의 문 → 다시 눌러 단 한 발: 거대한 심판의 화살이 내리꽂힘). 피해 · 재사용 대기 · 틱 · 매커니즘은 2판 그대로 (그림 · 이름 · 설명만).
- * 화살은 공격 피해. 화면 흔들림 없음. 연출 = 모드 없는 클라이언트에도 보이는 것 (3D 빛 화살 · 3D 날개 · 3D 빛 고리 · 룬 빛기둥 · 문양 · 반짝임)
+ * 화살은 공격 피해. 화면 흔들림 없음. 연출 = 3D (빛 화살 · 날개 · 빛 고리) + 직업 2D 그림 (2026-11-14 글꼴로 옮김 — 화살에 두르는 해 화살 · 거대한 화살 · 조준 과녁 ·
+ * 하늘에서 내리비추는 빛 원뿔 · 나풀거리는 깃털 · 땅의 빛 고리) + 룬 빛기둥 · 문양 · 반짝임
  */
 final class SniperSkills {
     private SniperSkills() {}
@@ -131,9 +132,12 @@ final class SniperSkills {
                     }
                 }
                 if (tt % 5 == 0 || tt == charge) {
-                    // 화살촉 앞 빛의 고리가 조여 듦 (다 당기면 맞춰짐) · 차오르는 소리
+                    // 화살촉 앞 2D 조준 과녁 (rfx_jtarget2 — 조여 듦, 다 당기면 맞춰진 채 깜빡임) · 빛의 고리 · 차오르는 소리
                     Vec3 tip = V.add(hand, look, 2.6 + q * 0.6);
-                    SkillFx.ring(level, tip, look, tt == charge ? FLASH : glow, Math.max(0.3, 1.3 - q * 0.9), 0.2, 0);
+                    double rr = Math.max(0.3, 1.3 - q * 0.9);
+                    SkillFx.ring(level, tip, look, tt == charge ? FLASH : glow, rr, 0.2, 0);
+                    if (tt == charge) JobFx.target(level, tip, rr * 1.15, GOLD, FLASH, look, 1, 0.45, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.95));
+                    else JobFx.target(level, tip, rr * 1.15, glow, core, look, 0, 0.26, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.85));
                     SkillFx.play(level, "crossbow.loading.middle", sp.position(), 0.7 + q * 0.6, 0.6);
                 }
                 if (tt == charge) {
@@ -196,6 +200,7 @@ final class SniperSkills {
             afx.on(t0 + hitT + 11, () -> a.grow(0.1, 4));
             afx.on(t0 + hitT + 15, a::remove);
         } else ArrowFx.arrow3d(level, from, end, hitT, 2.4, 10, first == null ? null : first.e(), glow, FLASH);
+        ArrowFx.art(level, from, end, hitT, 2.0 + 0.6 * c, ArrowFx.Art.SUN, GOLD, FLASH, Opt.empty());
         RuneKit.flyStreak(level, from, end, speed, glow, FLASH, 1.0 + 0.5 * c, 0.3);
         RuneKit.streak(level, V.add(from, look, 0.6), end, FLASH, 0.1 + 0.08 * c, 0.4, 1.0, 0);
         RuneKit.streak(level, V.add(from, look, 0.6), end, glow, 0.26 + 0.16 * c, 0.35, 0.6, 0);
@@ -216,8 +221,10 @@ final class SniperSkills {
         JobKit.strike(sp, e, j, P, k.total() * frac * boost, false, full, life, hitT, x -> {
             if (!(e.level() instanceof ServerLevel lv)) return;
             Vec3 at = Kit.bodyPoint(e);
-            // 하늘에서 심판의 빛기둥 · X 섬광 · 금빛 반짝임 · 발밑 성광
+            // 하늘에서 심판의 빛기둥 (룬 빛기둥 · 2D 빛 원뿔) · X 섬광 · 금빛 반짝임 · 발밑 성광
             pillar(sp, lv, e.position(), 12 + 4 * c, 0.5, glow, core);
+            JobFx.spotlight(lv, e.position(), 8 + 3 * c, 0.6, Opt.of("alpha", 0.9), GOLD, FLASH);
+            JobFx.glint(lv, at, 0.9 + 0.5 * c, GOLD, FLASH, 0.3, Opt.empty());
             SkillFx.fx(lv, "rpg:slash_x", V.add(at, look, -0.3), Opt.of("dir", look, "size", 1.0 + 0.5 * c, "life", 0.3, "color", glow, "alpha", 1.0));
             ArrowFx.glint(lv, V.add(at, look, -0.4), 0.9 + 0.5 * c, 0.3, RuneKit.WHITE, Opt.empty());
             BowFx.impact(lv, e.position(), glow, core, 2.0 + c, "noble");
@@ -266,6 +273,7 @@ final class SniperSkills {
             int fly = t > 0 ? t : Math.max(2, (int) Math.round(dist / 40 * 20));
             // 3D 빛 화살 · 빛줄 · 화살촉을 감싼 작은 빛 고리
             ArrowFx.arrow3d(level, from, to, fly, 1.6, 4, on ? target : null, glow, FLASH);
+            ArrowFx.art(level, from, to, fly, 1.6, ArrowFx.Art.SUN, glow, FLASH, Opt.empty());
             RuneKit.flyStreak(level, from, to, dist / (fly / 20.0), glow, core, 0.9, 0.22);
             SkillFx.burst(level, from, glow, 0.6, 0.2);
             SkillFx.play(level, "item.crossbow.shoot", from, 1.3, 0.9);
@@ -282,7 +290,12 @@ final class SniperSkills {
                 int n = 0;
                 for (LivingEntity e : caught) {
                     RuneKit.effect(e, "slowness", slow, JobKit.isBoss(e) ? 1 : 2);
-                    if (n++ < 4) bind(level, e, slow, glow);
+                    if (n++ < 4) {
+                        bind(level, e, slow, glow);
+                        // 발밑 2D 빛 고리 (rfx_jhalo — 옭아매인 동안 몸을 따라감)
+                        JobFx.halo(level, V.up(e.position(), 0.06), 0.75 + Kit.bodyPad(e), glow, FLASH, slow / 20.0, Opt.of("vel", RuneKit.entVel(e), "alpha", 0.85,
+                                "spinRate", 60.0));
+                    }
                 }
                 if (caught.isEmpty()) SkillFx.shock(level, V.up(at, -1.0), glow, 1.0, 0.5); // 눕힌 고리 (zonePulse 자리 — bash_ring 은 늘 카메라를 봄)
             });
@@ -366,7 +379,7 @@ final class SniperSkills {
             ServerLevel level = sp.level();
             Vec3 from = ArrowFx.bow(sp, 0.6);
             Vec3 to = Kit.bodyPoint(target);
-            int t = ArrowFx.shot(level, from, to, visSpeed(k.num("speed", 60), V.len(V.sub(to, from))), 1.6, 4, target, glow, FLASH);
+            int t = ArrowFx.shot(level, from, to, visSpeed(k.num("speed", 60), V.len(V.sub(to, from))), 1.6, 4, target, glow, FLASH, ArrowFx.Art.SUN);
             RuneKit.streak(level, from, to, glow, 0.14, 0.3, 0.75, 0);
             SkillFx.burst(level, from, glow, 0.5, 0.2);
             SkillFx.play(level, "random.bow", from, 1.2, 0.9);
@@ -417,6 +430,7 @@ final class SniperSkills {
                 "fade", 0.4));
         SkillFx.burst(level, gate, core, 1.0, 0.25);
         ArrowFx.arrow3d(level, V.up(gate, 0.4), b, Math.max(1, delay), 2.2, 6, n, GOLD, FLASH);
+        ArrowFx.art(level, V.up(gate, 0.4), b, Math.max(1, delay), 2.2, ArrowFx.Art.SUN, GOLD, FLASH, Opt.empty());
         RuneKit.flyStreak(level, V.up(gate, 0.4), b, V.len(V.sub(b, gate)) / (Math.max(1, delay) / 20.0), GOLD, FLASH, 0.9, 0.26);
         SkillFx.sparks(level, a, GOLD, 10, 5);
         ArrowFx.glint(level, a, 0.8, 0.25, GOLD, Opt.empty());
@@ -427,6 +441,7 @@ final class SniperSkills {
             Vec3 at = Kit.bodyPoint(n);
             JobImpact.hit(sp, n, j, 1.15);
             pillar(sp, lv, n.position(), 9, 0.4, glow, core);
+            JobFx.spotlight(lv, n.position(), 7.5, 0.5, Opt.of("alpha", 0.9), GOLD, FLASH);
             ArrowFx.glint(lv, at, 1.0, 0.3, RuneKit.WHITE, Opt.empty());
             RuneKit.zonePulse(lv, n.position(), GOLD, 1.5 + Kit.bodyPad(n), 0.3);
             SkillFx.sparks(lv, at, GOLD, 12, 5);
@@ -459,6 +474,8 @@ final class SniperSkills {
         SERAPH.put(sp.getUUID(), wings);
         RuneKit.domainSigil(level, c, 2.4, "holy", glow, core, Opt.of("life", 0.9, "spinRate", 60.0, "grow", 0.15, "alpha", 0.85));
         RuneKit.zonePulse(level, c, glow, 2.6, 0.45);
+        JobFx.halo(level, V.up(c, 0.07), 2.8, GOLD, FLASH, 0.9, Opt.of("alpha", 0.9, "spinRate", 40.0));
+        JobFx.spotlight(level, c, 6.0, 0.8, JobFx.hide1p(sp).with("alpha", 0.75), GOLD, FLASH);
         for (int i = 0; i < 12; i++) {
             Vec3 at = V.add(V.up(c, 0.3 + Kit.rand() * 1.4), RuneKit.turn(new Vec3(1, 0, 0), i * 30), 0.9 + Kit.rand() * 0.6);
             SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 2.0, "size", 0.14, "grow", 0.6, "life", 0.6, "color", i % 2 == 0 ? core : glow,
@@ -561,6 +578,9 @@ final class SniperSkills {
                         "solo", 9.0));
                 double size = (h == null ? 0.9 : 1.0 + Kit.bodyPad(h.e()) * 0.5) * (1.9 - 0.9 * q);
                 SkillFx.ring(level, at, V.unit(V.sub(eye, at)), GOLD, size, 0.14, 0);
+                // 겨눈 적의 2D 조준 과녁 (rfx_jtarget2 — 조여 듦 → 쏠 수 있으면 맞춰진 채 깜빡임)
+                if (tt % 4 == 2) JobFx.target(level, at, size * 1.1, tt >= gap ? FLASH : GOLD, RuneKit.WHITE, V.unit(V.sub(eye, at)), tt >= gap ? 1 : 0, 0.22,
+                        Opt.of("alpha", 0.9));
                 if (tt % 4 == 0) RuneKit.streak(level, V.up(gate, -0.3), V.up(foot, top + 0.4), core, 0.05 + 0.05 * q, 0.2, 0.6, 0);
                 if (tt == gap) {
                     SkillFx.playFor(sp, "block.note_block.chime", 1.6, 0.6); // 조여 듦 끝 — 이제 쏠 수 있음
@@ -612,6 +632,7 @@ final class SniperSkills {
         }
         // 빛의 화살 (3D · 금빛 줄 · 흰 섬광 줄)
         ArrowFx.arrow3d(level, from, end, hitT, 2.0, 6, h == null ? null : h.e(), glow, FLASH);
+        ArrowFx.art(level, from, end, hitT, 2.0, ArrowFx.Art.SUN, GOLD, FLASH, Opt.empty());
         RuneKit.flyStreak(level, from, end, speed, GOLD, FLASH, 1.2, 0.32);
         RuneKit.streak(level, V.add(from, look, 0.6), end, GOLD, 0.12, 0.35, 0.8, 0);
         SkillFx.burst(level, from, glow, 1.0, 0.25);
@@ -628,11 +649,13 @@ final class SniperSkills {
                 "fade", 0.5));
         SkillFx.burst(level, gate, core, 2.6, 0.35);
         ArrowFx.arrow3d(level, V.up(gate, -0.2 + ArrowFx.reach(GREAT_LEN)), tipAt, hitT, GREAT_LEN, 16, h == null ? null : h.e(), GOLD, FLASH);
+        ArrowFx.art(level, V.up(gate, -0.2 + ArrowFx.reach(GREAT_LEN)), tipAt, hitT, GREAT_LEN, ArrowFx.Art.GREAT, GOLD, FLASH, Opt.empty());
         RuneKit.flyStreak(level, gate, tipAt, V.len(V.sub(tipAt, gate)) / Math.max(0.05, hitT / 20.0), GOLD, FLASH, 2.0, 0.6);
         RuneKit.later(hitT, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             pillar(sp, lv, foot, 18, 0.6, glow, core);
+            JobFx.spotlight(lv, foot, 12, 0.7, Opt.of("alpha", 0.95), GOLD, FLASH);
             BowFx.impact(lv, foot, glow, core, 2.6, "noble");
             SkillFx.play(lv, "ambient.weather.lightning.impact", foot, 1.4, 0.6);
         });
@@ -656,6 +679,8 @@ final class SniperSkills {
             // 꽂힌 자리에서 성광이 터짐: 흔들림 없는 큰 터짐 · 둘레 빛기둥 다섯 · 큰 반짝임 · 위로 솟는 빛 알갱이
             BowFx.bigImpact(lv, e.position(), glow, core, 3.2 + Kit.bodyPad(e));
             RuneKit.godRays(sp, lv, e.position(), 2.4 + Kit.bodyPad(e), 5, glow, core, Opt.of("h", 12.0, "life", 0.6, "skipNear", true));
+            JobFx.burst(lv, at, 2.2 + Kit.bodyPad(e) * 0.5, GOLD, FLASH, 0.4, Opt.empty());
+            JobFx.halo(lv, V.up(e.position(), 0.07), 3.2 + Kit.bodyPad(e), GOLD, FLASH, 0.7, Opt.of("alpha", 0.95));
             ArrowFx.glint(lv, at, 2.4, 0.45, FLASH, Opt.empty());
             SkillFx.play(lv, "block.amethyst_block.break", at, 1.4, 0.9);
             SkillFx.play(lv, "firework.large_blast", at, 1.2, 0.6);

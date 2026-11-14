@@ -28,7 +28,8 @@ import net.minecraft.world.phys.Vec3;
  * 섀도 볼리 (분신 넷과 함께 쏘아 올린 열두 발이 휘어 둘레 적들에게) · 섀도 스위치 (분신이 적 무리로 뛰어듦 → 내려앉는 순간 자리를 바꿔 둘레에 화살) · 섀도 트랩 (분신이 덫처럼
  * 터지며 부채꼴 그림자 화살 조각) · 섀도 댄스 (태세 — 곁에서 함께 달리는 분신 둘 · 늘 세 갈래) · 섀도 레기온 (분신 여덟의 화살 물결 → 한 점에 모인 거대한 그림자 화살).
  * 피해 · 재사용 대기 · 틱 · 매커니즘은 2판 그대로 (섀도 스위치만 뛰어오름 대신 분신과 자리 바꿈 — 내려앉는 틱 · 자리 · 화살 그대로). 화살은 공격 피해 · 3칸 안 +20% ·
- * 10칸 밖 −30% (분신 — JobKit.hit). 화면 흔들림 없음. 연출 = 모드 없는 클라이언트에도 보이는 것 (3D 그림자 분신 몹 · 3D 그림자 화살 · 룬 그림 · 직업 연기)
+ * 10칸 밖 −30% (분신 — JobKit.hit). 화면 흔들림 없음. 연출 = 3D (그림자 분신 몹 · 그림자 화살) + 직업 2D 그림 (2026-11-14 글꼴로 옮김 — 화살에 두르는 바람 화살 ·
+ * 그림자 연기 · 혼불 · 잔상 줄기 · 그림자 틈 · 검은 해 · 거대한 화살) + 룬 그림
  */
 final class BattlearcherSkills {
     private BattlearcherSkills() {}
@@ -71,6 +72,15 @@ final class BattlearcherSkills {
         }
         fx.on(ticks + 6, () -> ar.grow(0.1, 4));
         fx.on(ticks + 11, ar::remove);
+        // 2D 바람 화살 (rfx_jarrow2): 곡선을 두 토막으로 (반 → 끝) 따라감 — 머리가 3D 화살촉과 같은 틱에 b 에 닿음
+        int half = Math.max(1, ticks / 2);
+        Vec3 mid = bez(a, c, b, half / (double) ticks);
+        double s1 = V.len(V.sub(mid, a)) / Math.max(0.05, half / 20.0);
+        double s2 = V.len(V.sub(b, mid)) / Math.max(0.05, (ticks - half) / 20.0);
+        JobFx.flyHead(sp.level(), "jarrow2", JobFx.ARROW2, 0.97, a, mid, s1, alen * 0.62, Opt.of("alpha", 0.9), glow, core);
+        fx.on(half, () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx.flyHead(sp.level(), "jarrow2", JobFx.ARROW2, 0.97, mid, b, s2, alen * 0.62, Opt.of("alpha", 0.9), glow, core);
+        });
     }
 
     // ------------------------------------------------------------ 섀도 볼리
@@ -132,6 +142,7 @@ final class BattlearcherSkills {
                 RuneMob m = clones[ci];
                 Vec3 b = m != null && m.alive() ? ShadeArchers.bowUpOf(m) : V.up(spots[ci], 2.0);
                 SkillFx.burst(level, b, glow, 0.7, 0.2);
+                JobFx.soul(level, b, 0.45, glow, core, 0.4, Opt.of("alpha", 0.9)); // 쏘아 올린 활의 2D 혼불
                 if (m != null) RuneKit.later(flight + 4, () -> ShadeArchers.leave(m, glow));
             }
             SkillFx.sparks(level, V.up(sp.position(), 2.0), core, 10, 5);
@@ -215,6 +226,10 @@ final class BattlearcherSkills {
                 Vec3 p = V.up(V.lerp(start, dest, u), 4 * k.num("lift", 2.6) * u * (1 - u));
                 RuneKit.shadeClone(sp, sp.level(), p, f0, 2, ShadeArchers.DARK, glow, Opt.of("life", 0.3, "fade", 0.7, "alpha", 0.55));
                 SkillFx.sparks(sp.level(), V.up(p, 0.9), glow, 2, 1.5);
+                // 지나는 길의 2D 잔상 줄기 (rfx_jdash2 — 앞 자리에서 지금 자리까지)
+                double u0 = Math.max(0, (tt - 2) / (double) flight);
+                Vec3 p0 = V.up(V.lerp(start, dest, u0), 4 * k.num("lift", 2.6) * u0 * (1 - u0));
+                JobFx.dash(sp.level(), V.up(p0, 1.0), V.up(p, 1.0), glow, core, 0.3, Opt.of("alpha", 0.85));
             });
         }
         RuneKit.later(flight, () -> {
@@ -233,7 +248,10 @@ final class BattlearcherSkills {
                 SkillFx.beam(level, V.up(was, 1), V.up(c, 1), ShadeArchers.DARK, Opt.of("half", 0.3, "thick", 0.26, "life", 0.3, "alpha", 0.75));
                 RuneKit.streak(level, V.up(was, 1), V.up(c, 1), glow, 0.1, 0.3, 0.8, 0);
                 ShadeArchers.puff(level, was, glow, 1.0);
+                // 두 자리의 2D 그림자 틈 (rfx_jrift — 땅이 갈라져 보랏빛이 새어 나옴 → 닫힘)
+                JobFx.rift(level, was, f0, 0.55, 0, 6, 0.6, false, Opt.of("alpha", 0.9), j);
             }
+            JobFx.rift(level, c, f0, 0.7, 0, 6, 0.7, false, Opt.of("alpha", 0.95), j);
             double rad = k.num("radius", 3.5);
             ShadeArchers.puff(level, c, glow, 1.4);
             RuneKit.zonePulse(level, c, glow, rad, 0.45);
@@ -250,7 +268,10 @@ final class BattlearcherSkills {
                 hit.add(e);
                 Vec3 from = V.up(c, 1.3);
                 Vec3 to = Kit.bodyPoint(e);
-                if (hit.size() <= 6) ArrowFx.arrow3d(level, from, to, Math.max(1, t), 1.1, 3, e, glow, core);
+                if (hit.size() <= 6) {
+                    ArrowFx.arrow3d(level, from, to, Math.max(1, t), 1.1, 3, e, glow, core);
+                    ArrowFx.art(level, from, to, Math.max(1, t), 1.1, ArrowFx.Art.WIND, glow, core, Opt.empty());
+                }
                 RuneKit.streak(level, from, to, glow, 0.08, 0.25, 0.8, 0);
                 RuneKit.effect(e, "slowness", (int) k.num("slow", 20), JobKit.isBoss(e) ? 0 : 1);
             }
@@ -314,6 +335,7 @@ final class BattlearcherSkills {
                 // 2026-11-14 영상: 분신이 터지는 것이 잘 보이지 않았음 → 몸에서 그림자 연기가 터지고 발밑 고리 · 보랏빛 불티
                 Vec3 feet = m != null && m.alive() ? m.pos() : V.up(origin[i], -1.35);
                 JobFx.smoke(level, V.up(feet, 1.0), 1.4, ShadeArchers.DARK, glow, 0.45, Opt.of("alpha", 0.9));
+                JobFx.burst(level, origin[i], 0.9, glow, core, 0.3, Opt.of("alpha", 0.9));
                 SkillFx.shock(level, feet, glow, 0.9, 0.35);
                 SkillFx.sparks(level, V.up(feet, 1.1), glow, 10, 5);
                 if (m != null) {
@@ -334,6 +356,7 @@ final class BattlearcherSkills {
                 Vec3 o = origin[i % 2];
                 int t = ArrowFx.flyTicks(o, to, 60);
                 ArrowFx.arrow3d(level, o, to, Math.max(1, t), 1.25, 2, h == null ? null : h.e(), glow, core);
+                if (i % 2 == 0) ArrowFx.art(level, o, to, Math.max(1, t), 1.25, ArrowFx.Art.WIND, glow, core, Opt.empty());
                 RuneKit.streak(level, o, to, i % 3 == 0 ? glow : core, 0.08, 0.22, 0.9, 0);
             }
             RuneKit.zonePulse(level, sp.position(), glow, 1.6, 0.3);
@@ -456,7 +479,10 @@ final class BattlearcherSkills {
                     for (Kit.LineHit x : RuneKit.lineTargets(sp, o, d, len, 0.3)) if (h == null || x.t() < h.t()) h = x;
                     Vec3 to = V.add(o, d, h == null ? len : h.t());
                     RuneKit.flyArrow(level, from, to, 55, glow, core, 0.7, 0.4);
-                    if (i < 2) RuneKit.streak(level, from, to, core, 0.06, 0.2, 0.8, 0);
+                    if (i < 2) {
+                        RuneKit.streak(level, from, to, core, 0.06, 0.2, 0.8, 0);
+                        JobFx.arrow(level, from, to, 55, 0.75, Opt.of("alpha", 0.9), glow, core); // 2D 바람 화살 (그림자 빛)
+                    }
                 }
                 if (tt % 4 == 0) SkillFx.play(level, "random.bow", sp.position(), 1.1 + Kit.rand() * 0.4, 0.8);
                 if (tt % 8 == 0) SkillFx.ring(level, V.add(V.up(V.add(sp.position(), f, 0.6), 1.35), f, 1.2), f, glow, 0.9, 0.25, 2.0);
@@ -494,6 +520,8 @@ final class BattlearcherSkills {
             }
             Vec3 hand = RuneKit.bowHand(sp);
             RuneKit.flyStreak(level, hand, top, 70, glow, core, 0.9, 0.24);
+            // 화살이 모이는 하늘의 2D 검은 해 (rfx_jeclipse — 커지며 나타나 코로나가 일렁임)
+            JobFx.eclipse(level, V.up(top, 0.6), 2.6, glow, core, 0.75, Opt.of("alpha", 0.95));
             SkillFx.play(level, "item.crossbow.shoot", sp.position(), 0.6, 1.0);
             SkillFx.play(level, "mob.endermen.portal", top, 0.6, 1.0);
         });
@@ -514,6 +542,12 @@ final class BattlearcherSkills {
             SkillFx.burst(level, top, glow, 2.4, 0.3);
             JobFx.smoke(level, top, 2.0, ShadeArchers.DARK, glow, 0.4, Opt.of("alpha", 0.8));
             RuneKit.flyStreak(level, top, V.up(g, 0.5), V.len(V.sub(top, g)) / 0.2, glow, core, 1.8, 0.5);
+            // 3D 그림자 화살에 두르는 2D 거대한 화살 (맺힘 2틱 → 내리꽂힘 3틱 — 3D 화살과 같은 틱에 땅)
+            JobFx.greatArrowAt(level, V.up(top, -r * 0.5), V.DOWN, alen * 0.56, 0.15, Opt.of("alpha", 0.9), glow, core);
+            RuneKit.later(3, () -> {
+                if (RuneKit.sameLife(sp, life)) JobFx.flyHead(sp.level(), "jgreatarrow", JobFx.GREATARROW, JobFx.GREATARROW_HEAD, V.up(top, -r * 0.5), V.up(g, 0.5),
+                        V.len(V.sub(top, g)) / 0.15, alen * 0.56, Opt.of("alpha", 0.95), glow, core);
+            });
         });
         RuneKit.later(finalAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -523,6 +557,8 @@ final class BattlearcherSkills {
             // 내리꽂힌 자리: 큰 터짐 (흔들림 없음) · 부채꼴을 덮는 충격 고리 · 그림자 연기 · 갈라진 땅
             BowFx.bigImpact(level, mid, glow, core, range * 0.5);
             SkillFx.shock(level, mid, glow, range * 0.6, 0.5);
+            JobFx.burst(level, V.up(mid, 1.0), 2.6, glow, core, 0.45, Opt.empty());
+            JobFx.rift(level, mid, Kit.facingOf(sp), 1.1, 0, 6, 1.0, false, Opt.of("alpha", 0.95), j);
             JobFx.smoke(level, V.up(mid, 0.8), 2.6, ShadeArchers.DARK, glow, 0.5, Opt.of("alpha", 0.85));
             RuneKit.glowCrack(level, mid, 2.6, glow, core, Opt.of("life", 1.2));
             Ult.flash(level, mid, core, Opt.empty(), sp);

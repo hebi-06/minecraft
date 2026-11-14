@@ -162,6 +162,9 @@ final class StormEye {
             Vec3 at = Kit.bodyPoint(foe);
             RuneKit.zap(lv, top, at, glow, core, 0.26, 0.3);
             RuneKit.zap(lv, V.add(top, new Vec3(0.3, 0, -0.2)), V.up(at, 0.2), glow, core, 0.12, 0.22);
+            // 2026-11-14 구름에서 적까지 2D 번개 줄 (rfx_jarc — 번쩍 갈라지며 사그라짐) · 발밑 2D 번개 고리
+            JobFx.arc(lv, top, at, glow, core, 0.32, Opt.of("flash", true));
+            JobFx.volt(lv, V.up(foe.position(), 0.06), 1.1 + Kit.bodyPad(foe), glow, core, 0.4, Opt.empty());
             RuneKit.plasmaOrb(lv, at, 0.7 + Kit.bodyPad(foe) * 0.4, glow, Opt.of("life", 0.3, "fade", 0.4, "vel", RuneKit.entVel(foe)));
             SkillFx.burst(lv, at, core, 1.3, 0.22);
             RuneKit.zonePulse(lv, foe.position(), glow, 1.6 + Kit.bodyPad(foe), 0.3);

@@ -136,12 +136,15 @@ public final class JobTraits9 {
         RuneKit.streak(level, V.add(from, dir, 1.2), end, JobKit.glow(j), 0.16, 0.25, 0.55, 0);
         RpgCombat.Shot shot = RpgCombat.arrowShot(len);
         RuneKit.flyStreak(level, V.add(from, dir, 1.0), end, len / Math.max(0.05, shot.life()), JobKit.glow(j), SNIPE, 0.9, 0.24);
+        // 2026-11-14 2D 해 화살 (rfx_jsunarrow — 평타 화살과 같은 빠르기)
+        JobFx.sunArrow(level, V.add(from, dir, 1.0), end, len / Math.max(0.05, shot.life()), 1.1, Opt.of("alpha", 0.95), JobKit.glow(j), SNIPE);
         int t = Math.max(1, (int) Math.round(shot.life() * 20));
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(t, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 g = new Vec3(end.x, RuneKit.groundAt(level, end, end.y - 1.5), end.z);
             RuneKit.godRays(sp, level, g, 0, 1, JobKit.glow(j), JobKit.core(j), Opt.of("h", 9.0, "life", 0.4, "skipNear", true));
+            JobFx.spotlight(level, g, 7.0, 0.45, Opt.of("alpha", 0.9), JobKit.glow(j), SNIPE);
             ArrowFx.glint(level, end, 0.7, 0.25, RuneKit.WHITE, Opt.empty());
         });
         SkillFx.play(level, "item.trident.hit", sp.position(), 1.8, 0.7);
@@ -224,6 +227,10 @@ public final class JobTraits9 {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         ArrowFx.fallArrow(level, e.position(), 2.6, e.getBbHeight() + 5, 2, 12, glow, SNIPE);
+        // 2D 해 화살이 같이 내리꽂힘 (2틱) · 하늘에서 내리비추는 2D 빛 원뿔
+        JobFx.flyHead(level, "jsunarrow", JobFx.SUNARROW, JobFx.SUNARROW_HEAD, V.up(e.position(), e.getBbHeight() + 5), V.up(e.position(), e.getBbHeight() * 0.5),
+                (5 + e.getBbHeight() * 0.5) / 0.1, 1.5, Opt.of("alpha", 0.95), glow, SNIPE);
+        JobFx.spotlight(level, e.position(), 8.0, 0.5, Opt.of("alpha", 0.9), glow, SNIPE);
         RuneKit.godRays(sp, level, e.position(), 0, 1, glow, core, Opt.of("h", 11.0, "life", 0.45, "skipNear", true));
         ArrowFx.glint(level, c, 1.0 + pad * 0.3, 0.35, RuneKit.WHITE, Opt.empty());
         RuneKit.zonePulse(level, e.position(), glow, 1.6 + pad, 0.35);
@@ -299,6 +306,7 @@ public final class JobTraits9 {
             Vec3 to = Kit.bodyPoint(e);
             RuneKit.streak(level, src, to, glow, 0.07, 0.2, 0.75, 0);
             RuneKit.flyArrow(level, src, to, V.len(V.sub(to, src)) / Math.max(0.05, t / 20.0), glow, core, 0.6, 0.0);
+            JobFx.arrow(level, src, to, V.len(V.sub(to, src)) / Math.max(0.05, t / 20.0), 0.7, Opt.of("alpha", 0.9), glow, core); // 2D 바람 화살
         }
         // 갈래 불티 (쏘는 쪽으로 세 갈래 — 다른 적이 없어도 보임)
         for (int s = -1; s <= 1; s++) {

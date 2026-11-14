@@ -360,6 +360,14 @@ final class JobFx {
         streakSparks(level, from, to, j, o);
     }
 
+    /** 같은 것 — 색을 정함 (불티 없이) */
+    static void dash(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double life, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.2) return;
+        two(level, "jdash2", DASH, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), glow, core);
+    }
+
     /** 0.47.0 더 화려하게: 줄기 · 일섬을 따라 흩어지는 불티 (몇 개 — 1인칭 숨김 그림이면 같이 숨김은 못 함: 줄 위 1칸 넘게 떨어진 곳만) */
     private static void streakSparks(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, Opt o) {
         if (o.num("view", 0) != 0) return;
@@ -495,6 +503,21 @@ final class JobFx {
         return Math.max(1, (int) Math.round(life * 20));
     }
 
+    /**
+     * 2026-11-14 3D 화살 · 창과 함께 나는 2D 그림 (궁수 계열 — 3D 화살에 두르는 빛): 처음 머리가 head0 (꼬리는 그 뒤로 그림 길이만큼), 머리가 headSpeed 칸/초로 to 에
+     * 닿음 — 닿는 틱. headAt = 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1)
+     */
+    static int flyHead(ServerLevel level, String name, int frames, double headAt, Vec3 head0, Vec3 to, double headSpeed, double size, Opt o, double[] glow,
+            double[] core) {
+        Vec3 d = V.sub(to, head0);
+        double rem = V.len(d);
+        if (rem < 0.05) return 0;
+        Vec3 u = V.scale(d, 1 / rem);
+        double life = Math.max(0.05, rem / Math.max(0.1, headSpeed));
+        loop(level, name, frames, V.add(head0, u, -size * headAt), life, 14, o.with("dir", u, "size", size, "speed", rem / life, "fade", o.num("fade", 0.1)), glow, core);
+        return Math.max(1, (int) Math.round(life * 20));
+    }
+
     /** 마탄 (rfx_jbolt) 이 from → to: 닿는 틱 */
     static int bolt(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
         return bolt(level, from, to, outer(j), inner(j), speed, size, o);
@@ -511,6 +534,11 @@ final class JobFx {
     /** 빛의 화살 (0.50.0 v2 바람 화살 rfx_jarrow2 — 잎 촉 · 살대 · 깃 셋 · 살대를 감아 도는 바람 띠 둘) 이 from → to: 닿는 틱 */
     static int arrow(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
         return fly(level, "jarrow2", ARROW2, from, to, speed, size, 0.97, o, outer(j), inner(j));
+    }
+
+    /** 같은 것 — 색을 정함 (2026-11-14 궁수 계열 — 3D 화살에 두르는 2D 빛) */
+    static int arrow(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Opt o, double[] glow, double[] core) {
+        return fly(level, "jarrow2", ARROW2, from, to, speed, size, 0.97, o, glow, core);
     }
 
     /** 멈춰 있는 빛의 화살 (잔상 — 촉이 tip, 방향 dir) */
@@ -577,9 +605,14 @@ final class JobFx {
 
     /** 과녁 (rfx_jtarget — 면이 normal 쪽): 바깥 고리 반지름 radius 칸 (= 반 크기 × 0.84). stage 0 = 조여 들어옴 (0 ~ 3) · 1 = 맞춰진 채 깜빡임 (3 ~ 5 이어 돌림) */
     static void target(ServerLevel level, Vec3 at, double radius, Jobs.Job j, Vec3 normal, int stage, double life, Opt o) {
+        target(level, at, radius, outer(j), inner(j), normal, stage, life, o);
+    }
+
+    /** 같은 것 — 색을 정함 */
+    static void target(ServerLevel level, Vec3 at, double radius, double[] glow, double[] core, Vec3 normal, int stage, double life, Opt o) {
         Opt b = o.with("dir", normal, "size", radius / 0.84);
-        if (stage == 0) cells(level, "jtarget2", TARGET, 0, 4, at, life, 0, false, b, outer(j), inner(j));
-        else cells(level, "jtarget2", TARGET, 3, 3, at, life, 8, true, b, outer(j), inner(j));
+        if (stage == 0) cells(level, "jtarget2", TARGET, 0, 4, at, life, 0, false, b, glow, core);
+        else cells(level, "jtarget2", TARGET, 3, 3, at, life, 8, true, b, glow, core);
     }
 
     /** 땅에 눕는 바람 고리 (rfx_jwind): 바깥 반지름 약 radius 칸 */
@@ -663,7 +696,12 @@ final class JobFx {
 
     /** 혼불 (rfx_jsoul — 카메라를 봄, 이어 돌림): 흔들리는 혼의 불꽃 (높이 약 size × 2 칸) */
     static void soul(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jsoul2", SOUL, at, life, 12, o.with("size", size), outer(j), inner(j));
+        soul(level, at, size, outer(j), inner(j), life, o);
+    }
+
+    /** 같은 것 — 색을 정함 */
+    static void soul(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        loop(level, "jsoul2", SOUL, at, life, 12, o.with("size", size), glow, core);
     }
 
     /** 날아가는 혼불 from → to (speed 칸/초): 닿는 틱 */
@@ -714,8 +752,12 @@ final class JobFx {
 
     /** 땅에 눕는 번개 고리 (rfx_jvolt — 면이 위): 고리 반지름 radius 칸 (= 반 크기 × 0.8) — 나타나 지직거리다 사라짐 (안쪽 무늬 없음) */
     static void volt(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, Opt o) {
-        two(level, "jvolt2", VOLT, center, life, o.with("dir", V.UP, "size", radius / 0.8, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j),
-                inner(j));
+        volt(level, center, radius, outer(j), inner(j), life, o);
+    }
+
+    /** 같은 것 — 색을 정함 */
+    static void volt(ServerLevel level, Vec3 center, double radius, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jvolt2", VOLT, center, life, o.with("dir", V.UP, "size", radius / 0.8, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
     }
 
     /** 번개 대망치 (rfx_jmaul2 — 세워 카메라 쪽으로 돎, 이어 돌림 · 머리가 아래): 가운데 at · 높이 약 size × 2.67 칸 */
@@ -860,10 +902,15 @@ final class JobFx {
 
     /** 검은 해 (rfx_jeclipse — 카메라를 봄): 커지며 나타남 (0 ~ 3) 뒤 일렁이는 코로나가 맥동 (4 ~ 7 이어 돌림). 지름 약 size × 1.6 칸 */
     static void eclipse(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        eclipse(level, at, size, outer(j), inner(j), life, o);
+    }
+
+    /** 같은 것 — 색을 정함 (2026-11-14 그림자 사수 — 섀도 레기온의 검은 해) */
+    static void eclipse(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
         double grow = Math.min(0.5, life * 0.3);
-        cells(level, "jeclipse", ECLIPSE, 0, 4, at, grow, 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        cells(level, "jeclipse", ECLIPSE, 0, 4, at, grow, 0, false, o.with("size", size, "fade", 0.0), glow, core);
         RuneKit.later(Math.max(1, (int) Math.round(grow * 20) - 1), () -> cells(level, "jeclipse", ECLIPSE, 4, 4, at, Math.max(0.1, life - grow), 8, true,
-                o.with("size", size, "fade", o.num("fade", 0.25)), outer(j), inner(j)));
+                o.with("size", size, "fade", o.num("fade", 0.25)), glow, core));
     }
 
     /** 검은 장미 (rfx_jrose — 카메라를 봄): 피어나 (0 ~ 4) 꽃잎이 흩어짐 (5 ~ 7). 지름 약 size × 1.5 칸 */
@@ -897,11 +944,16 @@ final class JobFx {
 
     /** 떠다니는 깃털 n 개 (rfx_jfeather — 카메라를 봄, 이어 돌림 · 뒤집힘): at 둘레 spread 칸에서 천천히 내려앉음 (크기 약 size 칸) */
     static void feathers(ServerLevel level, Vec3 at, int n, double spread, double size, Jobs.Job j, double life, Opt o) {
+        feathers(level, at, n, spread, size, outer(j), inner(j), life, o);
+    }
+
+    /** 같은 것 — 색을 정함 */
+    static void feathers(ServerLevel level, Vec3 at, int n, double spread, double size, double[] glow, double[] core, double life, Opt o) {
         for (int i = 0; i < n; i++) {
             Vec3 p = V.add(at, new Vec3((Kit.rand() - 0.5) * 2 * spread, (Kit.rand() - 0.3) * spread, (Kit.rand() - 0.5) * 2 * spread));
             Vec3 vel = new Vec3((Kit.rand() - 0.5) * 0.6, -0.35 - Kit.rand() * 0.35, (Kit.rand() - 0.5) * 0.6);
             cells(level, "jfeather", FEATHER, 0, FEATHER, p, life * (0.8 + Kit.rand() * 0.4), 10, true, o.with("size", size * (0.8 + Kit.rand() * 0.4), "vel", vel,
-                    "spin", Kit.rand() * 360, "fade", o.num("fade", 0.4)), outer(j), inner(j));
+                    "spin", Kit.rand() * 360, "fade", o.num("fade", 0.4)), glow, core);
         }
     }
 
@@ -1207,6 +1259,11 @@ final class JobFx {
         return fly(level, "jsunarrow", SUNARROW, from, to, speed, size, SUNARROW_HEAD, o, outer(j), inner(j));
     }
 
+    /** 같은 것 — 색을 정함 (2026-11-14 천벌의 사수 — 금빛 · 흰 성광) */
+    static int sunArrow(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Opt o, double[] glow, double[] core) {
+        return fly(level, "jsunarrow", SUNARROW, from, to, speed, size, SUNARROW_HEAD, o, glow, core);
+    }
+
     /**
      * 꽂힌 화살 (rfx_jpinned — 세워 카메라 쪽으로 돎): 아래 끝 = ground (화살이 꽂힌 땅) · 높이 약 size × 3 칸 — 꽂히며 번쩍 (0 ~ 1) 뒤 묶는 빛 고리가 맥동
      * (2 ~ 5 이어 돌림)
@@ -1236,8 +1293,12 @@ final class JobFx {
 
     /** 빛 고리 (rfx_jhalo — 땅에 누움): 반지름 radius 칸 (= 반 크기 × 0.88 — ring 과 같은 뜻) — 부드러운 빛 고리 · 가는 빛살 · 반짝임이 조금 퍼지며 사라짐 */
     static void halo(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, Opt o) {
-        two(level, "jhalo", HALO, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j),
-                inner(j));
+        halo(level, center, radius, outer(j), inner(j), life, o);
+    }
+
+    /** 같은 것 — 색을 정함 */
+    static void halo(ServerLevel level, Vec3 center, double radius, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jhalo", HALO, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
     }
 
     /** 무지개 다리 비프로스트의 다섯 빛 (위에서부터 빨강 · 주황 · 초록 · 파랑 · 보라) */

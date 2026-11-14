@@ -103,6 +103,35 @@ public final class PBridge {
         return THIRD.contains(sp.getId());
     }
 
+    /** 시험 영상 카메라 (사진기 cam film 과 같은 값 — Probe.filmCamera): {각(라디안), 거리, 높이, 보는 높이, 앞, 따라감, 처음 x, y, z, 앞 x, 앞 z} */
+    private static final Map<Integer, double[]> FILM = new HashMap<>();
+
+    /**
+     * 2026-11-14 시험 영상 카메라를 서버도 앎 (VanillaProbe 가 사진기에 cam film 을 보낼 때 같은 값): 가는 쪽으로 눕는 그림 (화살 · 번개 줄 · 광선 · 참격 판) 의 앞면을
+     * 몸의 눈 대신 영상 카메라 쪽으로 돌림 (3인칭 영상에서 그림이 옆으로 눕거나 얇게 보이지 않게). angle 도 = 보는 쪽에서 왼쪽으로
+     */
+    public static void filmCam(ServerPlayer sp, double angle, double dist, double height, double lookY, double ahead, double follow) {
+        double yaw = Math.toRadians(sp.getYRot());
+        FILM.put(sp.getId(), new double[] {Math.toRadians(angle), dist, height, lookY, ahead, follow, sp.getX(), sp.getY(), sp.getZ(), -Math.sin(yaw), Math.cos(yaw)});
+    }
+
+    /** 시험 영상 카메라를 지움 */
+    public static void filmCamOff(ServerPlayer sp) {
+        FILM.remove(sp.getId());
+    }
+
+    /** 그림의 앞면을 돌릴 이 사람의 눈: 시험 영상이면 영상 카메라 자리 (Probe.filmCamera 와 같은 셈), 아니면 몸의 눈 */
+    static Vec3 eyeOf(ServerPlayer sp) {
+        double[] c = FILM.get(sp.getId());
+        if (c == null || !isThird(sp)) return sp.getEyePosition();
+        double fx = c[9];
+        double fz = c[10];
+        double by = c[7] + (sp.getY() - c[7]) * 0.6;
+        double ox = Math.cos(c[0]) * fx + Math.sin(c[0]) * fz;
+        double oz = Math.cos(c[0]) * fz + Math.sin(c[0]) * -fx;
+        return new Vec3(c[6] + (sp.getX() - c[6]) * c[5] + ox * c[1], by + c[2], c[8] + (sp.getZ() - c[8]) * c[5] + oz * c[1]);
+    }
+
     // ------------------------------------------------------------ 들어오는 곳
 
     /** AddonFx.spawn / spawnFor: 그 자리를 볼 모드 없는 클라이언트 (plain — 이미 걸러짐) 에게 파티클 하나 (발생기) */
@@ -298,7 +327,7 @@ public final class PBridge {
             double best = Double.MAX_VALUE;
             for (ServerPlayer sp : viewers) {
                 if (sp.isRemoved()) continue;
-                Vec3 e = sp.getEyePosition();
+                Vec3 e = eyeOf(sp);
                 double d = e.distanceToSqr(origin);
                 if (d < best) {
                     best = d;
