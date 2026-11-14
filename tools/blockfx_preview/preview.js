@@ -391,7 +391,8 @@ const SCENES = {
       at(14, () => {
         const d = tgt.clone().sub(hand).normalize(), hilt = tgt.clone().sub(d.clone().multiplyScalar(2.8));
         sw.to(hilt, d, 1);
-        BlockFx.beam(hand, tgt, 0.16, CRIMSON, 7); BlockFx.beam(hand, tgt, 0.16, CRIMSON, 8);
+        const s0 = hand.clone().add(d.clone().multiplyScalar(1.5));
+        BlockFx.beam(s0, tgt, 0.16, CRIMSON, 7); BlockFx.beam(s0, tgt, 0.16, CRIMSON, 8);
       });
       at(15, () => { BlockFx.burst(tgt, 1.2 * 0.8, CRIMSON, WHITE, 6); BlockFx.shards(tgt, 6, 1.6, 0.45, BLADE, 8); });
       at(25, () => { sw.remove(); blast(tgt, 4 * 0.9); BlockFx.burst(tgt, 4.4 * 0.75, FIRE, FIRE_CORE, 12); });
@@ -470,7 +471,7 @@ const SCENES = {
           sw.to(end, d, t, faceOf(d));
           BlockFx.star(from, 0.9 + i * 0.25, CRIMSON);
           afterimages(from, end, d, len, t);
-          BlockFx.beam(from, to, 0.16, CRIMSON, Math.max(3, Math.round(Math.max(0.2, t / 20 + 0.15) * 20)));
+          BlockFx.beam(from.clone().add(d.clone().multiplyScalar(0.8)), to, 0.16, CRIMSON, Math.max(3, Math.round(Math.max(0.2, t / 20 + 0.15) * 20)));
           at(NOW + t, () => {
             sw.remove(); lodgeFx(body, from, 1);
             const sz = i === n - 1 ? 1.2 : 0.75;

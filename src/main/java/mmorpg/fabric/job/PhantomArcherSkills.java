@@ -107,7 +107,8 @@ final class PhantomArcherSkills {
                 int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
                 b.pose(V.add(to, d, -b.reach() * 0.75), d, PhantomArcher.faceOf(d), t);
                 mmorpg.fabric.vfx.BlockFx.star(level, from, 0.9 + ii * 0.25, glow); // 2026-11-15 쏘는 번쩍임 (잔상은 미리보기에서 빛 줄과 겹쳐 안 보여 뺌)
-                PhantomArcher.streak2d(level, from, to, Math.max(0.2, t / 20.0 + 0.15), glow, core);
+                // 2026-11-15 1인칭 미리보기: 빛 줄이 자루 (눈앞) 에서 시작하면 가까운 끝이 화면을 크게 덮음 → 0.8칸 앞에서
+                PhantomArcher.streak2d(level, V.add(from, d, 0.8), to, Math.max(0.2, t / 20.0 + 0.15), glow, core);
                 SkillFx.play(level, "item.trident.throw", from, 1.25 + ii * 0.1, 0.8);
                 if (ii == 0) JobKit.strikeSplit(sp, target, j, P, total, n, every, wts, false, false, life, t, dd -> {});
                 RuneKit.later(t, () -> {
@@ -416,8 +417,10 @@ final class PhantomArcherSkills {
             int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
             double reach = b.reach();
             b.pose(V.add(to, d, -reach * 0.7), d, PhantomArcher.faceOf(d), t);
-            PhantomArcher.streak2d(level, from, to, Math.max(0.25, t / 20.0 + 0.2), glow, core);
-            PhantomArcher.streak2d(level, from, to, Math.max(0.25, t / 20.0 + 0.3), glow, core);
+            // 2026-11-15 1인칭 미리보기: 자루 (눈앞) 에서 시작한 굵은 빛 줄이 화면 아래를 덮었음 → 1.5칸 앞에서
+            Vec3 s0 = V.add(from, d, 1.5);
+            PhantomArcher.streak2d(level, s0, to, Math.max(0.25, t / 20.0 + 0.2), glow, core);
+            PhantomArcher.streak2d(level, s0, to, Math.max(0.25, t / 20.0 + 0.3), glow, core);
             SkillFx.play(level, "item.crossbow.shoot", from, 0.6, 1.0);
             SkillFx.play(level, "item.trident.riptide_2", from, 1.2, 0.8);
             Vec3 off = hitE != null ? V.sub(V.add(to, d, -reach * 0.7), Kit.bodyPoint(hitE)) : null;
