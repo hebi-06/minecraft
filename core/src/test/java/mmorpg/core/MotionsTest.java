@@ -111,9 +111,9 @@ public final class MotionsTest {
     public static void main(String[] argv) throws Exception {
         Rules r = Rules.get();
         // 연타 차례
-        // 2026-11-14 평타에서 회전을 뺌 (사용자 — 마검 · 낫 = 무기마다 새 마무리). 같은 날 칼 = 왼쪽 → 오른쪽 가로 베기 하나 (사용자 "검사 평타 그냥 왼쪽에서
-        // 오른쪽으로 베는 걸로 가로로 평행하게")
-        check(Motions.combo("sword").equals(List.of("slash_hb")), "combo sword " + Motions.combo("sword"));
+        // 2026-11-14 평타에서 회전을 뺌 (사용자 — 마검 · 낫 = 무기마다 새 마무리). 2026-11-15 칼 = 왼쪽 → 오른쪽 · 오른쪽 → 왼쪽 가로 베기 2타 (사용자
+        // "오른쪽에서 왼쪽으로 가는것도 만들어줘 총 2종의 모션으로")
+        check(Motions.combo("sword").equals(List.of("slash_hb", "slash_h")), "combo sword " + Motions.combo("sword"));
         check(Motions.combo("greatsword").equals(List.of("slash_h", "slash_v", "gs_slam")), "combo greatsword " + Motions.combo("greatsword"));
         check(Motions.combo("scythe").equals(List.of("slash_h", "slash_v", "reap_up")), "combo scythe " + Motions.combo("scythe"));
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
