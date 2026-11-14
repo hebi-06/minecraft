@@ -528,6 +528,9 @@ def main():
     # 0.51.0 2차 직업 — 소드마스터 · 블러드 나이트 아이콘 (tools/job_skill_icons_adv.py)
     import job_skill_icons_adv
     ICONS.update(job_skill_icons_adv.ICONS)
+    # 2026-11-14 궁수 계열 다시 만들기 (폭풍 궁수 · 천벌의 사수 · 그림자 사수 — tools/job_skill_icons_archer2.py): 예전 그림을 덮어씀
+    import job_skill_icons_archer2
+    ICONS.update(job_skill_icons_archer2.ICONS)
     slot_sprites()
     cols = job_colors()
     os.makedirs(OUT, exist_ok=True)

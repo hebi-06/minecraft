@@ -53,11 +53,11 @@ def arc_pts(cx, cy, r, a0, a1, n=24):
     return [(cx + math.cos(math.radians(a0 + (a1 - a0) * i / n)) * r, cy + math.sin(math.radians(a0 + (a1 - a0) * i / n)) * r) for i in range(n + 1)]
 
 
-def wing(m, root, s, side, tilt=0.0):
-    """날개 하나 (뿌리 root · 크기 s · side +1 오른쪽 · −1 왼쪽 · tilt 도 — 위로 듦): 깃 다섯이 겹친 부채"""
+def wing(m, root, s, side, tilt=0.0, spread=88.0):
+    """날개 하나 (뿌리 root · 크기 s · side +1 오른쪽 · −1 왼쪽 · tilt 도 — 가운데 깃이 tilt − 16 도 · spread = 깃 다섯이 펼친 각): 깃 다섯이 겹친 부채"""
     rx, ry = root
     for i in range(5):
-        a = math.radians(-60 + tilt + i * 22)
+        a = math.radians(tilt - 16 - spread / 2 + i * spread / 4)
         L = s * (1.0 - 0.1 * i)
         tipx = rx + side * math.cos(a) * L
         tipy = ry + math.sin(a) * L
@@ -69,21 +69,28 @@ def wing(m, root, s, side, tilt=0.0):
 
 
 def hooded(m, cx, base, h, bow=True):
-    """두건을 쓴 그림자 궁수 (발 대신 연기 — 가운데 cx · 아래 base · 키 h): 뾰족한 두건 · 어깨 · 아래로 좁아지는 옷자락, 왼쪽에 활"""
+    """두건을 쓴 그림자 궁수 (발 대신 연기 — 가운데 cx · 아래 base · 키 h): 뾰족한 두건 · 넓은 어깨 · 아래로 좁아지는 옷자락, 왼쪽에 활"""
     k = h / 16.0
-    poly(m, [(cx, base - h), (cx + 3.0 * k, base - 11.5 * k), (cx + 3.2 * k, base - 9.5 * k), (cx + 4.6 * k, base - 8.6 * k), (cx + 4.2 * k, base - 3 * k),
-             (cx + 2.2 * k, base), (cx - 2.2 * k, base), (cx - 4.2 * k, base - 3 * k), (cx - 4.6 * k, base - 8.6 * k), (cx - 3.2 * k, base - 9.5 * k),
-             (cx - 3.0 * k, base - 11.5 * k)])
+    poly(m, [(cx, base - h), (cx + 2.4 * k, base - 13.0 * k), (cx + 3.1 * k, base - 10.6 * k), (cx + 5.2 * k, base - 9.2 * k), (cx + 5.4 * k, base - 7.0 * k),
+             (cx + 3.8 * k, base - 6.0 * k), (cx + 3.0 * k, base - 2.0 * k), (cx + 1.4 * k, base), (cx - 1.4 * k, base), (cx - 3.0 * k, base - 2.0 * k),
+             (cx - 3.8 * k, base - 6.0 * k), (cx - 5.4 * k, base - 7.0 * k), (cx - 5.2 * k, base - 9.2 * k), (cx - 3.1 * k, base - 10.6 * k),
+             (cx - 2.4 * k, base - 13.0 * k)])
     b = mask()
     if bow:
-        line(b, arc_pts(cx - 2.0 * k, base - 8.0 * k, 6.0 * k, 125, 235, 16), 1.1 * max(1, k))
+        line(b, arc_pts(cx - 3.2 * k, base - 8.0 * k, 6.4 * k, 120, 240, 16), 1.1 * max(1, k))
     return b
+
+
+def face(m, cx, base, h):
+    k = h / 16.0
+    disc(m, cx, base - 11.0 * k, 1.9 * k)
+    return m
 
 
 def eyes(m, cx, base, h):
     k = h / 16.0
-    disc(m, cx - 1.1 * k, base - 11.0 * k, 0.55 * max(1, k))
-    disc(m, cx + 1.1 * k, base - 11.0 * k, 0.55 * max(1, k))
+    disc(m, cx - 0.9 * k, base - 11.0 * k, 0.7 * max(1, k))
+    disc(m, cx + 0.9 * k, base - 11.0 * k, 0.7 * max(1, k))
     return m
 
 
@@ -235,9 +242,9 @@ def sniper_trick(A, B):
 def sniper_mark(A, B):
     # 세라핌: 날개 여섯 (위 · 가운데 · 아래 세 쌍) · 가운데 빛의 고리 · 고리 속 섬광
     w = mask()
-    for (y, s, tilt) in ((12.5, 12.5, -30), (15.5, 11.0, 6), (18.5, 9.0, 40)):
-        wing(w, (14.2, y), s, -1, tilt)
-        wing(w, (17.8, y), s, 1, tilt)
+    for (y, s, tilt) in ((12.0, 12.5, -36), (17.0, 12.5, 14), (22.0, 10.0, 62)):
+        wing(w, (14.4, y), s, -1, tilt, 34)
+        wing(w, (17.6, y), s, 1, tilt, 34)
     rg = mask()
     ring(rg, 16.0, 6.0, 4.0, 1.1)
     sp = mask()
@@ -273,10 +280,13 @@ def shadow_back(A, B):
 def figure_layers(A, B, cx, base, h, ghost=False):
     body = mask()
     bow = hooded(body, cx, base, h)
+    fc = mask()
+    face(fc, cx, base, h)
     ey = mask()
     eyes(ey, cx, base, h)
-    top = mix(SHADOW, A, 0.45 if ghost else 0.25)
-    return [layer(body, top, SHADOW_LO, mix(A, WHITE, 0.15) if not ghost else A, None), layer(bow, mix(A, WHITE, 0.3), A), layer(ey, WHITE, B)], body
+    top = mix(A, SHADOW, 0.25 if ghost else 0.45)
+    low = mix(A, SHADOW_LO, 0.55 if ghost else 0.8)
+    return [layer(body, top, low, mix(A, WHITE, 0.45), mix(A, SHADOW_LO, 0.5)), layer(bow, mix(A, WHITE, 0.5), A), layer(fc, SHADOW_LO, SHADOW_LO), layer(ey, WHITE, B)], body
 
 
 def battlearcher_swarm(A, B):
