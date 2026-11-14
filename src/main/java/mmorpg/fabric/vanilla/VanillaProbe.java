@@ -1171,7 +1171,7 @@ final class VanillaProbe {
             java.util.Map.entry("spellblade", "22 20 42 28 72"),
             java.util.Map.entry("warrior", "24 22 54 24a3 80"),
             java.util.Map.entry("mage", "18 18 76 58 84"),
-            java.util.Map.entry("archer", "18 30a4 52 40a4 84"),
+            java.util.Map.entry("archer", "18 30 64 40 100"), // 2026-11-15 팬텀 아처 (RpgJobGallery CASES_AR)
             java.util.Map.entry("assassin", "20 50 50 24a4 58"),
             java.util.Map.entry("lancer", "20 22 24 30a3 66"),
             java.util.Map.entry("reaper", "22 34 16 24a3 90"),
@@ -1260,12 +1260,10 @@ final class VanillaProbe {
         return switch (id) {
             case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4};
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3};
-            // 2026-11-14 헤븐 보우: 앞 하늘의 3D 폭풍의 활 (너비 6.6칸 — 뛰어오른 자리의 눈 위 1.9칸) · 길을 따라 날아가는 번개 화살 · 벼락
-            case "archer_ult" -> new double[] {12.0, 3.6, 3.8, 0.4};
-            // 스톰 아이: 머리 위 먹구름 (발에서 3.6칸)
-            case "archer_focus" -> new double[] {8.0, 3.0, 2.2, 0.6};
-            // 스톰 레인: 과녁 위 7.2칸의 3D 먹구름 · 떨어지는 번개 화살
-            case "archer_rain" -> new double[] {8.5, 2.8, 3.0, 0.5};
+            // 2026-11-15 소드 생추어리: 12칸 불꽃 고리 · 칼 들판 · 겨눈 곳 하늘 7칸에서 내리꽂힘 — 위에서 넓게
+            case "archer_ult" -> new double[] {13.0, 4.6, 1.6, 0.3};
+            // 블레이드 레인: 과녁 위 7칸 하늘의 칼 물결
+            case "archer_blades" -> new double[] {9.0, 3.4, 3.0, 0.5};
             // 2026-11-14 디바인 펀니시먼트: 과녁 머리 위 5.5칸의 하늘의 문 · 거대한 심판의 화살 (8.5칸)
             case "sniper_ult" -> new double[] {8.0, 3.0, 3.0, 0.5};
             // 헤븐즈 게이트: 과녁 머리 위 3.3칸의 하늘의 문
@@ -1674,7 +1672,6 @@ final class VanillaProbe {
         net.minecraft.world.entity.LivingEntity front = foes.isEmpty() ? null : foes.get(0);
         if (id.equals("swordsman_flurry")) mmorpg.fabric.job.JobTraits.setStacks(sp, 3);
         if (id.equals("warrior_crush")) mmorpg.fabric.job.JobTraitsMore.setRage(sp, 60);
-        if (id.equals("archer_rapid")) mmorpg.fabric.job.JobTraitsMore.setBreath(sp, 3);
         mmorpg.fabric.job.JobTraitsMore.setChain(sp, 0);
         if (id.equals("assassin_bloom") || id.equals("assassin_ult")) for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits3.setMarks(sp, e, 5);
         if (id.equals("reaper_burst")) mmorpg.fabric.job.JobTraits3.setSouls(sp, 10);

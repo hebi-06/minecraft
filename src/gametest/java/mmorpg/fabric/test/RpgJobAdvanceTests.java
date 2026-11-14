@@ -256,8 +256,8 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("necromancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("네크로맨서"),
                     "necromancer free from the first job: " + JobSystem.jobOf(sp));
-            // 2026-11-14 궁수 (스나이퍼 · 배틀 아처) 는 숨김 — 카드 없음
-            h.assertTrue(JobTrainer.slotOf("archer") == -1, "archer hidden: no card");
+            // 2026-11-15 궁수는 팬텀 아처로 다시 보임 (카드 있음 — 매지션 다음) · 옛 2차 (스나이퍼 · 배틀 아처) 만 숨김
+            h.assertTrue(JobTrainer.slotOf("archer") != -1 && Jobs.visibleAdvancedOf("archer").isEmpty(), "archer shown again (no 2nd jobs yet)");
             // 0.51.0 암살자의 2차 전직 (트릭스터 · 피에로 — 2026-11-06 블레이드 댄서 대신) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);

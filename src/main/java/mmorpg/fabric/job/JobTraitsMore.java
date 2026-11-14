@@ -144,7 +144,7 @@ public final class JobTraitsMore {
 
     /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 스나이퍼 — 반전 배틀 아처 는 난사, JobTraits9) */
     static boolean breathJob(Jobs.Job j) {
-        return j != null && (j.id().equals("archer") || j.id().equals(JobTraits9.SN));
+        return j != null && j.id().equals(JobTraits9.SN); // 2026-11-15 궁수는 팬텀 아처 (환영 무기 — PhantomArcher)
     }
 
     /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 워로드) */
@@ -394,7 +394,7 @@ public final class JobTraitsMore {
 
     /** 시험: 스톰 아이의 먹구름이 떠 있는지 (2026-11-14 — 와일드 헌트의 늑대 정령 대신) */
     public static boolean stormCloud(ServerPlayer sp) {
-        return StormEye.on(sp);
+        return false; // 2026-11-15 팬텀 아처 — 스톰 아이 없음
     }
 
     /** 정조준 시작: 호흡 가득 */
@@ -423,10 +423,6 @@ public final class JobTraitsMore {
     static double pierceWidth(ServerPlayer sp, Weapon w) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return 0;
-        if (j.id().equals("archer") && "bow".equals(w.type()) && JobTraits.stanceOn(sp, "archer_focus")) {
-            Jobs.Skill k = skill(j, "archer_focus");
-            return k == null ? 0.6 : k.num("width", 0.6);
-        }
         if (j.id().equals(JobTraits9.SN) && "bow".equals(w.type())) {
             // 0.51.0 스나이퍼: 호흡 8 (급소 사격) 이면 화살이 꿰뚫음
             State st = STATES.get(sp.getUUID());
@@ -443,6 +439,10 @@ public final class JobTraitsMore {
     private static void onFired(ServerPlayer sp, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return;
+        if (j.id().equals("archer") && "bow".equals(w.type())) {
+            PhantomArcher.onFired(sp, j, w, target, from, dir, dist); // 2026-11-15 팬텀 아처: 화살 대신 투영한 칼
+            return;
+        }
         ServerLevel level = sp.level();
         long now = Tasks.now();
         if (breathJob(j) && "bow".equals(w.type())) {
@@ -469,19 +469,6 @@ public final class JobTraitsMore {
                 RuneKit.plasmaOrb(level, hb, 0.22, JobKit.glow(j), Opt.of("life", 0.2, "vel", RuneKit.bodyVel(sp)));
                 RuneKit.zap(level, hb, V.add(hb, dir, 1.4), JobKit.glow(j), JobKit.core(j), 0.06, 0.12);
             }
-            if (target != null && st.windShots > 0 && st.windUntil > now) {
-                st.windShots--;
-                Jobs.Skill k = skill(j, "archer_wind");
-                int follow = k == null ? 10 : (int) k.num("follow", 10);
-                String life = RuneKit.lifeToken(sp);
-                RuneKit.later(follow, () -> {
-                    if (!RuneKit.sameLife(sp, life) || target.isRemoved() || !target.isAlive()) return;
-                    Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
-                    if (held == null || !held.id().equals(w.id())) return;
-                    RpgCombat.extraArrow(sp, target, w, JobUpgrades.num(sp, k, "extra", 1)); // 0.31.0 강화: 덧쏘기 피해 비율
-                    ArcherSkills.windArrow(sp, j, target); // 2026-11-14 번개 화살
-                });
-            }
             return;
         }
         if (j.id().equals(JobTraits9.BA) && "bow".equals(w.type())) {
@@ -494,14 +481,8 @@ public final class JobTraitsMore {
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return;
-        if (j.id().equals("archer") && "bow".equals(w.type()) && !RpgCombat.bonusHitting() && JobTraits.stanceOn(sp, "archer_focus")) {
-            // 2026-11-14 스톰 아이: 활 평타가 겨눈 적을 맞힘 → 머리 위 먹구름에서 그 적에게 벼락 (평타 × bite — 한 발에 한 번 · 늑대가 물던 때와 같은 틱)
-            State st = STATES.get(sp.getUUID());
-            if (st != null && st.huntTarget == victim) {
-                st.huntTarget = null;
-                Jobs.Skill k = skill(j, "archer_focus");
-                StormEye.strike(sp, j, victim, w, k == null ? 0.4 : JobUpgrades.num(sp, k, "bite", 0.4)); // 강화
-            }
+        if (j.id().equals("archer") && "bow".equals(w.type())) {
+            if (!RpgCombat.bonusHitting()) PhantomArcher.onHit(sp, j, victim); // 2026-11-15 팬텀 아처: 맞은 적에게 칼이 꽂힘 (터짐 피해는 다시 꽂지 않음)
             return;
         }
         if (rageJob(j) && "axe".equals(w.type()) && Combat.isMeleeWeapon(w)) {
@@ -699,7 +680,8 @@ public final class JobTraitsMore {
         return switch (j.id()) {
             case "warrior", "warlord" -> rage(sp); // 0.51.0 워로드 도 분노
             case "mage", "arcmage" -> chain(sp); // 0.51.0 아크메이지 도 연쇄 (최대 5)
-            case "archer", "sniper" -> breath(sp); // 0.51.0 스나이퍼 도 호흡 (최대 8)
+            case "archer" -> PhantomArcher.gauge(sp); // 2026-11-15 팬텀 아처: 마지막으로 맞힌 적에게 꽂힌 칼 수
+            case "sniper" -> breath(sp); // 0.51.0 스나이퍼 호흡 (최대 8)
             default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼
         };
     }

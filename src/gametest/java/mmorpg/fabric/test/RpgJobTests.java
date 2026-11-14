@@ -294,10 +294,13 @@ public final class RpgJobTests {
         ServerPlayer sp = jobPlayer(h, "warlord", Map.of("str", 20), 50);
         try {
             h.assertTrue(JobSystem.dropHidden(sp) && "warrior".equals(JobSystem.jobOf(sp)), "warlord → warrior: " + JobSystem.jobOf(sp));
-            for (String id : List.of("lancer", "dragoon", "archer", "sniper")) {
+            for (String id : List.of("lancer", "dragoon")) {
                 JobSystem.setJob(sp, id);
                 h.assertTrue(JobSystem.dropHidden(sp) && JobSystem.jobOf(sp).isEmpty(), id + " → no job: " + JobSystem.jobOf(sp));
             }
+            // 2026-11-15 궁수는 팬텀 아처로 다시 보임 — 숨긴 옛 2차 (스나이퍼) 는 1차 (팬텀 아처) 로
+            JobSystem.setJob(sp, "sniper");
+            h.assertTrue(JobSystem.dropHidden(sp) && "archer".equals(JobSystem.jobOf(sp)), "sniper → archer: " + JobSystem.jobOf(sp));
             JobSystem.setJob(sp, "bloodknight");
             h.assertTrue(!JobSystem.dropHidden(sp) && "bloodknight".equals(JobSystem.jobOf(sp)), "shown job stays");
         } finally {
@@ -326,10 +329,10 @@ public final class RpgJobTests {
             int sw = JobTrainer.slotOf("swordsman");
             boolean allReady = true;
             for (String id : Jobs.visibleOrder()) allReady &= list.slots().get(JobTrainer.slotOf(id)).kind() != 3;
-            // 2026-11-14 숨긴 직업 (jobs.json hidden) 은 카드가 없음 — 여섯 직업만
-            boolean noHidden = Jobs.visibleOrder().size() == 6;
+            // 2026-11-14 숨긴 직업 (jobs.json hidden) 은 카드가 없음 — 2026-11-15 팬텀 아처가 다시 보여 일곱 직업
+            boolean noHidden = Jobs.visibleOrder().size() == 7;
             for (String id : Jobs.hiddenIds()) noHidden &= JobTrainer.slotOf(id) == -1;
-            h.assertTrue(list.slots().get(sw).name().contains("검사") && allReady && noHidden, "cards: 6 shown jobs ready, hidden jobs have no card");
+            h.assertTrue(list.slots().get(sw).name().contains("검사") && allReady && noHidden, "cards: 7 shown jobs ready, hidden jobs have no card");
             // 검사 → 확인 → 전직 (무료)
             Forms.answer(sp, sw, null);
             h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c3 && c3.title().contains("전직 확인"), "confirm window");
@@ -738,113 +741,96 @@ public final class RpgJobTests {
     // ------------------------------------------------------------ 0.28.0 궁수
 
     /**
-     * 궁수 (2026-11-14 폭풍 궁수 — 이름 · 그림만): 충전 (멈춰 쏘면 +1 · 하나당 활 평타 +4%) → 체인 볼트 (2.5 × 3, 충전 3 이상 4발) · 썬더 스텝 (다음 활 평타가 두 발) ·
-     * 스톰 레인 (2.7 × 5) · 스톰 아이 (충전 5 · 관통 · 머리 위 먹구름 — 겨눈 적을 맞히면 벼락 평타의 40%, 태세가 끝나면 흩어짐) · 헤븐 보우 (40 + 20)
+     * 2026-11-15 팬텀 아처 (궁수 리메이크): 환영 무기 (활 평타 · 직업 스킬로 맞힌 적에게 칼이 꽂힘 — 다섯째에 0.5초 뒤 터짐: 둘레 2칸의 적마다 활 평타의 100%) →
+     * 소드 볼트 (2 + 2 + 3 · 셋 다 꽂힘) · 크로스 팽 (뒤로 공중제비 · 교차 2.8 + 돌아옴 1.4) · 블레이드 레인 (2.0 × 5 + 2.6) · 팬텀 버스트 (5.6 + 11.2 — 꽂힌 칼을 터뜨림) ·
+     * 소드 생추어리 (7 × 6 + 14)
      */
-    @GameTest(environment = ENV_AR, maxTicks = 460)
+    @GameTest(environment = ENV_AR, maxTicks = 560)
     public void archerSkills(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = jobPlayer(h, "archer", Map.of("dex", 50), 40);
         Weapon w = Weapons.weaponFrom("bow", 0, "common");
         hold(sp, w);
         Jobs.Job j = Jobs.job("archer");
+        mmorpg.fabric.job.PhantomArcher.testReset(sp);
         List<Husk> z = new ArrayList<>(List.of(dummy(h, 4)));
         List<Step> steps = new ArrayList<>();
-        double[] want0 = {0};
-        steps.add(new Step(1, () -> home(h, sp)));
-        // 멈춰 쏨: 호흡 +1 → 평타 × 1.04
+        double[] basic = {0};
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            basic[0] = w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
+            z.add(dummy(h, 5.2)); // 둘레 2칸 안의 두 번째 과녁 (쏘지 않음 — 터짐만 맞음)
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+        }));
+        // 평타 한 발 = 평타 그대로 · 칼 하나가 꽂힘
         steps.add(new Step(12, () -> {
-            JobTraitsMore.setBreath(sp, 0);
-            RpgCombat.forceCrit = false;
-            double base = w.damage() * RpgCombat.powerOf(sp, w);
-            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
-            h.assertTrue(JobTraitsMore.breath(sp) == 1, "still shot → breath 1: " + JobTraitsMore.breath(sp));
-            want0[0] = base * 1.04;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), basic[0]), "bow shot = basic: " + TestDummies.dealt(z.get(0)) + " vs " + basic[0]);
+            h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 1, "one sword lodged: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
         }));
-        steps.add(new Step(8, () -> {
+        // 네 발 더 (무적 시간 넘게 띄움) → 다섯째에 0.5초 뒤 터짐
+        for (int q = 0; q < 4; q++) steps.add(new Step(12, () -> RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0))));
+        steps.add(new Step(24, () -> {
             RpgCombat.forceCrit = null;
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want0[0]), "breath 1 → bow × 1.04: " + TestDummies.dealt(z.get(0)) + " vs " + want0[0]);
-            z.get(0).discard();
-            z.set(0, dummy(h, 4));
-            JobTraitsMore.setBreath(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 0), "속사 cast");
-        }));
-        steps.add(new Step(16, () -> {
-            double want = expected(sp, j, j.skill(0), 7.5);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "속사 3 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            z.get(0).discard();
-            z.set(0, dummy(h, 4));
-            JobSkills.resetCooldowns(sp);
-            JobTraitsMore.setBreath(sp, 3);
-            h.assertTrue(JobSkills.press(sp, 0), "속사 cast (breath 3)");
-        }));
-        steps.add(new Step(18, () -> {
-            double want = expected(sp, j, j.skill(0), 10);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "속사 4 (breath 3) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            z.get(0).discard();
-            home(h, sp);
-            h.assertTrue(JobSkills.press(sp, 1), "바람 타기 cast");
-            h.assertTrue(JobTraitsMore.windShots(sp) == 2, "wind shots 2");
-        }));
-        // 바람 타기 뒤 활 평타: 두 발 (두 번째 = 평타와 같은 피해). 바람 타기가 간 쪽은 움직이던 쪽 · 막힌 쪽에 따라 달라 (뒤가 바닥 끝이면 앞으로) 그 앞 3.5칸
-        // 과녁이 시험 자리 (barrier 벽 8칸) 밖에 설 수 있었음 — 제자리로 돌아와 쏨 (0.30.0: 두 번째 화살이 들어가지 않은 시험이 다섯 번에 두 번)
-        steps.add(new Step(8, () -> {
-            home(h, sp);
-            z.set(0, dummyAhead(h, sp, 3.5));
-            RpgCombat.forceCrit = false;
-            // 호흡 가득 (멈춰 쏘면 +1 이 붙는지는 바람 타기가 끝난 뒤 움직임을 재는 4틱 마디에 따라 달라짐 — 가득이면 그대로)
-            JobTraitsMore.setBreath(sp, 5);
-            want0[0] = 2 * w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
-            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
-            h.assertTrue(JobTraitsMore.windShots(sp) == 1, "one wind shot used");
-        }));
-        steps.add(new Step(26, () -> {
-            RpgCombat.forceCrit = null;
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want0[0]), "wind: two arrows " + TestDummies.dealt(z.get(0)) + " vs " + want0[0]);
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 5));
-            h.assertTrue(JobSkills.press(sp, 2), "화살비 cast");
-        }));
-        // 화살비: 2.7 × 5 (장판)
-        steps.add(new Step(56, () -> {
-            double want = expected(sp, j, j.skill(2), 13.5);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "화살비 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 2.5));
-            z.add(dummy(h, 5));
-            h.assertTrue(JobSkills.press(sp, 3), "스톰 아이 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "archer_focus") && JobTraitsMore.breath(sp) == 5 && RpgCombat.rangedMod.pierce(sp, w) > 0
-                    && JobTraitsMore.stormCloud(sp), "storm eye: charge 5, pierce, storm cloud overhead: " + JobTraitsMore.stormCloud(sp));
-            RpgCombat.forceCrit = false;
-            // 앞의 바람 타기 덧쏘기가 하나 남아 있음 (5초 안 — CI 42332661771: 덧쏘기 화살이 더 들어감) → 지움
-            JobTraitsMore.testClearWind(sp);
-            want0[0] = w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
-            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
-        }));
-        // 관통: 앞의 과녁과 그 뒤의 과녁 · 먹구름에서 겨눈 (앞의) 과녁에게 벼락 (평타의 40% — 화살의 무적 시간이 끝난 뒤)
-        steps.add(new Step(26, () -> {
-            RpgCombat.forceCrit = null;
-            double bite = j.skill(3).num("bite", 0.4);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want0[0] * (1 + bite)) && near(TestDummies.dealt(z.get(1)), want0[0]), "arrow pierces · bolt strikes the aimed one: "
-                    + TestDummies.dealt(z.get(0)) + " vs " + want0[0] * (1 + bite) + " / " + TestDummies.dealt(z.get(1)) + " vs " + want0[0]);
-            JobTraits.testEndStance(sp);
-        }));
-        steps.add(new Step(4, () -> {
-            h.assertTrue(!JobTraitsMore.stormCloud(sp), "storm cloud leaves with the stance: " + JobTraitsMore.stormCloud(sp));
+            h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 0, "five swords burst: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
+            h.assertTrue(near(TestDummies.dealt(z.get(1)), basic[0] * j.trait().def().num("burst")), "burst hits the neighbour (basic × 1): "
+                    + TestDummies.dealt(z.get(1)) + " vs " + basic[0]);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), basic[0] * 6), "target: five shots + burst: " + TestDummies.dealt(z.get(0)) + " vs " + basic[0] * 6);
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            z.add(dummy(h, 6));
-            h.assertTrue(JobSkills.press(sp, 4), "헤븐 보우 cast");
+            z.add(dummy(h, 4));
+            h.assertTrue(JobSkills.press(sp, 0), "소드 볼트 cast");
         }));
-        steps.add(new Step(70, () -> {
-            double want = expected(sp, j, j.skill(4), 60);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "헤븐 보우 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        steps.add(new Step(18, () -> {
+            double want = expected(sp, j, j.skill(0), 7);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "소드 볼트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 3, "three swords lodged: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 4));
+            h.assertTrue(JobSkills.press(sp, 1), "크로스 팽 cast");
+        }));
+        // 크로스 팽: 뒤로 물러남 · 교차 (2.8) 는 꼭 · 돌아오는 칼 (1.4) 은 길 위면
+        steps.add(new Step(26, () -> {
+            double cross = expected(sp, j, j.skill(1), 2.8);
+            double all = expected(sp, j, j.skill(1), 4.2);
+            double d = TestDummies.dealt(z.get(0));
+            h.assertTrue(d >= cross * 0.99 && d <= all * 1.01, "크로스 팽 " + d + " in [" + cross + ", " + all + "]");
+            Vec3 start = h.absoluteVec(new Vec3(1.5, 2, 1.5));
+            h.assertTrue(sp.position().distanceTo(start) >= 2, "leapt back: " + sp.position().distanceTo(start));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 5));
+            h.assertTrue(JobSkills.press(sp, 2), "블레이드 레인 cast");
+        }));
+        // 블레이드 레인: 2.0 × 5 + 2.6 (물결마다 꽂혀 다섯째 물결 뒤 환영 무기도 터짐 — 더 들어감)
+        steps.add(new Step(64, () -> {
+            double want = expected(sp, j, j.skill(2), 12.6);
+            h.assertTrue(TestDummies.dealt(z.get(0)) >= want * 0.999, "블레이드 레인 " + TestDummies.dealt(z.get(0)) + " ≥ " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 6));
+            h.assertTrue(JobSkills.press(sp, 3), "팬텀 버스트 cast");
+        }));
+        // 팬텀 버스트: 꽂힘 5.6 + 터짐 11.2 (꽂힌 칼 하나 +10%) → 꽂힌 칼 없음
+        steps.add(new Step(40, () -> {
+            double want = expected(sp, j, j.skill(3), 5.6) + expected(sp, j, j.skill(3), 11.2 * 1.1);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "팬텀 버스트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 0, "lodged swords detonated");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 6));
+            h.assertTrue(JobSkills.press(sp, 4), "소드 생추어리 cast");
+        }));
+        steps.add(new Step(104, () -> {
+            double want = expected(sp, j, j.skill(4), 56);
+            h.assertTrue(TestDummies.dealt(z.get(0)) >= want * 0.999, "소드 생추어리 " + TestDummies.dealt(z.get(0)) + " ≥ " + want);
         }));
         chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
             cleanup(sp);
+            mmorpg.fabric.job.PhantomArcher.testReset(sp);
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });
@@ -1739,13 +1725,13 @@ public final class RpgJobTests {
         h.assertTrue(JobTraits.stanceOn(sp, "paladin_oath") && JobTraits.stanceTotal(sp) == 300, "oath +5 lasts 300 ticks: " + JobTraits.stanceTotal(sp));
         // 값: 암영 첫 공격 (1 을 넘는 몫) · 바람 타기 덧쏘기 · 맹세 오라 (up 키 아님)
         Jobs.Skill veil = Jobs.job("assassin").skill("assassin_veil");
-        Jobs.Skill wind = Jobs.job("archer").skill("archer_wind");
+        Jobs.Skill wind = Jobs.job("swordsman").skill("swordsman_mirror"); // 2026-11-15 궁수 썬더 스텝이 빠짐 (팬텀 아처) — 미러 블레이드 두 번째 베기 (35%)
         Jobs.Skill oath = Jobs.job("paladin").skill("paladin_oath");
         JobUpgrades.set(sp, veil.id(), 5);
         JobUpgrades.set(sp, wind.id(), 3);
         JobUpgrades.set(sp, oath.id(), 5);
         h.assertTrue(close(JobUpgrades.num(sp, veil, "first", 2.5), 3.25, 1e-9), "veil +5 first ×3.25");
-        h.assertTrue(close(JobUpgrades.num(sp, wind, "extra", 1), 1.3, 1e-9), "wind +3 extra 130%");
+        h.assertTrue(close(JobUpgrades.num(sp, wind, "echo", 0.35), 0.455, 1e-9), "mirror +3 echo 45.5%");
         h.assertTrue(JobUpgrades.ticks(sp, oath, "dur", 200) == 300 && close(JobUpgrades.num(sp, oath, "aura", 0.15), 0.15, 1e-9), "oath +5: 300 ticks, aura unchanged");
         for (String id : List.of("priest_heal", veil.id(), wind.id(), oath.id())) JobUpgrades.set(sp, id, 0);
         cleanup(sp);

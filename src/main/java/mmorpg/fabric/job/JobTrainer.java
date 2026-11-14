@@ -62,7 +62,7 @@ public final class JobTrainer {
 
     /** 직업 이름 글자색 (창 · 알림 — § 색 하나: 직업 색에 가까운 것) */
     private static final Map<String, String> CODE = Map.ofEntries(Map.entry("swordsman", "§b"), Map.entry("warrior", "§c"), Map.entry("spellblade", "§d"),
-            Map.entry("mage", "§9"), Map.entry("archer", "§9"), Map.entry("assassin", "§5"), Map.entry("lancer", "§6"), Map.entry("reaper", "§3"),
+            Map.entry("mage", "§9"), Map.entry("archer", "§c"), Map.entry("assassin", "§5"), Map.entry("lancer", "§6"), Map.entry("reaper", "§3"),
             Map.entry("paladin", "§e"), Map.entry("priest", "§f"), Map.entry("guardian", "§7"),
             // 0.51.0 2차 직업 (없는 것은 1차 직업 색)
             Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("frostraider", "§b"), Map.entry("arcaneblade", "§5"),

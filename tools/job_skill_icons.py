@@ -531,6 +531,9 @@ def main():
     # 2026-11-14 궁수 계열 다시 만들기 (폭풍 궁수 · 천벌의 사수 · 그림자 사수 — tools/job_skill_icons_archer2.py): 예전 그림을 덮어씀
     import job_skill_icons_archer2
     ICONS.update(job_skill_icons_archer2.ICONS)
+    # 2026-11-15 팬텀 아처 (궁수 리메이크 — tools/job_skill_icons_phantom.py)
+    import job_skill_icons_phantom
+    ICONS.update(job_skill_icons_phantom.ICONS)
     slot_sprites()
     cols = job_colors()
     os.makedirs(OUT, exist_ok=True)

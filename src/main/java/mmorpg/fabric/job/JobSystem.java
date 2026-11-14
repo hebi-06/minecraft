@@ -68,7 +68,7 @@ public final class JobSystem {
         SpellbladeSkills.register();
         WarriorSkills.register(); // 0.28.0
         MageSkills.register();
-        ArcherSkills.register();
+        PhantomArcherSkills.register(); // 2026-11-15 팬텀 아처 (궁수 리메이크)
         AssassinSkills.register(); // 0.29.0
         LancerSkills.register();
         ReaperSkills.register();

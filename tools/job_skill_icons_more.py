@@ -498,9 +498,4 @@ ICONS = {
     "mage_orb": mage_orb,
     "mage_overload": mage_overload,
     "mage_ult": mage_ult,
-    "archer_rapid": archer_rapid,
-    "archer_wind": archer_wind,
-    "archer_rain": archer_rain,
-    "archer_focus": archer_focus,
-    "archer_ult": archer_ult,
 }

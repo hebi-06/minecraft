@@ -90,7 +90,7 @@ public final class JobsTest {
                 check(!Jobs.upLines(k, 0, 1).isEmpty(), k.id() + " shows what an upgrade does");
             }
         }
-        check(withUp == 16, "16 skills with up keys " + withUp);
+        check(withUp == 14, "14 skills with up keys (2026-11-15 팬텀 아처 — 썬더 스텝 · 스톰 아이 빠짐) " + withUp);
         // 0.51.0 4번 칸 (태세 · 강화) 을 피해 스킬로 바꾼 직업 (사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 배율 합 = 태세 칸 몫 12 × 세기 (검사 기준
         // 초당 0.4 · 30초) · 직업 맞춤 밖 (budget stance) · 강화 열쇠 없음 (위력 P 가 오름)
         int stanceDamage = 0;
@@ -105,7 +105,7 @@ public final class JobsTest {
             check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
-        check(stanceDamage == 9, "nine slot-3 damage skills (매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로 · 소울 리퍼의 랜턴 오브 소울즈가 스펙트럴 사이스 태세로) "
+        check(stanceDamage == 10, "ten slot-3 damage skills (2026-11-15 팬텀 아처의 팬텀 버스트 · 매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로 · 소울 리퍼의 랜턴 오브 소울즈가 스펙트럴 사이스 태세로) "
                 + stanceDamage);
 
         Jobs.Job sw = Jobs.job("swordsman");
@@ -124,7 +124,6 @@ public final class JobsTest {
         check(Jobs.upLines(mirror, 0, 1).equals(List.of("두 번째 베기 35% → 38.5%")), "mirror lines " + Jobs.upLines(mirror, 0, 1));
         check(Jobs.upLines(veil, 0, 1).equals(List.of("첫 공격 ×2.5 → ×2.65")), "veil lines " + Jobs.upLines(veil, 0, 1));
         check(Jobs.upLines(oath, 0, 1).equals(List.of("지속 10초 → 11초")), "oath lines " + Jobs.upLines(oath, 0, 1));
-        check(Jobs.upLines(Jobs.job("archer").skill("archer_focus"), 0, 1).equals(List.of("벼락 피해 40% → 44%")), "storm eye lines: " + Jobs.upLines(Jobs.job("archer").skill("archer_focus"), 0, 1));
         check(Jobs.upLines(Jobs.job("priest").skill("priest_hymn"), 0, 1).equals(List.of("위력 ×1 → ×1.1", "회복 (0.5초마다) 1.5% → 1.65%")),
                 "hymn lines " + Jobs.upLines(Jobs.job("priest").skill("priest_hymn"), 0, 1));
         check(Jobs.upLines(Jobs.job("lancer").skill("lancer_wall"), 0, 1).equals(List.of("위력 ×1 → ×1.1")), "wall lines (power only)");
@@ -135,16 +134,17 @@ public final class JobsTest {
     public static void main(String[] args) {
         // 모양: 직업 11 (설계 문서 순서) · 무기 11종이 하나씩 (마검사는 칼 · 마검)
         List<String> ids = List.of("swordsman", "warrior", "spellblade", "mage", "archer", "assassin", "lancer", "reaper", "paladin", "priest", "guardian");
-        List<String> names = List.of("검사", "전사", "마검사", "매지션", "궁수", "암살자", "창술사", "사신", "성기사", "사제", "수호기사");
+        List<String> names = List.of("검사", "전사", "마검사", "매지션", "팬텀 아처", "암살자", "창술사", "사신", "성기사", "사제", "수호기사");
         check(Jobs.order().equals(ids), "order " + Jobs.order());
         for (int i = 0; i < ids.size(); i++) check(Jobs.job(ids.get(i)).name().equals(names.get(i)), "name " + ids.get(i));
         // 2026-11-14 숨긴 직업 (jobs.json hidden — 사용자 "직업을 줄이자" · "궁수, 스나이퍼, 배틀아처, 워로드, 피닉스 가드를 없애라고" · "둘 다 숨김"):
         // 1차 숨김이면 2차까지 · 2차만 숨김 (워로드 · 피닉스 가드) — 데이터는 그대로 (order · all · job)
-        check(Jobs.visibleOrder().equals(List.of("swordsman", "warrior", "mage", "assassin", "priest", "guardian")), "visible order " + Jobs.visibleOrder());
-        for (String id : List.of("spellblade", "lancer", "reaper", "paladin", "archer", "arcaneblade", "elementalblade", "stormlancer", "dragoon", "soulreaper",
+        // 2026-11-15 궁수는 팬텀 아처로 리메이크해 다시 보임 — 옛 2차 (스나이퍼 · 배틀 아처) 만 숨김
+        check(Jobs.visibleOrder().equals(List.of("swordsman", "warrior", "mage", "archer", "assassin", "priest", "guardian")), "visible order " + Jobs.visibleOrder());
+        for (String id : List.of("spellblade", "lancer", "reaper", "paladin", "arcaneblade", "elementalblade", "stormlancer", "dragoon", "soulreaper",
                 "executioner", "thunderlord", "tyrant", "sniper", "battlearcher", "warlord", "phoenix")) check(Jobs.hidden(id) && Jobs.job(id) != null, "hidden " + id);
         for (String id : List.of("swordsman", "swordmaster", "bloodknight", "warrior", "frostraider", "mage", "arcmage", "necromancer", "assassin", "trickster",
-                "pierrot", "priest", "saint", "warlock", "guardian", "darkknight")) check(!Jobs.hidden(id), "shown " + id);
+                "pierrot", "priest", "saint", "warlock", "guardian", "darkknight", "archer")) check(!Jobs.hidden(id), "shown " + id);
         check(!Jobs.hidden("") && !Jobs.hidden(null) && !Jobs.hidden("nope"), "hidden(unknown) false");
         check(Jobs.visibleAdvance("warrior", "awaken") == null && Jobs.visibleAdvance("warrior", "invert") == Jobs.job("frostraider")
                 && Jobs.visibleAdvancedOf("warrior").equals(List.of(Jobs.job("frostraider"))) && Jobs.visibleAdvancedOf("archer").isEmpty()
@@ -234,16 +234,28 @@ public final class JobsTest {
         check(near(mg.skill(2).num("pulse", 0) * mg.skill(2).num("pulses", 0) + mg.skill(2).num("burst", 0), 12.6), "비전 구체 1.4 × 6 + 4.2");
         check(near(mg.skill(4).num("page", 0) * mg.skill(4).num("pages", 0) + mg.skill(4).num("final", 0), 56)
                 && near(mg.skill(4).num("pages", 0) % mg.skill(4).num("waves", 1), 0), "금서 개방 3 × 12 + 20 (물결마다 같은 장 수)");
-        check(near(ar.skill(0).num("arrow", 0) * ar.skill(0).num("arrows", 0), 7.5) && ar.skill(0).num("more", 0) == 4, "체인 볼트 2.5 × 3 (충전 3 이상 4발)");
-        check(near(ar.skill(2).num("wave", 0) * ar.skill(2).num("waves", 0), 13.5) && ar.skill(2).num("per", 0) == 2, "스톰 레인 2.7 × 5 (두 발씩)");
-        check(near(ar.skill(4).num("shot", 0) + ar.skill(4).num("after", 0), 60) && ar.skill(4).name().equals("헤븐 보우") && ar.skill(3).name().equals("스톰 아이")
-                && near(ar.skill(3).num("bite", 0), 0.4) && ar.skill(4).num("bolts", 0) == 20 && ar.trait().name().equals("충전") && ar.skill(0).name().equals("체인 볼트"),
-                "헤븐 보우 40 + 20 · 스톰 아이 벼락 40% · 충전 (2026-11-14 폭풍 궁수)");
+        // 2026-11-15 팬텀 아처 (궁수 리메이크 — 세기 1.4: 7 · 4.2 · 12.6 · 16.8 (태세 칸 몫) · 56)
+        check(near(sum(ar.skill(0), "swords"), 7) && near(ar.skill(0).total(), 7) && ar.skill(0).def().list("swords").size() == 3 && ar.skill(0).name().equals("소드 볼트"),
+                "소드 볼트 2 + 2 + 3");
+        check(near(ar.skill(1).num("cross", 0) + ar.skill(1).num("back", 0), 4.2) && near(ar.skill(1).total(), 4.2) && ar.skill(1).name().equals("크로스 팽"), "크로스 팽 2.8 + 1.4");
+        check(near(ar.skill(2).num("wave", 0) * ar.skill(2).num("waves", 0) + ar.skill(2).num("burst", 0), 12.6) && near(ar.skill(2).total(), 12.6)
+                && ar.skill(2).name().equals("블레이드 레인"), "블레이드 레인 2.0 × 5 + 2.6");
+        check(near(ar.skill(3).num("hit", 0) + ar.skill(3).num("blast", 0), 16.8) && near(ar.skill(3).total(), 16.8) && Jobs.stanceBudget(ar.skill(3))
+                && ar.skill(3).name().equals("팬텀 버스트"), "팬텀 버스트 5.6 + 11.2 (태세 칸 몫 12 × 1.4)");
+        check(near(ar.skill(4).num("wave", 0) * ar.skill(4).num("waves", 0) + ar.skill(4).num("final", 0), 56) && near(ar.skill(4).total(), 56)
+                && ar.skill(4).name().equals("소드 생추어리") && ar.trait().name().equals("환영 무기") && ar.trait().max() == 5 && near(ar.trait().def().num("burst"), 1.0),
+                "소드 생추어리 7 × 6 + 14 · 환영 무기 5 (평타 100%)");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (빠른 연타는 한 번에 넣고 숫자만 여러 줄 — 마탄 연사 · 속사 · 화살비 한 물결 · 금서의 주문)
         check(wa.skill(2).num("gap", 0) >= 10 && wa.skill(4).num("leapTicks", 0) >= 10 && wa.skill(4).num("finalDelay", 0) >= 10, "warrior i-frame spacing");
         check(mg.skill(2).num("gap", 0) >= 10 && mg.skill(2).num("dur", 0) - mg.skill(2).num("gap", 0) * mg.skill(2).num("pulses", 0) >= 10
                 && mg.skill(4).num("gap", 0) >= 10 && mg.skill(4).num("finalDelay", 0) >= 10, "mage i-frame spacing");
-        check(ar.skill(2).num("gap", 0) >= 10 && ar.skill(4).num("boltDelay", 0) >= 10, "archer i-frame spacing");
+        check(ar.skill(1).num("backAt", 0) - ar.skill(1).num("crossAt", 0) >= 10 && ar.skill(2).num("gap", 0) >= 10
+                && ar.skill(2).num("burstAt", 0) - ar.skill(2).num("first", 0) - (ar.skill(2).num("waves", 0) - 1) * ar.skill(2).num("gap", 0) >= 10
+                && ar.skill(3).num("blastDelay", 0) >= 10 && ar.skill(4).num("every", 0) >= 10
+                && ar.skill(4).num("finalAt", 0) - ar.skill(4).num("first", 0) - (ar.skill(4).num("waves", 0) - 1) * ar.skill(4).num("every", 0) >= 10
+                && near(ar.skill(1).num("backAt", 0), ar.skill(1).num("t", 0)) && near(ar.skill(1).num("crossAt", 0), ar.skill(1).num("w", 0))
+                && near(ar.skill(2).num("burstAt", 0), ar.skill(2).num("t", 0)) && near(ar.skill(2).num("first", 0), ar.skill(2).num("w", 0))
+                && near(ar.skill(4).num("finalAt", 0), ar.skill(4).num("t", 0)) && near(ar.skill(4).num("first", 0), ar.skill(4).num("w", 0)), "archer i-frame spacing · t · w");
         // 지속 보정: 대회전 t 40 → short · 격노 도약 · 비전 구체 · 관천일시 → long · 화살비 · 금서 개방 (장판) → zone, 나머지 한방
         check(Jobs.spreadKind(wa.skill(0)) == null && Jobs.spreadKind(wa.skill(1)) == null && "short".equals(Jobs.spreadKind(wa.skill(2)))
                 && "long".equals(Jobs.spreadKind(wa.skill(4))), "warrior spread");
@@ -322,7 +334,7 @@ public final class JobsTest {
         // 특성 수치
         check(wa.trait().max() == 100 && near(wa.trait().def().num("halfBonus"), 0.1) && near(wa.trait().def().num("fullBonus"), 0.2), "분노 0 ~ 100 · +10% · +20%");
         check(mg.trait().max() == 3 && near(mg.trait().def().num("perChain"), 0.12) && mg.trait().def().num("window") == 80, "주문 연쇄 3 · 12% · 4초");
-        check(ar.trait().max() == 5 && near(ar.trait().def().num("perStack"), 0.04) && ar.trait().def().num("rangePer") == 1, "호흡 5 · 4% · 1칸");
+        check(ar.trait().max() == 5 && ar.trait().def().num("life") == 160 && ar.trait().def().num("burstDelay") >= 10 && ar.trait().def().num("radius") == 2, "환영 무기 5 · 8초 · 0.5초 · 2칸");
         check(near(Jobs.power(mg, Map.of("int", 125.0, "lvmax", 40.0)), 42) && near(Jobs.power(ar, Map.of("dex", 125.0, "lvmax", 40.0)), 42), "mage · archer P 42");
 
         // 칸 해금 레벨: 10 · 15 · 20 · 30 · 40
@@ -450,8 +462,10 @@ public final class JobsTest {
                 check(Jobs.jobOf(k) == a, "jobOf " + k.id());
                 // 4번 칸 (태세) 은 강화 스킬 · 태세 칸 몫 피해 스킬 (budget stance) 이 섞임 — 0.51.0 사용자 "딜링기도 괜찮고 버프기도 괜찮고"
                 // 2026-11-06 워록은 역할이 바뀐 반전 (힐러 → 원거리 딜러 — 재설계안 2판 기준 5: 새 역할의 목표) 이라 사제의 회복 · 보호막 칸에도 피해
-                check((k.total() > 0) == (b.skill(i).total() > 0) || i == 3 || a.id().equals("warlock"), a.id() + " slot " + i + " same role (damage · stance)");
-                check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3, a.id() + " slot " + i + " up keys");
+                // 2026-11-15 옛 궁수 2차 (스나이퍼 · 배틀 아처 — 숨김) 는 리메이크 전 궁수 (2번 칸 = 강화) 에 맞춘 것이라 뺌 — 아스널 킹 · 블레이드 레인저로 바뀜
+                boolean oldArcher = a.id().equals("sniper") || a.id().equals("battlearcher");
+                check((k.total() > 0) == (b.skill(i).total() > 0) || i == 3 || a.id().equals("warlock") || oldArcher, a.id() + " slot " + i + " same role (damage · stance)");
+                check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3 || oldArcher, a.id() + " slot " + i + " up keys");
             }
             double r = dps(a) / dps(b);
             check(near(r, Jobs.advanceDps(a), 0.005), a.id() + " dps ×" + r + " (1차 × " + Jobs.advanceDps(a) + " — 피에로 · 엑시큐셔너 1.0)");
@@ -494,7 +508,7 @@ public final class JobsTest {
         warriorAdvance(wa, wl, fr);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("elementalblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
-        archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("battlearcher"));
+        // 2026-11-15 궁수 2차 (스나이퍼 · 배틀 아처) 는 아스널 킹 · 블레이드 레인저로 바뀜 — 그때 새 시험 (옛 2차는 숨김 · 1차 칸 합과 맞추지 않음)
         assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("pierrot"));
         lancerAdvance(Jobs.job("lancer"), Jobs.job("stormlancer"), Jobs.job("dragoon"));
         reaperAdvance(Jobs.job("reaper"), Jobs.job("soulreaper"), Jobs.job("executioner"));
@@ -1281,7 +1295,7 @@ public final class JobsTest {
                 if (k.total() <= 0) check(Jobs.areaKind(k) == null && !k.def().has("a"), k.id() + " no damage → no area");
             }
         }
-        check(singles == 3 && narrows == 18, "area kinds 3 single · 18 narrow: " + singles + " · " + narrows);
+        check(singles == 3 && narrows == 19, "area kinds 3 single · 19 narrow (2026-11-15 크로스 팽): " + singles + " · " + narrows);
         String bolts = Jobs.scaleNote(mg.skill(0));
         check(bolts != null && bolts.contains("단일 +15%"), "별빛 마탄 note " + bolts);
         String claw = Jobs.scaleNote(la.skill(4));

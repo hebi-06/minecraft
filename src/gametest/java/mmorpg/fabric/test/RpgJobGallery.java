@@ -104,12 +104,12 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(3, new int[] {6, 8, 18, 28, 38, 48, 50}, new int[] {18, 48}, 58, false), // 0.51.0 프리즘 레이 (8 ~ 38 광선 · 48 다섯 갈래)
         new Case(4, new int[] {10, 22, 34, 46, 58, 70, 74}, new int[] {22, 46, 70}, 84, false),
     };
-    private static final Case[] CASES_AR = {
-        new Case(0, new int[] {2, 6, 12}, new int[] {3, 9}, 18, false),
-        new Case(1, new int[] {1, 3, 8}, new int[] {2, 6}, 30, false, true, 4),
-        new Case(2, new int[] {3, 10, 26, 46}, new int[] {10, 30}, 52, false),
-        new Case(3, new int[] {4, 10, 18}, new int[] {6, 14}, 40, true, false, 4), // 2026-11-07 와일드 헌트: 늑대 정령 둘이 깨어남 → 4 활 평타 → 늑대가 뛰어올라 물어뜯음
-        new Case(4, new int[] {8, 18, 25, 27, 36, 43, 50}, new int[] {12, 22, 26, 30, 44}, 64, false), // 스피릿 스탬피드: 0 ~ 24 사슴 왕 깨어남 → 24 내달림 → 43 꽃이 터짐
+    private static final Case[] CASES_AR = { // 2026-11-15 팬텀 아처 (궁수 리메이크)
+        new Case(0, new int[] {2, 5, 8, 11}, new int[] {3, 9}, 18, false), // 소드 볼트: 활 위에 칼 셋 투영 → 3 · 6 · 9 쏨
+        new Case(1, new int[] {1, 4, 8, 14, 20}, new int[] {3, 8, 18}, 30, false), // 크로스 팽: 공중제비 · 쌍검이 휘어 날아가 8 교차 → 돌아옴
+        new Case(2, new int[] {3, 8, 26, 46, 57}, new int[] {10, 30, 56}, 64, false), // 블레이드 레인: 하늘의 칼 물결 → 56 터짐
+        new Case(3, new int[] {4, 10, 15, 21, 26}, new int[] {8, 16, 25}, 40, false), // 팬텀 버스트: 거대한 칼 투영 · 당김 → 14 쏨 → 25 터짐
+        new Case(4, new int[] {4, 10, 16, 30, 52, 74, 80, 87}, new int[] {12, 26, 44, 76, 86}, 100, false), // 소드 생추어리: 불꽃 고리 · 칼 들판 → 물결 → 86 내리꽂힘
     };
 
     /** 0.29.0 암살자 · 창술사 · 사신 (암영은 태세지만 평타가 풀므로 강화처럼 — 평타가 들어갔는지만) */
@@ -467,7 +467,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 skills(ctx, server, conn, "mage", CASES_MG);
             });
             part(ctx, "archer", () -> {
-                newJob(ctx, server, conn, "archer", "rpg:bow_l40_hero", 5, sp -> JobTraitsMore.setBreath(sp, 3));
+                newJob(ctx, server, conn, "archer", "rpg:bow_l40_hero", 5, sp -> {});
                 skills(ctx, server, conn, "archer", CASES_AR);
             });
             // 0.29.0 암살자 · 창술사 · 사신 (핫바 셋째 칸 — 단검 · 창 · 낫)
@@ -677,7 +677,6 @@ public final class RpgJobGallery implements FabricClientGameTest {
         RpgHealth.healFull(sp);
         if (id.equals("swordsman_flurry")) JobTraits.setStacks(sp, 3); // 검기
         if (id.equals("warrior_crush")) JobTraitsMore.setRage(sp, 60); // 분노 30 을 씀
-        if (id.equals("archer_rapid")) JobTraitsMore.setBreath(sp, 3); // 4발
         JobTraitsMore.setChain(sp, 0);
         spawnHusks(sp.level());
         if (id.equals("assassin_bloom") || id.equals("assassin_ult")) markHusks(sp, 5); // 낙화 · 흑야: 표식 가득
@@ -878,7 +877,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "spellblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 3, sp -> {});
                         case "warrior" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
                         case "mage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 3, sp -> JobTraitsMore.setChain(sp, 2));
-                        case "archer" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 5, sp -> JobTraitsMore.setBreath(sp, 3));
+                        case "archer" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 5, sp -> {});
                         case "assassin" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 5, sp -> markHusks(sp, 3));
                         case "lancer" -> newJob(ctx, server, conn, job, "rpg:lance_l40_hero", 1, sp -> JobTraits3.setMomentum(sp, true));
                         case "reaper" -> newJob(ctx, server, conn, job, "rpg:scythe_l40_hero", 10, sp -> JobTraits3.setSouls(sp, 6));
@@ -936,8 +935,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         return switch (id) {
             case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4}; // 2026-11-07 엑스칼리버: 15칸 빛의 대검을 올려다봄 · 앞 24칸 검격
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3}; // 블레이드 에코: 둘레를 옮겨 다니다 처음 자리로 돌아옴 — 덜 따라감
-            case "archer_ult" -> new double[] {11.0, 3.4, 2.8, 0.4}; // 2026-11-07 스피릿 스탬피드: 등 뒤 사슴 정령 왕 (4.4칸) · 앞으로 내달리는 무리 · 정령 꽃
-            case "archer_focus" -> new double[] {7.5, 2.8, 1.2, 0.6}; // 와일드 헌트: 곁의 늑대 정령 둘 · 과녁에 뛰어오름
+            case "archer_ult" -> new double[] {13.0, 4.6, 1.6, 0.3}; // 2026-11-15 소드 생추어리: 12칸 불꽃 고리 · 칼 들판 — 위에서 넓게
+            case "archer_blades" -> new double[] {9.0, 3.4, 3.0, 0.5}; // 블레이드 레인: 과녁 위 7칸 하늘에서 칼 물결
             case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5}; // 사일런트 아울: 등 뒤 위 부엉이 정령 (2.5칸 위) · 부엉이 화살
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35}; // 2026-11-07 트윈 리플렉션: 과녁 등 뒤 거울 (2.8칸) · 엇갈려 꿰뚫고 돌아섬 — 덜 따라감
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6}; // 팬텀 왈츠: 오른쪽 뒤의 춤 상대 · 과녁 둘레를 휘도는 환영

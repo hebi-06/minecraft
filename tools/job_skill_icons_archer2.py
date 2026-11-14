@@ -364,12 +364,7 @@ def battlearcher_ult(A, B):
                   glows + [glow(lighter(sh, hd), A, 1.8, 1.0), glow(con, A, 1.2, 0.7)], shadow_back(A, B))
 
 
-ICONS = {
-    "archer_rapid": archer_rapid,
-    "archer_wind": archer_wind,
-    "archer_rain": archer_rain,
-    "archer_focus": archer_focus,
-    "archer_ult": archer_ult,
+ICONS = {  # 2026-11-15 궁수 1차는 팬텀 아처로 리메이크 (tools/job_skill_icons_phantom.py) — 폭풍 궁수 그림은 쓰지 않음
     "sniper_heart": sniper_heart,
     "sniper_snare": sniper_snare,
     "sniper_trick": sniper_trick,
