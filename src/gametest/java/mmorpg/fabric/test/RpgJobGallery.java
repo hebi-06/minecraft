@@ -510,10 +510,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("직업 교관"), "trainer window")) return;
         hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("swordsman")));
         shot(ctx, "job_trainer_swordsman");
-        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("spellblade")));
-        shot(ctx, "job_trainer_spellblade");
-        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("paladin")));
-        shot(ctx, "job_trainer_paladin");
+        // 2026-11-14 숨긴 직업 (마검사 · 성기사 …) 은 교관 창에 없음 — 보이는 직업 카드
+        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("warrior")));
+        shot(ctx, "job_trainer_warrior");
+        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("guardian")));
+        shot(ctx, "job_trainer_guardian");
         click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("swordsman")));
         if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("확인"), "confirm window")) return;
         hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(13));
@@ -1127,19 +1128,20 @@ public final class RpgJobGallery implements FabricClientGameTest {
             JobTrainer.open(player(s), null);
         });
         if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("직업 교관"), "trainer window (change)")) return;
-        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("spellblade")));
+        // 2026-11-14 마검사는 숨김 (jobs.json hidden) — 매지션으로 바꿈
+        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("mage")));
         shot(ctx, "job_trainer_change_card");
-        click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("spellblade")));
+        click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("mage")));
         if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("바꾸기"), "change confirm")) return;
         shot(ctx, "job_trainer_change_confirm");
         click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(11));
         ctx.waitTicks(6);
-        shot(ctx, "job_change_sb_06");
+        shot(ctx, "job_change_mg_06");
         ctx.waitTicks(20);
-        check(server.computeOnServer(s -> "spellblade".equals(JobSystem.jobOf(player(s))) && Wallet.get(player(s), Economy.Kind.SILVER) == 200),
-                "changed to spellblade for 300 silver");
-        check(ctx.computeOnClient(mc -> ClientJobBar.jobId().equals("spellblade") && ClientJobBar.gaugeMax() == 3), "client: spellblade, 각인 max 3");
-        shot(ctx, "job_hud_spellblade");
+        check(server.computeOnServer(s -> "mage".equals(JobSystem.jobOf(player(s))) && Wallet.get(player(s), Economy.Kind.SILVER) == 200),
+                "changed to mage for 300 silver");
+        check(ctx.computeOnClient(mc -> ClientJobBar.jobId().equals("mage") && ClientJobBar.gaugeMax() == 3), "client: mage, chain max 3");
+        shot(ctx, "job_hud_mage_changed");
     }
 
     // ------------------------------------------------------------ 스탯 창
@@ -1148,7 +1150,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         ctx.getInput().pressKey(MmorpgClient.statsKey);
         if (waitScreen(ctx, sc -> sc instanceof StatScreen, "stat window")) {
             ctx.waitTicks(4);
-            shot(ctx, "job_stat_spellblade");
+            shot(ctx, "job_stat_mage");
             ctx.setScreen(() -> null);
             ctx.waitTicks(3);
         }
@@ -1243,6 +1245,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
     }
 
     private void part(ClientGameTestContext ctx, String name, Runnable run) {
+        // 2026-11-14 숨긴 직업 (jobs.json hidden — 사용자 "직업을 줄이자" · "둘 다 숨김", 퀄을 높인 뒤 다시 넣음) 의 사진은 찍지 않음
+        if (Jobs.job(name) != null && Jobs.hidden(name)) {
+            LOG.info("[job-gallery] part {} skipped (hidden job)", name);
+            return;
+        }
         try {
             run.run();
             LOG.info("[job-gallery] part {} finished", name);

@@ -295,16 +295,17 @@ public final class RpgMotionGallery implements FabricClientGameTest {
 
     /**
      * {종류, 등급, 동작 · 찍는 틱 …} — 평타를 실제로 눌러 그 동작이 진행된 틱에 찍음 (2026-11-14 칼은 왼쪽 → 오른쪽 가로 베기 하나, 마검 · 낫은 셋째 마무리까지 —
-     * 민첩 150 의 공속 ×2 면 동작이 ×1.5 빨라 찍는 틱을 줄임: 낫 마무리 10 → 7틱 · 단검 8 → 5틱)
+     * 민첩 150 의 공속 ×2 면 동작이 ×1.5 빨라 찍는 틱을 줄임: 낫 마무리 10 → 7틱 · 단검 8 → 5틱. 2026-11-14 찍는 틱 = 동작 틱 − 2 이하 — 누른 틱부터 세면
+     * 동작이 한 틱 일찍 시작해 단검 · 홀 · 창 찌르기가 찍는 틱에 이미 끝났음 (CI 43602133804 "trail swing … (null)"))
      */
     private static final String[][] TRAILS = {
         {"sword", "rare", "slash_hb:4"}, // 2026-11-14 칼 = 왼쪽 → 오른쪽 가로 베기 하나
         {"scythe", "hero", "slash_h:4", "slash_v:4", "reap_up:4"},
         {"greatsword", "transcend", "slash_h:4", "slash_v:4", "gs_slam:5"},
-        {"dagger", "rare", "dagger_x:4"},
+        {"dagger", "rare", "dagger_x:3"},
         {"axe", "rare", "chop:5"},
-        {"scepter", "rare", "smite:5"},
-        {"lance", "rare", "thrust:4", "lance_sweep:5"}, // 0.42.0 창: 찌르기 (빛줄기 — 궤적 없음) → 가로 휘두르기
+        {"scepter", "rare", "smite:4"},
+        {"lance", "rare", "thrust:3", "lance_sweep:5"}, // 0.42.0 창: 찌르기 (빛줄기 — 궤적 없음) → 가로 휘두르기
     };
 
     private void trail(ClientGameTestContext ctx, TestServerContext server) {
