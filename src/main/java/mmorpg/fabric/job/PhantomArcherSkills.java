@@ -496,7 +496,7 @@ final class PhantomArcherSkills {
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
         // 2026-11-15 영상: 바닐라는 하늘이 바뀌지 않음 → 보는 쪽 지평선에 지는 진홍 해 (rfx_sun) · 둘레 노을 빛
         Vec3 fs = Kit.facingOf(sp);
-        for (int q = -1; q <= 1; q++) PhantomArcher.dusk2d(level0, V.add(V.up(c0, 6.0), RuneKit.turn(fs, q * 40), 32), 20.0, (finalAt + 20) / 20.0); // 전용 노을 판 (rfx_jpdusk)
+        PhantomArcher.dusk2d(level0, V.add(V.up(c0, 5.0), fs, 36), 26.0, (finalAt + 20) / 20.0); // 전용 노을 판 (rfx_jpdusk — 2026-11-15 영상: 세 판이 겹쳐 계단 꼴 → 하나 · 멀리 · 크게)
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.2, 0.9);
         SkillFx.play(level0, "item.firecharge.use", c0, 0.6, 1.0);

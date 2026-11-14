@@ -248,8 +248,10 @@ def dusk_frame(f, W=512, H=256):
     pad = Pad(W, H)
     X, Y = pad.grid()
     v = Y / H  # 0 위 → 1 아래 (지평선)
-    side = clamp01(1 - np.abs(X - W / 2) / (W * 0.5)) ** 0.6
-    glow = clamp01((v - 0.05) / 0.9) ** 1.4 * side * 0.95
+    # 2026-11-15 영상: 판 가장자리 (옆 · 아래) 가 딱 끊겨 큰 네모로 보였음 → 옆은 넓게 · 아래 (지평선 밑) 도 부드럽게 사라짐
+    side = clamp01(1 - np.abs(X - W / 2) / (W * 0.5)) ** 1.6
+    bottom = clamp01((0.985 - v) / 0.12)
+    glow = clamp01((v - 0.05) / 0.9) ** 1.4 * side * bottom * 0.85
     n = fbm(X / 60.0, Y / 14.0, seed=11, octaves=4)
     bands = clamp01((np.sin(v * 38.0 + n * 3.0) - 0.55) / 0.45) * clamp01((v - 0.25) / 0.3) * clamp01((0.92 - v) / 0.1) * side
     glow = np.maximum(glow, bands * 0.55)
