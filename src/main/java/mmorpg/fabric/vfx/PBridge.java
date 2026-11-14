@@ -1161,6 +1161,8 @@ public final class PBridge {
     public static int solidsDropped;
     /** 아이템 표시가 모델을 Y 둘레로 180° 돌려 그리는 것을 되돌림 (Vfx.ITEM_Y_FLIP) */
     private static final Quaternionf Y180 = new Quaternionf().rotationY((float) Math.PI);
+    /** 스스로 빛나는 입체 모델의 속빛을 흰색 쪽으로 옮기는 몫 (모드의 더하는 빛 무리 — glowAlpha 0.55 가 가운데에 더해짐) */
+    private static final double HOT = 0.45;
     /** 무기 모델 (item:) 을 효과 모델의 축에 맞춤 (client FxModels.ITEM_TURN — Y 축 −90°: 넓은 면 ±Z · 치는 쪽 +X) */
     private static final Quaternionf ITEM_TURN = new Quaternionf().rotationY((float) (-Math.PI / 2));
 
@@ -1186,7 +1188,10 @@ public final class PBridge {
             this.weapon = weaponStack != null;
             double[] c = o.color("color", new double[] {1, 1, 1});
             double[] g = o.color("glow", c);
-            List<Integer> tint = List.of(rgb(c[0], c[1], c[2]), rgb(g[0], g[1], g[2]));
+            // 2026-11-14 스스로 빛나는 모델 (해 · 일식 · 빛기둥 · 불꽃 날개 …): 모드는 속빛 면 위에 더하는 빛 무리를 그려 가운데가 거의 흰색 — 모드 없는 클라이언트는
+            // 섞는 빛뿐이라 속빛 물들임을 흰색 쪽으로 HOT 만큼 (CI 43580113774: 작은 태양 · 성역의 해가 누런 원판으로 보였음)
+            double[] gt = def != null && def.emissive() ? new double[] {g[0] + (1 - g[0]) * HOT, g[1] + (1 - g[1]) * HOT, g[2] + (1 - g[2]) * HOT} : g;
+            List<Integer> tint = List.of(rgb(c[0], c[1], c[2]), rgb(gt[0], gt[1], gt[2]));
             List<PDefs.SolidPart> ps = new ArrayList<>();
             if (def != null) for (PDefs.SolidPart sp : def.parts()) if (sp.item() != null) ps.add(sp);
             this.parts = ps.toArray(new PDefs.SolidPart[0]);
