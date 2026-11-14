@@ -268,19 +268,33 @@ public final class PBridge {
 
     // ------------------------------------------------------------ Fx3d 카드 (2D 판)
 
-    /** Fx3d.spawn: 판 모델 (slash_* — 카드 목록에 있으면) 을 모드 없는 클라이언트에게. false = 이 모델은 다리가 없음 */
-    public static boolean card(ServerLevel level, String model, Vec3 at, Opt o, List<ServerPlayer> plain) {
+    /** Fx3d 번호 → 띄운 카드 (옮기기 · 움직임 바꾸기 · 지우기 — Fx3d.move · anim · kill 도 모드 없는 클라이언트에게) */
+    private static final Map<Integer, Card> BY_ID = new HashMap<>();
+
+    /**
+     * Fx3d.spawn: 판 모델 (카드 목록에 있으면 — 휘두른 자국 slash_* · 2026-11-14 직업 스킬의 2D 물체 card_* · 입체 모델을 구운 판) 을 모드 없는 클라이언트에게.
+     * 2026-11-14 주인 기준 (follow — 주인 둘레를 도는 검 · 앞의 방패) · 도는 길 (orbit) · 휘두름 (arc · 쥔 곳 grip) · 돌기 (spin) · 가는 쪽 (align) · 움직임 이름도 —
+     * 전에는 이런 판을 통째로 버렸음 (헬름 브레이커의 머리 위 도끼 · 포비든 그리모어의 금서 · 책장 …). id = Fx3d 번호 (옮기기 · 움직임 · 지우기). false = 다리가 없음
+     */
+    public static boolean card(ServerLevel level, String model, Vec3 at, Opt o, List<ServerPlayer> plain, int id) {
         List<Layer[]> frames = PDefs.card(model);
-        if (frames != null && (o.has("follow") || o.has("orbit") || o.has("arc") || o.has("spin"))) frames = null; // 주인 기준 · 도는 길 · 휘두름 · 돌기 — 아직 없음
         if (frames == null || frames.isEmpty()) {
             if (WARNED.add("card:" + model)) Mmorpg.LOG.info("[vfx] fx model {} has no vanilla card", model);
             return false;
         }
         int view = (int) o.num("view", 0);
         int owner = (int) o.num("owner", o.num("follow", 0));
+        // 주인 기준: at 은 주인 기준 [오른쪽, 위, 앞] — 홀더 · 보는 사람은 주인 자리로
+        net.minecraft.world.entity.Entity follow = null;
+        Vec3 near = at;
+        if (o.has("follow")) {
+            follow = level.getEntity((int) o.num("follow", 0));
+            if (follow == null) return true;
+            near = follow.position();
+        }
         List<ServerPlayer> who = new ArrayList<>(plain.size());
         for (ServerPlayer sp : plain) {
-            if (sp.level() != level || sp.position().distanceToSqr(at) > RANGE * RANGE) continue;
+            if (sp.level() != level || sp.position().distanceToSqr(near) > RANGE * RANGE) continue;
             if (view != 0) {
                 boolean ownerFp = sp.getId() == owner && !isThird(sp);
                 if (view == 1 && ownerFp || view == 2 && !ownerFp) continue;
@@ -292,11 +306,43 @@ public final class PBridge {
             dropped++;
             return true;
         }
-        Batch b = new Batch(level, at, who);
-        b.card = new Card(b, frames, at, o);
+        Batch b = new Batch(level, near, who);
+        b.card = new Card(b, model, frames, at, o, follow);
+        if (id != 0) {
+            b.card.id = id;
+            BY_ID.put(id, b.card);
+        }
         b.attach();
         cards++;
         return true;
+    }
+
+    /** Fx3d.move · moveBack: 띄운 카드를 지금 그려지는 자리에서 to (세계 · 주인 기준이면 그 틀) 로 seconds 초에 */
+    public static void cardMove(int id, Vec3 to, double seconds, String ease, boolean back) {
+        Card c = BY_ID.get(id);
+        if (c == null || c.dead) return;
+        double[] p = c.posAt(c.age);
+        c.moveFrom = new Vec3(p[0], p[1], p[2]);
+        c.moveTo = to;
+        c.moveStart = c.age;
+        c.moveDur = Math.max(0.01, seconds);
+        c.moveEase = ease(ease);
+        c.moveBack = back;
+    }
+
+    /** Fx3d.anim: 카드의 움직임을 바꿈 (처음부터 · loop 면 되풀이) */
+    public static void cardAnim(int id, String anim, boolean loop) {
+        Card c = BY_ID.get(id);
+        if (c == null || c.dead) return;
+        c.setAnim(anim, loop, Math.max(0, c.age / 20.0 - c.delay));
+    }
+
+    /** Fx3d.kill: fade 초 동안 흐려지며 지움 */
+    public static void cardKill(int id, double fade) {
+        Card c = BY_ID.get(id);
+        if (c == null || c.dead || c.killAt >= 0) return;
+        c.killAt = c.age;
+        c.killFade = Math.max(0, fade);
     }
 
     // ------------------------------------------------------------ 효과 묶음 (한 번 뿜은 것 — 세계의 한 점에 붙은 홀더)
@@ -629,21 +675,46 @@ public final class PBridge {
 
     // ------------------------------------------------------------ 카드 (Fx3d 2D 판 — 휘두른 자국)
 
-    /** Fx3d 판 하나 (client FxModels 와 같은 자리 · 방향 · 크기 · 투명 · 칸 — 겹은 한 글줄에 겹쳐 그림: 몸 → 빛) */
+    /**
+     * Fx3d 판 하나 (client FxModels 와 같은 자리 · 방향 · 크기 · 투명 · 칸 — 겹은 한 글줄에 겹쳐 그림: 몸 → 빛). 2026-11-14 모드의 셈을 모두: 곧게 · 곡선 길 · 도는 길
+     * (orbit — 반지름이 늚 · 흔들림) · 주인 기준 (follow — 주인의 자리 · 보는 쪽 틀) · 옮기기 (Fx3d.move — 지금 자리에서) · 휘두름 (arc — 축 둘레로 dir · face) ·
+     * 쥔 곳 (grip — 이 점을 중심으로 돎) · 돌기 (spin — 판 안 z · 세계 위 up · x · y) · 가는 쪽 (align) · 축마다 늘임 (stretch) · 움직임 이름 (모델 JSON 의 anims —
+     * idle · open · grasp …) · 지우기 (Fx3d.kill — 흐려짐)
+     */
     static final class Card {
         final Batch batch;
+        final String model;
         final List<Layer[]> frames;
         final TextDisplayElement e;
         final Vec3 at;
         final Vec3 dir0;
         final Vec3 face0;
         final double roll;
+        final double spin;
+        final int spinAxis;
         final Vec3 vel;
         final Vec3 acc;
         final Vec3 to;
         final Vec3 ctrl;
         final double travel;
         final int ease;
+        final boolean orbit;
+        final double orbitR;
+        final double orbitW;
+        final double orbitA;
+        final double orbitGrow;
+        final double bob;
+        final double bobHz;
+        final Vec3 arcAxis;
+        final double arcDeg;
+        final double arcTime;
+        final int arcEase;
+        final Vec3 grip;
+        final Vec3 stretch;
+        final net.minecraft.world.entity.Entity follow;
+        Vec3 lastBase;
+        double lastYaw;
+        final boolean align;
         final double life;
         final double scale;
         final double grow;
@@ -655,10 +726,21 @@ public final class PBridge {
         final double delay;
         final int[] color;
         final boolean faceCam;
-        final boolean anim;
+        String animName;
+        PDefs.CardAnim animDef;
         final double animSpeed;
         final double animPhase;
-        final boolean loop;
+        boolean loop;
+        double animT0;
+        Vec3 moveFrom;
+        Vec3 moveTo;
+        int moveStart = -1;
+        double moveDur;
+        int moveEase;
+        boolean moveBack;
+        int killAt = -1;
+        double killFade;
+        int id;
         int age;
         int frame = -1;
         int opacity = -1;
@@ -667,13 +749,22 @@ public final class PBridge {
         boolean dead;
         Vec3 pos;
 
-        Card(Batch batch, List<Layer[]> frames, Vec3 at, Opt o) {
+        Card(Batch batch, String model, List<Layer[]> frames, Vec3 at, Opt o, net.minecraft.world.entity.Entity follow) {
             this.batch = batch;
+            this.model = model;
             this.frames = frames;
             this.at = at;
+            this.follow = follow;
             this.dir0 = o.vec("dir", new Vec3(0, 1, 0));
             this.face0 = o.vec("face", Vec3.ZERO);
             this.roll = o.num("roll", 0);
+            this.spin = o.num("spin", 0);
+            this.spinAxis = switch (o.str("spinAxis", "y")) {
+                case "x" -> 1;
+                case "z" -> 2;
+                case "up" -> 3;
+                default -> 0;
+            };
             this.vel = o.vec("vel", Vec3.ZERO);
             this.acc = o.vec("acc", Vec3.ZERO);
             if (o.has("to")) {
@@ -686,6 +777,27 @@ public final class PBridge {
             this.life = Math.max(0.05, o.num("life", 1));
             this.travel = Math.max(0.01, o.num("travel", life));
             this.ease = ease(o.str("ease", null));
+            this.orbit = o.has("orbit");
+            this.orbitR = o.num("orbit", 1);
+            this.orbitW = o.num("orbitSpeed", 180);
+            this.orbitA = o.num("orbitAngle", 0);
+            this.orbitGrow = o.num("orbitGrow", 0);
+            this.bob = o.num("bob", 0);
+            this.bobHz = o.num("bobHz", 1);
+            if (o.has("arc")) {
+                arcAxis = o.vec("arcAxis", new Vec3(0, 1, 0));
+                arcDeg = o.num("arc", 0);
+                arcTime = Math.max(0.01, o.num("arcTime", life));
+                arcEase = ease(o.str("arcEase", null));
+            } else {
+                arcAxis = null;
+                arcDeg = 0;
+                arcTime = 0;
+                arcEase = 0;
+            }
+            this.grip = o.vec("grip", Vec3.ZERO);
+            this.stretch = o.vec("stretch", new Vec3(1, 1, 1));
+            this.align = o.truthy("align");
             this.scale = o.num("scale", 1);
             this.grow = o.num("grow", 0);
             this.pop = o.num("pop", 0);
@@ -696,12 +808,12 @@ public final class PBridge {
             this.delay = o.num("delay", 0);
             double[] c = o.color("color", new double[] {1, 1, 1});
             double[] g = o.color("glow", c);
-            this.color = new int[] {rgb(c[0], c[1], c[2]), rgb(g[0], g[1], g[2])};
-            this.faceCam = o.truthy("faceCam");
-            this.anim = !o.str("anim", "").isEmpty();
+            this.color = new int[] {rgb(c[0], c[1], c[2]), rgb(g[0], g[1], g[2]), 0xFFFFFF};
+            // 구운 판 (입체 모델의 앞모습) 은 늘 보는 사람 쪽 — 옆에서 얇게 보이지 않게
+            this.faceCam = o.truthy("faceCam") || PDefs.bill(model);
             this.animSpeed = o.num("animSpeed", 1);
             this.animPhase = o.num("animPhase", 0);
-            this.loop = o.truthy("loop");
+            setAnim(o.str("anim", ""), o.truthy("loop"), 0);
             this.e = new TextDisplayElement();
             e.setBackground(0);
             e.setDefaultBackground(false);
@@ -719,30 +831,95 @@ public final class PBridge {
             first = false;
         }
 
+        void setAnim(String name, boolean loop, double t0) {
+            this.animName = name == null ? "" : name;
+            this.animDef = PDefs.cardAnim(model, animName);
+            this.loop = loop;
+            this.animT0 = t0;
+        }
+
         boolean step() {
             if (dead) return false;
             age++;
             double t = age / 20.0 - delay;
             if (t > life) return false;
+            if (killAt >= 0 && (age - killAt) / 20.0 >= killFade) return false;
             apply();
             return true;
+        }
+
+        private double bobAt(double tf) {
+            return bob != 0 ? bob * Math.sin(Math.PI * 2 * bobHz * tf) : 0;
+        }
+
+        /** t 초의 자리 · 가는 쪽 (주인 기준이면 그 틀 — client FxModels.localPos): {x, y, z, 가는 쪽 x, y, z} */
+        double[] localPos(double t) {
+            double tf = Math.max(0, t);
+            if (orbit) {
+                double r = orbitR + orbitGrow * tf;
+                double a = Math.toRadians(orbitA + orbitW * tf);
+                double b = bob != 0 ? bob * Math.sin(Math.PI * 2 * bobHz * tf + a) : 0;
+                double sg = orbitW >= 0 ? 1 : -1;
+                return new double[] {at.x + Math.cos(a) * r, at.y + b, at.z + Math.sin(a) * r, -Math.sin(a) * sg, 0, Math.cos(a) * sg};
+            }
+            if (to != null) {
+                double k = easeK(ease, tf / travel);
+                double a = (1 - k) * (1 - k);
+                double b = 2 * (1 - k) * k;
+                double c = k * k;
+                return new double[] {a * at.x + b * ctrl.x + c * to.x, a * at.y + b * ctrl.y + c * to.y + bobAt(tf), a * at.z + b * ctrl.z + c * to.z,
+                    2 * (1 - k) * (ctrl.x - at.x) + 2 * k * (to.x - ctrl.x), 2 * (1 - k) * (ctrl.y - at.y) + 2 * k * (to.y - ctrl.y),
+                    2 * (1 - k) * (ctrl.z - at.z) + 2 * k * (to.z - ctrl.z)};
+            }
+            return new double[] {at.x + vel.x * tf + 0.5 * acc.x * tf * tf, at.y + vel.y * tf + 0.5 * acc.y * tf * tf + bobAt(tf),
+                at.z + vel.z * tf + 0.5 * acc.z * tf * tf, vel.x + acc.x * tf, vel.y + acc.y * tf, vel.z + acc.z * tf};
+        }
+
+        /** 틱 ticks (태어난 뒤) 의 자리 — 옮기는 중이면 그 길 위 (client FxModels.posAt) */
+        double[] posAt(int ticks) {
+            double[] p = localPos(ticks / 20.0 - delay);
+            if (moveStart < 0) return p;
+            double k = Math.max(0, Math.min(1, (ticks - moveStart) / 20.0 / moveDur));
+            double m = easeK(moveEase, k);
+            double sg = moveBack ? -1 : 1;
+            return new double[] {moveFrom.x + (moveTo.x - moveFrom.x) * m, moveFrom.y + (moveTo.y - moveFrom.y) * m, moveFrom.z + (moveTo.z - moveFrom.z) * m,
+                sg * (moveTo.x - moveFrom.x), sg * (moveTo.y - moveFrom.y), sg * (moveTo.z - moveFrom.z)};
+        }
+
+        private void hide() {
+            if (hidden) return;
+            hidden = true;
+            e.setInterpolationDuration(0);
+            e.setScale(new Vector3f());
+            e.startInterpolationIfDirty();
         }
 
         void apply() {
             double t = age / 20.0 - delay;
             int dur = first ? 0 : 1;
             if (t < 0) return;
+            float tf = (float) t;
             float tn = (float) Math.max(0, Math.min(1, t / Math.max(0.01, life)));
-            // 자리 (곧게 · 곡선 길)
+            double[] lp = posAt(age);
+            // 주인 기준 [오른쪽, 위, 앞] → 세계 (주인이 사라지면 마지막 자리)
+            double sy = 0;
+            double cy = 1;
             Vec3 p;
-            if (to != null) {
-                double k = easeK(ease, t / travel);
-                double a = (1 - k) * (1 - k);
-                double b = 2 * (1 - k) * k;
-                double c = k * k;
-                p = new Vec3(a * at.x + b * ctrl.x + c * to.x, a * at.y + b * ctrl.y + c * to.y, a * at.z + b * ctrl.z + c * to.z);
+            if (follow != null) {
+                if (!follow.isRemoved()) {
+                    lastBase = follow.position();
+                    lastYaw = follow.getYRot();
+                }
+                if (lastBase == null) {
+                    hide();
+                    return;
+                }
+                double yr = Math.toRadians(lastYaw);
+                sy = Math.sin(yr);
+                cy = Math.cos(yr);
+                p = new Vec3(lastBase.x - cy * lp[0] - sy * lp[2], lastBase.y + lp[1], lastBase.z - sy * lp[0] + cy * lp[2]);
             } else {
-                p = new Vec3(at.x + vel.x * t + 0.5 * acc.x * t * t, at.y + vel.y * t + 0.5 * acc.y * t * t, at.z + vel.z * t + 0.5 * acc.z * t * t);
+                p = new Vec3(lp[0], lp[1], lp[2]);
             }
             // 크기 · 투명
             double s = scale;
@@ -752,11 +929,16 @@ public final class PBridge {
             double a = alpha;
             if (fadeIn > 0) a *= Math.max(0, Math.min(1, t / fadeIn));
             if (fadeOut > 0) a *= Math.max(0, Math.min(1, (life - t) / fadeOut));
+            if (killAt >= 0) a *= killFade <= 0 ? 0 : Math.max(0, 1 - (age - killAt) / 20.0 / killFade);
             int o = (int) Math.round(Math.max(0, Math.min(1, a)) * 255);
-            // 칸 (anim play — 칸마다 같은 길이)
+            // 칸: 모델의 움직임 (이름 — 구간마다 보이는 칸) · 이름만 있고 정의가 없으면 칸마다 같은 길이 (예전 play)
             int f = 0;
-            if (anim && frames.size() > 1) {
-                double u = (t * animSpeed + animPhase);
+            if (animDef != null) {
+                double u = ((t - animT0) * animSpeed + animPhase) / animDef.len();
+                u = loop ? u - Math.floor(u) : Math.max(0, Math.min(1, u));
+                f = animDef.frameAt(u);
+            } else if (!animName.isEmpty() && frames.size() > 1) {
+                double u = (t - animT0) * animSpeed + animPhase;
                 u = loop ? u - Math.floor(u) : Math.max(0, Math.min(1, u));
                 f = Math.min(frames.size() - 1, (int) Math.floor(u * frames.size()));
             }
@@ -765,13 +947,8 @@ public final class PBridge {
                 e.setTeleportDuration(dur);
                 e.setOffset(p.subtract(batch.origin));
             }
-            if (o < MIN_OPACITY || s <= 0.001) {
-                if (!hidden) {
-                    hidden = true;
-                    e.setInterpolationDuration(0);
-                    e.setScale(new Vector3f());
-                    e.startInterpolationIfDirty();
-                }
+            if (o < MIN_OPACITY || s <= 0.001 || f < 0 || f >= frames.size()) {
+                hide();
                 return;
             }
             boolean wasHidden = hidden;
@@ -783,7 +960,8 @@ public final class PBridge {
                 for (int i = 0; i < ls.length; i++) {
                     Layer l = ls[i];
                     if (i > 0) text.append(Component.literal(back(ls[i - 1].adv())).withStyle(Style.EMPTY.withFont(font)));
-                    text.append(Component.literal(new String(Character.toChars(l.glyph()))).withStyle(Style.EMPTY.withFont(font).withColor(color[Math.min(1, l.mat())])));
+                    text.append(Component.literal(new String(Character.toChars(l.glyph()))).withStyle(Style.EMPTY.withFont(font).withColor(color[Math.max(0,
+                            Math.min(2, l.mat()))])));
                 }
                 e.setText(text);
             }
@@ -791,14 +969,39 @@ public final class PBridge {
                 opacity = o;
                 e.setTextOpacity((byte) Math.min(255, o));
             }
-            // 방향: Y = dir, Z = face (또는 보는 사람), X = Y × Z, dir 둘레로 roll
-            Vector3f Y = new Vector3f((float) dir0.x, (float) dir0.y, (float) dir0.z);
+            // 방향 (client FxModels 와 같은 차례): 세계 위 둘레로 도는 카메라 판 (spin up + faceCam) → 휘두름 (arc) → 주인 틀 → Y = dir (또는 가는 쪽) ·
+            // Z = face (또는 보는 사람) · X = Y × Z → roll → 돌기 (spin)
+            Vector3f dir = new Vector3f((float) dir0.x, (float) dir0.y, (float) dir0.z);
+            Vector3f face = new Vector3f((float) face0.x, (float) face0.y, (float) face0.z);
+            Vector3f tan = new Vector3f((float) lp[3], (float) lp[4], (float) lp[5]);
+            boolean camSpinUp = faceCam && spinAxis == 3 && spin != 0;
+            if (camSpinUp) {
+                float su = (float) Math.toRadians(spin * tf);
+                Vector3f up = new Vector3f(0, 1, 0);
+                rotateAbout(dir, up, su);
+                rotateAbout(face, up, su);
+            }
+            if (arcTime > 0) {
+                Vector3f ax = new Vector3f((float) arcAxis.x, (float) arcAxis.y, (float) arcAxis.z);
+                if (ax.lengthSquared() > 1e-8F) {
+                    ax.normalize();
+                    float th = (float) Math.toRadians(arcDeg * easeK(arcEase, tf / arcTime));
+                    rotateAbout(dir, ax, th);
+                    rotateAbout(face, ax, th);
+                }
+            }
+            if (follow != null) {
+                dir = local(dir, sy, cy);
+                face = local(face, sy, cy);
+                tan = local(tan, sy, cy);
+            }
+            Vector3f Y = align && tan.lengthSquared() > 1e-6F ? new Vector3f(tan) : new Vector3f(dir);
             if (Y.lengthSquared() < 1e-8F) Y.set(0, 1, 0);
             Y.normalize();
             Vector3f Z;
             Vec3 toEye = batch.eye.subtract(p);
             if (faceCam) Z = new Vector3f((float) toEye.x, (float) toEye.y, (float) toEye.z);
-            else if (face0.lengthSqr() > 1e-6) Z = new Vector3f((float) face0.x, (float) face0.y, (float) face0.z);
+            else if (face.lengthSquared() > 1e-6F) Z = new Vector3f(face);
             else Z = new Vector3f(0, 1, 0);
             Z.sub(new Vector3f(Y).mul(Z.dot(Y)));
             if (Z.lengthSquared() < 1e-6F) {
@@ -809,19 +1012,31 @@ public final class PBridge {
             Vector3f X = new Vector3f(Y).cross(Z).normalize();
             Quaternionf q = basis(X, Y, Z);
             if (roll != 0) q.rotateY((float) Math.toRadians(roll));
+            float sp = camSpinUp ? 0F : (float) Math.toRadians(spin * tf);
+            if (sp != 0) {
+                switch (spinAxis) {
+                    case 1 -> q.rotateX(sp);
+                    case 2 -> q.rotateZ(sp);
+                    case 3 -> q = new Quaternionf().rotationY(sp).mul(q);
+                    default -> q.rotateY(sp);
+                }
+            }
             Vector3f n = q.transform(new Vector3f(0, 0, 1));
             if (n.x * toEye.x + n.y * toEye.y + n.z * toEye.z < 0) q.rotateY((float) Math.PI);
             Layer l0 = ls[ls.length - 1];
             double unit = PDefs.glyphH * TEXT_UNIT;
             float k = (float) (2 * l0.hh() * s / unit);
-            // 글줄 너비 = 마지막 겹의 advance (겹은 같은 너비) — 그림 너비와의 차이만큼 가운데 맞춤 · 모델 자리 (판 가운데)
+            float kx = (float) (k * stretch.x);
+            float ky = (float) (k * stretch.y);
+            // 글줄 너비 = 마지막 겹의 advance (겹은 같은 너비) — 그림 너비와의 차이만큼 가운데 맞춤 · 모델 자리 (판 가운데) − 쥔 곳
             double gw = PDefs.glyphH * (l0.hw() / Math.max(1e-6, l0.hh()));
-            float cx = (float) ((l0.adv() - gw) / 2 * TEXT_UNIT * k);
-            Vector3f tr = q.transform(new Vector3f(cx + (float) (l0.x() * s), (float) (l0.y() * s), (float) (l0.z() * s)));
+            float cx = (float) ((l0.adv() - gw) / 2 * TEXT_UNIT * kx);
+            Vector3f tr = q.transform(new Vector3f(cx + (float) ((l0.x() - grip.x) * s * stretch.x), (float) ((l0.y() - grip.y) * s * stretch.y),
+                    (float) ((l0.z() - grip.z) * s * stretch.z)));
             e.setInterpolationDuration(wasHidden ? 0 : dur);
             e.setTranslation(tr);
             e.setLeftRotation(q);
-            e.setScale(new Vector3f(k, k, 1));
+            e.setScale(new Vector3f(kx, ky, 1));
             e.setRightRotation(new Quaternionf());
             e.startInterpolationIfDirty();
         }
@@ -830,8 +1045,26 @@ public final class PBridge {
             if (dead) return;
             dead = true;
             live--;
+            if (id != 0 && BY_ID.get(id) == this) BY_ID.remove(id);
             batch.removeElement(e);
         }
+    }
+
+    /** 주인 기준 [오른쪽, 위, 앞] → 세계 (보는 쪽 sin · cos — client FxModels.local) */
+    static Vector3f local(Vector3f l, double sy, double cy) {
+        return new Vector3f((float) (-cy * l.x - sy * l.z), l.y, (float) (-sy * l.x + cy * l.z));
+    }
+
+    /** v 를 축 ax (단위) 둘레로 th 라디안 (로드리게스 — client FxModels.rotateAbout) */
+    static void rotateAbout(Vector3f v, Vector3f ax, float th) {
+        if (v.lengthSquared() < 1e-10F) return;
+        float c = (float) Math.cos(th);
+        float s = (float) Math.sin(th);
+        float d = v.dot(ax);
+        float cx = ax.y * v.z - ax.z * v.y;
+        float cy = ax.z * v.x - ax.x * v.z;
+        float cz = ax.x * v.y - ax.y * v.x;
+        v.set(v.x * c + cx * s + ax.x * d * (1 - c), v.y * c + cy * s + ax.y * d * (1 - c), v.z * c + cz * s + ax.z * d * (1 - c));
     }
 
     /** 뒤로 n 단위 옮기는 글자들 (space 글자 −2^b) */

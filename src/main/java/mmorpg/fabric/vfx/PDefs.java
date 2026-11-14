@@ -91,8 +91,23 @@ public final class PDefs {
         }
     }
 
-    /** 카드 (Fx3d 판) 의 겹 하나: 글자 · mat (0 몸 = color, 1 빛 = glow) · 모델 자리 · 반 크기 */
+    /** 카드 (Fx3d 판) 의 겹 하나: 글자 · mat (0 몸 = color, 1 빛 = glow, 2 흰색 — 색을 구워 넣은 그림) · 모델 자리 · 반 크기 */
     record Layer(int glyph, int mat, double x, double y, double z, double hw, double hh, int adv) {}
+
+    /**
+     * 2026-11-14 카드의 움직임 (모델 JSON 의 anims — 부분마다 scale 열쇠로 한 칸만 켬): len 초 · u (0 ~ 1) 구간마다 보이는 칸 (from 오름 · -1 = 없음).
+     * 모드 FxModels 와 같은 셈 — u = ((t − 바꾼 때) × animSpeed + animPhase) / len
+     */
+    record CardAnim(double len, double[] from, int[] frame) {
+        int frameAt(double u) {
+            int f = frame.length > 0 ? frame[0] : 0;
+            for (int i = 0; i < from.length; i++) {
+                if (u + 1e-6 >= from[i]) f = frame[i];
+                else break;
+            }
+            return f;
+        }
+    }
 
     /** 파티클 하나의 정의 */
     static final class Def {
@@ -139,6 +154,9 @@ public final class PDefs {
 
     private static Def[] defs = new Def[0];
     private static final Map<String, List<Layer[]>> CARDS = new HashMap<>();
+    private static final Map<String, Map<String, CardAnim>> CARD_ANIMS = new HashMap<>();
+    /** 늘 보는 사람 쪽으로 돌리는 카드 (입체 모델을 앞에서 본 그림으로 구운 것 — 명계의 문 · 망자의 손) */
+    private static final java.util.Set<String> BILL = new java.util.HashSet<>();
     /** 글꼴 */
     static String font = "rpg:vfxp";
     static int glyphH = 64;
@@ -152,6 +170,17 @@ public final class PDefs {
 
     static List<Layer[]> card(String model) {
         return CARDS.get(model);
+    }
+
+    /** 카드의 움직임 (없으면 null) */
+    static CardAnim cardAnim(String model, String anim) {
+        if (anim == null || anim.isEmpty()) return null;
+        Map<String, CardAnim> m = CARD_ANIMS.get(model);
+        return m == null ? null : m.get(anim);
+    }
+
+    static boolean bill(String model) {
+        return BILL.contains(model);
     }
 
     /** 서버를 켤 때 한 번 */
@@ -193,6 +222,27 @@ public final class PDefs {
                 }
                 CARDS.put((String) e.getKey(), frames);
             }
+        }
+        if (glyphs.get("cardAnims") instanceof Map<?, ?> am) {
+            for (Map.Entry<?, ?> e : am.entrySet()) {
+                Map<String, CardAnim> anims = new HashMap<>();
+                for (Map.Entry<?, ?> a : ((Map<?, ?>) e.getValue()).entrySet()) {
+                    Map<String, Object> ad = (Map<String, Object>) a.getValue();
+                    List<?> seq = (List<?>) ad.get("seq");
+                    double[] from = new double[seq.size()];
+                    int[] frame = new int[seq.size()];
+                    for (int i = 0; i < from.length; i++) {
+                        List<?> s = (List<?>) seq.get(i);
+                        from[i] = dbl(s.get(0));
+                        frame[i] = num(s.get(1));
+                    }
+                    anims.put((String) a.getKey(), new CardAnim(Math.max(0.01, dbl(ad.get("len"))), from, frame));
+                }
+                CARD_ANIMS.put((String) e.getKey(), anims);
+            }
+        }
+        if (glyphs.get("cardBill") instanceof List<?> bl) {
+            for (Object b : bl) BILL.add((String) b);
         }
         String text;
         try (InputStream in = PDefs.class.getResourceAsStream("/assets/mmorpg/addon_particles.json")) {

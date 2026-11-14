@@ -201,8 +201,19 @@ final class JobFx {
         // 0.47.0 더 화려하게: 조금 크고 조금 기운 잔상 한 겹 (옅게 — 두 겹의 칼빛)
         two(sp.level(), name, frames, V.add(at, look, 0.15), life * 0.9, own.with("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2,
                 "alpha", 0.42, "coreAlpha", 0.3), outer(j), inner(j));
-        // 0.50.0 3인칭 · 다른 사람: 카메라를 보는 그림 대신 세상에 놓인 참격 판 (휘두른 면 — 불룩한 날이 보는 쪽 · 가로 휘두름은 누운 판)
+        // 0.50.0 3인칭 · 다른 사람: 카메라를 보는 그림 대신 세상에 놓인 참격 판 — 2026-11-14 앞을 봄 (1인칭 눈앞 베기와 같은 모습이 같은 자리에 섬) · 1인칭처럼
+        // 조금 크고 기운 옅은 잔상 판 한 겹 (사용자 "참격이 잘 안보임" — 트리니티 엣지)
         slashCard(sp.level(), at, look, tilt, size * CARD, life, RuneKit.bodyVel(sp), j, hide1p(sp));
+        slashCard(sp.level(), V.add(at, look, 0.15), look, tilt + 7, size * CARD * 1.14, life * 0.9, RuneKit.bodyVel(sp), j, hide1p(sp).with("alpha", 0.45));
+    }
+
+    /**
+     * 참격 판의 방향 (2026-11-14 사용자 도감 메모 "참격이 앞을 안보고 있음" — 휘두른 면에 선 판은 옆 · 뒤에서 옆을 보는 초승달 "(" 로 보였음): FRONT = 앞을 봄
+     * (판의 면이 dir — 1인칭 눈앞 베기 rfx_jslash 와 같은 모습 · 기울기가 세상에 섬, 뒤 · 3인칭에서 넓은 면), UP = 위를 봄 (땅과 나란히 누움 — 불룩한 날이 dir 의
+     * 수평 쪽), SWING = 휘두른 면 (예전 — 불룩한 날이 dir 쪽 · 가로 휘두름은 보는 사람마다 dir 둘레로 돎: 날아가는 검기)
+     */
+    enum CardFace {
+        FRONT, UP, SWING
     }
 
     /** 참격 판 빛: 겉빛 */
@@ -210,8 +221,11 @@ final class JobFx {
         return outer(j);
     }
 
-    /** 참격 판의 크기 (파티클 size 의 몫 — 파티클은 1인칭 눈앞 화면을 채우게 커서, 세상에 놓으면 몸보다 너무 큼 · 룬 ARC_CARD 와 같은 뜻) */
-    static final double CARD = 0.75;
+    /**
+     * 참격 판의 크기 (파티클 size 의 몫 — 파티클은 1인칭 눈앞 화면을 채우게 커서, 세상에 놓으면 몸보다 너무 큼 · 룬 ARC_CARD 와 같은 뜻). 2026-11-14 앞을 보는 판으로 바꾸며
+     * 0.75 → 0.88 (뒤에서 넓은 면이 보이므로 1인칭 그림에 가깝게)
+     */
+    static final double CARD = 0.88;
 
     /**
      * 0.50.0 직업 참격 판 (사용자 "참격 방향 잡혀있는지 확인하고" — fxmodel slash_job: rfx_jslash 여덟 장을 붙인 판, 불룩한 날 = 판의 +Y): 불룩한 날이 dir 쪽,
@@ -219,13 +233,36 @@ final class JobFx {
      * 넓은 면을 보임 — RuneKit.faceCamIfFlat), 세로 휘두름은 선 판. vel = 같이 움직임 (칸/초). view = 보는 사람 걸러내기 (hide1p · only1p)
      */
     static void slashCard(ServerLevel level, Vec3 at, Vec3 dir, double tilt, double size, double life, Vec3 vel, Jobs.Job j, Opt view) {
+        slashCard(level, at, dir, tilt, size, life, vel, j, view, CardFace.FRONT);
+    }
+
+    /**
+     * 같은 것 — 방향 정함. FRONT: 판의 면 = dir 의 반대 (dir 쪽을 보는 사람에게 앞면), 불룩한 날 = 화면 아래를 tilt 도 반시계로 돌린 쪽 (rfx_jslash 의 spin 과 같은 뜻 —
+     * 0 = 아래로 불룩, 판 모델은 그림을 180° 돌려 불룩한 날이 +Y 라 그 사람 눈에 그림 그대로). UP: 면 = 위, 불룩한 날 = dir 의 수평을 위에서 tilt 도 돌린 쪽
+     */
+    static void slashCard(ServerLevel level, Vec3 at, Vec3 dir, double tilt, double size, double life, Vec3 vel, Jobs.Job j, Opt view, CardFace face) {
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
         double lf = Math.max(0.05, life);
         double roll = -tilt;
         Opt card = Opt.of("dir", d, "face", V.UP, "roll", roll, "scale", size, "life", lf, "grow", 0.15, "vel", vel, "anim", "play", "animSpeed", 1.0 / lf,
-                "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", cardColor(j), "glow", inner(j), "alpha", 0.95, "shine", 0.15, "view", view.num("view", 0),
-                "owner", view.num("owner", 0));
-        mmorpg.fabric.Fx3d.spawn(level, slashModel(j), at, RuneKit.faceCamIfFlat(card, d, V.UP, roll));
+                "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", cardColor(j), "glow", inner(j), "alpha", view.num("alpha", 0.95), "shine", 0.15, "view",
+                view.num("view", 0), "owner", view.num("owner", 0));
+        switch (face) {
+            case FRONT -> {
+                Vec3 up = screenUp(d);
+                Vec3 right = V.cross(d, up);
+                right = V.len(right) > 1e-6 ? V.unit(right) : V.rightOf(V.flat(d).lengthSqr() > 1e-6 ? V.unit(V.flat(d)) : new Vec3(0, 0, 1));
+                double a = Math.toRadians(tilt);
+                Vec3 bulge = V.unit(V.add(V.scale(up, -Math.cos(a)), right, Math.sin(a)));
+                mmorpg.fabric.Fx3d.spawn(level, slashModel(j), at, card.with("dir", bulge, "face", V.scale(d, -1), "roll", 0.0));
+            }
+            case UP -> {
+                Vec3 h = V.flat(d);
+                h = V.len(h) > 1e-6 ? V.unit(h) : new Vec3(0, 0, 1);
+                mmorpg.fabric.Fx3d.spawn(level, slashModel(j), at, card.with("dir", V.turnY(h, tilt), "face", V.UP, "roll", 0.0));
+            }
+            default -> mmorpg.fabric.Fx3d.spawn(level, slashModel(j), at, RuneKit.faceCamIfFlat(card, d, V.UP, roll));
+        }
     }
 
     /**
@@ -236,7 +273,7 @@ final class JobFx {
         ServerLevel level = sp.level();
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
         two(level, slashName(j), slashFrames(j), at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
-        slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp));
+        slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp), CardFace.SWING);
     }
 
     /**

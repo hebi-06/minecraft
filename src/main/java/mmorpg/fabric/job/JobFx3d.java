@@ -92,7 +92,9 @@ final class JobFx3d {
 
     /**
      * 0.50.0 (사용자 "직업 스킬들 중에서 지금 사신 궁 제외 3d로 되어있는 애들 2d로 다시 바꾸자 대신 엄청 고퀄로 다듬어야 함"): 입체 모델 → 같은 크기 · 같은 쥔 곳의
-     * 2D 그림 판 (tools/fx_models_card2d.py — v2 그림 두 겹). 사신의 니플헤임의 문 (gate) · 망자의 손 (bone_hand) 은 입체 그대로
+     * 2D 그림 판 (tools/fx_models_card2d.py — v2 그림 두 겹). 사신의 니플헤임의 문 (gate) · 망자의 손 (bone_hand) 은 입체 그대로.
+     * 2026-11-14 모드 없는 클라이언트: 이 판들 (움직임 · 주인 기준 · 도는 길 · 휘두름까지) 은 vfx.PBridge 카드로, 문 · 손은 앞에서 본 그림으로 구운 판
+     * (tools/vfx_bake3d.py) 으로 보임 — 전에는 카드 목록에 없어 통째로 빠졌음
      */
     static final Map<String, String> CARDS = Map.ofEntries(Map.entry("phantom_sword", "card_sword"), Map.entry("phantom_axe", "card_axe"),
             Map.entry("spear", "card_spear"), Map.entry("light_arrow", "card_arrow"), Map.entry("dagger", "card_dagger"), Map.entry("mana_bolt", "card_bolt"),

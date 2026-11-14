@@ -69,7 +69,7 @@ final class SoulreaperSkills {
             double a = (cw ? 1 : -1) * (q * 60.0 - 60);
             Vec3 d = V.turnY(f, a);
             Vec3 at = V.up(V.add(c, d, r * 0.55), 0.95);
-            RuneKit.later(q / 3, () -> JobFx.slashCard(level, at, d, cw ? 8.0 : -8.0, 1.8 * scale, 0.24, Vec3.ZERO, j, JobFx.hide1p(sp)));
+            RuneKit.later(q / 3, () -> JobFx.slashCard(level, at, d, cw ? 8.0 : -8.0, 1.8 * scale, 0.24, Vec3.ZERO, j, JobFx.hide1p(sp), JobFx.CardFace.UP));
         }
         JobFx.whirl(level, V.up(c, 0.9), r * 0.95, j, 0.3, Opt.of("alpha", 0.9));
         JobFx.ring(level, V.up(c, 0.08), r, j, !cw, 0.35, Opt.empty());

@@ -349,7 +349,8 @@ final class SpellbladeSkills {
             for (int q = 0; q < 6; q++) {
                 double ang = Math.toRadians(q * 60 + Kit.rand() * 20);
                 Vec3 p = V.add(g, new Vec3(Math.cos(ang), 0, Math.sin(ang)), r * 0.6);
-                JobFx.bigWave(lv, null, V.up(p, 0.4), V.UP, 18.0, 1.6, 90 + (Kit.rand() - 0.5) * 30, 0.4, j, Opt.empty());
+                // 2026-11-14 사용자 도감 메모 "참격이 위로 보이게 수정": 세로 (90° — 옆을 보는 "(") → 가로 (0° — 위로 불룩한 초승달이 솟음)
+                JobFx.bigWave(lv, null, V.up(p, 0.4), V.UP, 18.0, 1.6, (Kit.rand() - 0.5) * 20, 0.4, j, Opt.empty());
             }
             JobFx.burst(lv, V.up(g, 1.2), 3.0, j, 0.45, Opt.empty());
             JobFx.ring(lv, V.up(g, 0.08), r, j, true, 0.45, Opt.of("alpha", 1.0));

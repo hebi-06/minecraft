@@ -105,7 +105,7 @@ final class BloodknightSkills {
         JobFx.slashCard(level, V.up(V.add(sp.position(), f, 1.9), 1.1), f, tilt, 5.6, 0.32, V.ZERO, j, JobFx.hide1p(sp));
         JobFx.slashWave(sp, j, tilt, 2.5, reach + 2.5, 26); // 0.51.0 핏빛 초승달 검기가 앞으로 뻗어 나감
         // 칼끝 자리: 누운 붉은 베인 줄 (앞 sweetFrom ~ reach)
-        JobFx.slashCard(level, V.up(V.add(sp.position(), f, (from + reach) / 2), 0.35), f, 0.0, 4.2, 0.4, V.ZERO, j, Opt.empty());
+        JobFx.slashCard(level, V.up(V.add(sp.position(), f, (from + reach) / 2), 0.35), f, 0.0, 4.2, 0.4, V.ZERO, j, Opt.empty(), JobFx.CardFace.UP);
         for (int q = 0; q < 8; q++) {
             double a = Math.toRadians(-50 + q * 100 / 7.0);
             Vec3 d = V.unit(V.add(V.scale(f, Math.cos(a)), V.rightOf(f), Math.sin(a)));
@@ -454,9 +454,10 @@ final class BloodknightSkills {
         JobFx.burst(level, V.up(hit, 0.6), 2.4, j, 0.42, Opt.empty());
         JobFx.smash(level, V.up(hit, 0.05), 3.2, j, 0.5, Opt.empty());
         splash(level, V.up(hit, 0.8), 1.6, j, 10);
-        Vec3 from = V.up(V.add(c0, f, lead), 1.9);
-        JobFx.bigWave(level, sp, from, f, speed, 3.8, 90, len / speed + 0.15, j, Opt.empty());
-        RuneKit.later(2, () -> JobFx.bigWave(level, null, from, f, speed, 3.0, 84, len / speed + 0.1, j, MOON_GLOW, MOON_CORE, Opt.of("alpha", 0.6)));
+        // 2026-11-14 사용자 도감 메모 "참격이 위를 보게": 세로 초승달 (90°) → 위로 불룩한 가로 초승달 (0°) 이 땅을 스치며 달림 — 아래 끝이 땅에 묻히지 않게 조금 낮춤
+        Vec3 low = V.up(V.add(c0, f, lead), 1.5);
+        JobFx.bigWave(level, sp, low, f, speed, 3.8, 0, len / speed + 0.15, j, Opt.empty());
+        RuneKit.later(2, () -> JobFx.bigWave(level, null, low, f, speed, 3.0, 6, len / speed + 0.1, j, MOON_GLOW, MOON_CORE, Opt.of("alpha", 0.6)));
         WarlordSkills.rift(level, ground(level, V.add(c0, f, lead)), f, len, JobFx.outer(j), 1.6, speed);
         SkillFx.shock(level, V.up(hit, 0.1), JobFx.outer(j), 4.0, 0.5);
         RuneKit.rockBurst(level, V.up(hit, 0.3), 10, 6.5, 0.2);
@@ -491,7 +492,7 @@ final class BloodknightSkills {
                 ServerLevel lv = sp.level();
                 Vec3 g = ground(lv, V.add(V.add(c0, f, ss), right, (Kit.rand() - 0.5) * 0.7));
                 double q = 1 - (ss - lead) / Math.max(1, len) * 0.3;
-                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 15.0, 1.8 * q, 90 + (Kit.rand() - 0.5) * 30, 0.36, j, Opt.empty());
+                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 15.0, 1.8 * q, (Kit.rand() - 0.5) * 20, 0.36, j, Opt.empty()); // 2026-11-14 위로 불룩 (위를 봄)
                 JobFx.spikeLife(lv, g, 1.1 * q, 0.1, 0.4, Opt.empty(), MOON_GLOW, MOON_CORE);
                 JobTraits5.blood(lv, V.up(g, 1.4), 1.4 * q, j, 0.4, Opt.empty());
                 SkillFx.sparks(lv, V.up(g, 1.0), JobFx.inner(j), 8, 6.0);

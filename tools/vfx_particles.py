@@ -17,6 +17,8 @@
 만 옮겨 직업 스킬의 참격 판 · 큰 검기 · 눈앞 베기 · 회전 베기가 모드 없는 클라이언트에서 통째로 빠졌음). 쓰지 않는 그림 (DEAD_J) 은 뺌. 직업 그림은 칸의 긴 변을
 줄여 넣음 (cap_for — 참격 · 검기 무리 HI_J 는 룬과 같은 128, 3D 몹을 못 세울 때만 쓰는 그림 LOW_J 는 64, 나머지는 그림 크기의 0.45 · 56 ~ 96) — 글꼴 그림은
 모두 메모리에 올라감. 직업 참격 판 (slash_job*) 도 카드에.
+2026-11-14 직업 스킬의 2D 물체 판 (JobFx3d.CARDS — card_*) 도 카드에 · 카드마다 움직임 (모델 JSON anims → 구간마다 보이는 칸 — cardAnims) · 입체 모델
+(사신 황천문의 명계의 문 · 망자의 손) 은 앞에서 본 그림으로 구워 (tools/vfx_bake3d.py — 칸마다 한 겹 mat 2, 보는 사람 쪽으로 돌림 cardBill).
 """
 import json
 import os
@@ -25,6 +27,9 @@ from io import BytesIO
 
 import numpy as np
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vfx_bake3d  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "src/main/resources")
@@ -56,8 +61,12 @@ LOW_J = {"rpg:rfx_jphoenix"}
 # 칸이 많은 작은 그림은 더 줄임 (타격 그림 132칸 — 화면에서 한 칸 남짓)
 CAP_OF = {"rpg:rfx_jhits": 64}
 # Fx3d 카드 (룬 휘두름 판 — RuneKit.arc · waveCard · groundCrescent) · 2026-11-14 직업 참격 판 (JobFx.slashCard — 공통 · 검사 · 전사 · 사신 · 마검사)
+# · 2026-11-14 직업 스킬의 2D 물체 판 (JobFx3d.CARDS — 환영 검 · 대검 · 도끼 · 창 · 화살 · 비수 · 마탄 · 구체 · 금서 · 책장 · 망치 · 종 · 방패 · 연 방패 · 활:
+# 전에는 카드 목록에 없어 모드 없는 클라이언트에서 통째로 빠졌음 — 헬름 브레이커의 머리 위 도끼 · 포비든 그리모어의 책 · 책장 …)
 CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heavy_soft", "slash_thin", "slash_thin_soft",
-         "slash_job", "slash_job_sw", "slash_job_wa", "slash_job_rp", "slash_job_sb"]
+         "slash_job", "slash_job_sw", "slash_job_wa", "slash_job_rp", "slash_job_sb",
+         "card_sword", "card_greatsword", "card_axe", "card_spear", "card_arrow", "card_dagger", "card_bolt", "card_orb", "card_tome", "card_page",
+         "card_maul", "card_bell", "card_buckler", "card_aegis", "card_bow"]
 
 
 def wanted(pid):
@@ -126,6 +135,53 @@ def particle_sheets(defs):
                 cells.append(shrink(im.crop((x0, y0, x1, y1)), cap))
         sheets[key] = (cells, [uw, vh], [cols, rows])
     return of, sheets
+
+
+def scale_at(keys, u):
+    """FxModels.sample 의 scale (smoothstep 열쇠 사이)"""
+    if not keys:
+        return 1.0
+    if u <= keys[0][0]:
+        return keys[0][1]
+    for a, b in zip(keys, keys[1:]):
+        if u <= b[0]:
+            k = (u - a[0]) / max(1e-5, b[0] - a[0])
+            k = k * k * (3 - 2 * k)
+            return a[1] + (b[1] - a[1]) * k
+    return keys[-1][1]
+
+
+def card_anims(m):
+    """카드 모델의 움직임 → {이름: {len, seq: [[u, 칸]]}} (칸 = 그림이 있는 부분의 차례 — card_layers 와 같음). 모드는 움직임의 부분마다 scale 열쇠로 한 칸만
+    켬 (1) · 나머지는 끔 (0): u 구간마다 켜진 칸 (구간 가운데에서 0.5 넘는 것 — 바뀌는 짧은 틈은 앞 칸 그대로). 열쇠가 없는 부분은 늘 켜짐"""
+    names = [p["name"] for p in m["parts"] if p["q"]]
+    out = {}
+    for an, a in (m.get("anims") or {}).items():
+        tracks = a.get("tracks", {})
+        cuts = {0.0, 1.0}
+        for nm in names:
+            for key in (tracks.get(nm, {}).get("scale") or []):
+                if 0 <= key[0] <= 1:
+                    cuts.add(round(key[0], 5))
+        cuts = sorted(cuts)
+        seq = []
+        for a0, a1 in zip(cuts, cuts[1:]):
+            if a1 - a0 < 1e-6:
+                continue
+            mid = (a0 + a1) / 2
+            best, bv = -1, 0.5
+            for fi, nm in enumerate(names):
+                tr = tracks.get(nm)
+                v = 1.0 if tr is None or "scale" not in tr else scale_at(tr["scale"], mid)
+                if v > bv:
+                    best, bv = fi, v
+            if best < 0 and seq:
+                continue
+            if seq and seq[-1][1] == best:
+                continue
+            seq.append([round(a0, 4), best])
+        out[an] = {"len": float(a.get("len", 1.0)), "seq": seq}
+    return out
 
 
 def card_layers():
@@ -218,6 +274,7 @@ def build():
         chars, cw, ch, adv = sheet_png(key, cells)
         index_sheets[key] = {"first": chars[0], "n": len(chars), "cols": grid[0], "rows": grid[1], "uw": uvc[0], "vh": uvc[1], "px": [cw, ch], "adv": adv}
     index_cards = {}
+    index_anims = {}
     for name in CARDS:
         frames = []
         for fi, layers in enumerate(cards[name]):
@@ -227,6 +284,17 @@ def build():
                 fr.append({"c": chars[0], "mat": mat, "at": c, "half": half, "adv": adv})
             frames.append(fr)
         index_cards[name] = frames
+        anims = card_anims(json.load(open(os.path.join(MODEL_DIR, name + ".json"))))
+        if anims:
+            index_anims[name] = anims
+    # 2026-11-14 입체 모델을 구운 판 (tools/vfx_bake3d.py — 명계의 문 · 망자의 손): 칸마다 한 겹 (mat 2 = 흰 글자 — 색을 구워 넣음) · 보는 사람 쪽으로 돌림 (bill)
+    bill = []
+    for name in sorted(vfx_bake3d.BAKE):
+        cells, centre, half, anims = vfx_bake3d.bake(name)
+        chars, cw, ch, adv = sheet_png("card_%s" % name, cells)
+        index_cards[name] = [[{"c": c, "mat": 2, "at": [centre[0], centre[1], 0.0], "half": half, "adv": adv}] for c in chars]
+        index_anims[name] = anims
+        bill.append(name)
     assert code < SPACE_FIRST, "glyphs overflow %x" % code
     # 뒤로 옮김 (서버가 여러 겹을 한 글줄에 겹쳐 그림)
     adv = {chr(SPACE_FIRST + b): -(1 << b) for b in range(11)}
@@ -237,7 +305,7 @@ def build():
                 "카드 (Fx3d 판) → 칸마다 겹 (글자 · mat 0 몸 / 1 빛 · 모델 자리 · 반 크기). 글자 높이 h 글꼴 단위 (1 단위 = 0.025칸), adv = 글자 너비 (뒤로 옮김 space "
                 "글자 space+b 가 −2^b)",
         "font": "rpg:vfxp", "h": H, "space": SPACE_FIRST,
-        "particles": of, "sheets": index_sheets, "cards": index_cards,
+        "particles": of, "sheets": index_sheets, "cards": index_cards, "cardAnims": index_anims, "cardBill": bill,
     }
     files[OUT_FONT] = (json.dumps(font, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
     files[OUT_INDEX] = (json.dumps(idx, ensure_ascii=False, indent=1, sort_keys=True) + "\n").encode("utf-8")

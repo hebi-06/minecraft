@@ -266,7 +266,7 @@ public final class Fx3d {
             if (plain == null) plain = new java.util.ArrayList<>(2);
             plain.add(sp);
         }
-        if (plain != null) mmorpg.fabric.vfx.PBridge.card(level, model, at, o, plain);
+        if (plain != null) mmorpg.fabric.vfx.PBridge.card(level, model, at, o, plain, id);
         return id;
     }
 
@@ -285,6 +285,7 @@ public final class Fx3d {
         v[TRAVEL] = (float) Math.max(0.01, seconds);
         v[EASE] = ease(ease);
         send(level, to, new Payload(id, "", "", to.x, to.y, to.z, 0, F_MOVE, v));
+        mmorpg.fabric.vfx.PBridge.cardMove(id, to, seconds, ease, false); // 2026-11-14 모드 없는 클라이언트의 판도
     }
 
     /** 뒤로 옮기기 (0.50.0): move 와 같지만 가는 쪽을 보는 모델 (align) 이 떠난 쪽을 봄 — 물고 물러나는 뱀이 적을 본 채 뒷걸음 (머리부터 돌아 달아나지 않음) */
@@ -294,12 +295,14 @@ public final class Fx3d {
         v[TRAVEL] = (float) Math.max(0.01, seconds);
         v[EASE] = ease(ease);
         send(level, to, new Payload(id, "", "", to.x, to.y, to.z, 0, F_MOVE | F_BACK, v));
+        mmorpg.fabric.vfx.PBridge.cardMove(id, to, seconds, ease, true);
     }
 
     /** 띄운 모델의 움직임 (모델 안의 anim) 을 바꿈 — 처음부터, loop 면 되풀이 */
     public static void anim(ServerLevel level, int id, String anim, boolean loop, Vec3 near) {
         if (level == null || id == 0) return;
         send(level, near, new Payload(id, "", anim == null ? "" : anim, near.x, near.y, near.z, 0, F_ANIM | (loop ? F_LOOP : 0), new float[VALUES]));
+        mmorpg.fabric.vfx.PBridge.cardAnim(id, anim, loop);
     }
 
     /** 띄운 모델을 fade 초 동안 흐리게 하며 지움 */
@@ -308,6 +311,7 @@ public final class Fx3d {
         float[] v = new float[VALUES];
         v[FADE_OUT] = (float) Math.max(0, fade);
         send(level, near, new Payload(id, "", "", near.x, near.y, near.z, 0, F_KILL, v));
+        mmorpg.fabric.vfx.PBridge.cardKill(id, fade);
     }
 
     private static void send(ServerLevel level, Vec3 near, Payload p) {
