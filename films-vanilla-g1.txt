@@ -1,0 +1,11 @@
+film vanilla_job_archer_blades: 75 frames, 74 ticks, gaps [1]
+film vanilla_job_archer_burst: 51 frames, 50 ticks, gaps [1]
+film vanilla_job_archer_cross: 41 frames, 40 ticks, gaps [1]
+film vanilla_job_archer_ult: 111 frames, 110 ticks, gaps [1]
+film vanilla_job_archer_volley: 29 frames, 28 ticks, gaps [1]
+film vanilla_jobfp_archer_blades: 75 frames, 74 ticks, gaps [1]
+film vanilla_jobfp_archer_burst: 51 frames, 50 ticks, gaps [1]
+film vanilla_jobfp_archer_cross: 41 frames, 40 ticks, gaps [1]
+film vanilla_jobfp_archer_ult: 111 frames, 110 ticks, gaps [1]
+film vanilla_jobfp_archer_volley: 29 frames, 28 ticks, gaps [1]
+films: 10 made

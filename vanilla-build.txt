@@ -1,0 +1,39 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Configure project :
+Fabric Loom: 1.18.4
+
+> Task :core:compileJava
+> Task :core:processResources
+> Task :core:classes
+> Task :core:jar
+> Task :core:assemble
+
+> Task :compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: /home/runner/work/minecraft/minecraft/src/main/java/mmorpg/fabric/mob/RpgMonster.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processClientResources
+> Task :processIncludeJars
+> Task :compileProbeJava
+> Task :processProbeResources
+> Task :probeClasses
+> Task :probeJar
+> Task :jar
+> Task :assemble
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/vanilla-1794686663377.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/minecraft/minecraft/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 50s
+12 actionable tasks: 12 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html

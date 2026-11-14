@@ -1,0 +1,10 @@
+run: 43635052573  attempt: 1
+commit: b1f139dc04b247f027f0e4d9f683b686b35f86d4
+versions: success
+core: success
+build: success
+prod: success
+gametest: success
+client g1 (none): skipped
+vanilla-client: success
+client (all groups): success

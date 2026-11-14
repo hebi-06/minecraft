@@ -1,0 +1,36 @@
+mod jar: build/libs/mmorpg-0.48.1.jar  minecraft 26.3  loader 0.19.5  fabric-api 0.162.0+26.3
+     8256  1980-02-01 00:00   mmorpg/core/Rules.class
+     1857  1980-01-01 00:00   fabric.mod.json
+      585  1980-02-01 00:00   mmorpg.mixins.json
+   119672  1980-02-01 00:00   mmorpg/rules.json
+      804  1980-02-01 00:00   mmorpg.client.mixins.json
+fabric installer 1.1.2
+----- [prod] fabric-api 0.162.0+26.3: log tail
+[20:01:46] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[20:01:46] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[20:01:46] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[20:01:46] [Server thread/INFO]: Preparing level "world"
+[20:01:46] [Server thread/INFO]: Selecting global world spawn...
+[20:01:47] [Server thread/INFO]: Loading 0 persistent chunks...
+[20:01:47] [Server thread/INFO]: Preparing spawn area: 100%
+[20:01:47] [Server thread/INFO]: Time elapsed: 559 ms
+[20:01:47] [Server thread/INFO]: Done (0.745s)! For help, type "help"
+[20:01:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[20:01:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[20:01:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[20:01:47] [IO-Worker-2/INFO]: System chat: [Polymer] Starting resource pack generation...
+[20:01:47] [IO-Worker-2/INFO]: [vanilla] job skill icons 165, ui icons 38
+[20:01:47] [IO-Worker-2/INFO]: [vanilla] gui backgrounds 14, line fonts 13 + 11, tiles 4, icons 18, big runes 127
+[20:01:48] [IO-Worker-2/INFO]: [vanilla] cosmetics: weapon definitions 275, helmet definitions 70, dim icons 42
+[20:01:48] [IO-Worker-2/INFO]: [vanilla] rig default skins in atlas: 18
+[20:01:49] [Server thread/INFO]: System chat: [Polymer] Resource pack created successfully! You can find it in game folder as polymer/resource_pack.zip
+[20:01:56] [Server thread/INFO]: System chat: Stopping the server
+[20:01:56] [Server thread/INFO]: Stopping server
+[20:01:56] [Server thread/INFO]: Saving players
+[20:01:56] [Server thread/INFO]: Saving worlds
+[20:01:56] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[20:01:56] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[20:01:56] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+----- [prod] fabric-api 0.162.0+26.3: errors
+130:[20:01:44] [Worker-Main-2/ERROR]: No key layers in MapLike[{}]
+[prod] fabric-api 0.162.0+26.3: OK
