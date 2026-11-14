@@ -15,8 +15,11 @@ import net.minecraft.world.phys.Vec3;
  * 따라옴 (앞질러 옮김 — every 틱 보간). 머리 위 빛 고리 (halo — 쓰면) 도 함께. 끝나거나 죽으면 위로 접히며 작아져 사라짐
  */
 final class LightWings {
-    /** 쌍마다: 뿌리 높이 (발에서) · 옆 · 펼친 날개 위 각 · 뒤로 젖힘 · 크기 몫 */
-    private static final double[][] PAIRS = {{1.36, 0.17, 18, 12, 1.0}, {1.58, 0.15, 44, 8, 1.0}, {1.12, 0.16, -26, 24, 0.78}};
+    /**
+     * 쌍마다: 뿌리 높이 (발에서) · 옆 · 펼친 날개 위 각 · 뒤로 젖힘 · 크기 몫. 2026-11-14 영상 (세라핌): 여섯 날개가 겹쳐 깃털 덤불처럼 보였음 → 위 쌍은 더 세우고 작게 · 아래
+     * 쌍은 더 내리고 작게 (세 층이 갈라져 보이게)
+     */
+    private static final double[][] PAIRS = {{1.36, 0.17, 18, 12, 1.0}, {1.6, 0.15, 58, 6, 0.82}, {1.1, 0.16, -36, 16, 0.62}};
 
     final ServerPlayer sp;
     final Vfx.Fx fx;
@@ -101,11 +104,11 @@ final class LightWings {
         double sweep;
         double flap;
         int since = t - beatAt;
-        if (since >= 0 && since < 8) {
-            // 크게 내려침: 위로 치켜 (0 ~ 2) → 아래 앞으로 (3 ~ 5) → 돌아옴
-            double q = since / 8.0;
-            flap = since < 3 ? 30 : since < 6 ? -40 : -10 * (1 - q);
-            sweep = since < 3 ? 4 : since < 6 ? -14 : 6;
+        if (since >= 0 && since < 7) {
+            // 크게 내려침: 위로 치켜 (0 ~ 2) → 수평까지 내려침 (3 ~ 4) → 돌아옴. 2026-11-14 영상: −40° 까지 내리면 날개가 땅에 눕듯 앞으로 엎어져 보였음 → −20°
+            double q = since / 7.0;
+            flap = since < 3 ? 24 : since < 5 ? -20 : -8 * (1 - q);
+            sweep = since < 3 ? 4 : since < 5 ? -6 : 6;
         } else {
             // 천천히 날갯짓 (24틱 한 번)
             double ph = 2 * Math.PI * (t % 24) / 24.0;

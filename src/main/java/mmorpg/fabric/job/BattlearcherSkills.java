@@ -311,6 +311,11 @@ final class BattlearcherSkills {
                 RuneMob m = clones[i];
                 origin[i] = m != null && m.alive() ? ShadeArchers.bowOf(m) : V.add(from, rgt, i == 0 ? 1.0 : -1.0);
                 SkillFx.burst(level, origin[i], glow, 1.1, 0.25);
+                // 2026-11-14 영상: 분신이 터지는 것이 잘 보이지 않았음 → 몸에서 그림자 연기가 터지고 발밑 고리 · 보랏빛 불티
+                Vec3 feet = m != null && m.alive() ? m.pos() : V.up(origin[i], -1.35);
+                JobFx.smoke(level, V.up(feet, 1.0), 1.4, ShadeArchers.DARK, glow, 0.45, Opt.of("alpha", 0.9));
+                SkillFx.shock(level, feet, glow, 0.9, 0.35);
+                SkillFx.sparks(level, V.up(feet, 1.1), glow, 10, 5);
                 if (m != null) {
                     m.anim("shoot");
                     RuneMob mm = m;
@@ -328,7 +333,7 @@ final class BattlearcherSkills {
                 Vec3 to = V.add(from, d, h == null ? len : h.t());
                 Vec3 o = origin[i % 2];
                 int t = ArrowFx.flyTicks(o, to, 60);
-                ArrowFx.arrow3d(level, o, to, Math.max(1, t), 0.9, 2, h == null ? null : h.e(), glow, core);
+                ArrowFx.arrow3d(level, o, to, Math.max(1, t), 1.25, 2, h == null ? null : h.e(), glow, core);
                 RuneKit.streak(level, o, to, i % 3 == 0 ? glow : core, 0.08, 0.22, 0.9, 0);
             }
             RuneKit.zonePulse(level, sp.position(), glow, 1.6, 0.3);
@@ -383,8 +388,11 @@ final class BattlearcherSkills {
 
     // ------------------------------------------------------------ 섀도 레기온
 
-    /** 레기온의 분신 자리 (몸 뒤 반원 — 보는 쪽에서 각 · 반지름) */
-    private static final double[][] LEGION = {{-150, 2.4}, {150, 2.4}, {-118, 2.9}, {118, 2.9}, {-86, 3.1}, {86, 3.1}, {-170, 3.4}, {170, 3.4}};
+    /**
+     * 레기온의 분신 자리 (보는 쪽에서 각 · 반지름 — 양옆으로 펼친 날개꼴: 앞 양옆 둘은 1인칭 화면 가장자리에 보임). 2026-11-14 영상: 몸 뒤 반원 (±86 ~ ±170°) 은
+     * 3인칭 카메라 앞을 막고 1인칭에서는 하나도 보이지 않았음
+     */
+    private static final double[][] LEGION = {{-32, 2.6}, {32, 2.6}, {-60, 3.0}, {60, 3.0}, {-90, 3.2}, {90, 3.2}, {-118, 3.0}, {118, 3.0}};
 
     private static Vec3 legionSpot(ServerPlayer sp, int i) {
         Vec3 f = Kit.facingOf(sp);
@@ -392,7 +400,7 @@ final class BattlearcherSkills {
     }
 
     /**
-     * 섀도 레기온 (battlearcher_ult): 그림자 하늘 (rpg:ult_void) · 몸 뒤 반원에 3D 그림자 분신 여덟이 솟아 나를 따라오며 (천천히 걸음 — 느려짐) 보는 쪽 부채꼴 (range 칸 · cone 도)
+     * 섀도 레기온 (battlearcher_ult): 그림자 하늘 (rpg:ult_void) · 양옆 (앞 양옆에서 뒤 양옆까지 — LEGION) 에 3D 그림자 분신 여덟이 솟아 나를 따라오며 (천천히 걸음 — 느려짐) 보는 쪽 부채꼴 (range 칸 · cone 도)
      * 로 함께 쏨 — 2틱마다 화살 물결 (그림 — 분신 · 내 활에서, 처음 맞는 적까지) → first 틱부터 every 틱마다 pulses 번 부채꼴 안의 적마다 pulse (숫자 split 줄) →
      * finalAt − 8 틱 분신 여덟이 하늘로 쏨 (화살이 부채꼴 가운데 위 한 점으로 모임) → 모인 자리에 거대한 3D 그림자 화살이 맺혀 finalAt 틱에 부채꼴 가운데로 내리꽂힘 —
      * 부채꼴 안의 적 모두 final (큰 숫자 · 밀쳐냄)
@@ -414,7 +422,7 @@ final class BattlearcherSkills {
         RuneKit.domainSigil(level0, sp.position(), 3.4, "blade", glow, core, Opt.of("life", 0.9, "spinRate", -50.0, "grow", 0.1, "alpha", 0.8));
         SkillFx.play(level0, "mob.endermen.portal", sp.position(), 0.8, 1.0);
         SkillFx.play(level0, "entity.warden.sonic_charge", sp.position(), 1.6, 0.4);
-        // 분신 여덟: 몸 뒤 반원에서 차례로 솟아 (2틱마다 둘) 나를 따라옴 · 보는 쪽을 봄
+        // 분신 여덟: 양옆에서 차례로 솟아 (2틱마다 둘) 나를 따라옴 · 보는 쪽을 봄
         RuneMob[] legion = new RuneMob[LEGION.length];
         for (int i = 0; i < LEGION.length; i++) {
             int ii = i;

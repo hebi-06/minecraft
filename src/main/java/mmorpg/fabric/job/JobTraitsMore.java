@@ -540,7 +540,9 @@ public final class JobTraitsMore {
                     0.2, "color", glow, "alpha", 1.0));
             if (n == max) {
                 SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.9, 0.6);
-                SkillFx.ring(level, V.up(sp.position(), HALO_UP), V.UP, core, HALO_R * 2.4, 0.4, 0);
+                // 머리 위에 눕힌 고리 (shock_ring — bash_ring 은 늘 카메라를 보는 판이라 눕지 않음) · 1인칭에서는 숨김
+                SkillFx.fx(level, "rpg:shock_ring", V.up(sp.position(), HALO_UP), JobFx.hide1p(sp).with("dir", V.ZERO, "size", HALO_R * 1.1, "life", 0.4, "color", core,
+                        "alpha", 0.9, "vel", RuneKit.bodyVel(sp)));
             }
             return;
         }
@@ -579,7 +581,9 @@ public final class JobTraitsMore {
                 ArrowFx.glint(level, p, lit ? (n >= max ? 0.2 : 0.16) : 0.08, 0.24, lit ? core : glow, view.with("spin", i * 40.0, "spinRate", 90.0, "grow", 0.0, "fade", 0.4,
                         "alpha", lit ? 1.0 : 0.45));
             }
-            if (n >= max && now % 8 == 0) SkillFx.ring(level, V.up(c, HALO_UP), V.UP, core, HALO_R * 2.2, 0.3, 0);
+            // 가득: 머리 위에 눕힌 고리 (2026-11-14 영상: bash_ring 은 카메라를 보는 판이라 세운 고리가 몸을 둘러쌌음)
+            if (n >= max && now % 8 == 0) SkillFx.fx(level, "rpg:shock_ring", V.up(c, HALO_UP), view.with("dir", V.ZERO, "size", HALO_R * 0.95, "life", 0.3, "color", core,
+                    "alpha", 0.85));
             return;
         }
         double base = now * 0.16;

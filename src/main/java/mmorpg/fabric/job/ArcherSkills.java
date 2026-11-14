@@ -76,7 +76,7 @@ final class ArcherSkills {
                 Vec3 to = V.up(Kit.bodyPoint(target), ((ii % 3) - 1) * 0.2);
                 int t = ArrowFx.shot(level, from, to, 55, 1.25, 3, target, glow, core);
                 // 활과 적 사이를 잇는 번개 (화살이 날아가는 동안)
-                RuneKit.zap(level, V.add(from, sp.getViewVector(1F), 0.4), to, glow, core, 0.09, t / 20.0 + 0.1);
+                RuneKit.zap(level, V.add(from, sp.getViewVector(1F), 0.4), to, glow, core, 0.14, t / 20.0 + 0.1); // 2026-11-14 영상: 0.09 는 가늘어 잘 보이지 않았음
                 SkillFx.play(level, "random.bow", from, 1.3 + ii * 0.08, 0.7);
                 if (ii == 0) JobKit.strikeSplit(sp, target, j, P, mult, n, every, false, false, life, t, d -> {});
                 RuneKit.later(t, () -> {
@@ -85,7 +85,7 @@ final class ArcherSkills {
                     RuneKit.plasmaOrb(lv, b, 0.45 + Kit.bodyPad(target) * 0.3, glow, Opt.of("life", 0.28, "vel", RuneKit.entVel(target)));
                     SkillFx.burst(lv, b, glow, 0.9, 0.2);
                     SkillFx.sparks(lv, b, core, 6, 4);
-                    if (prev[0] != null) RuneKit.zap(lv, prev[0], b, glow, core, 0.08, 0.22); // 맞은 자리끼리 이어지는 번개 (연쇄)
+                    if (prev[0] != null) RuneKit.zap(lv, prev[0], b, glow, core, 0.12, 0.25); // 맞은 자리끼리 이어지는 번개 (연쇄)
                     prev[0] = b;
                     JobFx.hit(target, j, 0.8);
                     SkillFx.play(lv, "random.bowhit", b, 1.2, 0.5);
@@ -208,18 +208,19 @@ final class ArcherSkills {
         Vec3 hand = RuneKit.bowHand(sp);
         Vec3 to = Kit.bodyPoint(target);
         int t = ArrowFx.shot(level, hand, to, 60, 1.2, 3, target, glow, core);
-        RuneKit.zap(level, V.add(hand, sp.getViewVector(1F), 0.4), to, glow, core, 0.08, t / 20.0 + 0.1);
+        RuneKit.zap(level, V.add(hand, sp.getViewVector(1F), 0.4), to, glow, core, 0.14, t / 20.0 + 0.12); // 2026-11-14 영상: 0.08 은 평타 사이에 묻혔음
         RuneKit.later(t, () -> {
             if (target.isRemoved() || !(target.level() instanceof ServerLevel lv)) return;
-            RuneKit.plasmaOrb(lv, Kit.bodyPoint(target), 0.45, glow, Opt.of("life", 0.25, "vel", RuneKit.entVel(target)));
-            SkillFx.sparks(lv, Kit.bodyPoint(target), core, 5, 4);
+            RuneKit.plasmaOrb(lv, Kit.bodyPoint(target), 0.55, glow, Opt.of("life", 0.3, "vel", RuneKit.entVel(target)));
+            SkillFx.burst(lv, Kit.bodyPoint(target), glow, 0.8, 0.2);
+            SkillFx.sparks(lv, Kit.bodyPoint(target), core, 7, 4);
         });
     }
 
     // ------------------------------------------------------------ 스톰 레인
 
     /**
-     * 스톰 레인 (archer_rain): 조준한 곳 (range 칸) 위 8.5칸에 3D 먹구름 (덩이 다섯 — 밑이 번개빛, 구름 속 번쩍임 · 덩이 사이 번개) · 바닥 마법진 (반지름 radius 칸) →
+     * 스톰 레인 (archer_rain): 조준한 곳 (range 칸) 위 7.2칸에 3D 먹구름 (덩이 다섯 — 밑이 번개빛, 구름 속 번쩍임 · 덩이 사이 번개) · 바닥 마법진 (반지름 radius 칸) →
      * first 틱부터 gap 틱마다 (waves 번) 구름에서 번개 화살이 쏟아짐 — 마법진 안의 적마다 한 물결에 두 발 (wave — 한 번에 넣고 숫자 per 줄: 3D 빛 화살 · 구름에서 몸까지 번개 ·
      * 번개 구슬), 빈 자리에도 화살이 꽂힘 · 물결마다 벼락 하나. 처음 맞은 적은 발밑에 꽂힌 번개 화살에 root 틱 묶임 (보스는 둔화)
      */
@@ -251,10 +252,10 @@ final class ArcherSkills {
         // 바닥: 먹구름 그늘의 마법진 (돎) · 퍼지는 고리
         SkillFx.rune(level0, V.up(center, 0.05), Opt.of("size", r, "life", (end + 12) / 20.0, "color", glow, "alpha", 0.75, "rate", 40.0, "grow", 0.0));
         RuneKit.zonePulse(level0, center, glow, r, 0.45);
-        // 하늘 (과녁 위 — 쏜 사람 쪽으로 조금, 8.5칸 위): 1인칭에서 떨어지는 화살이 화면에 들어오게 낮게
+        // 하늘 (과녁 위 — 쏜 사람 쪽으로 조금, 7.2칸 위): 1인칭에서 먹구름 · 떨어지는 화살이 화면에 들어오게 낮게 (2026-11-14 영상: 8.5칸은 구름이 화면 위로 벗어났음)
         boolean onMe = Math.hypot(sp.getX() - center.x, sp.getZ() - center.z) < 0.1;
         Vec3 toMe = onMe ? V.ZERO : V.unit(V.flat(V.sub(sp.position(), center)));
-        Vec3 sky = V.up(V.add(center, toMe, 2.5), 8.5);
+        Vec3 sky = V.up(V.add(center, toMe, 2.5), 7.2);
         // 3D 먹구름 (덩이 다섯 — 가운데 큰 덩이 · 둘레 넷)
         Vec3[] puffs = new Vec3[5];
         double[] halves = {2.7, 2.0, 1.9, 1.9, 1.8};
@@ -345,7 +346,8 @@ final class ArcherSkills {
                                 ArrowFx.pinStake(lv, V.up(at, 0.05), tilt, rt, 1.4, glow, core);
                                 RuneKit.plasmaOrb(lv, V.up(e.position(), 0.25), 0.55 + Kit.bodyPad(e) * 0.4, glow, Opt.of("life", rt / 20.0, "fade", 0.3, "vel",
                                         RuneKit.entVel(e)));
-                                SkillFx.ring(lv, V.up(e.position(), 0.1), V.UP, glow, 0.8 + Kit.bodyPad(e), rt / 20.0, 0);
+                                SkillFx.rune(lv, V.up(e.position(), 0.06), Opt.of("size", 0.75 + Kit.bodyPad(e), "life", rt / 20.0, "color", glow, "alpha", 0.85,
+                                        "rate", 120.0, "grow", 0.0)); // 발밑에 눕힌 번개 문양 (묶임)
                             }
                         }
                     });
@@ -376,7 +378,7 @@ final class ArcherSkills {
         RuneKit.zap(level, V.up(c, 1.2), V.up(sky, -0.4), glow, core, 0.1, 0.3);
         RuneKit.plasmaOrb(level, RuneKit.bowHand(sp), 0.35, glow, Opt.of("life", 0.5, "vel", RuneKit.bodyVel(sp)));
         RuneKit.zonePulse(level, c, glow, 2.6, 0.45);
-        SkillFx.ring(level, V.up(c, 0.1), V.UP, glow, 2.2, 0.5, 0);
+        SkillFx.shock(level, c, glow, 1.5, 0.5); // 발밑 고리 (눕힌 고리 — bash_ring 은 늘 카메라를 보는 판이라 눕지 않음)
         for (int i = 0; i < 10; i++) {
             Vec3 at = V.add(V.up(c, 0.3 + Kit.rand() * 1.6), V.turnY(Kit.facingOf(sp), i * 36), 1.2 + Kit.rand() * 0.8);
             SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 1.6, "size", 0.12, "grow", 0.5, "life", 0.6, "color", i % 2 == 0 ? core : glow,
@@ -497,7 +499,7 @@ final class ArcherSkills {
             for (Vec3 tip : new Vec3[] {tipA, tipB}) {
                 Vec3 dv = V.sub(nock, tip);
                 double L = V.len(dv);
-                SkillFx.fx(level, "rpg:light_cut", V.add(tip, dv, 0.5), Opt.of("dir", V.unit(dv), "size", L / 2, "thick", 0.09, "life", 0.13, "color", core, "alpha", 1.0));
+                SkillFx.fx(level, "rpg:light_cut", V.add(tip, dv, 0.5), Opt.of("dir", V.unit(dv), "size", L / 2, "thick", 0.16, "life", 0.13, "color", core, "alpha", 1.0));
             }
             // 둘레에서 화살촉으로 모여 드는 번개 (당길수록 가까이) · 촉의 번개 구슬
             Vec3 tip = spear.tip();
@@ -520,7 +522,7 @@ final class ArcherSkills {
             Vec3 tipA = V.up(V.add(center, side, RuneProps.BOW_TIP[0] * px), RuneProps.BOW_TIP[1] * px);
             Vec3 tipB = V.up(V.add(center, side, -RuneProps.BOW_TIP[0] * px), RuneProps.BOW_TIP[1] * px);
             Vec3 dv = V.sub(tipB, tipA);
-            SkillFx.fx(level, "rpg:light_cut", V.add(tipA, dv, 0.5), Opt.of("dir", V.unit(dv), "size", V.len(dv) / 2, "thick", 0.12, "life", 0.3, "color", core, "alpha", 1.0));
+            SkillFx.fx(level, "rpg:light_cut", V.add(tipA, dv, 0.5), Opt.of("dir", V.unit(dv), "size", V.len(dv) / 2, "thick", 0.2, "life", 0.3, "color", core, "alpha", 1.0));
             int t0 = fx.age();
             spear.pose(V.up(center, 24), V.UP, face, 3);
             fx.on(t0 + 3, spear::remove);

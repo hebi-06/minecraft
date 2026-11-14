@@ -1,7 +1,8 @@
-"""0.51.0 2차 직업 스킬 동작 — 궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 2026-11-06 — 섀도 헌터 대신 배틀 아처. 틱 0 = 스킬이 나간 틱, 효과의
+"""0.51.0 2차 직업 스킬 동작 — 궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 2026-11-06 — 섀도 헌터 대신 배틀 아처 · 2026-11-14 천벌의 사수 · 그림자 사수로 다시 — 이름 ·
+세라핌 · 섀도 스위치 동작을 바꿈, 나머지 동작은 그대로. 틱 0 = 스킬이 나간 틱, 효과의
 later · every 와 같은 틱 — SniperSkills · BattlearcherSkills). 둘 다 활 (오른손에 활 · 왼손이 시위를 당김 — 1차 궁수 job_motions_b 의 BOW_UP · BOW_DRAWN · BOW_LOOSE
-와 같은 꼴). 몸이 뜨는 동안의 다리는 job_motions.AIR (스네어 샷의 반동 · 팰컨 다이브). 단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion —
-하트시커의 놓음 (다시 누름 · 저절로) · 데드아이의 한 발 (누를 때마다 · 저절로) · 퀴버 스톰의 마지막 화살비)."""
+와 같은 꼴). 몸이 뜨는 동안의 다리는 job_motions.AIR (윙 스텝의 날아 물러남 · 섀도 스위치의 웅크림). 단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion —
+저지먼트의 놓음 (다시 누름 · 저절로) · 디바인 펀니시먼트의 한 발 (다시 누름 · 저절로) · 섀도 레기온의 마지막 화살)."""
 import rune_motion_kit as K
 from job_motions_b import BOW_DRAWN, BOW_LOOSE, BOW_UP, FP_BOW, FP_BOW_LOOSE
 from rune_motion_kit import A_RAISE, A_SPREAD_DOWN, L, LEGS_FIGHT, LEGS_KNEEL, LEGS_WIDE, P, arm, bent, fpw, keyp, use_skill  # noqa: F401
@@ -19,10 +20,10 @@ FP_SKY = dict(p=(-0.25, 0.32, 0.1))
 FP_LOW_BOW = dict(p=(-0.2, -0.12, 0.08))
 FP_FULL = dict(p=(-0.27, 0.12, -0.04))
 
-# ------------------------------------------------------------ 스나이퍼 (활 — 밝은 연두 · 금빛 · 흰 섬광)
+# ------------------------------------------------------------ 스나이퍼 (활 — 천벌의 사수: 금빛 · 흰 성광)
 
-# 하트시커 (효과: 0 ~ 20 끝까지 당김 — 다시 누르면 그 틱에 놓음 (단계 release) · 안 누르면 20 에 저절로)
-m = Motion("sniper_heart", 28, "하트시커 — 다리를 넓게 벌려 버티고 활을 들어 시위를 천천히 끝까지 당김 (몸이 뒤로 비틀림) · 다 당긴 채 숨을 멈추고 미세하게 떨며 겨눔",
+# 저지먼트 (효과: 0 ~ 20 끝까지 당김 — 다시 누르면 그 틱에 놓음 (단계 release) · 안 누르면 20 에 저절로)
+m = Motion("sniper_heart", 28, "저지먼트 — 다리를 넓게 벌려 버티고 활을 들어 시위를 천천히 끝까지 당김 (몸이 뒤로 비틀림) · 다 당긴 채 숨을 멈추고 미세하게 떨며 겨눔",
            fade=(0.03, 0.1))
 keyp(m, 1.5, P(BOW_UP, body=[2, -20, 0], **LEGS_WIDE), "out3")
 keyp(m, 5.0, P(BOW_DRAWN, body=[0, -22, 0], la=arm([0.25, 0.08, 0.1], 130), **LEGS_WIDE))
@@ -33,7 +34,7 @@ for i, t in enumerate((20.5, 22.5, 24.5, 26.5)):
 fpw(m, 1.5, FP_BOW, "out3")
 fpw(m, 18.5, FP_FULL, "inout")
 use_skill(m, "sniper_heart")
-m = Motion("sniper_heart_release", 14, "하트시커 — 큰 화살을 놓는 순간 반동에 몸이 뒤로 젖혀지며 시위 손이 크게 뒤로 튐 → 천천히 겨눈 자세로", fade=(0.0, 0.12))
+m = Motion("sniper_heart_release", 14, "저지먼트 — 빛의 화살을 놓는 순간 반동에 몸이 뒤로 젖혀지며 시위 손이 크게 뒤로 튐 → 천천히 겨눈 자세로", fade=(0.0, 0.12))
 keyp(m, 0.0, WIDE_FULL)  # 틱 0 = 당긴 자세 (들어오는 무게 0 — 영상 1: 틱 0 이 쉬는 자세라 놓는 순간 한 장 팔이 내려갔음)
 keyp(m, 1.4, P(BOW_LOOSE, body=[-16, -12, 0], head=[-6, 0], la=arm([-0.35, 0.05, -0.8], 30), root=[-0.12, 0], **LEGS_WIDE), "out3")
 keyp(m, 6.5, P(BOW_LOOSE, body=[-6, -14, 0], **LEGS_WIDE))
@@ -43,9 +44,9 @@ fpw(m, 1.4, dict(p=(-0.25, 0.16, 0.26)), "out3")
 fpw(m, 12.5, FP_BOW, "inout")
 use_skill(m, "sniper_heart:release")
 
-# 스네어 샷 (효과: 0 ~ 2 재빨리 당김 → 2 에 그물 화살 · 같은 틱 반동으로 뒤로 6칸 (1.2칸 높이) → 12 내려앉음)
+# 윙 스텝 (효과: 0 ~ 2 재빨리 당김 → 2 에 빛의 고리 화살 · 같은 틱 등의 빛 날개가 내려치며 뒤로 6칸 (1.2칸 높이) → 12 내려앉음)
 RECOIL_AIR = P(BOW_LOOSE, body=[-22, -14, 0], head=[10, 0], la=arm([-0.35, 0.1, -0.8], 30), root=[-0.15, 0])
-m = Motion("sniper_snare", 18, "스네어 샷 — 활을 낮게 재빨리 당겨 그물 화살을 쏘고, 반동에 몸이 뒤로 젖혀진 채 뒤로 날아가 웅크려 내려앉음", fade=(0.02, 0.12))
+m = Motion("sniper_snare", 18, "윙 스텝 — 활을 낮게 재빨리 당겨 빛의 고리 화살을 쏘고, 날갯짓에 몸이 뒤로 젖혀진 채 뒤로 날아가 웅크려 내려앉음", fade=(0.02, 0.12))
 keyp(m, 0.4, P(BOW_DRAWN, body=[12, -20, 0], head=[-6, 0]), "out3")
 keyp(m, 2.6, RECOIL_AIR, "out3")
 keyp(m, 8.0, P(RECOIL_AIR, body=[-10, -16, 0], head=[4, 0]))
@@ -56,11 +57,11 @@ fpw(m, 2.6, dict(p=(-0.25, 0.18, 0.22)), "out3")
 fpw(m, 12.4, FP_BOW, "out")
 use_skill(m, "sniper_snare")
 
-# 트릭 샷 (효과: 0 ~ 3 활을 비스듬히 눕혀 당김 → 3 에 화살 → 4 · 14 · 24 튐)
+# 헤븐즈 게이트 (효과: 0 ~ 3 활을 비스듬히 눕혀 당김 → 3 에 빛의 화살 → 4 · 14 · 24 둘레 적 위 하늘의 문에서 금빛 화살)
 TRICK_DRAWN = P(BOW_DRAWN, body=[2, -30, -10], head=[0, 4], ra=arm([0.1, 0.32, 1], 0, [0.6, 0.8, 0]), la=arm([0.3, 0.2, -0.25], 140))  # 활을 옆으로 눕힘
 TRICK_LOOSE = P(BOW_LOOSE, body=[-6, -24, -8], head=[0, 4], ra=arm([0.1, 0.36, 1], 0, [0.6, 0.8, -0.2]), la=arm([-0.25, 0.4, -0.7], 30))
-WATCH = P(body=[-4, -10, 0], head=[-10, 6], ra=arm([0.25, -0.35, 0.85], 10, [0.2, 1, 0.3]), la=L(arm([0.35, 0.4, 0.85], 4)), **LEGS_FIGHT)  # 활을 내리고 왼손으로 튄 화살을 가리킴
-m = Motion("sniper_trick", 28, "트릭 샷 — 활을 옆으로 눕혀 비틀어 당겨 쏘고, 활을 빙글 내리며 왼손 손가락으로 튀어 오르는 화살을 따라 가리킴", fade=(0.02, 0.12))
+WATCH = P(body=[-4, -10, 0], head=[-10, 6], ra=arm([0.25, -0.35, 0.85], 10, [0.2, 1, 0.3]), la=L(arm([0.35, 0.4, 0.85], 4)), **LEGS_FIGHT)  # 활을 내리고 왼손으로 하늘의 문을 가리킴
+m = Motion("sniper_trick", 28, "헤븐즈 게이트 — 활을 옆으로 눕혀 비틀어 당겨 쏘고, 활을 빙글 내리며 왼손 손가락으로 열리는 하늘의 문을 차례로 가리킴", fade=(0.02, 0.12))
 keyp(m, 0.4, P(TRICK_DRAWN, la=arm([0.3, 0.2, 0.2], 120)), "out3")
 keyp(m, 2.6, TRICK_DRAWN, "in")
 keyp(m, 3.5, TRICK_LOOSE, "out3")
@@ -74,19 +75,23 @@ fpw(m, 8.0, FP_LOW_BOW, "inout")
 fpw(m, 26.5, FP_BOW, "inout")
 use_skill(m, "sniper_trick")
 
-# 헌터스 마크 (태세 8초 — 효과: 손 앞 은빛 큰 화살 · 은빛 기운)
-m = Motion("sniper_mark", 22, "헌터스 마크 — 왼손을 오른 어깨 뒤 화살통으로 뻗어 은빛 화살을 뽑아 머리 위로 들어 보이고, 시위에 걸어 눈높이로 겨눔", fade=(0.03, 0.12))
-keyp(m, 2.5, P(BOW_UP, body=[-4, -12, 0], la=bent([-0.35, 0.75, -0.3], 70, (0, 0, -1)), **LEGS_FIGHT), "out3")
-keyp(m, 7.0, P(BOW_UP, body=[-8, -8, 0], head=[-14, 0], la=L(A_RAISE), **LEGS_FIGHT), "out3")
-keyp(m, 11.0, P(BOW_UP, body=[-4, -16, 0], head=[-6, 0], la=L(arm([0.45, 0.6, 0.65], 6)), **LEGS_FIGHT))
+# 세라핌 (2026-11-14 — 헌터스 마크 대신. 태세 8초 — 효과: 0 ~ 6 등에서 3D 빛 날개 여섯이 솟아 펼쳐짐 · 머리 위 빛 고리 · 발밑 성광 문양)
+SPREAD_WINGS = P(body=[-10, -4, 0], head=[-22, 0], ra=arm([0.88, 0.42, 0.2], 6, [0, 1, 0.15]), la=L(arm([0.88, 0.42, 0.2], 6)), **LEGS_WIDE)  # 두 팔을 활짝 · 하늘을 봄
+m = Motion("sniper_mark", 22, "세라핌 — 두 팔을 가슴 앞에 모아 웅크렸다가 활짝 펼치며 가슴을 열고 하늘을 올려다봄 (등의 빛 날개 여섯이 펼쳐짐) → 활을 들어 눈높이로 겨눔",
+           fade=(0.03, 0.12))
+keyp(m, 1.8, P(body=[12, -6, 0], head=[10, 0], ra=bent([0.3, -0.5, 0.8], 110, (-1, 0.3, 0.2)), la=L(bent([0.3, -0.5, 0.8], 110, (-1, 0.3, 0.2))), **LEGS_FIGHT), "out3")
+keyp(m, 6.0, SPREAD_WINGS, "out3")
+keyp(m, 10.5, P(SPREAD_WINGS, body=[-6, -4, 0], head=[-14, 0], ra=arm([0.86, 0.36, 0.3], 6, [0, 1, 0.2]), la=L(arm([0.86, 0.36, 0.3], 6))))
 keyp(m, 15.5, P(BOW_DRAWN, body=[0, -22, 0], **LEGS_WIDE), "inout")
 keyp(m, 20.5, P(BOW_UP, **LEGS_WIDE))
-fpw(m, 2.5, FP_LOW_BOW, "out3")
+fpw(m, 1.8, FP_LOW_BOW, "out3")
+fpw(m, 6.0, dict(p=(0.05, 0.05, 0.3)), "out3")
 fpw(m, 15.5, FP_BOW, "inout")
 use_skill(m, "sniper_mark")
 
-# 사일런트 아울 (2026-11-07 재설계안 3판 — 데드아이 대신, 효과: 0 ~ 40 조준 (등 뒤 위 부엉이 정령 · 조여 드는 과녁) — 20 부터 다시 누르면 한 발 (단계 shot) · 40 이 지나면 저절로)
-m = Motion("sniper_ult", 44, "사일런트 아울 — 한쪽 무릎을 꿇고 활을 세워 끝까지 당긴 채 숨을 죽이고 미동 없이 겨눔 (저격 자세)", fade=(0.03, 0.1))
+# 디바인 펀니시먼트 (2026-11-14 — 사일런트 아울 대신, 동작은 그대로. 효과: 0 ~ 40 조준 (등의 빛 날개 · 겨눈 적 위 하늘의 문 · 조여 드는 금빛 고리) — 20 부터 다시 누르면
+# 한 발 (단계 shot) · 40 이 지나면 저절로)
+m = Motion("sniper_ult", 44, "디바인 펀니시먼트 — 한쪽 무릎을 꿇고 활을 세워 끝까지 당긴 채 숨을 죽이고 미동 없이 겨눔 (저격 자세)", fade=(0.03, 0.1))
 keyp(m, 1.5, P(KNEEL_UP, root=[-0.3, 0]), "out3")
 keyp(m, 6.0, KNEEL_FULL, "inout")
 for i, t in enumerate(range(12, 44, 8)):
@@ -95,7 +100,7 @@ for i, t in enumerate(range(12, 44, 8)):
 fpw(m, 1.5, FP_BOW, "out3")
 fpw(m, 6.0, dict(p=(-0.27, 0.15, 0.06)), "inout")
 use_skill(m, "sniper_ult")
-m = Motion("sniper_ult_shot", 18, "사일런트 아울 — 부엉이 정령이 된 화살을 소리 없이 놓고, 반동에 무릎 꿇은 몸이 조금 젖혀졌다가 활을 내리며 천천히 일어섬", fade=(0.0, 0.1))
+m = Motion("sniper_ult_shot", 18, "디바인 펀니시먼트 — 빛의 화살을 놓고 (하늘의 문에서 심판의 화살이 내리꽂힘), 반동에 무릎 꿇은 몸이 조금 젖혀졌다가 활을 내리며 천천히 일어섬", fade=(0.0, 0.1))
 keyp(m, 0.0, KNEEL_FULL)  # 틱 0 = 무릎 꿇고 당긴 자세
 keyp(m, 1.3, P(KNEEL_LOOSE, body=[-14, -12, 0], head=[-4, 0], la=arm([-0.35, 0.05, -0.75], 30), root=[-0.34, 0]), "out3")
 keyp(m, 7.0, P(KNEEL_LOOSE, body=[-6, -14, 0], la=bent([-0.3, 0.7, -0.35], 70, (0, 0, -1))))
@@ -106,10 +111,10 @@ fpw(m, 1.3, dict(p=(-0.25, 0.22, 0.32)), "out3")
 fpw(m, 13.0, FP_BOW, "inout")
 use_skill(m, "sniper_ult:shot")
 
-# ------------------------------------------------------------ 배틀 아처 (활 — 폭풍 하늘빛 · 번개 노랑)
+# ------------------------------------------------------------ 배틀 아처 (활 — 그림자 사수: 짙은 보랏빛 · 그림자)
 
-# 호넷 스웜 (효과: 0 ~ 2 어깨 위에 화살 고리 → 2 에 사방으로 쏘아 올림 → 7 꽂힘)
-m = Motion("battlearcher_swarm", 16, "호넷 스웜 — 활을 머리 위로 들어 끝까지 당겼다 하늘로 쏘아 올리며 몸을 한 바퀴 휘돌리고, 활을 앞으로 내려 겨눔", fade=(0.02, 0.12))
+# 섀도 볼리 (효과: 0 ~ 2 둘레의 그림자 분신 넷이 활을 하늘로 당김 → 2 에 함께 쏘아 올림 → 휘어 날아 꽂힘)
+m = Motion("battlearcher_swarm", 16, "섀도 볼리 — 활을 머리 위로 들어 끝까지 당겼다 하늘로 쏘아 올리며 몸을 한 바퀴 휘돌리고, 활을 앞으로 내려 겨눔", fade=(0.02, 0.12))
 keyp(m, 0.3, P(SKY_DRAW, body=[-12, -14, 0]), "out3")
 keyp(m, 1.8, SKY_DRAW, "in")
 keyp(m, 2.6, P(SKY_LOOSE, spin=-120), "out3")
@@ -121,15 +126,16 @@ fpw(m, 2.6, dict(p=(-0.25, 0.36, 0.18)), "out3")
 fpw(m, 8.0, FP_BOW, "out")
 use_skill(m, "battlearcher_swarm")
 
-# 팰컨 다이브 (효과: 0 ~ 12 높이 뛰어올라 적 무리 가운데로 → 12 내려앉으며 둘레에 화살)
-DIVE_AIR = P(BOW_DRAWN, body=[30, -20, 0], head=[-14, 0], ra=arm([0.05, -0.45, 0.9], 0, [0, 1, 0.3]), la=arm([0.25, -0.25, 0.25], 130))  # 공중에서 아래로 겨눔
+# 섀도 스위치 (2026-11-14 — 팰컨 다이브 대신. 효과: 0 ~ 12 3D 그림자 분신이 적 무리 가운데로 뛰어듦 — 나는 제자리에서 몸을 낮춰 분신이 내려앉을 곳을 겨눔 →
+# 12 분신과 자리를 바꿈 — 그 자리에 낮게 나타나며 활을 크게 휘둘러 둘레로 쏨. 다리는 job_motions.AIR 의 웅크림)
+SEND = P(BOW_DRAWN, body=[20, -20, 0], head=[-8, 0], ra=arm([0.05, -0.32, 0.95], 0, [0, 1, 0.3]), la=arm([0.24, -0.2, 0.28], 130))  # 몸을 낮춰 분신이 내려앉을 곳을 겨눔
 LAND_LOOSE = P(BOW_LOOSE, body=[24, -40, 0], head=[-8, 0], ra=arm([0.35, -0.3, 0.88], 0, [0, 1, 0.2]), la=arm([-0.35, -0.1, -0.6], 30), rl=[34, 0, 14], ll=[-30, 0, -14],
-               rk=62, lk=40, root=[-0.4, 0])  # 낮게 내려앉아 활을 휘둘러 쏨
-m = Motion("battlearcher_dive", 24, "팰컨 다이브 — 웅크렸다 앞으로 높이 뛰어올라 공중에서 몸을 숙여 아래를 겨누고, 적 한가운데 낮게 내려앉으며 활을 크게 휘둘러 둘레로 쏨",
+               rk=62, lk=40, root=[-0.4, 0])  # 낮게 나타나 활을 휘둘러 쏨
+m = Motion("battlearcher_dive", 24, "섀도 스위치 — 웅크려 몸을 낮추고 그림자 분신이 뛰어드는 곳을 겨누다가, 분신과 자리를 바꿔 적 한가운데 낮게 나타나며 활을 크게 휘둘러 둘레로 쏨",
            fade=(0.02, 0.12))
 keyp(m, 0.6, P(BOW_UP, body=[22, -18, 0], root=[-0.3, 0]), "out3")
-keyp(m, 3.5, P(DIVE_AIR, la=arm([0.3, -0.1, 0.4], 110)), "out3")
-keyp(m, 10.6, DIVE_AIR, "in")
+keyp(m, 3.5, P(SEND, la=arm([0.3, -0.1, 0.4], 110)), "out3")
+keyp(m, 10.6, SEND, "in")
 keyp(m, 12.5, LAND_LOOSE, "out3")
 keyp(m, 15.0, P(LAND_LOOSE, body=[20, 30, 0], ra=arm([0.4, -0.25, 0.88], 0, [0, 1, 0.2])), "out")
 keyp(m, 18.5, P(LAND_LOOSE, body=[14, 0, 0], root=[-0.25, 0]))
@@ -140,11 +146,11 @@ fpw(m, 12.5, dict(p=(-0.2, -0.05, 0.2)), "out3")
 fpw(m, 22.5, FP_BOW, "inout")
 use_skill(m, "battlearcher_dive")
 
-# 스플린터 샷 (효과: 0 ~ 6 활에 빛이 모임 · 끝까지 당김 → 6 에 부채꼴로 터짐)
+# 섀도 트랩 (효과: 0 ~ 6 몸 앞 양옆의 그림자 분신 둘이 함께 당김 → 6 에 분신이 터지며 화살 조각이 부채꼴로)
 COIL = P(BOW_DRAWN, body=[-10, -34, 0], head=[4, 4], la=arm([0.15, 0.08, -0.5], 152), rl=[-8, 0, 14], ll=[18, 0, -14], rk=18, lk=26, root=[-0.12, 0])  # 몸을 뒤로 감아 당김
 BLAST = P(BOW_LOOSE, body=[18, -8, 0], head=[-4, 0], ra=arm([0.0, 0.08, 1], 0, [0, 1, -0.1]), la=arm([-0.35, 0.05, -0.75], 25), rl=[-24, 0, 12], ll=[30, 0, -12], rk=32,
               lk=12, root=[0.12, -0.1])  # 앞으로 내디디며 터뜨림
-m = Motion("battlearcher_splinter", 20, "스플린터 샷 — 몸을 뒤로 비틀어 감으며 시위를 끝까지 당겼다가, 앞으로 크게 내디디며 화살을 부채꼴로 터뜨림 (반동에 활이 튐)", fade=(0.02, 0.12))
+m = Motion("battlearcher_splinter", 20, "섀도 트랩 — 몸을 뒤로 비틀어 감으며 시위를 끝까지 당겼다가, 앞으로 크게 내디디며 화살을 부채꼴로 터뜨림 (반동에 활이 튐)", fade=(0.02, 0.12))
 keyp(m, 1.0, P(BOW_UP, body=[-4, -24, 0], **LEGS_WIDE), "out3")
 keyp(m, 5.6, COIL, "in")
 keyp(m, 6.6, BLAST, "out3")
@@ -157,8 +163,8 @@ fpw(m, 6.6, dict(p=(-0.25, 0.16, 0.3)), "out3")
 fpw(m, 18.5, FP_BOW, "inout")
 use_skill(m, "battlearcher_splinter")
 
-# 스톰 스트라이드 (태세 8초 — 효과: 발밑 폭풍 바람 두 겹 · 회오리 · 번개 불티)
-m = Motion("battlearcher_stride", 18, "스톰 스트라이드 — 발을 구르며 활을 머리 위로 크게 휘돌려 바람을 일으키고, 몸을 낮춰 달릴 자세로 겨눔", fade=(0.03, 0.12))
+# 섀도 댄스 (태세 8초 — 효과: 발밑 그림자 연기 · 곁에 그림자 분신 둘)
+m = Motion("battlearcher_stride", 18, "섀도 댄스 — 발을 구르며 활을 머리 위로 크게 휘돌려 그림자를 일으키고, 몸을 낮춰 달릴 자세로 겨눔", fade=(0.03, 0.12))
 keyp(m, 1.5, P(BOW_UP, body=[-6, -10, 0], ra=arm([0.2, 0.9, 0.3], 0, [0, 0.3, 1]), la=L(A_SPREAD_DOWN), **LEGS_WIDE), "out3")
 keyp(m, 4.5, P(BOW_UP, body=[-6, 20, 0], ra=arm([-0.6, 0.75, 0.2], 0, [0, 0.3, 1]), la=L(A_SPREAD_DOWN), **LEGS_WIDE))
 keyp(m, 7.5, P(BOW_UP, body=[10, -10, 0], ra=arm([0.4, 0.2, 0.9], 0, [0, 1, 0]), la=bent([-0.3, -0.5, 0.6], 60, (0, 1, 0.4)), rl=[30, 0, 10], ll=[-26, 0, -10],
@@ -170,10 +176,10 @@ fpw(m, 7.5, FP_LOW_BOW, "out3")
 fpw(m, 12.0, FP_BOW)
 use_skill(m, "battlearcher_stride")
 
-# 퀴버 스톰 (효과: 0 ~ 62 2틱마다 화살 물결 — 걸으며 쏨 · 10 ~ 60 피해 → 61 단계 final)
+# 섀도 레기온 (효과: 0 ~ 62 2틱마다 화살 물결 — 몸 뒤 그림자 분신 여덟과 함께 걸으며 쏨 · 10 ~ 60 피해 → 61 단계 final (분신 여덟이 하늘로 쏨 → 거대한 그림자 화살))
 STORM_DRAWN = P(BOW_DRAWN, body=[8, -20, 0], head=[-4, 0], **LEGS_WIDE)
 STORM_LOOSE = P(BOW_LOOSE, body=[4, -16, 0], head=[-4, 0], **LEGS_WIDE)
-m = Motion("battlearcher_ult", 62, "퀴버 스톰 — 다리를 벌려 버티고 활을 앞으로 겨눈 채 쉬지 않고 시위를 당겼다 놓으며 (몸이 좌우로 조금씩 흔들림) 부채꼴로 화살을 퍼부음",
+m = Motion("battlearcher_ult", 62, "섀도 레기온 — 다리를 벌려 버티고 활을 앞으로 겨눈 채 쉬지 않고 시위를 당겼다 놓으며 (몸이 좌우로 조금씩 흔들림) 부채꼴로 화살을 퍼부음",
            fade=(0.03, 0.06))
 keyp(m, 0.5, STORM_DRAWN, "out3")
 fpw(m, 0.5, FP_BOW, "out3")
@@ -184,7 +190,7 @@ for i, t in enumerate(range(2, 60, 4)):
     keyp(m, t + 2.2, P(STORM_DRAWN, body=[8, -20 + s * 6, 0]))
     fpw(m, t + 2.2, FP_BOW)
 use_skill(m, "battlearcher_ult")
-m = Motion("battlearcher_ult_final", 20, "퀴버 스톰 끝 — 활을 하늘로 들어 마지막 화살 다발을 쏘아 올리고, 화살비가 쏟아지는 순간 왼팔을 앞으로 휘둘러 내림", fade=(0.02, 0.12))
+m = Motion("battlearcher_ult_final", 20, "섀도 레기온 끝 — 분신들과 함께 활을 하늘로 들어 쏘아 올리고, 거대한 그림자 화살이 내리꽂히는 순간 왼팔을 앞으로 휘둘러 내림", fade=(0.02, 0.12))
 keyp(m, 0.8, SKY_DRAW, "out3")
 keyp(m, 1.8, SKY_LOOSE, "out3")
 keyp(m, 6.0, P(body=[-6, -6, 0], head=[-20, 0], ra=arm([0.3, -0.7, 0.4], 10, [0.1, 0.8, 0.5]), la=L(A_RAISE), **LEGS_WIDE), "out")

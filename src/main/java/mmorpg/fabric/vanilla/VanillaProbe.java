@@ -1232,7 +1232,16 @@ final class VanillaProbe {
             case "archer_ult" -> new double[] {12.0, 3.6, 3.8, 0.4};
             // 스톰 아이: 머리 위 먹구름 (발에서 3.6칸)
             case "archer_focus" -> new double[] {8.0, 3.0, 2.2, 0.6};
-            case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5};
+            // 스톰 레인: 과녁 위 7.2칸의 3D 먹구름 · 떨어지는 번개 화살
+            case "archer_rain" -> new double[] {10.5, 3.4, 3.4, 0.4};
+            // 2026-11-14 디바인 펀니시먼트: 과녁 머리 위 5.5칸의 하늘의 문 · 거대한 심판의 화살 (8.5칸)
+            case "sniper_ult" -> new double[] {10.0, 3.6, 3.6, 0.5};
+            // 헤븐즈 게이트: 과녁 머리 위 3.3칸의 하늘의 문
+            case "sniper_trick" -> new double[] {9.0, 3.4, 2.6, 0.5};
+            // 세라핌: 등의 날개 여섯 (몸 위 3칸 남짓)
+            case "sniper_mark" -> new double[] {8.0, 3.2, 1.8, 0.6};
+            // 섀도 레기온: 양옆의 분신 여덟 (3칸 둘레) 너머로 — 높이 봄 · 내리꽂히는 거대한 그림자 화살
+            case "battlearcher_ult" -> new double[] {11.5, 5.2, 2.0, 0.4};
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};
             case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35};

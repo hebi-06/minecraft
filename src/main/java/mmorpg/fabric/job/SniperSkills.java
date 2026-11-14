@@ -284,7 +284,7 @@ final class SniperSkills {
                     RuneKit.effect(e, "slowness", slow, JobKit.isBoss(e) ? 1 : 2);
                     if (n++ < 4) bind(level, e, slow, glow);
                 }
-                if (caught.isEmpty()) SkillFx.ring(level, at, V.UP, glow, 1.4, 0.5, 0);
+                if (caught.isEmpty()) SkillFx.shock(level, V.up(at, -1.0), glow, 1.0, 0.5); // 눕힌 고리 (zonePulse 자리 — bash_ring 은 늘 카메라를 봄)
             });
         });
         // 날아 물러남 (낮은 도약) → 내려앉으면 심판 + breath
@@ -302,7 +302,7 @@ final class SniperSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             JobTraitsMore.addBreath(sp, (int) k.num("breath", 3));
-            SkillFx.ring(level, V.up(sp.position(), 0.1), V.UP, glow, 1.3, 0.4, 0);
+            SkillFx.shock(level, sp.position(), glow, 0.9, 0.4);
             ArrowFx.glint(level, ArrowFx.bow(sp, 0.6), 0.32, 0.3, core, Opt.of("vel", RuneKit.bodyVel(sp)));
             for (int i = 0; i < 3; i++) ArrowFx.feather(level, V.add(V.up(sp.position(), 1.6), new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 1.0), 0.2, 0.9, FEATHER);
             SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.6, 0.7);
@@ -411,7 +411,7 @@ final class SniperSkills {
         Vec3 a = Kit.bodyPoint(from);
         Vec3 b = Kit.bodyPoint(n);
         // 맞은 자리에서 위로 솟는 빛 (다음 문으로) · 다음 적 위 하늘의 문 (성광 문양 — 시전자를 봄) · 내리꽂히는 3D 하늘의 화살 (delay 틱에 닿음)
-        Vec3 gate = V.up(n.position(), n.getBbHeight() + 4.2);
+        Vec3 gate = V.up(n.position(), n.getBbHeight() + 3.3); // 2026-11-14 영상: 4.2칸은 화면 위 끝에 잘렸음
         RuneKit.streak(level, a, gate, GOLD, 0.14, 0.3, 0.85, 0);
         RuneKit.skyPlate(sp, level, "sigil", gate, 1.5, glow, core, Opt.of("cell", HOLY, "life", (delay + 8) / 20.0, "spinRate", 90.0, "grow", 0.25, "alpha", 0.9,
                 "fade", 0.4));
@@ -454,7 +454,7 @@ final class SniperSkills {
         double[] core = JobKit.core(j);
         LightWings old = SERAPH.remove(sp.getUUID());
         if (old != null) old.end();
-        LightWings wings = new LightWings(sp, 3, 3.0, dur, 6, 2, 1.1, FEATHER, FEATHER_GLOW);
+        LightWings wings = new LightWings(sp, 3, 2.6, dur, 6, 2, 1.1, FEATHER, FEATHER_GLOW); // 2026-11-14 영상: 3칸 여섯은 몸을 덮었음 → 2.6칸
         wings.keep = () -> JobTraits.stanceOn(sp, "sniper_mark") && JobTraits9.jobIf(sp, JobTraits9.SN) != null;
         SERAPH.put(sp.getUUID(), wings);
         RuneKit.domainSigil(level, c, 2.4, "holy", glow, core, Opt.of("life", 0.9, "spinRate", 60.0, "grow", 0.15, "alpha", 0.85));
@@ -501,9 +501,11 @@ final class SniperSkills {
     }
 
     private static final Map<UUID, Snipe> SNIPES = new HashMap<>();
-    /** 심판의 화살 (3D 빛 화살 — 길이 칸) · 하늘의 문이 열리는 높이 (과녁 머리 위) */
+    /**
+     * 심판의 화살 (3D 빛 화살 — 길이 칸) · 하늘의 문이 열리는 높이 (과녁 머리 위 — 2026-11-14 영상: 9칸은 3인칭 · 1인칭 화면 위로 벗어났음 → 5.5칸)
+     */
     private static final double GREAT_LEN = 8.5;
-    private static final double GATE_UP = 9.0;
+    private static final double GATE_UP = 5.5;
 
     /**
      * 디바인 펀니시먼트 (sniper_ult): 무릎 꿇고 조준 (하늘이 금빛으로 — rpg:ult_heaven · 밀려나지 않음) · 등에 3D 빛의 날개가 크게 펼쳐지고 머리 위 빛 고리 · 보는 쪽에서 처음

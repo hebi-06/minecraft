@@ -72,8 +72,10 @@ final class ShadeArchers {
     // ------------------------------------------------------------ 섀도 댄스 (태세 동안 곁에서 함께 달리는 분신 둘)
 
     private static final Map<UUID, List<RuneMob>> DANCE = new HashMap<>();
-    /** 곁 자리: 오른쪽 · 앞 (칸) — 둘 다 조금 뒤 (1인칭 화면 밖 · 3인칭에서 몸 양옆) */
-    private static final double[][] SIDE = {{1.45, -0.7}, {-1.45, -0.7}};
+    /**
+     * 곁 자리: 오른쪽 · 앞 (칸) — 둘 다 옆으로 조금 앞 (1인칭 화면 밖 (81°) · 3인칭에서 몸 양옆). 2026-11-14 영상: 1.45칸 옆 · 0.7칸 뒤는 비스듬한 뒤 카메라와 몸 사이를 막았음
+     */
+    private static final double[][] SIDE = {{1.9, 0.3}, {-1.9, 0.3}};
 
     static Vec3 sideSpot(ServerPlayer sp, int i) {
         Vec3 f = Kit.facingOf(sp);
