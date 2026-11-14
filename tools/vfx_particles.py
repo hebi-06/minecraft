@@ -66,7 +66,11 @@ CAP_OF = {"rpg:rfx_jhits": 64}
 CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heavy_soft", "slash_thin", "slash_thin_soft",
          "slash_job", "slash_job_sw", "slash_job_wa", "slash_job_rp", "slash_job_sb",
          "card_sword", "card_greatsword", "card_axe", "card_spear", "card_arrow", "card_dagger", "card_bolt", "card_orb", "card_tome", "card_page",
-         "card_maul", "card_bell", "card_buckler", "card_aegis", "card_bow"]
+         "card_maul", "card_bell", "card_buckler", "card_aegis", "card_bow",
+         "slash_basic", "slash_basic_l", "slash_basic_w", "slash_basic_wl"]
+# 2026-11-14 기본 평타 참격 판 (몸 둘레 큰 초승달 — 칼 반지름 2.3칸 · 마검 4.1칸): 글자 한 장의 긴 변을 글꼴 판 (256) 까지 — 128 이면 큰 판에서 픽셀이 보임
+# (사용자 "그렇다고 도트로 하지말고")
+CARD_CAP = {"slash_basic": 256, "slash_basic_l": 256, "slash_basic_w": 256, "slash_basic_wl": 256}
 
 
 def wanted(pid):
@@ -188,6 +192,7 @@ def card_layers():
     """카드 모델 → 칸 (anim play 의 f0 … 또는 main 하나) 마다 겹 [(그림, mat, 가운데 x y z, 반 너비 · 반 높이)] — 앞뒤 빛 겹 (z ±) 은 하나로"""
     out = {}
     for name in CARDS:
+        cap = CARD_CAP.get(name, CAP)
         m = json.load(open(os.path.join(MODEL_DIR, name + ".json")))
         tex = m["tex"].split(":", 1)[1]
         im = Image.open(os.path.join(RES, "assets/mmorpg", tex)).convert("RGBA")
@@ -213,7 +218,7 @@ def card_layers():
                 crop = im.crop(rect)
                 ch_px = crop.size[1]
                 crop = crop.resize((max(1, round(ch_px * qa)), ch_px), Image.LANCZOS)
-                cell = shrink(crop, CAP)
+                cell = shrink(crop, cap)
                 cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
                 layers.append((cell, mat, [round(cx, 4), round(cy, 4), 0.0], [round((max(xs) - min(xs)) / 2, 4), round((max(ys) - min(ys)) / 2, 4)]))
             # 그리는 차례: 몸 (mat 0) 먼저, 빛 (mat 1) 을 위에 (모델에서 빛 겹이 몸 앞뒤에 있음)

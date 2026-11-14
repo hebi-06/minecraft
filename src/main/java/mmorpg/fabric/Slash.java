@@ -283,6 +283,14 @@ public final class Slash {
         boolean ok = RpgCombat.lackOf(sp, w).isEmpty();
         String motion = m != null ? m.motion() : "";
         boolean trail = ok && mmorpg.core.Motions.trailBasic(motion);
+        // 2026-11-14 기본 평타 참격 판 (모드 없는 클라이언트에도 — 궤적 평타는 모드의 칼 궤적뿐이라 참격이 보이지 않았음): 몸 둘레 · 앞 큰 초승달
+        if (trail) {
+            try {
+                BasicSlash.swing(sp, w, style, motion);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] basic slash {}", motion, e);
+            }
+        }
         if (style.truthy("bash")) {
             if (trail) sound(sp.level(), eye(sp), SoundEvents.SPEAR_ATTACK.value(), 0.7, 0.6);
             else bashSwing(sp, w, style, ok);
@@ -309,7 +317,8 @@ public final class Slash {
         boolean flip = !SIDE.getOrDefault(sp.getUUID(), false);
         double turn = 0;
         if (motion.equals("slash_h")) flip = false; // 가로 베기: 늘 오른쪽 → 왼쪽
-        else if (motion.equals("slash_v")) {
+        else if (motion.equals("slash_hb")) flip = true; // 2026-11-14 반대 가로 베기: 왼쪽 → 오른쪽
+        else if (motion.equals("slash_v") || motion.equals("gs_slam")) {
             flip = false;
             turn = SLASH.numOr("verticalTurn", -90); // 세로 베기: 그림을 세워 위 → 아래
         }

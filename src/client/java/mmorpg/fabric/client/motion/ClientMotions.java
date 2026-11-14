@@ -121,14 +121,19 @@ public final class ClientMotions {
 
     /** 같은 것 — 0.41.0 평타 강화 모습과 함께 (궤적 색 · 길이) */
     public static void start(int entity, String motion, float yaw, MotionNet.Look look) {
+        start(entity, motion, yaw, look, 1F);
+    }
+
+    /** 같은 것 — 2026-11-14 빠르기 speed (평타 공속: 동작 틱 ÷ speed — Motions.playTicks, 서버 VanillaRig 와 같은 셈) */
+    public static void start(int entity, String motion, float yaw, MotionNet.Look look, float speed) {
         MotionPoses.Motion m = MotionPoses.get(motion);
         if (m == null) return;
-        ACTIVE.put(entity, new Active(motion, ticks + 1, yaw, Math.max(1, m.ticks), look != null ? look : MotionNet.Look.NONE));
+        ACTIVE.put(entity, new Active(motion, ticks + 1, yaw, Motions.playTicks(m.ticks, speed), look != null ? look : MotionNet.Look.NONE));
     }
 
     /** 서버가 알린 동작 */
     public static void receive(MotionNet.PlayPayload p) {
-        start(p.entity(), p.motion(), p.yaw(), p.look());
+        start(p.entity(), p.motion(), p.yaw(), p.look(), p.speed());
     }
 
     /** 0.51.0 서버가 알린 멈칫: 그 사람이 하는 동작을 지금부터 ticks 틱 멈춤 (멈춘 중이면 늘림) */
@@ -379,7 +384,8 @@ public final class ClientMotions {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || e != mc.player) return;
         String motion = pendingCombo.get(pendingStep - 1);
-        start(e.getId(), motion, 0, selfLookFor(motion)); // 0.41.0 평타 강화 모습 (서버가 미리 알린 것)
+        // 0.41.0 평타 강화 모습 (서버가 미리 알린 것) · 2026-11-14 공속 (서버 MotionSystem.swung 과 같은 Motions.playSpeed)
+        start(e.getId(), motion, 0, selfLookFor(motion), (float) Motions.playSpeed(mmorpg.fabric.client.ClientJobBar.attackSpeed()));
         lastStep = pendingStep;
         lastSwing = ticks;
         lastType = pendingType;

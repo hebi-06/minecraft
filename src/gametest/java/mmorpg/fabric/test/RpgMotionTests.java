@@ -107,29 +107,33 @@ public final class RpgMotionTests {
         Weapon sword = Weapons.weaponFrom("sword", 20, "rare");
         Weapon bow = Weapons.weaponFrom("bow", 20, "rare");
         hold(sp, sword);
-        String[] want = {"slash_h", "slash_v", "spin", "slash_h"};
+        // 2026-11-14 칼 = 가로 → 반대 가로 (회전 없음)
+        String[] want = {"slash_h", "slash_hb", "slash_h", "slash_hb"};
         for (int i = 0; i < want.length; i++) {
             int n = i;
             h.runAfterDelay(2 + i * 3, () -> {
                 MotionSystem.Swing s = MotionSystem.swung(sp, sword);
-                h.assertTrue(s != null && s.motion().equals(want[n]) && s.step() == n % 3 + 1, "swing " + n + " " + s);
+                h.assertTrue(s != null && s.motion().equals(want[n]) && s.step() == n % 2 + 1, "swing " + n + " " + s);
                 h.assertTrue(want[n].equals(MotionSystem.lastSent(sp)), "sent " + MotionSystem.lastSent(sp));
-                h.assertTrue(MotionSystem.spinNow(sp) == want[n].equals("spin"), "spinNow " + n);
+                h.assertFalse(MotionSystem.spinNow(sp), "no spin " + n);
+                // 공속 (민첩 150 → ×2) 만큼 몸 동작도 빠르게 (Motions.playSpeed — ×1.5)
+                float ps = MotionSystem.lastSentSpeed(sp);
+                h.assertTrue(Math.abs(ps - Motions.playSpeed(2.0)) < 1e-4, "swing play speed " + ps);
             });
         }
-        // 2단 뒤 comboWindow 를 넘기면 처음
-        h.runAfterDelay(15, () -> h.assertTrue(MotionSystem.swung(sp, sword).step() == 2, "step 2 again"));
+        // 2단 뒤에는 1단 · comboWindow 를 넘기면 처음
+        h.runAfterDelay(15, () -> h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "after step 2 → 1"));
         h.runAfterDelay(15 + Motions.comboWindow() + 1, () -> {
             h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "window passed → 1");
             h.assertFalse(MotionSystem.spinNow(sp), "no spin");
         });
         // 클라이언트가 보낸 단계 (공격보다 먼저 옴) — 범위 밖은 무시
         h.runAfterDelay(45, () -> {
-            MotionSystem.testRequest(sp, "basic", 3, 0);
+            MotionSystem.testRequest(sp, "basic", 2, 0);
             MotionSystem.Swing s = MotionSystem.swung(sp, sword);
-            h.assertTrue(s.motion().equals("spin") && s.step() == 3, "client step 3 → spin " + s);
-            MotionSystem.testRequest(sp, "basic", 7, 0);
-            h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "bad client step ignored (3 → 1)");
+            h.assertTrue(s.motion().equals("slash_hb") && s.step() == 2, "client step 2 → slash_hb " + s);
+            MotionSystem.testRequest(sp, "basic", 3, 0);
+            h.assertTrue(MotionSystem.swung(sp, sword).step() == 1, "bad client step ignored (2 → 1)");
         });
         h.runAfterDelay(50, () -> {
             h.assertTrue(MotionSystem.swung(sp, bow) == null, "bow: no combo");
@@ -257,9 +261,81 @@ public final class RpgMotionTests {
             h.assertTrue(TestDummies.dealt(b) == 0, "behind not hit");
             h.assertFalse(Slash.admit(sp, true) || Slash.admit(sp, false), "2 ticks later: too early");
         });
-        h.runAfterDelay(2 + Motions.serverInterval() - 1, () -> h.assertFalse(Slash.admit(sp, true), "interval − 1: too early"));
-        h.runAfterDelay(2 + Motions.serverInterval(), () -> {
+        // 2026-11-14 평타 사이 = 공속 (민첩 150 → ×2: 16 → 8틱, 서버 여유 2틱)
+        int gap = Motions.serverInterval(RpgCombat.attackSpeed.applyAsDouble(sp));
+        h.assertTrue(gap == Motions.serverInterval(2.0), "server interval at dex 150 " + gap);
+        h.runAfterDelay(2 + gap - 1, () -> h.assertFalse(Slash.admit(sp, true), "interval − 1: too early"));
+        h.runAfterDelay(2 + gap, () -> {
             h.assertTrue(Slash.admit(sp, true) && Slash.admit(sp, false), "after the interval: admitted");
+            done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 2026-11-14 민첩 = 공속 · 기본 평타 참격 판
+
+    @GameTest(environment = ENV, maxTicks = 60)
+    public void dexAttackSpeed(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon sword = Weapons.weaponFrom("sword", 20, "rare");
+        Weapon bow = Weapons.weaponFrom("bow", 20, "rare");
+        hold(sp, sword);
+        h.runAfterDelay(2, () -> {
+            for (int[] c : new int[][] {{0, 16}, {50, 11}, {100, 8}, {150, 8}}) {
+                RpgPlayers.setStat(sp, "dex", c[0]);
+                double spd = RpgCombat.attackSpeed.applyAsDouble(sp);
+                h.assertTrue(Math.abs(spd - mmorpg.core.AttackSpeed.speedOf(c[0])) < 1e-9, "dex " + c[0] + " speed " + spd);
+                h.assertTrue(Motions.attackInterval(spd) == c[1], "dex " + c[0] + " interval " + Motions.attackInterval(spd));
+            }
+            // 활 (희귀 20렙 — 요구 민첩 53): 재사용 대기 = 20 × 1.6 ÷ 공속 (민첩 80 → ×1.8 → 18틱)
+            RpgPlayers.setStat(sp, "dex", 80);
+            sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(bow.id())));
+        });
+        h.runAfterDelay(4, () -> {
+            ItemStack st = sp.getMainHandItem();
+            RpgCombat.fireRanged(sp, st, bow, null);
+            h.assertTrue(sp.getCooldowns().isOnCooldown(st), "bow cooldown started");
+        });
+        // 18틱 대기: 16틱 뒤에는 아직 · 20틱 뒤에는 끝 (예전 바탕 20틱 · 민첩 0 이면 32틱)
+        h.runAfterDelay(4 + 16, () -> h.assertTrue(sp.getCooldowns().isOnCooldown(sp.getMainHandItem()), "bow still cooling at 16 ticks (18 at dex 80)"));
+        h.runAfterDelay(4 + 20, () -> {
+            h.assertFalse(sp.getCooldowns().isOnCooldown(sp.getMainHandItem()), "bow ready after 18 ticks");
+            done(h, sp);
+        });
+    }
+
+    @GameTest(environment = ENV, maxTicks = 60)
+    public void basicSlashCards(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon sword = Weapons.weaponFrom("sword", 20, "rare");
+        Weapon gs = Weapons.weaponFrom("greatsword", 40, "transcend"); // 마검은 초월만
+        hold(sp, sword);
+        int[] n0 = new int[1];
+        h.runAfterDelay(2, () -> {
+            n0[0] = mmorpg.fabric.BasicSlash.spawned;
+            Slash.onPunch(sp); // 가로 베기 (허공)
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 1 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic"),
+                    "slash_h → one flat card " + mmorpg.fabric.BasicSlash.lastModel);
+            Double reach = Motions.reach("sword", sword.gradeIndex());
+            h.assertTrue(reach != null && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - reach) < 1e-6, "radius = sword reach " + mmorpg.fabric.BasicSlash.lastRadius);
+            // 공속 ×2 → 동작 ×1.5: 휘두름 구간 (0.3 ~ 0.68 × 6틱) ÷ 0.4
+            int ticks = Motions.playTicks(9, Motions.playSpeed(2.0));
+            double life = (0.68 - 0.3) * ticks / 20.0 / 0.4;
+            h.assertTrue(Math.abs(mmorpg.fabric.BasicSlash.lastLife - life) < 1e-3, "life follows the play speed " + mmorpg.fabric.BasicSlash.lastLife + " vs " + life);
+        });
+        h.runAfterDelay(2 + Motions.attackInterval(2.0) + 1, () -> {
+            n0[0] = mmorpg.fabric.BasicSlash.spawned;
+            Slash.onPunch(sp); // 반대 가로 베기 (거울 그림)
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 1 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_l"),
+                    "slash_hb → mirrored card " + mmorpg.fabric.BasicSlash.lastModel);
+            hold(sp, gs);
+        });
+        h.runAfterDelay(4 + 2 * Motions.attackInterval(2.0) + Motions.comboWindow(), () -> {
+            n0[0] = mmorpg.fabric.BasicSlash.spawned;
+            Slash.onPunch(sp); // 마검 가로 베기 — 광역 (두꺼운 띠 · 4.1칸)
+            h.assertTrue(mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_w") && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.1) < 1e-6,
+                    "greatsword → thick wide card " + mmorpg.fabric.BasicSlash.lastModel + " " + mmorpg.fabric.BasicSlash.lastRadius);
             done(h, sp);
         });
     }

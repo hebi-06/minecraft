@@ -948,7 +948,7 @@ final class VanillaProbe {
                 if (k.startsWith("motion:")) {
                     // 2026-11-13 뼈 몸 모션 (motion:<무기 종류> — 평타 연타 두 바퀴)
                     FILM_RUNES.add(k);
-                    FILM_FRAMES.add(MOTION_FRAMES);
+                    FILM_FRAMES.add(motionFrames(k.substring(7)));
                     continue;
                 }
                 if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(k + "_" + g);
@@ -1556,12 +1556,41 @@ final class VanillaProbe {
         });
     }
 
-    /** 2026-11-13 뼈 몸 모션 영상의 장 수 (평타 연타 두 바퀴 + 뼈 몸이 남아 있는 모습) */
-    static final int MOTION_FRAMES = 112;
+    /**
+     * 2026-11-14 뼈 몸 모션 영상의 두 바퀴 (민첩 = 공속): 바퀴마다 {민첩, 평타 사이 틱} — 첫 바퀴는 무기의 요구 민첩 (공속이 가장 느린 쪽), 둘째는 민첩 150
+     * (공속 ×2 — 평타 사이 반)
+     */
+    static int[][] motionPlan(String type) {
+        mmorpg.core.Weapon w = mmorpg.core.Weapons.weaponFrom(type, 40, motionGrade(type));
+        int req = w == null ? 0 : (int) Math.ceil(mmorpg.core.AttackSpeed.reqOf(w));
+        int[] dex = {req, 150};
+        int[][] out = new int[2][];
+        for (int r = 0; r < 2; r++) out[r] = new int[] {dex[r], mmorpg.core.Motions.attackInterval(mmorpg.core.AttackSpeed.speedOf(dex[r]))};
+        return out;
+    }
+
+    /** 모션 영상의 무기 등급: 40렙 영웅 — 없으면 초월 (마검은 초월만) · 희귀 */
+    static String motionGrade(String type) {
+        for (String g : new String[] {"hero", "transcend", "rare"}) if (mmorpg.core.Weapons.weaponFrom(type, 40, g) != null) return g;
+        return "hero";
+    }
+
+    /** 모션 영상의 평타 수 (한 바퀴 — 연타 단계가 하나 · 둘이면 셋까지 되풀이) */
+    static int motionPer(String type) {
+        return Math.max(3, mmorpg.core.Motions.combo(type).size());
+    }
+
+    /** 모션 영상의 장 수 (두 바퀴 · 바퀴 사이 20틱 쉼 + 뼈 몸이 남아 있는 모습) */
+    static int motionFrames(String type) {
+        int t = 3;
+        for (int[] r : motionPlan(type)) t += motionPer(type) * r[1] + 20;
+        return t + 12;
+    }
 
     /**
-     * 2026-11-13 뼈 몸 모션 영상 (VFILM motion:&lt;무기 종류&gt; — films/vanilla_motion_&lt;종류&gt;): 그 무기 (40렙 영웅) 를 들고 과녁 앞에서 평타 연타 (12틱마다 —
-     * 칼은 가로 · 세로 · 회전, 단계가 하나 · 둘이면 셋까지 되풀이) 두 바퀴 (사이 20틱 쉼). 내 모션 보기를 켠 3인칭 화면 (직업 영상과 같은 카메라).
+     * 2026-11-13 뼈 몸 모션 영상 (VFILM motion:&lt;무기 종류&gt; — films/vanilla_motion_&lt;종류&gt;): 그 무기 (40렙 영웅) 를 들고 과녁 앞에서 평타 연타
+     * (칼은 가로 · 반대 가로, 단계가 하나 · 둘이면 셋까지 되풀이) 두 바퀴 (사이 20틱 쉼). 2026-11-14 공속: 첫 바퀴는 요구 민첩 · 둘째는 민첩 150 — 평타 사이
+     * (Motions.attackInterval(공속)) 마다 ({@link #motionPlan}). 내 모션 보기를 켠 3인칭 화면 (직업 영상과 같은 카메라).
      * 첫 평타 뒤: 뼈 몸이 떴는지 (check) · 클라이언트의 둘레 엔티티 (뼈가 사람에게 탔는지 — ents)
      */
     private static void motionFilm(ServerPlayer p, int step, String type, int frames, int y) {
@@ -1569,7 +1598,7 @@ final class VanillaProbe {
         MinecraftServer server = level.getServer();
         run(server, "tick rate 20");
         run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
-        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:" + type + "_l40_hero");
+        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:" + type + "_l40_" + motionGrade(type));
         p.getInventory().setSelectedSlot(0);
         p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
         mmorpg.fabric.RpgHealth.healFull(p);
@@ -1588,22 +1617,28 @@ final class VanillaProbe {
         mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
         if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
         String name = "vanilla_motion_" + type;
-        int per = Math.max(3, mmorpg.core.Motions.combo(type).size());
+        int per = motionPer(type);
+        int[][] plan = motionPlan(type);
+        mmorpg.fabric.RpgPlayers.setStat(p, "dex", plan[0][0]);
         say(p, "cam film 125 6.00 2.10 1.00 2.5 1.00");
         mmorpg.fabric.vfx.PBridge.filmCam(p, 125, 6.0, 2.1, 1.0, 2.5, 1.0);
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);
-            for (int r = 0; r < 2; r++) {
+            int at = 3;
+            for (int[] round : plan) {
+                int dex = round[0];
+                Tasks.later(Math.max(0, at - 2), () -> mmorpg.fabric.RpgPlayers.setStat(p, "dex", dex));
                 for (int k = 0; k < per; k++) {
-                    int at = 3 + r * (per * 12 + 20) + k * 12;
-                    Tasks.later(at, () -> {
+                    Tasks.later(at + k * round[1], () -> {
                         if (p.isRemoved()) return;
                         var e = nearest(p.position(), foes);
                         if (e != null) p.attack(e);
                     });
                 }
+                at += per * round[1] + 20;
             }
+            Tasks.later(frames, () -> mmorpg.fabric.RpgPlayers.setStat(p, "dex", 150));
             Tasks.later(9, () -> {
                 check("rig shown " + type + " (" + VanillaRig.lastMotion + ")", VanillaRig.active(p));
                 say(p, "ents");

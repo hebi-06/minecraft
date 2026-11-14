@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 0.38.0 사진첩 (화면 시험, only=motion): 동작 22 가지를 마네킹 셋 (같은 동작의 세 순간) 에 멈춰 3/4 · 옆에서 찍고 (mo_&lt;동작&gt;_34 · _side),
- * 공허 갑옷을 입은 마네킹의 팔꿈치 · 무릎 굽힘 (mo_armor_*), 실제 입력: 공격 키 세 번 = 가로 → 세로 → 회전 (클라이언트 · 서버 단계가 같은지 · 1인칭 사진),
+ * 공허 갑옷을 입은 마네킹의 팔꿈치 · 무릎 굽힘 (mo_armor_*), 실제 입력: 공격 키 두 번 = 가로 → 반대 가로 (2026-11-14 — 클라이언트 · 서버 단계가 같은지 · 1인칭 사진),
  * 쉬프트 두 번 = 구르기 (앞으로 3칸 넘게 · 재사용 대기 중에는 다시 안 됨 · 1인칭 · 3인칭 사진), 우클릭 무기 스킬 → 서버가 보낸 동작 (skill_slash),
  * 맨손 1인칭 (굽힘이 남지 않음). 0.40.0 참격 궤적: 렌더가 그린 무기 자리 = BladeTrails 계산 (3인칭 마네킹 · 1인칭), 실제로 눌러 찍은 궤적 (mo_trail_tp_* · mo_trail_fp_*) —
  * 멈춘 사진 (mo_&lt;동작&gt;_* · mo_fp_*) 에도 그 순간까지의 궤적. 0.41.0 평타 강화 모습: 멈춘 마네킹의 가로 베기 궤적을 모습마다 (mo_look_&lt;key&gt;),
@@ -56,6 +56,9 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     private static final String[][] SAMPLES = {
         {"slash_h", "sword", "0.3,0.5,0.68"},
         {"slash_v", "sword", "0.32,0.52,0.86"},
+        {"slash_hb", "sword", "0.3,0.5,0.68"},
+        {"gs_slam", "greatsword", "0.38,0.6,0.8"},
+        {"reap_up", "scythe", "0.32,0.5,0.68"},
         {"spin", "sword", "0.16,0.45,0.8"},
         {"dagger_x", "dagger", "0.16,0.36,0.72"},
         {"chop", "axe", "0.36,0.56,0.76"},
@@ -225,7 +228,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.waitTicks(3);
     }
 
-    // ------------------------------------------------------------ 3. 공격 키 세 번 (가로 → 세로 → 회전)
+    // ------------------------------------------------------------ 3. 공격 키 두 번 (2026-11-14 칼: 가로 → 반대 가로)
 
     private void attack(ClientGameTestContext ctx, TestServerContext server) {
         server.runOnServer(s -> {
@@ -236,7 +239,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.getInput().lookAt(180F, -35F); // 하늘 (블록을 캐지 않게)
         ctx.waitTicks(12);
         int me = ctx.computeOnClient(mc -> mc.player.getId());
-        String[] want = {"slash_h", "slash_v", "spin"};
+        String[] want = {"slash_h", "slash_hb"};
         for (int i = 0; i < want.length; i++) {
             ctx.getInput().pressKey(o -> o.keyAttack);
             ctx.waitTicks(3);
@@ -248,7 +251,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                 return sw == null ? "-" : sw.motion() + "#" + sw.step();
             });
             check(srv.equals(want[i] + "#" + (i + 1)), "server step " + i + " " + srv);
-            ctx.waitTicks(10); // 허공 공격 뒤 바닐라 공격 대기 (missTime 10)
+            ctx.waitTicks(Motions.attackInterval() + 1 - 3); // 평타 사이 (공속 ×1 이어도 — 허공 공격 뒤 바닐라 공격 대기 missTime 10 보다 김)
         }
         // 0.39.0 선입력: 2틱 간격으로 두 번 누르면 둘째는 미뤄 두었다가 평타 사이 (10틱) 가 지나는 틱에 나감 (2단으로 이어짐)
         ctx.waitTicks(Motions.comboWindow() + 2);
@@ -268,7 +271,9 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             MotionSystem.Swing sw = MotionSystem.last(player(s));
             return sw == null ? "-" : sw.step() + "@" + (sw.tick() - firstSwing);
         });
-        check(buf.startsWith("2@") && Math.abs(Integer.parseInt(buf.substring(2)) - Motions.attackInterval()) <= 2, "server: step 2 one interval later " + buf);
+        // 2026-11-14 평타 사이 = 공속 (민첩 150 → ×2)
+        int gap = server.computeOnServer(s -> Motions.attackInterval(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(player(s))));
+        check(buf.startsWith("2@") && Math.abs(Integer.parseInt(buf.substring(2)) - gap) <= 2, "server: step 2 one interval later " + buf + " (gap " + gap + ")");
         ctx.waitTicks(12);
         // 3인칭 (앞 · 시야 40 으로 가까이): 연타 셋
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
@@ -279,7 +284,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(o -> o.keyAttack);
             ctx.waitTicks(4);
             ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_" + m).withSize(960, 540));
-            ctx.waitTicks(9);
+            ctx.waitTicks(Motions.attackInterval() + 1 - 4);
         }
         fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
@@ -288,14 +293,17 @@ public final class RpgMotionGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 3-1. 0.40.0 참격 궤적 (칼이 지나간 자리에 띠)
 
-    /** {종류, 등급, 동작 · 찍는 틱 …} — 평타를 실제로 눌러 그 동작이 진행된 틱에 찍음 (칼은 연타 셋) */
+    /**
+     * {종류, 등급, 동작 · 찍는 틱 …} — 평타를 실제로 눌러 그 동작이 진행된 틱에 찍음 (2026-11-14 칼은 가로 → 반대 가로, 마검 · 낫은 셋째 마무리까지 —
+     * 민첩 150 의 공속 ×2 면 동작이 ×1.5 빨라 찍는 틱을 줄임: 낫 마무리 10 → 7틱 · 단검 8 → 5틱)
+     */
     private static final String[][] TRAILS = {
-        {"sword", "rare", "slash_h:5", "slash_v:5", "spin:6"},
-        {"scythe", "hero", "slash_h:5"},
-        {"greatsword", "transcend", "slash_h:5"},
-        {"dagger", "rare", "dagger_x:5"},
-        {"axe", "rare", "chop:6"},
-        {"scepter", "rare", "smite:6"},
+        {"sword", "rare", "slash_h:4", "slash_hb:4"},
+        {"scythe", "hero", "slash_h:4", "slash_v:4", "reap_up:4"},
+        {"greatsword", "transcend", "slash_h:4", "slash_v:4", "gs_slam:5"},
+        {"dagger", "rare", "dagger_x:4"},
+        {"axe", "rare", "chop:5"},
+        {"scepter", "rare", "smite:5"},
         {"lance", "rare", "thrust:4", "lance_sweep:5"}, // 0.42.0 창: 찌르기 (빛줄기 — 궤적 없음) → 가로 휘두르기
     };
 
@@ -303,7 +311,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         server.runCommand("tp @a 0.5 -60 0.5 180 0"); // 북쪽 (-z) 을 봄
         // (1) 렌더가 실제로 그린 무기 자리 = BladeTrails 의 계산 (3인칭: 마네킹을 멈춰 · 1인칭: 내 자세를 멈춰)
         hideGui(ctx, true);
-        String[][] cases = {{"slash_h", "sword", "0.5"}, {"slash_v", "sword", "0.45"}, {"spin", "sword", "0.45"}, {"chop", "axe", "0.5"},
+        String[][] cases = {{"slash_h", "sword", "0.5"}, {"slash_hb", "sword", "0.5"}, {"slash_v", "sword", "0.45"}, {"spin", "sword", "0.45"}, {"chop", "axe", "0.5"},
             {"dagger_x", "dagger", "0.3"}, {"smite", "scepter", "0.55"}, {"skill_flurry", "sword", "0.5"}, {"lance_sweep", "lance", "0.5"}};
         double worst = 0;
         for (String[] c : cases) {
@@ -373,7 +381,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                 check(dg < 0.03 && dt < 0.05, String.format("1st person blade = render %s %s grip %.3f tip %.3f", c[0], type, dg, dt));
             }
         }
-        // (2) 실제로 눌러 찍음: 3인칭 앞 (시야 50) · 3인칭 뒤 (보통 3인칭 — 시야 70) · 1인칭 — 칼은 가로 → 세로 → 회전
+        // (2) 실제로 눌러 찍음: 3인칭 앞 (시야 50) · 3인칭 뒤 (보통 3인칭 — 시야 70) · 1인칭 — 칼은 가로 → 반대 가로 · 마검 · 낫은 마무리까지
         for (CameraType cam : new CameraType[] {CameraType.THIRD_PERSON_FRONT, CameraType.THIRD_PERSON_BACK, CameraType.FIRST_PERSON}) {
             boolean tp = cam != CameraType.FIRST_PERSON;
             String tag = cam == CameraType.THIRD_PERSON_FRONT ? "tp_" : cam == CameraType.THIRD_PERSON_BACK ? "tb_" : "fp_";

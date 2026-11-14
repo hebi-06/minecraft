@@ -69,16 +69,21 @@ public final class MotionNet {
         }
     }
 
-    public record PlayPayload(int entity, String motion, float yaw, Look look) implements CustomPacketPayload {
+    /** 2026-11-14 speed = 동작 빠르기 (평타만 공속 — 1 = poses.json 의 ticks 그대로, 2 = 반 틱에 끝남 · Motions.playSpeed) */
+    public record PlayPayload(int entity, String motion, float yaw, Look look, float speed) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<PlayPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("motion"));
         public static final StreamCodec<RegistryFriendlyByteBuf, PlayPayload> CODEC = CustomPacketPayload.codec(PlayPayload::write, PlayPayload::read);
 
         public PlayPayload(int entity, String motion, float yaw) {
-            this(entity, motion, yaw, Look.NONE);
+            this(entity, motion, yaw, Look.NONE, 1F);
+        }
+
+        public PlayPayload(int entity, String motion, float yaw, Look look) {
+            this(entity, motion, yaw, look, 1F);
         }
 
         private static PlayPayload read(RegistryFriendlyByteBuf buf) {
-            return new PlayPayload(buf.readVarInt(), buf.readUtf(32), buf.readFloat(), Look.read(buf));
+            return new PlayPayload(buf.readVarInt(), buf.readUtf(32), buf.readFloat(), Look.read(buf), buf.readFloat());
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -86,6 +91,7 @@ public final class MotionNet {
             buf.writeUtf(motion, 32);
             buf.writeFloat(yaw);
             (look != null ? look : Look.NONE).write(buf);
+            buf.writeFloat(speed > 0 ? speed : 1F);
         }
 
         @Override

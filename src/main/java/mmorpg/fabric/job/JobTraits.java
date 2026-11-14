@@ -504,6 +504,8 @@ public final class JobTraits {
         long now = Tasks.now();
         if (MARKS.size() > 256) MARKS.values().removeIf(m -> m[1] < now);
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            // 2026-11-14 공속 (민첩 · 장비 · 버프가 바뀜 — 직업이 없는 사람도): 1초마다 게이지가 바뀌었으면 보냄 (모드 클라이언트의 평타 사이 · 선입력)
+            if (now % 20 == 0) sendGauge(sp, false);
             State st = STATES.get(sp.getUUID());
             Jobs.Job j = JobSystem.job(sp);
             if (j != null) {
@@ -599,7 +601,7 @@ public final class JobTraits {
     /** 지금 게이지 (직업이 없으면 빈 것) */
     static JobSkills.GaugePayload gauge(ServerPlayer sp) {
         Jobs.Job j = JobSystem.job(sp);
-        if (j == null || j.trait() == null) return new JobSkills.GaugePayload("", 0, 0, "", 0, 0, 1F);
+        if (j == null || j.trait() == null) return new JobSkills.GaugePayload("", 0, 0, "", 0, 0, speedOf(sp)); // 2026-11-14 직업이 없어도 민첩의 공속
         State st = STATES.get(sp.getUUID());
         long now = Tasks.now();
         String stance = st != null && st.stanceUntil > now ? st.stanceName : "";
@@ -632,9 +634,14 @@ public final class JobTraits {
                 value = e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);
             }
         } else value = JobTraitsMore.gaugeValue(sp, j); // 0.28.0 분노 · 연쇄 · 호흡
-        // 0.51.0 공격 속도 (클라이언트 평타 사이 — 0.05 단위로 맞춤)
-        float speed = (float) (Math.round(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp) * 20) / 20.0);
-        return new JobSkills.GaugePayload(j.trait().name(), value, Math.max(0, j.trait().max()), stance, left, total, speed);
+        return new JobSkills.GaugePayload(j.trait().name(), value, Math.max(0, j.trait().max()), stance, left, total, speedOf(sp));
+    }
+
+    /**
+     * 0.51.0 공격 속도 (클라이언트 평타 사이 · 선입력). 2026-11-14 민첩 1당 +1% 라 0.01 단위로 맞춤 (전에는 0.05 — 클라이언트 평타 사이가 서버보다 1틱쯤 짧을 수 있었음)
+     */
+    static float speedOf(ServerPlayer sp) {
+        return (float) (Math.round(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp) * 100) / 100.0);
     }
 
     /** 게이지를 보냄 (force 가 아니면 바뀌었을 때만 — 남은 틱은 클라이언트가 셈) */

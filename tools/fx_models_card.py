@@ -32,7 +32,7 @@ FRAMES = 5
 def add(mod):
     global fx
     fx = mod
-    fns = [slash_wave] + [_job_slash_fn(n) for n in JOB_SLASHES]
+    fns = [slash_wave] + [_job_slash_fn(n) for n in JOB_SLASHES] + [slash_basic, slash_basic_l, slash_basic_w, slash_basic_wl]
     for shape in SLASH_SHAPES:
         fns.append(_slash_fn(shape, False))
         fns.append(_slash_fn(shape, True))
@@ -170,6 +170,46 @@ def slash_job(name="slash_job"):
     m.part("main")
     m.anims["play"] = {"len": 1.0, "tracks": {"f%d" % k: {"scale": _steps(k, n)} for k in range(n)}}
     return m
+
+
+def _basic_slash(name, mirror, thick=False):
+    """2026-11-14 기본 평타 참격 판 (tools/basic_slash_art.py — 몸 둘레 초승달 띠: 가늘고 날카로운 머리 · 두껍고 짙어지는 잔상, 원점 = 몸 가운데,
+    바깥 반지름 1 · 그림 위 = 앞): 칸 FRAMES 장을 부분 f0 ~ f(n-1) 에 — 몸 (TINT, 밝기 · 알파 — 무기 색) + 날 (GLOW 앞 · 뒤 두 장 — 흰빛). 움직임 play
+    (칸마다 u 0.1 — 휘두름 0 ~ 0.4 · 거둬짐 0.4 ~ 1). mirror = 왼쪽 → 오른쪽 휘두름 (slash_basic_l), thick = 광역 무기의 두꺼운 띠 (slash_basic_w · _wl)"""
+    import basic_slash_art as art
+    m = fx.Model(name, tex=1024, cell=16)
+    m.emissive = True
+    cw, ch = art.W // 16, art.H // 16
+    x0, x1, y0, y1 = art.XL, art.XR, art.YB, art.YT
+    frames = art.frames(mirror, thick)
+    for k, (lum, a, c) in enumerate(frames):
+        m.part("f%d" % k)
+        buv = m.atlas.swatch("b%d" % k, art.painter((lum, a)), cw, ch)
+        cuv = m.atlas.swatch("c%d" % k, art.painter((np.ones_like(c), c)), cw, ch)
+        for uv, mat, z in ((cuv, fx.GLOW, -0.01), (buv, fx.TINT, 0.0), (cuv, fx.GLOW, 0.01)):
+            u0, v0, u1, v1 = uv
+            ps = [v3(x0, y1, z), v3(x0, y0, z), v3(x1, y0, z), v3(x1, y1, z)]
+            m.quad(ps, [(u0, v0), (u0, v1), (u1, v1), (u1, v0)], mat, [v3(0, 0, 1)] * 4)
+    m.part("main")
+    n = len(frames)
+    m.anims["play"] = {"len": 1.0, "tracks": {"f%d" % k: {"scale": _steps(k, n)} for k in range(n)}}
+    return m
+
+
+def slash_basic():
+    return _basic_slash("slash_basic", False)
+
+
+def slash_basic_l():
+    return _basic_slash("slash_basic_l", True)
+
+
+def slash_basic_w():
+    return _basic_slash("slash_basic_w", False, True)
+
+
+def slash_basic_wl():
+    return _basic_slash("slash_basic_wl", True, True)
 
 
 def _job_slash_fn(name):

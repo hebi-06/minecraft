@@ -25,6 +25,24 @@ public final class MotionsTest {
         else BAD.add(what);
     }
 
+    /** 2026-11-14 동작 이름 → poses.json 의 ticks (평타 동작 빠르기 시험) */
+    private static final Map<String, Integer> MOTION_TICKS = motionTicks();
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Integer> motionTicks() {
+        Map<String, Integer> out = new java.util.HashMap<>();
+        try {
+            Map<String, Object> pj = Json.parseObject(Files.readString(Path.of("src/main/resources/assets/mmorpg/motion/poses.json"), StandardCharsets.UTF_8));
+            for (Map.Entry<String, Object> e : ((Map<String, Object>) pj.get("motions")).entrySet()) {
+                Object t = ((Map<String, Object>) e.getValue()).get("ticks");
+                if (t instanceof Number n) out.put(e.getKey(), n.intValue());
+            }
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return out;
+    }
+
     /** 룬 동작 수 · 왼손 맨손 (fpo) 인 것 · 소품을 드는 것 */
     private static final int[] RUNE_SHAPES = new int[3];
 
@@ -155,6 +173,22 @@ public final class MotionsTest {
         Weapon scy = Weapons.weaponFrom("scythe", 40, "transcend");
         st.put("dex", 89.0);
         check(Math.abs(Combat.statMultiplier(st, scy) - (1 + 0.01 * AttackSpeed.reqOf(scy))) < 1e-9, "scythe dex between req and 100 → req only");
+        // 2026-11-14 평타 몸 동작 빠르기 = 1 + (공속 − 1) × 0.5 (0.7 ~ 2.2) · 동작 틱 ÷ 빠르기
+        check(Math.abs(Motions.playSpeed(1) - 1) < 1e-9 && Math.abs(Motions.playSpeed(2) - 1.5) < 1e-9 && Math.abs(Motions.playSpeed(3) - 2) < 1e-9
+                && Math.abs(Motions.playSpeed(5) - 2.2) < 1e-9 && Math.abs(Motions.playSpeed(0.75) - 0.875) < 1e-9 && Math.abs(Motions.playSpeed(0.2) - 0.7) < 1e-9
+                && Motions.playSpeed(0) == 1 && Motions.playSpeed(Double.NaN) == 1, "play speed");
+        check(Motions.playTicks(9, 1) == 9 && Motions.playTicks(9, 1.5) == 6 && Motions.playTicks(12, 1.5) == 8 && Motions.playTicks(8, 1.5) == 5
+                && Motions.playTicks(9, 0.875) == 10 && Motions.playTicks(1, 2.2) == 1 && Motions.playTicks(9, 0) == 9, "play ticks");
+        // 공속 ×2 (민첩 100) 에서도 평타 동작은 다음 평타 전에 끝남 (동작 틱 ≤ 평타 사이)
+        for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
+            for (double sp : new double[] {1, 1.5, 2, 2.8}) {
+                int gap = Motions.attackInterval(sp);
+                for (String m : Motions.combo(t)) {
+                    Integer ticks = MOTION_TICKS.get(m);
+                    check(ticks != null && Motions.playTicks(ticks, Motions.playSpeed(sp)) <= gap + 1, "motion " + m + " ends before the next swing at speed " + sp);
+                }
+            }
+        }
         check(Motions.areaEnabled() && Motions.areaMax() == 6, "area on · max 6");
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) {

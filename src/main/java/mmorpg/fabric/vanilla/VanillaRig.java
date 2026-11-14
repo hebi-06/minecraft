@@ -124,6 +124,8 @@ public final class VanillaRig {
     /** 시험: 뼈 몸을 띄운 횟수 · 마지막 동작 */
     public static int shown;
     public static String lastMotion = "";
+    /** 시험: 마지막 동작의 빠르기 (2026-11-14 공속) */
+    public static float lastSpeed = 1F;
 
     public static void init() {
         load();
@@ -147,6 +149,11 @@ public final class VanillaRig {
 
     /** 동작 시작 (MotionSystem.broadcast — 평타 · 스킬 · 룬 · 구르기): 싸우는 동안 뼈 몸으로 */
     public static void play(ServerPlayer sp, String motion, float yaw) {
+        play(sp, motion, yaw, 1F);
+    }
+
+    /** 같은 것 — 2026-11-14 빠르기 speed (평타 공속: 동작 틱 ÷ speed) */
+    public static void play(ServerPlayer sp, String motion, float yaw, float speed) {
         if (sp == null || sp.isRemoved() || VARIANTS.isEmpty()) return;
         MotionPoses.Motion m = MotionPoses.get(motion);
         if (m == null) return;
@@ -157,8 +164,9 @@ public final class VanillaRig {
             RIGS.put(sp.getUUID(), r);
             r.attach();
         }
-        r.start(motion, m, yaw);
+        r.start(motion, m, yaw, speed);
         lastMotion = motion;
+        lastSpeed = speed;
     }
 
     /** 멈칫 (MotionSystem.hitStop — 맞는 순간): 하는 동작을 ticks 틱 그 자세로 */
@@ -366,12 +374,12 @@ public final class VanillaRig {
                     : s == DEFAULT ? "ours" : "profile " + variant);
         }
 
-        void start(String name, MotionPoses.Motion mo, float y) {
+        void start(String name, MotionPoses.Motion mo, float y, float speed) {
             motion = name;
             m = mo;
             start = Tasks.now() + 1;
             yaw = y;
-            ticks = Math.max(1, mo.ticks);
+            ticks = mmorpg.core.Motions.playTicks(mo.ticks, speed); // 2026-11-14 공속 (평타만 — 나머지는 1)
             holdFrom = Double.NaN;
             until = Tasks.now() + ticks + COMBAT;
         }

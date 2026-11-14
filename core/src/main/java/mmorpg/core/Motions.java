@@ -107,6 +107,26 @@ public final class Motions {
         return Math.max(1, attackInterval(speed) - (int) cfg().numOr("intervalSlack", 2));
     }
 
+    /**
+     * 2026-11-14 평타 몸 동작 빠르기 (사용자 "공속이 빠를수록 평타가 빨리 나가게"): 1 + (공격 속도 배율 − 1) × MOTION.playSpeed.share 를 [min, max] 안으로
+     * (1 = poses.json 의 ticks — 공속 ×2 면 ×1.5: 평타 사이 (÷2) 보다 덜 줄여 휘두름이 너무 짧아지지 않게, 동작은 늘 다음 평타 전에 끝남).
+     * 서버 (MotionSystem.swung — 둘레 사람 · 뼈 몸 · 기본 참격 판) 와 모드 클라이언트 (내 평타 — ClientMotions.attackSwing) 가 같은 값을 씀
+     */
+    public static double playSpeed(double attackSpeed) {
+        if (!(attackSpeed > 0)) return 1;
+        Obj c = cfg().objOrNull("playSpeed");
+        double share = c == null ? 0.5 : c.numOr("share", 0.5);
+        double lo = c == null ? 0.7 : c.numOr("min", 0.7);
+        double hi = c == null ? 2.2 : c.numOr("max", 2.2);
+        return Math.max(lo, Math.min(hi, 1 + (attackSpeed - 1) * share));
+    }
+
+    /** 동작 틱 ticks 를 빠르기 speed 로 (반올림 · 1 이상 — speed 가 1 이면 그대로) */
+    public static int playTicks(int ticks, double speed) {
+        if (!(speed > 0) || Math.abs(speed - 1) < 1e-6) return Math.max(1, ticks);
+        return Math.max(1, (int) Math.round(ticks / speed));
+    }
+
     private static Obj areaCfg() {
         Obj a = cfg().objOrNull("area");
         return a != null ? a : new Obj(new java.util.LinkedHashMap<>(), "MOTION.area");

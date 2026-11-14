@@ -38,6 +38,8 @@ public final class MotionSystem {
     private static final Map<UUID, String> SENT = new HashMap<>();
     /** 시험: 마지막으로 보낸 동작의 평타 강화 모습 (0.41.0) */
     private static final Map<UUID, MotionNet.Look> SENT_LOOK = new HashMap<>();
+    /** 시험: 마지막으로 보낸 동작의 빠르기 (2026-11-14 공속) */
+    private static final Map<UUID, Float> SENT_SPEED = new HashMap<>();
 
     public static void init() {
         MotionNet.register();
@@ -51,6 +53,7 @@ public final class MotionSystem {
         ROLLED.remove(id);
         SENT.remove(id);
         SENT_LOOK.remove(id);
+        SENT_SPEED.remove(id);
         SwingLook.forget(id);
     }
 
@@ -88,7 +91,9 @@ public final class MotionSystem {
         }
         Swing s = new Swing(combo.get(step - 1), step, now);
         LAST.put(id, s);
-        broadcast(sp, s.motion(), sp.getYRot(), fromClient, SwingLook.forSwing(sp, s.motion()));
+        // 2026-11-14 공속: 평타 몸 동작도 그만큼 빠르게 (Motions.playSpeed — 쓴 사람 모드 화면은 클라이언트가 같은 값으로 셈)
+        float speed = (float) Motions.playSpeed(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp));
+        broadcast(sp, s.motion(), sp.getYRot(), fromClient, SwingLook.forSwing(sp, s.motion()), speed);
         return s;
     }
 
@@ -165,15 +170,21 @@ public final class MotionSystem {
 
     /** 같은 것 — 0.41.0 평타 강화 모습과 함께 (평타만) */
     static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf, MotionNet.Look look) {
+        broadcast(sp, motion, yaw, exceptSelf, look, 1F);
+    }
+
+    /** 같은 것 — 2026-11-14 동작 빠르기 speed (평타 공속) */
+    static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf, MotionNet.Look look, float speed) {
         // 2026-11-13 모드 없는 클라이언트: 뼈 몸이 같은 동작을 함 (VanillaRig — 싸우는 동안)
         try {
-            mmorpg.fabric.vanilla.VanillaRig.play(sp, motion, yaw);
+            mmorpg.fabric.vanilla.VanillaRig.play(sp, motion, yaw, speed);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] rig motion {}", motion, e);
         }
         SENT.put(sp.getUUID(), motion);
         SENT_LOOK.put(sp.getUUID(), look != null ? look : MotionNet.Look.NONE);
-        MotionNet.PlayPayload p = new MotionNet.PlayPayload(sp.getId(), motion, yaw, look != null ? look : MotionNet.Look.NONE);
+        SENT_SPEED.put(sp.getUUID(), speed);
+        MotionNet.PlayPayload p = new MotionNet.PlayPayload(sp.getId(), motion, yaw, look != null ? look : MotionNet.Look.NONE, speed);
         for (ServerPlayer o : PlayerLookup.tracking(sp)) {
             if (o != sp) MotionNet.send(o, p);
         }
@@ -209,6 +220,12 @@ public final class MotionSystem {
     public static MotionNet.Look lastSentLook(ServerPlayer sp) {
         MotionNet.Look l = sp == null ? null : SENT_LOOK.get(sp.getUUID());
         return l == null ? MotionNet.Look.NONE : l;
+    }
+
+    /** 시험: 이 사람의 마지막 동작 알림의 빠르기 (없으면 1) */
+    public static float lastSentSpeed(ServerPlayer sp) {
+        Float f = sp == null ? null : SENT_SPEED.get(sp.getUUID());
+        return f == null ? 1F : f;
     }
 
     /** 시험: 클라이언트 요청처럼 (ReqPayload) */

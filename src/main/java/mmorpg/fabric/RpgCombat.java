@@ -251,9 +251,11 @@ public final class RpgCombat {
 
     /**
      * 0.51.0 공격 속도 배율 (1 = 그대로 — 소드마스터 용의 피 · 블러드 나이트 광란 · 워로드 거인의 무게 · 글래디에이터 불사의 분노가 넣음): 근접 평타 사이 (Slash.admit · 보스 무적 시간 칸 — Motions.serverInterval(배율)).
-     * 클라이언트 선입력은 같은 값을 게이지로 셈 (ClientJobBar.attackSpeed)
+     * 클라이언트 선입력은 같은 값을 게이지로 셈 (ClientJobBar.attackSpeed).
+     * 2026-11-14 바탕 = 민첩의 공속 (core AttackSpeed — 민첩 1당 +1%, 100까지 ×2 · 사용자 "민첩 스탯은 공속으로 바꾸고 공속이 빠를수록 평타가 빨리 나가게"):
+     * 직업 특성은 이 위에 곱함 (JobTraits5 · JobTraits15). 활 · 완드 재사용 대기 ({@link #fireRanged}) · 평타 몸 동작 빠르기 (MotionSystem.swung) 도 이 값
      */
-    public static java.util.function.ToDoubleFunction<ServerPlayer> attackSpeed = p -> 1;
+    public static java.util.function.ToDoubleFunction<ServerPlayer> attackSpeed = p -> mmorpg.core.AttackSpeed.speed(RpgStats.effective(p));
 
     /** 0.51.0 근접 무기를 휘두름 (허공 포함 — Slash.once, 들 수 있는 근접 무기만): 워로드 곰의 화신의 발톱 세 줄 */
     public static java.util.function.BiConsumer<ServerPlayer, Weapon> swingHook = (p, w) -> {};
@@ -654,8 +656,10 @@ public final class RpgCombat {
             Notify.warn(sp, reqText(sp, w));
             return;
         }
-        // 연타 (평타 강화 룬): 재사용 대기 × 배율 (완드는 시전 시간보다 짧아지지 않게)
-        int cd = (int) Math.max(w.type().equals("wand") ? WAND.num("castTicks") + 1 : 2, Math.round(cfg.num("cooldownTicks") * rangedCdScale(sp, w)));
+        // 연타 (평타 강화 룬): 재사용 대기 × 배율 (완드는 시전 시간보다 짧아지지 않게). 2026-11-14 공속: 바탕 × rangedSlow (근접 평타 0.5 → 0.8초와 같은 몫) ÷ 공속
+        double speed = Math.max(0.25, attackSpeed.applyAsDouble(sp));
+        int cd = (int) Math.max(w.type().equals("wand") ? WAND.num("castTicks") + 1 : 2,
+                Math.round(cfg.num("cooldownTicks") * rangedCdScale(sp, w) * mmorpg.core.AttackSpeed.rangedSlow() / speed));
         RANGED_READY.put(k, now + cd);
         sp.getCooldowns().addCooldown(stack, cd);
         if (w.type().equals("wand")) {
