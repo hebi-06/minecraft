@@ -81,7 +81,7 @@ public final class BlockFx {
             Vec3 p = V.add(c, radial, r);
             double w = thick * (0.3 + 0.7 * Math.sin(Math.PI * (i + 0.5) / n));
             double segLen = Math.abs(da) * r * 1.18;
-            Quaternionf rot = Vfx.basis(radial, tan, nrm);
+            Quaternionf rot = Vfx.basis(radial, tan, V.unit(V.cross(radial, tan))); // 오른손 (da < 0 이면 tan 이 뒤집혀 nrm 이 아님)
             int at = sweep * i / n;
             int ii = i;
             fx.on(at, () -> {
@@ -148,7 +148,7 @@ public final class BlockFx {
             double a = Math.PI * 2 * i / n;
             Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
             Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
-            Quaternionf rot = Vfx.basis(radial, tan, V.UP);
+            Quaternionf rot = Vfx.basis(radial, tan, V.DOWN); // 오른손 (radial × tan = 아래) — 2026-11-15 미리보기: UP 이면 왼손이라 마디가 서 버렸음
             double seg0 = Math.PI * 2 * r0 / n * 1.12, seg1 = Math.PI * 2 * r1 / n * 1.12;
             Vfx.Prop p = box(fx, V.add(c, radial, r0), rot, thick, seg0, thick * 0.35, color);
             fx.on(1, () -> p.move(V.add(c, radial, r1), L - 1).stretch(0.0, seg1, 0.0, L - 1));
@@ -169,7 +169,7 @@ public final class BlockFx {
             double a = Math.PI * 2 * i / n;
             Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
             Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
-            Quaternionf rot = Vfx.basis(radial, tan, V.UP);
+            Quaternionf rot = Vfx.basis(radial, tan, V.DOWN); // 오른손 (radial × tan = 아래) — 2026-11-15 미리보기: UP 이면 왼손이라 마디가 서 버렸음
             double seg = Math.PI * 2 * r / n * 1.1;
             int at = G * i / n;
             fx.on(at, () -> {

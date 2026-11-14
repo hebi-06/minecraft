@@ -100,7 +100,7 @@ const BlockFx = {
       let tan = u.clone().multiplyScalar(-Math.sin(a)).add(v.clone().multiplyScalar(Math.cos(a))); if (da < 0) tan.negate();
       const p = c.clone().add(radial.clone().multiplyScalar(r));
       const w = thick * (0.3 + 0.7 * Math.sin(Math.PI * (i + 0.5) / n)), segLen = Math.abs(da) * r * 1.18;
-      const rot = basis(radial, tan, nrm);
+      const rot = basis(radial, tan, radial.clone().cross(tan).normalize());
       at(t0 + Math.floor(sweep * i / n), () => {
         const o = box(p, rot, w * 0.2, segLen * 0.4, w * 0.35, color);
         const k = box(p.clone().add(radial.clone().multiplyScalar(w * 0.15)), rot, w * 0.08, segLen * 0.4, w * 0.15, WHITE);
@@ -132,7 +132,7 @@ const BlockFx = {
     const n = Math.max(6, segs), L = Math.max(3, life), t0 = NOW;
     for (let i = 0; i < n; i++) {
       const a = Math.PI * 2 * i / n, radial = V3(Math.cos(a), 0, Math.sin(a)), tan = V3(-Math.sin(a), 0, Math.cos(a));
-      const rot = basis(radial, tan, UP), s0 = Math.PI * 2 * r0 / n * 1.12, s1 = Math.PI * 2 * r1 / n * 1.12;
+      const rot = basis(radial, tan, V3(0, -1, 0)), s0 = Math.PI * 2 * r0 / n * 1.12, s1 = Math.PI * 2 * r1 / n * 1.12;
       const p = box(c.clone().add(radial.clone().multiplyScalar(r0)), rot, thick, s0, thick * 0.35, color);
       at(t0 + 1, () => { p.move(c.clone().add(radial.clone().multiplyScalar(r1)), L - 1).stretch(0, s1, 0, L - 1); });
       at(t0 + L + 1, () => p.remove());
@@ -142,7 +142,7 @@ const BlockFx = {
     const n = Math.max(8, segs), G = Math.max(1, grow), Hh = Math.max(1, hold), t0 = NOW;
     for (let i = 0; i < n; i++) {
       const a = Math.PI * 2 * i / n, radial = V3(Math.cos(a), 0, Math.sin(a)), tan = V3(-Math.sin(a), 0, Math.cos(a));
-      const rot = basis(radial, tan, UP), seg = Math.PI * 2 * r / n * 1.1;
+      const rot = basis(radial, tan, V3(0, -1, 0)), seg = Math.PI * 2 * r / n * 1.1;
       at(t0 + Math.floor(G * i / n), () => {
         const o = box(c.clone().add(radial.clone().multiplyScalar(r)), rot, 0.02, seg * 0.3, 0.02, color);
         const k = box(c.clone().add(radial.clone().multiplyScalar(r - thick * 0.15)).add(V3(0, thick * 0.12, 0)), rot, 0.01, seg * 0.3, 0.01, WHITE);
