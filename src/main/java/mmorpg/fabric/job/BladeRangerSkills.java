@@ -267,7 +267,9 @@ final class BladeRangerSkills {
             for (int s = 0; s < 2; s++) swing(bl[s], c, ff, 0.05, s * Math.PI, s * Math.PI + Math.PI * 1.6, 0.4, 3);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
             SkillFx.play(level, "item.trident.riptide_1", c, 1.3, 0.7);
-            for (LivingEntity e : Kit.around(sp, sp.position(), sr, 2.2)) {
+            // 2026-11-15 시험 (CI 43644702711): 몸이 덜 끌려가면 (벽 · 막힘) 돌며 베기가 빗나갔음 → 칼이 교차한 자리 둘레 (그 자리로 끌려감) 의 적을 벰
+            Vec3 at = spot[0] != null ? ground(level, spot[0]) : sp.position();
+            for (LivingEntity e : Kit.around(sp, at, sr, 2.5)) {
                 JobKit.strike(sp, e, j, P, k.num("spin", 1.4), false, false, life, 0, d -> JobFx.hit(e, j, 0.8));
             }
         });

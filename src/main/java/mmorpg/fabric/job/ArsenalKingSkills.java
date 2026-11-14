@@ -397,7 +397,7 @@ final class ArsenalKingSkills {
         RuneKit.later(hitAt, () -> {
             ServerLevel lv = sp.level();
             Vec3 to = spot[0];
-            BlockFx.star(lv, to, 2.6, glow);
+            BlockFx.star(lv, to, 2.0, glow); // 1인칭 영상: 2.6 은 화면을 거의 덮었음
             BlockFx.ring(lv, V.up(ground(lv, to), 0.05), 0.4, 3.0, 22, 0.3, glow, 6);
             SkillFx.sparks(lv, to, core, 12, 5);
             SkillFx.play(lv, "item.trident.hit", to, 0.6, 1.0);
@@ -470,13 +470,14 @@ final class ArsenalKingSkills {
             double u = cnt <= 1 ? 0 : idx / (double) (cnt - 1) * 2 - 1;
             double ang = u * (low ? 1.25 : 1.0);
             Vec3 out = V.add(V.scale(f0, -Math.cos(ang)), right, Math.sin(ang));
-            gp[g] = V.add(V.up(c0, (low ? 3.0 : 5.6) + Kit.rand() * 0.6 + (1 - u * u) * 0.8), out, low ? 3.4 : 2.6);
+            // 2026-11-15 게임 영상: 문이 작고 몸에 붙어 보였음 → 더 크게 · 더 멀리
+            gp[g] = V.add(V.up(c0, (low ? 3.2 : 6.0) + Kit.rand() * 0.6 + (1 - u * u) * 0.9), out, low ? 4.4 : 3.6);
             Vec3 face = V.add(V.scale(f0, 1), V.UP, -0.15);
             Vec3 pos = gp[g];
             int open = 2 + g;
             RuneKit.later(open, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                BlockFx.gate(sp.level(), pos, face, low ? 0.8 : 0.65, 14, glow, 3, finalAt - open);
+                BlockFx.gate(sp.level(), pos, face, low ? 1.1 : 0.9, 14, glow, 3, finalAt - open);
             });
         }
         // 물결: 문마다 보물이 나와 적에게 날아감 (hitAt 에 닿음)

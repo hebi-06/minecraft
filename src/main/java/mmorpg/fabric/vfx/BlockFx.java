@@ -365,8 +365,11 @@ public final class BlockFx {
         int H = Math.max(1, hold);
         Vfx.Fx fx = RuneProps.fx(level, c, G + H + 12);
         double[] hot = lighten(color, 0.55);
+        // 2026-11-15 게임 영상: 아래를 보는 문 (하늘의 문) 은 아래에서 보면 판 · 고리의 아랫면이 어둡게 (마크 면 밝기 0.4 ~ 0.5) 그려져 검은 흙빛이었음 →
+        // 빛 판을 빼고 고리를 세운 띠로 (옆면이 보임 — 하늘 고리 halo 와 같은 까닭)
+        boolean down = f.y < -0.45;
         // 안을 채운 빛 판 (네모 셋을 30° 씩 돌려 겹침)
-        for (int q = 0; q < 3; q++) {
+        for (int q = 0; q < (down ? 0 : 3); q++) {
             double b = Math.PI / 6 * q;
             Vec3 x = V.add(V.scale(u, Math.cos(b)), v, Math.sin(b));
             Vec3 y = V.add(V.scale(u, -Math.sin(b)), v, Math.cos(b));
@@ -380,8 +383,8 @@ public final class BlockFx {
         for (int ring = 0; ring < 2; ring++) {
             int m = ring == 0 ? n : Math.max(8, n * 3 / 4);
             double rr = ring == 0 ? r : r * 0.74;
-            double th = ring == 0 ? r * 0.13 : r * 0.06;
-            double dz = ring == 0 ? 0.08 : 0.1;
+            double th = down ? (ring == 0 ? r * 0.05 : r * 0.035) : ring == 0 ? r * 0.13 : r * 0.06;
+            double dz = down ? (ring == 0 ? r * 0.32 : r * 0.2) : ring == 0 ? 0.08 : 0.1;
             double[] col = ring == 0 ? color : WHITE;
             double seg = Math.PI * 2 * rr / m * 1.12;
             for (int i = 0; i < m; i++) {
