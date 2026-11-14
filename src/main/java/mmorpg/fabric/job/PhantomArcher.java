@@ -36,7 +36,7 @@ public final class PhantomArcher {
     private PhantomArcher() {}
 
     /** 칼 날 (반투명 강철빛 — rune_sword 물들임 0) · 홈 · 보석 (진홍 — 물들임 1) */
-    static final double[] BLADE = {0.8, 0.88, 1.0};
+    static final double[] BLADE = {0.9, 0.95, 1.0}; // 2026-11-15 영상: 0.8 · 0.88 은 낮 하늘 앞에서 잿빛으로 가라앉았음
     static final double[] GEM = {1.0, 0.3, 0.22};
     /** 투영 선 (푸른 흰빛) */
     static final double[] TRACE = {0.42, 0.78, 1.0};
@@ -168,9 +168,19 @@ public final class PhantomArcher {
 
     /**
      * 적 e 에게 칼 n 자루를 꽂음 (from 쪽에서 날아옴 — 칼이 몸에 박힌 채 따라다님, 칼마다 life 틱 뒤 빛으로 흩어짐). 가득 (max) 이면 burstDelay 틱 뒤 모두 터짐.
-     * 꽂은 수
+     * 직업 스킬 (skill) 은 max − 1 까지만 꽂음 — 터짐 (다섯째) 은 활 평타로 (CI 43619048420: 블레이드 레인 · 소드 생추어리의 물결이 다섯째를 채우면 터짐이 스킬의 다음
+     * 타와 같은 틱에 겹쳐 무적 시간에 10틱 밀림 — 스킬의 마지막 피해가 늦어짐). 꽂은 수
      */
     public static int lodge(ServerPlayer sp, Jobs.Job j, LivingEntity e, int n, Vec3 from) {
+        return lodge(sp, j, e, n, from, true);
+    }
+
+    /** 활 평타의 칼 (skill false — 다섯째까지 · 터짐) */
+    static int lodgeShot(ServerPlayer sp, Jobs.Job j, LivingEntity e, Vec3 from) {
+        return lodge(sp, j, e, 1, from, false);
+    }
+
+    private static int lodge(ServerPlayer sp, Jobs.Job j, LivingEntity e, int n, Vec3 from, boolean skill) {
         if (sp == null || e == null || e.isRemoved() || !e.isAlive() || n <= 0 || !(e.level() instanceof ServerLevel level)) return 0;
         prune();
         Lodge l = LODGES.computeIfAbsent(key(sp, e), k -> new Lodge());
@@ -179,7 +189,7 @@ public final class PhantomArcher {
         int life = (int) trait(j, "life", 160);
         long now = Tasks.now();
         l.swords.removeIf(s -> s.gone || s.until <= now);
-        int add = Math.min(n, max - l.swords.size());
+        int add = Math.min(n, (skill ? max - 1 : max) - l.swords.size());
         Vec3 body = Kit.bodyPoint(e);
         Vec3 in = V.sub(body, from);
         Vec3 base = V.len(in) > 0.1 ? V.unit(in) : Kit.facingOf(sp);
@@ -320,6 +330,6 @@ public final class PhantomArcher {
 
     /** 활 평타가 맞음: 칼이 꽂힘 (+1) */
     static void onHit(ServerPlayer sp, Jobs.Job j, LivingEntity victim) {
-        lodge(sp, j, victim, 1, sp.getEyePosition());
+        lodgeShot(sp, j, victim, sp.getEyePosition());
     }
 }

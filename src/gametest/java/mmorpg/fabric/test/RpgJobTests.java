@@ -745,7 +745,7 @@ public final class RpgJobTests {
      * 소드 볼트 (2 + 2 + 3 · 셋 다 꽂힘) · 크로스 팽 (뒤로 공중제비 · 교차 2.8 + 돌아옴 1.4) · 블레이드 레인 (2.0 × 5 + 2.6) · 팬텀 버스트 (5.6 + 11.2 — 꽂힌 칼을 터뜨림) ·
      * 소드 생추어리 (7 × 6 + 14)
      */
-    @GameTest(environment = ENV_AR, maxTicks = 560)
+    @GameTest(environment = ENV_AR, maxTicks = 620)
     public void archerSkills(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = jobPlayer(h, "archer", Map.of("dex", 50), 40);
@@ -768,8 +768,8 @@ public final class RpgJobTests {
             h.assertTrue(near(TestDummies.dealt(z.get(0)), basic[0]), "bow shot = basic: " + TestDummies.dealt(z.get(0)) + " vs " + basic[0]);
             h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 1, "one sword lodged: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
         }));
-        // 네 발 더 (무적 시간 넘게 띄움) → 다섯째에 0.5초 뒤 터짐
-        for (int q = 0; q < 4; q++) steps.add(new Step(12, () -> RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0))));
+        // 네 발 더 (활 평타 재사용 대기 · 무적 시간 넘게 24틱마다 — CI 43619048420: 12틱마다는 재사용 대기에 걸려 두 발이 나가지 않았음) → 다섯째에 0.5초 뒤 터짐
+        for (int q = 0; q < 4; q++) steps.add(new Step(24, () -> RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0))));
         steps.add(new Step(24, () -> {
             RpgCombat.forceCrit = null;
             h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 0, "five swords burst: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
@@ -786,6 +786,9 @@ public final class RpgJobTests {
             double want = expected(sp, j, j.skill(0), 7);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "소드 볼트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 3, "three swords lodged: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
+            // 직업 스킬은 넷까지만 꽂음 (다섯째 · 터짐은 활 평타로)
+            mmorpg.fabric.job.PhantomArcher.lodge(sp, j, z.get(0), 3, sp.getEyePosition());
+            h.assertTrue(mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)) == 4, "skills stop at four: " + mmorpg.fabric.job.PhantomArcher.count(sp, z.get(0)));
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 4));
