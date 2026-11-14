@@ -324,7 +324,7 @@ public final class RpgMotionTests {
             h.assertTrue(reach != null && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - reach) < 1e-6, "radius = sword reach " + mmorpg.fabric.BasicSlash.lastRadius);
             // 공속 ×2 → 동작 ×1.5: 휘두름 구간 (0.3 ~ 0.68 × 6틱) ÷ 0.4
             int ticks = Motions.playTicks(9, Motions.playSpeed(2.0));
-            double life = (0.68 - 0.3) * ticks / 20.0 / 0.4;
+            double life = Math.max(0.3, (0.68 - 0.3) * ticks / 20.0 / 0.4); // 2026-11-14 minLife 0.3초
             h.assertTrue(Math.abs(mmorpg.fabric.BasicSlash.lastLife - life) < 1e-3, "life follows the play speed " + mmorpg.fabric.BasicSlash.lastLife + " vs " + life);
         });
         h.runAfterDelay(2 + Motions.attackInterval(2.0) + 1, () -> {

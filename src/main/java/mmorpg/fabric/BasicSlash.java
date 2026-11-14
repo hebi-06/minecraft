@@ -74,7 +74,7 @@ public final class BasicSlash {
             // 동작은 다음 틱에 시작 (ClientMotions · VanillaRig 의 start = 지금 + 1)
             double delay = (1 + tw[0] * ticks) / 20.0;
             double sweep = Math.max(0.05, (tw[1] - tw[0]) * ticks / 20.0);
-            double life = Math.max(0.12, sweep / c.numOr("sweepShare", 0.4));
+            double life = Math.max(c.numOr("minLife", 0.3), sweep / c.numOr("sweepShare", 0.4));
             double radius = Math.max(c.numOr("minRadius", 1.4), base * s.numOr("radius", 1));
             spawn(sp, s, thick, radius, delay, life, glow, core);
             if (s.has("impact")) impact(sp, s, radius, delay + sweep, glow, core);

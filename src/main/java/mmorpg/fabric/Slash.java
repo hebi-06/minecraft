@@ -448,19 +448,24 @@ public final class Slash {
         Vec3 dir = attacker.getViewVector(1F);
         Vec3 e = eye(attacker);
         RandomSource rnd = attacker.getRandom();
+        // 2026-11-14 기본 평타 참격 판이 나간 휘두르기 (BasicSlash): 맞은 적마다의 흰 고리 · 섬광 · 벗어난 자리 참격은 그리지 않음 — 범위로 맞은 적마다 크게 떠서
+        // 모드 없는 클라이언트에서 흰 네모 원판으로 참격을 덮었음 (영상 CI 43595133077 창 · 홀). 치명타 · 발밑 충격 · 홀 빛 십자 · 소리는 그대로
+        MotionSystem.Swing sw = MotionSystem.last(attacker);
+        boolean card = sw != null && Tasks.now() - sw.tick() <= 3 && BasicSlash.has(sw.motion());
         if (style != null && style.truthy("bash")) {
-            bashHit(level, attacker, mid, w, crit, style, rnd);
+            if (!card) bashHit(level, attacker, mid, w, crit, style, rnd);
             if (style.truthy("holy")) holyHit(level, attacker, victim, mid, w, crit, style);
             if (crit) sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
             return;
         }
         if (style != null && style.truthy("thrust")) {
-            thrustHit(level, attacker, mid, w, crit, style, rnd);
+            if (!card) thrustHit(level, attacker, mid, w, crit, style, rnd);
+            else sound(level, mid, SoundEvents.TRIDENT_HIT, crit ? 0.8 : 1.1, 0.8);
             if (crit) sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
             return;
         }
         // 화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 참격 (가운데 참격과 같은 방향) — 낫은 빼고 (0.25.2: 넓은 초승달 하나가 앞 120° 를 덮음 · 참격은 하나만)
-        if (style != null && !w.type().equals("scythe") && offAxisDegrees(e, dir, victim) > SLASH.numOr("offAxis", 12)) {
+        if (style != null && !card && !w.type().equals("scythe") && offAxisDegrees(e, dir, victim) > SLASH.numOr("offAxis", 12)) {
             Vec3 to = mid.subtract(e);
             double len = to.length();
             if (len > 0.6) {
