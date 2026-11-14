@@ -410,9 +410,10 @@ const SCENES = {
           for (let i = 0; i < 6; i++) {
             const a = rand() * 6.28, rr = r * Math.sqrt(rand()), g = V3(c.x + Math.cos(a) * rr, 0, c.z + Math.sin(a) * rr);
             const tilt = V3((rand() - 0.5) * 0.35, -1, (rand() - 0.5) * 0.35).normalize();
-            const top = g.clone().add(V3(0, sky, 0)), s = sword(top, tilt, 1.9, V3(1, 0, 0));
+            const top = g.clone().add(V3(0, sky, 0)), s = sword(top, tilt, 1.9, faceOf(tilt));
             at(NOW + 3, () => s.to(g.clone().sub(tilt.clone().multiplyScalar(1.9 * 0.62)), tilt, 4));
-            at(56, () => s.remove());
+            at(NOW + 7, () => { if (rand() < 0.6) { BlockFx.star(g.clone().add(V3(0, 0.25, 0)), 0.6, CRIMSON); BlockFx.ring(g.clone().add(V3(0, 0.05, 0)), 0.1, 0.8, 10, 0.12, CRIMSON, 5); } });
+            at(56, () => { s.remove(); if (rand() < 0.35) BlockFx.burst(g.clone().add(V3(0, 0.3, 0)), 0.7, FIRE, FIRE_CORE, 8); });
           }
         });
         at(hitAt, () => BlockFx.ring(V3(c.x, 0.05, c.z), r * 0.85, r * 1.05, 24, 0.22, CRIMSON, 5));
