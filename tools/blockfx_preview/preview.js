@@ -155,9 +155,10 @@ const BlockFx = {
       at(t0 + 3, () => {
         const m = box(c.clone().add(off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE_C);
         m.stretch(sz, sz, sz, 3).move(c.clone().add(off.clone().multiplyScalar(1.4)).add(V3(0, size * 0.3, 0)), 3);
-        at(t0 + 6, () => m.move(c.clone().add(off.clone().multiplyScalar(1.7)).add(V3(0, size * 0.75, 0)), L - 2).stretch(0, 0, 0, L - 2)
-          .turn(rq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 1.2)), L - 2));
-        at(t0 + L + 5, () => m.remove());
+        const sl = Math.max(4, Math.floor(L / 2));
+        at(t0 + 6, () => m.move(c.clone().add(off.clone().multiplyScalar(1.6)).add(V3(0, size * 0.45, 0)), sl).stretch(0, 0, 0, sl)
+          .turn(rq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 1.2)), sl));
+        at(t0 + 7 + sl, () => m.remove());
       });
     }
     // 가시 여덟 (뻗음 → 끝으로 줄어듦)
@@ -231,6 +232,21 @@ const BlockFx = {
         const k = box(c.clone().add(radial.clone().multiplyScalar(r - thick * 0.15)).add(V3(0, thick * 0.12, 0)), rot, 0.01, seg * 0.3, 0.01, WHITE);
         o.stretch(thick, seg, thick * 0.3, 2); k.stretch(thick * 0.28, seg * 1.02, thick * 0.12, 2);
         at(t0 + G + Hh, () => { o.stretch(0, seg, 0, 4); k.stretch(0, seg, 0, 4); });
+        at(t0 + G + Hh + 5, () => { o.remove(); k.remove(); });
+      });
+    }
+  },
+  // 2026-11-15 하늘 고리 = 세운 띠 (눕힌 고리는 아래에서 바닥 면 0.5 밝기로 검붉었음)
+  halo(c, r, segs, height, color, grow, hold) {
+    const n = Math.max(8, segs), G = Math.max(1, grow), Hh = Math.max(1, hold), t0 = NOW;
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI * 2 * i / n, radial = V3(Math.cos(a), 0, Math.sin(a)), tan = V3(-Math.sin(a), 0, Math.cos(a));
+      const rot = basis(radial, tan, V3(0, -1, 0)), seg = Math.PI * 2 * r / n * 1.1;
+      at(t0 + Math.floor(G * i / n), () => {
+        const o = box(c.clone().add(radial.clone().multiplyScalar(r)), rot, height * 0.12, seg * 0.3, 0.02, color);
+        const k = box(c.clone().add(radial.clone().multiplyScalar(r - height * 0.08)), rot, height * 0.05, seg * 0.3, 0.02, WHITE);
+        o.stretch(height * 0.12, seg, height, 2); k.stretch(height * 0.05, seg * 1.02, height * 0.35, 2);
+        at(t0 + G + Hh, () => { o.stretch(height * 0.12, seg, 0, 4); k.stretch(height * 0.05, seg, 0, 4); });
         at(t0 + G + Hh + 5, () => { o.remove(); k.remove(); });
       });
     }
@@ -404,7 +420,7 @@ const SCENES = {
       crowd();
       const c = V3(-3.5, 0, 0), r = 4.5, sky = 7.0;
       BlockFx.ringHold(V3(c.x, 0.04, c.z), r, 30, 0.24, CRIMSON, 5, 56); BlockFx.ring(V3(c.x, 0.05, c.z), r * 0.3, r, 24, 0.3, CRIMSON, 8);
-      BlockFx.ringHold(V3(c.x, sky, c.z), r * 0.8, 26, 0.28, CRIMSON, 4, 48);
+      BlockFx.halo(V3(c.x, sky, c.z), r * 0.8, 26, 0.5, CRIMSON, 4, 48);
       for (let w = 0; w < 5; w++) {
         const hitAt = 6 + w * 10;
         at(hitAt - 7, () => {
@@ -469,7 +485,7 @@ const SCENES = {
           const t = Math.max(1, Math.round(Math.max(0.05, to.distanceTo(from) / 60) * 20));
           const end = to.clone().sub(d.clone().multiplyScalar(len * 0.75));
           sw.to(end, d, t, faceOf(d));
-          BlockFx.star(from, 0.9 + i * 0.25, CRIMSON);
+          BlockFx.star(from.clone().add(d.clone().multiplyScalar(0.8)), 0.7 + i * 0.15, CRIMSON);
           afterimages(from, end, d, len, t);
           BlockFx.beam(from.clone().add(d.clone().multiplyScalar(0.8)), to, 0.16, CRIMSON, Math.max(3, Math.round(Math.max(0.2, t / 20 + 0.15) * 20)));
           at(NOW + t, () => {

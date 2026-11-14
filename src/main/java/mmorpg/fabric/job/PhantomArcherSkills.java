@@ -106,7 +106,8 @@ final class PhantomArcherSkills {
                 Vec3 d = V.unit(V.sub(to, from));
                 int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
                 b.pose(V.add(to, d, -b.reach() * 0.75), d, PhantomArcher.faceOf(d), t);
-                mmorpg.fabric.vfx.BlockFx.star(level, from, 0.9 + ii * 0.25, glow); // 2026-11-15 쏘는 번쩍임 (잔상은 미리보기에서 빛 줄과 겹쳐 안 보여 뺌)
+                // 2026-11-15 쏘는 번쩍임 (1인칭 영상: 자루 자리 · 0.9 ~ 1.4 는 눈앞에서 화면을 덮었음 → 0.8칸 앞 · 0.7 ~ 1.0)
+                mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 0.8), 0.7 + ii * 0.15, glow);
                 // 2026-11-15 1인칭 미리보기: 빛 줄이 자루 (눈앞) 에서 시작하면 가까운 끝이 화면을 크게 덮음 → 0.8칸 앞에서
                 PhantomArcher.streak2d(level, V.add(from, d, 0.8), to, Math.max(0.2, t / 20.0 + 0.15), glow, core);
                 SkillFx.play(level, "item.trident.throw", from, 1.25 + ii * 0.1, 0.8);
@@ -249,7 +250,7 @@ final class PhantomArcherSkills {
         });
         RuneKit.later(home, () -> {
             for (RuneSwords.Blade b : bl) {
-                mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.hilt(), 0.8, PhantomArcher.TRACE);
+                mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.hilt(), 0.5, PhantomArcher.TRACE);
                 b.remove();
             }
         });
@@ -296,7 +297,7 @@ final class PhantomArcherSkills {
         // 2026-11-15 사용자 "남은 2D 고리 블록으로 바꿔": 땅 예고 고리 · 퍼지는 고리 · 하늘 고리 = 단색 블록 (BlockFx)
         mmorpg.fabric.vfx.BlockFx.ringHold(level0, V.up(center, 0.04), r, 30, 0.24, glow, 5, burstAt);
         mmorpg.fabric.vfx.BlockFx.ring(level0, V.up(center, 0.05), r * 0.3, r, 24, 0.3, glow, 8);
-        mmorpg.fabric.vfx.BlockFx.ringHold(level0, V.up(center, sky), r * 0.8, 26, 0.28, glow, 4, burstAt - 8);
+        mmorpg.fabric.vfx.BlockFx.halo(level0, V.up(center, sky), r * 0.8, 26, 0.5, glow, 4, burstAt - 8); // 2026-11-15 세운 띠 (눕힌 고리는 아래에서 검붉게 보였음)
         for (int w = 0; w < waves; w++) {
             int ww = w;
             int hitAt = first + w * gap;
@@ -396,7 +397,7 @@ final class PhantomArcherSkills {
                 Vec3 h = V.add(V.add(RuneKit.bowHand(sp), V.rightOf(V.flat(f)), 0.3), f, pull);
                 if (tt > draw - 5) h = V.add(h, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.04);
                 b.pose(h, f, PhantomArcher.faceOf(f), 1);
-                if (tt % 3 == 0) mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.tip(), 0.5 + tt * 0.05, glow); // 칼끝에 모이는 빛 (2026-11-15 단색 블록 별)
+                if (tt % 3 == 0) mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.tip(), 0.4 + tt * 0.03, glow); // 칼끝에 모이는 빛 (2026-11-15 단색 블록 별 — 1인칭에서 크지 않게)
             });
         }
         RuneKit.later(draw, () -> {
@@ -630,7 +631,7 @@ final class PhantomArcherSkills {
                 p.b.pose(top, d, PhantomArcher.faceOf(d), 6 + (q % 4));
                 rain.add(p.b);
             }
-            mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(spot[0], 7.5), 4.5, 26, 0.3, glow, 3, 12);
+            mmorpg.fabric.vfx.BlockFx.halo(level, V.up(spot[0], 7.5), 4.5, 26, 0.5, glow, 3, 12);
             SkillFx.play(level, "block.amethyst_block.resonate", spot[0], 0.7, 1.2);
             SkillFx.play(level, "item.trident.riptide_3", spot[0], 1.2, 0.8);
         });

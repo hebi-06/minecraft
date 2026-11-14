@@ -392,7 +392,8 @@ public final class PhantomArcher {
             fx.on(ticks + 8, () -> b.grow(0.1, 4));
             fx.on(ticks + 13, b::remove);
         }
-        if (RuneKit.fxQuota("phantomShotGlint", 6)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 0.5), 0.55, TRACE);
+        // 2026-11-15 1인칭: 눈앞 0.5칸 별은 평타마다 화면을 덮음 → 1.6칸 앞 · 작게
+        if (RuneKit.fxQuota("phantomShotGlint", 6)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 1.6), 0.45, TRACE);
         // 2026-11-15 날아가는 칼 뒤 가는 진홍 빛 줄 (평타가 잦아 가늘게 · 몫 8)
         if (RuneKit.fxQuota("phantomShotTrail", 8)) mmorpg.fabric.vfx.BlockFx.beam(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), 0.07, GEM, ticks + 3);
         SkillFx.play(level, "item.trident.throw", from, 1.5 + Kit.rand() * 0.2, 0.3);

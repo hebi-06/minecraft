@@ -166,8 +166,10 @@ public final class BlockFx {
             fx.on(3, () -> {
                 Vfx.Prop m = box(fx, V.add(c, off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE);
                 m.stretch(sz, sz, sz, 3).move(V.up(V.add(c, off, 1.4), size * 0.3), 3);
-                fx.on(6, () -> m.move(V.up(V.add(c, off, 1.7), size * 0.75), L - 2).stretch(0.0, 0.0, 0.0, L - 2).turn(rq2, L - 2));
-                fx.on(L + 5, m::remove);
+                // 2026-11-15 게임 영상: 오래 떠 있던 짙은 상자가 흙 덩이처럼 보였음 → 짧게 · 낮게
+                int sl = Math.max(4, L / 2);
+                fx.on(6, () -> m.move(V.up(V.add(c, off, 1.6), size * 0.45), sl).stretch(0.0, 0.0, 0.0, sl).turn(rq2, sl));
+                fx.on(7 + sl, m::remove);
             });
         }
         // 가시 열둘
@@ -300,6 +302,39 @@ public final class BlockFx {
                 fx.on(G + H, () -> {
                     o.stretch(0.0, seg, 0.0, 4);
                     k.stretch(0.0, seg, 0.0, 4);
+                });
+                fx.on(G + H + 5, () -> {
+                    o.remove();
+                    k.remove();
+                });
+            });
+        }
+    }
+
+    /**
+     * 하늘 고리 (2026-11-15 게임 영상: 눕힌 고리를 아래에서 보면 바닥 면이 어둡게 — 마크 면 밝기 0.5 — 그려져 검붉었음 → 세운 띠): 가운데 c · 반지름 r · 띠 높이
+     * height — grow 틱 동안 마디가 돌아가며 솟아 hold 틱 머문 뒤 4틱에 낮아져 사라짐, 안쪽에 흰 심지 띠
+     */
+    public static void halo(ServerLevel level, Vec3 c, double r, int segs, double height, double[] color, int grow, int hold) {
+        int n = Math.max(8, segs);
+        int G = Math.max(1, grow);
+        int H = Math.max(1, hold);
+        Vfx.Fx fx = RuneProps.fx(level, c, G + H + 8);
+        for (int i = 0; i < n; i++) {
+            double a = Math.PI * 2 * i / n;
+            Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
+            Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
+            Quaternionf rot = Vfx.basis(radial, tan, V.DOWN); // x = 바깥 (두께) · y = 둘레 · z = 아래 (띠 높이)
+            double seg = Math.PI * 2 * r / n * 1.1;
+            int at = G * i / n;
+            fx.on(at, () -> {
+                Vfx.Prop o = box(fx, V.add(c, radial, r), rot, height * 0.12, seg * 0.3, 0.02, color);
+                Vfx.Prop k = box(fx, V.add(c, radial, r - height * 0.08), rot, height * 0.05, seg * 0.3, 0.02, WHITE);
+                o.stretch(height * 0.12, seg, height, 2);
+                k.stretch(height * 0.05, seg * 1.02, height * 0.35, 2);
+                fx.on(G + H, () -> {
+                    o.stretch(height * 0.12, seg, 0.0, 4);
+                    k.stretch(height * 0.05, seg, 0.0, 4);
                 });
                 fx.on(G + H + 5, () -> {
                     o.remove();
