@@ -76,36 +76,40 @@ public final class BlockFx {
     // ------------------------------------------------------------ 호 (베기)
 
     /**
-     * 빛 호: 가운데 c · 평면 축 u · v (단위 · 서로 수직) · 반지름 r · 각 a0 → a1 (라디안, u 에서 v 쪽) 을 마디 segs 개로 — sweep 틱 동안 차례로 나타나
-     * (마디마다 굵기 thick · 가운데가 굵고 양끝이 가는 초승달) life 틱 동안 가늘어지며 사라짐
+     * 빛 호 2판 (2026-11-15 로컬 미리보기): 가운데 c · 평면 축 u · v · 반지름 r · 각 a0 → a1 을 마디 segs 개로 — sweep 틱 동안 차례로 나타나는 세 겹 초승달 (겉 색
+     * 넓게 · 가운데 뜨거운 색 · 흰 심지, 가운데가 굵고 양끝이 가늚) · 그어진 차례대로 꼬리부터 사라짐 (마디마다 life 의 45 ~ 100%)
      */
     public static void arc(ServerLevel level, Vec3 c, Vec3 u, Vec3 v, double r, double a0, double a1, int segs, double thick, double[] color, int sweep, int life) {
-        int n = Math.max(2, segs);
-        Vfx.Fx fx = RuneProps.fx(level, c, sweep + life + 4);
+        int n = Math.max(4, segs);
+        Vfx.Fx fx = RuneProps.fx(level, c, sweep + life + 8);
         double da = (a1 - a0) / n;
-        Vec3 nrm = V.unit(V.cross(u, v));
+        double[] hot = {Math.min(1, color[0] * 0.4 + 0.6), Math.min(1, color[1] * 0.4 + 0.5), Math.min(1, color[2] * 0.4 + 0.3)};
         for (int i = 0; i < n; i++) {
             double a = a0 + da * (i + 0.5);
             Vec3 radial = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
             Vec3 tan = V.add(V.scale(u, -Math.sin(a)), v, Math.cos(a));
             if (da < 0) tan = V.scale(tan, -1);
+            Quaternionf rot = Vfx.basis(radial, tan, V.unit(V.cross(radial, tan))); // 오른손 (da < 0 이면 tan 이 뒤집힘)
+            double w = thick * (0.25 + 0.75 * Math.pow(Math.sin(Math.PI * (i + 0.5) / n), 0.7));
+            double segLen = Math.abs(da) * r * 1.12;
             Vec3 p = V.add(c, radial, r);
-            double w = thick * (0.3 + 0.7 * Math.sin(Math.PI * (i + 0.5) / n));
-            double segLen = Math.abs(da) * r * 1.18;
-            Quaternionf rot = Vfx.basis(radial, tan, V.unit(V.cross(radial, tan))); // 오른손 (da < 0 이면 tan 이 뒤집혀 nrm 이 아님)
+            int li = Math.max(2, (int) Math.round(life * (0.45 + 0.55 * i / (double) n)));
             int at = sweep * i / n;
-            int ii = i;
             fx.on(at, () -> {
-                Vfx.Prop o = box(fx, p, rot, w * 0.2, segLen * 0.4, w * 0.35, color);
-                Vfx.Prop k = box(fx, V.add(p, radial, w * 0.15), rot, w * 0.08, segLen * 0.4, w * 0.15, WHITE);
-                o.stretch(w, segLen, w * 0.55, 1);
-                k.stretch(w * 0.32, segLen * 1.02, w * 0.3, 1);
+                Vfx.Prop o = box(fx, p, rot, w * 0.3, segLen * 0.5, w * 0.25, color);
+                Vfx.Prop m = box(fx, V.add(p, radial, w * 0.12), rot, w * 0.2, segLen * 0.5, w * 0.2, hot);
+                Vfx.Prop k = box(fx, V.add(p, radial, w * 0.22), rot, w * 0.1, segLen * 0.5, w * 0.12, WHITE);
+                o.stretch(w, segLen, w * 0.4, 1);
+                m.stretch(w * 0.55, segLen * 1.01, w * 0.42, 1);
+                k.stretch(w * 0.22, segLen * 1.02, w * 0.44, 1);
                 fx.on(fx.age + 2, () -> {
-                    o.stretch(0.0, segLen * 0.9, 0.0, life);
-                    k.stretch(0.0, segLen, 0.0, life);
+                    o.stretch(0.0, segLen * 0.9, 0.0, li);
+                    m.stretch(0.0, segLen * 0.95, 0.0, Math.max(2, li - 1));
+                    k.stretch(0.0, segLen, 0.0, Math.max(2, li - 2));
                 });
-                fx.on(fx.age + life + 2, () -> {
+                fx.on(fx.age + li + 3, () -> {
                     o.remove();
+                    m.remove();
                     k.remove();
                 });
             });
@@ -260,22 +264,25 @@ public final class BlockFx {
 
     // ------------------------------------------------------------ 불꽃
 
-    /** 불꽃 하나 (발 foot · 높이 h): 겉 색 상자 · 속 색 상자가 솟으며 돌고 작아져 사라짐 (life 틱) */
+    /**
+     * 불꽃 3판 (발 foot · 높이 h — 2026-11-15 로컬 미리보기: 마름모 상자는 상자로 보였음): 세운 긴 상자 넷 (아래 넓은 겉 색 → 위 좁은 속 색 · 흰 심) 이
+     * 흔들리며 솟고 가늘어져 사라짐 (life 틱)
+     */
     public static void flame(ServerLevel level, Vec3 foot, double h, double[] outer, double[] inner, int life) {
         int L = Math.max(4, life);
         Vfx.Fx fx = RuneProps.fx(level, foot, L + 4);
-        double w = h * 0.38;
-        Quaternionf r = new Quaternionf().rotateY((float) (Kit.rand() * Math.PI)).rotateZ(0.785F).rotateX(0.615F);
-        Vfx.Prop o = box(fx, V.up(foot, w * 0.5), r, w, w, w, outer);
-        Vfx.Prop k = box(fx, V.up(foot, w * 0.45), r, w * 0.55, w * 0.55, w * 0.55, inner);
-        Quaternionf r2 = new Quaternionf(r).rotateY(1.4F);
-        fx.on(1, () -> {
-            o.move(V.up(foot, h), L - 1).turn(r2, L - 1).stretch(0.0, 0.0, 0.0, L - 1);
-            k.move(V.up(foot, h * 0.75), L - 1).turn(r2, L - 1).stretch(0.0, 0.0, 0.0, Math.max(2, L - 3));
-        });
-        fx.on(L + 1, () -> {
-            o.remove();
-            k.remove();
-        });
+        double[] hot = {Math.min(1, outer[0] * 0.5 + inner[0] * 0.5), Math.min(1, outer[1] * 0.5 + inner[1] * 0.5), Math.min(1, outer[2] * 0.5 + inner[2] * 0.5)};
+        double[][] cols = {outer, hot, inner, WHITE};
+        double[] wk = {0.3, 0.22, 0.14, 0.07}, hk = {0.55, 0.75, 0.9, 0.5}, y0 = {0.0, 0.12, 0.25, 0.15};
+        for (int i = 0; i < 4; i++) {
+            double w = h * wk[i], hh = h * hk[i];
+            double yaw = Kit.rand() * Math.PI;
+            Quaternionf r = new Quaternionf().rotateY((float) yaw);
+            Quaternionf r2 = new Quaternionf().rotateY((float) (yaw + 0.9));
+            Vfx.Prop o = box(fx, V.up(foot, h * y0[i] + hh * 0.5), r, w, hh, w, cols[i]);
+            Vec3 sway = V.add(foot, new Vec3((Kit.rand() - 0.5) * h * 0.3, h * (y0[i] + 0.45) + hh * 0.5, (Kit.rand() - 0.5) * h * 0.3));
+            fx.on(1, () -> o.move(sway, L - 1).turn(r2, L - 1).stretch(0.0, hh * 1.3, 0.0, L - 1));
+            fx.on(L + 1, o::remove);
+        }
     }
 }

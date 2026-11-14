@@ -97,21 +97,25 @@ const BlockFx = {
       at(t0 + life_i + 1, () => { o.remove(); k.remove(); });
     }
   },
+  // 2026-11-15 호 2판: 겉 색 (넓게) · 가운데 뜨거운 색 · 흰 심지 세 겹 초승달 · 그어진 차례대로 꼬리부터 사라짐
   arc(c, u, v, r, a0, a1, segs, thick, color, sweep, life) {
-    const n = Math.max(2, segs), da = (a1 - a0) / n, nrm = u.clone().cross(v).normalize(), t0 = NOW;
+    const n = Math.max(4, segs), da = (a1 - a0) / n, t0 = NOW;
+    const hot = [Math.min(1, color[0] * 0.4 + 0.6), Math.min(1, color[1] * 0.4 + 0.5), Math.min(1, color[2] * 0.4 + 0.3)];
     for (let i = 0; i < n; i++) {
       const a = a0 + da * (i + 0.5);
       const radial = u.clone().multiplyScalar(Math.cos(a)).add(v.clone().multiplyScalar(Math.sin(a)));
       let tan = u.clone().multiplyScalar(-Math.sin(a)).add(v.clone().multiplyScalar(Math.cos(a))); if (da < 0) tan.negate();
-      const p = c.clone().add(radial.clone().multiplyScalar(r));
-      const w = thick * (0.3 + 0.7 * Math.sin(Math.PI * (i + 0.5) / n)), segLen = Math.abs(da) * r * 1.18;
       const rot = basis(radial, tan, radial.clone().cross(tan).normalize());
+      const w = thick * (0.25 + 0.75 * Math.pow(Math.sin(Math.PI * (i + 0.5) / n), 0.7)), segLen = Math.abs(da) * r * 1.12;
+      const p = c.clone().add(radial.clone().multiplyScalar(r));
+      const li = Math.max(2, Math.round(life * (0.45 + 0.55 * i / n)));
       at(t0 + Math.floor(sweep * i / n), () => {
-        const o = box(p, rot, w * 0.2, segLen * 0.4, w * 0.35, color);
-        const k = box(p.clone().add(radial.clone().multiplyScalar(w * 0.15)), rot, w * 0.08, segLen * 0.4, w * 0.15, WHITE);
-        o.stretch(w, segLen, w * 0.55, 1); k.stretch(w * 0.32, segLen * 1.02, w * 0.3, 1);
-        at(NOW + 2, () => { o.stretch(0, segLen * 0.9, 0, life); k.stretch(0, segLen, 0, life); });
-        at(NOW + life + 2, () => { o.remove(); k.remove(); });
+        const o = box(p, rot, w * 0.3, segLen * 0.5, w * 0.25, color);
+        const m = box(p.clone().add(radial.clone().multiplyScalar(w * 0.12)), rot, w * 0.2, segLen * 0.5, w * 0.2, hot);
+        const k = box(p.clone().add(radial.clone().multiplyScalar(w * 0.22)), rot, w * 0.1, segLen * 0.5, w * 0.12, WHITE);
+        o.stretch(w, segLen, w * 0.4, 1); m.stretch(w * 0.55, segLen * 1.01, w * 0.42, 1); k.stretch(w * 0.22, segLen * 1.02, w * 0.44, 1);
+        at(NOW + 2, () => { o.stretch(0, segLen * 0.9, 0, li); m.stretch(0, segLen * 0.95, 0, Math.max(2, li - 1)); k.stretch(0, segLen, 0, Math.max(2, li - 2)); });
+        at(NOW + li + 3, () => { o.remove(); m.remove(); k.remove(); });
       });
     }
   },
@@ -202,13 +206,19 @@ const BlockFx = {
       at(t0 + L + 1, () => p.remove());
     }
   },
+  // 2026-11-15 불꽃 3판: 세운 긴 상자 넷 (아래 넓은 겉 색 → 위 좁은 속 색 · 흰 심) 이 흔들리며 솟고 가늘어짐 (y 축으로 늘인 기둥 — 마름모 상자는 상자로 보였음)
   flame(foot, h, outer, inner, life) {
-    const L = Math.max(4, life), t0 = NOW, w = h * 0.38;
-    const r = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.615, rand() * Math.PI, 0.785));
-    const o = box(foot.clone().add(V3(0, w * 0.5, 0)), r, w, w, w, outer), k = box(foot.clone().add(V3(0, w * 0.45, 0)), r, w * 0.55, w * 0.55, w * 0.55, inner);
-    const r2 = r.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 1.4));
-    at(t0 + 1, () => { o.move(foot.clone().add(V3(0, h, 0)), L - 1).turn(r2, L - 1).stretch(0, 0, 0, L - 1); k.move(foot.clone().add(V3(0, h * 0.75, 0)), L - 1).turn(r2, L - 1).stretch(0, 0, 0, Math.max(2, L - 3)); });
-    at(t0 + L + 1, () => { o.remove(); k.remove(); });
+    const L = Math.max(4, life), t0 = NOW;
+    const hot = [Math.min(1, outer[0] * 0.5 + inner[0] * 0.5), Math.min(1, outer[1] * 0.5 + inner[1] * 0.5), Math.min(1, outer[2] * 0.5 + inner[2] * 0.5)];
+    const layers = [[outer, 0.3, 0.55, 0.0], [hot, 0.22, 0.75, 0.12], [inner, 0.14, 0.9, 0.25], [WHITE, 0.07, 0.5, 0.15]];
+    for (const [col, wk, hk, y0] of layers) {
+      const w = h * wk, hh = h * hk, yaw = rand() * Math.PI;
+      const r = new THREE.Quaternion().setFromAxisAngle(UP, yaw);
+      const o = box(foot.clone().add(V3(0, h * y0 + hh * 0.5, 0)), r, w, hh, w, col);
+      const sway = V3((rand() - 0.5) * h * 0.3, h * (y0 + 0.45) + hh * 0.5, (rand() - 0.5) * h * 0.3);
+      at(t0 + 1, () => o.move(foot.clone().add(sway), L - 1).turn(new THREE.Quaternion().setFromAxisAngle(UP, yaw + 0.9), L - 1).stretch(0, hh * 1.3, 0, L - 1));
+      at(t0 + L + 1, () => o.remove());
+    }
   },
 };
 
@@ -313,6 +323,58 @@ const SCENES = {
         at(hitAt, () => BlockFx.ring(V3(c.x, 0.05, c.z), r * 0.85, r * 1.05, 24, 0.22, CRIMSON, 5));
       }
       at(56, () => { blast(V3(c.x, 0.8, c.z), r * 0.7); BlockFx.ring(V3(c.x, 0.05, c.z), r * 0.4, r + 1.2, 28, 0.4, FIRE, 10); });
+    },
+  },
+  cross: { // 크로스 팽: 0 ~ 8 공중제비 · 쌍검이 바깥으로 휘어 8 에 X 자로 교차 → 18 돌아옴
+    cam: [[2.5, 2.2, 5.5], [-1.8, 1.3, 0]], ticks: 34,
+    run() {
+      crowd();
+      const tgt = V3(-3, 1.3, 0), start = V3(PL.x - 0.3, 1.2, PL.z);
+      for (const sd of [-1, 1]) {
+        const sw = sword(start.clone().add(RIGHT.clone().multiplyScalar(sd * 0.45)), FWD, 1.8, UP);
+        let prev = null;
+        for (let t = 2; t <= 8; t++) at(t, () => {
+          const u = (t - 2) / 6, mid = start.clone().lerp(tgt, 0.5).add(RIGHT.clone().multiplyScalar(sd * 3.5)).add(V3(0, 0.6, 0));
+          const p = start.clone().multiplyScalar((1 - u) * (1 - u)).add(mid.clone().multiplyScalar(2 * u * (1 - u))).add(tgt.clone().multiplyScalar(u * u));
+          const d = FWD.clone().applyAxisAngle(UP, sd * t * 1.08);
+          sw.to(p.clone().sub(d.clone().multiplyScalar(0.8)), d, 1, UP);
+          if (prev) BlockFx.beam(prev, p, 0.14, CRIMSON, 6);
+          prev = p;
+        });
+        at(20, () => sw.remove());
+      }
+      at(8, () => {
+        const u = RIGHT.clone(), v = UP.clone(), size = 1.9, Rc = size * 2.2, span = size * 1.15 / Rc;
+        for (let s2 = 0; s2 < 2; s2++) {
+          const dd = (s2 === 0 ? u.clone().sub(v) : u.clone().negate().sub(v)).normalize();
+          const n = (s2 === 0 ? u.clone().add(v) : u.clone().sub(v)).normalize();
+          BlockFx.arc(tgt.clone().add(n.clone().multiplyScalar(Rc)), n.clone().negate(), dd, Rc, -span, span, 12, size * 0.26, CRIMSON, 3, 9);
+        }
+        BlockFx.burst(tgt, size * 0.45, CRIMSON, WHITE, 6);
+      });
+    },
+  },
+  ult: { // 소드 생추어리: 0 ~ 12 불꽃 고리가 번짐 · 칼 들판 → 24 ~ 74 물결 → 72 하늘로 → 86 내리꽂힘
+    cam: [[11, 8.5, 12], [-1.5, 0.5, 0]], ticks: 100,
+    run() {
+      crowd();
+      const c0 = V3(PL.x, 0, PL.z), R = 12, tgt = V3(-4, 0, 0);
+      for (let i = 0; i <= 12; i += 2) {
+        const ri = Math.max(1.5, R * i / 12);
+        at(i, () => { BlockFx.ring(V3(c0.x, 0.06, c0.z), Math.max(0.5, ri - 1.8), ri, 30, 0.35, CRIMSON, 4); for (let qq = 0; qq < 8; qq++) { const a = rand() * 6.28; BlockFx.flame(V3(c0.x + Math.cos(a) * ri, 0, c0.z + Math.sin(a) * ri), 1.2 + rand() * 0.6, CRIMSON, FIRE_CORE, 9); } });
+      }
+      at(12, () => BlockFx.ringHold(V3(c0.x, 0.04, c0.z), R, 48, 0.32, CRIMSON, 4, 80));
+      for (let t = 12; t < 86; t += 6) at(t, () => { for (let qq = 0; qq < 10; qq++) { const a = rand() * 6.28; BlockFx.flame(V3(c0.x + Math.cos(a) * R, 0, c0.z + Math.sin(a) * R), 1.4 + rand() * 0.7, CRIMSON, FIRE_CORE, 11); } });
+      const field = [];
+      for (let i = 0; i < 36; i++) {
+        const rad = R * Math.sqrt((i + 0.5) / 36) * 0.95;
+        at(3 + Math.floor(rad / R * 12) + (i % 3), () => {
+          const a = rand() * 6.28, g = V3(c0.x + Math.cos(a) * rad, 0, c0.z + Math.sin(a) * rad), d = V3((rand() - 0.5) * 0.5, -1, (rand() - 0.5) * 0.5).normalize(), L = 1.8 + rand() * 0.8;
+          field.push(sword(g.clone().sub(d.clone().multiplyScalar(L * 0.62)), d, L, V3(Math.cos(a), 0, Math.sin(a))));
+        });
+      }
+      for (let w = 0; w < 6; w++) at(24 + w * 10, () => BlockFx.ring(V3(c0.x, 0.05, c0.z), R - 0.6, R + 0.4, 40, 0.25, CRIMSON, 5));
+      at(86, () => { blast(V3(tgt.x, 1.0, tgt.z), 3.6); for (const f of field) f.remove(); });
     },
   },
 };
