@@ -323,6 +323,8 @@ public final class Vfx {
         Vec3 pos;
         Quaternionf rot = new Quaternionf();
         float scale = 1F;
+        /** 2026-11-15 축마다 다른 크기 (null 이면 scale 하나 — BlockFx 의 단색 상자 · 빛 줄 · 판) */
+        Vector3f scale3;
         /** 쥔 곳 (모델 픽셀 0 ~ 16 자리) — 이 점이 pos 에 오고 이 점 둘레로 돎. 기본 = 모델 가운데 (8, 8, 8) */
         Vector3f grip = new Vector3f(8, 8, 8);
         boolean removed;
@@ -440,16 +442,28 @@ public final class Vfx {
         }
 
         public Prop size(double s, int ticks) {
+            scale3 = null;
             return to(null, null, s, ticks);
+        }
+
+        /** 2026-11-15 축마다 다른 크기 (모델 x · y · z — 칸 = 모델 16 픽셀 × 크기) 로 ticks 틱 동안 (BlockFx — 단색 상자를 늘여 빛 줄 · 판 · 조각) */
+        public Prop stretch(double sx, double sy, double sz, int ticks) {
+            if (removed) return this;
+            scale3 = new Vector3f((float) sx, (float) sy, (float) sz);
+            e.setInterpolationDuration(Math.max(0, ticks));
+            apply();
+            e.startInterpolationIfDirty();
+            return this;
         }
 
         private void apply() {
             // 모델 가운데 (8, 8, 8) 가 엔티티 자리 → 쥔 곳을 엔티티 자리로: 안쪽 옮김 c = −(grip − 8) / 16 (아이템 표시의 Y 180° 를 되돌린 축)
-            Vector3f c = new Vector3f(-(grip.x - 8F) / 16F, -(grip.y - 8F) / 16F, -(grip.z - 8F) / 16F).mul(scale);
+            Vector3f sc = scale3 != null ? new Vector3f(scale3) : new Vector3f(scale, scale, scale);
+            Vector3f c = new Vector3f(-(grip.x - 8F) / 16F * sc.x, -(grip.y - 8F) / 16F * sc.y, -(grip.z - 8F) / 16F * sc.z);
             Vector3f tr = rot.transform(c, new Vector3f());
             e.setTranslation(tr);
             e.setLeftRotation(rot);
-            e.setScale(new Vector3f(scale, scale, scale));
+            e.setScale(sc);
             e.setRightRotation(ITEM_Y_FLIP ? new Quaternionf().rotateY((float) Math.PI) : new Quaternionf());
         }
 

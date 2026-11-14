@@ -93,45 +93,66 @@ public final class PhantomArcher {
         trace2d(level, hilt, dir, len, Math.max(0.3, life));
     }
 
-    // ------------------------------------------------------------ 2026-11-15 전용 2D (사용자 "아니 2d 그리라고" — tools/job_fx_art_phantom.py rfx_jp*)
+    // ------------------------------------------------------------ 2026-11-15 단색 블록 볼륨 (사용자 "그냥 위르드처럼" · "도트처럼 보이는게 문제" — BlockFx)
+    // (같은 날 그린 2D rfx_jp* 는 바닐라 글꼴에서 픽셀이 그대로 커져 도트로 보였음 → 본체를 무늬 없는 단색 상자 볼륨으로)
 
-    /** 투영 선 (rfx_jptrace — 칼 윤곽이 손잡이부터 그어짐 → 번쩍): 그림의 칼 = 칸 x 18 ~ 240 (256) → 칸 가운데는 자루에서 len × 110 / 222 */
+    /** 투영 선: 칼 윤곽 (자루 · 코등이 · 날 양쪽 · 칼끝) 을 가는 푸른 흰빛 줄 다섯으로 — life 초 동안 가늘어지며 사라짐 */
     static void trace2d(ServerLevel level, Vec3 hilt, Vec3 dir, double len, double life) {
         Vec3 d = V.unit(dir);
-        JobFx.two(level, "jptrace", 8, V.add(hilt, d, len * 110 / 222.0), life, Opt.of("dir", d, "size", len * 128 / 222.0), TRACE, TRACE_CORE);
+        Vec3 side = V.rightOf(V.flat(d));
+        if (V.len(side) < 1e-3) side = new Vec3(1, 0, 0);
+        Vec3 up = V.unit(V.cross(side, d));
+        Vec3 guard = V.add(hilt, d, len * 0.22);
+        Vec3 tip = V.add(hilt, d, len);
+        Vec3 sa = V.add(V.add(guard, d, len * 0.05), up, len * 0.07);
+        Vec3 sb = V.add(V.add(guard, d, len * 0.05), up, -len * 0.07);
+        int t = Math.max(4, (int) Math.round(life * 20));
+        double th = 0.035 + len * 0.012;
+        mmorpg.fabric.vfx.BlockFx.beam(level, hilt, guard, th, TRACE, t);
+        mmorpg.fabric.vfx.BlockFx.beam(level, V.add(guard, up, len * 0.16), V.add(guard, up, -len * 0.16), th, TRACE, t);
+        mmorpg.fabric.vfx.BlockFx.beam(level, sa, tip, th, TRACE, t);
+        mmorpg.fabric.vfx.BlockFx.beam(level, sb, tip, th, TRACE, t);
     }
 
-    /** 칼 궤적 (rfx_jpstreak — 앞이 굵고 밝은 리본): from → to */
+    /** 칼 궤적: 진홍 빛 줄 (흰 심지) — from → to, life 초 동안 가늘어짐 */
     static void streak2d(ServerLevel level, Vec3 from, Vec3 to, double life, double[] glow, double[] core) {
-        Vec3 dv = V.sub(to, from);
-        double L = V.len(dv);
-        if (L < 0.3) return;
-        JobFx.two(level, "jpstreak", 6, V.lerp(from, to, 0.5), life, Opt.of("dir", V.scale(dv, 1 / L), "size", L * 0.55), glow, core);
+        mmorpg.fabric.vfx.BlockFx.beam(level, from, to, 0.16, glow, Math.max(3, (int) Math.round(life * 20)));
     }
 
-    /** 착탄 섬광 (rfx_jpimpact — 번쩍 → 고리 · 칼 조각 여덟) */
+    /** 착탄 섬광: 흰 심 · 진홍 겉 상자가 터졌다 꺼짐 · 강철 조각 여섯 */
     static void impact2d(ServerLevel level, Vec3 at, double size, double[] glow, double[] core) {
-        JobFx.two(level, "jpimpact", 8, at, 0.4, Opt.of("size", size, "spin", Kit.rand() * 360), glow, core);
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.8, glow, mmorpg.fabric.vfx.BlockFx.WHITE, 6);
+        mmorpg.fabric.vfx.BlockFx.shards(level, at, 6, size * 1.4, size * 0.4, BLADE, 8);
     }
 
-    /** X 베기 (rfx_jpcross) */
-    static void cross2d(ServerLevel level, Vec3 at, double size, double[] glow, double[] core) {
-        JobFx.two(level, "jpcross", 8, at, 0.45, Opt.of("size", size), glow, core);
+    /** X 베기: 보는 쪽 (facing — 쓴 사람 → 과녁) 에 수직인 판에서 엇갈린 빛 호 둘 */
+    static void cross2d(ServerLevel level, Vec3 at, Vec3 facing, double size, double[] glow, double[] core) {
+        Vec3 u = V.rightOf(V.flat(facing));
+        if (V.len(u) < 1e-3) u = new Vec3(1, 0, 0);
+        Vec3 v = V.UP;
+        double Rc = size * 2.2;
+        double span = size * 1.15 / Rc;
+        for (int s = 0; s < 2; s++) {
+            Vec3 dd = V.unit(s == 0 ? V.sub(u, v) : V.add(V.scale(u, -1), V.scale(v, -1)));
+            Vec3 n = V.unit(s == 0 ? V.add(u, v) : V.sub(u, v));
+            Vec3 center = V.add(at, n, Rc);
+            mmorpg.fabric.vfx.BlockFx.arc(level, center, V.scale(n, -1), dd, Rc, -span, span, 9, size * 0.22, glow, 3, 8);
+        }
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.45, glow, mmorpg.fabric.vfx.BlockFx.WHITE, 6);
     }
 
-    /** 폭발 (rfx_jpblast — 불덩이 · 충격파 고리 · 칼 조각) */
+    /** 폭발: 진홍 · 주황 상자 볼륨 · 흰 심 · 땅 충격파 고리 · 강철 조각 */
     static void blast2d(ServerLevel level, Vec3 at, double size) {
-        JobFx.two(level, "jpblast", 10, at, 0.6, Opt.of("size", size, "spin", Kit.rand() * 360), FIRE, FIRE_CORE);
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.75, FIRE, FIRE_CORE, 12);
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.5, GEM, mmorpg.fabric.vfx.BlockFx.WHITE, 9);
+        Vec3 g = new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1) + 0.05, at.z);
+        mmorpg.fabric.vfx.BlockFx.ring(level, g, size * 0.3, size * 1.25, 22, 0.32, FIRE, 11);
+        mmorpg.fabric.vfx.BlockFx.shards(level, at, 10, size * 1.6, size * 0.35, BLADE, 12);
     }
 
-    /** 불꽃 (rfx_jpflame — 이어 돌림): 아래 끝 foot */
+    /** 불꽃: 주황 · 노란 상자가 솟으며 돌고 작아짐 */
     static void flame2d(ServerLevel level, Vec3 foot, double size, double life) {
-        JobFx.loop(level, "jpflame", 8, V.up(foot, size * 0.75), life, 14, Opt.of("size", size, "phase", Kit.rand() * 8), FIRE, FIRE_CORE);
-    }
-
-    /** 노을 배경판 (rfx_jpdusk — 지평선 띠 · 지는 해 · 구름 띠) */
-    static void dusk2d(ServerLevel level, Vec3 at, double size, double life) {
-        JobFx.two(level, "jpdusk", 1, at, life, Opt.of("size", size, "fade", 0.12), new double[] {1.0, 0.24, 0.14}, new double[] {1.0, 0.8, 0.52});
+        mmorpg.fabric.vfx.BlockFx.flame(level, foot, size * 2.0, FIRE, FIRE_CORE, Math.max(6, (int) Math.round(life * 20)));
     }
 
     /**

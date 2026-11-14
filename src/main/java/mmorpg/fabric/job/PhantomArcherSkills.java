@@ -206,7 +206,7 @@ final class PhantomArcherSkills {
             Vec3 r = V.rightOf(V.flat(V.sub(c, sp.position())));
             Vec3 a = V.unit(V.add(r, V.UP, 1));
             Vec3 b = V.unit(V.add(r, V.UP, -1));
-            PhantomArcher.cross2d(level, c, 1.9, glow, core); // 2026-11-15 전용 X 베기 (rfx_jpcross)
+            PhantomArcher.cross2d(level, c, V.sub(c, sp.position()), 1.9, glow, core); // 2026-11-15 단색 블록 X 베기 (BlockFx 호 둘)
             SkillFx.sparks(level, c, core, 10, 5);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
             SkillFx.play(level, "item.trident.hit", c, 1.1, 0.8);
@@ -496,7 +496,7 @@ final class PhantomArcherSkills {
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
         // 2026-11-15 영상: 바닐라는 하늘이 바뀌지 않음 → 보는 쪽 지평선에 지는 진홍 해 (rfx_sun) · 둘레 노을 빛
         Vec3 fs = Kit.facingOf(sp);
-        PhantomArcher.dusk2d(level0, V.add(V.up(c0, 5.0), fs, 36), 26.0, (finalAt + 20) / 20.0); // 전용 노을 판 (rfx_jpdusk — 2026-11-15 영상: 세 판이 겹쳐 계단 꼴 → 하나 · 멀리 · 크게)
+        // (노을 판 rfx_jpdusk 는 뺌 — 2026-11-15 "도트처럼 보이는게 문제": 큰 글꼴 판은 픽셀이 그대로 보임)
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.2, 0.9);
         SkillFx.play(level0, "item.firecharge.use", c0, 0.6, 1.0);

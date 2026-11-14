@@ -1,0 +1,85 @@
+{
+ "credit": "tools/vfx_blocky.py — BlockFx 단색 상자 (2026-11-15 — 무늬 없는 흰 면 · 물들임 0 · 스스로 빛남)",
+ "textures": {
+  "0": "rpg:item/vfx/flat_cube",
+  "particle": "rpg:item/vfx/flat_cube"
+ },
+ "elements": [
+  {
+   "name": "flat",
+   "from": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "to": [
+    16.0,
+    16.0,
+    16.0
+   ],
+   "faces": {
+    "north": {
+     "uv": [
+      0.25,
+      0.25,
+      4.25,
+      4.25
+     ],
+     "texture": "#0",
+     "tintindex": 0
+    },
+    "south": {
+     "uv": [
+      4.75,
+      0.25,
+      8.75,
+      4.25
+     ],
+     "texture": "#0",
+     "tintindex": 0
+    },
+    "east": {
+     "uv": [
+      9.25,
+      0.25,
+      13.25,
+      4.25
+     ],
+     "texture": "#0",
+     "tintindex": 0
+    },
+    "west": {
+     "uv": [
+      0.25,
+      4.75,
+      4.25,
+      8.75
+     ],
+     "texture": "#0",
+     "tintindex": 0
+    },
+    "up": {
+     "uv": [
+      4.75,
+      4.75,
+      8.75,
+      8.75
+     ],
+     "texture": "#0",
+     "tintindex": 0
+    },
+    "down": {
+     "uv": [
+      9.25,
+      4.75,
+      13.25,
+      8.75
+     ],
+     "texture": "#0",
+     "tintindex": 0
+    }
+   },
+   "light_emission": 15
+  }
+ ]
+}

@@ -1151,16 +1151,48 @@ def rune_sword():
     return m
 
 
+def flat_color(hexc):
+    """2026-11-15 무늬 없는 단색 면"""
+    col = C(hexc)
+
+    def paint(w, h, face, rng, frame):
+        img = np.tile(col, (h, w, 1)).astype(float)
+        return np.concatenate([img, np.ones((h, w, 1))], -1), None
+    return paint
+
+
+def flat_white():
+    """2026-11-15 무늬 없는 흰 면 (사용자 "도트처럼 보이는게 문제" — 결 · 잡티 없이, 물들임 색이 그대로)"""
+    W_ = C("#FFFFFF")
+
+    def paint(w, h, face, rng, frame):
+        img = np.tile(W_, (h, w, 1)).astype(float)
+        return np.concatenate([img, np.ones((h, w, 1))], -1), None
+    return paint
+
+
+def flat_cube():
+    """2026-11-15 BlockFx 단색 상자 (위르드처럼 — 늘이고 돌리고 키우고 줄여 빛 줄 · 호 · 폭발 · 고리 · 조각 · 불꽃): 0 ~ 16 꽉 찬 상자 · 무늬 없는 흰 면 ·
+    물들임 0 · 스스로 빛남. 가운데 (8, 8, 8) 이 쥔 곳"""
+    m = BModel("flat_cube", "BlockFx 단색 상자 (2026-11-15 — 무늬 없는 흰 면 · 물들임 0 · 스스로 빛남)", d=1.0)
+    m.mat("flat", Mat(flat_white(), tint=0, glow=True))
+    m.box("flat", (0, 0, 0), (16, 16, 16))
+    return m
+
+
 def phantom_sword():
     """2026-11-15 팬텀 아처의 투영 장검 (궁수 리메이크 — 사용자 "컨셉아트지? 너무 저퀄인데" → 컨셉아트 1판 확인 뒤 "다음 작업"): rune_sword 와 같은 쥔 곳
     (손잡이 (8, −3.5, 8) · 칼끝 y 31) — 불투명 밝은 강철 날 (스스로 빛남 · 여섯 단으로 좁아지는 블록 날) · 흰 날 · 진홍 빛 홈 (물들임 1) · 곧은 금 코등이 ·
     가운데 진홍 보석 · 쇠 칼 목 · 가죽 손잡이 (금 고리 둘) · 금 자루 끝. 날 = 물들임 0 (서버가 강철 흰빛으로)"""
     m = BModel("phantom_sword", "팬텀 아처 투영 장검 (2026-11-15 — 밝은 강철 단 날 · 진홍 빛 홈 · 곧은 금 코등이, 컨셉아트 1판)", d=2.5)
-    weapon_mats(m)
-    m.mat("pblade", Mat(bevel("#E4ECF6", "#FFFFFF", "#AEBCD2", speck=0.02), tint=0, glow=True))
-    m.mat("pedge", Mat(edge_paint(), glow=True))
-    m.mat("pfuller", Mat(rune_flow(0.6), tint=1, glow=True, animated=True))
-    m.mat("pgem", Mat(gem_paint(0.62), tint=1, glow=True, animated=True))
+    # 2026-11-15 "도트처럼 보이는게 문제" → 모든 면이 무늬 없는 단색 (결 · 잡티 · 흐르는 빛 없음)
+    m.mat("pblade", Mat(flat_color("#E9EFF8"), tint=0, glow=True))
+    m.mat("pedge", Mat(flat_color("#FFFFFF"), glow=True))
+    m.mat("pfuller", Mat(flat_color("#FFFFFF"), tint=1, glow=True))
+    m.mat("pgem", Mat(flat_color("#FFFFFF"), tint=1, glow=True))
+    m.mat("gold", Mat(flat_color("#E0AE48")))
+    m.mat("grip", Mat(flat_color("#3B2219")))
+    m.mat("steel", Mat(flat_color("#A3AEC0")))
     # 자루 끝 · 손잡이
     m.box("gold", (7.2, -10.4, 7.2), (8.8, -8.8, 8.8))
     m.box("pgem", (7.5, -10.0, 6.9), (8.5, -9.2, 9.1))
@@ -2323,7 +2355,7 @@ def chain_link():
     return m
 
 
-BUILD = {"phantom_sword": phantom_sword, "rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
+BUILD = {"flat_cube": flat_cube, "phantom_sword": phantom_sword, "rock_spike": rock_spike, "ice_spike": ice_spike, "meteor": meteor, "cloud": cloud, "rune_sword": rune_sword, "rune_hammer": rune_hammer,
          "rune_arrow": rune_arrow, "sky_bow": sky_bow, "rune_scythe": rune_scythe, "boulder": boulder, "void_orb": void_orb,
          "ice_blade": ice_blade, "fist": fist, "guillotine": guillotine, "guillotine_blade": guillotine_blade, "halo": halo, "hex_panel": hex_panel, "thunder_spear": thunder_spear,
          "shuriken": shuriken, "smoke_bomb": smoke_bomb, "tower_shield": tower_shield, "grapple_hook": grapple_hook, "chain_link": chain_link,
@@ -2470,7 +2502,7 @@ def load_current(name):
     return js["elements"], np.asarray(im.crop((0, 0, w, w)))
 
 
-TINTS = {"phantom_sword": [(0.9, 0.95, 1.0), (1.0, 0.3, 0.22)], "rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
+TINTS = {"flat_cube": [(1.0, 0.3, 0.22)], "phantom_sword": [(0.9, 0.95, 1.0), (1.0, 0.3, 0.22)], "rock_spike": [(1.0, 0.62, 0.2)], "ice_spike": [(0.6, 0.85, 1.0)], "meteor": [(1, 1, 1)],
          "cloud": [(0.42, 0.36, 0.62), (0.78, 0.62, 1.0)], "rune_sword": [(0.45, 0.62, 1.0), (0.86, 0.92, 1.0)],
          "rune_hammer": [(1.0, 0.82, 0.3), (1.0, 0.95, 0.7)],
          "rune_arrow": [(0.66, 1.0, 0.28), (0.95, 1.0, 0.82)], "sky_bow": [(1.0, 0.86, 0.35), (1.0, 0.98, 0.8)], "rune_scythe": [(0.86, 0.06, 0.12), (1.0, 0.72, 0.68)],
