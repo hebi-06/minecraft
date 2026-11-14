@@ -511,7 +511,7 @@ final class BattlearcherSkills {
             ServerLevel level = sp.level();
             Vec3 f = Kit.facingOf(sp);
             Vec3 mid = V.add(sp.position(), f, range * 0.55);
-            Vec3 top = V.up(mid, 10);
+            Vec3 top = V.up(mid, 7); // 2026-11-14 영상 CI 43552516534: 10칸은 모이는 자리 · 검은 해가 화면 위로 벗어났음
             apex[0] = top;
             for (RuneMob m : legion) {
                 Vec3 b = m != null && m.alive() ? ShadeArchers.bowUpOf(m) : V.up(sp.position(), 2.2);
@@ -530,7 +530,7 @@ final class BattlearcherSkills {
             if (!RuneKit.sameLife(sp, life) || apex[0] == null) return;
             ServerLevel level = sp.level();
             Vec3 top = apex[0];
-            Vec3 g = new Vec3(top.x, RuneKit.groundAt(level, V.up(top, -8), sp.getY()), top.z);
+            Vec3 g = new Vec3(top.x, RuneKit.groundAt(level, V.up(top, -5), sp.getY()), top.z);
             double alen = 6.0;
             double r = ArrowFx.reach(alen);
             Vfx.Fx fx = RuneProps.fx(level, top, 40);
@@ -553,7 +553,7 @@ final class BattlearcherSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 f = Kit.facingOf(sp);
-            Vec3 mid = apex[0] != null ? new Vec3(apex[0].x, RuneKit.groundAt(level, V.up(apex[0], -8), sp.getY()), apex[0].z) : V.add(sp.position(), f, range * 0.55);
+            Vec3 mid = apex[0] != null ? new Vec3(apex[0].x, RuneKit.groundAt(level, V.up(apex[0], -5), sp.getY()), apex[0].z) : V.add(sp.position(), f, range * 0.55);
             // 내리꽂힌 자리: 큰 터짐 (흔들림 없음) · 부채꼴을 덮는 충격 고리 · 그림자 연기 · 갈라진 땅
             BowFx.bigImpact(level, mid, glow, core, range * 0.5);
             SkillFx.shock(level, mid, glow, range * 0.6, 0.5);

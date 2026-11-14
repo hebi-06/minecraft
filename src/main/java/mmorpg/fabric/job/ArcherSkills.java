@@ -269,16 +269,7 @@ final class ArcherSkills {
         puffs[0] = V.up(sky, 0.5);
         for (int i = 1; i < 5; i++) puffs[i] = V.up(V.add(sky, RuneKit.turn(new Vec3(1, 0, 0), i * 90 + 25), r * 0.55), (i % 2) * 0.3);
         RuneProps.clouds(level0, puffs, halves, CLOUD, glow, end + 14);
-        // 2D 먹구름 (rfx_jcloud — 3D 덩이 뒤의 옅은 구름 · 속에서 번쩍이는 번개): 모여 듦 → 일렁임 (이어 돌림) → 흩어짐
-        Vec3 haze = V.up(sky, 0.9);
-        JobFx.cloud(level0, haze, r * 1.15, 0, 2, 0.15, false, Opt.of("alpha", 0.6), CLOUD, core);
-        RuneKit.later(3, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.cloud(sp.level(), haze, r * 1.15, 2, 4, Math.max(0.2, (end + 4) / 20.0), true, Opt.of("alpha", 0.6, "fade", 0.0), CLOUD,
-                    core);
-        });
-        RuneKit.later(end + 6, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.cloud(sp.level(), haze, r * 1.15, 6, 2, 0.4, false, Opt.of("alpha", 0.6), CLOUD, core);
-        });
+        // (2D 먹구름 rfx_jcloud 는 뺌 — 2026-11-14 영상 CI 43552516534: 3D 덩이 뒤의 납작한 회색 판으로 보이고 속의 번개는 3D 덩이에 가렸음)
         // 구름 속 번쩍임 · 덩이 사이 번개 (6틱마다)
         for (int t = 2; t <= end + 6; t += 6) {
             RuneKit.later(t, () -> {
