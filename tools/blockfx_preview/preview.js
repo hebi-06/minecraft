@@ -85,12 +85,17 @@ const WHITE = [1, 1, 1];
 
 // ---------------------------------------------------------------- BlockFx (자바와 같은 꼴)
 const BlockFx = {
+  // 2026-11-15 빛 줄 2판: 세 마디 (머리 쪽 굵게 → 꼬리 가늘게) · 꼬리부터 사라짐 · 흰 심지
   beam(from, to, thick, color, life) {
     const d = to.clone().sub(from), len = d.length(); if (len < 0.05) return;
-    const mid = from.clone().lerp(to, 0.5), rot = along(d), L = Math.max(2, life), t0 = NOW;
-    const o = box(mid, rot, thick, len, thick, color), k = box(mid, rot, thick * 0.38, len * 1.01, thick * 0.38, WHITE);
-    at(t0 + 1, () => { o.stretch(0, len * 0.96, 0, L - 1); k.stretch(0, len, 0, L - 1); });
-    at(t0 + L + 1, () => { o.remove(); k.remove(); });
+    const rot = along(d), L = Math.max(2, life), t0 = NOW, n = 3;
+    for (let i = 0; i < n; i++) {
+      const a = from.clone().lerp(to, i / n), b = from.clone().lerp(to, (i + 1) / n), mid = a.clone().lerp(b, 0.5), seg = len / n * 1.02;
+      const th = thick * (0.45 + 0.55 * (i + 1) / n), life_i = Math.max(2, Math.round(L * (0.55 + 0.45 * (i + 1) / n)));
+      const o = box(mid, rot, th, seg, th, color), k = box(mid, rot, th * 0.4, seg * 1.01, th * 0.4, WHITE);
+      at(t0 + 1, () => { o.stretch(0, seg * 0.96, 0, life_i - 1); k.stretch(0, seg, 0, life_i - 1); });
+      at(t0 + life_i + 1, () => { o.remove(); k.remove(); });
+    }
   },
   arc(c, u, v, r, a0, a1, segs, thick, color, sweep, life) {
     const n = Math.max(2, segs), da = (a1 - a0) / n, nrm = u.clone().cross(v).normalize(), t0 = NOW;
@@ -110,22 +115,56 @@ const BlockFx = {
       });
     }
   },
+  // 2026-11-15 폭발 2판 (사용자 "너 하고 싶은거 다 해봐"): 번쩍 별 (흰 긴 상자 셋) · 흰 심 · 불덩이 상자 넷 (뜨거운 색 → 겉 색) · 가시 여덟 (겉 색 + 흰 심지 —
+  // 뻗었다 끝으로 줄어듦) · 불티 열 (솟았다 떨어지며 작아짐)
   burst(c, size, color, core, life) {
-    const L = Math.max(4, life), t0 = NOW;
-    const r1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
-    const r2 = new THREE.Quaternion().setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
-    const r3 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.785, 0.615, 0));
-    const a = box(c, r1, 0.05, 0.05, 0.05, color), b = box(c, r2, 0.05, 0.05, 0.05, color), w = box(c, r3, 0.05, 0.05, 0.05, core);
-    at(t0 + 1, () => { a.stretch(size * 0.85, size * 0.85, size * 0.85, 3); b.stretch(size * 0.7, size * 0.7, size * 0.7, 3); w.stretch(size * 0.55, size * 0.55, size * 0.55, 2); });
-    at(t0 + 4, () => {
-      a.turn(r1.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 1.2)), L - 3).stretch(0, 0, 0, L - 3);
-      b.turn(r2.clone().multiply(new THREE.Quaternion().setFromAxisAngle(V3(1, 0, 0), -1.0)), L - 3).stretch(0, 0, 0, L - 3);
-      w.stretch(0, 0, 0, Math.max(2, Math.floor(L / 2)));
-    });
-    at(t0 + L + 2, () => { a.remove(); b.remove(); w.remove(); });
-    for (let i = 0; i < 6; i++) {
-      const d = V3(rand() - 0.5, rand() - 0.35, rand() - 0.5).normalize();
-      BlockFx.beam(c.clone().add(d.clone().multiplyScalar(size * 0.2)), c.clone().add(d.clone().multiplyScalar(size * (0.9 + rand() * 0.5))), size * 0.07, color, Math.max(3, L - 2));
+    const L = Math.max(5, life), t0 = NOW;
+    const hot = [Math.min(1, color[0] * 0.5 + core[0] * 0.5), Math.min(1, color[1] * 0.5 + core[1] * 0.5), Math.min(1, color[2] * 0.5 + core[2] * 0.5)];
+    // 번쩍 별 (2 ~ 3틱)
+    for (let k = 0; k < 3; k++) {
+      const ax = [V3(1, 0.2, 0.1), V3(-0.2, 1, 0.3), V3(0.3, -0.1, 1)][k].normalize();
+      const st = box(c, along(ax), size * 0.05, size * 0.4, size * 0.05, WHITE);
+      st.stretch(size * 0.04, size * 2.2, size * 0.04, 1);
+      at(t0 + 2, () => st.stretch(0, size * 2.8, 0, 2));
+      at(t0 + 5, () => st.remove());
+    }
+    // 흰 심 · 불덩이
+    const wq = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.785, 0.615, 0));
+    const w = box(c, wq, 0.05, 0.05, 0.05, core);
+    w.stretch(size * 0.62, size * 0.62, size * 0.62, 2);
+    at(t0 + 3, () => w.turn(wq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 0.8)), 4).stretch(0, 0, 0, 5));
+    at(t0 + 9, () => w.remove());
+    for (let k = 0; k < 4; k++) {
+      const rq = new THREE.Quaternion().setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
+      const off = V3(rand() - 0.5, rand() * 0.6 - 0.2, rand() - 0.5).multiplyScalar(size * 0.35);
+      const sz = size * (0.55 + rand() * 0.35);
+      const f = box(c.clone().add(off), rq, 0.05, 0.05, 0.05, k < 2 ? hot : color);
+      at(t0 + 1, () => f.stretch(sz, sz, sz, 3).move(c.clone().add(off.clone().multiplyScalar(1.6)), 3));
+      at(t0 + 4, () => f.turn(rq.clone().multiply(new THREE.Quaternion().setFromAxisAngle(V3(rand(), rand(), rand()).normalize(), 1.4)), L - 3)
+        .move(c.clone().add(off.clone().multiplyScalar(2.2)).add(V3(0, size * 0.25, 0)), L - 3).stretch(0, 0, 0, L - 3));
+      at(t0 + L + 2, () => f.remove());
+    }
+    // 가시 여덟 (뻗음 → 끝으로 줄어듦)
+    for (let k = 0; k < 12; k++) {
+      const d = V3(Math.cos(k * 0.524 + rand() * 0.3), rand() * 1.0 - 0.25, Math.sin(k * 0.524 + rand() * 0.3)).normalize();
+      const len = size * (0.8 + rand() * 0.5);
+      const mid0 = c.clone().add(d.clone().multiplyScalar(size * 0.3)), rot = along(d);
+      const o = box(mid0, rot, size * 0.07, 0.05, size * 0.07, color), kk = box(mid0, rot, size * 0.028, 0.05, size * 0.028, WHITE);
+      const mid1 = c.clone().add(d.clone().multiplyScalar(size * 0.3 + len * 0.5));
+      o.move(mid1, 2).stretch(size * 0.07, len, size * 0.07, 2); kk.move(mid1, 2).stretch(size * 0.028, len * 1.02, size * 0.028, 2);
+      const tip = c.clone().add(d.clone().multiplyScalar(size * 0.3 + len * 1.05));
+      at(t0 + 3, () => { o.move(tip, L - 4).stretch(0, 0, 0, L - 4); kk.move(tip, L - 5).stretch(0, 0, 0, Math.max(2, L - 5)); });
+      at(t0 + L + 1, () => { o.remove(); kk.remove(); });
+    }
+    // 불티 열 (솟았다 떨어짐)
+    for (let k = 0; k < 10; k++) {
+      const d = V3(rand() - 0.5, 0, rand() - 0.5).normalize(), e = size * (0.08 + rand() * 0.06);
+      const pk = c.clone().add(d.clone().multiplyScalar(size * (0.6 + rand() * 0.8))).add(V3(0, size * (0.5 + rand() * 0.6), 0));
+      const end = pk.clone().add(d.clone().multiplyScalar(size * 0.4)).add(V3(0, -size * (0.6 + rand() * 0.4), 0));
+      const em = box(c, along(V3(rand(), rand(), rand())), e, e, e, k % 2 ? [1.0, 0.85, 0.4] : hot);
+      em.move(pk, 4);
+      at(t0 + 4, () => em.move(end, L).stretch(0, 0, 0, L));
+      at(t0 + L + 5, () => em.remove());
     }
   },
   ring(c, r0, r1, segs, thick, color, life) {
@@ -220,7 +259,7 @@ function sword(hilt, dir, len, side) {
 }
 
 // ---------------------------------------------------------------- 장면 (자바 PhantomArcherSkills 의 틱을 따라감)
-const CRIMSON = [1.0, 0.34, 0.24], CORE = [0.92, 0.96, 1.0], FIRE = [1.0, 0.42, 0.2], FIRE_CORE = [1.0, 0.9, 0.72], TRACE = [0.42, 0.78, 1.0], BLADE = [0.9, 0.95, 1.0], GEM = [1.0, 0.3, 0.22];
+const CRIMSON = [0.92, 0.12, 0.14], CORE = [0.92, 0.96, 1.0], FIRE = [1.0, 0.36, 0.12], FIRE_CORE = [1.0, 0.86, 0.5], TRACE = [0.42, 0.78, 1.0], BLADE = [0.9, 0.95, 1.0], GEM = [1.0, 0.3, 0.22];
 const PL = V3(3, 0, 0), FWD = V3(-1, 0, 0), RIGHT = V3(0, 0, -1);
 function crowd() { person(PL.x, PL.z, Math.PI / 2); draugr(-3, 0, -Math.PI / 2); draugr(-4.6, -1.5, -Math.PI / 2); draugr(-4.4, 1.6, -Math.PI / 2); draugr(-6.2, 0.2, -Math.PI / 2); }
 function trace(hilt, dir, len, life) {

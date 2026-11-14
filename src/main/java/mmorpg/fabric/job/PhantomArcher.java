@@ -37,13 +37,13 @@ public final class PhantomArcher {
 
     /** 칼 날 (반투명 강철빛 — rune_sword 물들임 0) · 홈 · 보석 (진홍 — 물들임 1) */
     static final double[] BLADE = {0.9, 0.95, 1.0}; // 2026-11-15 영상: 0.8 · 0.88 은 낮 하늘 앞에서 잿빛으로 가라앉았음
-    static final double[] GEM = {1.0, 0.3, 0.22};
+    static final double[] GEM = {0.92, 0.12, 0.14}; // 2026-11-15 미리보기: 더 짙은 진홍
     /** 투영 선 (푸른 흰빛) */
     static final double[] TRACE = {0.42, 0.78, 1.0};
     static final double[] TRACE_CORE = {0.9, 0.97, 1.0};
     /** 폭발 (진홍 불꽃 · 흰 심지) */
-    static final double[] FIRE = {1.0, 0.42, 0.2};
-    static final double[] FIRE_CORE = {1.0, 0.9, 0.72};
+    static final double[] FIRE = {1.0, 0.36, 0.12};
+    static final double[] FIRE_CORE = {1.0, 0.86, 0.5};
 
     /** 꽂힌 칼 하나 */
     private static final class Stuck {

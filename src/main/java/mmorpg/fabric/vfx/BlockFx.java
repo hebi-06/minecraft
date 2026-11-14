@@ -41,25 +41,36 @@ public final class BlockFx {
 
     // ------------------------------------------------------------ 빛 줄
 
-    /** 빛 줄 (from → to · 굵기 thick): 겉 색 + 흰 심지 — life 틱 동안 가늘어지며 사라짐 */
+    /**
+     * 빛 줄 (from → to · 굵기 thick): 세 마디 (머리 쪽 to 가 굵고 꼬리 from 쪽이 가늘게) · 흰 심지 — 꼬리부터 가늘어지며 사라짐 (life 틱 — 2026-11-15 로컬
+     * 미리보기 2판)
+     */
     public static void beam(ServerLevel level, Vec3 from, Vec3 to, double thick, double[] color, int life) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.05) return;
-        Vec3 mid = V.lerp(from, to, 0.5);
         Quaternionf rot = along(d, null);
         int L = Math.max(2, life);
-        Vfx.Fx fx = RuneProps.fx(level, mid, L + 3);
-        Vfx.Prop outer = box(fx, mid, rot, thick, len, thick, color);
-        Vfx.Prop core = box(fx, mid, rot, thick * 0.38, len * 1.01, thick * 0.38, WHITE);
-        fx.on(1, () -> {
-            outer.stretch(0.0, len * 0.96, 0.0, L - 1);
-            core.stretch(0.0, len, 0.0, L - 1);
-        });
-        fx.on(L + 1, () -> {
-            outer.remove();
-            core.remove();
-        });
+        int n = 3;
+        Vfx.Fx fx = RuneProps.fx(level, V.lerp(from, to, 0.5), L + 4);
+        for (int i = 0; i < n; i++) {
+            Vec3 a = V.lerp(from, to, i / (double) n);
+            Vec3 b = V.lerp(from, to, (i + 1) / (double) n);
+            Vec3 mid = V.lerp(a, b, 0.5);
+            double seg = len / n * 1.02;
+            double th = thick * (0.45 + 0.55 * (i + 1) / n);
+            int li = Math.max(2, (int) Math.round(L * (0.55 + 0.45 * (i + 1) / n)));
+            Vfx.Prop o = box(fx, mid, rot, th, seg, th, color);
+            Vfx.Prop k = box(fx, mid, rot, th * 0.4, seg * 1.01, th * 0.4, WHITE);
+            fx.on(1, () -> {
+                o.stretch(0.0, seg * 0.96, 0.0, li - 1);
+                k.stretch(0.0, seg, 0.0, li - 1);
+            });
+            fx.on(li + 1, () -> {
+                o.remove();
+                k.remove();
+            });
+        }
     }
 
     // ------------------------------------------------------------ 호 (베기)
@@ -104,36 +115,74 @@ public final class BlockFx {
     // ------------------------------------------------------------ 폭발 · 섬광
 
     /**
-     * 폭발 (가운데 c · 크기 size 칸): 흰 심 상자 (45° 돌림) 가 2틱에 커졌다 돌며 꺼짐 · 겉 색 상자 둘 (서로 다르게 돌림) 이 3틱에 커졌다 life 틱 동안 줄어듦 ·
-     * 사방으로 빛 줄 여섯
+     * 폭발 2판 (가운데 c · 크기 size 칸 — 2026-11-15 로컬 미리보기에서 맞춤, 사용자 "너 하고 싶은거 다 해봐"): 번쩍 별 (흰 가는 긴 상자 셋 · 3틱) · 흰 심 (돌며
+     * 꺼짐) · 불덩이 상자 넷 (뜨거운 색 둘 · 겉 색 둘 — 커졌다 돌며 떠올라 줄어듦) · 가시 열둘 (겉 색 + 흰 심지 — 2틱에 뻗었다 끝으로 줄어듦) · 불티 열 (솟았다
+     * 떨어지며 작아짐)
      */
     public static void burst(ServerLevel level, Vec3 c, double size, double[] color, double[] core, int life) {
-        int L = Math.max(4, life);
-        Vfx.Fx fx = RuneProps.fx(level, c, L + 4);
-        Quaternionf r1 = new Quaternionf().rotateXYZ((float) (Kit.rand() * 3), (float) (Kit.rand() * 3), (float) (Kit.rand() * 3));
-        Quaternionf r2 = new Quaternionf().rotateXYZ((float) (Kit.rand() * 3), (float) (Kit.rand() * 3), (float) (Kit.rand() * 3));
-        Quaternionf r3 = new Quaternionf().rotateXYZ(0.785F, 0.615F, 0F);
-        Vfx.Prop a = box(fx, c, r1, 0.05, 0.05, 0.05, color);
-        Vfx.Prop b = box(fx, c, r2, 0.05, 0.05, 0.05, color);
-        Vfx.Prop w = box(fx, c, r3, 0.05, 0.05, 0.05, core);
-        fx.on(1, () -> {
-            a.stretch(size * 0.85, size * 0.85, size * 0.85, 3);
-            b.stretch(size * 0.7, size * 0.7, size * 0.7, 3);
-            w.stretch(size * 0.55, size * 0.55, size * 0.55, 2);
-        });
-        fx.on(4, () -> {
-            a.turn(new Quaternionf(r1).rotateY(1.2F), L - 3).stretch(0.0, 0.0, 0.0, L - 3);
-            b.turn(new Quaternionf(r2).rotateX(-1.0F), L - 3).stretch(0.0, 0.0, 0.0, L - 3);
-            w.stretch(0.0, 0.0, 0.0, Math.max(2, L / 2));
-        });
-        fx.on(L + 2, () -> {
-            a.remove();
-            b.remove();
-            w.remove();
-        });
-        for (int i = 0; i < 6; i++) {
-            Vec3 d = V.unit(new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.35, Kit.rand() - 0.5));
-            beam(level, V.add(c, d, size * 0.2), V.add(c, d, size * (0.9 + Kit.rand() * 0.5)), size * 0.07, color, Math.max(3, L - 2));
+        int L = Math.max(5, life);
+        Vfx.Fx fx = RuneProps.fx(level, c, L + 10);
+        double[] hot = {Math.min(1, color[0] * 0.5 + core[0] * 0.5), Math.min(1, color[1] * 0.5 + core[1] * 0.5), Math.min(1, color[2] * 0.5 + core[2] * 0.5)};
+        double[] gold = {1.0, 0.85, 0.4};
+        // 번쩍 별
+        Vec3[] axes = {V.unit(new Vec3(1, 0.2, 0.1)), V.unit(new Vec3(-0.2, 1, 0.3)), V.unit(new Vec3(0.3, -0.1, 1))};
+        for (Vec3 ax : axes) {
+            Vfx.Prop st = box(fx, c, along(ax, null), size * 0.05, size * 0.4, size * 0.05, WHITE);
+            fx.on(1, () -> st.stretch(size * 0.04, size * 2.2, size * 0.04, 1));
+            fx.on(3, () -> st.stretch(0.0, size * 2.8, 0.0, 2));
+            fx.on(6, st::remove);
+        }
+        // 흰 심
+        Quaternionf wq = new Quaternionf().rotateXYZ(0.785F, 0.615F, 0F);
+        Vfx.Prop w = box(fx, c, wq, 0.05, 0.05, 0.05, core);
+        fx.on(1, () -> w.stretch(size * 0.62, size * 0.62, size * 0.62, 2));
+        fx.on(4, () -> w.turn(new Quaternionf(wq).rotateY(0.8F), 4).stretch(0.0, 0.0, 0.0, 5));
+        fx.on(10, w::remove);
+        // 불덩이
+        for (int k = 0; k < 4; k++) {
+            Quaternionf rq = new Quaternionf().rotateXYZ((float) (Kit.rand() * 3), (float) (Kit.rand() * 3), (float) (Kit.rand() * 3));
+            Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6 - 0.2, Kit.rand() - 0.5), size * 0.35);
+            double sz = size * (0.55 + Kit.rand() * 0.35);
+            Vfx.Prop f = box(fx, V.add(c, off), rq, 0.05, 0.05, 0.05, k < 2 ? hot : color);
+            Vec3 axis = V.unit(new Vec3(Kit.rand() + 0.01, Kit.rand(), Kit.rand()));
+            Quaternionf rq2 = new Quaternionf(rq).rotateAxis(1.4F, (float) axis.x, (float) axis.y, (float) axis.z);
+            fx.on(1, () -> f.stretch(sz, sz, sz, 3).move(V.add(c, off, 1.6), 3));
+            fx.on(4, () -> f.turn(rq2, L - 3).move(V.up(V.add(c, off, 2.2), size * 0.25), L - 3).stretch(0.0, 0.0, 0.0, L - 3));
+            fx.on(L + 2, f::remove);
+        }
+        // 가시 열둘
+        for (int k = 0; k < 12; k++) {
+            Vec3 d = V.unit(new Vec3(Math.cos(k * 0.524 + Kit.rand() * 0.3), Kit.rand() - 0.25, Math.sin(k * 0.524 + Kit.rand() * 0.3)));
+            double len = size * (0.8 + Kit.rand() * 0.5);
+            Vec3 mid0 = V.add(c, d, size * 0.3);
+            Quaternionf rot = along(d, null);
+            Vfx.Prop o = box(fx, mid0, rot, size * 0.07, 0.05, size * 0.07, color);
+            Vfx.Prop kk = box(fx, mid0, rot, size * 0.028, 0.05, size * 0.028, WHITE);
+            Vec3 mid1 = V.add(c, d, size * 0.3 + len * 0.5);
+            Vec3 tip = V.add(c, d, size * 0.3 + len * 1.05);
+            fx.on(1, () -> {
+                o.move(mid1, 2).stretch(size * 0.07, len, size * 0.07, 2);
+                kk.move(mid1, 2).stretch(size * 0.028, len * 1.02, size * 0.028, 2);
+            });
+            fx.on(4, () -> {
+                o.move(tip, L - 4).stretch(0.0, 0.0, 0.0, L - 4);
+                kk.move(tip, L - 5).stretch(0.0, 0.0, 0.0, Math.max(2, L - 5));
+            });
+            fx.on(L + 2, () -> {
+                o.remove();
+                kk.remove();
+            });
+        }
+        // 불티 열
+        for (int k = 0; k < 10; k++) {
+            Vec3 d = V.unit(new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5 + 1e-3));
+            double e = size * (0.08 + Kit.rand() * 0.06);
+            Vec3 pk = V.up(V.add(c, d, size * (0.6 + Kit.rand() * 0.8)), size * (0.5 + Kit.rand() * 0.6));
+            Vec3 end = V.up(V.add(pk, d, size * 0.4), -size * (0.6 + Kit.rand() * 0.4));
+            Vfx.Prop em = box(fx, c, along(new Vec3(Kit.rand(), Kit.rand() + 0.1, Kit.rand()), null), e, e, e, k % 2 == 1 ? gold : hot);
+            fx.on(1, () -> em.move(pk, 4));
+            fx.on(5, () -> em.move(end, L).stretch(0.0, 0.0, 0.0, L));
+            fx.on(L + 6, em::remove);
         }
     }
 
