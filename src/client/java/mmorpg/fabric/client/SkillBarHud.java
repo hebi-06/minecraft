@@ -336,7 +336,7 @@ public final class SkillBarHud {
                             g.fill(bx + 4, by + 1, bx + 5, by + 4, c);
                             if (i < v) g.fill(bx + 2, by + 2, bx + 3, by + 3, 0xFFFFFFFF);
                         }
-                        case "archer" -> {
+                        case "archer", "arsenalking" -> { // 2026-11-15 아스널 킹도 꽂힌 칼 (보물) 수
                             // 과녁 (5 × 5): 바깥 네모 줄 + 가운데 점 — 찬 것은 둘째 빛
                             g.fill(bx, by, bx + 5, by + 5, 0xC0000000);
                             int c = i < v ? col : dim;
@@ -464,16 +464,6 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
                         }
-                        case "sniper" -> {
-                            // 0.51.0 호흡 (최대 8 — 가득 차면 급소 사격) — 과녁 (5 × 5): 바깥 테 넷 + 십자 조준선, 찬 것은 첫째 빛 (밝은 연두) + 가운데 흰 점 (가득이면 모두 금빛 테),
-                            // 오른쪽 아래 1칸 그림자
-                            int c = i < v ? (v >= max ? bright : col) : dim;
-                            int ty = y;
-                            int[][] cells = {{1, 0}, {3, 0}, {0, 1}, {4, 1}, {2, 1}, {1, 2}, {3, 2}, {2, 3}, {0, 3}, {4, 3}, {1, 4}, {3, 4}};
-                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
-                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
-                            g.fill(bx + 2, ty + 2, bx + 3, ty + 3, i < v ? 0xFFFFFFFF : dim);
-                        }
                         case "pierrot" -> {
                             // 2026-11-06 쇼타임 (소환물 수 — 최대 4) — 깜짝 상자 (5 × 5): 위 두 줄 = 용수철 광대 머리 (두 뿔 모자) · 아래 세 줄 = 상자 (가운데 마름모 무늬 빈칸),
                             // 찬 것은 머리 둘째 빛 (금빛) · 상자 첫째 빛 (서커스 빨강), 오른쪽 아래 1칸 그림자
@@ -484,16 +474,6 @@ public final class SkillBarHud {
                             for (int[] q : box) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
                             for (int[] q : box) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, i < v ? bright : dim);
                             for (int[] q : head) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, i < v ? col : dim);
-                        }
-                        case "battlearcher" -> {
-                            // 0.51.0 난사 (갈래 — 다음 활 평타가 1 · 3 갈래) — 화살촉 (5 × 5, 위가 앞): 뾰족한 촉 · 갈라진 미늘, 찬 것은 첫째 빛 (폭풍 하늘빛) + 촉 끝 번개
-                            // 노랑 (둘째 빛), 오른쪽 아래 1칸 그림자
-                            int c = i < v ? bright : dim;
-                            int ty = y;
-                            int[][] cells = {{2, 0}, {1, 1}, {2, 1}, {3, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {2, 3}, {0, 3}, {4, 3}, {2, 4}};
-                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
-                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
-                            if (i < v) g.fill(bx + 2, ty, bx + 3, ty + 1, col);
                         }
                         case "stormlancer" -> {
                             // 0.51.0 창끝 바람 (최대 4 — 가득이면 다음 창 평타가 질풍 창) — 바람 소용돌이 (5 × 5): 바깥에서 가운데로 감기는 갈고리, 찬 것은 첫째 빛 (옥빛 바람) +

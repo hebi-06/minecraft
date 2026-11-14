@@ -298,9 +298,9 @@ public final class RpgJobTests {
                 JobSystem.setJob(sp, id);
                 h.assertTrue(JobSystem.dropHidden(sp) && JobSystem.jobOf(sp).isEmpty(), id + " → no job: " + JobSystem.jobOf(sp));
             }
-            // 2026-11-15 궁수는 팬텀 아처로 다시 보임 — 숨긴 옛 2차 (스나이퍼) 는 1차 (팬텀 아처) 로
-            JobSystem.setJob(sp, "sniper");
-            h.assertTrue(JobSystem.dropHidden(sp) && "archer".equals(JobSystem.jobOf(sp)), "sniper → archer: " + JobSystem.jobOf(sp));
+            // 2차만 숨김 (피닉스 가드) 은 1차 (수호기사) 로 (2026-11-15 옛 스나이퍼는 없어짐 — 아스널 킹으로 바뀜)
+            JobSystem.setJob(sp, "phoenix");
+            h.assertTrue(JobSystem.dropHidden(sp) && "guardian".equals(JobSystem.jobOf(sp)), "phoenix → guardian: " + JobSystem.jobOf(sp));
             JobSystem.setJob(sp, "bloodknight");
             h.assertTrue(!JobSystem.dropHidden(sp) && "bloodknight".equals(JobSystem.jobOf(sp)), "shown job stays");
         } finally {

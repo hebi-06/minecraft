@@ -289,14 +289,14 @@ public final class RpgJobTimingTests {
      * 데드아이는 12틱마다 다시 눌러 13 · 25 · 37)
      */
     @GameTest(environment = "mmorpg:jt_sn", maxTicks = 2400)
-    public void timingSniper(GameTestHelper h) {
-        probe(h, "sniper");
+    public void timingArsenalking(GameTestHelper h) {
+        probe(h, "arsenalking");
     }
 
     /** 0.51.0 2차 직업 — 궁수 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신: 과녁이 2.5칸 앞이라 난사의 가까운 적 +20% — 다 들어감 · 호넷 스웜 7 · 스플린터 샷 6 · 퀴버 스톰 70) */
     @GameTest(environment = "mmorpg:jt_ba", maxTicks = 2400)
-    public void timingBattlearcher(GameTestHelper h) {
-        probe(h, "battlearcher");
+    public void timingBladeranger(GameTestHelper h) {
+        probe(h, "bladeranger");
     }
 
     /**

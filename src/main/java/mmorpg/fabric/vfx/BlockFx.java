@@ -344,6 +344,107 @@ public final class BlockFx {
         }
     }
 
+    // ------------------------------------------------------------ 2026-11-15 금빛 문 · 사슬 (아스널 킹)
+
+    /** 색을 흰빛과 섞음 (k = 흰빛 몫) */
+    public static double[] lighten(double[] c, double k) {
+        return new double[] {c[0] + (1 - c[0]) * k, c[1] + (1 - c[1]) * k, c[2] + (1 - c[2]) * k};
+    }
+
+    /**
+     * 금빛 문 (가운데 c · 보물이 나오는 쪽 facing · 반지름 r · 겉 고리 마디 segs): 겉 고리 (색) · 안 고리 (흰) 가 0.2r 에서 r 로 grow 틱 동안 펼쳐지고, 안을 밝은 빛 판
+     * (세 겹 돌린 네모 — 열두 모 별) 이 채움, 펼쳐질 때 번쩍 별 · (segs 14 넘으면) 물결 고리 하나가 1.5r 로 번짐 → hold 틱 머문 뒤 4틱에 오므라들어 사라짐
+     */
+    public static void gate(ServerLevel level, Vec3 c, Vec3 facing, double r, int segs, double[] color, int grow, int hold) {
+        Vec3 f = V.len(facing) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(facing);
+        Vec3 u = Math.abs(f.y) > 0.95 ? new Vec3(1, 0, 0) : V.unit(V.rightOf(V.flat(f)));
+        Vec3 v = V.unit(V.cross(u, f));
+        Vec3 back = V.scale(f, -1);
+        int n = Math.max(8, segs);
+        int G = Math.max(1, grow);
+        int H = Math.max(1, hold);
+        Vfx.Fx fx = RuneProps.fx(level, c, G + H + 12);
+        double[] hot = lighten(color, 0.55);
+        // 안을 채운 빛 판 (네모 셋을 30° 씩 돌려 겹침)
+        for (int q = 0; q < 3; q++) {
+            double b = Math.PI / 6 * q;
+            Vec3 x = V.add(V.scale(u, Math.cos(b)), v, Math.sin(b));
+            Vec3 y = V.add(V.scale(u, -Math.sin(b)), v, Math.cos(b));
+            Quaternionf rot = Vfx.basis(x, y, back);
+            Vfx.Prop d = box(fx, c, rot, r * 0.2, r * 0.2, 0.01, hot);
+            fx.on(1, () -> d.stretch(r * 1.18, r * 1.18, 0.012, G));
+            fx.on(1 + G + H, () -> d.stretch(0.0, 0.0, 0.0, 4));
+            fx.on(G + H + 6, d::remove);
+        }
+        // 겉 고리 (색) · 안 고리 (흰)
+        for (int ring = 0; ring < 2; ring++) {
+            int m = ring == 0 ? n : Math.max(8, n * 3 / 4);
+            double rr = ring == 0 ? r : r * 0.74;
+            double th = ring == 0 ? r * 0.13 : r * 0.06;
+            double dz = ring == 0 ? 0.08 : 0.1;
+            double[] col = ring == 0 ? color : WHITE;
+            double seg = Math.PI * 2 * rr / m * 1.12;
+            for (int i = 0; i < m; i++) {
+                double a = Math.PI * 2 * i / m;
+                Vec3 radial = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
+                Vec3 tan = V.add(V.scale(u, -Math.sin(a)), v, Math.cos(a));
+                Quaternionf rot = Vfx.basis(radial, tan, back);
+                Vfx.Prop o = box(fx, V.add(c, radial, rr * 0.2), rot, th * 0.3, seg * 0.2, dz, col);
+                fx.on(1, () -> o.move(V.add(c, radial, rr), G).stretch(th, seg, dz, G));
+                fx.on(1 + G + H, () -> o.move(V.add(c, radial, rr * 0.3), 4).stretch(0.0, seg * 0.3, 0.0, 4));
+                fx.on(G + H + 6, o::remove);
+            }
+        }
+        // 물결 고리 (큰 문만)
+        if (n > 14) {
+            double seg = Math.PI * 2 * r / n * 1.12;
+            for (int i = 0; i < n; i++) {
+                double a = Math.PI * 2 * i / n;
+                Vec3 radial = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
+                Vec3 tan = V.add(V.scale(u, -Math.sin(a)), v, Math.cos(a));
+                Quaternionf rot = Vfx.basis(radial, tan, back);
+                fx.on(1 + G, () -> {
+                    Vfx.Prop w = box(fx, V.add(c, radial, r), rot, r * 0.08, seg, 0.05, hot);
+                    w.move(V.add(c, radial, r * 1.5), 6).stretch(0.0, seg * 1.5, 0.0, 6);
+                    fx.on(fx.age + 7, w::remove);
+                });
+            }
+        }
+        fx.on(1 + G / 2, () -> star(level, c, r * 1.1, color));
+    }
+
+    /**
+     * 사슬 (a → b · 고리 크기 link 칸): grow 틱 동안 a 에서 b 로 고리가 차례로 뻗어 나옴 (고리마다 90° 엇갈림 — 고리 하나 = 나란한 가는 막대 둘) → hold 틱 → 3틱에 작아져
+     * 사라짐
+     */
+    public static void chain(ServerLevel level, Vec3 a, Vec3 b, double link, double[] color, int grow, int hold) {
+        Vec3 dv = V.sub(b, a);
+        double L = V.len(dv);
+        if (L < 0.1) return;
+        Vec3 y = V.scale(dv, 1 / L);
+        Vec3 side = Math.abs(y.y) > 0.95 ? new Vec3(1, 0, 0) : V.unit(V.rightOf(V.flat(y)));
+        Vec3 side2 = V.unit(V.cross(side, y));
+        int n = Math.min(40, Math.max(2, (int) Math.ceil(L / (link * 0.85))));
+        int G = Math.max(1, grow);
+        int H = Math.max(1, hold);
+        Vfx.Fx fx = RuneProps.fx(level, V.lerp(a, b, 0.5), G + H + 8);
+        for (int i = 0; i < n; i++) {
+            Vec3 p = V.add(a, y, (i + 0.5) * L / n);
+            Vec3 sd = i % 2 == 0 ? side : side2;
+            Quaternionf rot = along(y, sd);
+            int at = G * i / n;
+            for (int bar = 0; bar < 2; bar++) {
+                Vec3 q = V.add(p, sd, (bar == 0 ? -1 : 1) * link * 0.17);
+                fx.on(at, () -> {
+                    Vfx.Prop o = box(fx, q, rot, link * 0.1, link * 0.2, link * 0.1, color);
+                    o.stretch(link * 0.11, link * 0.95, link * 0.11, 1);
+                    fx.on(G + H, () -> o.stretch(0.0, link * 0.4, 0.0, 3));
+                    fx.on(G + H + 4, o::remove);
+                });
+            }
+        }
+    }
+
     // ------------------------------------------------------------ 조각
 
     /** 조각 n 개 (가운데 c 에서 사방으로 dist 칸 · 길이 size): 길쭉한 상자가 돌며 날아가 작아져 사라짐 (life 틱) */

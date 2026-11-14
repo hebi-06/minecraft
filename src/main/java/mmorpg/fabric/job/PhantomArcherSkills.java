@@ -521,15 +521,15 @@ final class PhantomArcherSkills {
                 }
             });
         }
-        // 2026-11-15 컨셉아트: 고리 테두리의 불꽃이 끝까지 타오름 (6틱마다 열여섯)
-        for (int t = ringTicks; t < finalAt; t += 6) {
+        // 2026-11-15 고리 테두리의 불꽃이 끝까지 타오름 — 게임 영상: 6틱마다 열 (마구 흩음) 은 성겨서 주황 상자로 보였음 → 4틱마다 스물넷 (고르게 · 조금 흔듦) · 더 높게
+        for (int t = ringTicks; t < finalAt; t += 4) {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                for (int q = 0; q < 10; q++) {
-                    double a = Kit.rand() * Math.PI * 2;
-                    Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.8));
-                    PhantomArcher.flame2d(level, p, 0.7 + Kit.rand() * 0.4, 0.55);
+                for (int q = 0; q < 24; q++) {
+                    double a = Math.PI * 2 * (q + Kit.rand() * 0.7) / 24;
+                    Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.6));
+                    PhantomArcher.flame2d(level, p, 0.85 + Kit.rand() * 0.45, 0.6);
                 }
             });
         }

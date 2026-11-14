@@ -1186,8 +1186,8 @@ final class VanillaProbe {
             java.util.Map.entry("elementalblade", "30 22 50 20a4 86"),
             java.util.Map.entry("arcmage", "28 32 82 80 80"),
             java.util.Map.entry("necromancer", "36 80 56 124 90"),
-            java.util.Map.entry("sniper", "34 30 24 30a4 52"),
-            java.util.Map.entry("battlearcher", "20 30 18 30a4 84"),
+            java.util.Map.entry("arsenalking", "22 30 66 40 104"), // 2026-11-15 궁수 2차 (옛 스나이퍼 · 배틀 아처 대신)
+            java.util.Map.entry("bladeranger", "20 30 64 40 98"),
             java.util.Map.entry("trickster", "28 26 46 24a8 76"),
             java.util.Map.entry("pierrot", "58 22 34 70 100"),
             java.util.Map.entry("stormlancer", "36 28 48 34 86"),
@@ -1202,7 +1202,7 @@ final class VanillaProbe {
             java.util.Map.entry("darkknight", "30 26 30 22a3 70"));
     /** 다시 쓰는 스킬 (RpgJobGallery.AGAIN — JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 */
     private static final java.util.Map<String, int[]> JOB_AGAIN = java.util.Map.ofEntries(java.util.Map.entry("bloodknight_cleave", new int[] {12, 24}),
-            java.util.Map.entry("necromancer_call", new int[] {16}), java.util.Map.entry("sniper_ult", new int[] {22}),
+            java.util.Map.entry("necromancer_call", new int[] {16}),
             java.util.Map.entry("trickster_swap", new int[] {12}), java.util.Map.entry("trickster_dash", new int[] {16}),
             java.util.Map.entry("stormlancer_drive", new int[] {12}), java.util.Map.entry("stormlancer_rend", new int[] {20}),
             java.util.Map.entry("dragoon_jump", new int[] {16}), java.util.Map.entry("executioner_ult", new int[] {36}),
@@ -1269,14 +1269,18 @@ final class VanillaProbe {
             case "archer_volley" -> new double[] {4.2, 1.8, 1.5, 0.7};
             case "archer_cross" -> new double[] {5.0, 2.0, 1.4, 0.5};
             case "archer_burst" -> new double[] {4.4, 1.9, 1.5, 0.7};
-            // 2026-11-14 디바인 펀니시먼트: 과녁 머리 위 5.5칸의 하늘의 문 · 거대한 심판의 화살 (8.5칸)
-            case "sniper_ult" -> new double[] {8.0, 3.0, 3.0, 0.5};
-            // 헤븐즈 게이트: 과녁 머리 위 3.3칸의 하늘의 문
-            case "sniper_trick" -> new double[] {6.8, 2.6, 1.9, 0.6};
-            // 세라핌: 등의 날개 여섯 (몸 위 3칸 남짓)
-            case "sniper_mark" -> new double[] {6.5, 2.6, 1.6, 0.8};
-            // 섀도 레기온: 양옆의 분신 여덟 (3칸 둘레) 너머로 — 높이 봄 · 내리꽂히는 거대한 그림자 화살
-            case "battlearcher_ult" -> new double[] {8.5, 4.2, 1.6, 0.5};
+            // 2026-11-15 아스널 킹: 등 뒤 문 (뒤 · 위 3 ~ 6칸) 이 보이게 옆에서 · 하늘 문 · 거대한 보물은 멀리 위를
+            case "arsenalking_volley" -> new double[] {5.5, 2.4, 2.4, 0.6};
+            case "arsenalking_chain" -> new double[] {6.5, 2.6, 1.8, 0.5};
+            case "arsenalking_rain" -> new double[] {9.5, 3.6, 3.2, 0.5};
+            case "arsenalking_judge" -> new double[] {8.0, 3.0, 3.4, 0.5};
+            case "arsenalking_ult" -> new double[] {13.0, 4.8, 2.0, 0.3};
+            // 블레이드 레인저: 가까이 (쌍검 베기) · 블레이드 스톰 · 아이언 템페스트는 둘레가 보이게
+            case "bladeranger_twin" -> new double[] {4.6, 1.9, 1.6, 0.7};
+            case "bladeranger_boomerang" -> new double[] {6.0, 2.4, 1.6, 0.5};
+            case "bladeranger_storm" -> new double[] {5.5, 2.6, 1.4, 0.6};
+            case "bladeranger_forge" -> new double[] {6.0, 2.6, 1.8, 0.6};
+            case "bladeranger_ult" -> new double[] {11.0, 4.2, 1.8, 0.35};
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};
             case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35};
@@ -1720,7 +1724,6 @@ final class VanillaProbe {
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, y, -1.0));
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(2.5, y, -1.0));
         }
-        if (id.startsWith("sniper_")) mmorpg.fabric.job.JobTraitsMore.setBreath(sp, 5);
         if (id.equals("trickster_swap")) for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits3.setMarks(sp, e, 6);
         if (id.equals("trickster_ult")) for (var e : byFar(sp, foes)) mmorpg.fabric.job.JobTraits3.setMarks(sp, e, 3);
         if (job.equals("stormlancer")) mmorpg.fabric.job.JobTraits11.setWind(sp, 3);
@@ -1769,10 +1772,6 @@ final class VanillaProbe {
     /** 키를 누르기 바로 전 (RpgJobGallery.beforeCast — 헌터스 마크 둘째까지 맞힘 · 받아넘기기에 맞음 · 이그니션 막음 · 맞음) */
     private static void jobBeforeCast(ServerPlayer sp, String id, List<net.minecraft.world.entity.LivingEntity> foes) {
         switch (id) {
-            case "sniper_mark" -> Tasks.later(2, () -> {
-                var e = nearest(sp.position(), foes);
-                if (e != null && !sp.isRemoved()) mmorpg.fabric.job.JobTraits9.testMarkHits(sp, e, 2);
-            });
             case "swordmaster_parry" -> Tasks.later(4, () -> foeHits(sp, nearest(sp.position(), foes), 4F, false));
             case "phoenix_ignition" -> {
                 Tasks.later(8, () -> foeHits(sp, nearest(new Vec3(0.5, sp.getY(), 3.2), foes), 8F, true));

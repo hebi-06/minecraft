@@ -621,7 +621,7 @@ public final class JobTraits {
         else if (j.id().equals(JobTraits16.FR)) value = JobTraits16.gaugeValue(sp, j); // 2026-11-07 프로스트 레이더 = 마지막으로 친 적의 서리
         else if (j.id().equals(JobTraits17.EB)) value = JobTraits17.gaugeValue(sp, j); // 2026-11-07 엘리멘탈 블레이드 = 칼에 깃든 원소 (1 불 ~ 5 바위)
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
-        else if (j.id().equals(JobTraits9.BA)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 배틀 아처 = 다음 활 평타의 갈래 (1 · 3)
+        else if (j.id().equals(JobTraits9.AK)) value = JobTraits9.gaugeValue(sp, j); // 2026-11-15 아스널 킹 = 마지막으로 맞힌 적에게 꽂힌 보물 수
         else if (j.id().equals(JobTraits10.PR)) value = JobTraits10.gaugeValue(sp, j); // 0.51.0 피에로 = 소환물 수
         else if (j.id().equals(JobTraits11.SL) || j.id().equals(JobTraits11.DG)) value = JobTraits11.gaugeValue(sp, j); // 0.51.0 스톰 랜서 = 바람 · 드라군 = 높이
         else if (j.id().equals(JobTraits12.EX)) value = JobTraits12.gaugeValue(sp, j); // 0.51.0 엑시큐셔너 = 마지막으로 친 적의 잃은 체력

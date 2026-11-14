@@ -83,8 +83,8 @@ public final class JobSystem {
         ElementalbladeSkills.register(); // 2026-11-07 마검사 반전 엘리멘탈 블레이드 (소드 콜러 대신 — 원소 반응)
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
         NecromancerSkills.register();
-        SniperSkills.register(); // 0.51.0 궁수 2차 — 스나이퍼
-        BattlearcherSkills.register(); // 0.51.0 궁수 2차 — 배틀 아처 (재설계안 2판 — 섀도 헌터 대신)
+        ArsenalKingSkills.register(); // 2026-11-15 궁수 (팬텀 아처) 2차 각성 — 아스널 킹 (옛 스나이퍼 대신)
+        BladeRangerSkills.register(); // 2026-11-15 궁수 (팬텀 아처) 2차 반전 — 블레이드 레인저 (옛 배틀 아처 대신)
         TricksterSkills.register(); // 0.51.0 암살자 2차 — 트릭스터
         PierrotSkills.register(); // 0.51.0 암살자 2차 — 피에로 (재설계안 2판 — 블레이드 댄서 대신 광대 소환물 탱커)
         StormlancerSkills.register(); // 0.51.0 창술사 2차 — 스톰 랜서 (2026-11-06)

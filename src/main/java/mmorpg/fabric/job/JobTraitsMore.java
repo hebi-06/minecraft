@@ -144,7 +144,7 @@ public final class JobTraitsMore {
 
     /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 스나이퍼 — 반전 배틀 아처 는 난사, JobTraits9) */
     static boolean breathJob(Jobs.Job j) {
-        return j != null && j.id().equals(JobTraits9.SN); // 2026-11-15 궁수는 팬텀 아처 (환영 무기 — PhantomArcher)
+        return false; // 2026-11-15 궁수는 팬텀 아처 (환영 무기 — PhantomArcher) · 2차는 아스널 킹 · 블레이드 레인저 (JobTraits9) — 호흡을 쓰는 직업 없음
     }
 
     /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 워로드) */
@@ -370,7 +370,7 @@ public final class JobTraitsMore {
     /** 0.51.0 급소 사격 중인지 (호흡 8 에서 쏜 활 평타의 화살이 닿는 동안 — 치명타 확정, RpgCombat.sureCrit) */
     static boolean snipeCrit(ServerPlayer sp, Weapon w) {
         State st = STATES.get(sp.getUUID());
-        return st != null && st.snipeUntil >= Tasks.now() && w != null && "bow".equals(w.type()) && jobIf(sp, JobTraits9.SN) != null;
+        return false; // 2026-11-15 스나이퍼 없음
     }
 
     /** 바람 타기의 남은 덧쏘기 */
@@ -423,12 +423,6 @@ public final class JobTraitsMore {
     static double pierceWidth(ServerPlayer sp, Weapon w) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return 0;
-        if (j.id().equals(JobTraits9.SN) && "bow".equals(w.type())) {
-            // 0.51.0 스나이퍼: 호흡 8 (급소 사격) 이면 화살이 꿰뚫음
-            State st = STATES.get(sp.getUUID());
-            int max = j.trait() == null ? 8 : Math.max(1, j.trait().max());
-            if (st != null && st.breath >= max) return trait(j, "snipeWidth", 0.6);
-        }
         return 0;
     }
 
@@ -448,20 +442,12 @@ public final class JobTraitsMore {
         if (breathJob(j) && "bow".equals(w.type())) {
             State st = of(sp);
             int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
-            if (j.id().equals(JobTraits9.SN) && st.breath >= max) {
-                // 0.51.0 스나이퍼 급소 사격 (2026-11-14 천벌의 화살): 심판 8 에서 쏜 화살 — 닿는 동안 치명타 확정 · 꿰뚫음 (pierceWidth), 심판 snipeUse 씀
-                st.snipeUntil = now + (long) trait(j, "snipeFor", 18);
-                st.breath = Math.max(0, st.breath - (int) trait(j, "snipeUse", 3));
+            if (now - st.lastMove > 4 && st.breath < max) {
+                st.breath++;
+                communionGain(sp, j, st.breath, max);
                 JobTraits.sendGauge(sp, false);
-                JobTraits9.snipeFx(sp, j, from, dir, dist);
-            } else {
-                if (now - st.lastMove > 4 && st.breath < max) {
-                    st.breath++;
-                    communionGain(sp, j, st.breath, max);
-                    JobTraits.sendGauge(sp, false);
-                }
-                if (j.id().equals("archer") && st.breath >= max) stormArrow(sp, j, dir, dist);
             }
+            if (j.id().equals("archer") && st.breath >= max) stormArrow(sp, j, dir, dist);
             if (j.id().equals("archer") && JobTraits.stanceOn(sp, "archer_focus")) st.huntTarget = target;
             if (JobTraits.stanceOn(sp, "archer_focus")) {
                 // 스톰 아이: 활에서 번개가 튐
@@ -471,8 +457,8 @@ public final class JobTraitsMore {
             }
             return;
         }
-        if (j.id().equals(JobTraits9.BA) && "bow".equals(w.type())) {
-            JobTraits9.onFired(sp, j, w, target, from, dir, dist); // 0.51.0 배틀 아처 난사: 움직이며 쏘면 세 갈래
+        if ((j.id().equals(JobTraits9.AK) || j.id().equals(JobTraits9.BR)) && "bow".equals(w.type())) {
+            JobTraits9.onFired(sp, j, w, target, from, dir, dist); // 2026-11-15 아스널 킹 = 금빛 칼 + 문의 보물 · 블레이드 레인저 = 가까우면 쌍검 베기
             return;
         }
     }
@@ -483,6 +469,10 @@ public final class JobTraitsMore {
         if (j == null || w == null) return;
         if (j.id().equals("archer") && "bow".equals(w.type())) {
             if (!RpgCombat.bonusHitting()) PhantomArcher.onHit(sp, j, victim); // 2026-11-15 팬텀 아처: 맞은 적에게 칼이 꽂힘 (터짐 피해는 다시 꽂지 않음)
+            return;
+        }
+        if ((j.id().equals(JobTraits9.AK) || j.id().equals(JobTraits9.BR)) && "bow".equals(w.type())) {
+            if (!RpgCombat.bonusHitting()) JobTraits9.onHit(sp, j, victim); // 2026-11-15 아스널 킹: 칼 + 보물이 꽂힘 (블레이드 레인저는 꽂지 않음)
             return;
         }
         if (rageJob(j) && "axe".equals(w.type()) && Combat.isMeleeWeapon(w)) {
@@ -514,7 +504,7 @@ public final class JobTraitsMore {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         Vec3 hand = RuneKit.bowHand(sp);
-        if (JobTraits9.SN.equals(j.id())) {
+        if ("sniper".equals(j.id()) /* 2026-11-15 옛 스나이퍼 — 호흡 직업 없음 (쓰이지 않음) */) {
             Vec3 pip = haloPip(sp, n - 1, max, Tasks.now());
             ArrowFx.glint(level, pip, 0.34, 0.3, core, Opt.of("grow", 0.8, "fade", 0.6, "vel", RuneKit.bodyVel(sp)));
             SkillFx.fx(level, "rpg:arrow_spark", hand, Opt.of("dir", V.unit(V.sub(pip, hand)), "speed", V.len(V.sub(pip, hand)) / 0.2, "size", 0.12, "grow", 0.4, "life",
@@ -555,7 +545,7 @@ public final class JobTraitsMore {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
-        if (JobTraits9.SN.equals(j.id())) {
+        if ("sniper".equals(j.id()) /* 2026-11-15 옛 스나이퍼 — 호흡 직업 없음 (쓰이지 않음) */) {
             for (int i = 0; i < max; i++) {
                 boolean lit = i < n;
                 Vec3 p = haloPip(sp, i, max, now);
@@ -681,7 +671,7 @@ public final class JobTraitsMore {
             case "warrior", "warlord" -> rage(sp); // 0.51.0 워로드 도 분노
             case "mage", "arcmage" -> chain(sp); // 0.51.0 아크메이지 도 연쇄 (최대 5)
             case "archer" -> PhantomArcher.gauge(sp); // 2026-11-15 팬텀 아처: 마지막으로 맞힌 적에게 꽂힌 칼 수
-            case "sniper" -> breath(sp); // 0.51.0 스나이퍼 호흡 (최대 8)
+            case "arsenalking" -> PhantomArcher.gauge(sp); // 2026-11-15 아스널 킹: 마지막으로 맞힌 적에게 꽂힌 보물 수
             default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼
         };
     }

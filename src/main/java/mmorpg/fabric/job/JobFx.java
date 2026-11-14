@@ -300,8 +300,8 @@ final class JobFx {
         Object[] snd = j == null ? null : JobTraits14.WK.equals(j.id()) ? new Object[] {"entity.player.hurt_sweet_berry_bush", 0.85, 0.45} : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
-        if (j != null && "archer".equals(j.id())) { // 2026-11-15 팬텀 아처: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark)
-            PhantomArcher.hitMark(level, e, size);
+        if (PhantomArcher.family(j)) { // 2026-11-15 팬텀 아처 · 2차 둘: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark — 직업 색)
+            PhantomArcher.hitMark(level, e, size, PhantomArcher.pal(j).gem());
             mmorpg.fabric.skill.SkillFx.sparks(level, Kit.bodyPoint(e), inner(j), 5, 3.5 + scale);
             return;
         }

@@ -44,6 +44,27 @@ public final class PhantomArcher {
     static final double[] FIRE = {1.0, 0.36, 0.12};
     static final double[] FIRE_CORE = {1.0, 0.82, 0.3};
 
+    /** 2026-11-15 직업마다 칼 · 폭발 색 (팬텀 아처 진홍 · 2차 아스널 킹 금빛 보물 · 2차 블레이드 레인저 단조 불빛) */
+    record Pal(double[] blade, double[] gem, double[] fire, double[] fireCore) {}
+
+    static final Pal CRIMSON_PAL = new Pal(BLADE, GEM, FIRE, FIRE_CORE);
+    static final Pal GOLD_PAL = new Pal(new double[] {1.0, 0.86, 0.42}, new double[] {0.95, 0.18, 0.14}, new double[] {1.0, 0.66, 0.12}, new double[] {1.0, 0.95, 0.62});
+    static final Pal FORGE_PAL = new Pal(BLADE, new double[] {1.0, 0.42, 0.08}, new double[] {1.0, 0.42, 0.08}, new double[] {1.0, 0.86, 0.36});
+
+    static Pal pal(Jobs.Job j) {
+        if (j == null) return CRIMSON_PAL;
+        return switch (j.id()) {
+            case "arsenalking" -> GOLD_PAL;
+            case "bladeranger" -> FORGE_PAL;
+            default -> CRIMSON_PAL;
+        };
+    }
+
+    /** 팬텀 아처 줄기 (1차 · 2차 둘) */
+    static boolean family(Jobs.Job j) {
+        return j != null && (j.id().equals("archer") || j.id().equals("arsenalking") || j.id().equals("bladeranger"));
+    }
+
     /** 꽂힌 칼 하나 */
     private static final class Stuck {
         final RuneSwords.Blade blade;
@@ -100,6 +121,11 @@ public final class PhantomArcher {
      * 판은 가장 가까운 사람 (쏜 사람 — 32칸) 쪽을 봄
      */
     static void hitMark(ServerLevel level, LivingEntity e, double size) {
+        hitMark(level, e, size, GEM);
+    }
+
+    /** 맞은 자리 (색 color — 2차는 직업 색) */
+    static void hitMark(ServerLevel level, LivingEntity e, double size, double[] color) {
         Vec3 b = Kit.bodyPoint(e);
         net.minecraft.world.entity.player.Player p = level.getNearestPlayer(e, 32);
         Vec3 f = p != null ? V.sub(b, p.getEyePosition()) : new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5);
@@ -114,9 +140,9 @@ public final class PhantomArcher {
         for (int s = 0; s < 2; s++) {
             double a = s == 0 ? a0 : Math.PI - a0 + (Kit.rand() - 0.5) * 0.3;
             Vec3 dir = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
-            mmorpg.fabric.vfx.BlockFx.slash(level, at, dir, f, size * 1.35, GEM, s);
+            mmorpg.fabric.vfx.BlockFx.slash(level, at, dir, f, size * 1.35, color, s);
         }
-        mmorpg.fabric.vfx.BlockFx.star(level, at, size * 0.75, GEM);
+        mmorpg.fabric.vfx.BlockFx.star(level, at, size * 0.75, color);
     }
 
     /** 투영 선: 칼 윤곽 (자루 · 코등이 · 날 양쪽 · 칼끝) 을 가는 푸른 흰빛 줄 다섯으로 — life 초 동안 가늘어지며 사라짐 */
@@ -166,11 +192,16 @@ public final class PhantomArcher {
 
     /** 폭발: 진홍 · 주황 상자 볼륨 · 흰 심 · 땅 충격파 고리 · 강철 조각 */
     static void blast2d(ServerLevel level, Vec3 at, double size) {
-        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.75, FIRE, FIRE_CORE, 12);
-        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.5, GEM, mmorpg.fabric.vfx.BlockFx.WHITE, 9);
+        blast2d(level, at, size, CRIMSON_PAL);
+    }
+
+    /** 폭발 (색 묶음 p — 2차는 직업 색) */
+    static void blast2d(ServerLevel level, Vec3 at, double size, Pal p) {
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.75, p.fire(), p.fireCore(), 12);
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.5, p.gem(), mmorpg.fabric.vfx.BlockFx.WHITE, 9);
         Vec3 g = new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1) + 0.05, at.z);
-        mmorpg.fabric.vfx.BlockFx.ring(level, g, size * 0.3, size * 1.25, 22, 0.32, FIRE, 11);
-        mmorpg.fabric.vfx.BlockFx.shards(level, at, 10, size * 1.6, size * 0.35, BLADE, 12);
+        mmorpg.fabric.vfx.BlockFx.ring(level, g, size * 0.3, size * 1.25, 22, 0.32, p.fire(), 11);
+        mmorpg.fabric.vfx.BlockFx.shards(level, at, 10, size * 1.6, size * 0.35, p.blade(), 12);
     }
 
     /** 불꽃: 주황 · 노란 상자가 솟으며 돌고 작아짐 */
@@ -206,9 +237,9 @@ public final class PhantomArcher {
 
     /** 진홍 폭발 (칼이 터짐 — 크기 size 칸) */
     static void blast(ServerLevel level, Jobs.Job j, Vec3 at, double size) {
-        blast2d(level, at, size * 1.1);
+        blast2d(level, at, size * 1.1, pal(j));
         impact2d(level, at, size * 0.8, JobKit.glow(j), JobKit.core(j));
-        SkillFx.sparks(level, at, FIRE_CORE, 6 + (int) (size * 3), 5);
+        SkillFx.sparks(level, at, pal(j).fireCore(), 6 + (int) (size * 3), 5);
         shards(level, at, 4 + (int) (size * 2), 6.0, 0.25 + size * 0.06);
         SkillFx.play(level, "entity.generic.explode", at, 1.5 - Math.min(0.6, size * 0.12), 0.35 + size * 0.1);
         SkillFx.play(level, "block.glass.break", at, 1.3, 0.5);
@@ -271,7 +302,7 @@ public final class PhantomArcher {
             Vec3 off = V.sub(hilt, body);
             Vec3 face = faceOf(d);
             Vfx.Fx fx = RuneProps.fx(level, hilt, life + 12);
-            RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(hilt, d, -0.35), d, face, len, 0.6, BLADE, GEM);
+            RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(hilt, d, -0.35), d, face, len, 0.6, pal(j).blade(), pal(j).gem());
             Stuck s = new Stuck(b, now + life);
             fx.on(1, () -> {
                 b.grow(1, 1);
@@ -380,7 +411,7 @@ public final class PhantomArcher {
         Vec3 start = V.add(from, d, 0.2);
         Vfx.Fx fx = RuneProps.fx(level, start, ticks + 14);
         Vec3 face = faceOf(d);
-        RuneSwords.Blade b = RuneSwords.phantom(fx, start, d, face, len, 0.35, BLADE, GEM);
+        RuneSwords.Blade b = RuneSwords.phantom(fx, start, d, face, len, 0.35, pal(j).blade(), pal(j).gem());
         double reach = b.reach() / 0.35;
         Vec3 end = V.add(from, d, Math.max(0.6, dist - reach * (target != null ? 0.75 : 1.0)));
         fx.on(1, () -> {
@@ -395,12 +426,13 @@ public final class PhantomArcher {
         // 2026-11-15 1인칭: 눈앞 0.5칸 별은 평타마다 화면을 덮음 → 1.6칸 앞 · 작게
         if (RuneKit.fxQuota("phantomShotGlint", 6)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 1.6), 0.45, TRACE);
         // 2026-11-15 날아가는 칼 뒤 가는 진홍 빛 줄 (평타가 잦아 가늘게 · 몫 8)
-        if (RuneKit.fxQuota("phantomShotTrail", 8)) mmorpg.fabric.vfx.BlockFx.beam(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), 0.07, GEM, ticks + 3);
+        if (RuneKit.fxQuota("phantomShotTrail", 8)) mmorpg.fabric.vfx.BlockFx.beam(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), 0.07, pal(j).gem(), ticks + 3);
         SkillFx.play(level, "item.trident.throw", from, 1.5 + Kit.rand() * 0.2, 0.3);
     }
 
     /** 활 평타가 맞음: 칼이 꽂힘 (+1) */
     static void onHit(ServerPlayer sp, Jobs.Job j, LivingEntity victim) {
-        lodgeShot(sp, j, victim, sp.getEyePosition());
+        // 2026-11-15 아스널 킹: 평타 칼 + 등 뒤 문의 보물 — 한 발에 perShot (2) 자루
+        lodge(sp, j, victim, Math.max(1, (int) trait(j, "perShot", 1)), sp.getEyePosition(), false);
     }
 }

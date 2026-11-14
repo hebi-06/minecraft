@@ -534,11 +534,16 @@ def main():
     # 2026-11-15 팬텀 아처 (궁수 리메이크 — tools/job_skill_icons_phantom.py)
     import job_skill_icons_phantom
     ICONS.update(job_skill_icons_phantom.ICONS)
+    # 2026-11-15 팬텀 아처 2차 — 아스널 킹 · 블레이드 레인저 (tools/job_skill_icons_archer_adv.py — 옛 스나이퍼 · 배틀 아처 대신)
+    import job_skill_icons_archer_adv
+    ICONS.update(job_skill_icons_archer_adv.ICONS)
     slot_sprites()
     cols = job_colors()
     os.makedirs(OUT, exist_ok=True)
     made = {}
     for sid, fn in ICONS.items():
+        if sid not in cols:  # 2026-11-15 없어진 스킬 (옛 스나이퍼 · 배틀 아처) 은 건너뜀
+            continue
         A, B = cols[sid]
         img = fn(A, B)
         img.save(os.path.join(OUT, f"{sid}.png"))

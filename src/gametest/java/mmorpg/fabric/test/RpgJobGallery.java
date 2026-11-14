@@ -180,7 +180,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
     /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 · 데드아이 세 발 — 사진첩 · 영상 모두) */
     private static final java.util.Map<String, int[]> AGAIN = java.util.Map.ofEntries(java.util.Map.entry("bloodknight_cleave", new int[] {12, 24}),
-            java.util.Map.entry("necromancer_call", new int[] {16}), java.util.Map.entry("sniper_ult", new int[] {22}),
+            java.util.Map.entry("necromancer_call", new int[] {16}),
             java.util.Map.entry("trickster_swap", new int[] {12}), java.util.Map.entry("trickster_dash", new int[] {16}), // 2026-11-06 트릭스터 2판: 섀도 스와프 자리 바꿈 · 미라주 대시 돌아옴
             java.util.Map.entry("stormlancer_drive", new int[] {12}), java.util.Map.entry("stormlancer_rend", new int[] {20}),
             java.util.Map.entry("dragoon_jump", new int[] {16}), // 2026-11-06 창술사 2차: 돌아서며 바람 창 · 뽑아 찢음 · 내리꽂음
@@ -264,19 +264,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
      * 스플린터 샷 (0 ~ 6 당김 → 6 부채꼴 화살 조각) · 스톰 스트라이드 (태세 → 서서 쏜 평타가 세 갈래) · 퀴버 스톰 (2 ~ 62 화살 물결 · 10 ~ 60 여섯 번 → 62 하늘로 다발 →
      * 64 화살비 → 70 내리꽂힘)
      */
-    private static final Case[] CASES_SN = {
-        new Case(0, new int[] {4, 12, 19, 21, 24}, new int[] {12, 21}, 34, false),
-        new Case(1, new int[] {2, 4, 7, 12, 20}, new int[] {4, 12}, 30, false),
-        new Case(2, new int[] {3, 5, 8, 11, 16}, new int[] {5, 11}, 24, false),
-        new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
-        new Case(4, new int[] {6, 14, 22, 24, 30, 36, 42}, new int[] {12, 23, 35}, 52, false), // 2026-11-07 사일런트 아울: 22 에 다시 눌러 부엉이 화살 → 24 꿰뚫음 → 34 정령빛
+    private static final Case[] CASES_AK = { // 2026-11-15 아스널 킹 (궁수 2차 각성 — 옛 스나이퍼 대신)
+        new Case(0, new int[] {2, 5, 7, 10, 14}, new int[] {4, 10}, 22, false), // 골든 볼리: 어깨 뒤 문 넷 → 6 · 9 · 12 · 15 보물
+        new Case(1, new int[] {1, 3, 6, 12, 18}, new int[] {3, 6, 18}, 30, false), // 킹스 체인: 발밑 문 · 문 셋 사슬 → 6 묶음 → 18 조임
+        new Case(2, new int[] {4, 8, 26, 44, 57}, new int[] {10, 30, 56}, 66, false), // 트레저 레인: 하늘 문 열 · 보물 비 → 56 거대한 보물
+        new Case(3, new int[] {4, 10, 15, 18, 28}, new int[] {8, 17, 27}, 40, false), // 킹스 저지먼트: 큰 문 · 거대한 보물 → 17 내리꽂힘 → 27 터짐
+        new Case(4, new int[] {6, 14, 24, 44, 72, 80, 87}, new int[] {12, 26, 46, 76, 86}, 104, false), // 아스널 게이트: 문 스물 → 보물 물결 → 86 가장 큰 문의 보물
     };
-    private static final Case[] CASES_BA = {
-        new Case(0, new int[] {1, 3, 5, 7, 10}, new int[] {4, 7}, 20, false),
-        new Case(1, new int[] {3, 6, 9, 12, 14, 20}, new int[] {6, 12, 14}, 30, false),
-        new Case(2, new int[] {2, 5, 7, 9, 12}, new int[] {4, 7}, 18, false),
-        new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
-        new Case(4, new int[] {4, 10, 20, 30, 40, 50, 60, 63, 66, 70, 74}, new int[] {10, 30, 50, 63, 70}, 84, false),
+    private static final Case[] CASES_BR = { // 2026-11-15 블레이드 레인저 (궁수 2차 반전 — 옛 배틀 아처 대신)
+        new Case(0, new int[] {1, 3, 4, 6, 9}, new int[] {4, 8}, 20, false), // 트윈 슬래시: 파고들어 4 · 6 · 8 · 10 엇갈려 벰
+        new Case(1, new int[] {2, 5, 8, 12, 18}, new int[] {5, 8, 18}, 30, false), // 블레이드 부메랑: 쌍검 → 8 교차 → 끌려감 → 18 돌며 벰
+        new Case(2, new int[] {4, 7, 17, 37, 57}, new int[] {7, 27, 57}, 64, false), // 블레이드 스톰: 칼 여섯이 돎 · 10틱마다 벰
+        new Case(3, new int[] {4, 10, 16, 21, 27}, new int[] {10, 16, 26}, 40, false), // 포지 브레이커: 거대한 칼 → 16 내려침 → 26 불빛 칼이 솟음
+        new Case(4, new int[] {4, 12, 16, 36, 56, 70, 76, 81}, new int[] {16, 46, 70, 80}, 98, false), // 아이언 템페스트: 칼 들판 → 날아들어 X 베기 → 80 거대한 칼
     };
 
     /**
@@ -666,7 +666,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 활 · 완드 직업 (태세 · 강화 뒤 평타 = 오른쪽 클릭) — 0.51.0 아크메이지 · 네크로맨서도 완드, 스나이퍼 · 배틀 아처는 활 */
     private static boolean ranged(String job) {
-        return job.equals("archer") || job.equals("mage") || job.equals("arcmage") || job.equals("necromancer") || job.equals("sniper") || job.equals("battlearcher");
+        return job.equals("archer") || job.equals("mage") || job.equals("arcmage") || job.equals("necromancer") || job.equals("arsenalking") || job.equals("bladeranger");
     }
 
     /** 스킬 하나 쓰기 전 (서버): 직업 다시 (앞 칸의 태세 지움) · 재사용 대기 · 체력 · 자원 · 과녁 · 표식 */
@@ -714,8 +714,6 @@ public final class RpgJobGallery implements FabricClientGameTest {
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -1.0));
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(2.5, -60, -1.0));
         }
-        // 0.51.0 스나이퍼: 정령 교감 5 (하트시커 +30% · 스네어 샷이 내려앉으면 8 — 게이지)
-        if (id.startsWith("sniper_")) JobTraitsMore.setBreath(sp, 5);
         // 2026-11-06 트릭스터 2판: 섀도 스와프는 표식 6 (꿰뚫어 7 — 가득 찬 터뜨림) · 미러 월드 (3판) 는 표식 3 (거울 환영 넷이 7 까지)
         if (id.equals("trickster_swap")) markHusks(sp, 6);
         if (id.equals("trickster_ult")) markHusks(sp, 3);
@@ -812,14 +810,6 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 0.51.0 키를 누르기 바로 전 (서버) */
     private static void beforeCast(ServerPlayer sp, String id) {
-        if (id.equals("sniper_mark")) {
-            // 0.51.0 헌터스 마크: 쓴 뒤 (태세가 이어 맞힌 수를 처음부터 셈) 가장 가까운 과녁에 둘째까지 맞힌 것으로 → 태세 뒤 활 평타가 셋째 — 은빛 화살 (머리 위 은빛 표식 둘)
-            mmorpg.fabric.Tasks.later(2, () -> {
-                List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(6), h -> true);
-                near.sort(java.util.Comparator.comparingDouble(h -> h.distanceToSqr(sp)));
-                if (!near.isEmpty() && !sp.isRemoved()) mmorpg.fabric.job.JobTraits9.testMarkHits(sp, near.get(0), 2);
-            });
-        }
         if (id.equals("swordmaster_parry")) {
             // 0.51.0 받아넘기기: 4틱 뒤 앞 과녁이 침 (받는 피해 처리 — 막아서 깎이지 않음) → 받아침 (과녁은 움직이지 않는 허스크라 직접)
             mmorpg.fabric.Tasks.later(4, () -> {
@@ -862,7 +852,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
         {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "frostraider"}, {"arcaneblade", "elementalblade"}, {"arcmage", "necromancer"},
-        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"},
+        {"arsenalking", "bladeranger"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"},
         {"phoenix", "darkknight"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
@@ -890,8 +880,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "arcaneblade", "elementalblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
-                        case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
-                        case "battlearcher" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 3, sp -> {});
+                        case "arsenalking", "bladeranger" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 4, sp -> {});
                         case "trickster" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 7, sp -> markHusks(sp, 4));
                         case "pierrot" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 4, sp -> {}); // 2026-11-06 쇼타임 게이지 = 소환물 수 (넷까지)
                         case "stormlancer" -> newJob(ctx, server, conn, job, "rpg:lance_l40_hero", 4, sp -> mmorpg.fabric.job.JobTraits11.setWind(sp, 3)); // 2026-11-06 창끝 바람 (넷까지)
@@ -937,7 +926,6 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3}; // 블레이드 에코: 둘레를 옮겨 다니다 처음 자리로 돌아옴 — 덜 따라감
             case "archer_ult" -> new double[] {13.0, 4.6, 1.6, 0.3}; // 2026-11-15 소드 생추어리: 12칸 불꽃 고리 · 칼 들판 — 위에서 넓게
             case "archer_blades" -> new double[] {9.0, 3.4, 3.0, 0.5}; // 블레이드 레인: 과녁 위 7칸 하늘에서 칼 물결
-            case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5}; // 사일런트 아울: 등 뒤 위 부엉이 정령 (2.5칸 위) · 부엉이 화살
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35}; // 2026-11-07 트윈 리플렉션: 과녁 등 뒤 거울 (2.8칸) · 엇갈려 꿰뚫고 돌아섬 — 덜 따라감
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6}; // 팬텀 왈츠: 오른쪽 뒤의 춤 상대 · 과녁 둘레를 휘도는 환영
             case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35}; // 미러 월드: 과녁 둘레 4칸 거울 열둘 (3칸) — 위에서 넓게
@@ -981,8 +969,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "elementalblade" -> CASES_EB;
             case "arcmage" -> CASES_AM;
             case "necromancer" -> CASES_NC;
-            case "sniper" -> CASES_SN;
-            case "battlearcher" -> CASES_BA;
+            case "arsenalking" -> CASES_AK;
+            case "bladeranger" -> CASES_BR;
             case "trickster" -> CASES_TR;
             case "pierrot" -> CASES_PI;
             case "stormlancer" -> CASES_SL;

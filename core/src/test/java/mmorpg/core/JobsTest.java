@@ -105,7 +105,7 @@ public final class JobsTest {
             check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
-        check(stanceDamage == 10, "ten slot-3 damage skills (2026-11-15 팬텀 아처의 팬텀 버스트 · 매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로 · 소울 리퍼의 랜턴 오브 소울즈가 스펙트럴 사이스 태세로) "
+        check(stanceDamage == 12, "twelve slot-3 damage skills (2026-11-15 아스널 킹의 킹스 저지먼트 · 블레이드 레인저의 포지 브레이커 · 팬텀 아처의 팬텀 버스트 · 매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로 · 소울 리퍼의 랜턴 오브 소울즈가 스펙트럴 사이스 태세로) "
                 + stanceDamage);
 
         Jobs.Job sw = Jobs.job("swordsman");
@@ -142,12 +142,12 @@ public final class JobsTest {
         // 2026-11-15 궁수는 팬텀 아처로 리메이크해 다시 보임 — 옛 2차 (스나이퍼 · 배틀 아처) 만 숨김
         check(Jobs.visibleOrder().equals(List.of("swordsman", "warrior", "mage", "archer", "assassin", "priest", "guardian")), "visible order " + Jobs.visibleOrder());
         for (String id : List.of("spellblade", "lancer", "reaper", "paladin", "arcaneblade", "elementalblade", "stormlancer", "dragoon", "soulreaper",
-                "executioner", "thunderlord", "tyrant", "sniper", "battlearcher", "warlord", "phoenix")) check(Jobs.hidden(id) && Jobs.job(id) != null, "hidden " + id);
+                "executioner", "thunderlord", "tyrant", "warlord", "phoenix")) check(Jobs.hidden(id) && Jobs.job(id) != null, "hidden " + id);
         for (String id : List.of("swordsman", "swordmaster", "bloodknight", "warrior", "frostraider", "mage", "arcmage", "necromancer", "assassin", "trickster",
-                "pierrot", "priest", "saint", "warlock", "guardian", "darkknight", "archer")) check(!Jobs.hidden(id), "shown " + id);
+                "pierrot", "priest", "saint", "warlock", "guardian", "darkknight", "archer", "arsenalking", "bladeranger")) check(!Jobs.hidden(id), "shown " + id);
         check(!Jobs.hidden("") && !Jobs.hidden(null) && !Jobs.hidden("nope"), "hidden(unknown) false");
         check(Jobs.visibleAdvance("warrior", "awaken") == null && Jobs.visibleAdvance("warrior", "invert") == Jobs.job("frostraider")
-                && Jobs.visibleAdvancedOf("warrior").equals(List.of(Jobs.job("frostraider"))) && Jobs.visibleAdvancedOf("archer").isEmpty()
+                && Jobs.visibleAdvancedOf("warrior").equals(List.of(Jobs.job("frostraider"))) && Jobs.visibleAdvancedOf("archer").size() == 2
                 && Jobs.visibleAdvancedOf("guardian").equals(List.of(Jobs.job("darkknight"))) && Jobs.visibleAdvancedOf("swordsman").size() == 2, "visible advanced");
         Set<String> firstWeapons = new HashSet<>();
         for (Jobs.Job j : Jobs.all()) {
@@ -462,10 +462,8 @@ public final class JobsTest {
                 check(Jobs.jobOf(k) == a, "jobOf " + k.id());
                 // 4번 칸 (태세) 은 강화 스킬 · 태세 칸 몫 피해 스킬 (budget stance) 이 섞임 — 0.51.0 사용자 "딜링기도 괜찮고 버프기도 괜찮고"
                 // 2026-11-06 워록은 역할이 바뀐 반전 (힐러 → 원거리 딜러 — 재설계안 2판 기준 5: 새 역할의 목표) 이라 사제의 회복 · 보호막 칸에도 피해
-                // 2026-11-15 옛 궁수 2차 (스나이퍼 · 배틀 아처 — 숨김) 는 리메이크 전 궁수 (2번 칸 = 강화) 에 맞춘 것이라 뺌 — 아스널 킹 · 블레이드 레인저로 바뀜
-                boolean oldArcher = a.id().equals("sniper") || a.id().equals("battlearcher");
-                check((k.total() > 0) == (b.skill(i).total() > 0) || i == 3 || a.id().equals("warlock") || oldArcher, a.id() + " slot " + i + " same role (damage · stance)");
-                check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3 || oldArcher, a.id() + " slot " + i + " up keys");
+                check((k.total() > 0) == (b.skill(i).total() > 0) || i == 3 || a.id().equals("warlock"), a.id() + " slot " + i + " same role (damage · stance)");
+                check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3, a.id() + " slot " + i + " up keys");
             }
             double r = dps(a) / dps(b);
             check(near(r, Jobs.advanceDps(a), 0.005), a.id() + " dps ×" + r + " (1차 × " + Jobs.advanceDps(a) + " — 피에로 · 엑시큐셔너 1.0)");
@@ -508,7 +506,7 @@ public final class JobsTest {
         warriorAdvance(wa, wl, fr);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("elementalblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
-        // 2026-11-15 궁수 2차 (스나이퍼 · 배틀 아처) 는 아스널 킹 · 블레이드 레인저로 바뀜 — 그때 새 시험 (옛 2차는 숨김 · 1차 칸 합과 맞추지 않음)
+        archerAdvance(Jobs.job("archer"), Jobs.job("arsenalking"), Jobs.job("bladeranger")); // 2026-11-15 아스널 킹 · 블레이드 레인저 (옛 스나이퍼 · 배틀 아처 대신)
         assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("pierrot"));
         lancerAdvance(Jobs.job("lancer"), Jobs.job("stormlancer"), Jobs.job("dragoon"));
         reaperAdvance(Jobs.job("reaper"), Jobs.job("soulreaper"), Jobs.job("executioner"));
@@ -937,52 +935,63 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 궁수 2차 — 스나이퍼 · 배틀 아처 (재설계안 2판 — 2026-11-06 사용자 "다음 작업": 스나이퍼 새 스킬 · 섀도 헌터 대신 배틀 아처): 부분 합 = 배율 합 (궁수와 같은
-     * 7.5 · 13.5 · 60 — 둘째 칸은 1차 게일 스텝처럼 평타 화살이라 배율 합 없음) · 무적 시간 띄움 · t · w · 특성 (호흡 8 급소 사격 / 난사 — 세 갈래 · 가까이 +20% · 멀리 −30%)
+     * 2026-11-15 궁수 (팬텀 아처) 2차 — 아스널 킹 · 블레이드 레인저 (사용자 "2차부터 길가매쉬 같은 느낌으로" · "에미아 같은 근접으로", claude/archer-remake.md — 옛
+     * 스나이퍼 · 배틀 아처 대신): 부분 합 = 배율 합 (1차와 같은 7 · 4.2 · 12.6 · 16.8 · 56) · 무적 시간 띄움 · t · w · 특성
      */
-    static void archerAdvance(Jobs.Job ar, Jobs.Job sn, Jobs.Job ba) {
-        check(sn != null && ba != null, "archer advanced jobs");
-        if (sn == null || ba == null) return;
-        check(Jobs.advance("archer", "awaken") == sn && Jobs.advance("archer", "invert") == ba && Jobs.baseOf(sn) == ar && Jobs.baseOf(ba) == ar, "archer advance");
-        check(sn.display().equals("스나이퍼") && ba.display().equals("배틀 아처") && Jobs.find("스나이퍼") == sn && Jobs.find("에길") == null && Jobs.find("배틀 아처") == ba
-                && Jobs.find("battlearcher") == ba && Jobs.job("shadowhunter") == null && Jobs.find("섀도 헌터") == null, "archer display · find");
-        List<String> snIds = new ArrayList<>();
-        List<String> baIds = new ArrayList<>();
-        for (Jobs.Skill k : sn.skills()) snIds.add(k.id());
-        for (Jobs.Skill k : ba.skills()) baIds.add(k.id());
-        check(snIds.equals(List.of("sniper_heart", "sniper_snare", "sniper_trick", "sniper_mark", "sniper_ult"))
-                && baIds.equals(List.of("battlearcher_swarm", "battlearcher_dive", "battlearcher_splinter", "battlearcher_stride", "battlearcher_ult")), "archer advanced skill ids (2판)");
-        for (int i : new int[] {0, 1, 2, 4}) check(near(sn.skill(i).total(), ar.skill(i).total()) && near(ba.skill(i).total(), ar.skill(i).total()), "archer totals slot " + i);
-        Jobs.Skill sh = sn.skill(0), ss = sn.skill(1), st = sn.skill(2), sm = sn.skill(3), su = sn.skill(4);
-        Jobs.Skill bs = ba.skill(0), bd = ba.skill(1), bp = ba.skill(2), bt = ba.skill(3), bu = ba.skill(4);
-        check(near(sh.total(), 7.5) && near(st.num("first", 0) + st.num("bounce", 0) * st.num("bounces", 0), 13.5)
-                && near(su.num("shot", 0) + su.num("burst", 0), 60) && su.name().equals("디바인 펀니시먼트"), "sniper totals 7.5 · 13.5 · 60 (디바인 펀니시먼트 45 + 15)");
-        check(near(bs.num("arrows", 0) * bs.num("arrow", 0), 7.5) && near(bp.total(), 13.5) && near(bu.num("pulses", 0) * bu.num("pulse", 0) + bu.num("final", 0), 60),
-                "battlearcher totals 7.5 · 13.5 · 60");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게 (트릭 샷이 같은 적에게 다시 · 데드아이 세 발 · 퀴버 스톰 물결 — 열두 발 · 조각은 한 번에 넣고 숫자만 여러 줄)
-        check(st.num("sameGap", 0) >= 10 && su.num("burstAt", 0) >= 10 && su.num("gap", 0) >= 10 && sh.num("gap", 0) >= 6, "sniper i-frame spacing");
-        check(bu.num("every", 0) >= 10 && bu.num("finalAt", 0) - bu.num("first", 0) - (bu.num("pulses", 0) - 1) * bu.num("every", 0) >= 10, "battlearcher i-frame spacing");
-        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 다시 쓰는 스킬은 12틱마다 다시 누름 · 화살이 2.5칸 앞 과녁에 닿는 1틱)
-        check(near(sh.num("t", 0), 12 + 1) && near(sh.num("w", 0), sh.num("t", 0)) && near(st.num("shotAt", 0) + 1 + st.num("sameGap", 0) * st.num("bounces", 0), st.num("t", 0))
-                && near(su.num("w", 0), su.num("gap", 0) + 2) && near(su.num("t", 0), su.num("w", 0) + su.num("burstAt", 0)), "sniper t 13 · 24 · 32 (w 13 · 22 — 사일런트 아울: 다시 누를 수 있는 20 에 눌러 (CI 42332661771) 2틱 날아감 · 10틱 뒤 터짐)");
-        check(near(bs.num("launchAt", 0) + bs.num("flight", 0), bs.num("t", 0)) && near(bp.num("fireAt", 0), bp.num("t", 0)) && near(bp.num("fireAt", 0), bp.num("w", 0))
-                && near(bu.num("finalAt", 0), bu.num("t", 0)) && near(bu.num("first", 0), bu.num("w", 0)), "battlearcher t 6 · 6 · 70 (w 6 · 10)");
-        // 특성: 스나이퍼 = 궁수의 정령 교감 (2026-11-07 3판 — 호흡에서 이름 · 그림만, 같은 +4% · 사거리 +1칸) 최대 8 + 급소 사격, 배틀 아처 = 난사 (세 갈래 — 평타 50% · 5칸, 3칸 안 +20% · 10칸 밖 −30%)
-        check(ar.trait().name().equals("충전") && sn.trait().max() == 8 && near(sn.trait().def().numOr("perStack", 0), ar.trait().def().numOr("perStack", -1))
-                && near(sn.trait().def().numOr("rangePer", 0), ar.trait().def().numOr("rangePer", -1)) && near(sn.trait().def().numOr("snipeUse", 0), 3) && sn.trait().name().equals("심판"), "심판 8 · 천벌의 화살");
-        check(ba.trait().name().equals("분신") && ba.trait().max() == 3 && near(ba.trait().def().numOr("side", 0), 0.5) && near(ba.trait().def().numOr("sideRange", 0), 5)
-                && near(ba.trait().def().numOr("near", 0), 3) && near(ba.trait().def().numOr("nearBonus", 0), 0.2) && near(ba.trait().def().numOr("far", 0), 10)
-                && near(ba.trait().def().numOr("farCut", 0), 0.3), "분신 세 갈래 · +20% · −30%");
-        // 유틸 · 범위: 하트시커 단일 · 스플린터 샷 좁은 범위 (60° · 7.5칸) · 밀쳐냄, 트릭 샷 · 호넷 스웜은 넓음
-        check("single".equals(Jobs.areaKind(sh)) && "narrow".equals(Jobs.areaKind(bp)) && Jobs.areaKind(st) == null && Jobs.areaKind(bs) == null && Jobs.utils(bp).equals(List.of("knock"))
-                && Jobs.utils(bu).equals(List.of("knock")) && Jobs.utils(st).isEmpty() && Jobs.utils(sh).isEmpty(), "archer advanced utils · area");
-        check(Jobs.windupTicks(sh) == 13 && Jobs.windupTicks(su) == 22 && Jobs.windupTicks(bu) == 10 && Jobs.windupTicks(bp) == 6, "windups 13 · 22 · 10 · 6");
-        check(Jobs.upKey(ss, "arrow") != null && Jobs.upKey(bd, "arrow") != null && Jobs.upKey(sm, "dur") != null && Jobs.upKey(bt, "dur") != null && Jobs.upKeys(sh).isEmpty(),
-                "archer advanced up keys");
-        check(sm.total() <= 0 && bt.total() <= 0 && !Jobs.stanceBudget(sm) && !Jobs.stanceBudget(bt), "세라핌 · 섀도 댄스 강화 (배율 합 없음)");
-        check(Jobs.skillLine(sm).equals("세라핌 · 30초") && Jobs.skillLine(bs).startsWith("섀도 볼리 · 6초 · 배율 "), "archer advanced skill line");
-        check(ar.color()[0][2] > 0.9 && ar.color()[0][0] < 0.5 && sn.color()[0][0] > 0.9 && sn.color()[1][2] > 0.9 && ba.color()[0][2] > 0.9 && ba.color()[0][1] < 0.4,
-                "colors (2026-11-14): storm indigo / platinum gold · sky / shadow violet");
+    static void archerAdvance(Jobs.Job ar, Jobs.Job ak, Jobs.Job br) {
+        check(ak != null && br != null, "archer advanced jobs");
+        if (ak == null || br == null) return;
+        check(Jobs.advance("archer", "awaken") == ak && Jobs.advance("archer", "invert") == br && Jobs.baseOf(ak) == ar && Jobs.baseOf(br) == ar
+                && Jobs.advancedOf("archer").equals(List.of(ak, br)) && Jobs.visibleAdvancedOf("archer").equals(List.of(ak, br)), "archer advance");
+        check(ak.display().equals("아스널 킹") && br.display().equals("블레이드 레인저") && Jobs.find("아스널 킹") == ak && Jobs.find("bladeranger") == br
+                && Jobs.job("sniper") == null && Jobs.job("battlearcher") == null && Jobs.find("스나이퍼") == null, "archer display · find (옛 2차 없음)");
+        List<String> akIds = new ArrayList<>();
+        List<String> brIds = new ArrayList<>();
+        for (Jobs.Skill k : ak.skills()) akIds.add(k.id());
+        for (Jobs.Skill k : br.skills()) brIds.add(k.id());
+        check(akIds.equals(List.of("arsenalking_volley", "arsenalking_chain", "arsenalking_rain", "arsenalking_judge", "arsenalking_ult"))
+                && brIds.equals(List.of("bladeranger_twin", "bladeranger_boomerang", "bladeranger_storm", "bladeranger_forge", "bladeranger_ult")), "archer advanced skill ids");
+        // 칸 합 (1차와 같음 — 직업 맞춤이 × 1.2) · 부분 합 = 배율 합
+        double[] totals = {7, 4.2, 12.6, 16.8, 56};
+        for (int i = 0; i < Jobs.SLOTS; i++) {
+            check(near(ak.skill(i).total(), totals[i]) && near(br.skill(i).total(), totals[i]) && near(ar.skill(i).total(), totals[i]), "archer line slot " + i + " total " + totals[i]);
+        }
+        check(near(sum(ak.skill(0), "swords"), 7) && near(ak.skill(1).num("bind", 0) + ak.skill(1).num("pull", 0), 4.2)
+                && near(ak.skill(2).num("wave", 0) * ak.skill(2).num("waves", 0) + ak.skill(2).num("final", 0), 12.6)
+                && near(ak.skill(3).num("hit", 0) + ak.skill(3).num("blast", 0), 16.8) && Jobs.stanceBudget(ak.skill(3))
+                && near(ak.skill(4).num("wave", 0) * ak.skill(4).num("waves", 0) + ak.skill(4).num("final", 0), 56), "arsenalking parts = totals");
+        check(near(sum(br.skill(0), "cuts"), 7) && near(br.skill(1).num("cross", 0) + br.skill(1).num("spin", 0), 4.2)
+                && near(br.skill(2).num("hit", 0) * br.skill(2).num("hits", 0), 12.6)
+                && near(br.skill(3).num("hit", 0) + br.skill(3).num("wave", 0), 16.8) && Jobs.stanceBudget(br.skill(3))
+                && near(br.skill(4).num("wave", 0) * br.skill(4).num("waves", 0) + br.skill(4).num("final", 0), 56), "bladeranger parts = totals");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 · t · w
+        Jobs.Skill kc = ak.skill(1);
+        Jobs.Skill kr = ak.skill(2);
+        Jobs.Skill kj = ak.skill(3);
+        Jobs.Skill ku = ak.skill(4);
+        check(kc.num("pullAt", 0) - kc.num("bindAt", 0) >= 10 && near(kc.num("bindAt", 0), kc.num("w", 0)) && near(kc.num("pullAt", 0), kc.num("t", 0)), "킹스 체인 간격 · t · w");
+        check(kr.num("gap", 0) >= 10 && kr.num("finalAt", 0) - kr.num("first", 0) - (kr.num("waves", 0) - 1) * kr.num("gap", 0) >= 10 && near(kr.num("finalAt", 0), kr.num("t", 0))
+                && near(kr.num("first", 0), kr.num("w", 0)), "트레저 레인 간격 · t · w");
+        check(kj.num("blastAt", 0) - kj.num("hitAt", 0) >= 10 && near(kj.num("hitAt", 0), kj.num("w", 0)) && near(kj.num("blastAt", 0), kj.num("t", 0)), "킹스 저지먼트 간격 · t · w");
+        check(ku.num("every", 0) >= 10 && ku.num("finalAt", 0) - ku.num("first", 0) - (ku.num("waves", 0) - 1) * ku.num("every", 0) >= 10 && near(ku.num("finalAt", 0), ku.num("t", 0))
+                && near(ku.num("first", 0), ku.num("w", 0)), "아스널 게이트 간격 · t · w");
+        Jobs.Skill bb = br.skill(1);
+        Jobs.Skill bs = br.skill(2);
+        Jobs.Skill bf = br.skill(3);
+        Jobs.Skill bu = br.skill(4);
+        check(near(br.skill(0).num("hitAt", 0), br.skill(0).num("t", 0)), "트윈 슬래시 t (한 번에)");
+        check(bb.num("spinAt", 0) - bb.num("crossAt", 0) >= 10 && near(bb.num("crossAt", 0), bb.num("w", 0)) && near(bb.num("spinAt", 0), bb.num("t", 0)), "블레이드 부메랑 간격 · t · w");
+        check(bs.num("gap", 0) >= 10 && near(bs.num("first", 0) + (bs.num("hits", 0) - 1) * bs.num("gap", 0), bs.num("t", 0)) && near(bs.num("first", 0), bs.num("w", 0)), "블레이드 스톰 간격 · t · w");
+        check(bf.num("waveAt", 0) - bf.num("hitAt", 0) >= 10 && near(bf.num("hitAt", 0), bf.num("w", 0)) && near(bf.num("waveAt", 0), bf.num("t", 0)), "포지 브레이커 간격 · t · w");
+        check(bu.num("every", 0) >= 10 && bu.num("finalAt", 0) - bu.num("first", 0) - (bu.num("waves", 0) - 1) * bu.num("every", 0) >= 10 && near(bu.num("finalAt", 0), bu.num("t", 0))
+                && near(bu.num("first", 0), bu.num("w", 0)), "아이언 템페스트 간격 · t · w");
+        // 특성
+        check(ak.trait().name().equals("황금 문") && ak.trait().max() == 8 && near(ak.trait().def().numOr("perShot", 0), 2) && near(ak.trait().def().numOr("burst", 0), 1.2)
+                && near(ak.trait().def().numOr("radius", 0), 2.5), "황금 문 최대 8 · 한 발에 둘 · 터짐 120%");
+        check(br.trait().name().equals("쌍검") && near(br.trait().def().numOr("twin", 0), 4) && near(br.trait().def().numOr("cleave", 0), 0.5)
+                && near(br.trait().def().numOr("nearBonus", 0), 0.2) && near(br.trait().def().numOr("farCut", 0), 0.3), "쌍검 4칸 · 베기 50% · +20% / −30%");
+        check(Jobs.skillLine(ak.skill(0)).startsWith("골든 볼리 · 6초 · 배율 ") && Jobs.skillLine(br.skill(4)).startsWith("아이언 템페스트 · 60초 · 배율 "), "archer advanced skill line");
+        check(ak.color()[0][0] > 0.9 && ak.color()[0][1] > 0.6 && ak.color()[0][2] < 0.4 && br.color()[0][0] > 0.9 && br.color()[0][1] < 0.6, "colors: gold / forge orange");
     }
 
     /**
