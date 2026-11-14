@@ -133,7 +133,8 @@ final class PhantomArcherSkills {
         Vec3 right = V.rightOf(V.flat(f));
         Vec3 hand = RuneKit.bowHand(sp);
         double u = i - (n - 1) / 2.0;
-        return V.add(V.up(V.add(hand, f, -0.2), 0.45 + 0.12 * Math.abs(u) + (i == n - 1 ? 0.15 : 0)), right, u * 0.5);
+        // 2026-11-15 1인칭 영상: 활 손 뒤 0.2칸은 눈에 너무 가까워 칼자루가 화면 위를 덮었음 → 활 앞 0.7칸 · 조금 더 위
+        return V.add(V.up(V.add(hand, f, 0.7), 0.6 + 0.12 * Math.abs(u) + (i == n - 1 ? 0.15 : 0)), right, u * 0.55);
     }
 
     // ------------------------------------------------------------ 크로스 팽
@@ -374,7 +375,7 @@ final class PhantomArcherSkills {
         double[] core = JobKit.core(j);
         RuneKit.effect(sp, "slowness", draw + 4, 2);
         Vec3 f0 = sp.getViewVector(1F);
-        Vec3 h0 = V.add(RuneKit.bowHand(sp), f0, -0.7);
+        Vec3 h0 = V.add(V.add(RuneKit.bowHand(sp), V.rightOf(V.flat(f0)), 0.3), f0, 0.4);
         RuneSwords.Blade b = PhantomArcher.project(level0, h0, f0, len, 6, draw + blastDelay + 60, true);
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 0.9, 1.0);
         SkillFx.play(level0, "block.beacon.power_select", sp.position(), 1.6, 0.6);
@@ -384,8 +385,9 @@ final class PhantomArcherSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 f = sp.getViewVector(1F);
-                double pull = 0.7 + 0.35 * tt / (double) draw;
-                Vec3 h = V.add(RuneKit.bowHand(sp), f, -pull);
+                // 2026-11-15 1인칭 영상: 활 손 뒤 (−0.7 ~ −1.05칸) 는 칼자루 · 코등이가 화면 오른쪽을 크게 덮었음 → 활 앞 0.4 → 0.1칸 · 오른쪽 0.3칸
+                double pull = 0.4 - 0.3 * tt / (double) draw;
+                Vec3 h = V.add(V.add(RuneKit.bowHand(sp), V.rightOf(V.flat(f)), 0.3), f, pull);
                 if (tt > draw - 5) h = V.add(h, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.04);
                 b.pose(h, f, PhantomArcher.faceOf(f), 1);
                 if (tt % 3 == 0) JobFx.glint(sp.level(), b.tip(), 0.3 + tt * 0.03, glow, core, 0.16, Opt.empty());
