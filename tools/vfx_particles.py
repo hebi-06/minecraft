@@ -13,7 +13,10 @@
 
 글자는 그림 그대로 (흰 그림 · 칠한 그림) — 서버가 파티클의 색 (식) 을 글자 색으로 곱함 (파티클과 같음).
 칸마다 오른쪽 위 구석에 알파 1 점: 마인크래프트가 비트맵 글자의 너비를 빈 열만큼 줄이지 않게 (너비 = 칸 전체 → 가운데가 맞음 · 서버가 너비를 앎).
-직업 스킬 그림 (rfx_j*) 은 직업 단계에서 (JOB_PARTICLES) — 룬이 쓰는 것만 RUNE_J 에.
+직업 스킬 그림 (rfx_j*) — 2026-11-14 모두 (사용자 "우리 만든 참격 이펙트는 어디가고 왜 다 파티클로 만들고 있음?" → "1번부터 진행": 전에는 룬이 쓰는 여섯 (RUNE_J)
+만 옮겨 직업 스킬의 참격 판 · 큰 검기 · 눈앞 베기 · 회전 베기가 모드 없는 클라이언트에서 통째로 빠졌음). 쓰지 않는 그림 (DEAD_J) 은 뺌. 직업 그림은 칸의 긴 변을
+줄여 넣음 (cap_for — 참격 · 검기 무리 HI_J 는 룬과 같은 128, 3D 몹을 못 세울 때만 쓰는 그림 LOW_J 는 64, 나머지는 그림 크기의 0.45 · 56 ~ 96) — 글꼴 그림은
+모두 메모리에 올라감. 직업 참격 판 (slash_job*) 도 카드에.
 """
 import json
 import os
@@ -38,17 +41,38 @@ FIRST = 0xE000  # 글자 (사용자 영역 E000 ~ F8FF)
 SPACE_FIRST = 0xF800  # 뒤로 옮김 글자 (−1 · −2 · −4 … −1024)
 COLS = 8  # 판 한 줄의 칸 수
 
-# 룬이 쓰는 직업 그림 (rfx_j*) — 나머지 직업 그림은 직업 단계에서
-# (2026-11-12 census — VanillaProbe vcensus: 룬 120 이 보낸 파티클 가운데 직업 그림 — 원소 표식 · 터짐 · 타격 · 웅덩이 · 연기 · 깨짐 표식)
+# 룬이 쓰는 직업 그림 (rfx_j*) — 2026-11-12 첫 판에 옮긴 여섯 (그때 census — VanillaProbe vcensus: 룬 120 이 보낸 파티클 가운데 직업 그림 — 원소 표식 · 터짐 ·
+# 타격 · 웅덩이 · 연기 · 깨짐 표식). 2026-11-14 부터는 직업 그림 모두 (DEAD_J 빼고)
 RUNE_J = {"rpg:rfx_jbreak", "rpg:rfx_jelem", "rpg:rfx_jburst2", "rpg:rfx_jhits", "rpg:rfx_jpool", "rpg:rfx_jsmoke2"}
+# 쓰는 곳이 없는 직업 그림 (2026-11-14 — 정령 궁수의 늑대 · 사슴 · 부엉이 · 정령 꽃은 궁수 계열을 다시 만들며 빠짐 · 얼음 감옥 · 단두대 · 금서는 3D 로 바뀜)
+DEAD_J = {"rpg:rfx_jswolf", "rpg:rfx_jswolf1p", "rpg:rfx_jstag", "rpg:rfx_jstagf", "rpg:rfx_jowl", "rpg:rfx_jowlside", "rpg:rfx_jsbloom", "rpg:rfx_jicecage",
+          "rpg:rfx_jgallows", "rpg:rfx_jtome"}
+# 참격 · 검기 무리 (화면에 크게 · 자주 — 룬 그림과 같은 128)
+HI_J = {"rpg:rfx_jslash", "rpg:rfx_jslash2", "rpg:rfx_jslash_rp", "rpg:rfx_jslash_sb", "rpg:rfx_jslash_sw", "rpg:rfx_jslash_wa", "rpg:rfx_jwave", "rpg:rfx_jspin",
+        "rpg:rfx_jspin2", "rpg:rfx_jxmark", "rpg:rfx_jcross", "rpg:rfx_jcross2", "rpg:rfx_jstab", "rpg:rfx_jstab2", "rpg:rfx_jsmash", "rpg:rfx_jsmash2", "rpg:rfx_jcuts",
+        "rpg:rfx_jmaulswing"}
+# 3D 몹을 못 세울 때만 쓰는 그림 (드물게 — 작게)
+LOW_J = {"rpg:rfx_jphoenix"}
 # 칸이 많은 작은 그림은 더 줄임 (타격 그림 132칸 — 화면에서 한 칸 남짓)
 CAP_OF = {"rpg:rfx_jhits": 64}
-# Fx3d 카드 (룬 휘두름 판 — RuneKit.arc · waveCard · groundCrescent)
-CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heavy_soft", "slash_thin", "slash_thin_soft"]
+# Fx3d 카드 (룬 휘두름 판 — RuneKit.arc · waveCard · groundCrescent) · 2026-11-14 직업 참격 판 (JobFx.slashCard — 공통 · 검사 · 전사 · 사신 · 마검사)
+CARDS = ["slash_wave", "slash_arc", "slash_arc_soft", "slash_heavy", "slash_heavy_soft", "slash_thin", "slash_thin_soft",
+         "slash_job", "slash_job_sw", "slash_job_wa", "slash_job_rp", "slash_job_sb"]
 
 
 def wanted(pid):
-    return "rfx_j" not in pid or pid in RUNE_J
+    return pid not in DEAD_J
+
+
+def cap_for(pid, native):
+    """칸의 긴 변 (픽셀) — native = 그림의 칸 긴 변"""
+    if pid in CAP_OF:
+        return CAP_OF[pid]
+    if "rfx_j" not in pid or pid in RUNE_J or pid in HI_J:
+        return CAP
+    if pid in LOW_J:
+        return 64
+    return max(56, min(96, round(native * 0.45)))
 
 
 def shrink(cell, cap):
@@ -94,11 +118,12 @@ def particle_sheets(defs):
         sx, sy = W / tw, Hh / th
         cols, rows = round(tw / uw), round(th / vh)
         cells = []
+        cap = cap_for(pid, max(uw * sx, vh * sy))
         for r in range(rows):
             for c in range(cols):
                 x0, y0 = round(c * uw * sx), round(r * vh * sy)
                 x1, y1 = round((c + 1) * uw * sx), round((r + 1) * vh * sy)
-                cells.append(shrink(im.crop((x0, y0, x1, y1)), CAP_OF.get(pid, CAP)))
+                cells.append(shrink(im.crop((x0, y0, x1, y1)), cap))
         sheets[key] = (cells, [uw, vh], [cols, rows])
     return of, sheets
 

@@ -1364,6 +1364,23 @@ final class VanillaProbe {
             Tasks.later(3, () -> {
                 if (id.equals("assassin_shade")) run(server, "tp " + NAME + " ~ ~ ~ ~180 ~"); // 과녁을 등지고 씀 (모드 영상 TURN_AFTER)
                 jobBeforeCast(p, id, foes);
+                // 2026-11-14 파티클 다리 셈 (직업 그림을 글꼴에 넣은 뒤 — 한도 MAX_LIVE · MAX_BATCH 를 넘는지): 이 영상이 보낸 파티클 ID · 글자 표시 · 가루 · 버림 · 카드 · 가장 많이 떠 있던 수
+                java.util.Map<String, Integer> seen0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.PBridge.SEEN);
+                int[] c0 = {mmorpg.fabric.vfx.PBridge.made, mmorpg.fabric.vfx.PBridge.dusts, mmorpg.fabric.vfx.PBridge.dropped, mmorpg.fabric.vfx.PBridge.noGlyph,
+                        mmorpg.fabric.vfx.PBridge.cards, mmorpg.fabric.vfx.PBridge.soloReused};
+                int[] peak = {0};
+                for (int t = 1; t <= frames; t++) Tasks.later(t, () -> peak[0] = Math.max(peak[0], mmorpg.fabric.vfx.PBridge.live()));
+                Tasks.later(frames + 1, () -> {
+                    StringBuilder sb = new StringBuilder();
+                    for (var e : mmorpg.fabric.vfx.PBridge.SEEN.entrySet()) {
+                        int d = e.getValue() - seen0.getOrDefault(e.getKey(), 0);
+                        if (d > 0) sb.append(e.getKey().replace("rpg:", "")).append('=').append(d).append(' ');
+                    }
+                    log("jobcensus " + name + " made " + (mmorpg.fabric.vfx.PBridge.made - c0[0]) + " dust " + (mmorpg.fabric.vfx.PBridge.dusts - c0[1]) + " dropped "
+                            + (mmorpg.fabric.vfx.PBridge.dropped - c0[2]) + " noGlyph " + (mmorpg.fabric.vfx.PBridge.noGlyph - c0[3]) + " cards "
+                            + (mmorpg.fabric.vfx.PBridge.cards - c0[4]) + " solo " + (mmorpg.fabric.vfx.PBridge.soloReused - c0[5]) + " peak " + peak[0] + " | "
+                            + sb.toString().trim());
+                });
                 boolean ok = mmorpg.fabric.job.JobSkills.press(p, slot);
                 check("film cast " + name, ok);
                 log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active() + " fx · props " + mmorpg.fabric.vfx.Vfx.propsMade + " · sprites "

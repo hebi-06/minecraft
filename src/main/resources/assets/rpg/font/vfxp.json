@@ -575,182 +575,185 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_jbreak_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jabyss_384x384.png",
    "height": 64,
    "ascent": 30,
    "chars": [
     "",
-    "\u0000\u0000\u0000\u0000"
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_jburst2_192x192.png",
+   "file": "rpg:font/vfxp/fx_rfx_jaegis2_256x320.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_jelem_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jaegis_192x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
     "",
-    "\u0000\u0000\u0000\u0000\u0000\u0000"
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_jhits_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jarc_512x128.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "\u0000\u0000\u0000\u0000"
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_jpool_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jarrow2_256x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_jsmoke2_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jarrow_256x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_king_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jaura2_128x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_leaf_64x64.png",
+   "file": "rpg:font/vfxp/fx_rfx_jaura_128x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_meteor_256x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jballoon_192x192.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_moon_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbeam2_256x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_net_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbeam_256x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_nova_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbear_256x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_orb_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbell2_256x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_plasma_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbell_192x192.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_prop_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbifrost_512x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    "\u0000\u0000\u0000\u0000\u0000\u0000"
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_punch_512x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbladering_256x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_rays_48x384.png",
+   "file": "rpg:font/vfxp/fx_rfx_jblood_128x128.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_relic_512x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbloom_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jbolt2_192x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -759,7 +762,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_relicspin_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbolt_128x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -768,208 +771,105 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_rift_256x80.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbonespear_256x64.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_rock_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbook_192x192.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_serpent_256x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbow2_256x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_shade_128x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbow_192x192.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_shield_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbreak2_128x128.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_sigil_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbreak_128x128.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_skyeye_256x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbuckler2_128x128.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_spear_384x80.png",
+   "file": "rpg:font/vfxp/fx_rfx_jbuckler_128x128.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_spirit_128x128.png",
+   "file": "rpg:font/vfxp/fx_rfx_jburst2_192x192.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_spiritking_512x512.png",
+   "file": "rpg:font/vfxp/fx_rfx_jburst_192x192.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    "",
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_splash_256x256.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_sun_256x256.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_sword_512x128.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_thorn_128x128.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_vortex_128x256.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_wave_256x128.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_wings_256x160.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_rfx_yggdrasil_512x512.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_solas_sword_384x128.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_svalinn_hex_64x64.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_svalinn_ice_32x32.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_svalinn_shield_256x256.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    "",
-    "\u0000\u0000\u0000\u0000"
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfxp/fx_tyr_ghostfire_128x256.png",
+   "file": "rpg:font/vfxp/fx_rfx_jchain2_256x32.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -978,12 +878,1801 @@
   },
   {
    "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jchain_256x32.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcinder_192x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcloud_384x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcomet2_256x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcomet_256x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jconfetti_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcross2_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcross_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcrown_192x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jcuts_320x320.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdagger2_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdagger_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdash2_256x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdash_256x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdmaw_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdragon_448x448.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jdrop_128x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jecho_384x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jeclipse_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jelem_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jexcal_512x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfalcon_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfallstar_256x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfeather_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfire_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfireball_256x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfirework_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jflame_128x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfly_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfrost_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfury_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jfwings_512x416.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgalaxy_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgate2_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgate_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgeyser_192x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jglint_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jglyph_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgrave_128x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgreatarrow_320x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jgrip_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jhalo_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jhand2_64x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jhand_64x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jheal2_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jheal_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jheart_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jhit_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jhits_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jicelance_256x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jimpact_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jjudge2_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jjudge_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jlance_320x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jline2_256x32.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jline_256x32.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jlotus_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jmaul2_256x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jmaul_192x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jmaulswing_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jmirror_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jmoon_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jmshatter_256x320.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jnet_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jninerunes_512x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jnote2_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jnote_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jorb_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpage2_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpage_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpane_128x224.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpaw_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpetal2_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpetal_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jphoenix_512x512.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpillar_160x640.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpinned_128x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpool_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jpyre_192x448.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jquake_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jreaper2_192x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jreaper_192x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jribbon_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jrift_128x320.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jring2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jring_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jrose_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jrunes_512x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jshatter2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jshatter_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jskull_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jslash2_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jslash_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jslash_rp_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jslash_sb_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jslash_sw_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jslash_wa_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsmash2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsmash_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsmoke2_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsmoke_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsoul2_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsoul_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsparkorb_192x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspear2_384x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspear_256x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspeed2_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspeed_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspike_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspin2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspin_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jspot_128x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstab2_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstab_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstar_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstarnode_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstigma2_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstigma_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstone_192x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstun2_128x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jstun_128x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jsunarrow_512x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jswirl_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jtarget2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jtarget_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jtear_512x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jtendril_512x96.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jthunder2_128x512.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jthunder_128x512.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jtwister2_128x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jtwister_128x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jvalwing_256x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jvolt2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jvolt_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwail_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwall_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwave_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jweak_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwheel_256x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwhirl2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwhirl_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwind2_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwind_192x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwing2_256x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwing_256x192.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jwolf_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_jxmark_384x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_king_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_leaf_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_meteor_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_moon_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_net_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_nova_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_orb_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_plasma_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_prop_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_punch_512x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_rays_48x384.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_relic_512x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_relicspin_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_rift_256x80.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_rock_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_serpent_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_shade_128x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_shield_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_sigil_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_skyeye_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_spear_384x80.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_spirit_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_spiritking_512x512.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_splash_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_sun_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_sword_512x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_thorn_128x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_vortex_128x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_wave_256x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_wings_256x160.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_rfx_yggdrasil_512x512.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_solas_sword_384x128.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_svalinn_hex_64x64.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_svalinn_ice_32x32.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_svalinn_shield_256x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/fx_tyr_ghostfire_128x256.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "rpg:font/vfxp/fx_tyr_warrior_256x256.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    "\u0000\u0000\u0000\u0000"
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {
@@ -992,8 +2681,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    "\u0000\u0000\u0000\u0000\u0000\u0000"
+    "",
+    "\u0000\u0000\u0000\u0000\u0000\u0000"
    ]
   },
   {
@@ -1002,7 +2691,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1011,7 +2700,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1020,7 +2709,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1029,7 +2718,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1038,7 +2727,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1047,7 +2736,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1056,7 +2745,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1065,7 +2754,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1074,7 +2763,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1083,7 +2772,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1092,7 +2781,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1101,7 +2790,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1110,7 +2799,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1119,7 +2808,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1128,7 +2817,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1137,7 +2826,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1146,7 +2835,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1155,7 +2844,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1164,7 +2853,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1173,7 +2862,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1182,7 +2871,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1191,7 +2880,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1200,7 +2889,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1209,7 +2898,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1218,7 +2907,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1227,7 +2916,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1236,7 +2925,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1245,7 +2934,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1254,7 +2943,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1263,7 +2952,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1272,7 +2961,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1281,7 +2970,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1290,7 +2979,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1299,7 +2988,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1308,7 +2997,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1317,7 +3006,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1326,7 +3015,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1335,7 +3024,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1344,7 +3033,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1353,7 +3042,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1362,7 +3051,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1371,7 +3060,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1380,7 +3069,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1389,7 +3078,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1398,7 +3087,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1407,7 +3096,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1416,7 +3105,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1425,7 +3114,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1434,7 +3123,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1443,7 +3132,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1452,7 +3141,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1461,7 +3150,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1470,7 +3159,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1479,7 +3168,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1488,7 +3177,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1497,7 +3186,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1506,7 +3195,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1515,7 +3204,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1524,7 +3213,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1533,7 +3222,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1542,7 +3231,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1551,7 +3240,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1560,7 +3249,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1569,7 +3258,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1578,7 +3267,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1587,7 +3276,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1596,7 +3285,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -1605,7 +3294,799 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f0_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f0_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f1_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f1_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f2_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f2_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f3_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f3_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f4_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f4_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f5_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f5_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f6_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f6_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f7_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_f7_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f0_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f0_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f1_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f1_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f2_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f2_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f3_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f3_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f4_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f4_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f5_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f5_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f6_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f6_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f7_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f7_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f8_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f8_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f9_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f9_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f10_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f10_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f11_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sw_f11_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f0_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f0_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f1_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f1_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f2_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f2_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f3_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f3_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f4_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f4_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f5_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f5_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f6_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f6_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f7_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_wa_f7_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f0_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f0_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f1_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f1_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f2_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f2_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f3_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f3_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f4_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f4_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f5_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f5_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f6_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f6_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f7_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_rp_f7_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f0_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f0_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f1_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f1_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f2_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f2_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f3_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f3_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f4_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f4_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f5_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f5_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f6_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f6_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f7_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_slash_job_sb_f7_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
