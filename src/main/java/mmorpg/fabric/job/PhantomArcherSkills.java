@@ -532,6 +532,21 @@ final class PhantomArcherSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.04), R, 48, 0.32, glow, 4, finalAt - ringTicks + 6); // 2026-11-15 2D 칼날 고리 대신 단색 블록 테두리
+            // 2026-11-15 마법진 (미리보기에서 맞춤): 육망성 (세모 둘 · 반지름 0.97R — 2틱마다 한 변씩 그어짐) + 그 안쪽 고리 (0.485R)
+            mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.035), R * 0.485, 30, 0.18, glow, 6, finalAt - ringTicks + 2);
+            double rho = R * 0.97;
+            for (int tri = 0; tri < 2; tri++) {
+                for (int e = 0; e < 3; e++) {
+                    double a0 = Math.PI / 2 + tri * Math.PI / 3 + e * 2 * Math.PI / 3;
+                    double a1 = a0 + 2 * Math.PI / 3;
+                    int delay = (tri * 3 + e) * 2;
+                    Vec3 pa = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a0), 0, Math.sin(a0)), rho);
+                    Vec3 pb = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a1), 0, Math.sin(a1)), rho);
+                    RuneKit.later(delay, () -> {
+                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.2, glow, 4, finalAt - ringTicks - delay);
+                    });
+                }
+            }
             SkillFx.play(level, "block.fire.ambient", c0, 0.8, 1.0);
         });
         // 칼이 솟음 (가까운 데부터 — 번지는 고리를 따라)
@@ -653,7 +668,7 @@ final class PhantomArcherSkills {
         double a = Kit.rand() * Math.PI * 2;
         Vec3 g = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), rad));
         Vec3 d = V.unit(V.add(V.DOWN, new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 0.5));
-        double len = 1.8 + Kit.rand() * 0.8; // 2026-11-15 컨셉아트: 들판 칼 크게
+        double len = 2.4 + Kit.rand() * 0.8; // 2026-11-15 미리보기: 들판 칼 더 크게 (1.8 ~ 2.6 은 3인칭에서 작았음)
         Vec3 face = PhantomArcher.faceOf(d);
         RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(g, d, -len * 0.15), d, face, len, 0.7, PhantomArcher.BLADE, PhantomArcher.GEM);
         b.pose(V.add(g, d, -len * 0.62), d, face, 3);

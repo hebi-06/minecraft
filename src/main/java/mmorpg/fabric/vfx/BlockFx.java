@@ -332,24 +332,57 @@ public final class BlockFx {
     // ------------------------------------------------------------ 불꽃
 
     /**
-     * 불꽃 3판 (발 foot · 높이 h — 2026-11-15 로컬 미리보기: 마름모 상자는 상자로 보였음): 세운 긴 상자 넷 (아래 넓은 겉 색 → 위 좁은 속 색 · 흰 심) 이
-     * 흔들리며 솟고 가늘어져 사라짐 (life 틱)
+     * 불꽃 4판 (발 foot · 높이 h): 혀 넷 (겉 색 크게 · 높이 솟음 → 뜨거운 색 → 속 색 → 흰 작게 · 낮게) 이 차례로 (0 · 1 · 2 · 2틱) 발밑에서 솟으며 돌고 고르게
+     * 작아짐 (2026-11-15 미리보기: 3판의 세운 기둥은 가늘어지며 막대처럼 보였음)
      */
     public static void flame(ServerLevel level, Vec3 foot, double h, double[] outer, double[] inner, int life) {
         int L = Math.max(4, life);
-        Vfx.Fx fx = RuneProps.fx(level, foot, L + 4);
+        Vfx.Fx fx = RuneProps.fx(level, foot, L + 6);
         double[] hot = {Math.min(1, outer[0] * 0.5 + inner[0] * 0.5), Math.min(1, outer[1] * 0.5 + inner[1] * 0.5), Math.min(1, outer[2] * 0.5 + inner[2] * 0.5)};
         double[][] cols = {outer, hot, inner, WHITE};
-        double[] wk = {0.3, 0.22, 0.14, 0.07}, hk = {0.55, 0.75, 0.9, 0.5}, y0 = {0.0, 0.12, 0.25, 0.15};
+        double[] sk = {0.42, 0.36, 0.28, 0.14}, rk = {1.15, 0.85, 0.6, 0.35};
+        int[] dl = {0, 1, 2, 2};
         for (int i = 0; i < 4; i++) {
-            double w = h * wk[i], hh = h * hk[i];
-            double yaw = Kit.rand() * Math.PI;
-            Quaternionf r = new Quaternionf().rotateY((float) yaw);
-            Quaternionf r2 = new Quaternionf().rotateY((float) (yaw + 0.9));
-            Vfx.Prop o = box(fx, V.up(foot, h * y0[i] + hh * 0.5), r, w, hh, w, cols[i]);
-            Vec3 sway = V.add(foot, new Vec3((Kit.rand() - 0.5) * h * 0.3, h * (y0[i] + 0.45) + hh * 0.5, (Kit.rand() - 0.5) * h * 0.3));
-            fx.on(1, () -> o.move(sway, L - 1).turn(r2, L - 1).stretch(0.0, hh * 1.3, 0.0, L - 1));
-            fx.on(L + 1, o::remove);
+            double[] col = cols[i];
+            double sz = h * sk[i];
+            int li = Math.max(3, L - dl[i]);
+            Quaternionf q0 = new Quaternionf().rotateXYZ(0.6F, (float) (Kit.rand() * Math.PI), 0.6F);
+            Quaternionf q1 = new Quaternionf(q0).rotateY(1.6F);
+            Vec3 top = V.add(foot, new Vec3((Kit.rand() - 0.5) * h * 0.35, h * rk[i], (Kit.rand() - 0.5) * h * 0.35));
+            fx.on(dl[i], () -> {
+                Vfx.Prop o = box(fx, V.up(foot, sz * 0.5), q0, sz * 0.4, sz * 0.4, sz * 0.4, col);
+                o.stretch(sz, sz, sz, 2).move(V.up(foot, sz * 0.7 + h * 0.1), 2);
+                fx.on(fx.age + 2, () -> o.move(top, li - 2).turn(q1, li - 2).stretch(0.0, 0.0, 0.0, li - 2));
+                fx.on(fx.age + li + 1, o::remove);
+            });
         }
+    }
+
+    /** 땅에 그은 줄 (a → b · 굵기 thick · 흰 심): grow 틱 동안 a 에서 b 로 뻗음 → hold 틱 → 4틱에 가늘어져 사라짐 (2026-11-15 소드 생추어리 마법진 육망성) */
+    public static void line(ServerLevel level, Vec3 a, Vec3 b, double thick, double[] color, int grow, int hold) {
+        Vec3 d = V.sub(b, a);
+        double len = V.len(d);
+        if (len < 0.05) return;
+        Vec3 y = V.scale(d, 1 / len);
+        Vec3 x = V.cross(y, V.UP);
+        if (V.len(x) < 1e-3) return;
+        Quaternionf rot = Vfx.basis(V.unit(x), y, V.UP); // 오른손 (x × y = 위) — 두께가 위아래
+        int G = Math.max(1, grow), H = Math.max(1, hold);
+        Vec3 mid = V.lerp(a, b, 0.5);
+        Vfx.Fx fx = RuneProps.fx(level, mid, G + H + 8);
+        Vfx.Prop o = box(fx, a, rot, thick, 0.05, thick * 0.3, color);
+        Vfx.Prop k = box(fx, V.up(a, 0.01), rot, thick * 0.3, 0.05, thick * 0.32, WHITE);
+        fx.on(1, () -> {
+            o.move(mid, G).stretch(thick, len, thick * 0.3, G);
+            k.move(V.up(mid, 0.01), G).stretch(thick * 0.3, len, thick * 0.32, G);
+        });
+        fx.on(1 + G + H, () -> {
+            o.stretch(0.0, len, 0.0, 4);
+            k.stretch(0.0, len, 0.0, 4);
+        });
+        fx.on(G + H + 6, () -> {
+            o.remove();
+            k.remove();
+        });
     }
 }

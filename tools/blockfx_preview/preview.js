@@ -246,19 +246,32 @@ const BlockFx = {
       at(t0 + L + 1, () => p.remove());
     }
   },
-  // 2026-11-15 불꽃 3판: 세운 긴 상자 넷 (아래 넓은 겉 색 → 위 좁은 속 색 · 흰 심) 이 흔들리며 솟고 가늘어짐 (y 축으로 늘인 기둥 — 마름모 상자는 상자로 보였음)
+  // 2026-11-15 불꽃 4판: 혀 넷 (겉 색 크게 · 높이 → 뜨거운 색 → 속 색 → 흰 작게 · 낮게) 이 차례로 (0 · 1 · 2 · 2틱) 발밑에서 솟으며 돌고 고르게 작아짐
+  // (3판의 세운 기둥은 가늘어지며 막대처럼 보였음)
   flame(foot, h, outer, inner, life) {
     const L = Math.max(4, life), t0 = NOW;
     const hot = [Math.min(1, outer[0] * 0.5 + inner[0] * 0.5), Math.min(1, outer[1] * 0.5 + inner[1] * 0.5), Math.min(1, outer[2] * 0.5 + inner[2] * 0.5)];
-    const layers = [[outer, 0.3, 0.55, 0.0], [hot, 0.22, 0.75, 0.12], [inner, 0.14, 0.9, 0.25], [WHITE, 0.07, 0.5, 0.15]];
-    for (const [col, wk, hk, y0] of layers) {
-      const w = h * wk, hh = h * hk, yaw = rand() * Math.PI;
-      const r = new THREE.Quaternion().setFromAxisAngle(UP, yaw);
-      const o = box(foot.clone().add(V3(0, h * y0 + hh * 0.5, 0)), r, w, hh, w, col);
-      const sway = V3((rand() - 0.5) * h * 0.3, h * (y0 + 0.45) + hh * 0.5, (rand() - 0.5) * h * 0.3);
-      at(t0 + 1, () => o.move(foot.clone().add(sway), L - 1).turn(new THREE.Quaternion().setFromAxisAngle(UP, yaw + 0.9), L - 1).stretch(0, hh * 1.3, 0, L - 1));
-      at(t0 + L + 1, () => o.remove());
+    const tongues = [[outer, 0.42, 1.15, 0], [hot, 0.36, 0.85, 1], [inner, 0.28, 0.6, 2], [WHITE, 0.14, 0.35, 2]];
+    for (const [col, sk, rk, dl] of tongues) {
+      const sz = h * sk, li = Math.max(3, L - dl), yaw = rand() * Math.PI;
+      const q0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.6, yaw, 0.6));
+      const q1 = q0.clone().multiply(new THREE.Quaternion().setFromAxisAngle(UP, 1.6));
+      const top = foot.clone().add(V3((rand() - 0.5) * h * 0.35, h * rk, (rand() - 0.5) * h * 0.35));
+      at(t0 + dl, () => {
+        const o = box(foot.clone().add(V3(0, sz * 0.5, 0)), q0, sz * 0.4, sz * 0.4, sz * 0.4, col);
+        o.stretch(sz, sz, sz, 2).move(foot.clone().add(V3(0, sz * 0.7 + h * 0.1, 0)), 2);
+        at(NOW + 2, () => o.move(top, li - 2).turn(q1, li - 2).stretch(0, 0, 0, li - 2));
+        at(NOW + li + 1, () => o.remove());
+      });
     }
+  },
+  // 2026-11-15 땅에 그은 줄 (a → b · 굵기 thick): grow 틱 동안 a 에서 b 로 뻗음 → hold 틱 → 4틱에 가늘어져 사라짐 (소드 생추어리 마법진 바큇살)
+  line(a, b, thick, color, grow, hold) {
+    const d = b.clone().sub(a), len = d.length(), rot = basis(d.clone().normalize().cross(UP).normalize(), d.clone().normalize(), UP.clone()), t0 = NOW; // 오른손 (x × y = z = 위)
+    const o = box(a, rot, thick, 0.05, thick * 0.3, color), k = box(a.clone().add(V3(0, 0.01, 0)), rot, thick * 0.3, 0.05, thick * 0.32, WHITE);
+    o.move(a.clone().lerp(b, 0.5), grow).stretch(thick, len, thick * 0.3, grow); k.move(a.clone().lerp(b, 0.5).add(V3(0, 0.01, 0)), grow).stretch(thick * 0.3, len, thick * 0.32, grow);
+    at(t0 + grow + hold, () => { o.stretch(0, len, 0, 4); k.stretch(0, len, 0, 4); });
+    at(t0 + grow + hold + 5, () => { o.remove(); k.remove(); });
   },
 };
 
@@ -503,12 +516,20 @@ const SCENES = {
         at(i, () => { BlockFx.ring(V3(c0.x, 0.06, c0.z), Math.max(0.5, ri - 1.8), ri, 30, 0.35, CRIMSON, 4); for (let qq = 0; qq < 8; qq++) { const a = rand() * 6.28; BlockFx.flame(V3(c0.x + Math.cos(a) * ri, 0, c0.z + Math.sin(a) * ri), 1.2 + rand() * 0.6, CRIMSON, FIRE_CORE, 9); } });
       }
       at(12, () => BlockFx.ringHold(V3(c0.x, 0.04, c0.z), R, 48, 0.32, CRIMSON, 4, 80));
+      if (q.get('circle') !== '0') { // 2026-11-15 마법진: 육망성 (세모 둘 · 반지름 0.97R) + 그 안쪽 고리 (0.485R) — 바큇살은 거미줄처럼 보였음
+        at(12, () => BlockFx.ringHold(V3(c0.x, 0.035, c0.z), R * 0.485, 30, 0.18, CRIMSON, 6, 76));
+        const rho = R * 0.97;
+        for (let tri = 0; tri < 2; tri++) for (let e = 0; e < 3; e++) at(12 + (tri * 3 + e) * 2, () => {
+          const a0 = Math.PI / 2 + tri * Math.PI / 3 + e * 2 * Math.PI / 3, a1 = a0 + 2 * Math.PI / 3;
+          BlockFx.line(V3(c0.x + Math.cos(a0) * rho, 0.03, c0.z + Math.sin(a0) * rho), V3(c0.x + Math.cos(a1) * rho, 0.03, c0.z + Math.sin(a1) * rho), 0.2, CRIMSON, 4, 70);
+        });
+      }
       for (let t = 12; t < 86; t += 6) at(t, () => { for (let qq = 0; qq < 10; qq++) { const a = rand() * 6.28; BlockFx.flame(V3(c0.x + Math.cos(a) * R, 0, c0.z + Math.sin(a) * R), 1.4 + rand() * 0.7, CRIMSON, FIRE_CORE, 11); } });
       const field = [];
       for (let i = 0; i < 36; i++) {
         const rad = R * Math.sqrt((i + 0.5) / 36) * 0.95;
         at(3 + Math.floor(rad / R * 12) + (i % 3), () => {
-          const a = rand() * 6.28, g = V3(c0.x + Math.cos(a) * rad, 0, c0.z + Math.sin(a) * rad), d = V3((rand() - 0.5) * 0.5, -1, (rand() - 0.5) * 0.5).normalize(), L = 1.8 + rand() * 0.8;
+          const a = rand() * 6.28, g = V3(c0.x + Math.cos(a) * rad, 0, c0.z + Math.sin(a) * rad), d = V3((rand() - 0.5) * 0.5, -1, (rand() - 0.5) * 0.5).normalize(), L = (q.get('big') === '1' ? 2.4 : 1.8) + rand() * 0.8;
           field.push(sword(g.clone().sub(d.clone().multiplyScalar(L * 0.62)), d, L, V3(Math.cos(a), 0, Math.sin(a))));
         });
       }
