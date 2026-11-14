@@ -934,6 +934,17 @@ final class VanillaProbe {
                     jobList(k.substring(4)); // 2026-11-12 직업 스킬 (job:<직업> = 다섯 칸 · job:<스킬 id> = 하나)
                     continue;
                 }
+                if (k.startsWith("jobfp:")) {
+                    // 2026-11-14 1인칭 화면 (곰 · 용 변신 — 쓴 사람의 눈): job:<…> 과 같고 사진기 카메라를 끔 (films/vanilla_jobfp_<스킬 id>)
+                    int before = FILM_RUNES.size();
+                    jobList(k.substring(6));
+                    for (int f = before; f < FILM_RUNES.size(); f++) FILM_RUNES.set(f, FILM_RUNES.get(f) + ":fp");
+                    continue;
+                }
+                if (k.startsWith("wp:")) {
+                    wpList(k.substring(3)); // 2026-11-14 무기 스킬 (wp:all · wp:<무기 종류> · wp:<스킬 id>)
+                    continue;
+                }
                 if (k.startsWith("motion:")) {
                     // 2026-11-13 뼈 몸 모션 (motion:<무기 종류> — 평타 연타 두 바퀴)
                     FILM_RUNES.add(k);
@@ -1026,6 +1037,10 @@ final class VanillaProbe {
         }
         if (FILM_RUNES.get(i).startsWith("job:")) {
             jobFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("wp:")) {
+            wpFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         if (FILM_RUNES.get(i).startsWith("motion:")) {
@@ -1298,6 +1313,8 @@ final class VanillaProbe {
             case "dragoon_tail" -> new double[] {7.5, 2.6, 1.4, 1.0};
             // 2026-11-13 워로드 3D 곰 (일어서면 4~5칸): 멀리 · 위를 봄 (CI 43442895567 카타클리즘 — 일어선 곰의 머리가 화면 위로 잘림)
             case "warlord_ult" -> new double[] {11.5, 3.4, 3.4, 0.4};
+            // 2026-11-14 나글파르 (입체 배 — 길이 10칸 남짓, 모드 없는 클라이언트에도): 멀리 · 위를 봄
+            case "necromancer_ult" -> new double[] {12.0, 3.6, 3.0, 0.4};
             case "warlord_hug" -> new double[] {8.5, 3.0, 2.2, 0.5};
             case "warlord_stomp" -> new double[] {8.5, 3.2, 2.2, 0.5};
             case "warlord_slumber" -> new double[] {9.5, 3.2, 2.6, 0.5};
@@ -1352,14 +1369,23 @@ final class VanillaProbe {
             SPAWNED.add(e);
         }
         String id = k.id();
-        String name = "vanilla_job_" + id;
+        boolean fp = a.length > 3 && a[3].equals("fp");
+        String name = (fp ? "vanilla_jobfp_" : "vanilla_job_") + id;
         int[] time = jobTime(j.id(), slot);
-        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
-        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
-        double[] cam = jobView(id);
-        // 모드 직업 영상 (RpgFilm) 과 같은 카메라: 보는 쪽에서 왼쪽 뒤 125° · 몸 앞 2.5칸을 봄
-        say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
-        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, cam[0], cam[1], cam[2], 2.5, cam[3]);
+        if (fp) {
+            // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임)
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
+            mmorpg.fabric.vfx.PBridge.filmCamOff(p);
+            say(p, "cam off");
+            say(p, "cam first");
+        } else {
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+            if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+            double[] cam = jobView(id);
+            // 모드 직업 영상 (RpgFilm) 과 같은 카메라: 보는 쪽에서 왼쪽 뒤 125° · 몸 앞 2.5칸을 봄
+            say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
+            mmorpg.fabric.vfx.PBridge.filmCam(p, 125, cam[0], cam[1], cam[2], 2.5, cam[3]);
+        }
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             jobPrepare(p, j, id, foes, y);
@@ -1392,6 +1418,135 @@ final class VanillaProbe {
                     Tasks.later(again, () -> log("film " + name + " again " + mmorpg.fabric.job.JobSkills.press(p, slot)));
                 }
                 if (time[1] > 0) Tasks.later(time[0], () -> jobBasic(p, j, foes));
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    // ------------------------------------------------------------ 2026-11-14 무기 스킬 영상 (VFILM wp:all · wp:<무기 종류> · wp:<스킬 id>)
+
+    /**
+     * 무기 스킬 영상의 장 수 (쓰기 전 3 + 끝 + 8 — 모드 영상 RpgSkillGallery.CASES 의 total 둘레, 없는 것은 초월 2번 100 · 그 밖 70)
+     */
+    private static final java.util.Map<String, Integer> WP_TIMES = java.util.Map.ofEntries(java.util.Map.entry("gram_charge", 44),
+            java.util.Map.entry("gram_descent", 64), java.util.Map.entry("solas_rush", 54), java.util.Map.entry("solas_halo", 78),
+            java.util.Map.entry("ygg_seed", 58), java.util.Map.entry("ygg_tree", 92), java.util.Map.entry("svalinn_charge", 54),
+            java.util.Map.entry("svalinn_dome", 120), java.util.Map.entry("artemis_pierce", 50), java.util.Map.entry("artemis_moon", 88),
+            java.util.Map.entry("odin_ravens", 72), java.util.Map.entry("odin_eye", 90), java.util.Map.entry("tyrfing_fire", 54),
+            java.util.Map.entry("tyrfing_waking", 104));
+
+    /** 무기 스킬 영상의 카메라 {거리, 높이, 보는 높이, 따라가는 몫} — 큰 하늘 물체 (세계수 · 오딘의 눈 · 작은 태양 · 먹구름) 는 멀리 · 위를 봄 */
+    private static double[] wpView(String skill) {
+        return switch (skill) {
+            case "ygg_tree", "odin_eye", "apollo_sun", "apollo_sanctuary", "mjolnir_storm", "gungnir_fall", "kronos_clock", "svalinn_dome", "artemis_moon",
+                    "tyrfing_waking" -> new double[] {11.0, 4.0, 3.2, 0.4};
+            default -> new double[] {8.6, 3.4, 1.9, 0.6};
+        };
+    }
+
+    /** 그 무기 종류 · 등급의 스킬이 있는 무기 아이템 (40렙부터 둘레 레벨을 찾음 — 12단계 무기는 정한 레벨만) */
+    private static String wpItem(String type, String grade) {
+        for (int lv : new int[] {40, 50, 45, 35, 30, 60, 20}) {
+            String id = mmorpg.core.Weapons.weaponId(type, lv, grade);
+            mmorpg.core.Weapon w = mmorpg.core.Weapons.parseWeapon(id);
+            if (w != null && w.skills() != null && !w.skills().isEmpty()) return id;
+        }
+        return null;
+    }
+
+    /** what = all · 무기 종류 · 스킬 id → 영상 목록 (wp:&lt;무기 아이템&gt;:&lt;스킬 번호&gt;) */
+    private static void wpList(String what) {
+        int n = 0;
+        for (String type : mmorpg.core.Weapons.allTypes()) {
+            for (String g : new String[] {"transcend", "hero"}) {
+                String item = wpItem(type, g);
+                if (item == null) continue;
+                mmorpg.core.Weapon w = mmorpg.core.Weapons.parseWeapon(item);
+                for (int i = 0; i < w.skills().size(); i++) {
+                    String sid = w.skills().get(i).str("id");
+                    if (!(what.equals("all") || what.equals(type) || what.equals(sid))) continue;
+                    FILM_RUNES.add("wp:" + item + ":" + i);
+                    FILM_FRAMES.add(WP_TIMES.getOrDefault(sid, g.equals("transcend") && i == 1 ? 100 : 70));
+                    n++;
+                }
+            }
+        }
+        if (n == 0) log("film list: no weapon skill '" + what + "'");
+    }
+
+    /**
+     * 무기 스킬 하나 (모드 없는 클라이언트 — films/vanilla_wp_&lt;스킬 id&gt;): 집으로 · 그 무기 (1번 칸) · 과녁 여섯 (직업 영상과 같음) → 30틱 뒤 영상 시작 →
+     * 3틱 뒤 Transcend.castSkill (우클릭 · Shift + 우클릭과 같은 길). 셈 wpcensus: 글자 표시 · 카드 · 입체 모델 · 무기 모델 · 버림 · 가장 많이 떠 있던 수
+     */
+    private static void wpFilm(ServerPlayer p, int step, String entry, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        int cut = entry.lastIndexOf(':');
+        String item = entry.substring(3, cut);
+        int index = Integer.parseInt(entry.substring(cut + 1));
+        mmorpg.core.Weapon wd = mmorpg.core.Weapons.parseWeapon(item);
+        if (wd == null || wd.skills() == null || index >= wd.skills().size()) {
+            check("film weapon " + entry, false);
+            Tasks.later(2, () -> film(p, step + 1));
+            return;
+        }
+        String sid = wd.skills().get(index).str("id");
+        run(server, "tick rate 20");
+        clearStrays(server);
+        mmorpg.fabric.rune.RuneKit.filmReset(p);
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
+        run(server, "item replace entity " + NAME + " hotbar.0 with " + item);
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        mmorpg.fabric.skill.Transcend.resetCooldowns(p);
+        mmorpg.fabric.RpgHealth.healFull(p);
+        for (double[] t : JOB_TARGETS) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                m.setHealth(m.getMaxHealth());
+            }
+            SPAWNED.add(e);
+        }
+        String name = "vanilla_wp_" + sid;
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+        double[] cam = wpView(sid);
+        say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
+        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, cam[0], cam[1], cam[2], 2.5, cam[3]);
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            Tasks.later(3, () -> {
+                java.util.Map<String, Integer> seen0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.PBridge.SEEN);
+                int[] c0 = {mmorpg.fabric.vfx.PBridge.made, mmorpg.fabric.vfx.PBridge.dusts, mmorpg.fabric.vfx.PBridge.dropped, mmorpg.fabric.vfx.PBridge.noGlyph,
+                        mmorpg.fabric.vfx.PBridge.cards, mmorpg.fabric.vfx.PBridge.solidsMade, mmorpg.fabric.vfx.PBridge.weaponsMade,
+                        mmorpg.fabric.vfx.PBridge.solidsDropped};
+                int[] peak = {0, 0};
+                for (int t = 1; t <= frames; t++) {
+                    Tasks.later(t, () -> {
+                        peak[0] = Math.max(peak[0], mmorpg.fabric.vfx.PBridge.live());
+                        peak[1] = Math.max(peak[1], mmorpg.fabric.vfx.PBridge.solidLive());
+                    });
+                }
+                Tasks.later(frames + 1, () -> {
+                    StringBuilder sb = new StringBuilder();
+                    for (var e : mmorpg.fabric.vfx.PBridge.SEEN.entrySet()) {
+                        int d = e.getValue() - seen0.getOrDefault(e.getKey(), 0);
+                        if (d > 0) sb.append(e.getKey().replace("rpg:", "")).append('=').append(d).append(' ');
+                    }
+                    log("wpcensus " + name + " made " + (mmorpg.fabric.vfx.PBridge.made - c0[0]) + " dust " + (mmorpg.fabric.vfx.PBridge.dusts - c0[1]) + " dropped "
+                            + (mmorpg.fabric.vfx.PBridge.dropped - c0[2]) + " noGlyph " + (mmorpg.fabric.vfx.PBridge.noGlyph - c0[3]) + " cards "
+                            + (mmorpg.fabric.vfx.PBridge.cards - c0[4]) + " solids " + (mmorpg.fabric.vfx.PBridge.solidsMade - c0[5]) + " weapons "
+                            + (mmorpg.fabric.vfx.PBridge.weaponsMade - c0[6]) + " solidDropped " + (mmorpg.fabric.vfx.PBridge.solidsDropped - c0[7]) + " peak "
+                            + peak[0] + " solidPeak " + peak[1] + " | " + sb.toString().trim());
+                });
+                mmorpg.core.Weapon w = mmorpg.fabric.RpgCombat.weaponOf(p.getMainHandItem());
+                boolean ok = w != null && mmorpg.fabric.skill.Transcend.castSkill(p, w, index);
+                check("film cast " + name, ok);
+                log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active());
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });

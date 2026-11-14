@@ -109,6 +109,81 @@ public final class PDefs {
         }
     }
 
+    /**
+     * 2026-11-14 입체 효과 모델 (tools/vfx_solids.py — mmorpg/vfx_solids.json): 모드 FxModels 의 면 모델을 부분마다 자바 아이템 모델로 옮긴 것.
+     * 부분 = 아이템 모델 (rpg:fx3d/&lt;모델&gt;_&lt;번호&gt;) · 가운데 c (모델 칸 · 블록 — 아이템 모델의 (8, 8, 8)) · 배율 k (1 블록 = k 칸) · 쥔 점 (움직임의 pivot)
+     */
+    record SolidPart(String name, String item, float cx, float cy, float cz, float k, float px, float py, float pz) {}
+
+    /** 부분 움직임의 열쇠 (client FxModels.Track — [t, x, y, z] · scale 은 [t, s]) */
+    record Track(float[][] rot, float[][] pos, float[][] scale) {}
+
+    record SolidAnim(double len, Map<String, Track> tracks) {}
+
+    record SolidDef(String name, List<SolidPart> parts, Map<String, SolidAnim> anims, float[][] glow, boolean emissive, boolean upright) {}
+
+    private static final Map<String, SolidDef> SOLIDS = new HashMap<>();
+    /** 빛 무리 (입체 모델의 glow — 모드는 더하는 빛 부채꼴) 를 그리는 글자 (rfx_bloom 판 · 없으면 −1) · 글자 너비 */
+    static int haloGlyph = -1;
+    static int haloAdv = 65;
+
+    static SolidDef solid(String model) {
+        return SOLIDS.get(model);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static float[][] keys(Object o) {
+        if (!(o instanceof List<?> l) || l.isEmpty()) return null;
+        float[][] out = new float[l.size()][];
+        for (int i = 0; i < out.length; i++) {
+            List<?> k = (List<?>) l.get(i);
+            out[i] = new float[k.size()];
+            for (int j = 0; j < k.size(); j++) out[i][j] = (float) dbl(k.get(j));
+        }
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void loadSolids() {
+        Map<String, Object> root;
+        try (InputStream in = PDefs.class.getResourceAsStream("/mmorpg/vfx_solids.json")) {
+            if (in == null) return;
+            root = Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException | RuntimeException e) {
+            Mmorpg.LOG.warn("[vfx] solid models: {}", e.toString());
+            return;
+        }
+        if (!(root.get("models") instanceof Map<?, ?> models)) return;
+        for (Map.Entry<?, ?> e : models.entrySet()) {
+            Map<String, Object> m = (Map<String, Object>) e.getValue();
+            List<SolidPart> parts = new java.util.ArrayList<>();
+            for (Object po : (List<?>) m.get("parts")) {
+                Map<String, Object> p = (Map<String, Object>) po;
+                List<?> pv = (List<?>) p.get("pivot");
+                List<?> c = (List<?>) p.get("c");
+                parts.add(new SolidPart((String) p.get("name"), (String) p.get("item"), c == null ? 0F : (float) dbl(c.get(0)), c == null ? 0F : (float) dbl(c.get(1)),
+                        c == null ? 0F : (float) dbl(c.get(2)), (float) num(p.get("k"), 16), (float) dbl(pv.get(0)), (float) dbl(pv.get(1)), (float) dbl(pv.get(2))));
+            }
+            Map<String, SolidAnim> anims = new HashMap<>();
+            if (m.get("anims") instanceof Map<?, ?> am) {
+                for (Map.Entry<?, ?> a : am.entrySet()) {
+                    Map<String, Object> ad = (Map<String, Object>) a.getValue();
+                    Map<String, Track> tracks = new HashMap<>();
+                    if (ad.get("tracks") instanceof Map<?, ?> tm) {
+                        for (Map.Entry<?, ?> t : tm.entrySet()) {
+                            Map<String, Object> to = (Map<String, Object>) t.getValue();
+                            tracks.put((String) t.getKey(), new Track(keys(to.get("rot")), keys(to.get("pos")), keys(to.get("scale"))));
+                        }
+                    }
+                    anims.put((String) a.getKey(), new SolidAnim(Math.max(0.01, num(ad.get("len"), 1)), tracks));
+                }
+            }
+            float[][] glow = keys(m.get("glow"));
+            SOLIDS.put((String) e.getKey(), new SolidDef((String) e.getKey(), parts, anims, glow == null ? new float[0][] : glow,
+                    Boolean.TRUE.equals(m.get("emissive")), Boolean.TRUE.equals(m.get("upright"))));
+        }
+    }
+
     /** 파티클 하나의 정의 */
     static final class Def {
         String id;
@@ -244,6 +319,12 @@ public final class PDefs {
         if (glyphs.get("cardBill") instanceof List<?> bl) {
             for (Object b : bl) BILL.add((String) b);
         }
+        Sheet halo = sheets.get("fx_rfx_bloom_256x256");
+        if (halo != null) {
+            haloGlyph = halo.first();
+            haloAdv = halo.adv();
+        }
+        loadSolids();
         String text;
         try (InputStream in = PDefs.class.getResourceAsStream("/assets/mmorpg/addon_particles.json")) {
             if (in == null) throw new IOException("missing addon_particles.json");
@@ -272,7 +353,7 @@ public final class PDefs {
         defs = out;
         loaded = ok;
         withGlyph = g;
-        Mmorpg.LOG.info("[vfx] particle bridge: {} defs, {} with glyphs, {} cards", ok, g, CARDS.size());
+        Mmorpg.LOG.info("[vfx] particle bridge: {} defs, {} with glyphs, {} cards, {} solid models", ok, g, CARDS.size(), SOLIDS.size());
     }
 
     private static int num(Object o) {

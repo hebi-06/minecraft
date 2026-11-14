@@ -450,6 +450,19 @@ public final class VanillaCosmetics {
         };
     }
 
+    /**
+     * 2026-11-14 효과의 무기 모델 (모드 없는 클라이언트 — Fx3d item:&lt;무기&gt;, vfx.PBridge.Solid): 종이 + 그 무기의 아이템 모델 (rpg:&lt;무기&gt; — 손에 든 것과 같은 모델) ·
+     * 주인 (owner) 의 무기 스킨 (모드 클라이언트 FxModels 와 같게). 없는 아이템이면 null
+     */
+    public static ItemStack effectStack(net.minecraft.resources.Identifier itemId, Entity owner) {
+        if (itemId == null || !BuiltInRegistries.ITEM.containsKey(itemId)) return null;
+        ItemStack out = new ItemStack(net.minecraft.world.item.Items.PAPER);
+        out.set(DataComponents.ITEM_MODEL, itemId);
+        String skin = lookOf(owner).weaponSkin(weaponType(BuiltInRegistries.ITEM.getValue(itemId)));
+        if (skin != null && SKINS.contains(skin)) out.set(DataComponents.CUSTOM_MODEL_DATA, cmd(skin));
+        return out;
+    }
+
     static String weaponType(Item item) {
         return TYPES.computeIfAbsent(item, it -> {
             Weapon w = Weapons.parseWeapon(BuiltInRegistries.ITEM.getKey(it).toString());
