@@ -1159,7 +1159,7 @@ final class VanillaProbe {
             java.util.Map.entry("guardian", "14 16 30 24a3 180"),
             java.util.Map.entry("swordmaster", "28 26 36 26a3 52"),
             java.util.Map.entry("bloodknight", "42 18 46 26a3 52"),
-            java.util.Map.entry("warlord", "46 56 28 36 50"),
+            java.util.Map.entry("warlord", "46 64 36 48 56"), // 2026-11-14 곰 변신: 사람으로 돌아오는 것까지 (끝 + BearForm.LINGER)
             java.util.Map.entry("frostraider", "34 26 42 26a3 66"),
             java.util.Map.entry("arcaneblade", "28 22 32 30 48"),
             java.util.Map.entry("elementalblade", "30 22 50 20a4 86"),

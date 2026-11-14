@@ -110,6 +110,7 @@ final class WarlordSkills {
     }
 
     static void register() {
+        BearForm.init(); // 2026-11-14 곰 변신 (하이버네이트 · 그리즐리 크러시 · 베어 스톰프 · 카타클리즘)
         JobSystem.register(REND, WarlordSkills::rend);
         JobSystem.register(SLUMBER, WarlordSkills::slumber);
         JobSystem.register("warlord_hug", WarlordSkills::hug);
@@ -177,6 +178,7 @@ final class WarlordSkills {
      * 갈라진 땅에서 돌창 (rfx_jspike) 이 솟아 맞은 적을 띄움 (lift)
      */
     static boolean rend(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        BearForm.drop(sp); // 2026-11-14 대지 가르기는 사람의 도끼 — 곰이면 바로 사람으로
         int charge = Math.max(8, (int) k.num("charge", 24));
         if (JobRecast.stage(sp, k.id()) >= 1) {
             Charge c = CHARGES.get(sp.getUUID());
@@ -320,39 +322,53 @@ final class WarlordSkills {
         Vec3 c0 = sp.position();
         Vec3 f0 = Kit.facingOf(sp);
         Vec3 r0 = V.rightOf(f0);
-        // 2026-11-13 곰의 혼 (3D — 사용자 "곰과 땅 연출을 3d로"): 오른쪽 곁 (2.4칸) 땅에서 솟아 엎드려 웅크림 (curl — 깊은 숨) → dur − 15 에 깨어나 일어서고
-        // (wake) → dur 에 두 앞발로 내리찍음 (slam — 닿는 때가 깨어남의 피해 틱) → 흩어짐. 굴은 3D 돌창 다섯 (곰이 엎드린 오른쪽은 비움)
-        Vec3 bAt = ground(level, V.add(V.add(c0, r0, 2.4), f0, -0.3));
-        RuneMob b = bear(level, bAt, f0, dur + 30, 0.5);
-        if (b != null) {
-            b.hold("curl");
-            growBear(b, 1.35, 4);
-            bearAnim(b, dur - BEAR_SLAM_AT - BEAR_WAKE, "wake", true);
-            bearAnim(b, dur - BEAR_SLAM_AT, "slam", false);
-            bearLeave(b, dur + 9);
+        // 2026-11-14 곰으로 변신 (사용자 직업 도감 메모 "곰으로 변해서 때리는걸로" — 예전: 오른쪽 곁의 땅에서 솟은 곰의 혼): 그 자리에서 곰이 되어 엎드려
+        // 웅크림 (curl — 깊은 숨) → dur − 15 에 깨어나 일어서고 (wake) → dur 에 두 앞발로 내리찍음 (slam — 닿는 때가 깨어남의 피해 틱) → 사람으로.
+        // 곰이 못 서면 예전 곰의 혼 (곁) · 2D 곰
+        BearForm.Use u = BearForm.begin(sp, j, dur + 30);
+        RuneMob b = null;
+        if (u != null) {
+            BearForm.hold(sp, u, "curl");
+            BearForm.animLater(sp, u, dur - BEAR_SLAM_AT - BEAR_WAKE, "wake", true);
+            BearForm.animLater(sp, u, dur - BEAR_SLAM_AT, "slam", false);
+            BearForm.endLater(sp, u, dur + 6, BearForm.LINGER);
+        } else {
+            b = bear(level, ground(level, V.add(V.add(c0, r0, 2.4), f0, -0.3)), f0, dur + 30, 0.5);
+            if (b != null) {
+                b.hold("curl");
+                growBear(b, 1.35, 4);
+                bearAnim(b, dur - BEAR_SLAM_AT - BEAR_WAKE, "wake", true);
+                bearAnim(b, dur - BEAR_SLAM_AT, "slam", false);
+                bearLeave(b, dur + 9);
+            }
         }
-        // 굴: 앞 · 왼쪽 · 뒤 1.5칸에 3D 돌창 다섯이 솟아 dur 동안 서 있음 (금 사이 호박빛)
-        for (int i = 0; i < 5; i++) {
-            double a = Math.toRadians(-160 + i * 50);
+        // 굴: 곰 둘레 (곰 가운데에서 2.3칸 — 곰이 아니면 몸 둘레 1.5칸, 곁의 곰 쪽은 비움) 에 3D 돌창이 솟아 dur 동안 서 있음 (금 사이 호박빛)
+        Vec3 den = u != null ? V.add(c0, f0, (BearForm.AHEAD + 0.5) * BearForm.SCALE) : c0; // 곰 가운데 (다 자란 크기)
+        int nSpike = u != null ? 7 : 5;
+        for (int i = 0; i < nSpike; i++) {
+            double a = Math.toRadians(u != null ? i * 360.0 / nSpike + 20 : -160 + i * 50);
             Vec3 d = V.add(V.scale(f0, Math.cos(a)), r0, Math.sin(a));
-            spike3d(level, ground(level, V.add(c0, d, 1.5)), 0.75, 0.2, dur / 20.0 - 0.2, JobKit.glow(j));
+            spike3d(level, ground(level, V.add(den, d, u != null ? 2.3 : 1.5)), 0.75, 0.2, dur / 20.0 - 0.2, JobKit.glow(j));
         }
         JobFx.ring(level, V.up(c0, 0.06), 2.0, j, false, 0.5, Opt.empty());
         SkillFx.sparks(level, V.up(c0, 0.2), DUST, 12, 3);
         SkillFx.play(level, "entity.polar_bear.ambient_baby", c0, 0.6, 0.8);
         SkillFx.play(level, "block.rooted_dirt.place", c0, 0.6, 1.0);
         // 숨 (8틱마다 흙먼지 · 낮은 숨소리 — 곰이 없으면 예전 2D 웅크린 곰)
+        RuneMob bb = b;
         for (int t = 2; t < dur; t += 8) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                if (b == null) {
+                if (u != null) {
+                    SkillFx.sparks(lv, BearForm.at(sp, u, 1.7, 0.35), DUST, 3, 1.2); // 웅크린 곰의 코 앞
+                } else if (bb == null) {
                     Vec3 back = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.3), 1.1);
                     JobFx.bear(lv, back, 1.45, 0.46, 3, 4, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.5, "coreAlpha", 0.85),
                             JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
-                } else if (b.alive()) {
-                    SkillFx.sparks(lv, V.up(V.add(b.pos(), b.forward(), 2.0), 0.3), DUST, 3, 1.2);
+                } else if (bb.alive()) {
+                    SkillFx.sparks(lv, V.up(V.add(bb.pos(), bb.forward(), 2.0), 0.3), DUST, 3, 1.2);
                 }
                 SkillFx.sparks(lv, V.up(sp.position(), 0.15), DUST, 4, 1.6);
                 if (tt % 16 == 2) SkillFx.play(lv, "entity.polar_bear.ambient", sp.position(), 0.5, 0.5);
@@ -360,18 +376,21 @@ final class WarlordSkills {
         }
         RuneKit.later(dur, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            wake(sp, j, k, P, life, b);
+            wake(sp, j, k, P, life, bb, u);
         });
         return true;
     }
 
-    /** 깨어남: 둘레 radius 칸 터짐 (total · 밀쳐냄) — 돌창이 바깥으로 솟고 · 땅이 갈라지고 · 곰이 포효 (3D 곰 b 가 내리찍는 때 — 없으면 2D 곰) */
-    private static void wake(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, String life, RuneMob b) {
+    /**
+     * 깨어남: 둘레 radius 칸 터짐 (total · 밀쳐냄) — 돌창이 바깥으로 솟고 · 땅이 갈라지고 · 곰이 포효 (변신한 곰 u · 곁의 3D 곰 b 가 내리찍는 때 — 둘 다 없으면 2D 곰).
+     * 2026-11-14 변신한 곰이면 두 앞발이 닿는 자리 (곰 앞) 에 내리찍는 그림
+     */
+    private static void wake(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, String life, RuneMob b, BearForm.Use u) {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         Vec3 g = ground(level, c);
         double r = k.num("radius", 4.5);
-        slamFx(sp, j, g, r, 1.4);
+        slamFx(sp, j, u != null ? ground(level, BearForm.at(sp, u, 1.3, 0)) : g, r, 1.4);
         JobFx.ring(level, V.up(g, 0.08), r, j, false, 0.45, Opt.of("alpha", 1.0));
         SkillFx.shock(level, V.up(g, 0.1), JobFx.inner(j), r, 0.5);
         for (int i = 0; i < 8; i++) {
@@ -385,8 +404,8 @@ final class WarlordSkills {
             rift(level, g, d, r, JobKit.glow(j), 0.8, 30);
         }
         boulders(level, g, Kit.facingOf(sp), 7, 1.4, 2.8, 0.5, 0.85, 3.0, JobKit.glow(j)); // 2026-11-13 굴이 무너지며 3D 바위가 튐
-        if (b == null) JobFx.bear(level, V.up(V.add(c, Kit.facingOf(sp), -0.5), 1.8), 2.2, 0.8, 3, 5, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp),
-                "alpha", 0.9), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
+        if (b == null && u == null) JobFx.bear(level, V.up(V.add(c, Kit.facingOf(sp), -0.5), 1.8), 2.2, 0.8, 3, 5, false, JobFx.hide1p(sp).with("vel",
+                RuneKit.bodyVel(sp), "alpha", 0.9), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         JobFx.eyeRing(sp, j, 2.3, 1.1, 0.45);
         SkillFx.play(level, "entity.polar_bear.warning", c, 0.6, 1.3);
         SkillFx.play(level, "mob.ravager.roar", c, 0.9, 0.8);
@@ -423,9 +442,17 @@ final class WarlordSkills {
         }
         boolean both = !left.isEmpty() && !right.isEmpty();
         RpgCombat.setSteadfast(sp, slamAt + 6);
-        // 2026-11-13 곰의 혼 (3D — 사용자 "곰과 땅 연출을 3d로"): 끌어모을 자리 너머 (2.2칸) 땅에서 솟아 일어서며 두 팔을 활짝 (rise_wide) → pullAt 에 두 팔로
-        // 앞 가운데를 휩쓸어 껴안음 (hug — 적이 끌려옴) → slamAt 에 모은 자리를 내리찍음 (hugslam) → 흩어짐. 못 세우면 예전 2D 앞발 · 곰
-        RuneMob b = bear(level, ground(level, V.add(gather, f, 2.4)), V.scale(f, -1), slamAt + 40, 1.8); // 1.5 → 1.8 (영상에서 내리찍은 뒤 적 무리에 가렸음)
+        // 2026-11-14 곰으로 변신 (사용자 "곰으로 변해서 때리는걸로" — 예전: 끌어모을 자리 너머에서 솟은 곰의 혼): 그 자리에서 곰이 되어 일어서며 두 팔을
+        // 활짝 (rise_wide) → pullAt 에 두 팔로 앞 가운데를 휩쓸어 껴안음 (hug — 적이 끌려옴) → slamAt 에 모은 자리를 내리찍음 (hugslam) → 사람으로.
+        // 곰이 못 서면 예전 곰의 혼 · 2D 앞발
+        BearForm.Use u = BearForm.begin(sp, j, slamAt + 30);
+        if (u != null) {
+            BearForm.hold(sp, u, "rise_wide");
+            BearForm.animLater(sp, u, pullAt, "hug", true);
+            BearForm.animLater(sp, u, slamAt - BEAR_SLAM_AT, "hugslam", false);
+            BearForm.endLater(sp, u, slamAt + 6, BearForm.LINGER);
+        }
+        RuneMob b = u != null ? null : bear(level, ground(level, V.add(gather, f, 2.4)), V.scale(f, -1), slamAt + 40, 1.8);
         if (b != null) {
             bearAnim(b, 0, "rise_wide", true);
             bearAnim(b, pullAt, "hug", true);
@@ -436,7 +463,7 @@ final class WarlordSkills {
         }
         // 앞발 둘 (곰이 없을 때만 — 3인칭 · 다른 사람): 양옆 4칸 위에서 가운데로 휩쓸어 모임 · 1인칭: 눈앞 양옆에서
         double life0 = (pullAt + pullTicks) / 20.0;
-        for (int s = b != null ? 3 : -1; s <= 1; s += 2) {
+        for (int s = b != null || u != null ? 3 : -1; s <= 1; s += 2) {
             Vec3 from = V.up(V.add(V.add(c, r, 4.2 * s), f, 1.2), 1.6);
             Vec3 to = V.up(V.add(gather, r, 0.6 * s), 1.1);
             Vec3 dir = V.unit(V.sub(to, from));
@@ -452,8 +479,8 @@ final class WarlordSkills {
                     s * 70.0, "vel", RuneKit.bodyVel(sp)), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         }
         // 곰의 혼은 끌어모으는 자리 위 (3인칭 뒤 카메라와 몸 사이에 두면 화면을 덮음 — 영상 1) — 3D 곰이 없을 때만
-        if (b == null) JobFx.bear(level, V.up(V.add(c, f, 1.8), 3.0), 2.0, (slamAt + 6) / 20.0, 0, JobFx.BEAR - 1, false, JobFx.hide1p(sp).with("vel",
-                RuneKit.bodyVel(sp), "alpha", 0.8), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
+        if (b == null && u == null) JobFx.bear(level, V.up(V.add(c, f, 1.8), 3.0), 2.0, (slamAt + 6) / 20.0, 0, JobFx.BEAR - 1, false, JobFx.hide1p(sp).with(
+                "vel", RuneKit.bodyVel(sp), "alpha", 0.8), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         SkillFx.play(level, "entity.polar_bear.warning", c, 0.8, 1.0);
         SkillFx.play(level, "item.trident.riptide_1", c, 0.7, 0.8);
         // 끌어옴 (pullAt ~ pullAt + pullTicks): 왼쪽 무리는 가운데 왼쪽으로 · 오른쪽 무리는 오른쪽으로 (부딪히는 자리) — 끌리는 땅의 흙먼지
@@ -573,10 +600,19 @@ final class WarlordSkills {
         double[] bc = JobTraits6.bearCore(j);
         // 2026-11-13 곰의 혼 (3D — 사용자 "곰과 땅 연출을 3d로"): 오른쪽 곁 (2.4칸) 땅에서 솟음 (summon) → leapAt 에 함께 뛰어올라 일어선 채 (rear) 내려설 자리
         // 오른쪽으로 날아감 → landAt 에 두 앞발로 내리찍음 (slam) → afterAt 앞에 으르렁 (growl) → 흩어짐. 못 세우면 예전 2D 곰
+        // 2026-11-14 곰으로 변신 (사용자 "곰으로 변해서 때리는걸로" — 예전: 곁에서 솟아 함께 날아간 곰의 혼): 그 자리에서 곰이 되어 웅크렸다가 leapAt 에
+        // 일어선 채 (rear) 함께 뛰어오름 (사람의 뛰어오름을 따라감) → landAt 에 두 앞발로 내리찍음 (slam) → afterAt 앞에 으르렁 (growl) → 사람으로
+        BearForm.Use u = BearForm.begin(sp, j, afterAt + 20);
+        if (u != null) {
+            BearForm.animLater(sp, u, leapAt, "rear", true);
+            BearForm.animLater(sp, u, landAt - BEAR_SLAM_AT, "slam", false);
+            BearForm.animLater(sp, u, afterAt - 6, "growl", false);
+            BearForm.endLater(sp, u, afterAt + 4, BearForm.LINGER);
+        }
         Vec3 r0 = V.rightOf(f);
         Vec3 bFrom = ground(level0, V.add(c0, r0, 2.4));
         Vec3 bLand = ground(level0, V.add(V.add(dest, r0, 2.4), f, -0.4));
-        RuneMob b = bear(level0, bFrom, f, afterAt + 40, 0.5);
+        RuneMob b = u != null ? null : bear(level0, bFrom, f, afterAt + 40, 0.5);
         if (b != null) {
             growBear(b, 1.5, Math.max(2, leapAt));
             bearAnim(b, leapAt, "rear", true);
@@ -590,9 +626,9 @@ final class WarlordSkills {
             bearLeave(b, afterAt + 6);
         }
         // 웅크림: 등 뒤에 곰의 혼이 모임 (3D 곰이 없을 때만) · 도끼에 빛 · 발밑 흙먼지
-        if (b == null) JobFx.bear(level0, V.up(V.add(c0, f, -0.9), 2.2), 1.6, (leapAt + 3) / 20.0, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.75, "coreAlpha", 0.95),
-                bg, bc);
-        JobFx.charge(sp, j, new Vec3(0.0, 2.2, -0.2), leapAt + 1, 0.9);
+        if (b == null && u == null) JobFx.bear(level0, V.up(V.add(c0, f, -0.9), 2.2), 1.6, (leapAt + 3) / 20.0, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.75,
+                "coreAlpha", 0.95), bg, bc);
+        if (u == null) JobFx.charge(sp, j, new Vec3(0.0, 2.2, -0.2), leapAt + 1, 0.9);
         SkillFx.sparks(level0, V.up(c0, 0.2), DUST, 10, 3.0);
         SkillFx.play(level0, "mob.polarbear.warning", c0, 0.6, 1.0);
         // 뛰어오름 (포물선) — 내려찍을 자리 땅의 곰 발자국 고리 (경고)
@@ -608,14 +644,14 @@ final class WarlordSkills {
         // 거대한 곰의 혼이 자리 위 하늘에서 함께 내려옴 (포효 · 앞발을 든 채) — 3D 곰이 없을 때만
         int fall = Math.max(4, landAt - leapAt - 4);
         RuneKit.later(leapAt + 4, () -> {
-            if (!RuneKit.sameLife(sp, life) || b != null) return;
+            if (!RuneKit.sameLife(sp, life) || b != null || u != null) return;
             double h0 = 7.5;
             double h1 = 2.6;
             JobFx.bear(sp.level(), V.up(dest, h0), 3.2, fall / 20.0 + 0.1, 3, 4, true, Opt.of("vel", new Vec3(0, -(h0 - h1) / (fall / 20.0), 0), "alpha", 0.8, "coreAlpha",
                     1.0, "fade", 0.1), bg, bc);
         });
         RuneKit.later(landAt, () -> {
-            if (RuneKit.sameLife(sp, life)) stompLand(sp, j, k, P, dest, life, b != null);
+            if (RuneKit.sameLife(sp, life)) stompLand(sp, j, k, P, dest, life, b != null || u != null);
         });
         RuneKit.later(afterAt, () -> {
             if (RuneKit.sameLife(sp, life)) stompAfter(sp, j, k, P, dest, life);
@@ -701,13 +737,24 @@ final class WarlordSkills {
         // 2026-11-13 곰의 혼 (3D — 사용자 "곰과 땅 연출을 3d로", 크기 2): 오른쪽 앞 곁 (오른쪽 2.8 · 앞 0.8칸) 땅에서 솟아 (4틱) 일어서며 하늘로 포효 (roar) →
         // 한 바퀴 휘두르는 때 (windup) 에 두 앞발로 땅을 내리찍음 (roarslam) → 흩어짐. 못 세우면 예전 2D 곰 (앞 2.6칸 위 — 몸 뒤에 두면 3인칭 카메라를 덮음)
         Vec3 f0 = Kit.facingOf(sp);
-        RuneMob b = bear(level0, ground(level0, V.add(V.add(c0, V.rightOf(f0), 2.8), f0, 0.8)), f0, windup + 50, 0.6);
+        // 2026-11-14 곰으로 변신 (사용자 "곰으로 변해서 때리기" — 예전: 오른쪽 앞 곁에서 솟은 크기 2 의 곰의 혼): 그 자리에서 곰이 되어 커지며 (8틱 — 1.25배)
+        // 일어서 하늘로 포효 (roar) → windup 에 두 앞발로 땅을 내리찍음 (roarslam — 한 바퀴 터짐) → 사람으로
+        BearForm.Use u = BearForm.begin(sp, j, windup + 30);
+        RuneMob b = null;
+        if (u != null) {
+            RuneKit.later(5, () -> BearForm.resize(sp, u, BearForm.SCALE * 1.25, 8));
+            BearForm.animLater(sp, u, 4, "roar", true);
+            BearForm.animLater(sp, u, windup - BEAR_SLAM_AT, "roarslam", false);
+            BearForm.endLater(sp, u, windup + 10, BearForm.LINGER);
+        } else {
+            b = bear(level0, ground(level0, V.add(V.add(c0, V.rightOf(f0), 2.8), f0, 0.8)), f0, windup + 50, 0.6);
+        }
         if (b != null) {
             growBear(b, 2.0, 4);
             bearAnim(b, 4, "roar", true);
             bearAnim(b, windup - BEAR_SLAM_AT, "roarslam", false);
             bearLeave(b, windup + 14);
-        } else {
+        } else if (u == null) {
             JobFx.bear(level0, V.up(V.add(c0, f0, 2.6), 3.2), 2.6, windup / 20.0 * 0.4, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.9),
                     JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
             RuneKit.later((int) Math.round(windup * 0.4), () -> {
@@ -744,13 +791,15 @@ final class WarlordSkills {
                     SkillFx.fx(lv, "rpg:arrow_spark", p, Opt.of("dir", V.unit(V.add(V.scale(dir, -1), V.UP, 0.15)), "speed", 6.0 + 4 * q, "size", 0.14, "grow", 0.5,
                             "life", 0.4, "color", tt % 2 == 0 ? DUST : JobKit.glow(j), "alpha", 1.0));
                 }
-                RuneKit.Hand h = RuneKit.handOf(sp);
-                SkillFx.fx(lv, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.8, "size", 0.15, "grow", 0.8, "life", 0.35, "color",
-                        JobKit.glow(j), "alpha", 1.0));
+                // 손의 불티 (곰이면 치켜든 두 앞발 사이)
+                Vec3 hand = u != null ? BearForm.at(sp, u, 0.6, 2.6) : V.up(RuneKit.handOf(sp).hand(), 0.1);
+                SkillFx.fx(lv, "rpg:arrow_spark", hand, Opt.of("dir", V.UP, "speed", 1.8, "size", 0.15, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j), "alpha",
+                        1.0));
                 if (tt % 6 == 0) SkillFx.play(lv, "block.grindstone.use", c, 0.4 + 0.5 * q, 0.4);
             });
         }
-        JobFx.charge(sp, j, new Vec3(-0.9, 0.55, -0.55), windup, 1.0); // 0.51.0 왼쪽 뒤로 감은 도끼날에 빛이 빨려 들며 커짐
+        if (u == null) JobFx.charge(sp, j, new Vec3(-0.9, 0.55, -0.55), windup, 1.0); // 0.51.0 왼쪽 뒤로 감은 도끼날에 빛이 빨려 들며 커짐
+        else JobFx.charge(sp, j, new Vec3(0.0, 2.7, 0.9), windup, 1.2); // 2026-11-14 곰: 치켜든 두 앞발 사이에 빛이 빨려 듦
         RuneKit.later(windup - 4, () -> {
             if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "mob.ravager.roar", sp.position(), 0.7, 1.0);
         });

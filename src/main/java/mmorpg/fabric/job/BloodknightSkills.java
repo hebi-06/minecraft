@@ -259,21 +259,37 @@ final class BloodknightSkills {
             ServerLevel lv = sp.level();
             for (LivingEntity e : Kit.around(sp, V.up(sp.position(), 1.0), R, 3.0)) {
                 bound.add(e);
-                Vec3 from = V.up(sp.position(), 0.9);
-                JobFx.chain(lv, from, Kit.bodyPoint(e), j, 0.5, 0.3, Opt.empty());
+                // 2026-11-14 사슬이 3틱 동안 몸에서 적으로 뻗어 나가 박힘 → 적 발밑 붉은 족쇄 고리 · 피 튀김
+                for (int s = 0; s < 3; s++) {
+                    double upTo = (s + 1) / 3.0;
+                    RuneKit.later(s, () -> {
+                        if (RuneKit.sameLife(sp, life) && e.isAlive()) hellChain(sp.level(), V.up(sp.position(), 0.9), Kit.bodyPoint(e), upTo, s3(upTo), Opt.empty());
+                    });
+                }
+                RuneKit.later(2, () -> {
+                    if (!RuneKit.sameLife(sp, life) || !e.isAlive()) return;
+                    ServerLevel l2 = sp.level();
+                    JobFx.ring(l2, V.up(e.position(), 0.06), 0.55 + Kit.bodyPad(e), j, true, 0.45, Opt.of("alpha", 1.0));
+                    JobTraits5.blood(l2, Kit.bodyPoint(e), 1.0 + Kit.bodyPad(e) * 0.4, j, 0.4, Opt.empty());
+                    SkillFx.sparks(l2, Kit.bodyPoint(e), CHAIN_CORE, 6, 3.5);
+                });
                 JobKit.strike(sp, e, j, P, k.num("bind", 3), false, false, life, 0, d -> JobImpact.hit(sp, e, j, 1.0));
             }
             SkillFx.play(lv, "block.chain.break", sp.position(), 0.8, 0.8);
             SkillFx.play(lv, "item.trident.hit", sp.position(), 0.7, 0.6);
         });
-        // 사슬이 이어짐 (4틱마다 다시 — 적을 따라감)
-        for (int t = first + 4; t < first + delay; t += 4) {
+        // 사슬이 이어짐 (4틱마다 다시 — 적을 따라감) · 8틱마다 적의 피가 사슬을 타고 내게로 흘러듦 (붉은 빛 구슬)
+        for (int t = first + 3; t < first + delay; t += 4) {
+            int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 for (LivingEntity e : bound) {
                     if (e.isRemoved() || !e.isAlive()) continue;
-                    JobFx.chain(lv, V.up(sp.position(), 0.9), Kit.bodyPoint(e), j, 0.5, 0.25, Opt.of("alpha", 0.95));
+                    hellChain(lv, V.up(sp.position(), 0.9), Kit.bodyPoint(e), 1.0, 0.25, Opt.of("alpha", 0.95));
+                    if ((tt - first) % 8 == 7 && RuneKit.fxQuota("bkChainDrain", 6)) {
+                        JobFx.spell(lv, 2, Kit.bodyPoint(e), V.up(sp.position(), 1.0), 0.32, 0.3, CHAIN_GLOW, CHAIN_CORE);
+                    }
                 }
             });
         }
@@ -288,21 +304,24 @@ final class BloodknightSkills {
             for (LivingEntity e : bound) {
                 if (e.isRemoved() || !e.isAlive()) continue;
                 if (Math.hypot(e.getX() - c.x, e.getZ() - c.z) > keep) {
-                    // 벗어남: 사슬이 끊어짐
-                    JobFx.line(lv, V.up(c, 0.9), Kit.bodyPoint(e), j, 0.25, Opt.empty());
+                    // 벗어남: 사슬이 끊어짐 (내 쪽 반만 남아 흐려짐)
+                    hellChain(lv, V.up(c, 0.9), Kit.bodyPoint(e), 0.5, 0.3, Opt.empty());
                     SkillFx.sparks(lv, Kit.bodyPoint(e), JobFx.inner(j), 6, 3.0);
                     SkillFx.play(lv, "block.chain.break", e.position(), 1.3, 0.8);
                     continue;
                 }
                 any = true;
+                Vec3 was = Kit.bodyPoint(e);
                 if (JobKit.pushable(e)) {
                     Vec3 d = V.flat(V.sub(e.position(), front));
                     double off = Math.min(0.9, V.len(d));
                     Vec3 to = V.len(d) < 1e-3 ? front : V.add(front, V.unit(d), off);
                     e.teleportTo(to.x, e.getY(), to.z);
                     e.setDeltaMovement(0, 0.15, 0);
+                    // 2026-11-14 끌려온 길 (붉은 잔상 줄기)
+                    JobFx.dash(lv, was, Kit.bodyPoint(e), CHAIN_GLOW, CHAIN_CORE, 0.3, Opt.empty());
                 }
-                JobFx.chain(lv, V.up(c, 0.9), Kit.bodyPoint(e), j, 0.5, 0.18, Opt.empty());
+                hellChain(lv, V.up(c, 0.9), Kit.bodyPoint(e), 1.0, 0.2, Opt.empty());
                 JobKit.strike(sp, e, j, P, k.num("pull", 6), false, false, life, 2, d -> {
                     JobImpact.hit(sp, e, j, 1.6);
                     if (e.level() instanceof ServerLevel l2) splash(l2, Kit.bodyPoint(e), 1.3 + Kit.bodyPad(e) * 0.5, j, 8);
@@ -319,6 +338,25 @@ final class BloodknightSkills {
             }
         });
         return true;
+    }
+
+    /** 2026-11-14 헬 체인 사슬 빛 (사용자 직업 도감 메모 "사슬이 잘 안보임" — 짙은 핏빛 · 가는 사슬이 회색 적 · 풀밭에 묻혔음): 밝은 피빛 · 옅은 분홍 심지 */
+    private static final double[] CHAIN_GLOW = {0.98, 0.14, 0.18};
+    private static final double[] CHAIN_CORE = {1.0, 0.8, 0.78};
+
+    /**
+     * 굵은 핏빛 사슬 (from → to 의 upTo 만큼 — 뻗어 나가는 사슬): 사슬 뒤에 붉게 빛나는 줄 (rfx_jline2 — 옅게) + 사슬 고리 (rfx_jchain2 — 1.1칸마다 한 장: 굵기 약
+     * 0.14칸, 예전 0.5칸마다 · 0.065칸)
+     */
+    private static void hellChain(ServerLevel level, Vec3 from, Vec3 to, double upTo, double life, Opt o) {
+        Vec3 end = V.lerp(from, to, Math.max(0.05, Math.min(1, upTo)));
+        JobFx.line(level, from, end, MOON_GLOW, CHAIN_GLOW, life, o.with("alpha", 0.55 * o.num("alpha", 1)));
+        JobFx.chain(level, from, to, CHAIN_GLOW, CHAIN_CORE, 1.1, upTo, life, o);
+    }
+
+    /** 뻗어 나가는 사슬 한 토막의 수명 (끝 토막이 다음 틱의 이어 그림까지 남게) */
+    private static double s3(double upTo) {
+        return upTo >= 1 ? 0.25 : 0.12;
     }
 
     // ------------------------------------------------------------ 광란

@@ -862,15 +862,24 @@ final class JobFx {
 
     /** 빛의 사슬 (rfx_jchain — 방향으로 누움, 이어 돌림 · 그림 256 × 32): from → to 를 seg 칸 조각으로 (굵기 = 조각 길이 / 8) */
     static void chain(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double seg, double life, Opt o) {
+        chain(level, from, to, outer(j), inner(j), seg, 1.0, life, o);
+    }
+
+    /**
+     * 같은 것 — 색 · 마디 수를 정함 (2026-11-14 헬 체인 — 사용자 "사슬이 잘 안보임"): seg 칸마다 한 장 (사슬 고리 넷 · 굵기 = 장 길이의 1/8), upTo (0 ~ 1) = from
+     * 에서 그만큼만 (뻗어 나가는 사슬)
+     */
+    static void chain(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double seg, double upTo, double life, Opt o) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.3) return;
         Vec3 u = V.scale(d, 1 / len);
         int n = Math.max(1, (int) Math.ceil(len / seg));
         double step = len / n;
-        for (int i = 0; i < n; i++) {
+        int m = Math.max(1, (int) Math.ceil(n * Math.max(0, Math.min(1, upTo))));
+        for (int i = 0; i < m; i++) {
             Vec3 c = V.add(from, u, step * (i + 0.5));
-            loop(level, "jchain2", CHAIN, c, life, 10, o.with("dir", u, "size", step / 2 * 1.04), outer(j), inner(j));
+            loop(level, "jchain2", CHAIN, c, life, 10, o.with("dir", u, "size", step / 2 * 1.04), glow, core);
         }
     }
 

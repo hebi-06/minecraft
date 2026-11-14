@@ -732,8 +732,16 @@ final class ArcanebladeSkills {
                 ServerLevel lv = sp.level();
                 Vec3 g = ground(lv, V.add(V.add(c0, f, ss), right, (Kit.rand() - 0.5) * 0.6));
                 double q = 1 - (ss - start) / Math.max(1, len - start) * 0.35;
-                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 16.0, 1.7 * q, 90 + (Kit.rand() - 0.5) * 30, 0.34, j, Opt.empty());
+                // 2026-11-14 솟는 검기는 위로 불룩한 가로 초승달 (사용자 도감 메모 — 블러드 문 · 스펠 가이저 "참격이 위를 보게" 와 같게)
+                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 16.0, 1.7 * q, (Kit.rand() - 0.5) * 20, 0.34, j, Opt.empty());
                 JobFx.burst(lv, V.up(g, 0.9), 1.3 * q, j, 0.35, Opt.empty());
+                // 2026-11-14 사용자 도감 메모 "2d 연출 없음": 3칸마다 갈라진 땅 위로 차원의 틈이 열렸다 닫힘 (rfx_jtear — 아케인 블레이드의 틈)
+                if (((int) Math.round(ss / 1.5)) % 2 == 1) {
+                    Vec3 ta = V.up(g, 1.3);
+                    tear(lv, ta, f, 1.05 * q, 0, 2, 0.1, false, j);
+                    RuneKit.later(2, () -> tear(lv, ta, f, 1.05 * q, 2, 4, 0.3, true, j));
+                    RuneKit.later(8, () -> tear(lv, ta, f, 1.05 * q, 6, 2, 0.12, false, j));
+                }
                 JobFx.glyph(lv, V.up(g, 1.4), 0.7, (int) (Kit.rand() * 3), 4, 2, 0.3, false, Opt.empty(), j);
                 RuneKit.rockBurst(lv, V.up(g, 0.2), 3, 5.0, 0.15);
                 SkillFx.sparks(lv, V.up(g, 1.0), JobFx.inner(j), 8, 6.0);

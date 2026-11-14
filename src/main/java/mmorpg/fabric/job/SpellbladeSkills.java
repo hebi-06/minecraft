@@ -23,7 +23,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Quaternionf;
 
 /**
  * 0.27.0 마검사 직업 스킬 (jobs.json spellblade — 남보라 마력 · 청록 칼날, 특성 「마력 검술」 · 마력 각인): 비전 참격 · 마력 도약 · 룬 검무 · 스펠 가이저 (0.51.0
@@ -375,10 +374,11 @@ final class SpellbladeSkills {
     // ------------------------------------------------------------ 비전 거검
 
     /**
-     * 비전 거검: 남보라 하늘 · 발밑에서 크게 도는 둥근 베기 · 둘레 빛기둥 → 눈앞에 거대한 마력 검이 솟음 (rise 틱) → gap 틱마다 가로 · 세로 · 대각 베기
-     * (slashes — 앞 range 칸 · 폭 width, 칼, 공격 피해) → after 틱 뒤 앞 thrustAt 칸 찌르기 폭발 (thrust — 그 둘레 thrustRadius 칸 + 찌르는 길, 마력, 큰 숫자) —
-     * 맞은 적의 남은 각인을 모두 터뜨려 더함 (각인 하나 = 위력 × markBurst), 찌르기에 닿지 않은 각인 찍힌 적도 그 자리에서 터짐.
-     * 발동: 번쩍임 · 빛기둥 · 퍼지는 고리 · 하늘 룬의 섬광
+     * 비전 거검 (아스트랄 클레이모어): 남보라 하늘 · 발밑에서 크게 도는 둥근 베기 · 둘레 빛기둥 → 등 뒤 하늘에 거대한 마력 검이 솟음 (rise 틱) → gap 틱마다 검이 등 뒤에서
+     * 앞으로 돌진해 길을 꿰뚫음 (slashes — 앞 range 칸 · 폭 width, 칼, 공격 피해 · 세 번: 오른쪽 뒤 · 바로 뒤 위 · 왼쪽 뒤에서) → after 틱 뒤 마지막 돌진: 하늘 높이
+     * 올라 앞 thrustAt 칸에 내리꽂혀 큰 폭발 (thrust — 그 둘레 thrustRadius 칸 + 꽂히는 길, 마력, 큰 숫자) — 맞은 적의 남은 각인을 모두 터뜨려 더함 (각인 하나 =
+     * 위력 × markBurst), 폭발에 닿지 않은 각인 찍힌 적도 그 자리에서 터짐. 2026-11-14 사용자 직업 도감 메모 "검을 뒤에서 앞으로 돌진시키면서 큰폭팔을 일으키는걸로
+     * 수정" (예전: 눈앞에 솟은 검이 가로 · 세로 · 대각으로 베고 몸 쪽으로 당겨 찌름). 피해 · 틱은 그대로
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         List<Double> slashes = SwordsmanSkills.numbers(k, "slashes", List.of(11.0, 11.0, 11.0));
@@ -411,7 +411,7 @@ final class SpellbladeSkills {
                 JobMove.to(thrustTick - dive - 1, thrustTick - 1, JobMove.landAhead(sp, k.num("diveDist", 2), c0.y), JobMove.IN));
         // 2026-11-13 3D 거검 (직업 도감 메모 "검 연출을 3d로" — 환영 검 판 대신): 솟음 → 세 번 베기 → 찌르기를 틱마다 주인을 따라 (claymore)
         claymore(sp, j, k, life, rise, gap, slashes.size(), thrustTick, c0);
-        // 빨려 드는 빛 (솟는 동안)
+        // 빨려 드는 빛 (솟는 동안 — 등 뒤 하늘의 거검 가운데로 양옆에서 · 2D 마력 소용돌이 고리)
         for (int t = 0; t < rise; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
@@ -419,24 +419,24 @@ final class SpellbladeSkills {
                 ServerLevel level = sp.level();
                 Vec3 f = Kit.facingOf(sp);
                 double q = Math.min(1, (tt + 2.0) / rise);
-                Vec3 hilt = V.up(V.add(sp.position(), f, 2.6), 0.4);
-                if (tt < rise) {
-                    for (int sd : new int[] {-1, 1}) {
-                        Vec3 a = V.add(V.up(hilt, 1 + q * 2.5), V.rightOf(f), sd * (2.6 - q * 1.6));
-                        SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.scale(V.rightOf(f), -sd), "speed", 3.0, "size", 0.16, "grow", 0.5, "life", 0.25,
-                                "color", core, "alpha", 1.0));
-                    }
-                    if (tt % 6 == 0) SkillFx.play(level, "block.bell.hit", hilt, 1.0 + q, 0.35);
+                Vec3 mid = V.add(behindAt(sp, 0, c0.y), V.scale(V.unit(V.sub(passEnd(sp, 0, range, c0.y), behindAt(sp, 0, c0.y))), JobSword3d.REACH * CLAY * 0.45));
+                for (int sd : new int[] {-1, 1}) {
+                    Vec3 a = V.add(V.up(mid, 1.5 - q), V.rightOf(f), sd * (3.0 - q * 2.0));
+                    SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.scale(V.rightOf(f), -sd), "speed", 3.0, "size", 0.18, "grow", 0.5, "life", 0.25,
+                            "color", core, "alpha", 1.0));
+                }
+                if (tt % 6 == 0) {
+                    JobFx.runeRing(level, mid, 1.2 + q * 1.4, j, 6, tt * 30, 0.32, JobFx.hide1p(sp).with("alpha", 0.75));
+                    SkillFx.play(level, "block.bell.hit", mid, 1.0 + q, 0.35);
                 }
             });
         }
         for (int i = 0; i < slashes.size(); i++) {
             int ii = i;
-            int next = i + 1 < slashes.size() ? gap : after;
             RuneKit.later(rise + i * gap, () -> {
-                if (RuneKit.sameLife(sp, life)) giantSlash(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked, next, c0.y);
+                if (RuneKit.sameLife(sp, life)) chargePass(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked, c0.y);
             });
-            JobKit.motionLater(sp, "spellblade_ult:slash" + (i % 3), rise + i * gap - 1, life); // 0.47.0 가로 · 세로 · 대각 베기 동작
+            JobKit.motionLater(sp, "spellblade_ult:slash" + (i % 3), rise + i * gap - 1, life); // 0.47.0 가로 · 세로 · 대각 베기 동작 (검을 앞으로 내보냄)
         }
         RuneKit.later(thrustTick, () -> {
             if (RuneKit.sameLife(sp, life)) thrust(sp, j, k, P, range, glow, core, life, c0);
@@ -455,67 +455,91 @@ final class SpellbladeSkills {
 
     /** 2026-11-13 아스트랄 클레이모어의 3D 거검 크기 (rune_sword — 길이 약 6.9칸, 예전 환영 검 판 3.4배와 비슷) */
     private static final double CLAY = 2.7;
+    /** 돌진 하나의 옆 (오른쪽 +) — 오른쪽 뒤 · 바로 뒤 · 왼쪽 뒤에서 (끝은 반대쪽) */
+    private static final double[] PASS_SIDE = {1.8, 0.0, -1.8};
+    /** 돌진에 걸리는 틱 (등 뒤 → 앞 끝 — 이 틱 뒤에 피해: 돌진을 rise + i × gap − PASS_T 에 떠남) */
+    private static final int PASS_T = 3;
+
+    /** 돌진 i 의 떠나는 자리 (쥔 곳): 몸 뒤 3.2칸 · 옆 · 머리 위 (돌진마다 조금 높게) — 땅 높이 groundY 기준 */
+    private static Vec3 behindAt(ServerPlayer sp, int i, double groundY) {
+        Vec3 f = Kit.facingOf(sp);
+        double side = PASS_SIDE[Math.floorMod(i, PASS_SIDE.length)];
+        Vec3 p = V.add(V.add(sp.position(), f, -3.2), V.rightOf(f), side);
+        return new Vec3(p.x, Math.max(sp.getY(), groundY) + 4.2 + 0.4 * Math.floorMod(i, 3), p.z);
+    }
+
+    /** 돌진 i 의 칼끝이 닿는 앞 끝: 앞 range × 0.9칸 · 반대쪽 옆 · 땅 위 1.0칸 (벽까지) */
+    private static Vec3 passEnd(ServerPlayer sp, int i, double range, double groundY) {
+        Vec3 f = Kit.facingOf(sp);
+        double side = PASS_SIDE[Math.floorMod(i, PASS_SIDE.length)];
+        Vec3 from = new Vec3(sp.getX(), groundY + 1.0, sp.getZ());
+        double reach = Math.max(2, RuneKit.rayLength(sp.level(), from, f, range * 0.9));
+        return V.add(V.add(from, f, reach), V.rightOf(f), -side * 0.7);
+    }
 
     /**
-     * 2026-11-13 아스트랄 클레이모어의 3D 거검 (직업 도감 메모 "검 연출을 3d로" — 환영 검 판 대신, 계열 색 반투명 빛 날 · 룬 홈): 틱마다 주인을 따라 —
-     * 솟음 (0 ~ rise: 몸 앞 2.6칸 땅속에서 칼끝을 위로 솟으며 커짐) → 베기 (rise + i × gap: 몸 앞 2.2칸을 손잡이로 −25° → 105° 를 4틱 (처음에 빠르게) · 2틱 멈춤 ·
-     * 3틱 동안 다시 세움 — 가로 · 세로 · 대각) → 찌르기 (thrustTick − 4: 몸 쪽으로 당겨 눕힘 → thrustTick: 칼끝이 폭발 자리까지 2틱) → 머물다 오그라들며 사라짐
+     * 2026-11-13 아스트랄 클레이모어의 3D 거검 (계열 색 반투명 빛 날 · 룬 홈) — 2026-11-14 등 뒤에서 앞으로 돌진 (사용자 "검을 뒤에서 앞으로 돌진시키면서 큰폭팔"):
+     * 솟음 (0 ~ rise: 등 뒤 하늘에서 칼끝을 앞 아래로 겨눈 채 커짐) → 돌진 (rise + i × gap − PASS_T 부터 PASS_T 틱: 칼끝이 앞 끝까지 — 길을 꿰뚫음) → 앞 하늘로 솟아
+     * (3틱) 다음 돌진 자리로 돌아감 (gap − PASS_T − 3틱) → 마지막: 높이 솟아 폭발 자리를 겨눔 → thrustTick − 4 부터 4틱 동안 내리꽂힘 (칼끝이 땅속까지) → 머물다
+     * 오그라들며 사라짐
      */
     private static void claymore(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, String life, int rise, int gap, int n, int thrustTick, Vec3 c0) {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        double range = k.num("range", 10);
+        double L = JobSword3d.REACH * CLAY;
         int end = thrustTick + 16;
-        int prep = thrustTick - 4;
-        Vec3 f0 = Kit.facingOf(sp);
+        int dive = thrustTick - 4;
+        Vec3 h0 = behindAt(sp, 0, c0.y);
         Vfx.Fx fx = RuneProps.fx(sp.level(), sp.position(), end + 4);
-        Vfx.Prop p = JobSword3d.sword(fx, V.up(V.add(sp.position(), f0, 2.6), -2.2), JobSword3d.HILT, JobSword3d.pose(V.UP, V.rightOf(f0)), CLAY * 0.3, glow, core);
+        Vfx.Prop p = JobSword3d.sword(fx, h0, JobSword3d.HILT, JobSword3d.aim(V.sub(passEnd(sp, 0, range, c0.y), h0)), CLAY * 0.3, glow, core);
         Vec3[] point = {null};
         fx.each(1, end, 1, a -> {
             if (!RuneKit.sameLife(sp, life) || sp.isRemoved()) {
                 fx.end();
                 return;
             }
-            Vec3 f = Kit.facingOf(sp);
-            Vec3 right = V.rightOf(f);
-            Vec3 base = sp.position();
-            Vec3 front = V.up(V.add(base, f, 2.6), 0.4);
-            Quaternionf upright = JobSword3d.pose(V.UP, right);
-            if (a <= rise) {
-                double q = 1 - Math.pow(1 - a / (double) Math.max(1, rise), 2);
-                p.to(V.up(front, -2.6 * (1 - q)), upright, CLAY * (0.3 + 0.7 * q), 1);
+            // 솟음: 등 뒤 하늘에서 커짐 (주인을 따라감)
+            if (a < rise - PASS_T) {
+                double q = 1 - Math.pow(1 - a / (double) Math.max(1, rise - PASS_T - 1), 2);
+                Vec3 b = behindAt(sp, 0, c0.y);
+                p.to(V.up(b, -1.5 * (1 - q)), JobSword3d.aim(V.sub(passEnd(sp, 0, range, c0.y), b)), CLAY * (0.3 + 0.7 * q), 1);
                 return;
             }
-            if (a < prep) {
-                int i = Math.min(n - 1, (a - rise) / Math.max(1, gap));
-                int t = a - (rise + i * Math.max(1, gap));
-                if (t >= 9) {
-                    p.to(front, upright, CLAY, 1);
+            if (a < dive - 6) {
+                int i = Math.min(n - 1, Math.max(0, (a - (rise - PASS_T)) / Math.max(1, gap)));
+                int t = a - (rise - PASS_T + i * Math.max(1, gap));
+                Vec3 b = behindAt(sp, i, c0.y);
+                Vec3 e = passEnd(sp, i, range, c0.y);
+                Vec3 d = V.unit(V.sub(e, b));
+                if (t == 0) {
+                    // 돌진: 칼끝이 앞 끝 e 까지 (쥔 곳 = e − 칼 길이)
+                    p.to(b, JobSword3d.aim(d), CLAY, 1);
+                    fx.on(a + 1, () -> p.to(V.add(e, d, -L), JobSword3d.aim(d), CLAY, PASS_T - 1));
                     return;
                 }
-                Vec3 sw = switch (i % 3) {
-                    case 0 -> right;
-                    case 1 -> f;
-                    default -> V.unit(V.add(right, f, 0.6));
-                };
-                double th = t < 4 ? -25 + 130 * (1 - Math.pow(1 - (t + 1) / 4.0, 2)) : t < 6 ? 105 : 105 * (1 - (t - 5) / 3.0);
-                double r = Math.toRadians(th);
-                Vec3 blade = V.add(V.scale(V.UP, Math.cos(r)), sw, Math.sin(r));
-                Vec3 edge = V.add(V.scale(V.UP, -Math.sin(r)), sw, Math.cos(r));
-                Vec3 pivot = V.up(V.add(base, f, 2.2), 0.25);
-                p.to(t >= 6 ? V.lerp(pivot, front, (t - 5) / 3.0) : pivot, JobSword3d.pose(blade, edge), CLAY, 1);
+                if (t == PASS_T + 1) {
+                    // 앞 하늘로 솟음 → 다음 돌진 자리 (마지막 돌진 뒤에는 하늘 높이 — 폭발 자리를 겨눔)
+                    Vec3 up = V.up(V.add(e, d, -L * 0.6), 4.5);
+                    p.to(up, JobSword3d.aim(V.add(d, V.UP, 0.8)), CLAY, 3);
+                    boolean last = i + 1 >= n;
+                    int back = last ? 6 : Math.max(2, gap - PASS_T - 4);
+                    fx.on(a + 3, () -> {
+                        Vec3 nb = last ? finalAt(sp, k, c0) : behindAt(sp, i + 1, c0.y);
+                        Vec3 aimAt = last ? thrustPoint(sp, k, c0) : passEnd(sp, i + 1, range, c0.y);
+                        p.to(nb, JobSword3d.aim(V.sub(aimAt, nb)), CLAY * (last ? 1.15 : 1.0), back);
+                    });
+                }
                 return;
             }
-            Vec3 hilt0 = V.up(V.add(base, f, 0.4), 1.1);
-            if (a < thrustTick) {
-                // 당겨 눕힘 (3틱 동안 돌고 그 뒤로는 자리만 따라감)
-                if (a == prep) p.to(hilt0, JobSword3d.pose(f, right), CLAY, 3);
-                else p.move(hilt0, 1);
-                return;
-            }
-            if (a == thrustTick) {
+            if (a < dive) return;
+            if (a == dive) {
+                // 마지막 돌진: 하늘 높이에서 폭발 자리로 내리꽂힘 (칼끝이 땅속 0.4 × 길이까지 — 4틱)
                 point[0] = thrustPoint(sp, k, c0);
-                Vec3 d = V.unit(V.sub(point[0], hilt0));
-                p.to(V.add(point[0], d, -JobSword3d.REACH * CLAY), JobSword3d.pose(d, right), CLAY, 2);
+                Vec3 from = p.pos();
+                Vec3 d = V.unit(V.sub(point[0], from));
+                p.to(V.add(point[0], d, -L * 0.62), JobSword3d.aim(d), CLAY * 1.15, 4);
+                RuneKit.flyStreak(sp.level(), from, point[0], V.len(V.sub(point[0], from)) * 5, glow, core, 1.6, 0.6);
                 return;
             }
             if (a == thrustTick + 9) p.size(CLAY * 0.08, 6);
@@ -523,44 +547,44 @@ final class SpellbladeSkills {
         fx.on(end, p::remove);
     }
 
-    /** 거대한 검의 베기 하나 (i = 0 가로 · 1 세로 · 2 대각): 검이 휘둘러지는 세 장 · 거대한 검기 · 화면을 가르는 빛, 앞 range 칸 · 폭 half × 2 의 적 */
-    private static void giantSlash(ServerPlayer sp, Jobs.Job j, double P, double mult, int i, double range, double half, double[] glow, double[] core, String life,
-            Set<UUID> marked, int untilNext, double groundY) {
+    /** 마지막 돌진 전에 검이 오르는 자리 (쥔 곳): 몸 뒤 2.5칸 · 땅 위 7칸 */
+    private static Vec3 finalAt(ServerPlayer sp, Jobs.Skill k, Vec3 c0) {
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 p = V.add(sp.position(), f, -2.5);
+        return new Vec3(p.x, Math.max(sp.getY(), c0.y) + 7.0, p.z);
+    }
+
+    /**
+     * 돌진 하나 (i = 0 오른쪽 뒤 · 1 바로 뒤 위 · 2 왼쪽 뒤에서 — 3D 거검은 claymore 가 맡음): 지나간 길의 빛 줄기 · 앞으로 달리는 큰 검기 · 꿰뚫린 길의 빛 금 ·
+     * 1인칭 눈앞의 빛 · 앞 range 칸 · 폭 half × 2 의 적
+     */
+    private static void chargePass(ServerPlayer sp, Jobs.Job j, double P, double mult, int i, double range, double half, double[] glow, double[] core, String life,
+            Set<UUID> marked, double groundY) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 right = V.rightOf(f);
-        Vec3 eye = sp.getEyePosition();
-        // 0.47.0 사진첩: 코등이를 축으로 돌던 검은 손잡이가 1인칭 눈앞을 가렸음 → 끝 보석 바로 위를 쥐고 (몸 앞 2.2칸 · 낮게) 돎
-        Vec3 pommel = V.up(V.add(sp.position(), f, 2.2), 0.25);
-        // 베는 면의 두 축: 가로 = (위 → 오른쪽), 세로 = (위 → 앞), 대각 = (위 → 오른쪽 아래 비스듬히)
-        Vec3 sweep = switch (i % 3) {
-            case 0 -> right;
-            case 1 -> f;
-            default -> V.unit(V.add(right, f, 0.6));
-        };
-        // 2026-11-13 거대한 검의 휘두름은 3D 거검 (claymore — 같은 손잡이 자리 · 같은 베는 면) 이 맡음
-        Vec3 cutDir = switch (i % 3) {
-            case 0 -> right;
-            case 1 -> V.UP;
-            default -> V.unit(V.add(right, V.UP));
-        };
-        double spin = i % 3 == 0 ? -4.0 : i % 3 == 1 ? 90.0 : 45.0;
-        JobFx.slash(sp, j, 3.0, 0.2, 3.0, spin, 0.3);
-        SkillFx.fx(level, "rpg:light_cut", V.up(V.add(eye, f, 3.4), -0.3), Opt.of("dir", cutDir, "size", 4.6, "thick", 0.3, "life", 0.4, "delay", 0.05, "color", glow,
-                "alpha", 1.0));
-        SkillFx.fx(level, "rpg:light_cut", V.up(V.add(eye, f, 3.35), -0.3), Opt.of("dir", cutDir, "size", 4.3, "thick", 0.1, "life", 0.36, "delay", 0.05, "color",
-                WHITE, "alpha", 1.0));
-        SkillFx.play(level, "item.trident.thunder", eye, 1.3 + i * 0.15, 0.6);
-        SkillFx.play(level, "item.spear.attack_miss", eye, 0.8 + i * 0.1, 1.0);
-        RuneKit.shakeAround(level, sp.position(), 10, 0.15, 0.2);
+        Vec3 b = behindAt(sp, i, groundY);
+        Vec3 e = passEnd(sp, i, range, groundY);
+        Vec3 d = V.unit(V.sub(e, b));
+        RuneKit.flyStreak(level, b, e, V.len(V.sub(e, b)) * 7, glow, core, 1.4, 0.55);
+        JobFx.dash(level, V.add(b, d, 1.5), e, glow, core, 0.3, JobFx.hide1p(sp));
+        // 칼끝이 지나간 길: 앞으로 달리는 큰 검기 (돌진하는 쪽으로 기운 초승달) · 땅의 빛 금
+        Vec3 low = new Vec3(sp.getX(), groundY + 1.2, sp.getZ());
+        JobFx.bigWave(level, sp, V.add(low, f, 1.2), f, 40.0, 2.6, i == 1 ? 90 : i == 0 ? 30 : -30, range / 40.0 + 0.12, j, Opt.empty());
+        WarlordSkills.rift(level, new Vec3(e.x, RuneKit.groundAt(level, e, groundY), e.z), V.scale(f, -1), Math.min(range * 0.5, 5.0), JobFx.outer(j), 0.9, 50);
+        SkillFx.fx(level, "rpg:light_cut", V.lerp(V.up(low, 0.4), e, 0.5), Opt.of("dir", d, "size", range * 0.55, "thick", 0.3, "life", 0.35, "color", glow, "alpha",
+                1.0));
+        SkillFx.sparks(level, e, core, 12, 6.0);
+        JobFx.burst(level, e, 1.6, j, 0.32, Opt.empty());
+        SkillFx.play(level, "item.trident.riptide_3", sp.getEyePosition(), 0.9 + i * 0.1, 0.8);
+        SkillFx.play(level, "item.trident.thunder", e, 1.3 + i * 0.15, 0.5);
         Vec3 from = new Vec3(sp.getX(), groundY + 1.0, sp.getZ()); // 0.50.0 공중에서 베어도 땅 높이의 줄 (떠 있는 동안에도 땅의 적을 벰)
         double len = Math.max(1, RuneKit.rayLength(level, from, f, range));
         int[] cnt = {0};
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, half)) {
-            LivingEntity e = h.e();
-            JobKit.strike(sp, e, j, P, mult, false, false, life, 0, d -> {
-                markOnce(sp, e, j, marked);
-                if (cnt[0]++ < 8) JobFx.hit(e, j, 1.3);
+            LivingEntity t = h.e();
+            JobKit.strike(sp, t, j, P, mult, false, false, life, 0, x -> {
+                markOnce(sp, t, j, marked);
+                if (cnt[0]++ < 8) JobFx.hit(t, j, 1.3);
             });
         }
     }
@@ -576,18 +600,20 @@ final class SpellbladeSkills {
         Vec3 ground = new Vec3(point.x, RuneKit.groundAt(level, point, sp.getY()), point.z);
         double radius = k.num("thrustRadius", 4);
         double markBurst = j.trait() == null ? 1.0 : j.trait().def().numOr("markBurst", 1.0);
-        // 거대한 검이 앞으로 뻗어 찌름 (손잡이 눈앞 1.8칸 → 칼끝이 폭발 자리)
-        Vec3 hilt = V.up(V.add(sp.position(), f, 1.8), 1.0);
-        Vec3 dv = V.unit(V.sub(point, hilt));
-        double lv0 = Math.max(1, V.len(V.sub(point, hilt)));
-        // 2026-11-13 거대한 검의 찌르기는 3D 거검 (claymore — 칼끝이 같은 폭발 자리 thrustPoint 에 닿음) 이 맡음
-        RuneKit.flyStreak(level, hilt, point, 60, glow, core, 1.2, 0.45);
-        // 폭발: 큰 터짐 · 둘레 둥근 베기 둘 (거꾸로) · 빛기둥 · 번쩍임
-        JobFx.burst(level, point, 2.6, j, 0.45, Opt.empty());
-        JobFx.ring(level, V.up(ground, 0.06), radius, j, false, 0.4, Opt.empty());
-        RuneKit.later(2, () -> JobFx.ring(level, V.up(ground, 0.1), radius * 0.6, j, true, 0.36, Opt.empty()));
-        SkillFx.sparks(level, point, core, 14, 7);
-        RuneKit.later(3, () -> RuneKit.godRays(sp, level, ground, 0, 1, glow, core, Opt.of("h", 16.0, "life", 0.8, "skipNear", true)));
+        // 2026-11-14 큰 폭발 (사용자 "큰폭팔"): 거검이 내리꽂힌 자리 (3D 거검 claymore — 칼끝이 같은 자리 thrustPoint) 에서 큰 터짐 둘 (2틱 사이) · 땅 깨짐 · 퍼지는
+        // 고리 셋 · 충격파 · 둘레로 퍼지는 큰 검기 여덟 · 하늘로 솟는 빛기둥 · 둘레 빛줄기 여섯 · 돌 조각 · 번쩍임
+        JobFx.burst(level, V.up(ground, 1.4), 4.6, j, 0.55, Opt.empty());
+        RuneKit.later(2, () -> JobFx.burst(level, V.up(ground, 2.2), 3.4, j, 0.5, Opt.of("alpha", 0.9)));
+        JobFx.smash(level, V.up(ground, 0.05), radius * 1.1, j, 0.6, Opt.empty());
+        JobFx.ring(level, V.up(ground, 0.06), radius, j, false, 0.45, Opt.empty());
+        RuneKit.later(2, () -> JobFx.ring(level, V.up(ground, 0.1), radius * 0.6, j, true, 0.4, Opt.empty()));
+        RuneKit.later(4, () -> JobFx.ring(level, V.up(ground, 0.08), radius * 1.6, j, false, 0.5, Opt.of("alpha", 0.75)));
+        SkillFx.shock(level, V.up(ground, 0.1), glow, radius * 1.4, 0.55);
+        JobFx.radialWaves(sp, j, ground, 8, 0.8, radius * 1.5, 1.0, 1.9, 0.35, Kit.rand() * 45);
+        JobFx.pillar(level, ground, 9.0, 0, 7, 0.6, false, Opt.of("alpha", 1.0), glow, core);
+        RuneKit.rockBurst(level, V.up(ground, 0.3), 14, 8.0, 0.2);
+        SkillFx.sparks(level, point, core, 24, 9);
+        RuneKit.later(3, () -> RuneKit.godRays(sp, level, ground, radius * 0.8, 6, glow, core, Opt.of("h", 14.0, "life", 0.8, "alpha", 0.8, "skipNear", true)));
         Ult.flash(level, point, glow, Opt.empty(), sp);
         SkillFx.play(level, "random.explode", point, 1.0, 1.0);
         SkillFx.play(level, "item.trident.thunder", point, 1.1, 0.9);
