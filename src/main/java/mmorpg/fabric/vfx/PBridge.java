@@ -108,6 +108,11 @@ public final class PBridge {
         return THIRD.contains(sp.getId());
     }
 
+    /** 이 사람 (모드 없는 클라이언트) 을 3인칭으로 보는지 (시험 영상 카메라 — 보통 놀이는 1인칭으로 봄) */
+    public static boolean thirdPersonOf(ServerPlayer sp) {
+        return THIRD.contains(sp.getId());
+    }
+
     /** 시험 영상 카메라 (사진기 cam film 과 같은 값 — Probe.filmCamera): {각(라디안), 거리, 높이, 보는 높이, 앞, 따라감, 처음 x, y, z, 앞 x, 앞 z} */
     private static final Map<Integer, double[]> FILM = new HashMap<>();
 
@@ -1212,15 +1217,17 @@ public final class PBridge {
             else solidsMade++;
             apply();
             for (var el : els) batch.addElement(el);
-            // 빛 무리: 밝은 속빛일 때만 (섞는 빛 — 어두운 색은 회색 원판으로 보임)
+            // 빛 무리: 밝은 속빛일 때만 (섞는 빛 — 어두운 색은 회색 원판으로 보임). 2026-11-14 모델 뒤 (보는 사람에게서 반지름만큼 — 판의 z 는 눈 쪽) · 더 옅게:
+            // 영상 (CI 43577665879) 에서 앞에 그린 빛 판이 태양 · 달 원판을 하얗게 덮었음 — 뒤에 두면 모델 둘레로만 번짐
             double ga = (weapon ? o.num("glowAlpha", 0.4) : o.num("glowAlpha", 0.55)) * Math.min(1, alpha);
             double bright = Math.max(g[0], Math.max(g[1], g[2]));
             if (PDefs.haloGlyph >= 0 && ga > 0.05 && bright >= 0.55) {
                 float[][] glow = weapon ? new float[][] {{0, 0, 0, (float) o.num("glowR", 0)}} : def.glow();
                 for (float[] gp : glow) {
                     if (gp.length < 4 || gp[3] <= 0.01F) continue;
-                    List<Layer[]> fr = List.<Layer[]>of(new Layer[] {new Layer(PDefs.haloGlyph, 1, gp[0], gp[1], gp[2], gp[3], gp[3], PDefs.haloAdv)});
-                    Card h = new Card(batch, "__halo", fr, at, o.with("faceCam", 1.0).with("alpha", ga * 0.55).with("anim", null), follow);
+                    float back = Math.max(gp[3], 0.5F);
+                    List<Layer[]> fr = List.<Layer[]>of(new Layer[] {new Layer(PDefs.haloGlyph, 1, gp[0], gp[1], gp[2] - back, gp[3], gp[3], PDefs.haloAdv)});
+                    Card h = new Card(batch, "__halo", fr, at, o.with("faceCam", 1.0).with("alpha", ga * 0.45).with("anim", null), follow);
                     halos.add(h);
                 }
             }

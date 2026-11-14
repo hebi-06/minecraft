@@ -49,7 +49,7 @@ import java.util.WeakHashMap;
  * T(0, -탄 높이) · S(크기) · Ry(180 - 몸 방향) · Rz(쓰러짐) · T(0, 1.501) · 뼈 사슬 [T(자리 / 16) · Rz(z) · Ry(-y) · Rx(-x) · S(크기)] ·
  * S(1 / k) · T(-(c0 - 8) / 16). 뼈 자리: 뿌리 (-px, py - 24, pz), 자식은 부모 pivot 과의 차이 (x 반대), 동작 위치 (-x, y, z) 를 더함.
  */
-final class VanillaModels {
+public final class VanillaModels {
     private VanillaModels() {}
 
     /** 아이템 표시가 아이템 모델을 Y 둘레로 돌려 그리는 각 (되돌림 — 표시 변환 끝에 곱함) */
@@ -189,6 +189,28 @@ final class VanillaModels {
         order[at[0]++] = i;
     }
 
+    /**
+     * 2026-11-14 변신 몹 (워로드 곰 · 드라군 용 — 쓴 사람이 몹이 됨) 을 쓴 사람 (모드 없는 클라이언트) 에게서 숨김: 서버는 그 사람의 1 · 3인칭을 모름 → 1인칭으로 보면
+     * 눈이 몹 몸 안 (CI 43577665879 1인칭 영상 — 일어선 곰의 머리 · 몸 · 팔이 화면을 가렸음). 다른 사람은 그대로 봄
+     */
+    private static final Map<Entity, java.util.Set<java.util.UUID>> HIDDEN = new WeakHashMap<>();
+
+    public static void hideFrom(Entity mob, ServerPlayer viewer) {
+        if (mob == null || viewer == null) return;
+        HIDDEN.computeIfAbsent(mob, k -> new java.util.HashSet<>()).add(viewer.getUUID());
+        MobModel m = MODELS.get(mob);
+        if (m != null) {
+            for (ServerGamePacketListenerImpl c : new ArrayList<>(m.getWatchingPlayers())) {
+                if (c.getPlayer().getUUID().equals(viewer.getUUID())) m.stopWatching(c);
+            }
+        }
+    }
+
+    static boolean hiddenFrom(Entity mob, ServerPlayer viewer) {
+        java.util.Set<java.util.UUID> h = HIDDEN.get(mob);
+        return h != null && h.contains(viewer.getUUID());
+    }
+
     static void attach(BedrockMob mob) {
         if (MODELS.containsKey(mob)) return;
         Look look = LOOKS.get(BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString());
@@ -286,6 +308,7 @@ final class VanillaModels {
         @Override
         public boolean startWatching(ServerGamePacketListenerImpl player) {
             if (VanillaClients.isModded(player.getPlayer())) return false;
+            if (hiddenFrom(mob, player.getPlayer())) return false; // 변신 몹 — 쓴 사람의 1인칭 화면을 가리지 않게
             if (!super.startWatching(player)) return false;
             AttributeInstance size = mob.getAttribute(Attributes.SCALE);
             if (size != null) player.send(new ClientboundUpdateAttributesPacket(mob.getId(), List.of(size)));

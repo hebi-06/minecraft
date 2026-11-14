@@ -100,6 +100,11 @@ public final class RuneMob {
         return (float) Math.toDegrees(Math.atan2(-face.x, face.z));
     }
 
+    /** 2026-11-14 이 몹을 viewer (모드 없는 클라이언트) 에게서 숨김 — 변신 몹이 쓴 사람의 1인칭 화면을 가리지 않게 (vanilla.VanillaModels.hideFrom) */
+    public void hideFrom(net.minecraft.server.level.ServerPlayer viewer) {
+        mmorpg.fabric.vanilla.VanillaModels.hideFrom(x, viewer);
+    }
+
     public boolean alive() {
         return !x.isRemoved() && !leaving;
     }

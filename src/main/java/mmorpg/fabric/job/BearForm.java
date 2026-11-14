@@ -134,6 +134,8 @@ public final class BearForm {
         Vec3 face = Kit.facingOf(sp);
         RuneMob d = RuneMob.spawn(WarlordSkills.BEAR, level, V.add(at, V.flat(face), AHEAD * SCALE * GROW[0]), face, MAX_LIFE, SCALE * GROW[0], true);
         if (d == null) return null;
+        // 2026-11-14 쓴 사람 (모드 없는 클라이언트 — 1인칭으로 봄) 에게는 곰을 숨김: 1인칭 영상 (CI 43577665879) 에서 일어선 곰의 머리 · 몸 · 팔이 화면을 가렸음
+        if (!mmorpg.fabric.vfx.PBridge.thirdPersonOf(sp)) d.hideFrom(sp);
         Form nf = new Form(d, life, JobKit.glow(j));
         nf.id = ++ids;
         nf.endAt = now + Math.max(1, maxTicks);
