@@ -42,7 +42,7 @@ class Box {
   constructor(color, pos, quat, scale) {
     this.born = NOW; this.dead = Infinity;
     this.tracks = { pos: [[NOW, NOW, pos.clone()]], quat: [[NOW, NOW, quat.clone()]], scale: [[NOW, NOW, scale.clone()]] };
-    this.mesh = new THREE.Mesh(GEO, new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(color[0], color[1], color[2], THREE.SRGBColorSpace), vertexColors: true }) // 게임의 물들임 색 = sRGB);
+    this.mesh = new THREE.Mesh(GEO, new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(color[0], color[1], color[2], THREE.SRGBColorSpace), vertexColors: true })); // 게임의 물들임 색 = sRGB
     this.mesh.visible = false; scene.add(this.mesh); BOXES.push(this);
   }
   _set(k, v, dur) { this.tracks[k].push([NOW, NOW + Math.max(0, dur), v.clone()]); return this; }
