@@ -195,9 +195,12 @@ final class JobFx {
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
-            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 눈앞 칼빛 초승달 — 카메라를 보는 한 벌을 모두가 봄 (1인칭 눈앞 · 3인칭 · 다른 사람 — 같은 자리 ·
-            // 화면에서 같은 기울기)
-            PhantomFx.slashBill(sp.level(), L, at, size * 1.8, tilt, null);
+            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 (주인) = 카메라를 보는 눈앞 칼빛 초승달, 3인칭 · 다른 사람 = 같은 자리에 앞을 보고 선 판
+            // (+ 조금 크고 7° 기운 옅은 잔상 판 — 예전과 같음). 사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?" — 모두가 카메라를 보는 한 벌은 높은 3인칭 · 영상 카메라
+            // 쪽으로 뒤로 누워 위를 보는 것처럼 보였음
+            PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt);
+            PhantomFx.card(sp.level(), L, at, look, tilt, size * 1.8, PhantomFx.hide1p(sp));
+            PhantomFx.card(sp.level(), L, V.add(at, look, 0.15), look, tilt + 7, size * 1.8 * 1.14, PhantomFx.hide1p(sp), 0.45, 1);
             return;
         }
         Opt own = only1p(sp);
@@ -250,9 +253,10 @@ final class JobFx {
     static void slashCard(ServerLevel level, Vec3 at, Vec3 dir, double tilt, double size, double life, Vec3 vel, Jobs.Job j, Opt view, CardFace face) {
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
-            // 2026-11-15 원소 공용 묶음: 칼빛 초승달 판 (앞을 봄 — 앞뒤 두 면 · 땅에 누움)
+            // 2026-11-15 원소 공용 묶음: 칼빛 초승달 판 — 앞을 보고 섬 (앞뒤 두 면) · UP 은 땅에 누움. 사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?" (카메라를 보는
+            // 판은 높은 카메라 쪽으로 뒤로 누워 위를 보는 것처럼 보였음) → 2026-11-14 메모 때 정한 앞을 보는 판으로 되돌림
             if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, size, PhantomFx.who(view));
-            else PhantomFx.slashBill(level, L, at, size, tilt, PhantomFx.who(view)); // 카메라를 봄 (옆 · 앞에서도 넓은 면)
+            else PhantomFx.card(level, L, at, dir, tilt, size, PhantomFx.who(view), view.num("alpha", 1.0), 1);
             return;
         }
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
@@ -288,8 +292,10 @@ final class JobFx {
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
-            // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 (카메라를 봄 — 눈앞 베기와 같은 기울기 뜻: 검기 기울기 = 베기 + 180)
-            PhantomFx.wave(level, L, at, d, speed, o.num("size", 1) * 0.9, o.num("spin", 0) + 180, life, null, o.num("alpha", 1));
+            // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 — 1인칭 (주인) 은 카메라를 봄 (눈앞 베기와 같은 기울기 뜻: 검기 기울기 = 베기 + 180), 3인칭 · 다른 사람은
+            // 앞을 보고 선 판이 날아감 (사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?")
+            PhantomFx.wave(level, L, at, d, speed, o.num("size", 1) * 0.9, o.num("spin", 0) + 180, life, PhantomFx.only1p(sp), o.num("alpha", 1));
+            PhantomFx.cardFly(level, L, at, d, speed, o.num("size", 1) * 1.8, o.num("spin", 0), life, PhantomFx.hide1p(sp), o.num("alpha", 1));
             return;
         }
         two(level, slashName(j), slashFrames(j), at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));

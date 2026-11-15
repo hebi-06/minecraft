@@ -540,9 +540,31 @@ final class PhantomFx {
      * 기울기 tilt (eyeSlash 와 같은 뜻) · 칼빛 너비 width 칸. 앞면 slashm · 뒷면 slash (세계에서 같은 그림 — 휘두르는 쪽이 칼과 같음)
      */
     static void card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who) {
+        card(level, L, at, dir, tilt, width, who, 1.0, 1);
+    }
+
+    /**
+     * 같은 것 — 불투명 alpha · 칸 넘김 every 틱 (날아가는 판은 수명에 맞춤). 반환 = 효과 (날아가는 판은 shift). 2026-11-15 사용자 "참격이 앞을 바라봐야 하는데 위를
+     * 보는데?" — 카메라를 보는 판 (slashBill) 은 높은 3인칭 · 영상 카메라 쪽으로 뒤로 누워 위를 보는 것처럼 보였음 → 3인칭 · 다른 사람은 다시 이 앞을 보는 판
+     * (2026-11-14 사용자 메모 "참격이 앞을 안보고 있음" 때 정한 FRONT)
+     */
+    static Vfx.Fx card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who, double alpha, int every) {
         Vec3[] ax = screenAxes(dir);
         Quaternionf q = Vfx.basis(ax[2], ax[1], V.scale(ax[0], -1));
-        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180 - tilt, 0, 1, true, L.n("slash"), who, 1.0);
+        return tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180 - tilt, 0, Math.max(1, every), true, L.n("slash"), who, alpha);
+    }
+
+    /**
+     * 날아가는 앞을 보는 참격 판 (JobFx.wave 의 3인칭 · 다른 사람 — 예전 SWING 판 대신): at 에서 dir 쪽으로 speed 칸/초 · life 초 · 칼빛 너비 width · 기울기 tilt
+     * (JobFx.slash 와 같은 뜻 — 0 = 아래로 불룩) — 면이 dir 의 반대 (뒤 · 3인칭에서 넓은 면)
+     */
+    static void cardFly(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double speed, double width, double tilt, double life, Predicate<ServerPlayer> who,
+            double alpha) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        int frames = Vfx.sheet(L.n("slashm_00")).frames();
+        Vfx.Fx fx = card(level, L, at, d, tilt, width, who, alpha, (int) Math.round(ticks / (double) frames));
+        if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
     }
 
     /** 땅에 눕힌 참격 판 (JobFx.CardFace.UP — 면이 위): 불룩한 날 = dir 의 수평을 위에서 tilt 도 돌린 쪽 · 칼빛 너비 width 칸 */
