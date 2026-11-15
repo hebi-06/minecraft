@@ -230,11 +230,11 @@ SPRITES = [
     ("shock", lambda: shock_ring(), False),
 ]
 
-# 2026-11-15 시범 (사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐 나는 압도적인 퀄을 중요하게 여김" — 팬텀 버스트, tools/vfx_pilot_art.py): 미리 렌더링한 칠한
-# 그림 (폭발 · 충격파 · 그을린 땅은 2 × 2 조각 — 512 픽셀, 섬광 · 모으는 빛 · 빛 무리 · 불티는 한 장)
-import vfx_pilot_art  # noqa: E402
+# 2026-11-15 직업 전용 2D 이펙트 그림 (사용자 "직업마다 전용으로 그릴래" — tools/jobvfx/<직업>.py, 미리 칠한 colored): 팬텀 아처 pa_* (시범 팬텀 버스트의
+# pb_* 를 옮김 · 다른 스킬 · 특성 · 평타 그림을 더함)
+from jobvfx import phantom as _jobvfx_phantom  # noqa: E402
 
-SPRITES += vfx_pilot_art.sprites()
+SPRITES += _jobvfx_phantom.sprites()
 
 
 def build():

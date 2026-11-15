@@ -75,6 +75,7 @@ final class PhantomArcherSkills {
         ServerLevel level0 = sp.level();
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.PHANTOM; // 2026-11-15 직업 전용 이펙트 (사용자 "직업마다 전용으로 그릴래")
         // 동작: 쏘며 뒤로 짧게 뜀
         JobMove.run(sp, JobMove.hop(0, lead + (n - 1) * every + 3, JobMove.ahead(sp, -k.num("back", 1.0), 0), 0.4));
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 1.7, 0.7);
@@ -84,7 +85,8 @@ final class PhantomArcherSkills {
             double len = k.num("len", 1.3) * (i == n - 1 ? k.num("big", 1.6) : 1.0);
             int fireAt = lead + i * every;
             Vec3 h0 = hover(sp, i, n);
-            blades[i] = PhantomArcher.project(level0, h0, V.sub(Kit.bodyPoint(target), h0), len, 1 + i, fireAt + 40, true);
+            // 2026-11-15 직업 전용: 투영 선 · 칼 발광 · 나타날 때 작은 섬광 (1인칭 눈앞 — 칼 길이보다 작게)
+            blades[i] = PhantomArcher.project(level0, h0, V.sub(Kit.bodyPoint(target), h0), len, 1 + i, fireAt + 40, true, L, 0.6 + len * 0.2);
             // 쏘기 전까지 활 위를 따라다니며 적을 겨눔
             for (int t = 1; t < fireAt; t++) {
                 RuneKit.later(t, () -> {
@@ -107,7 +109,7 @@ final class PhantomArcherSkills {
                 int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
                 b.pose(V.add(to, d, -b.reach() * 0.75), d, PhantomArcher.faceOf(d), t);
                 // 2026-11-15 쏘는 번쩍임 (1인칭 영상: 자루 자리 · 0.9 ~ 1.4 는 눈앞에서 화면을 덮었음 → 0.8칸 앞 · 0.7 ~ 1.0)
-                mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 0.8), 0.7 + ii * 0.15, glow);
+                PhantomFx.flash(level, L, V.add(from, d, 0.8), 0.7 + ii * 0.2);
                 // 2026-11-15 1인칭 미리보기: 빛 줄이 자루 (눈앞) 에서 시작하면 가까운 끝이 화면을 크게 덮음 → 0.8칸 앞에서
                 PhantomArcher.streak2d(level, V.add(from, d, 0.8), to, Math.max(0.2, t / 20.0 + 0.15), glow, core);
                 SkillFx.play(level, "item.trident.throw", from, 1.25 + ii * 0.1, 0.8);
@@ -118,8 +120,7 @@ final class PhantomArcherSkills {
                     Vec3 at = Kit.bodyPoint(target);
                     PhantomArcher.lodge(sp, j, target, 1, from);
                     JobFx.hit(target, j, ii == n - 1 ? 1.1 : 0.8);
-                    PhantomArcher.impact2d(lv, at, ii == n - 1 ? 1.2 : 0.75, glow, core);
-                    SkillFx.sparks(lv, at, core, ii == n - 1 ? 10 : 5, 4);
+                    PhantomFx.impact(lv, L, at, ii == n - 1 ? 1.2 : 0.75);
                     if (ii == n - 1) SkillFx.play(lv, "item.trident.hit", at, 0.8, 1.0);
                 });
             });
@@ -162,6 +163,7 @@ final class PhantomArcherSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.PHANTOM;
         // 몸: 뒤로 공중제비 (순간 이동 몫)
         JobMove.run(sp, JobMove.hop(0, 8, JobMove.ahead(sp, -k.num("leap", 5), 0), k.num("lift", 1.3)));
         SkillFx.play(level0, "entity.player.attack.sweep", c0, 1.4, 0.8);
@@ -174,8 +176,9 @@ final class PhantomArcherSkills {
         for (int s = 0; s < 2; s++) {
             double side = s == 0 ? -1 : 1;
             start[s] = V.add(V.up(c0, 1.15), right, side * 0.45);
-            PhantomArcher.traceLines(level0, start[s], f, V.UP, len, 0.25);
+            PhantomArcher.trace2d(level0, start[s], f, len, 0.3, L.trace()); // 2026-11-15 투영 선 발광
             bl[s] = RuneSwords.phantom(fx, start[s], f, V.UP, len, 0.05, PhantomArcher.BLADE, PhantomArcher.GEM);
+            bl[s].prop.outline(L.glow());
             int ss = s;
             fx.on(1, () -> bl[ss].grow(1, 2));
         }
@@ -206,9 +209,11 @@ final class PhantomArcherSkills {
             Vec3 r = V.rightOf(V.flat(V.sub(c, sp.position())));
             Vec3 a = V.unit(V.add(r, V.UP, 1));
             Vec3 b = V.unit(V.add(r, V.UP, -1));
-            PhantomArcher.cross2d(level, c, V.sub(c, sp.position()), 2.4, glow, core); // 2026-11-15 단색 블록 X 베기 (BlockFx 호 둘 — 미리보기: 1.9 는 작았음)
-            mmorpg.fabric.vfx.BlockFx.star(level, c, 2.2, glow);
-            SkillFx.sparks(level, c, core, 10, 5);
+            // 2026-11-15 직업 전용: 미리 렌더링한 X 베기 (두 줄기가 차례로 그어짐 · 교차점 섬광 — 2 × 2) · 섬광 · 불씨 (예전 2D 참격 판 둘 · 상자 터짐 · 별 대신)
+            Vec3 toMe = V.unit(V.sub(sp.getEyePosition(), c));
+            PhantomFx.xslash(level, L, V.add(c, toMe, 0.45), 3.8, Kit.rand() * 16 - 8);
+            PhantomFx.flash(level, L, c, 2.4);
+            PhantomFx.embers(level, L, c, 12, 1.8, 0.42, 16);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
             SkillFx.play(level, "item.trident.hit", c, 1.1, 0.8);
             for (LivingEntity e : Kit.around(sp, c, k.num("radius", 2), 2.0)) {
@@ -241,16 +246,16 @@ final class PhantomArcherSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 hand = V.up(sp.position(), 1.0);
             Vec3 dv = V.sub(hand, spot[0]);
-            double L = V.len(dv);
-            if (L < 0.5) return;
-            for (Kit.LineHit h : Kit.lineHits(sp, spot[0], V.scale(dv, 1 / L), L, k.num("width", 1.5))) {
+            double dl = V.len(dv);
+            if (dl < 0.5) return;
+            for (Kit.LineHit h : Kit.lineHits(sp, spot[0], V.scale(dv, 1 / dl), dl, k.num("width", 1.5))) {
                 LivingEntity e = h.e();
                 JobKit.strike(sp, e, j, P, k.num("back", 1.4), false, false, life, 0, d -> JobFx.hit(e, j, 0.7));
             }
         });
         RuneKit.later(home, () -> {
             for (RuneSwords.Blade b : bl) {
-                mmorpg.fabric.vfx.BlockFx.star(sp.level(), b.hilt(), 0.5, PhantomArcher.TRACE);
+                PhantomFx.flash(sp.level(), L, b.hilt(), 0.7);
                 b.remove();
             }
         });
@@ -277,6 +282,7 @@ final class PhantomArcherSkills {
         int fall = 4;
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
+        PhantomFx.Lib L = PhantomFx.PHANTOM;
         Set<UUID> rooted = new HashSet<>();
         List<RuneSwords.Blade> stuck = new ArrayList<>();
         Vfx.Fx fx = RuneProps.fx(level0, center, burstAt + 20);
@@ -285,18 +291,22 @@ final class PhantomArcherSkills {
         for (int i = 0; i < 3; i++) {
             Vec3 from = RuneKit.bowHand(sp);
             Vec3 up = V.add(V.up(from, 8 + i), V.flat(sp.getViewVector(1F)), 2 + i * 0.6);
-            RuneSwords.Blade b = PhantomArcher.project(level0, from, V.sub(up, from), 1.2, 1, 12, false);
+            RuneSwords.Blade b = PhantomArcher.project(level0, from, V.sub(up, from), 1.2, 1, 12, false, L, 0.8);
             b.pose(V.add(up, V.unit(V.sub(up, from)), -1.0), V.sub(up, from), V.UP, 6);
-            RuneKit.later(7, b::remove);
-            mmorpg.fabric.vfx.BlockFx.beam(level0, from, up, 0.12, glow, 7); // 2026-11-15 2D 빛 줄 대신 단색 블록
+            RuneKit.later(7, () -> {
+                PhantomFx.flash(level0, L, up, 1.6);
+                b.remove();
+            });
+            PhantomArcher.streak2d(level0, V.add(from, V.unit(V.sub(up, from)), 0.8), up, 0.35, glow, null); // 2026-11-15 직업 전용: 2D 잔상 줄기
         }
         SkillFx.play(level0, "item.trident.riptide_1", sp.position(), 1.4, 0.8);
         SkillFx.play(level0, "block.amethyst_block.resonate", center, 1.2, 1.0);
         // 땅: 과녁 문양 · 하늘: 투영 고리 (칼이 나오는 곳)
         // 2026-11-15 영상: 오각별 마법진 (SkillFx.rune) 대신 땅에 눕는 칼날 고리 (rfx_jbladering — 칼 컨셉과 맞춤)
         // 2026-11-15 사용자 "남은 2D 고리 블록으로 바꿔": 땅 예고 고리 · 퍼지는 고리 · 하늘 고리 = 단색 블록 (BlockFx)
-        mmorpg.fabric.vfx.BlockFx.ringHold(level0, V.up(center, 0.04), r, 30, 0.24, glow, 5, burstAt);
-        mmorpg.fabric.vfx.BlockFx.ring(level0, V.up(center, 0.05), r * 0.3, r, 24, 0.3, glow, 8);
+        // 2026-11-15 직업 전용: 땅 고리 (2 × 2 그림 — 예고 · 테두리) · 퍼지는 충격파
+        PhantomFx.ring(level0, L, center, r, 5, burstAt);
+        PhantomFx.shock(level0, L, center, r * 2.2, 1);
         // 2026-11-15 HD: 하늘 띠 고리 (장난감처럼 보였음) 대신 땅에 진홍 마법진 (육망성 · 칼 문장 · 금빛 룬 — 위를 보는 판은 마크 면 밝기 1)
         mmorpg.fabric.vfx.BlockFx.sigil(level0, V.up(center, 0.045), r * 1.02, PhantomArcher.SIGIL_CRIMSON, 5, burstAt - 2, 60);
         for (int w = 0; w < waves; w++) {
@@ -317,15 +327,16 @@ final class PhantomArcherSkills {
                     Vec3 tilt = V.unit(V.add(V.DOWN, new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 0.35));
                     Vec3 top = V.add(V.up(g, sky), new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 1.2);
                     RuneSwords.Blade b = RuneSwords.phantom(fx, top, tilt, PhantomArcher.faceOf(tilt), len, 0.05, PhantomArcher.BLADE, PhantomArcher.GEM);
+                    b.prop.outline(L.glow());
                     b.grow(1, 2);
-                    if (RuneKit.fxQuota("bladeRainTrace", 8)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(top, tilt, len * 0.5), 0.7, PhantomArcher.TRACE);
+                    if (RuneKit.fxQuota("bladeRainTrace", 8)) PhantomFx.flash(level, L, V.add(top, tilt, len * 0.5), 1.0);
                     stuck.add(b);
                     RuneKit.later(3, () -> b.pose(V.add(g, tilt, -len * 0.62), tilt, PhantomArcher.faceOf(tilt), fall));
                     RuneKit.later(3 + fall, () -> {
                         if (RuneKit.fxQuota("bladeRainLand", 8)) {
-                            SkillFx.sparks(level, V.up(g, 0.1), PhantomArcher.BLADE, 3, 3);
-                            mmorpg.fabric.vfx.BlockFx.star(level, V.up(g, 0.25), 0.6, glow); // 2026-11-15 꽂힌 자리: 번쩍 별 · 작은 땅 고리 (2D 반짝임 대신)
-                            mmorpg.fabric.vfx.BlockFx.ring(level, V.up(g, 0.05), 0.1, 0.8, 10, 0.12, glow, 5);
+                            // 2026-11-15 직업 전용: 꽂힌 자리 흙먼지 (밑의 진홍 번쩍) · 작은 섬광
+                            PhantomFx.dust(level, L, g, 1.5);
+                            PhantomFx.flash(level, L, V.up(g, 0.3), 0.9);
                         }
                     });
                 }
@@ -335,7 +346,6 @@ final class PhantomArcherSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 SkillFx.play(level, "item.trident.hit_ground", center, 1.0 + ww * 0.06, 1.0);
-                mmorpg.fabric.vfx.BlockFx.ring(level, V.up(center, 0.05), r * 0.85, r * 1.05, 24, 0.22, glow, 5);
                 for (LivingEntity e : Kit.around(sp, center, r, 4)) {
                     boolean pin = rooted.add(e.getUUID());
                     JobKit.strikeSplit(sp, e, j, P, k.num("wave", 2.0), 2, 2, false, false, life, 0, d -> {
@@ -354,13 +364,14 @@ final class PhantomArcherSkills {
             ServerLevel level = sp.level();
             for (RuneSwords.Blade b : stuck) {
                 // 2026-11-15 칼마다 작은 불 터짐 (예전 blast 는 칼마다 상자 120개 남짓 — 열넷이면 너무 많음)
-                if (RuneKit.fxQuota("bladeRainBurst", 10)) mmorpg.fabric.vfx.BlockFx.burst(level, b.tip(), 0.7, PhantomArcher.FIRE, PhantomArcher.FIRE_CORE, 8);
-                PhantomArcher.shatter(level, b, 1.0);
+                if (RuneKit.fxQuota("bladeRainBurst", 10)) PhantomFx.flash(level, L, b.tip(), 1.5);
+                PhantomArcher.shatter(level, b, 1.0, L);
             }
             stuck.clear();
             if (!RuneKit.sameLife(sp, life)) return;
-            PhantomArcher.blast(level, j, V.up(center, 0.8), r * 0.7);
-            mmorpg.fabric.vfx.BlockFx.ring(level, V.up(center, 0.05), r * 0.4, r + 1.2, 28, 0.4, PhantomArcher.FIRE, 10);
+            // 2026-11-15 직업 전용: 큰 폭발 (불덩이 · 땅 충격파 · 그을린 땅 · 불씨 · 칼 조각 — 예전 상자 폭발 · 상자 고리 대신)
+            PhantomFx.boom(level, L, V.up(center, 0.1), r * 0.75);
+            SkillFx.play(level, "entity.generic.explode", center, 0.9, 1.1);
             for (LivingEntity e : Kit.around(sp, center, r, 4)) JobKit.strike(sp, e, j, P, k.num("burst", 2.6), false, false, life, 0, d -> JobFx.hit(e, j, 1.0));
         });
         return true;
@@ -384,20 +395,19 @@ final class PhantomArcherSkills {
         RuneKit.effect(sp, "slowness", draw + 4, 2);
         Vec3 f0 = sp.getViewVector(1F);
         Vec3 h0 = V.add(V.add(RuneKit.bowHand(sp), V.rightOf(V.flat(f0)), 0.3), f0, 0.4);
-        RuneSwords.Blade b = PhantomArcher.project(level0, h0, f0, len, 6, draw + blastDelay + 60, true);
+        // 2026-11-15 직업 전용: 투영 선 발광 · 칼 발광 · 나타날 때 섬광 3.4 (project 가 함)
+        RuneSwords.Blade b = PhantomArcher.project(level0, h0, f0, len, 6, draw + blastDelay + 60, true, PhantomFx.PHANTOM, 3.4);
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 0.9, 1.0);
         SkillFx.play(level0, "block.beacon.power_select", sp.position(), 1.6, 0.6);
         // 2026-11-15 시범 HD (사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐 나는 압도적인 퀄을 중요하게 여김" — PhantomFx): 칼 발광 (외곽선 → 리소스 팩 후처리가
         // 부드러운 빛 번짐 — 2판 자체 가우스 흐림) · 칼끝에 모으는 빛 (미리 렌더링한 2D 되풀이) · 나타날 때 섬광. 2판: 칼 둘레 2D 빛 무리 뺌 (밝은 3D 칼에 가려 안 보였음)
-        b.prop.outline(PhantomFx.GLOW_CRIMSON);
         Vfx.Fx chargeFx = Vfx.at(level0, h0, draw + 6);
         Vfx.Sprite[] charge = {null};
         RuneKit.later(6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            PhantomFx.flash(lv, V.lerp(b.hilt(), b.tip(), 0.5), 3.4);
             PhantomFx.embers(lv, V.lerp(b.hilt(), b.tip(), 0.5), 8, 1.4, 0.32, 14);
-            charge[0] = PhantomFx.single(chargeFx, "pb_charge", b.tip(), 1.0, 0, 1, true);
+            charge[0] = PhantomFx.charge(chargeFx, PhantomFx.PHANTOM, b.tip(), 1.0);
         });
         // 당김: 활을 따라 겨눔 · 조금씩 뒤로 당겨짐 · 칼끝에 빛이 모임 · 끝무렵 떨림
         for (int t = 1; t < draw; t++) {
@@ -447,7 +457,7 @@ final class PhantomArcherSkills {
                 ServerLevel lv = sp.level();
                 // 2026-11-15 시범: 꽂힐 때 섬광 · 그을린 땅 (금이 달아올랐다 식음 — 2 × 2 조각) · 불씨
                 PhantomFx.flash(lv, to, 4.4);
-                PhantomFx.tiled(lv, "pb_crack", 2, PhantomFx.ground(lv, to), 3.4, PhantomFx.flat(Kit.rand() * 360), 0, 0, 5);
+                PhantomFx.crack(lv, PhantomFx.PHANTOM, PhantomFx.ground(lv, to), 3.4, 0, 5);
                 PhantomFx.embers(lv, to, 14, 2.2, 0.42, 18);
                 SkillFx.play(lv, "item.trident.hit", to, 0.6, 1.0);
                 if (hitE != null && RuneKit.sameLife(sp, life)) JobKit.strike(sp, hitE, j, P, k.num("hit", 5.6), false, false, life, 0, dd -> {
@@ -456,7 +466,7 @@ final class PhantomArcherSkills {
                 });
                 // 꽂힌 채 빛이 부풂 (적을 따라감) — 2판: 꽂힌 자리에 모으는 빛이 커지며 터지기 직전을 알림 (1판 칼 둘레 빛 무리 대신)
                 Vfx.Fx swellFx = Vfx.at(lv, to, blastDelay + 4);
-                Vfx.Sprite swell = PhantomFx.single(swellFx, "pb_charge", V.lerp(b.hilt(), b.tip(), 0.62), 1.2, 0, 1, true);
+                Vfx.Sprite swell = PhantomFx.charge(swellFx, PhantomFx.PHANTOM, V.lerp(b.hilt(), b.tip(), 0.62), 1.2);
                 for (int q = 1; q < blastDelay; q++) {
                     int qq = q;
                     RuneKit.later(q, () -> {
@@ -473,12 +483,7 @@ final class PhantomArcherSkills {
                     double rad = k.num("radius", 4);
                     // 2026-11-15 시범 HD: 미리 렌더링한 진홍 대폭발 (2 × 2 조각 · 20칸 — 흰 섬광 → 불덩이 → 옅어지는 연기) · 땅 충격파 (속이 빈 고리 — 흰 심 · 푸른 흰 앞 날 ·
                     // 진홍 뒤 빛) · 그을린 땅 (오래 — 금이 식어 감) · 불씨 · 칼 조각 (예전 상자 폭발 · 상자 고리 대신). 2판: 폭발 2.1 → 1.9 (1인칭에서 화면을 덮었음)
-                    Vec3 gc = PhantomFx.ground(l2, c);
-                    PhantomFx.tiled(l2, "pb_boom", 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
-                    PhantomFx.tiled(l2, "pb_shock", 2, V.up(gc, 0.02), rad * 3.2, PhantomFx.flat(Kit.rand() * 360), 0, 0, 1);
-                    PhantomFx.tiled(l2, "pb_crack", 2, gc, rad * 1.7, PhantomFx.flat(Kit.rand() * 360), 0, 2, 7);
-                    PhantomFx.embers(l2, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
-                    PhantomFx.shards(l2, V.up(c, 0.3), 12, rad * 1.2, 0.5, 22);
+                    PhantomFx.boom(l2, PhantomFx.PHANTOM, c, rad);
                     Ult.flash(l2, c, PhantomArcher.FIRE, Opt.of("radius", 6.0, "time", new double[] {0.02, 0.04, 0.25}), sp);
                     SkillFx.play(l2, "entity.generic.explode", c, 0.8, 1.2);
                     if (!RuneKit.sameLife(sp, life)) return;
@@ -525,6 +530,7 @@ final class PhantomArcherSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.PHANTOM; // 2026-11-15 직업 전용 이펙트
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
         // 2026-11-15 영상: 바닐라는 하늘이 바뀌지 않음 → 보는 쪽 지평선에 지는 진홍 해 (rfx_sun) · 둘레 노을 빛
         Vec3 fs = Kit.facingOf(sp);
@@ -532,41 +538,49 @@ final class PhantomArcherSkills {
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.2, 0.9);
         SkillFx.play(level0, "item.firecharge.use", c0, 0.6, 1.0);
-        mmorpg.fabric.vfx.BlockFx.ring(level0, V.up(c0, 0.1), 0.3, 2.6, 18, 0.3, mmorpg.fabric.vfx.BlockFx.WHITE, 6); // 2026-11-15 2D 기운 판 대신 발밑 흰 고리
+        // 2026-11-15 직업 전용: 발밑 섬광 · 작은 충격파 (예전 발밑 흰 상자 고리 대신)
+        Vec3 g0 = PhantomFx.ground(level0, c0);
+        PhantomFx.flash(level0, L, V.up(c0, 1.0), 2.6);
+        PhantomFx.shock(level0, L, g0, 6.0, 1);
         Vfx.Fx fx = RuneProps.fx(level0, c0, finalAt + 40);
         List<Planted> field = new ArrayList<>();
-        // 불꽃 고리가 번짐
+        // 불꽃 고리가 번짐 — 2026-11-15 직업 전용: 퍼지는 큰 충격파 (ringTicks 동안 R 까지) + 앞 날을 따라 솟는 2D 불꽃 혀 (예전 상자 고리 · 상자 불꽃 대신)
+        PhantomFx.shock(level0, L, g0, R * 2.15, Math.max(1, Math.round(ringTicks / 12F)));
         for (int i = 0; i <= ringTicks; i += 2) {
             double ri = Math.max(1.5, R * i / (double) ringTicks);
             RuneKit.later(i, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                mmorpg.fabric.vfx.BlockFx.ring(level, V.up(c0, 0.06), Math.max(0.5, ri - 1.8), ri, 30, 0.35, glow, 4);
-                for (int q = 0; q < 8; q++) {
+                if (ri < 2.5) return; // 1인칭: 발 둘레 불꽃은 눈앞을 덮음
+                for (int q = 0; q < 9; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
-                    PhantomArcher.flame2d(level, p, 0.6 + Kit.rand() * 0.3, 0.45); // 2026-11-15 단색 블록 불꽃 (BlockFx.flame 4판 — 2D rfx_jpflame 은 안 씀)
+                    PhantomFx.flame(level, L, p, 1.2 + Kit.rand() * 0.6, 1);
                 }
             });
         }
-        // 2026-11-15 고리 테두리의 불꽃이 끝까지 타오름 — 게임 영상: 6틱마다 열 (마구 흩음) 은 성겨서 주황 상자로 보였음 → 4틱마다 스물넷 (고르게 · 조금 흔듦) · 더 높게
-        for (int t = ringTicks; t < finalAt; t += 4) {
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel level = sp.level();
-                for (int q = 0; q < 24; q++) {
-                    double a = Math.PI * 2 * (q + Kit.rand() * 0.7) / 24;
-                    Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.6));
-                    PhantomArcher.flame2d(level, p, 0.85 + Kit.rand() * 0.45, 0.6);
-                }
-            });
-        }
+        // 2026-11-15 직업 전용: 고리 테두리의 불꽃 혀 서른둘이 끝까지 타오름 (되풀이 — 혀마다 다른 칸에서 시작해 들쭉날쭉 · 세로축 빌보드)
         RuneKit.later(ringTicks, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
-            mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.04), R, 48, 0.32, glow, 4, finalAt - ringTicks + 6); // 2026-11-15 2D 칼날 고리 대신 단색 블록 테두리
+            int hold = finalAt - ringTicks + 6;
+            Vfx.Fx ff = Vfx.at(level, c0, hold + 8);
+            int nf = 32;
+            int frames = Vfx.sheet(L.n("flame")).frames();
+            for (int q = 0; q < nf; q++) {
+                double a = Math.PI * 2 * (q + Kit.rand() * 0.6) / nf;
+                Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.5));
+                Vfx.Sprite fl = PhantomFx.flame(ff, L, p, 2.0 + Kit.rand() * 0.9, 1 + (q % 2), true, (int) (Kit.rand() * frames));
+                fl.fade(hold, 6);
+            }
+        });
+        RuneKit.later(ringTicks, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel level = sp.level();
+            // 2026-11-15 직업 전용: 테두리 · 안쪽 고리 = 땅 고리 그림 (2 × 2 — 반짝임) — 예전 상자 고리 대신
+            PhantomFx.ring(level, L, g0, R, 4, finalAt - ringTicks + 6);
             // 2026-11-15 마법진 (미리보기에서 맞춤): 육망성 (세모 둘 · 반지름 0.97R — 2틱마다 한 변씩 그어짐) + 그 안쪽 고리 (0.485R)
-            mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.035), R * 0.485, 30, 0.18, glow, 6, finalAt - ringTicks + 2);
+            PhantomFx.ring(level, L, g0, R * 0.485, 6, finalAt - ringTicks + 2);
             // 2026-11-15 HD: 안쪽 고리 안을 진홍 마법진 (육망성 · 칼 문장 · 금빛 룬) 이 채움
             mmorpg.fabric.vfx.BlockFx.sigil(level, V.up(c0, 0.045), R * 0.5, PhantomArcher.SIGIL_CRIMSON, 8, finalAt - ringTicks + 2, 45);
             double rho = R * 0.97;
@@ -578,7 +592,7 @@ final class PhantomArcherSkills {
                     Vec3 pa = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a0), 0, Math.sin(a0)), rho);
                     Vec3 pb = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a1), 0, Math.sin(a1)), rho);
                     RuneKit.later(delay, () -> {
-                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.2, glow, 4, finalAt - ringTicks - delay);
+                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.2, glow, 4, finalAt - ringTicks - delay, L.glow());
                     });
                 }
             }
@@ -617,7 +631,7 @@ final class PhantomArcherSkills {
                     if (RuneKit.fxQuota("sanctuaryStreak", 10)) PhantomArcher.streak2d(level, lift, to, 0.3, glow, core);
                     RuneKit.later(fly, () -> {
                         b.remove();
-                        if (e == null && RuneKit.fxQuota("sanctuaryMiss", 6)) mmorpg.fabric.vfx.BlockFx.star(sp.level(), to, 0.8, glow);
+                        if (e == null && RuneKit.fxQuota("sanctuaryMiss", 6)) PhantomFx.flash(sp.level(), L, to, 1.1);
                     });
                     RuneKit.later(fly + 2, () -> {
                         if (RuneKit.sameLife(sp, life)) plant(sp.level(), fx, field, c0, R * Math.sqrt(Kit.rand()) * 0.95);
@@ -628,7 +642,6 @@ final class PhantomArcherSkills {
             RuneKit.later(hitAt, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                mmorpg.fabric.vfx.BlockFx.ring(level, V.up(c0, 0.05), R - 0.6, R + 0.4, 40, 0.25, glow, 5);
                 SkillFx.play(level, "item.trident.hit", c0, 0.9 + ww * 0.06, 0.9);
                 for (LivingEntity e : Kit.around(sp, c0, R, 5)) {
                     JobKit.strikeSplit(sp, e, j, P, k.num("wave", 7), 2, 2, false, false, life, 0, d -> {
@@ -662,7 +675,11 @@ final class PhantomArcherSkills {
                 p.b.pose(top, d, PhantomArcher.faceOf(d), 6 + (q % 4));
                 rain.add(p.b);
             }
-            mmorpg.fabric.vfx.BlockFx.halo(level, V.up(spot[0], 7.5), 4.5, 26, 0.5, glow, 3, 12);
+            // 2026-11-15 직업 전용: 하늘에 칼이 모이는 자리 — 모으는 빛이 커짐 (예전 세운 띠 상자 고리 대신)
+            Vfx.Fx cf = Vfx.at(level, V.up(spot[0], 7.5), 16);
+            Vfx.Sprite gather = PhantomFx.charge(cf, L, V.up(spot[0], 7.5), 2.4);
+            cf.on(1, () -> gather.to(null, 6.5, 9));
+            cf.on(10, () -> gather.fade(10, 3));
             SkillFx.play(level, "block.amethyst_block.resonate", spot[0], 0.7, 1.2);
             SkillFx.play(level, "item.trident.riptide_3", spot[0], 1.2, 0.8);
         });
@@ -678,16 +695,15 @@ final class PhantomArcherSkills {
             if (spot[0] == null) return;
             ServerLevel level = sp.level();
             double fr = k.num("finalRadius", 4);
-            PhantomArcher.blast(level, j, V.up(spot[0], 1.0), fr * 0.9);
-            mmorpg.fabric.vfx.BlockFx.ring(level, V.up(spot[0], 0.05), fr * 0.3, fr * 1.7, 32, 0.45, PhantomArcher.FIRE, 10); // 2026-11-15 2D 터짐 판 대신 큰 땅 충격파
-            PhantomArcher.shards(level, V.up(spot[0], 0.8), 16, 9.0, 0.5);
+            // 2026-11-15 직업 전용: 큰 폭발 (불덩이 · 땅 충격파 · 그을린 땅 · 불씨 · 칼 조각 — 예전 상자 폭발 · 상자 고리 · 상자 조각 대신)
+            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.05);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             if (!RuneKit.sameLife(sp, life)) return;
             for (LivingEntity e : Kit.around(sp, spot[0], fr, 4)) JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
         });
         RuneKit.later(finalAt + 12, () -> {
             ServerLevel level = sp.level();
-            for (RuneSwords.Blade b : rain) PhantomArcher.shatter(level, b, 1.2);
+            for (RuneSwords.Blade b : rain) PhantomArcher.shatter(level, b, 1.2, L);
             for (Planted p : field) {
                 if (!p.used) p.b.grow(0.1, 6);
             }
@@ -706,12 +722,14 @@ final class PhantomArcherSkills {
         double len = 2.4 + Kit.rand() * 0.8; // 2026-11-15 미리보기: 들판 칼 더 크게 (1.8 ~ 2.6 은 3인칭에서 작았음)
         Vec3 face = PhantomArcher.faceOf(d);
         RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(g, d, -len * 0.15), d, face, len, 0.7, PhantomArcher.BLADE, PhantomArcher.GEM);
+        b.prop.outline(PhantomFx.PHANTOM.glow()); // 2026-11-15 직업 전용: 들판 칼이 진홍으로 번짐
         b.pose(V.add(g, d, -len * 0.62), d, face, 3);
         b.grow(1, 3);
         field.add(new Planted(b, g));
         if (RuneKit.fxQuota("sanctuaryRise", 6)) {
-            SkillFx.sparks(level, V.up(g, 0.1), PhantomArcher.FIRE, 3, 2);
-            mmorpg.fabric.vfx.BlockFx.star(level, V.up(g, 0.3), 0.6, PhantomArcher.TRACE);
+            // 2026-11-15 직업 전용: 솟는 자리 흙먼지 · 작은 섬광 (예전 상자 별 · 불티 대신)
+            PhantomFx.dust(level, PhantomFx.PHANTOM, g, 1.6);
+            PhantomFx.flash(level, PhantomFx.PHANTOM, V.up(g, 0.4), 0.9);
         }
     }
 

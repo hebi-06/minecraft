@@ -103,6 +103,31 @@ public final class Vfx {
         }
     }
 
+    /** 2026-11-15 이름이 prefix 로 시작하는 그림판 이름들 (차례대로) */
+    public static List<String> sheetNames(String prefix) {
+        List<String> out = new ArrayList<>();
+        for (String k : SHEETS.keySet()) if (k.startsWith(prefix)) out.add(k);
+        java.util.Collections.sort(out);
+        return out;
+    }
+
+    /**
+     * 2026-11-15 그림 몸풀기: prefix 그림판의 모든 칸을 at 에 아주 작게 (0.02칸) 한 틱씩 차례로 띄움 — 클라이언트가 글꼴 그림을 미리 올림 (처음 보는 큰 그림은
+     * 몇 틱 늦게 나타났음 — CI 43668850426 팬텀 버스트 3인칭 폭발 5장). at 은 보는 사람의 화면 안 (눈앞) 이어야 함. 반환 = 걸리는 틱
+     */
+    public static int warm(ServerLevel level, Vec3 at, String prefix) {
+        List<String> names = sheetNames(prefix);
+        int longest = 1;
+        for (String n : names) longest = Math.max(longest, SHEETS.get(n).frames());
+        Fx fx = at(level, at, longest + 6);
+        for (String n : names) {
+            Sprite sp = fx.sprite(n, at);
+            sp.size(0.02);
+            sp.play(0, 0, SHEETS.get(n).frames(), 1, false);
+        }
+        return longest + 2;
+    }
+
     public static Sheet sheet(String name) {
         Sheet s = SHEETS.get(name);
         if (s == null) throw new IllegalArgumentException("vfx sprite " + name);
@@ -726,6 +751,14 @@ public final class Vfx {
         public Sprite fixed(Quaternionf q) {
             facing = new Quaternionf(q);
             e.setBillboardMode(Display.BillboardConstraints.FIXED);
+            transform();
+            return this;
+        }
+
+        /** 2026-11-15 세로축만 카메라를 봄 (불꽃 혀 · 기둥처럼 늘 서 있는 그림 — 위에서 봐도 눕지 않음) */
+        public Sprite vertical() {
+            facing = null;
+            e.setBillboardMode(Display.BillboardConstraints.VERTICAL);
             transform();
             return this;
         }

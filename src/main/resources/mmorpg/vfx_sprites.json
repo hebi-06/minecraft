@@ -117,98 +117,176 @@
    "aspect": 1.0,
    "colored": false
   },
-  "pb_boom_00": {
+  "pa_boom_00": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_boom_01": {
+  "pa_boom_01": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_boom_10": {
+  "pa_boom_10": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_boom_11": {
+  "pa_boom_11": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_shock_00": {
+  "pa_shock_00": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_shock_01": {
+  "pa_shock_01": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_shock_10": {
+  "pa_shock_10": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_shock_11": {
+  "pa_shock_11": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_crack_00": {
+  "pa_crack_00": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_crack_01": {
+  "pa_crack_01": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_crack_10": {
+  "pa_crack_10": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_crack_11": {
+  "pa_crack_11": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_flash": {
-   "chars": "",
-   "frames": 8,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "pb_charge": {
-   "chars": "",
-   "frames": 12,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "pb_ember": {
-   "chars": "",
+  "pa_ring_00": {
+   "chars": "",
    "frames": 4,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_shard": {
-   "chars": "",
+  "pa_ring_01": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_ring_10": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_ring_11": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_xslash_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_xslash_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_xslash_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_xslash_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_boom_s": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_shock_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_crack_s": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_charge": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pa_flame": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 0.5,
+   "colored": true
+  },
+  "pa_dust": {
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
    "colored": true

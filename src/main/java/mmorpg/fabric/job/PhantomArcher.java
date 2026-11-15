@@ -168,6 +168,11 @@ public final class PhantomArcher {
 
     /** 투영 선: 칼 윤곽 (자루 · 코등이 · 날 양쪽 · 칼끝) 을 가는 푸른 흰빛 줄 다섯으로 — life 초 동안 가늘어지며 사라짐 */
     static void trace2d(ServerLevel level, Vec3 hilt, Vec3 dir, double len, double life) {
+        trace2d(level, hilt, dir, len, life, -1);
+    }
+
+    /** 투영 선 + 발광 (glow ≥ 0 — 2026-11-15 직업 전용 이펙트: 푸른 흰 빛 번짐) */
+    static void trace2d(ServerLevel level, Vec3 hilt, Vec3 dir, double len, double life, int glow) {
         Vec3 d = V.unit(dir);
         Vec3 side = V.rightOf(V.flat(d));
         if (V.len(side) < 1e-3) side = new Vec3(1, 0, 0);
@@ -178,10 +183,10 @@ public final class PhantomArcher {
         Vec3 sb = V.add(V.add(guard, d, len * 0.05), up, -len * 0.07);
         int t = Math.max(4, (int) Math.round(life * 20));
         double th = 0.035 + len * 0.012;
-        mmorpg.fabric.vfx.BlockFx.beam(level, hilt, guard, th, TRACE, t);
-        mmorpg.fabric.vfx.BlockFx.beam(level, V.add(guard, up, len * 0.16), V.add(guard, up, -len * 0.16), th, TRACE, t);
-        mmorpg.fabric.vfx.BlockFx.beam(level, sa, tip, th, TRACE, t);
-        mmorpg.fabric.vfx.BlockFx.beam(level, sb, tip, th, TRACE, t);
+        mmorpg.fabric.vfx.BlockFx.beam(level, hilt, guard, th, TRACE, t, glow);
+        mmorpg.fabric.vfx.BlockFx.beam(level, V.add(guard, up, len * 0.16), V.add(guard, up, -len * 0.16), th, TRACE, t, glow);
+        mmorpg.fabric.vfx.BlockFx.beam(level, sa, tip, th, TRACE, t, glow);
+        mmorpg.fabric.vfx.BlockFx.beam(level, sb, tip, th, TRACE, t, glow);
     }
 
     /**
@@ -293,17 +298,45 @@ public final class PhantomArcher {
      * 칼 하나를 투영: 선이 먼저 (lines) → appear 틱에 3D 칼이 2틱 동안 커지며 나타남. 칼 (fx 수명 life 틱 — 다 쓰면 remove)
      */
     static RuneSwords.Blade project(ServerLevel level, Vec3 hilt, Vec3 dir, double len, int appear, int life, boolean lines) {
+        return project(level, hilt, dir, len, appear, life, lines, null);
+    }
+
+    /**
+     * 2026-11-15 직업 전용 이펙트 (L — 그림 묶음, null 이면 예전): 투영 선이 푸른 흰빛으로 번지고 (발광) · 칼은 진홍 발광 · 나타날 때 섬광 (칼 길이만큼)
+     */
+    static RuneSwords.Blade project(ServerLevel level, Vec3 hilt, Vec3 dir, double len, int appear, int life, boolean lines, PhantomFx.Lib L) {
+        return project(level, hilt, dir, len, appear, life, lines, L, Math.min(2.6, 0.7 + len * 0.55));
+    }
+
+    /** 위와 같고 나타날 때 섬광 크기 flash (0 이하면 섬광 없음) */
+    static RuneSwords.Blade project(ServerLevel level, Vec3 hilt, Vec3 dir, double len, int appear, int life, boolean lines, PhantomFx.Lib L, double flash) {
         Vec3 d = V.unit(dir);
         Vec3 face = faceOf(d);
-        if (lines) traceLines(level, hilt, d, face, len, Math.max(0.15, (appear + 3) / 20.0));
+        if (lines) trace2d(level, hilt, d, len, Math.max(0.3, Math.max(0.15, (appear + 3) / 20.0)), L == null ? -1 : L.trace());
         Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 4, life));
         RuneSwords.Blade b = RuneSwords.phantom(fx, RuneProps.PHANTOM_SWORD, hilt, d, face, len, 0.05, BLADE, GEM);
-        fx.on(Math.max(1, appear), () -> b.grow(1, 2));
+        if (L != null) b.prop.outline(L.glow());
+        fx.on(Math.max(1, appear), () -> {
+            b.grow(1, 2);
+            if (L != null && flash > 0) PhantomFx.flash(level, L, V.lerp(b.hilt(), b.tip(), 0.5), flash);
+        });
         return b;
     }
 
     /** 칼이 부서짐 (빛 조각 · 작은 섬광 — 칼은 지움) */
     static void shatter(ServerLevel level, RuneSwords.Blade b, double size) {
+        shatter(level, b, size, null);
+    }
+
+    /** 칼이 부서짐 (L 이 있으면 직업 전용 — 작은 섬광 · 2D 칼 조각) */
+    static void shatter(ServerLevel level, RuneSwords.Blade b, double size, PhantomFx.Lib L) {
+        if (L != null) {
+            Vec3 m = V.lerp(b.hilt(), b.tip(), 0.5);
+            PhantomFx.flash(level, L, m, 0.9 * size);
+            if (RuneKit.fxQuota("phantomShard", 10)) PhantomFx.shards(level, L, m, 3, 1.2 * size, 0.32, 12);
+            b.remove();
+            return;
+        }
         Vec3 mid = V.lerp(b.hilt(), b.tip(), 0.5);
         mmorpg.fabric.vfx.BlockFx.star(level, mid, 0.6 * size, TRACE); // 2026-11-15 2D 반짝임 대신 단색 블록 별
         if (RuneKit.fxQuota("phantomShard", 10)) shards(level, mid, 3, 5.0, 0.3 * size);
@@ -317,6 +350,14 @@ public final class PhantomArcher {
 
     /** 진홍 폭발 (칼이 터짐 — 크기 size 칸) */
     static void blast(ServerLevel level, Jobs.Job j, Vec3 at, double size) {
+        PhantomFx.Lib L = PhantomFx.lib(j);
+        if (L != null) {
+            // 2026-11-15 직업 전용: 작은 폭발 (불덩이 · 충격파 · 그을린 땅 한 장 그림) · 불씨 · 칼 조각
+            PhantomFx.boomSmall(level, L, at, size * 1.7);
+            SkillFx.play(level, "entity.generic.explode", at, 1.5 - Math.min(0.6, size * 0.12), 0.35 + size * 0.1);
+            SkillFx.play(level, "block.glass.break", at, 1.3, 0.5);
+            return;
+        }
         blast2d(level, at, size * 1.1, pal(j));
         impact2d(level, at, size * 0.8, JobKit.glow(j), JobKit.core(j));
         SkillFx.sparks(level, at, pal(j).fireCore(), 6 + (int) (size * 3), 5);
@@ -383,6 +424,7 @@ public final class PhantomArcher {
             Vec3 face = faceOf(d);
             Vfx.Fx fx = RuneProps.fx(level, hilt, life + 12);
             RuneSwords.Blade b = RuneSwords.phantom(fx, pal(j).sword(), V.add(hilt, d, -0.35), d, face, len, 0.6, pal(j).blade(), pal(j).gem());
+            if (PhantomFx.lib(j) != null) b.prop.outline(PhantomFx.lib(j).glow()); // 2026-11-15 꽂힌 칼이 진홍으로 번짐 (몇 자루 꽂혔는지 보임)
             Stuck s = new Stuck(b, now + life);
             fx.on(1, () -> {
                 b.grow(1, 1);
@@ -402,7 +444,8 @@ public final class PhantomArcher {
         }
         LAST.put(sp.getUUID(), e);
         if (add > 0) {
-            mmorpg.fabric.vfx.BlockFx.star(level, body, 0.8 + pad * 0.4, JobKit.glow(j)); // 2026-11-15 꽂힐 때 가벼운 번쩍 (평타마다라 폭발 대신)
+            if (PhantomFx.lib(j) != null) PhantomFx.flash(level, PhantomFx.lib(j), body, 1.0 + pad * 0.5); // 2026-11-15 직업 전용 섬광
+            else mmorpg.fabric.vfx.BlockFx.star(level, body, 0.8 + pad * 0.4, JobKit.glow(j)); // 2026-11-15 꽂힐 때 가벼운 번쩍 (평타마다라 폭발 대신)
             SkillFx.play(level, "item.trident.hit", body, 1.3 + Kit.rand() * 0.3, 0.45);
         }
         if (l.swords.size() >= max) {
@@ -424,10 +467,10 @@ public final class PhantomArcher {
             return;
         }
         Vec3 at = Kit.bodyPoint(e);
-        clear(l, level);
+        clear(l, level, PhantomFx.lib(j));
         if (e.isRemoved() || !RuneKit.sameLife(sp, life)) return;
         blast(level, j, at, 1.4 + Kit.bodyPad(e) * 0.6);
-        mmorpg.fabric.vfx.BlockFx.ring(level, V.up(e.position(), 0.05), 0.4, trait(j, "radius", 2), 16, 0.25, JobKit.glow(j), 7); // 2026-11-15 2D 고리 대신 단색 블록
+        if (PhantomFx.lib(j) == null) mmorpg.fabric.vfx.BlockFx.ring(level, V.up(e.position(), 0.05), 0.4, trait(j, "radius", 2), 16, 0.25, JobKit.glow(j), 7); // 2026-11-15 2D 고리 대신 단색 블록
         Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
         Weapon w = held != null && "bow".equals(held.type()) ? held : w0;
         if (w == null || !"bow".equals(w.type())) return;
@@ -438,10 +481,14 @@ public final class PhantomArcher {
 
     /** 꽂힌 칼을 모두 부숨 (level 이 있으면 조각 · 섬광) */
     private static void clear(Lodge l, ServerLevel level) {
+        clear(l, level, null);
+    }
+
+    private static void clear(Lodge l, ServerLevel level, PhantomFx.Lib L) {
         for (Stuck s : l.swords) {
             if (s.gone) continue;
             s.gone = true;
-            if (level != null) shatter(level, s.blade, 1);
+            if (level != null) shatter(level, s.blade, 1, L);
             else s.blade.remove();
         }
         l.swords.clear();
@@ -452,7 +499,7 @@ public final class PhantomArcher {
         int n = count(sp, e);
         Lodge l = LODGES.get(key(sp, e));
         if (l == null) return 0;
-        clear(l, e.level() instanceof ServerLevel lv ? lv : null);
+        clear(l, e.level() instanceof ServerLevel lv ? lv : null, PhantomFx.lib(JobSystem.job(sp)));
         l.bursting = false;
         return n;
     }
@@ -492,6 +539,8 @@ public final class PhantomArcher {
         Vfx.Fx fx = RuneProps.fx(level, start, ticks + 14);
         Vec3 face = faceOf(d);
         RuneSwords.Blade b = RuneSwords.phantom(fx, pal(j).sword(), start, d, face, len, 0.35, pal(j).blade(), pal(j).gem());
+        PhantomFx.Lib L = PhantomFx.lib(j);
+        if (L != null) b.prop.outline(L.glow());
         double reach = b.reach() / 0.35;
         Vec3 end = V.add(from, d, Math.max(0.6, dist - reach * (target != null ? 0.75 : 1.0)));
         fx.on(1, () -> {
@@ -504,7 +553,10 @@ public final class PhantomArcher {
             fx.on(ticks + 13, b::remove);
         }
         // 2026-11-15 1인칭: 눈앞 0.5칸 별은 평타마다 화면을 덮음 → 1.6칸 앞 · 작게
-        if (RuneKit.fxQuota("phantomShotGlint", 6)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 1.6), 0.45, TRACE);
+        if (RuneKit.fxQuota("phantomShotGlint", 6)) {
+            if (L != null) PhantomFx.flash(level, L, V.add(from, d, 1.6), 0.6);
+            else mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 1.6), 0.45, TRACE);
+        }
         // 2026-11-15 날아가는 칼 뒤 2D 잔상 줄기 (평타가 잦아 가늘게 · 몫 8)
         if (RuneKit.fxQuota("phantomShotTrail", 8)) trail2d(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), ticks / 20.0, 0.24, pal(j).gem(),
                 mmorpg.fabric.vfx.BlockFx.hot(pal(j).gem()));

@@ -1014,6 +1014,13 @@ final class VanillaProbe {
             // 2026-11-13 몸풀기: 첫 룬을 영상 전에 한 번 써 둠 — 묶음의 첫 영상만 쓴 직후 4 ~ 6장이 멈춘 채 찍혔음 (CI 43428424571 강철 피부 · 43423572384
             // 수호의 외침 — 이웃 프레임 차이 0, 그 뒤 한꺼번에 따라잡음: 처음 쓰는 길의 클래스 적재 · 모델 첫 표시). 남은 연출은 첫 영상의 filmReset 이 끝냄
             int wait = 40;
+            // 2026-11-15 직업 전용 2D 그림 몸풀기 (처음 보는 큰 그림은 몇 틱 늦게 나타났음 — CI 43668850426 팬텀 버스트 3인칭 폭발 5장): 눈앞 2칸에 아주 작게 모든 칸을 한 번씩
+            Tasks.later(4, () -> {
+                if (p.isRemoved()) return;
+                Vec3 eye = p.getEyePosition();
+                int t = mmorpg.fabric.vfx.Vfx.warm(p.level(), eye.add(p.getViewVector(1F).scale(2.0)), "pa_");
+                log("film warm sprites pa_ " + t + " ticks");
+            });
             mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0));
             if (warm != null) {
                 Tasks.later(10, () -> {

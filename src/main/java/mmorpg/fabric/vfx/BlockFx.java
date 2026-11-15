@@ -103,6 +103,11 @@ public final class BlockFx {
      * 미리보기 2판)
      */
     public static void beam(ServerLevel level, Vec3 from, Vec3 to, double thick, double[] color, int life) {
+        beam(level, from, to, thick, color, life, -1);
+    }
+
+    /** 빛 줄 + 발광 외곽선 (glow ≥ 0 이면 그 색 — 리소스 팩 후처리가 부드러운 빛 번짐으로, 2026-11-15 직업 전용 이펙트) */
+    public static void beam(ServerLevel level, Vec3 from, Vec3 to, double thick, double[] color, int life, int glow) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.05) return;
@@ -119,6 +124,7 @@ public final class BlockFx {
             int li = Math.max(2, (int) Math.round(L * (0.55 + 0.45 * (i + 1) / n)));
             // 2026-11-15 HD: 흰 심지 상자 대신 줄 상자의 뜨거운 심 겹 (상자 수 반)
             Vfx.Prop o = box(fx, mid, rot, th, seg, th, color);
+            if (glow >= 0) o.outline(glow);
             fx.on(1, () -> o.stretch(0.0, seg * 0.96, 0.0, li - 1));
             fx.on(li + 1, o::remove);
         }
@@ -526,6 +532,11 @@ public final class BlockFx {
 
     /** 땅에 그은 줄 (a → b · 굵기 thick · 흰 심): grow 틱 동안 a 에서 b 로 뻗음 → hold 틱 → 4틱에 가늘어져 사라짐 (2026-11-15 소드 생추어리 마법진 육망성) */
     public static void line(ServerLevel level, Vec3 a, Vec3 b, double thick, double[] color, int grow, int hold) {
+        line(level, a, b, thick, color, grow, hold, -1);
+    }
+
+    /** 땅에 그은 줄 + 발광 외곽선 (glow ≥ 0 — 2026-11-15 직업 전용 이펙트) */
+    public static void line(ServerLevel level, Vec3 a, Vec3 b, double thick, double[] color, int grow, int hold, int glow) {
         Vec3 d = V.sub(b, a);
         double len = V.len(d);
         if (len < 0.05) return;
@@ -537,6 +548,7 @@ public final class BlockFx {
         Vec3 mid = V.lerp(a, b, 0.5);
         Vfx.Fx fx = RuneProps.fx(level, mid, G + H + 8);
         Vfx.Prop o = box(fx, a, rot, thick, 0.05, thick * 0.3, color);
+        if (glow >= 0) o.outline(glow);
         fx.on(1, () -> o.move(mid, G).stretch(thick, len, thick * 0.3, G));
         fx.on(1 + G + H, () -> o.stretch(0.0, len, 0.0, 4));
         fx.on(G + H + 6, o::remove);
