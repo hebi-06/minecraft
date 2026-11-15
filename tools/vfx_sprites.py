@@ -233,8 +233,13 @@ SPRITES = [
 # 2026-11-15 직업 전용 2D 이펙트 그림 (사용자 "직업마다 전용으로 그릴래" — tools/jobvfx/<직업>.py, 미리 칠한 colored): 팬텀 아처 pa_* (시범 팬텀 버스트의
 # pb_* 를 옮김 · 다른 스킬 · 특성 · 평타 그림을 더함)
 from jobvfx import phantom as _jobvfx_phantom  # noqa: E402
+# 2026-11-15 궁수 2차 둘: 아스널 킹 ak_* (금빛 문 · 빛 폭발) · 블레이드 레인저 br_* (달아오른 베기 · 쇳물 폭발)
+from jobvfx import arsenal as _jobvfx_arsenal  # noqa: E402
+from jobvfx import forge as _jobvfx_forge  # noqa: E402
 
 SPRITES += _jobvfx_phantom.sprites()
+SPRITES += _jobvfx_arsenal.sprites()
+SPRITES += _jobvfx_forge.sprites()
 
 
 def build():

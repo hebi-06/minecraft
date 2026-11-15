@@ -14,8 +14,8 @@ import org.joml.Quaternionf;
  * (tools/jobvfx/&lt;직업&gt;.py — 글자 표시는 명암 계산이 없어 칠한 색 그대로 · 큰 그림은 2 × 2 조각 512 픽셀) · 날아가는 불씨 · 칼 조각 · 발광 외곽선 (리소스 팩
  * 후처리 post_effect/entity_outline — 자체 가우스 흐림 shaders/post/vfx_blur.fsh 로 부드러운 빛 번짐).
  * <p>
- * 그림 묶음 {@link Lib} = 그림판 이름 앞 (tools/jobvfx 의 LIB) · 발광 색. 지금은 팬텀 아처 (pa) — 2차 둘은 묶음을 그릴 때까지 예전 BlockFx 길 ({@link #lib} 이
- * null).
+ * 그림 묶음 {@link Lib} = 그림판 이름 앞 (tools/jobvfx 의 LIB) · 발광 색: 팬텀 아처 (pa — 진홍 불) · 아스널 킹 (ak — 금빛 문 · 빛) · 블레이드 레인저 (br — 단조
+ * 불빛 · 달아오른 베기). 다른 직업은 {@link #lib} 이 null (예전 길).
  */
 final class PhantomFx {
     private PhantomFx() {}
@@ -23,20 +23,32 @@ final class PhantomFx {
     /** 칼 · 폭발의 발광 빛 (외곽선 → 빛 번짐 후처리) 색 */
     static final int GLOW_CRIMSON = 0xFF3A3A;
     static final int GLOW_CYAN = 0x7FD8FF;
+    static final int GLOW_GOLD = 0xFFC23A;
+    static final int GLOW_FORGE = 0xFF6A1A;
 
-    /** 직업 전용 그림 묶음: 그림판 이름 앞 p (pa_boom …) · 칼 발광 색 glow · 투영 선 발광 색 trace */
-    record Lib(String p, int glow, int trace) {
+    /** 직업 전용 그림 묶음: 그림판 이름 앞 p (pa_boom …) · 칼 발광 색 glow · 투영 선 발광 색 trace · 날아가는 작은 그림 이름 ember (불씨 · 반짝임 · 불티) */
+    record Lib(String p, int glow, int trace, String ember) {
         String n(String name) {
             return p + "_" + name;
         }
     }
 
     /** 팬텀 아처 (tools/jobvfx/phantom.py — 진홍 불 · 푸른 흰 투영 · 강철) */
-    static final Lib PHANTOM = new Lib("pa", GLOW_CRIMSON, GLOW_CYAN);
+    static final Lib PHANTOM = new Lib("pa", GLOW_CRIMSON, GLOW_CYAN, "ember");
+    /** 2026-11-15 아스널 킹 (tools/jobvfx/arsenal.py — 금빛 문 · 빛 폭발 · 금가루 · 보석 반짝임) */
+    static final Lib GOLD = new Lib("ak", GLOW_GOLD, GLOW_GOLD, "sparkle");
+    /** 2026-11-15 블레이드 레인저 (tools/jobvfx/forge.py — 달아오른 베기 · 쇳물 폭발 · 불티 · 푸른 흰 투영) */
+    static final Lib FORGE = new Lib("br", GLOW_FORGE, GLOW_CYAN, "spark");
 
-    /** 이 직업의 그림 묶음 (아직 그리지 않은 직업은 null — 예전 BlockFx 길) */
+    /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
-        return j != null && j.id().equals("archer") ? PHANTOM : null;
+        if (j == null) return null;
+        return switch (j.id()) {
+            case "archer" -> PHANTOM;
+            case "arsenalking" -> GOLD;
+            case "bladeranger" -> FORGE;
+            default -> null;
+        };
     }
 
     /** 땅에 눕힌 그림 (그림 앞면이 위 — 그림 위쪽이 yaw 쪽) */
@@ -51,24 +63,46 @@ final class PhantomFx {
      * 나타나 every 틱마다 칸을 넘기고 마지막 칸 뒤 사라짐
      */
     static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every) {
+        return tiled(level, base, k, at, size, facing, roll, from, every, false);
+    }
+
+    /** 위와 같고 twoSided 면 고정 그림 (facing) 의 뒷면도 (조각마다 {@link Vfx.Sprite#back} 한 장 더 — 휘두른 면의 베기 · 허공의 문) */
+    static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every, boolean twoSided) {
         Vfx.Sheet s0 = Vfx.sheet(base + "_00");
         int frames = s0.frames();
         int life = from + frames * every + 4;
         Vfx.Fx fx = Vfx.at(level, at, life);
         double t = size / k;
+        int sides = twoSided && facing != null ? 2 : 1;
         fx.on(Math.max(0, from), () -> {
             for (int r = 0; r < k; r++) {
                 for (int c = 0; c < k; c++) {
-                    Vfx.Sprite sp = fx.sprite(base + "_" + r + c, at);
-                    if (facing != null) sp.fixed(facing);
-                    if (roll != 0) sp.roll(roll, 0);
-                    sp.size(t);
-                    sp.offset((c - (k - 1) / 2.0) * t, ((k - 1) / 2.0 - r) * t);
-                    sp.play(fx.age(), 0, frames, every, false);
+                    for (int side = 0; side < sides; side++) {
+                        Vfx.Sprite sp = fx.sprite(base + "_" + r + c, at);
+                        if (facing != null) sp.fixed(facing);
+                        if (side == 1) sp.back();
+                        if (roll != 0) sp.roll(roll, 0);
+                        sp.size(t);
+                        sp.offset((c - (k - 1) / 2.0) * t, ((k - 1) / 2.0 - r) * t);
+                        sp.play(fx.age(), 0, frames, every, false);
+                    }
                 }
             }
         });
         return fx;
+    }
+
+    /** 그림 위쪽 ey · 앞면 ez 의 고정 방향 (ex = ey × ez) — ey 가 ez 와 나란하면 다른 위 */
+    static Quaternionf face(Vec3 ez, Vec3 upHint) {
+        Vec3 z = V.unit(ez);
+        Vec3 u = V.sub(upHint, V.scale(z, V.dot(upHint, z)));
+        if (V.len(u) < 1e-3) {
+            Vec3 alt = Math.abs(z.y) > 0.9 ? new Vec3(0, 0, -1) : V.UP;
+            u = V.sub(alt, V.scale(z, V.dot(alt, z)));
+        }
+        Vec3 y = V.unit(u);
+        Vec3 x = V.cross(y, z);
+        return Vfx.basis(x, y, z);
     }
 
     /** 한 장 그림 (그림판 name — 칸이 여럿이면 every 틱마다 넘김): 가운데 at · 크기 size 칸 · loop 면 되풀이 */
@@ -114,7 +148,7 @@ final class PhantomFx {
     }
 
     static void embers(ServerLevel level, Lib L, Vec3 c, int n, double dist, double size, int life) {
-        fly(level, c, n, dist, size, life, L.n("ember"), 1.0);
+        fly(level, c, n, dist, size, life, L.n(L.ember()), 1.0);
     }
 
     /** 칼 조각 n 개 (묶음 shard — 납작한 강철 조각이 구르는 여덟 칸 · 깨진 가장자리가 달아오름): 불씨보다 낮고 멀리 · 빨리 떨어짐 */
@@ -246,6 +280,51 @@ final class PhantomFx {
     /** X 베기 (2 × 2 xslash — 두 줄기가 차례로 그어지고 교차점 섬광): 가운데 c · 크기 size 칸 · 화면 돌림 roll 도 (카메라를 봄) */
     static void xslash(ServerLevel level, Lib L, Vec3 c, double size, double roll) {
         tiled(level, L.n("xslash"), 2, c, size, null, roll, 0, 1);
+    }
+
+    // ------------------------------------------------------------ 2026-11-15 아스널 킹 · 블레이드 레인저
+
+    /**
+     * 금빛 문 (ak_gate — 녹은 금 판의 물결 고리 · 금 테 · 보석, 되풀이 8칸 · 2틱마다): 가운데 c · 보물이 나오는 쪽 facing (앞면 — 뒷면도 한 장이라 어느 쪽에서도 보임) ·
+     * 테 반지름 r 칸. open 틱에 작게서 열리고 (가운데 섬광) hold 틱 머문 뒤 4틱에 오므라들며 옅어짐. 반환 = 효과
+     */
+    static Vfx.Fx gate(ServerLevel level, Lib L, Vec3 c, Vec3 facing, double r, int open, int hold) {
+        Vec3 f = V.len(facing) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(facing);
+        Quaternionf q = face(f, V.UP);
+        int G = Math.max(1, open);
+        int Hh = Math.max(1, hold);
+        Vfx.Fx fx = Vfx.at(level, c, G + Hh + 8);
+        String name = L.n("gate");
+        int frames = Vfx.sheet(name).frames();
+        double side = r * 2.0 / 0.8; // 그림의 테는 반지름 0.8 (그림 한 변 = 2)
+        int start = (int) (Kit.rand() * frames);
+        for (int b = 0; b < 2; b++) {
+            Vfx.Sprite sp = fx.sprite(name, c);
+            sp.fixed(q);
+            if (b == 1) sp.back();
+            sp.size(side * 0.12);
+            sp.play(0, start, frames, 2, true);
+            fx.on(1, () -> sp.to(null, side, G));
+            fx.on(1 + G + Hh, () -> sp.to(null, side * 0.25, 4));
+            sp.fade(1 + G + Hh, 4);
+        }
+        fx.on(1 + G / 2, () -> flash(level, L, V.add(c, f, 0.05), r * 1.5));
+        return fx;
+    }
+
+    /**
+     * 단조 베기 (br_slash 2 × 2 — 달아오른 초승달이 휘둘러지고 꼬리부터 식으며 거둬짐 · 불티): 휘두르는 가운데 c (몸) · 볼록한 쪽 bulge (칼이 지나는 앞) · 휘두르는 쪽
+     * sweep (그림 왼쪽 → 오른쪽 = sweep 쪽) · 반지름 r 칸 — 휘두른 면에 고정 · 앞 · 뒤 두 장. 그림의 호는 가운데 (0, −0.4) · 반지름 0.9 (그림 한 변 = 2)
+     */
+    static void slash(ServerLevel level, Lib L, Vec3 c, Vec3 bulge, Vec3 sweep, double r) {
+        Vec3 ey = V.unit(bulge);
+        Vec3 ex = V.sub(sweep, V.scale(ey, V.dot(sweep, ey)));
+        if (V.len(ex) < 1e-3) ex = V.rightOf(V.flat(ey));
+        ex = V.unit(ex);
+        Vec3 ez = V.cross(ex, ey);
+        Quaternionf q = Vfx.basis(ex, ey, ez);
+        double side = r * 2.0 / 0.9;
+        tiled(level, L.n("slash"), 2, V.add(c, ey, r * 0.4 / 0.9), side, q, 0, 0, 1, true);
     }
 
     // ------------------------------------------------------------ 불꽃 (세로로 서는 그림)

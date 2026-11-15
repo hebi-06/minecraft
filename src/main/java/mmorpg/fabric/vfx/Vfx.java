@@ -704,6 +704,8 @@ public final class Vfx {
         int fadeFrom = -1;
         int fadeTicks;
         double fadeStart = 1;
+        /** 2026-11-15 뒷면 (크기 z 를 뒤집음 — 앞면이 반대쪽: 글자는 한쪽 면만 그려져 고정 그림은 앞 · 뒤 두 장) */
+        boolean backFace;
 
         Sprite(Fx fx, Sheet sheet, Vec3 at) {
             this.fx = fx;
@@ -823,6 +825,16 @@ public final class Vfx {
             return this;
         }
 
+        /**
+         * 2026-11-15 뒷면: 크기 z 를 뒤집어 (판의 두께는 0 — 모양 · 자리는 그대로, 세 축 행렬식이 음수라 삼각형 감김이 뒤집힘) 앞면이 반대쪽을 봄. 같은 자리 · 같은 방향 ·
+         * 같은 그림의 앞면 한 장과 겹치면 투명한 판처럼 양쪽에서 보이고 그림의 모든 점이 같은 세계 자리 (180° 돌린 판은 좌우가 바뀜 — 휘두르는 쪽이 거꾸로 보였을 것)
+         */
+        public Sprite back() {
+            backFace = true;
+            transform();
+            return this;
+        }
+
         /** 2026-11-15 그림 면 안의 자리 옮김 (칸 — 조각 그림: 오른쪽 x · 위 y) */
         public Sprite offset(double x, double y) {
             offset = new Vector3f((float) x, (float) y, 0F);
@@ -884,7 +896,7 @@ public final class Vfx {
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
             e.setTranslation(hidden ? new Vector3f() : q.transform(new Vector3f(offset)));
             e.setLeftRotation(q);
-            e.setScale(new Vector3f(s, s, s));
+            e.setScale(new Vector3f(s, s, backFace ? -s : s));
             e.setRightRotation(new Quaternionf());
         }
 

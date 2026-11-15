@@ -290,6 +290,354 @@
    "frames": 8,
    "aspect": 1.0,
    "colored": true
+  },
+  "ak_boom_00": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_boom_01": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_boom_10": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_boom_11": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_shock_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_shock_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_shock_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_shock_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_crack_00": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_crack_01": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_crack_10": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_crack_11": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_ring_00": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_ring_01": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_ring_10": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_ring_11": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_gate": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_shock_s": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_crack_s": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_charge": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_sparkle": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "ak_dust": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_slash_00": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_slash_01": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_slash_10": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_slash_11": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_xslash_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_xslash_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_xslash_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_xslash_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_boom_00": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_boom_01": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_boom_10": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_boom_11": {
+   "chars": "",
+   "frames": 16,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_shock_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_shock_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_shock_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_shock_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_crack_00": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_crack_01": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_crack_10": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_crack_11": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_ring_00": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_ring_01": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_ring_10": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_ring_11": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_shock_s": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_crack_s": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_charge": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_spark": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "br_flame": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 0.5,
+   "colored": true
+  },
+  "br_dust": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
   }
  }
 }

@@ -108,12 +108,13 @@ public final class JobTraits9 {
         Vec3 g = V.add(V.up(V.add(sp.position(), f, -0.9), 2.1 + Kit.rand() * 0.5), side, s * (1.0 + Kit.rand() * 0.5));
         Vec3 to = Kit.bodyPoint(target);
         Vec3 d = V.unit(V.sub(to, g));
-        BlockFx.gate(level, g, d, 0.55, 12, JobKit.glow(j), 2, 6);
+        PhantomFx.gate(level, PhantomFx.GOLD, g, d, 0.55, 2, 6); // 2026-11-15 직업 전용: 금빛 물결 문 (2D)
         PhantomArcher.Pal p = PhantomArcher.pal(j);
         double len = 1.5;
         Vfx.Fx fx = RuneProps.fx(level, g, 24);
         Vec3 face = PhantomArcher.faceOf(d);
         RuneSwords.Blade b = RuneSwords.phantom(fx, PhantomArcher.treasure((int) (Kit.rand() * 3)), V.add(g, d, -len * 0.6), d, face, len, 0.05, p.blade(), p.gem());
+        b.prop.outline(PhantomFx.GOLD.glow());
         fx.on(1, () -> {
             b.grow(1, 2);
             b.pose(V.add(g, d, -len * 0.2), d, face, 2);
@@ -137,8 +138,10 @@ public final class JobTraits9 {
         ServerLevel level = sp.level();
         Vec3 c = Kit.bodyPoint(target);
         Vec3 face = V.sub(c, sp.getEyePosition());
-        double[] glow = JobKit.glow(j);
-        PhantomArcher.cross2d(level, V.add(c, V.unit(face), -0.3), face, 1.3, glow, JobKit.core(j));
+        // 2026-11-15 직업 전용: 달아오른 쌍검 X 베기 (br_xslash — 2D 참격 판 대신) · 불티 별
+        Vec3 toEye = V.unit(V.sub(sp.getEyePosition(), c));
+        PhantomFx.xslash(level, PhantomFx.FORGE, V.add(c, toEye, 0.6), 2.6, Kit.rand() * 20 - 10);
+        PhantomFx.flash(level, PhantomFx.FORGE, c, 1.1);
         if (RuneKit.fxQuota("twinCutBlades", 6)) twinBlades(level, sp, c, j, 1.25, 5);
         SkillFx.play(level, "entity.player.attack.sweep", c, 1.3 + Kit.rand() * 0.2, 0.7);
         if (RpgCombat.bonusHitting()) return;
@@ -169,6 +172,8 @@ public final class JobTraits9 {
             Vec3 d1 = V.unit(V.add(V.add(V.scale(V.UP, -0.6), right, side * 0.9), f, 0.5));
             Vec3 h = V.add(at, right, side * 0.45);
             RuneSwords.Blade b = RuneSwords.phantom(fx, p.sword(), h, d0, V.scale(f, -1), len, 0.4, p.blade(), p.gem());
+            PhantomFx.Lib L = PhantomFx.lib(j);
+            if (L != null) b.prop.outline(L.glow());
             fx.on(1, () -> b.grow(1, 1).pose(h, d1, V.scale(f, -1), 2));
             fx.on(life, () -> b.grow(0.1, 4));
             fx.on(life + 5, b::remove);

@@ -27,6 +27,9 @@ import net.minecraft.world.phys.Vec3;
  * 2026-11-15 아스널 킹 (궁수 2차 각성 — 사용자 "2차부터 길가매쉬 같은 느낌으로", claude/archer-remake.md): 금빛 문 ({@link BlockFx#gate}) 이 허공에 열리고 보물
  * (금빛 투영 칼 — 붉은 홈) 이 칼끝부터 나와 날아감. 골든 볼리 · 킹스 체인 · 트레저 레인 · 킹스 저지먼트 · 아스널 게이트. 원작의 이름 · 주문 · 고유 무기 디자인은 쓰지 않음.
  * 같은 적을 여러 번 치는 것은 10틱 넘게 띄우고, 빠른 연타는 피해 한 번 · 숫자 여러 줄. 화면 흔들림 없음.
+ * <p>
+ * 2026-11-15 직업 전용 2D 그림 (사용자 "직업마다 전용으로 그릴래" — tools/jobvfx/arsenal.py · 그림판 ak_*): 문 = 허공의 금빛 물결 (예전 3D 금 원판 대신) · 빛 폭발 ·
+ * 금빛 충격파 · 달아오른 금 · 보석 반짝임 · 금가루, 보물 · 사슬은 3D 그대로 + 금빛 발광 (빛 번짐 후처리).
  */
 final class ArsenalKingSkills {
     private ArsenalKingSkills() {}
@@ -64,6 +67,7 @@ final class ArsenalKingSkills {
         PhantomArcher.Pal p = PhantomArcher.GOLD_PAL;
         Vfx.Fx fx = RuneProps.fx(level, g, Math.max(appear + 8, life));
         RuneSwords.Blade b = RuneSwords.phantom(fx, PhantomArcher.treasure(treasureN++), V.add(g, d, -len * 0.6), d, face, len, 0.05, p.blade(), p.gem());
+        b.prop.outline(PhantomFx.GOLD.glow()); // 2026-11-15 직업 전용: 보물이 금빛으로 번짐
         fx.on(Math.max(1, appear), () -> b.grow(1, 3).pose(V.add(g, d, -len * 0.2), d, face, 3));
         return b;
     }
@@ -106,6 +110,7 @@ final class ArsenalKingSkills {
         ServerLevel level0 = sp.level();
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.GOLD;
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 1.4, 0.8);
         SkillFx.play(level0, "block.beacon.activate", sp.position(), 1.8, 0.5);
         for (int i = 0; i < n; i++) {
@@ -114,7 +119,7 @@ final class ArsenalKingSkills {
             int fireAt = lead + i * every;
             Vec3 g = backGate(sp, i, n, 1.8, 0.9, 1.9, 0.7);
             Vec3 aim = V.sub(Kit.bodyPoint(target), g);
-            BlockFx.gate(level0, g, aim, 0.7 + (i == n - 1 ? 0.2 : 0), 16, glow, 3, fireAt + 2);
+            PhantomFx.gate(level0, L, g, aim, 0.7 + (i == n - 1 ? 0.2 : 0), 3, fireAt + 2); // 2026-11-15 직업 전용: 금빛 물결 문 (2D)
             RuneSwords.Blade b = treasure(level0, g, aim, len, 2 + i, fireAt + 30);
             // 쏘기 전까지 문 안에서 적을 겨눔
             for (int t = 5 + i; t < fireAt; t += 2) {
@@ -132,7 +137,7 @@ final class ArsenalKingSkills {
                 ServerLevel level = sp.level();
                 Vec3 to = V.up(Kit.bodyPoint(target), (ii - (n - 1) / 2.0) * 0.15);
                 int t = fire(level, b, to, speed, glow);
-                BlockFx.star(level, g, 0.9 + (ii == n - 1 ? 0.4 : 0), core);
+                PhantomFx.flash(level, L, g, 1.1 + (ii == n - 1 ? 0.5 : 0));
                 SkillFx.play(level, "item.trident.throw", g, 1.1 + ii * 0.1, 0.8);
                 if (ii == 0) JobKit.strikeSplit(sp, target, j, P, mult, n, every, wts, false, false, life, t, dd -> {});
                 RuneKit.later(t, () -> {
@@ -141,8 +146,7 @@ final class ArsenalKingSkills {
                     Vec3 at = Kit.bodyPoint(target);
                     PhantomArcher.lodge(sp, j, target, 1, g);
                     JobFx.hit(target, j, ii == n - 1 ? 1.1 : 0.8);
-                    PhantomArcher.impact2d(lv, at, ii == n - 1 ? 1.2 : 0.75, glow, core);
-                    SkillFx.sparks(lv, at, core, ii == n - 1 ? 10 : 5, 4);
+                    PhantomFx.impact(lv, L, at, ii == n - 1 ? 1.2 : 0.75); // 2026-11-15 직업 전용: 빛살 별 · 금가루 · 금 조각
                     if (ii == n - 1) SkillFx.play(lv, "item.trident.hit", at, 0.8, 1.0);
                 });
             });
@@ -173,8 +177,9 @@ final class ArsenalKingSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
-        // 발밑 문 → 뒤로 날아감
-        BlockFx.gate(level0, V.up(c0, 0.06), V.UP, 1.2, 18, glow, 2, 3);
+        PhantomFx.Lib L = PhantomFx.GOLD;
+        // 발밑 문 → 뒤로 날아감 (2026-11-15 직업 전용: 금빛 물결 문 2D)
+        PhantomFx.gate(level0, L, V.up(c0, 0.08), V.UP, 1.2, 2, 3);
         JobMove.run(sp, JobMove.hop(0, 8, JobMove.ahead(sp, -k.num("leap", 5), 0), k.num("lift", 1.0)));
         SkillFx.play(level0, "block.chain.place", c0, 0.8, 1.0);
         SkillFx.play(level0, "block.amethyst_block.resonate", c0, 1.5, 0.7);
@@ -189,8 +194,8 @@ final class ArsenalKingSkills {
             RuneKit.later(1 + s, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                BlockFx.gate(level, g, d, 0.6, 14, glow, 2, pullAt - 1);
-                BlockFx.chain(level, V.add(g, V.unit(d), 0.15), sp0, 0.34, glow, Math.max(2, bindAt - 2 - ss), pullAt - bindAt + 3);
+                PhantomFx.gate(level, L, g, d, 0.6, 2, pullAt - 1);
+                BlockFx.chain(level, V.add(g, V.unit(d), 0.15), sp0, 0.34, glow, Math.max(2, bindAt - 2 - ss), pullAt - bindAt + 3, L.glow());
                 SkillFx.play(level, "block.chain.hit", g, 0.9 + ss * 0.1, 0.9);
             });
         }
@@ -200,8 +205,8 @@ final class ArsenalKingSkills {
             ServerLevel level = sp.level();
             if (t0 != null && !t0.isRemoved() && t0.isAlive()) spot[0] = Kit.bodyPoint(t0);
             Vec3 c = spot[0];
-            BlockFx.star(level, c, 1.8, core);
-            BlockFx.ring(level, V.up(ground(level, c), 0.05), 0.3, radius * 1.3, 18, 0.22, glow, 6);
+            PhantomFx.flash(level, L, c, 2.2);
+            PhantomFx.shock(level, L, PhantomFx.ground(level, c), radius * 2.8, 1);
             SkillFx.play(level, "block.chain.break", c, 0.7, 1.0);
             for (LivingEntity e : Kit.around(sp, c, radius, 2.0)) {
                 bound.add(e.getUUID());
@@ -217,8 +222,9 @@ final class ArsenalKingSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 c = spot[0];
-            PhantomArcher.cross2d(level, c, V.sub(c, sp.position()), 1.8, glow, core);
-            BlockFx.burst(level, c, 1.0, glow, core, 8);
+            // 2026-11-15 직업 전용: 사슬이 조이며 작은 빛 폭발 (예전 X 베기 · 상자 터짐 대신)
+            PhantomFx.boomSmall(level, L, c, 2.6);
+            PhantomFx.flash(level, L, c, 2.0);
             SkillFx.play(level, "block.chain.break", c, 1.2, 1.0);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.8, 1.0);
             for (LivingEntity e : Kit.around(sp, c, radius + 0.5, 2.0)) {
@@ -253,6 +259,7 @@ final class ArsenalKingSkills {
         double[] core = JobKit.core(j);
         Set<UUID> rooted = new HashSet<>();
         List<RuneSwords.Blade> stuck = new ArrayList<>();
+        PhantomFx.Lib L = PhantomFx.GOLD;
         // 하늘 문 2026-11-15 HD: 과녁 자리 앞쪽 (쓴 사람 쪽) 하늘에 활처럼 늘어서 과녁 쪽 (앞 아래) 을 봄 — 쓴 사람 뒤 카메라에는 위를 보는 문의 뒷면이 보임 (마크 면
         // 밝기: 아래를 보는 판은 0.4 라 검은 흙빛이었음)
         Vec3 fw = V.flat(V.sub(center, sp.position()));
@@ -263,9 +270,12 @@ final class ArsenalKingSkills {
             double u = gates <= 1 ? 0 : g / (double) (gates - 1) * 2 - 1;
             double back = r * (0.55 + 0.35 * u * u) + Kit.rand() * 0.6;
             gp[g] = V.add(V.add(V.up(center, sky + (1 - u * u) * 1.4 + Kit.rand() * 0.8), fw, -back), rt, u * r * 1.15);
-            BlockFx.gate(level0, gp[g], V.sub(V.up(center, 0.5), gp[g]), 0.75, 14, glow, 3 + g / 3, finalAt - 3 - g / 3 + 2);
+            PhantomFx.gate(level0, L, gp[g], V.sub(V.up(center, 0.5), gp[g]), 0.75, 3 + g / 3, finalAt - 3 - g / 3 + 2);
         }
-        BlockFx.sigil(level0, V.up(center, 0.04), r * 1.05, PhantomArcher.SIGIL_GOLD, 6, finalAt + 4, 70);
+        // 2026-11-15 직업 전용: 땅 금빛 고리 (금 징 · 보석) · 금 마법진 — 거대한 보물이 내리꽂히기 전에 닫힘 (큰 폭발 그림과 겹치면 그리는 차례에 따라 마법진이 네모난
+        // 자리만큼 가려졌음 — 팬텀 아처 CI 43675143452)
+        PhantomFx.ring(level0, L, center, r, 5, finalAt - 9);
+        BlockFx.sigil(level0, V.up(center, 0.04), r * 1.05, PhantomArcher.SIGIL_GOLD, 6, finalAt - 12, 70);
         SkillFx.play(level0, "block.beacon.activate", center, 1.6, 1.0);
         SkillFx.play(level0, "block.amethyst_block.resonate", center, 1.2, 1.0);
         // 물결: 문마다 보물이 나와 (hit − 6) 날아가 (hit − t) 땅에 꽂힘 · hit 틱에 피해
@@ -295,8 +305,9 @@ final class ArsenalKingSkills {
                         RuneKit.later(t, () -> {
                             stuck.add(b);
                             if (RuneKit.fxQuota("treasureRainLand", 8)) {
-                                BlockFx.star(sp.level(), V.up(to, 0.25), 0.6, glow);
-                                BlockFx.ring(sp.level(), V.up(to, 0.05), 0.1, 0.8, 10, 0.12, glow, 5);
+                                // 2026-11-15 직업 전용: 꽂힌 자리 금가루 · 빛살 별
+                                PhantomFx.dust(sp.level(), L, PhantomFx.ground(sp.level(), to), 1.4);
+                                PhantomFx.flash(sp.level(), L, V.up(to, 0.3), 0.9);
                             }
                         });
                     });
@@ -305,7 +316,6 @@ final class ArsenalKingSkills {
             RuneKit.later(hitAt, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                BlockFx.ring(level, V.up(center, 0.05), r - 0.5, r + 0.3, 30, 0.2, glow, 5);
                 SkillFx.play(level, "item.trident.hit", center, 0.9 + ww * 0.08, 1.0);
                 for (LivingEntity e : Kit.around(sp, center, r, 4)) {
                     boolean pin = rooted.add(e.getUUID());
@@ -328,7 +338,7 @@ final class ArsenalKingSkills {
         RuneKit.later(bigAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
-            BlockFx.gate(level, bigGate, bigDir, 2.2, 28, glow, 5, 18);
+            PhantomFx.gate(level, L, bigGate, bigDir, 2.2, 5, 18);
             giant[0] = treasure(level, bigGate, bigDir, k.num("bigLen", 4.6), 4, 40);
             SkillFx.play(level, "block.beacon.power_select", center, 0.7, 1.4);
         });
@@ -340,15 +350,15 @@ final class ArsenalKingSkills {
         });
         RuneKit.later(finalAt, () -> {
             ServerLevel level = sp.level();
-            PhantomArcher.blast(level, j, V.up(center, 1.0), r * 0.75);
-            BlockFx.ring(level, V.up(center, 0.05), r * 0.3, r * 1.4, 30, 0.4, PhantomArcher.GOLD_PAL.fire(), 9);
+            // 2026-11-15 직업 전용: 금빛 빛 폭발 (빛살 · 불덩이 · 금가루 · 충격파 · 달아오른 금 — 예전 상자 폭발 · 상자 고리 대신)
+            PhantomFx.boom(level, L, V.up(center, 0.1), r * 0.95);
             SkillFx.play(level, "entity.generic.explode", center, 0.9, 1.2);
             for (RuneSwords.Blade b : stuck) {
-                if (RuneKit.fxQuota("treasureRainBurst", 10)) BlockFx.burst(level, V.lerp(b.hilt(), b.tip(), 0.7), 0.7, PhantomArcher.GOLD_PAL.fire(), PhantomArcher.GOLD_PAL.fireCore(), 8);
-                PhantomArcher.shatter(level, b, 1.0);
+                if (RuneKit.fxQuota("treasureRainBurst", 10)) PhantomFx.flash(level, L, V.lerp(b.hilt(), b.tip(), 0.7), 1.4);
+                PhantomArcher.shatter(level, b, 1.0, L);
             }
             stuck.clear();
-            if (giant[0] != null) RuneKit.later(10, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.0));
+            if (giant[0] != null) RuneKit.later(10, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.0, L));
             if (!RuneKit.sameLife(sp, life)) return;
             for (LivingEntity e : Kit.around(sp, center, r, 4)) JobKit.strike(sp, e, j, P, k.num("final", 2.6), false, true, life, 0, d -> JobFx.hit(e, j, 1.2));
         });
@@ -379,13 +389,16 @@ final class ArsenalKingSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.GOLD;
         // 2026-11-15 HD: 큰 문은 과녁 앞쪽 (쓴 사람 쪽) 위에서 비스듬히 과녁을 내려다봄 (아래만 보는 판은 마크 면 밝기 0.4 로 어두웠음) · 땅에 금빛 마법진
         Vec3 fw = V.flat(V.sub(spot[0], sp.position()));
         fw = V.len(fw) < 1e-3 ? Kit.facingOf(sp) : V.unit(fw);
         Vec3 top = V.add(V.up(spot[0], sky), fw, -sky * 0.45);
         Vec3 gdir = V.unit(V.sub(spot[0], top));
-        BlockFx.gate(level0, top, gdir, 2.6, 30, glow, 6, hitAt);
-        BlockFx.sigil(level0, V.up(ground(level0, spot[0]), 0.04), k.num("radius", 4) * 0.9, PhantomArcher.SIGIL_GOLD, 6, blastAt - 4, 80);
+        PhantomFx.gate(level0, L, top, gdir, 2.6, 6, hitAt);
+        // 2026-11-15 직업 전용: 땅 금빛 고리 · 금 마법진은 터지기 전에 닫힘 (큰 폭발 그림과 겹치지 않게)
+        PhantomFx.ring(level0, L, PhantomFx.ground(level0, spot[0]), k.num("radius", 4) * 0.9, 6, blastAt - 9);
+        BlockFx.sigil(level0, V.up(ground(level0, spot[0]), 0.04), k.num("radius", 4) * 0.9, PhantomArcher.SIGIL_GOLD, 6, blastAt - 13, 80);
         SkillFx.play(level0, "block.beacon.activate", sp.position(), 1.2, 1.0);
         SkillFx.play(level0, "block.amethyst_block.resonate", spot[0], 0.7, 1.4);
         RuneSwords.Blade b = treasure(level0, top, gdir, len, 5, blastAt + 30);
@@ -397,7 +410,7 @@ final class ArsenalKingSkills {
         });
         for (int t = 9; t < hitAt - 3; t += 3) {
             int tt = t;
-            RuneKit.later(t, () -> BlockFx.star(sp.level(), b.tip(), 0.5 + tt * 0.04, core));
+            RuneKit.later(t, () -> PhantomFx.flash(sp.level(), L, b.tip(), 0.7 + tt * 0.05));
         }
         RuneKit.later(hitAt - 3, () -> {
             if (!RuneKit.sameLife(sp, life)) {
@@ -414,9 +427,11 @@ final class ArsenalKingSkills {
         RuneKit.later(hitAt, () -> {
             ServerLevel lv = sp.level();
             Vec3 to = spot[0];
-            BlockFx.star(lv, to, 2.0, glow); // 1인칭 영상: 2.6 은 화면을 거의 덮었음
-            BlockFx.ring(lv, V.up(ground(lv, to), 0.05), 0.4, 3.0, 22, 0.3, glow, 6);
-            SkillFx.sparks(lv, to, core, 12, 5);
+            // 2026-11-15 직업 전용: 빛살 별 · 금빛 충격파 · 꽂힌 자리 금가루 · 반짝임 (1인칭 영상: 별 2.6 은 화면을 거의 덮었음 → 2.2)
+            PhantomFx.flash(lv, L, to, 2.2);
+            PhantomFx.shock(lv, L, PhantomFx.ground(lv, to), 6.0, 1);
+            PhantomFx.dust(lv, L, PhantomFx.ground(lv, to), 2.0);
+            PhantomFx.embers(lv, L, to, 12, 1.8, 0.42, 16);
             SkillFx.play(lv, "item.trident.hit", to, 0.6, 1.0);
             if (!RuneKit.sameLife(sp, life)) return;
             if (hitE != null) JobKit.strike(sp, hitE, j, P, k.num("hit", 5.6), false, false, life, 0, dd -> {
@@ -425,17 +440,22 @@ final class ArsenalKingSkills {
             });
             else for (LivingEntity e : Kit.around(sp, to, 1.5, 2.0)) JobKit.strike(sp, e, j, P, k.num("hit", 5.6), false, false, life, 0, dd -> JobFx.hit(e, j, 1.1));
         });
-        for (int q = hitAt + 3; q < blastAt; q += 3) {
-            int qq = q - hitAt;
-            RuneKit.later(q, () -> BlockFx.star(sp.level(), V.lerp(b.hilt(), b.tip(), 0.5), 1.0 + qq * 0.12, PhantomArcher.GOLD_PAL.fire()));
-        }
+        // 2026-11-15 직업 전용: 꽂힌 거대한 보물에 빛이 모이며 부풂 (모으는 빛 1.2 → 3.6 — 터질 때 지움)
+        Vfx.Sprite[] swell = {null};
+        RuneKit.later(hitAt + 1, () -> {
+            Vec3 m = V.lerp(b.hilt(), b.tip(), 0.62);
+            Vfx.Fx sf = Vfx.at(sp.level(), m, blastAt - hitAt + 4);
+            swell[0] = PhantomFx.charge(sf, L, m, 1.2);
+            swell[0].to(null, 3.6, Math.max(1, blastAt - hitAt - 2));
+        });
         RuneKit.later(blastAt, () -> {
             ServerLevel l2 = sp.level();
             Vec3 c = hitE != null && !hitE.isRemoved() ? Kit.bodyPoint(hitE) : spot[0];
-            PhantomArcher.shatter(l2, b, 2.5);
+            if (swell[0] != null) swell[0].remove();
+            PhantomArcher.shatter(l2, b, 2.5, L);
             double rad = k.num("radius", 4);
-            PhantomArcher.blast(l2, j, c, rad * 0.9);
-            BlockFx.ring(l2, V.up(ground(l2, c), 0.05), rad * 0.4, rad * 1.5, 30, 0.45, PhantomArcher.GOLD_PAL.fire(), 9);
+            // 2026-11-15 직업 전용: 금빛 빛 폭발 (예전 상자 폭발 · 상자 고리 대신)
+            PhantomFx.boom(l2, L, V.up(c, 0.1), rad);
             Ult.flash(l2, c, PhantomArcher.GOLD_PAL.fire(), Opt.of("radius", 6.0, "time", new double[] {0.02, 0.04, 0.25}), sp);
             SkillFx.play(l2, "entity.generic.explode", c, 0.8, 1.2);
             if (!RuneKit.sameLife(sp, life)) return;
@@ -469,12 +489,14 @@ final class ArsenalKingSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.GOLD;
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.beacon.activate", c0, 0.8, 1.4);
         SkillFx.play(level0, "block.end_portal.spawn", c0, 1.6, 0.5);
-        BlockFx.gate(level0, V.up(c0, 0.06), V.UP, 2.4, 30, glow, 4, 10);
-        BlockFx.ring(level0, V.up(c0, 0.1), 0.5, R, 48, 0.3, glow, 14);
+        // 2026-11-15 직업 전용: 발밑 금빛 물결 문 · 퍼지는 금빛 충격파 (예전 3D 원판 · 상자 고리 대신)
+        PhantomFx.gate(level0, L, V.up(c0, 0.08), V.UP, 2.4, 4, 10);
+        PhantomFx.shock(level0, L, PhantomFx.ground(level0, c0), R * 2.15, 1);
         // 등 뒤 문 두 줄 (아래 줄 넓게 · 위 줄 높게) — 쓴 자리 기준으로 고정
         Vec3 right = V.rightOf(f0);
         Vec3[] gp = new Vec3[gates];
@@ -493,7 +515,7 @@ final class ArsenalKingSkills {
             int open = 2 + g;
             RuneKit.later(open, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                BlockFx.gate(sp.level(), pos, face, low ? 1.1 : 0.9, 14, glow, 3, finalAt - open);
+                PhantomFx.gate(sp.level(), L, pos, face, low ? 1.1 : 0.9, 3, finalAt - open);
             });
         }
         // 물결: 문마다 보물이 나와 적에게 날아감 (hitAt 에 닿음)
@@ -517,7 +539,7 @@ final class ArsenalKingSkills {
                         if (RuneKit.fxQuota("arsenalStreak", 12)) PhantomArcher.streak2d(sp.level(), V.add(b.hilt(), d, 0.5), dst, 0.25, glow, null);
                         RuneKit.later(2, () -> {
                             b.remove();
-                            if (e == null && RuneKit.fxQuota("arsenalMiss", 6)) BlockFx.star(sp.level(), dst, 0.8, glow);
+                            if (e == null && RuneKit.fxQuota("arsenalMiss", 6)) PhantomFx.flash(sp.level(), L, dst, 1.0);
                         });
                     });
                 }
@@ -550,8 +572,10 @@ final class ArsenalKingSkills {
             fw = V.len(fw) < 1e-3 ? f0 : V.unit(fw);
             top0[0] = V.add(V.up(spot[0], 9.0), fw, -4.2);
             gdir0[0] = V.unit(V.sub(spot[0], top0[0]));
-            BlockFx.gate(level, top0[0], gdir0[0], 3.4, 36, glow, 6, 16);
-            BlockFx.sigil(level, V.up(spot[0], 0.04), k.num("finalRadius", 4) * 1.1, PhantomArcher.SIGIL_GOLD, 6, 20, 90);
+            PhantomFx.gate(level, L, top0[0], gdir0[0], 3.4, 6, 16);
+            // 2026-11-15 직업 전용: 땅 금빛 고리 · 금 마법진은 거대한 보물이 꽂히기 전에 닫힘 (큰 폭발 그림과 겹치지 않게)
+            PhantomFx.ring(level, L, spot[0], k.num("finalRadius", 4) * 1.1, 5, 8);
+            BlockFx.sigil(level, V.up(spot[0], 0.04), k.num("finalRadius", 4) * 1.1, PhantomArcher.SIGIL_GOLD, 6, 4, 90);
             giant[0] = treasure(level, top0[0], gdir0[0], k.num("giantLen", 7.0), 5, 40);
             SkillFx.play(level, "block.beacon.power_select", spot[0], 0.6, 1.4);
             SkillFx.play(level, "block.amethyst_block.resonate", spot[0], 0.6, 1.2);
@@ -568,11 +592,11 @@ final class ArsenalKingSkills {
             if (spot[0] == null) return;
             ServerLevel level = sp.level();
             double fr = k.num("finalRadius", 4);
-            PhantomArcher.blast(level, j, V.up(spot[0], 1.0), fr);
-            BlockFx.ring(level, V.up(spot[0], 0.05), fr * 0.3, fr * 1.8, 32, 0.45, PhantomArcher.GOLD_PAL.fire(), 10);
+            // 2026-11-15 직업 전용: 금빛 대폭발 (예전 상자 폭발 · 상자 고리 대신)
+            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.5);
             Ult.flash(level, spot[0], PhantomArcher.GOLD_PAL.fire(), Opt.of("radius", 8.0, "time", new double[] {0.02, 0.05, 0.3}), sp);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
-            if (giant[0] != null) RuneKit.later(12, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.5));
+            if (giant[0] != null) RuneKit.later(12, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.5, L));
             if (!RuneKit.sameLife(sp, life)) return;
             for (LivingEntity e : Kit.around(sp, spot[0], fr, 4)) JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
         });

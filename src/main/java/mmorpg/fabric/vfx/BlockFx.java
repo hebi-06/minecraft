@@ -424,6 +424,11 @@ public final class BlockFx {
      * hold 틱 → 3틱에 작아져 사라짐 (색 color 는 쓰지 않음 — 금)
      */
     public static void chain(ServerLevel level, Vec3 a, Vec3 b, double link, double[] color, int grow, int hold) {
+        chain(level, a, b, link, color, grow, hold, -1);
+    }
+
+    /** 사슬 + 발광 외곽선 (glow ≥ 0 — 2026-11-15 직업 전용 이펙트: 아스널 킹 금빛 빛 번짐) */
+    public static void chain(ServerLevel level, Vec3 a, Vec3 b, double link, double[] color, int grow, int hold, int glow) {
         Vec3 dv = V.sub(b, a);
         double L = V.len(dv);
         if (L < 0.1) return;
@@ -444,6 +449,7 @@ public final class BlockFx {
                     q.grip(8, 8, 8).bright();
                     q.to(p, rot, k * 0.3, 0);
                 });
+                if (glow >= 0) o.outline(glow);
                 o.size(k, 1);
                 fx.on(G + H, () -> o.size(k * 0.3, 3));
                 fx.on(G + H + 4, o::remove);

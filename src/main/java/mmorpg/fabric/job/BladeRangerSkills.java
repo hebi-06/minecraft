@@ -27,6 +27,9 @@ import net.minecraft.world.phys.Vec3;
  * 2026-11-15 블레이드 레인저 (궁수 2차 반전 — 사용자 "에미아 같은 근접으로", claude/archer-remake.md): 1차를 뒤집음 — 멀리서 쏘는 대신 투영한 쌍검 (단조 불빛 날 ·
  * 주황 홈) 을 들고 파고들어 벰. 트윈 슬래시 · 블레이드 부메랑 · 블레이드 스톰 · 포지 브레이커 · 아이언 템페스트. 원작의 이름 · 주문 · 쌍검 디자인은 쓰지 않음. 같은 적을 여러 번
  * 치는 것은 10틱 넘게 띄우고, 빠른 연타는 피해 한 번 · 숫자 여러 줄. 화면 흔들림 없음.
+ * <p>
+ * 2026-11-15 직업 전용 2D 그림 (사용자 "직업마다 전용으로 그릴래" — tools/jobvfx/forge.py · 그림판 br_*): 베기 = 달아오른 초승달 (휘두른 면에 고정 · 앞뒤 두 장 —
+ * 예전 단색 참격 판 대신) · 쌍검 X 베기 · 쇳물 폭발 · 열 충격파 · 녹은 금 · 단조 불꽃 · 불티, 칼은 3D 그대로 + 주황 발광 (빛 번짐 후처리).
  */
 final class BladeRangerSkills {
     private BladeRangerSkills() {}
@@ -54,6 +57,7 @@ final class BladeRangerSkills {
         Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 6, life));
         PhantomArcher.Pal p = PhantomArcher.FORGE_PAL;
         RuneSwords.Blade b = RuneSwords.phantom(fx, p.sword(), hilt, d, PhantomArcher.faceOf(d), len, 0.05, p.blade(), p.gem());
+        b.prop.outline(PhantomFx.FORGE.glow()); // 2026-11-15 직업 전용: 칼이 주황으로 번짐
         fx.on(Math.max(1, appear), () -> b.grow(1, 2));
         return b;
     }
@@ -66,8 +70,15 @@ final class BladeRangerSkills {
         Vec3 ff = V.unit(V.flat(f));
         if (V.len(ff) < 1e-3) ff = new Vec3(1, 0, 0);
         Vec3 v = V.unit(V.add(V.rightOf(ff), V.UP, tilt));
-        Vec3 n = V.unit(V.cross(v, ff));
-        PhantomArcher.slash2d(level, c, n, ff, r, 1.0, PhantomArcher.SLASH_LIFE, 0, glow, BlockFx.hot(glow), false, dirSign > 0);
+        // 2026-11-15 직업 전용: 달아오른 초승달 베기 (br_slash — 휘두른 면에 고정 · 앞뒤 두 장, 예전 단색 참격 판 slash_basic 대신)
+        PhantomFx.slash(level, PhantomFx.FORGE, c, ff, V.scale(v, dirSign), r);
+    }
+
+    /** 2026-11-15 몸 둘레 휩쓰는 베기 (돌며 베기 · 블레이드 스톰 — 누운 면을 앞이 조금 들리게 lift): 가운데 c · 볼록한 쪽 f · 반지름 r · 휘두르는 쪽 dirSign */
+    static void sweepArc(ServerLevel level, Vec3 c, Vec3 f, int dirSign, double r, double lift) {
+        Vec3 ff = V.len(V.flat(f)) < 1e-3 ? new Vec3(0, 0, 1) : V.unit(V.flat(f));
+        Vec3 side = V.add(V.scale(V.rightOf(ff), dirSign), V.UP, lift * dirSign);
+        PhantomFx.slash(level, PhantomFx.FORGE, c, V.add(ff, V.UP, lift * 0.5), side, r);
     }
 
     /** 칼이 호를 따라 휘두름 (각 a0 → a1 · ticks 틱 — 자루는 가슴 c 에서 hilt 칸 바깥) */
@@ -129,10 +140,11 @@ final class BladeRangerSkills {
         SkillFx.play(level0, "entity.player.attack.sweep", sp.position(), 1.5, 0.8);
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 1.7, 0.6);
         Vec3 right = V.rightOf(f);
+        PhantomFx.Lib L = PhantomFx.FORGE;
         RuneSwords.Blade[] bl = new RuneSwords.Blade[2];
         for (int s = 0; s < 2; s++) {
             Vec3 h = V.add(V.up(sp.position(), 1.1), right, (s == 0 ? -1 : 1) * 0.5);
-            PhantomArcher.traceLines(level0, h, V.add(f, V.UP, 0.3), V.UP, 1.4, 0.2);
+            PhantomArcher.traceLines(level0, h, V.add(f, V.UP, 0.3), V.UP, 1.4, 0.2, L.trace());
             bl[s] = blade(level0, h, V.add(f, V.UP, 0.3), 1.4, 1, hitAt + n * every + 10);
         }
         for (int q = 0; q < n; q++) {
@@ -147,7 +159,7 @@ final class BladeRangerSkills {
                 slashArc(level, V.add(c, ff, 0.2), ff, tilt, dir, 2.1, glow, 2, 6);
                 swing(bl[qq % 2], c, ff, tilt, dir > 0 ? -1.3 : 1.3, dir > 0 ? 1.3 : -1.3, 0.35, 2);
                 SkillFx.play(level, "entity.player.attack.sweep", c, 1.2 + qq * 0.1, 0.8);
-                if (qq == n - 1) BlockFx.star(level, V.add(c, ff, 1.6), 1.4, core);
+                if (qq == n - 1) PhantomFx.flash(level, L, V.add(c, ff, 1.9), 1.6);
                 if (qq != 0) return;
                 for (LivingEntity e : front(sp, sp.position(), ff, reach))
                     JobKit.strikeSplit(sp, e, j, P, mult, n, every, wts, false, false, life, 0, d -> JobFx.hit(e, j, 0.9));
@@ -155,7 +167,7 @@ final class BladeRangerSkills {
         }
         RuneKit.later(hitAt + n * every + 3, () -> {
             for (RuneSwords.Blade b : bl) {
-                BlockFx.star(sp.level(), b.hilt(), 0.5, core);
+                PhantomFx.flash(sp.level(), L, b.hilt(), 0.5);
                 b.remove();
             }
         });
@@ -190,12 +202,13 @@ final class BladeRangerSkills {
         SkillFx.play(level0, "entity.player.attack.sweep", c0, 1.3, 0.8);
         SkillFx.play(level0, "item.trident.throw", c0, 1.1, 0.8);
         Vec3 right = V.rightOf(f);
+        PhantomFx.Lib L = PhantomFx.FORGE;
         RuneSwords.Blade[] bl = new RuneSwords.Blade[2];
         Vec3[] start = new Vec3[2];
         Vec3[] prev = new Vec3[2];
         for (int s = 0; s < 2; s++) {
             start[s] = V.add(V.up(c0, 1.15), right, (s == 0 ? -1 : 1) * 0.5);
-            PhantomArcher.traceLines(level0, start[s], f, V.UP, len, 0.25);
+            PhantomArcher.traceLines(level0, start[s], f, V.UP, len, 0.25, L.trace());
             bl[s] = blade(level0, start[s], f, len, 1, spinAt + 12);
         }
         // 날아감 (2 → crossAt): 바깥으로 휘는 두 길 · 돎
@@ -222,9 +235,11 @@ final class BladeRangerSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 c = spot[0];
-            PhantomArcher.cross2d(level, c, V.sub(c, sp.position()), 2.2, glow, core);
-            BlockFx.star(level, c, 2.0, core);
-            SkillFx.sparks(level, c, core, 10, 5);
+            // 2026-11-15 직업 전용: 쌍검 X 베기 (br_xslash — 쓴 사람 쪽 1칸 앞) · 불티 별 · 불티
+            Vec3 toMe = V.unit(V.sub(sp.getEyePosition(), c));
+            PhantomFx.xslash(level, L, V.add(c, toMe, 1.0), 4.4, Kit.rand() * 16 - 8);
+            PhantomFx.flash(level, L, c, 2.2);
+            PhantomFx.embers(level, L, c, 12, 1.8, 0.4, 16);
             SkillFx.play(level, "item.trident.hit", c, 1.1, 0.8);
             for (LivingEntity e : Kit.around(sp, c, k.num("radius", 2), 2.0)) {
                 crossed.add(e.getUUID());
@@ -237,8 +252,8 @@ final class BladeRangerSkills {
             Vec3 c = spot[0];
             Vec3 from = sp.position();
             Vec3 dv = V.flat(V.sub(c, from));
-            double L = V.len(dv);
-            Vec3 land = L > 1.4 ? V.add(from, V.unit(dv), L - 1.3) : from;
+            double dl = V.len(dv);
+            Vec3 land = dl > 1.4 ? V.add(from, V.unit(dv), dl - 1.3) : from;
             JobMove.run(sp, JobMove.to(0, 5, JobMove.at(ground(sp.level(), land)), 1));
             PhantomArcher.trail2d(sp.level(), V.up(from, 1.0), V.up(land, 1.0), 0.25, 0.9, glow, BlockFx.hot(glow)); // 2026-11-15 2D 잔상 (끌려간 길)
             SkillFx.play(sp.level(), "entity.enderman.teleport", from, 1.5, 0.5);
@@ -264,10 +279,10 @@ final class BladeRangerSkills {
             Vec3 ff = Kit.facingOf(sp);
             double sr = k.num("spinRadius", 2.5);
             Vec3 rgt = V.rightOf(ff);
-            // 2026-11-15 2D 돌며 베기: 누운 두꺼운 참격 판 둘 (앞 · 뒤 — 0.08초 늦게) · 잔상이 천천히
-            PhantomArcher.sweep2d(level, c, ff, sr * 0.95, PhantomArcher.SLASH_LIFE, 0, glow, BlockFx.hot(glow), true, false);
-            PhantomArcher.sweep2d(level, c, V.scale(ff, -1), sr * 0.95, PhantomArcher.SLASH_LIFE, 0.08, glow, BlockFx.hot(glow), true, false);
-            BlockFx.ring(level, V.up(sp.position(), 0.05), 0.4, sr * 1.2, 18, 0.25, glow, 6);
+            // 2026-11-15 직업 전용: 돌며 베기 = 달아오른 초승달 둘 (앞 · 뒤 — 같은 쪽으로 돎) · 열 충격파
+            sweepArc(level, c, ff, 1, sr * 0.95, 0.22);
+            sweepArc(level, c, V.scale(ff, -1), 1, sr * 0.95, 0.22);
+            PhantomFx.shock(level, L, PhantomFx.ground(level, sp.position()), sr * 2.6, 1);
             for (int s = 0; s < 2; s++) swing(bl[s], c, ff, 0.05, s * Math.PI, s * Math.PI + Math.PI * 1.6, 0.4, 3);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
             SkillFx.play(level, "item.trident.riptide_1", c, 1.3, 0.7);
@@ -278,10 +293,7 @@ final class BladeRangerSkills {
             }
         });
         RuneKit.later(spinAt + 5, () -> {
-            for (RuneSwords.Blade b : bl) {
-                BlockFx.star(sp.level(), b.hilt(), 0.5, core);
-                b.remove();
-            }
+            for (RuneSwords.Blade b : bl) PhantomArcher.shatter(sp.level(), b, 0.8, L);
         });
         return true;
     }
@@ -305,9 +317,10 @@ final class BladeRangerSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.FORGE;
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 1.2, 0.9);
         SkillFx.play(level0, "item.trident.riptide_2", sp.position(), 1.4, 0.6);
-        BlockFx.ring(level0, V.up(sp.position(), 0.05), 0.4, orbit * 1.4, 18, 0.25, glow, 6);
+        PhantomFx.shock(level0, L, PhantomFx.ground(level0, sp.position()), orbit * 3.0, 1); // 2026-11-15 직업 전용: 열 충격파
         RuneSwords.Blade[] bl = new RuneSwords.Blade[n];
         for (int i = 0; i < n; i++) {
             double a = Math.PI * 2 * i / n;
@@ -339,20 +352,20 @@ final class BladeRangerSkills {
                 Vec3 ff = Kit.facingOf(sp);
                 Vec3 u = V.add(V.scale(ff, Math.cos(hh * 1.1)), V.rightOf(ff), Math.sin(hh * 1.1));
                 Vec3 v = V.rightOf(V.unit(u));
-                // 2026-11-15 2D: 칼 여섯이 도는 자리를 누운 참격 판이 휩씀 (번갈아 거꾸로 · 잔상 천천히)
-                PhantomArcher.sweep2d(level, c, V.unit(u), r * 0.9, PhantomArcher.SLASH_LIFE, 0, glow, BlockFx.hot(glow), hh % 2 == 1, hh % 2 == 1);
-                if (hh == hits - 1) BlockFx.ring(level, V.up(sp.position(), 0.05), 0.5, r * 1.3, 24, 0.3, glow, 7);
+                // 2026-11-15 직업 전용: 칼 여섯이 도는 자리를 달아오른 초승달이 휩씀 (번갈아 거꾸로) · 마지막은 열 충격파
+                sweepArc(level, c, V.unit(u), hh % 2 == 0 ? 1 : -1, r * 0.9, 0.18);
+                if (hh == hits - 1) PhantomFx.shock(level, L, PhantomFx.ground(level, sp.position()), r * 2.6, 1);
                 SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + hh * 0.06, 0.9);
                 for (LivingEntity e : Kit.around(sp, sp.position(), r, 2.2)) {
                     JobKit.strikeSplit(sp, e, j, P, k.num("hit", 2.1), 2, 2, false, false, life, 0, d -> {
                         if (RuneKit.fxQuota("bladeStormHit", 8)) JobFx.hit(e, j, 0.8);
-                        if (RuneKit.fxQuota("bladeStormSpark", 8)) SkillFx.sparks(level, Kit.bodyPoint(e), core, 4, 4);
+                        if (RuneKit.fxQuota("bladeStormSpark", 8)) PhantomFx.embers(level, L, Kit.bodyPoint(e), 4, 1.0, 0.3, 12);
                     });
                 }
             });
         }
         RuneKit.later(end + 2, () -> {
-            for (RuneSwords.Blade b : bl) PhantomArcher.shatter(sp.level(), b, 0.9);
+            for (RuneSwords.Blade b : bl) PhantomArcher.shatter(sp.level(), b, 0.9, L);
         });
         return true;
     }
@@ -377,8 +390,12 @@ final class BladeRangerSkills {
         Vec3 f0 = Kit.facingOf(sp);
         Vec3 h0 = V.up(V.add(sp.position(), f0, -0.2), 2.3);
         Vec3 d0 = V.unit(V.add(V.UP, f0, -0.35));
-        PhantomArcher.traceLines(level0, h0, d0, V.rightOf(f0), len, 0.5);
+        PhantomFx.Lib L = PhantomFx.FORGE;
+        PhantomArcher.traceLines(level0, h0, d0, V.rightOf(f0), len, 0.5, L.trace());
         RuneSwords.Blade b = blade(level0, h0, d0, len, 5, waveAt + 20);
+        // 2026-11-15 직업 전용: 치켜든 칼끝에 모이는 열 (br_charge — 칼끝을 따라감, 0.6 → 2.2)
+        Vfx.Fx chargeFx = Vfx.at(level0, V.add(h0, d0, len), hitAt + 2);
+        Vfx.Sprite[] heat = {null};
         SkillFx.play(level0, "block.anvil.use", sp.position(), 0.7, 0.8);
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 0.8, 1.0);
         // 들어 올림 (뒤로 젖힘) · 칼끝에 불빛
@@ -391,7 +408,8 @@ final class BladeRangerSkills {
                 double back = Math.min(1, tt / (double) leapAt);
                 Vec3 d = V.unit(V.add(V.UP, f, -0.35 - 0.5 * back));
                 b.pose(h, d, V.rightOf(f), 1);
-                if (tt % 3 == 0 && tt >= 6) BlockFx.star(sp.level(), b.tip(), 0.4 + tt * 0.03, glow);
+                if (tt == 6) heat[0] = PhantomFx.charge(chargeFx, L, b.tip(), 0.6);
+                if (heat[0] != null) heat[0].to(b.tip(), 0.6 + (tt - 6) * 0.17, 1);
             });
         }
         RuneKit.later(leapAt, () -> {
@@ -409,16 +427,17 @@ final class BladeRangerSkills {
             spot[0] = c;
             Vec3 d = V.unit(V.add(f, V.UP, -0.9));
             b.pose(V.add(V.up(c, 0.2), d, -b.reach() * 0.75), d, V.rightOf(f), 2);
+            if (heat[0] != null) heat[0].remove();
             PhantomArcher.streak2d(sp.level(), V.up(sp.position(), 3.0), V.up(c, 0.3), 0.3, glow, core);
         });
         RuneKit.later(hitAt, () -> {
             if (!RuneKit.sameLife(sp, life) || spot[0] == null) return;
             ServerLevel level = sp.level();
             Vec3 c = spot[0];
-            BlockFx.star(level, V.up(c, 0.6), 2.4, core);
-            BlockFx.burst(level, V.up(c, 0.4), 1.5, glow, core, 10);
-            BlockFx.ring(level, V.up(c, 0.05), 0.4, 3.2, 24, 0.35, glow, 7);
-            PhantomArcher.shards(level, V.up(c, 0.5), 10, 7.0, 0.4);
+            // 2026-11-15 직업 전용: 내려친 자리 작은 쇳물 폭발 · 불티 별 · 열 충격파 (예전 상자 별 · 상자 터짐 · 상자 고리 · 상자 조각 대신)
+            PhantomFx.boomSmall(level, L, V.up(c, 0.5), 2.6);
+            PhantomFx.flash(level, L, V.up(c, 0.6), 2.4);
+            PhantomFx.shock(level, L, PhantomFx.ground(level, c), 6.4, 1);
             SkillFx.play(level, "block.anvil.land", c, 0.6, 1.0);
             SkillFx.play(level, "entity.generic.explode", c, 1.3, 0.7);
             for (LivingEntity e : Kit.around(sp, c, k.num("hitRadius", 2.2), 2.5)) {
@@ -430,7 +449,7 @@ final class BladeRangerSkills {
         RuneKit.later(waveAt - rise, () -> {
             if (!RuneKit.sameLife(sp, life) || spot[0] == null) return;
             ServerLevel level = sp.level();
-            PhantomArcher.shatter(level, b, 2.0);
+            PhantomArcher.shatter(level, b, 2.0, L);
             Vec3 f = Kit.facingOf(sp);
             double rad = k.num("radius", 5);
             double cone = Math.toRadians(k.num("cone", 80)) / 2;
@@ -446,8 +465,12 @@ final class BladeRangerSkills {
                 RuneKit.later(at, () -> {
                     RuneSwords.Blade s = blade(sp.level(), V.add(g, up, -1.4), up, 1.6 + Kit.rand() * 0.8, 1, 26);
                     RuneKit.later(2, () -> s.pose(V.add(g, up, -0.2), up, PhantomArcher.faceOf(up), 3));
-                    if (RuneKit.fxQuota("forgeFlame", 10)) BlockFx.flame(sp.level(), g, 1.6, glow, core, 9);
-                    RuneKit.later(14, () -> PhantomArcher.shatter(sp.level(), s, 0.8));
+                    if (RuneKit.fxQuota("forgeFlame", 10)) {
+                        // 2026-11-15 직업 전용: 솟는 칼 둘레 단조 불꽃 (br_flame — 세로로 섬) · 그을음
+                        PhantomFx.flame(sp.level(), L, PhantomFx.ground(sp.level(), g), 1.8 + Kit.rand() * 0.8, 1);
+                        PhantomFx.dust(sp.level(), L, PhantomFx.ground(sp.level(), g), 1.3);
+                    }
+                    RuneKit.later(14, () -> PhantomArcher.shatter(sp.level(), s, 0.8, L));
                 });
             }
             SkillFx.play(level, "item.trident.riptide_3", spot[0], 1.0, 1.0);
@@ -458,7 +481,7 @@ final class BladeRangerSkills {
             Vec3 f = Kit.facingOf(sp);
             double rad = k.num("radius", 5);
             Vec3 mid = V.add(spot[0], f, rad * 0.5);
-            PhantomArcher.blast2d(level, V.up(mid, 0.8), rad * 0.7, PhantomArcher.FORGE_PAL);
+            PhantomFx.boom(level, L, V.up(mid, 0.1), rad * 0.6); // 2026-11-15 직업 전용: 쇳물 대폭발 (예전 상자 폭발 대신)
             Ult.flash(level, mid, glow, Opt.of("radius", 6.0, "time", new double[] {0.02, 0.04, 0.25}), sp);
             SkillFx.play(level, "entity.generic.explode", mid, 0.8, 1.2);
             double cone = Math.cos(Math.toRadians(k.num("cone", 80)) / 2 + 0.2);
@@ -490,13 +513,18 @@ final class BladeRangerSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
+        PhantomFx.Lib L = PhantomFx.FORGE;
         Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level0, "block.anvil.use", c0, 0.6, 1.2);
         SkillFx.play(level0, "block.amethyst_block.resonate", c0, 0.6, 1.4);
-        BlockFx.ring(level0, V.up(c0, 0.1), 0.5, k.num("field", 7), 40, 0.3, glow, 12);
+        // 2026-11-15 직업 전용: 퍼지는 열 충격파 · 들판 테두리 톱니 고리 (br_ring) · 단조 마법진 — 고리 · 마법진은 마지막 내려치기 전에 닫힘 (큰 폭발 그림과 겹치면
+        // 그리는 차례에 따라 마법진이 네모난 자리만큼 가려졌음 — 팬텀 아처 CI 43675143452)
+        Vec3 gc0 = PhantomFx.ground(level0, c0);
+        PhantomFx.shock(level0, L, gc0, k.num("field", 7) * 2.3, 1);
+        PhantomFx.ring(level0, L, gc0, k.num("field", 7) * 1.05, 6, finalAt - 16);
         // 2026-11-15 HD: 세운 주황 띠 고리 (장난감처럼 보였음) 대신 땅에 단조 마법진 (톱니 · 엇갈린 칼 · 푸른 강철 고리)
-        BlockFx.sigil(level0, V.up(c0, 0.04), k.num("field", 7) * 1.12, PhantomArcher.SIGIL_FORGE, 8, finalAt, 60);
+        BlockFx.sigil(level0, V.up(c0, 0.04), k.num("field", 7) * 1.12, PhantomArcher.SIGIL_FORGE, 8, finalAt - 22, 60);
         // 둘레 땅에 칼이 꽂힘 (뽑히면 그 자리 칼이 사라짐)
         int m = Math.max(8, (int) k.num("swords", 20));
         List<RuneSwords.Blade> field = new ArrayList<>();
@@ -512,7 +540,11 @@ final class BladeRangerSkills {
                 RuneSwords.Blade b = blade(sp.level(), V.add(V.up(g, 2.5), d, -len * 0.62), d, len, 1, finalAt + 20 - at);
                 RuneKit.later(2, () -> b.pose(V.add(g, d, -len * 0.62), d, PhantomArcher.faceOf(d), 3));
                 field.add(b);
-                if (RuneKit.fxQuota("tempestPlant", 8)) BlockFx.star(sp.level(), V.up(g, 0.3), 0.7, glow);
+                if (RuneKit.fxQuota("tempestPlant", 8)) {
+                    // 2026-11-15 직업 전용: 꽂힌 자리 그을음 · 불티 · 불티 별
+                    PhantomFx.dust(sp.level(), L, PhantomFx.ground(sp.level(), g), 1.5);
+                    PhantomFx.flash(sp.level(), L, V.up(g, 0.4), 0.8);
+                }
             });
         }
         // 물결: 적 앞으로 날아들어 X 베기
@@ -531,8 +563,8 @@ final class BladeRangerSkills {
                 Vec3 to;
                 if (e != null) {
                     Vec3 dv = V.flat(V.sub(e.position(), from));
-                    double L = V.len(dv);
-                    to = L > 1.6 ? V.add(from, V.unit(dv), L - Kit.bodyPad(e) - 1.2) : from;
+                    double dl = V.len(dv);
+                    to = dl > 1.6 ? V.add(from, V.unit(dv), dl - Kit.bodyPad(e) - 1.2) : from;
                 } else to = V.add(from, V.rightOf(Kit.facingOf(sp)), (ww % 2 == 0 ? 1 : -1) * 2.0);
                 Vec3 land = ground(level, to);
                 JobMove.run(sp, JobMove.to(0, 4, JobMove.at(land), 1));
@@ -543,7 +575,7 @@ final class BladeRangerSkills {
                     Vec3 hand = V.up(land, 1.2);
                     Vec3 d = V.unit(V.sub(hand, b.hilt()));
                     b.pose(V.add(hand, d, -0.3), d, PhantomArcher.faceOf(d), 4);
-                    RuneKit.later(5, () -> PhantomArcher.shatter(sp.level(), b, 0.8));
+                    RuneKit.later(5, () -> PhantomArcher.shatter(sp.level(), b, 0.8, L));
                 }
                 SkillFx.play(level, "entity.enderman.teleport", from, 1.6, 0.4);
             });
@@ -552,7 +584,10 @@ final class BladeRangerSkills {
                 ServerLevel level = sp.level();
                 LivingEntity e = last[0];
                 Vec3 c = e != null && !e.isRemoved() ? Kit.bodyPoint(e) : V.up(V.add(sp.position(), Kit.facingOf(sp), 1.5), 1.0);
-                PhantomArcher.cross2d(level, c, V.sub(c, sp.getEyePosition()), 1.9, glow, core);
+                // 2026-11-15 직업 전용: 쌍검 X 베기 (br_xslash — 쓴 사람 쪽 0.6칸 앞) · 불티 별
+                Vec3 toEye = V.unit(V.sub(sp.getEyePosition(), c));
+                PhantomFx.xslash(level, L, V.add(c, toEye, 0.6), 3.6, Kit.rand() * 16 - 8);
+                PhantomFx.flash(level, L, c, 1.5);
                 JobTraits9.twinBlades(level, sp, c, j, 1.5, 6);
                 SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + ww * 0.06, 1.0);
                 // 2026-11-15 칼 들판 둘레 (radius 칸) 의 적 모두 — 날아든 적 둘레만 치면 둘레 다른 몹 (시험의 이웃 구조물 몹 포함) 을 고른 물결이 빗나갔음
@@ -562,7 +597,10 @@ final class BladeRangerSkills {
                 for (LivingEntity x : Kit.around(sp, c0, R, 5)) struck.add(x.getUUID());
                 for (LivingEntity x : Kit.around(sp, c0, Math.max(R, V.hdist(c0, c) + cut), 5)) {
                     if (!struck.contains(x.getUUID())) continue;
-                    if (x != e && RuneKit.fxQuota("tempestCross", 6)) PhantomArcher.cross2d(level, Kit.bodyPoint(x), V.sub(Kit.bodyPoint(x), sp.getEyePosition()), 1.2, glow, core);
+                    if (x != e && RuneKit.fxQuota("tempestCross", 6)) {
+                        Vec3 bx = Kit.bodyPoint(x);
+                        PhantomFx.xslash(level, L, V.add(bx, V.unit(V.sub(sp.getEyePosition(), bx)), 0.5), 2.4, Kit.rand() * 16 - 8);
+                    }
                     JobKit.strikeSplit(sp, x, j, P, k.num("wave", 7), 2, 2, false, false, life, 0, d -> {
                         if (RuneKit.fxQuota("tempestHit", 8)) JobFx.hit(x, j, 1.0);
                     });
@@ -581,12 +619,13 @@ final class BladeRangerSkills {
             JobMove.run(sp, JobMove.hop(0, 12, JobMove.at(ground(level, V.add(spot[0], V.flat(V.sub(sp.position(), spot[0])).length() > 0.1
                     ? V.unit(V.flat(V.sub(sp.position(), spot[0]))) : Kit.facingOf(sp), 1.6))), 2.6));
             Vec3 top = V.up(spot[0], 6.5);
-            PhantomArcher.traceLines(level, top, V.DOWN, V.rightOf(Kit.facingOf(sp)), k.num("giantLen", 6.0), 0.5);
+            PhantomArcher.traceLines(level, top, V.DOWN, V.rightOf(Kit.facingOf(sp)), k.num("giantLen", 6.0), 0.5, L.trace());
             giant[0] = blade(level, V.up(top, 2.0), V.DOWN, k.num("giantLen", 6.0), 3, 40);
             RuneKit.later(4, () -> {
                 if (giant[0] != null) giant[0].pose(top, V.DOWN, PhantomArcher.faceOf(V.DOWN), 6);
             });
-            BlockFx.sigil(level, V.up(spot[0], 0.05), k.num("finalRadius", 4) * 1.05, PhantomArcher.SIGIL_FORGE, 5, 12, 120); // 2026-11-15 세운 띠 고리 대신 땅 마법진
+            // 2026-11-15 세운 띠 고리 대신 땅 마법진 — 내려치기 전에 닫힘 (큰 폭발 그림과 겹치지 않게)
+            BlockFx.sigil(level, V.up(spot[0], 0.05), k.num("finalRadius", 4) * 1.05, PhantomArcher.SIGIL_FORGE, 5, 2, 120);
             SkillFx.play(level, "block.anvil.use", spot[0], 0.5, 1.4);
         });
         RuneKit.later(finalAt - 2, () -> {
@@ -599,12 +638,12 @@ final class BladeRangerSkills {
             if (spot[0] == null) return;
             ServerLevel level = sp.level();
             double fr = k.num("finalRadius", 4);
-            PhantomArcher.blast(level, j, V.up(spot[0], 1.0), fr);
-            BlockFx.ring(level, V.up(spot[0], 0.05), fr * 0.3, fr * 1.8, 32, 0.45, PhantomArcher.FORGE_PAL.fire(), 10);
+            // 2026-11-15 직업 전용: 쇳물 대폭발 (예전 상자 폭발 · 상자 고리 대신)
+            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.4);
             Ult.flash(level, spot[0], glow, Opt.of("radius", 8.0, "time", new double[] {0.02, 0.05, 0.3}), sp);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             SkillFx.play(level, "block.anvil.land", spot[0], 0.5, 1.2);
-            if (giant[0] != null) RuneKit.later(10, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.5));
+            if (giant[0] != null) RuneKit.later(10, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.5, L));
             if (!RuneKit.sameLife(sp, life)) return;
             for (LivingEntity e : Kit.around(sp, spot[0], fr, 4)) JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
         });

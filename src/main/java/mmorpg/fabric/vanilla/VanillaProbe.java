@@ -1020,11 +1020,21 @@ final class VanillaProbe {
             // 수호의 외침 — 이웃 프레임 차이 0, 그 뒤 한꺼번에 따라잡음: 처음 쓰는 길의 클래스 적재 · 모델 첫 표시). 남은 연출은 첫 영상의 filmReset 이 끝냄
             int wait = 40;
             // 2026-11-15 직업 전용 2D 그림 몸풀기 (처음 보는 큰 그림은 몇 틱 늦게 나타났음 — CI 43668850426 팬텀 버스트 3인칭 폭발 5장): 눈앞 2칸에 아주 작게 모든 칸을 한 번씩
+            // 2026-11-15 직업마다 그림판 (팬텀 아처 pa_ · 아스널 킹 ak_ · 블레이드 레인저 br_): 영상 목록에 있는 직업 것만
+            java.util.Set<String> warmPrefixes = new java.util.LinkedHashSet<>();
+            for (String fr : FILM_RUNES) {
+                if (!fr.startsWith("job:")) continue;
+                String[] jp = fr.split(":");
+                String pre = jp.length > 1 ? mmorpg.fabric.job.PhantomArcher.vfxPrefix(jp[1]) : null;
+                if (pre != null) warmPrefixes.add(pre);
+            }
             Tasks.later(4, () -> {
                 if (p.isRemoved()) return;
                 Vec3 eye = p.getEyePosition();
-                int t = mmorpg.fabric.vfx.Vfx.warm(p.level(), eye.add(p.getViewVector(1F).scale(2.0)), "pa_");
-                log("film warm sprites pa_ " + t + " ticks");
+                for (String pre : warmPrefixes) {
+                    int t = mmorpg.fabric.vfx.Vfx.warm(p.level(), eye.add(p.getViewVector(1F).scale(2.0)), pre);
+                    log("film warm sprites " + pre + " " + t + " ticks");
+                }
             });
             mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0));
             if (warm != null) {

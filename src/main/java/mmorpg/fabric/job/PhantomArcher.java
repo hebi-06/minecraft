@@ -77,6 +77,17 @@ public final class PhantomArcher {
         };
     }
 
+    /** 2026-11-15 맞은 자리 · 평타 잔상 색: 팬텀 아처 진홍 · 블레이드 레인저 단조 주황 · 아스널 킹 금빛 (보석 루비 대신 — 금빛 묶음과 맞춤) */
+    static double[] accent(Jobs.Job j) {
+        return j != null && j.id().equals("arsenalking") ? GOLD_PAL.fire() : pal(j).gem();
+    }
+
+    /** 2026-11-15 직업 전용 2D 그림판 이름 앞 (pa_ · ak_ · br_ — 영상 몸풀기 Vfx.warm), 그리지 않은 직업은 null */
+    public static String vfxPrefix(String jobId) {
+        PhantomFx.Lib L = PhantomFx.lib(mmorpg.core.Jobs.job(jobId));
+        return L == null ? null : L.p() + "_";
+    }
+
     /** 팬텀 아처 줄기 (1차 · 2차 둘) */
     static boolean family(Jobs.Job j) {
         return j != null && (j.id().equals("archer") || j.id().equals("arsenalking") || j.id().equals("bladeranger"));
@@ -130,6 +141,11 @@ public final class PhantomArcher {
      */
     static void traceLines(ServerLevel level, Vec3 hilt, Vec3 dir, Vec3 face, double len, double life) {
         trace2d(level, hilt, dir, len, Math.max(0.3, life));
+    }
+
+    /** 위와 같고 투영 선이 발광 (glow — 직업 전용 그림 묶음의 trace 색) */
+    static void traceLines(ServerLevel level, Vec3 hilt, Vec3 dir, Vec3 face, double len, double life, int glow) {
+        trace2d(level, hilt, dir, len, Math.max(0.3, life), glow);
     }
 
     // ------------------------------------------------------------ 2026-11-15 단색 블록 볼륨 (사용자 "그냥 위르드처럼" · "도트처럼 보이는게 문제" — BlockFx)
@@ -558,8 +574,8 @@ public final class PhantomArcher {
             else mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 1.6), 0.45, TRACE);
         }
         // 2026-11-15 날아가는 칼 뒤 2D 잔상 줄기 (평타가 잦아 가늘게 · 몫 8)
-        if (RuneKit.fxQuota("phantomShotTrail", 8)) trail2d(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), ticks / 20.0, 0.24, pal(j).gem(),
-                mmorpg.fabric.vfx.BlockFx.hot(pal(j).gem()));
+        if (RuneKit.fxQuota("phantomShotTrail", 8)) trail2d(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), ticks / 20.0, 0.24, accent(j),
+                mmorpg.fabric.vfx.BlockFx.hot(accent(j)));
         SkillFx.play(level, "item.trident.throw", from, 1.5 + Kit.rand() * 0.2, 0.3);
     }
 
