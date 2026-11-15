@@ -211,7 +211,8 @@ final class PhantomArcherSkills {
             Vec3 b = V.unit(V.add(r, V.UP, -1));
             // 2026-11-15 직업 전용: 미리 렌더링한 X 베기 (두 줄기가 차례로 그어짐 · 교차점 섬광 — 2 × 2) · 섬광 · 불씨 (예전 2D 참격 판 둘 · 상자 터짐 · 별 대신)
             Vec3 toMe = V.unit(V.sub(sp.getEyePosition(), c));
-            PhantomFx.xslash(level, L, V.add(c, toMe, 0.45), 3.8, Kit.rand() * 16 - 8);
+            // 2026-11-15 영상 (3인칭): 3.8칸 · 몸 앞 0.45칸은 작고 과녁 몸에 반쯤 가렸음 → 4.8칸 · 쓴 사람 쪽 1칸 앞
+            PhantomFx.xslash(level, L, V.add(c, toMe, 1.0), 4.8, Kit.rand() * 16 - 8);
             PhantomFx.flash(level, L, c, 2.4);
             PhantomFx.embers(level, L, c, 12, 1.8, 0.42, 16);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
@@ -305,10 +306,11 @@ final class PhantomArcherSkills {
         // 2026-11-15 영상: 오각별 마법진 (SkillFx.rune) 대신 땅에 눕는 칼날 고리 (rfx_jbladering — 칼 컨셉과 맞춤)
         // 2026-11-15 사용자 "남은 2D 고리 블록으로 바꿔": 땅 예고 고리 · 퍼지는 고리 · 하늘 고리 = 단색 블록 (BlockFx)
         // 2026-11-15 직업 전용: 땅 고리 (2 × 2 그림 — 예고 · 테두리) · 퍼지는 충격파
-        PhantomFx.ring(level0, L, center, r, 5, burstAt);
+        // 2026-11-15 영상: 땅 고리 · 마법진은 꽂힌 칼이 터지기 직전에 닫힘 — 큰 폭발 그림 (반투명 2D) 과 겹치면 그리는 차례에 따라 마법진이 네모난 자리만큼 가려졌음
+        PhantomFx.ring(level0, L, center, r, 5, burstAt - 9);
         PhantomFx.shock(level0, L, center, r * 2.2, 1);
         // 2026-11-15 HD: 하늘 띠 고리 (장난감처럼 보였음) 대신 땅에 진홍 마법진 (육망성 · 칼 문장 · 금빛 룬 — 위를 보는 판은 마크 면 밝기 1)
-        mmorpg.fabric.vfx.BlockFx.sigil(level0, V.up(center, 0.045), r * 1.02, PhantomArcher.SIGIL_CRIMSON, 5, burstAt - 2, 60);
+        mmorpg.fabric.vfx.BlockFx.sigil(level0, V.up(center, 0.045), r * 1.02, PhantomArcher.SIGIL_CRIMSON, 5, burstAt - 11, 60);
         for (int w = 0; w < waves; w++) {
             int ww = w;
             int hitAt = first + w * gap;
@@ -370,7 +372,7 @@ final class PhantomArcherSkills {
             stuck.clear();
             if (!RuneKit.sameLife(sp, life)) return;
             // 2026-11-15 직업 전용: 큰 폭발 (불덩이 · 땅 충격파 · 그을린 땅 · 불씨 · 칼 조각 — 예전 상자 폭발 · 상자 고리 대신)
-            PhantomFx.boom(level, L, V.up(center, 0.1), r * 0.75);
+            PhantomFx.boom(level, L, V.up(center, 0.1), r * 0.95); // 2026-11-15 영상: 0.75 는 고리에 비해 작았음
             SkillFx.play(level, "entity.generic.explode", center, 0.9, 1.1);
             for (LivingEntity e : Kit.around(sp, center, r, 4)) JobKit.strike(sp, e, j, P, k.num("burst", 2.6), false, false, life, 0, d -> JobFx.hit(e, j, 1.0));
         });
@@ -581,9 +583,11 @@ final class PhantomArcherSkills {
             // 2026-11-15 직업 전용: 테두리 · 안쪽 고리 = 땅 고리 그림 (2 × 2 — 반짝임) — 예전 상자 고리 대신
             PhantomFx.ring(level, L, g0, R, 4, finalAt - ringTicks + 6);
             // 2026-11-15 마법진 (미리보기에서 맞춤): 육망성 (세모 둘 · 반지름 0.97R — 2틱마다 한 변씩 그어짐) + 그 안쪽 고리 (0.485R)
-            PhantomFx.ring(level, L, g0, R * 0.485, 6, finalAt - ringTicks + 2);
+            // 2026-11-15 영상: 안쪽 고리 · 마법진 · 육망성은 남은 칼이 내리꽂히는 동안 닫혀 마지막 폭발 전에 사라짐 (폭발 그림과 겹치면 네모난 자리만큼 가려졌음 —
+            // 반투명 글자 그림의 깊이 쓰기). 테두리 고리 · 불꽃은 폭발 뒤까지
+            PhantomFx.ring(level, L, g0, R * 0.485, 6, finalAt - ringTicks - 10);
             // 2026-11-15 HD: 안쪽 고리 안을 진홍 마법진 (육망성 · 칼 문장 · 금빛 룬) 이 채움
-            mmorpg.fabric.vfx.BlockFx.sigil(level, V.up(c0, 0.045), R * 0.5, PhantomArcher.SIGIL_CRIMSON, 8, finalAt - ringTicks + 2, 45);
+            mmorpg.fabric.vfx.BlockFx.sigil(level, V.up(c0, 0.045), R * 0.5, PhantomArcher.SIGIL_CRIMSON, 8, finalAt - ringTicks - 14, 45);
             double rho = R * 0.97;
             for (int tri = 0; tri < 2; tri++) {
                 for (int e = 0; e < 3; e++) {
@@ -594,7 +598,7 @@ final class PhantomArcherSkills {
                     Vec3 pb = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a1), 0, Math.sin(a1)), rho);
                     RuneKit.later(delay, () -> {
                         // 2026-11-15 영상: 굵기 0.2 + 발광은 3인칭에서 굵은 붉은 관 · 1인칭에서 화면을 가로지르는 붉은 막대 (가장 눈에 띄는 것이 됨) → 0.1 · 발광 없음
-                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.1, glow, 4, finalAt - ringTicks - delay);
+                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.1, glow, 4, finalAt - ringTicks - delay - 10);
                     });
                 }
             }

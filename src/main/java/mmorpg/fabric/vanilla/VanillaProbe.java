@@ -1184,8 +1184,8 @@ final class VanillaProbe {
             java.util.Map.entry("warrior", "24 22 54 24a3 80"),
             java.util.Map.entry("mage", "18 18 76 58 84"),
             // 2026-11-15 팬텀 아처 (RpgJobGallery CASES_AR). 직업 전용 이펙트 영상: 블레이드 레인 (꽂힌 칼이 56틱에 터짐 — 64 는 폭발 첫 칸에서 끝났음) ·
-            // 팬텀 버스트 (폭발 꼬리) · 소드 생추어리 (86틱 마지막 폭발 꼬리) 를 끝까지
-            java.util.Map.entry("archer", "18 30 90 60 112"),
+            // 팬텀 버스트 (폭발 꼬리) 를 끝까지 (CI 43675143452: 90 · 60 · 112 는 폭발 뒤 빈 장면이 1초 남짓 — 줄임)
+            java.util.Map.entry("archer", "18 30 80 50 100"),
             java.util.Map.entry("assassin", "20 50 50 24a4 58"),
             java.util.Map.entry("lancer", "20 22 24 30a3 66"),
             java.util.Map.entry("reaper", "22 34 16 24a3 90"),
@@ -1277,7 +1277,7 @@ final class VanillaProbe {
             // 2026-11-15 소드 생추어리: 12칸 불꽃 고리 · 칼 들판 · 겨눈 곳 하늘 7칸에서 내리꽂힘 — 위에서 넓게
             case "archer_ult" -> new double[] {13.0, 4.6, 1.6, 0.3};
             // 블레이드 레인: 과녁 위 7칸 하늘의 칼 물결
-            case "archer_blades" -> new double[] {7.5, 3.2, 3.4, 0.5}; // 2026-11-15 9칸은 칼 물결 · 폭발이 작게 보였음
+            case "archer_blades" -> new double[] {6.0, 3.0, 3.6, 0.5}; // 2026-11-15 9칸 · 7.5칸은 칼 물결 · 폭발이 작게 보였음
             // 2026-11-15 가까이 (사용자 "너무 저퀄" — 멀리서 작게 보였음): 소드 볼트 · 크로스 팽 · 팬텀 버스트
             // (2026-11-15 처음 값 6.0 ~ 7.0 은 기본 6.0 과 거의 같아 그대로 멀었음 → 4 ~ 5칸)
             case "archer_volley" -> new double[] {4.2, 1.8, 1.5, 0.7};
