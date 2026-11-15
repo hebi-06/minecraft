@@ -132,6 +132,6 @@ tasks.register('probeJar', Jar) {
 tasks.register('probeClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
     mods.setFrom(tasks.named('probeJar')) // 모드 jar · Fabric API 를 넣지 않음
     runDir.set(layout.projectDirectory.dir('run-probe'))
-    programArgs.addAll(['--quickPlayMultiplayer', '127.0.0.1:25565', '--username', 'Probe', '--width', '1280', '--height', '720'])
+    programArgs.addAll(['--quickPlayMultiplayer', '127.0.0.1:25565', '--username', 'Probe', '--width', '1920', '--height', '1080']) // 2026-11-15 시범: 1080p 영상
 }
 

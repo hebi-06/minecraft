@@ -175,6 +175,172 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_boom_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_boom_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_boom_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_boom_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_crack_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_crack_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_crack_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_crack_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_flash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_glow.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_glow_cyan.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/pb_spark.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

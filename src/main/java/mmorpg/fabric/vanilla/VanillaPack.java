@@ -31,11 +31,24 @@ final class VanillaPack {
                         jobIcons(builder, root);
                         guiFonts(builder, root);
                         cosmeticItems(builder, root);
+                        postEffects(builder, root);
                     }
                     rigAtlas(builder);
                 }));
         // 전용 서버는 켬 · 클라이언트 (싱글 — 다른 사람이 들어오지 않음) 는 끔: 개발 환경 (화면 시험) 에서 Polymer 기본은 켜짐이라 세계를 열 때마다 팩을 다시 만듦
         autoHostDefault(FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER);
+    }
+
+    /**
+     * 2026-11-15 시범 (사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐 나는 압도적인 퀄을 중요하게 여김"): 발광 외곽선을 부드러운 빛 번짐 (블룸 흉내) 으로 —
+     * assets/minecraft/post_effect/entity_outline.json (실루엣을 네 번 흐려 몸 바깥에만) · shaders/post/vfx_glow.fsh. 이펙트 소품에 발광을 켜면 (Vfx.Prop.outline)
+     * 둘레에 빛이 번짐 (벽 너머로도 보임 — 바닐라 발광과 같음)
+     */
+    private static void postEffects(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
+        for (String sub : new String[] {"post_effect", "shaders"}) {
+            Path p = root.resolve("assets").resolve("minecraft").resolve(sub);
+            if (Files.isDirectory(p)) builder.copyFromPath(p, "assets/minecraft/" + sub + "/", false);
+        }
     }
 
     /**

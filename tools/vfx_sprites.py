@@ -230,6 +230,12 @@ SPRITES = [
     ("shock", lambda: shock_ring(), False),
 ]
 
+# 2026-11-15 시범 (사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐 나는 압도적인 퀄을 중요하게 여김" — 팬텀 버스트, tools/vfx_pilot_art.py): 미리 렌더링한 칠한
+# 그림 (폭발 · 충격파 · 그을린 땅은 2 × 2 조각 — 512 픽셀, 섬광 · 모으는 빛 · 빛 무리 · 불티는 한 장)
+import vfx_pilot_art  # noqa: E402
+
+SPRITES += vfx_pilot_art.sprites()
+
 
 def build():
     """→ {파일 경로: 바이트} · 글꼴 · 목록"""

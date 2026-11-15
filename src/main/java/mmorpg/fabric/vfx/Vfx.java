@@ -666,6 +666,8 @@ public final class Vfx {
         double size = 1;
         double roll;
         Quaternionf facing;
+        /** 2026-11-15 조각 자리 (그림 면 안의 x · y — 칸): 큰 그림을 2 × 2 조각 글자로 나눠 붙일 때 (돌림 · 고정 방향을 따라 함께 돎) */
+        Vector3f offset = new Vector3f();
         boolean removed;
         boolean hidden;
         // 칸 넘기기 (play) · 옅어짐 (fade)
@@ -788,6 +790,13 @@ public final class Vfx {
             return this;
         }
 
+        /** 2026-11-15 그림 면 안의 자리 옮김 (칸 — 조각 그림: 오른쪽 x · 위 y) */
+        public Sprite offset(double x, double y) {
+            offset = new Vector3f((float) x, (float) y, 0F);
+            transform();
+            return this;
+        }
+
         /** 나이 at 에 지움 */
         public Sprite until(int at) {
             fx.on(at, this::remove);
@@ -840,7 +849,7 @@ public final class Vfx {
             float s = hidden ? 0F : (float) (size / (glyphHeight * TEXT_UNIT));
             Quaternionf q = facing != null ? new Quaternionf(facing) : new Quaternionf();
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
-            e.setTranslation(new Vector3f());
+            e.setTranslation(hidden ? new Vector3f() : q.transform(new Vector3f(offset)));
             e.setLeftRotation(q);
             e.setScale(new Vector3f(s, s, s));
             e.setRightRotation(new Quaternionf());

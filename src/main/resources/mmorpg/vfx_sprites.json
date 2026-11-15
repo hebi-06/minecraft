@@ -116,6 +116,108 @@
    "frames": 6,
    "aspect": 1.0,
    "colored": false
+  },
+  "pb_boom_00": {
+   "chars": "",
+   "frames": 20,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_boom_01": {
+   "chars": "",
+   "frames": 20,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_boom_10": {
+   "chars": "",
+   "frames": 20,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_boom_11": {
+   "chars": "",
+   "frames": 20,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_shock_00": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_shock_01": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_shock_10": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_shock_11": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_crack_00": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_crack_01": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_crack_10": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_crack_11": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_charge": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_glow": {
+   "chars": "",
+   "frames": 1,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_glow_cyan": {
+   "chars": "",
+   "frames": 1,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "pb_spark": {
+   "chars": "",
+   "frames": 1,
+   "aspect": 1.0,
+   "colored": true
   }
  }
 }
