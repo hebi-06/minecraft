@@ -65,6 +65,11 @@ jobs:
         id: build
         run: ./gradlew assemble gametestClasses --stacktrace --console=plain 2>&1 | tee ci-out/build.txt
 
+      - name: Shader probe
+        # 2026-11-15 리소스 팩 셰이더 시험 준비 (only 에 shaderprobe — 셰이더 · 후처리 파일 목록과 선언 줄만)
+        if: github.event_name == 'workflow_dispatch' && contains(inputs.only, 'shaderprobe')
+        run: bash ci/shader_probe.sh 2>&1 | tee ci-out/shader-probe.txt
+
       - name: Production server
         id: prod
         run: bash ci/prod_smoke.sh 2>&1 | tee ci-out/prod.txt
