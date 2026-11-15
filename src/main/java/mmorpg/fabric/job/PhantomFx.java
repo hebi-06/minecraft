@@ -1,11 +1,16 @@
 package mmorpg.fabric.job;
 
+import java.util.function.Predicate;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
+import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.V;
+import mmorpg.fabric.vfx.PBridge;
 import mmorpg.fabric.vfx.Vfx;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
@@ -40,15 +45,57 @@ final class PhantomFx {
     /** 2026-11-15 블레이드 레인저 (tools/jobvfx/forge.py — 달아오른 베기 · 쇳물 폭발 · 불티 · 푸른 흰 투영) */
     static final Lib FORGE = new Lib("br", GLOW_FORGE, GLOW_CYAN, "spark");
 
+    /** 2026-11-15 원소 공용 묶음 (tools/jobvfx/element.py — 사용자 "원소 공용 + 직업 대표") 의 발광 색 */
+    static final int GLOW_STEEL = 0x8CC8FF;
+    static final int GLOW_BLOOD = 0xE8283A;
+    /** 강철 · 푸른 달빛 (검사 — el_steel: 칼빛 초승달 · 빛 폭발 · 한 바퀴 베기 · 땅 가르기 · 일섬 · 반짝임) */
+    static final Lib STEEL = new Lib("el_steel", GLOW_STEEL, GLOW_STEEL, "ember");
+    /** 피 (블러드 나이트 — el_blood: 핏빛 초승달 · 피 물보라 · 맞은 자리 피 튐 · 피 기둥 · 핏빛 달 · 핏방울) */
+    static final Lib BLOOD = new Lib("el_blood", GLOW_BLOOD, GLOW_BLOOD, "ember");
+
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
         if (j == null) return null;
         return switch (j.id()) {
             case "archer" -> PHANTOM;
-            case "arsenalking" -> GOLD;
+            case "arsenalking", "swordmaster" -> GOLD;
             case "bladeranger" -> FORGE;
+            case "swordsman" -> STEEL;
+            case "bloodknight" -> BLOOD;
             default -> null;
         };
+    }
+
+    /** 원소 공용 묶음으로 그리는 직업 (JobFx 공통 함수 · JobImpact 가 이 묶음으로 갈라짐 — 팬텀 아처 줄기는 PhantomArcher 길이라 뺌) */
+    static Lib elem(Jobs.Job j) {
+        return j == null || PhantomArcher.family(j) ? null : lib(j);
+    }
+
+    /** 이 묶음에 그림판이 있는지 (조각 그림은 이름_00) */
+    static boolean has(Lib L, String name) {
+        return !Vfx.sheetNames(L.n(name)).isEmpty();
+    }
+
+    // ------------------------------------------------------------ 보는 사람 (JobFx 의 view · owner 값)
+
+    /** JobFx 보는 사람 값 (view 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만, owner = 주인 id) → 걸러내기 (null = 모두) */
+    static Predicate<ServerPlayer> who(Opt o) {
+        int v = o == null ? 0 : (int) o.num("view", 0);
+        if (v == 0) return null;
+        int owner = (int) o.num("owner", 0);
+        return v == 1 ? p -> !(p.getId() == owner && !PBridge.thirdPersonOf(p)) : p -> p.getId() == owner && !PBridge.thirdPersonOf(p);
+    }
+
+    /** 주인이 1인칭이면 숨김 (몸 앞 판 · 몸 둘레 그림) */
+    static Predicate<ServerPlayer> hide1p(ServerPlayer sp) {
+        int id = sp.getId();
+        return p -> !(p.getId() == id && !PBridge.thirdPersonOf(p));
+    }
+
+    /** 주인의 1인칭에만 (눈앞에 따로 그리는 그림) */
+    static Predicate<ServerPlayer> only1p(ServerPlayer sp) {
+        int id = sp.getId();
+        return p -> p.getId() == id && !PBridge.thirdPersonOf(p);
     }
 
     /** 땅에 눕힌 그림 (그림 앞면이 위 — 그림 위쪽이 yaw 쪽) */
@@ -71,13 +118,22 @@ final class PhantomFx {
      * 거울이 됨, 미리 뒤집은 그림판 (base + "m") 이 있으면 그것을 써서 뒷면도 세계에서 같은 그림 (휘두르는 쪽이 칼과 같음)
      */
     static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every, boolean twoSided) {
+        return tiled(level, base, k, at, size, facing, roll, from, every, twoSided, null, null, 1.0);
+    }
+
+    /**
+     * 2026-11-15 같은 것 — 뒷면 그림판 back (null = base + "m" 이 있으면 그것 · 없으면 base: 앞면이 미리 뒤집은 slashm 이면 뒷면은 slash 라야 세계에서 같은 그림) ·
+     * 볼 사람 who (null = 모두 — 붙이기 전에 정함) · 불투명 alpha
+     */
+    static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every, boolean twoSided,
+            String back, Predicate<ServerPlayer> who, double alpha) {
         Vfx.Sheet s0 = Vfx.sheet(base + "_00");
         int frames = s0.frames();
         int life = from + frames * every + 4;
-        Vfx.Fx fx = Vfx.at(level, at, life);
+        Vfx.Fx fx = Vfx.at(level, at, life, who);
         double t = size / k;
         int sides = twoSided && facing != null ? 2 : 1;
-        String backBase = Vfx.sheetNames(base + "m_").isEmpty() ? base : base + "m";
+        String backBase = back != null ? back : Vfx.sheetNames(base + "m_").isEmpty() ? base : base + "m";
         fx.on(Math.max(0, from), () -> {
             for (int r = 0; r < k; r++) {
                 for (int c = 0; c < k; c++) {
@@ -86,6 +142,7 @@ final class PhantomFx {
                         if (facing != null) sp.fixed(facing);
                         if (side == 1) sp.mirror();
                         if (roll != 0) sp.roll(roll, 0);
+                        if (alpha < 0.999) sp.alpha(alpha);
                         sp.size(t);
                         sp.offset((c - (k - 1) / 2.0) * t, ((k - 1) / 2.0 - r) * t);
                         sp.play(fx.age(), 0, frames, every, false);
@@ -230,7 +287,8 @@ final class PhantomFx {
         tiled(level, L.n("boom"), 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
         // 2026-11-15 영상 (팬텀 버스트 3인칭 · 1인칭): 지름 3.2 × rad 는 고리 앞 날이 카메라 밑까지 와서 화면 아래를 흰 띠로 가로질렀음 → 2.5 × rad
         tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 2.5, flat(Kit.rand() * 360), 0, 0, 1);
-        tiled(level, L.n("crack"), 2, gc, rad * 1.7, flat(Kit.rand() * 360), 0, 2, 7);
+        if (has(L, "crack_00")) tiled(level, L.n("crack"), 2, gc, rad * 1.7, flat(Kit.rand() * 360), 0, 2, 7);
+        else crackS(level, L, gc, rad * 1.7); // 원소 공용 묶음은 한 장 땅 자국만
         embers(level, L, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
         shards(level, L, V.up(c, 0.3), 12, rad * 1.2, 0.5, 22);
     }
@@ -352,5 +410,338 @@ final class PhantomFx {
         int frames = Vfx.sheet(L.n("flame")).frames();
         Vfx.Fx fx = Vfx.at(level, foot, frames * Math.max(1, every) + 4);
         flame(fx, L, foot, h, every, false, 0);
+    }
+
+    // ------------------------------------------------------------ 2026-11-15 원소 공용 묶음 — JobFx 공통 함수 · 검사 라인 스킬이 부름
+
+    /**
+     * 그림 속 칼빛 초승달이 그림 한 변에서 차지하는 너비 (tools/jobvfx/element.py — 호 반지름 0.9 · 그림 반 변 1): 칼빛 너비 w 칸이면 그림 한 변 = w / SLASH_FILL
+     */
+    static final double SLASH_FILL = 0.9;
+
+    /** 섬광 — 볼 사람을 정함 */
+    static void flash(ServerLevel level, Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
+        Vfx.Fx fx = Vfx.at(level, at, 12, who);
+        single(fx, L.n("flash"), at, size, Kit.rand() * 40 - 20, 1, false);
+    }
+
+    /**
+     * 1인칭 눈앞 큰 베기 (주인의 1인칭에만 — 카메라를 봄): 가운데 at · 칼빛 너비 width 칸 · 기울기 tilt (JobFx.slash 와 같은 뜻 — 0 = 왼쪽에서 아래로 불룩하게 오른쪽으로 ·
+     * 180 = 위로 불룩하게 오른쪽에서 왼쪽으로 · 95 = 위에서 아래로 내리침 · 275 = 아래에서 위로): 미리 뒤집은 그림판 (slashm — 위로 불룩 · 오른쪽 → 왼쪽) 을 180 − tilt 돌림
+     */
+    static void eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt) {
+        tiled(sp.level(), L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 - tilt, 0, 1, false, null, only1p(sp), 1.0);
+    }
+
+    /** 화면 위쪽 축 (dir 에 수직 — dir 이 거의 위 · 아래면 북쪽) · 오른쪽 축 */
+    private static Vec3[] screenAxes(Vec3 dir) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : new Vec3(0, 0, 1);
+        Vec3 up = V.sub(V.UP, V.scale(d, V.dot(V.UP, d)));
+        up = V.len(up) < 1e-3 ? new Vec3(0, 0, -1) : V.unit(up);
+        Vec3 right = V.unit(V.cross(d, up));
+        return new Vec3[] {d, up, right};
+    }
+
+    /**
+     * 몸 앞 참격 판 (세상에 고정 · 앞뒤 두 면 — 3인칭 · 다른 사람): 가운데 at · 앞면이 dir 의 반대 (쓴 사람 뒤에서 보면 앞면 — eyeSlash 와 같은 모습이 같은 자리에) ·
+     * 기울기 tilt (eyeSlash 와 같은 뜻) · 칼빛 너비 width 칸. 앞면 slashm · 뒷면 slash (세계에서 같은 그림 — 휘두르는 쪽이 칼과 같음)
+     */
+    static void card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who) {
+        Vec3[] ax = screenAxes(dir);
+        Quaternionf q = Vfx.basis(ax[2], ax[1], V.scale(ax[0], -1));
+        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180 - tilt, 0, 1, true, L.n("slash"), who, 1.0);
+    }
+
+    /** 땅에 눕힌 참격 판 (JobFx.CardFace.UP — 면이 위): 불룩한 날 = dir 의 수평을 위에서 tilt 도 돌린 쪽 · 칼빛 너비 width 칸 */
+    static void cardUp(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who) {
+        Vec3 h = V.flat(dir);
+        h = V.len(h) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(h);
+        Vec3 bulge = V.turnY(h, tilt);
+        Quaternionf q = Vfx.basis(V.unit(V.cross(bulge, V.UP)), bulge, V.UP);
+        tiled(level, L.n("slash"), 2, at, width / SLASH_FILL, q, 0, 0, 1, false, null, who, 1.0);
+    }
+
+    /**
+     * 날아가는 검기 (JobFx.bigWave · slashWave · groundWave · wave — 카메라를 보는 초승달): at 에서 dir 쪽으로 speed 칸/초 · life 초 · 반폭 half 칸 · 기울기 waveTilt
+     * (bigWave 의 뜻 — 0 = 위로 불룩 · 90 = 세로 · 180 = 아래로 불룩: slashm 을 −waveTilt 돌림) — 날아가는 동안 베기 칸이 차례로 (그어짐 → 거둬짐)
+     */
+    static void wave(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double speed, double half, double waveTilt, double life, Predicate<ServerPlayer> who,
+            double alpha) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        int frames = Vfx.sheet(L.n("slashm_00")).frames();
+        int every = Math.max(1, (int) Math.round(ticks / (double) frames));
+        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, half * 2, null, -waveTilt, 0, every, false, null, who, alpha);
+        if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
+    }
+
+    /** 맞은 자리 (JobFx.hit · JobImpact): X 베기 · 섬광 (피 = 맞은 자리 피 튐) · 날아가는 작은 그림 — 몸 가운데 · power (1 = 보통) */
+    static void hit(ServerLevel level, Lib L, LivingEntity e, double power) {
+        Vec3 b = Kit.bodyPoint(e);
+        double size = (0.75 + Kit.bodyPad(e) * 0.6) * power;
+        xslash(level, L, b, size * 1.7, Kit.rand() * 360);
+        flash(level, L, b, size * 1.9);
+        embers(level, L, b, 3 + (int) Math.round(power * 2), size * 1.1, 0.3, 12);
+    }
+
+    /** 터짐 (JobFx.burst): 작으면 섬광 · 보통이면 작은 폭발 (boom_s) · 크면 큰 폭발 (2 × 2) — 크기 size (예전 빛 반 크기) */
+    static void burst(ServerLevel level, Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
+        if (size < 0.7) {
+            flash(level, L, at, size * 2.6, who);
+            return;
+        }
+        if (size < 2.0) {
+            Vfx.Fx fx = Vfx.at(level, at, 20, who);
+            single(fx, L.n("boom_s"), at, size * 1.8, Kit.rand() * 30 - 15, 1, false);
+            flash(level, L, at, size * 1.5, who);
+            if (who == null) embers(level, L, at, 4 + (int) (size * 3), size, 0.35, 16);
+            return;
+        }
+        tiled(level, L.n("boom"), 2, at, size * 1.6, null, Kit.rand() * 30 - 15, 0, 1, false, null, who, 1.0);
+        if (who == null) {
+            embers(level, L, at, 14, size * 0.8, 0.45, 22);
+            shards(level, L, at, 6, size * 0.8, 0.4, 18);
+        }
+    }
+
+    /** 땅 자국 한 장 (crack_s — 눕힘, 2틱부터 6틱마다): 땅 g · 지름 size 칸 */
+    static void crackS(ServerLevel level, Lib L, Vec3 g, double size) {
+        Vfx.Fx cx = Vfx.at(level, g, 40);
+        Vfx.Sprite cr = cx.sprite(L.n("crack_s"), V.up(g, 0.012));
+        cr.fixed(flat(Kit.rand() * 360));
+        cr.size(size);
+        cr.play(2, 0, Vfx.sheet(L.n("crack_s")).frames(), 6, false);
+    }
+
+    /** 땅 내려찍기 (JobFx.smash — 반지름 radius 칸): 충격파 · 땅 자국 · 흙먼지 · 날아가는 작은 그림 */
+    static void smash(ServerLevel level, Lib L, Vec3 at, double radius, Predicate<ServerPlayer> who) {
+        Vec3 g = ground(level, at);
+        tiled(level, L.n("shock"), 2, V.up(g, 0.03), radius * 2.3, flat(Kit.rand() * 360), 0, 0, 1, false, null, who, 1.0);
+        crackS(level, L, g, radius * 1.5);
+        dust(level, L, g, Math.min(4.5, radius * 1.2));
+        if (who == null) embers(level, L, V.up(g, 0.3), 6 + (int) (radius * 2), radius * 0.8, 0.4, 18);
+    }
+
+    /** 칼끝 반짝임 (JobFx.glint): 짧으면 섬광 · 길면 반짝임이 깜박이며 머묾 (vel 칸/초로 같이 움직임) */
+    static void glint(ServerLevel level, Lib L, Vec3 at, double size, double life, Vec3 vel, Predicate<ServerPlayer> who) {
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        flash(level, L, at, size * 2.0, who);
+        if (ticks <= 7) return;
+        Vfx.Fx fx = Vfx.at(level, at, ticks + 6, who);
+        Vfx.Sprite s = single(fx, L.n(L.ember()), at, size * 1.5, Kit.rand() * 40 - 20, 1, true);
+        if (vel != null && V.len(vel) > 1e-3) s.to(V.add(at, vel, ticks / 20.0), -1, Math.min(59, ticks));
+        s.fade(Math.max(1, ticks - 4), 4);
+    }
+
+    /**
+     * 한 바퀴 베기 (JobFx.ring — 땅 · 허리 높이에 눕힘): 가운데 c · 반지름 radius 칸 · reverse = 반시계 (미리 뒤집은 spinm) · 불투명 alpha. 묶음에 spin 이 없거나
+     * 오래 머무는 고리 (hold 12틱 넘게 — 범위 예고) 면 땅 고리 (ring — 커지며 나타나 hold 틱 머묾)
+     */
+    static void spin(ServerLevel level, Lib L, Vec3 c, double radius, boolean reverse, double alpha, int hold, Predicate<ServerPlayer> who) {
+        if (!has(L, "spin_") || hold > 12) {
+            ring(level, L, c, radius, 3, Math.max(2, hold - 3), who, alpha);
+            return;
+        }
+        tiled(level, L.n(reverse ? "spinm" : "spin"), 2, V.up(c, 0.02), radius * 2 / 0.8, flat(Kit.rand() * 360), 0, 0, 1, false, null, who, alpha);
+    }
+
+    /** 땅 고리 — 볼 사람 · 불투명을 정함 */
+    static Vfx.Fx ring(ServerLevel level, Lib L, Vec3 c, double r, int grow, int hold, Predicate<ServerPlayer> who, double alpha) {
+        int G = Math.max(1, grow), Hh = Math.max(1, hold);
+        Vfx.Fx fx = Vfx.at(level, c, G + Hh + 8, who);
+        double size = r * 2.0 / 0.9;
+        double t = size / 2;
+        Quaternionf q = flat(Kit.rand() * 360);
+        String base = L.n("ring");
+        int frames = Vfx.sheet(base + "_00").frames();
+        for (int rr = 0; rr < 2; rr++) {
+            for (int cc = 0; cc < 2; cc++) {
+                Vfx.Sprite sp = fx.sprite(base + "_" + rr + cc, V.up(c, 0.03));
+                sp.fixed(q);
+                double ox = (cc - 0.5) * t;
+                double oy = (0.5 - rr) * t;
+                sp.size(t * 0.15);
+                sp.offset(ox * 0.15, oy * 0.15);
+                if (alpha < 0.999) sp.alpha(alpha);
+                sp.play(0, 0, frames, 3, true);
+                fx.on(1, () -> {
+                    sp.offset(ox, oy);
+                    sp.to(null, t, G);
+                });
+                sp.fade(G + Hh, 4);
+            }
+        }
+        return fx;
+    }
+
+    /**
+     * 일섬 · 걸린 칼자국 (JobFx.line · 블레이드 에코 — cut: 0 ~ 1 그어짐 → 2 ~ 4 머묾 (되풀이) → 5 ~ 7 터져 벌어짐): from → to 를 품은 두 판 (줄을 축으로 눕힌 판 · 세운 판,
+     * 앞뒤 두 면 — 어느 쪽에서 봐도 보임) · hold 틱 머문 뒤 터짐 (burst false 면 머문 뒤 옅어짐). 반환 = 효과
+     */
+    static Vfx.Fx cut(ServerLevel level, Lib L, Vec3 from, Vec3 to, int hold, boolean burst, Predicate<ServerPlayer> who) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.2 || !has(L, "cut")) return null;
+        Vec3 ex = V.scale(d, 1 / len);
+        Vec3 side = V.cross(ex, V.UP);
+        side = V.len(side) < 1e-3 ? new Vec3(1, 0, 0) : V.unit(side);
+        Vec3 n1 = V.unit(V.cross(ex, side));
+        Quaternionf flatQ = Vfx.basis(ex, side, V.unit(V.cross(ex, side)));
+        Quaternionf upQ = Vfx.basis(ex, n1, V.unit(V.cross(ex, n1)));
+        Vec3 mid = V.lerp(from, to, 0.5);
+        int H = Math.max(1, hold);
+        int life = 2 + H + (burst ? 4 : 5) + 2;
+        Vfx.Fx fx = Vfx.at(level, mid, life, who);
+        String name = L.n("cut");
+        double size = len / 0.92;
+        for (Quaternionf q : new Quaternionf[] {flatQ, upQ}) {
+            for (int s = 0; s < 2; s++) {
+                Vfx.Sprite sp = fx.sprite(name, mid);
+                sp.fixed(q);
+                if (s == 1) sp.mirror();
+                sp.size(size);
+                sp.play(0, 0, 2, 1, false);
+                fx.on(2, () -> sp.play(fx.age(), 2, 3, 2, true));
+                if (burst) fx.on(2 + H, () -> sp.play(fx.age(), 5, 3, 1, false));
+                else sp.fade(2 + H, 5);
+            }
+        }
+        return fx;
+    }
+
+    /**
+     * 땅 가르기 (검사 라그나로크 · 블러드 나이트 — rift 여섯 칸을 눕혀 이어 붙임): 땅 g 에서 f 쪽 (수평) 으로 len 칸 — piece 칸 토막마다 그 자리에 닿는 틱 (speed 칸/초) 에 열림
+     */
+    static void rift(ServerLevel level, Lib L, Vec3 g, Vec3 f, double len, double speed, double piece) {
+        if (!has(L, "rift")) return;
+        Vec3 h = V.flat(f);
+        if (V.len(h) < 1e-6) return;
+        h = V.unit(h);
+        String name = L.n("rift");
+        int frames = Vfx.sheet(name).frames();
+        for (double s = 0.3; s < len; s += piece * 0.78) {
+            int at = (int) Math.round(s / Math.max(1, speed) * 20);
+            Vec3 m = ground(level, V.add(g, h, s + piece * 0.4));
+            Vec3 ex = Kit.rand() < 0.5 ? h : V.scale(h, -1);
+            Quaternionf q = Vfx.basis(ex, V.cross(V.UP, ex), V.UP);
+            Vfx.Fx fx = Vfx.at(level, m, at + frames * 7 + 6);
+            fx.on(at, () -> {
+                Vfx.Sprite sp = fx.sprite(name, V.up(m, 0.015));
+                sp.fixed(q);
+                sp.size(piece * 1.15);
+                sp.play(fx.age(), 0, 1, 2, false);
+                fx.on(fx.age() + 2, () -> sp.play(fx.age(), 1, frames - 1, 7, false));
+            });
+        }
+    }
+
+    /** 핏빛 달 (moon 2 × 2 되풀이 — 카메라를 봄): 가운데 at · 지름 size 칸 · life 틱 (grow 틱에 커지며 나타남 · 끝 10틱 옅어짐) */
+    static Vfx.Fx moon(ServerLevel level, Lib L, Vec3 at, double size, int grow, int life) {
+        Vfx.Fx fx = Vfx.at(level, at, life + 4);
+        String base = L.n("moon");
+        int frames = Vfx.sheet(base + "_00").frames();
+        double t = size / 2;
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                Vfx.Sprite sp = fx.sprite(base + "_" + r + c, at);
+                double ox = (c - 0.5) * t;
+                double oy = (0.5 - r) * t;
+                sp.size(t * 0.6);
+                sp.offset(ox * 0.6, oy * 0.6);
+                sp.play(0, 0, frames, 3, true);
+                fx.on(1, () -> {
+                    sp.offset(ox, oy);
+                    sp.to(null, t, Math.max(1, grow));
+                });
+                sp.fade(Math.max(2, life - 10), 10);
+            }
+        }
+        return fx;
+    }
+
+    /** 세로 그림 하나 (pillar — 빛기둥 · 피 기둥, 세로축 빌보드): 발 자리 foot · 높이 h 칸 · every 틱마다 한 칸 */
+    static void pillar(ServerLevel level, Lib L, Vec3 foot, double h, int every) {
+        String name = L.n("pillar");
+        if (Vfx.sheetNames(name).isEmpty()) return;
+        Vfx.Sheet s = Vfx.sheet(name);
+        Vfx.Fx fx = Vfx.at(level, foot, s.frames() * Math.max(1, every) + 4);
+        Vfx.Sprite sp = fx.sprite(name, V.up(foot, h * 0.5));
+        sp.vertical();
+        sp.size(h);
+        sp.play(0, 0, s.frames(), Math.max(1, every), false);
+    }
+
+    /**
+     * 빛의 대검 (ak_excal 1 × 4 — 위를 보는 칼, 소드마스터 엑스칼리버): 손 hands 가 손잡이를 쥠 · 칼끝 쪽 dir · 길이 len 칸 — 칼의 면은 쓴 사람의 오른쪽 축 right 를 품음
+     * (뒤 3인칭에서 넓게 · 내리치면 위에서 넓게) · 앞뒤 두 면. 반환 = 조각 그림 넷 × 두 면 (excalPose 로 돌림 · 늘림)
+     */
+    static Vfx.Sprite[] excal(Vfx.Fx fx, Vec3 hands, Vec3 dir, Vec3 right, double len) {
+        Vfx.Sprite[] out = new Vfx.Sprite[8];
+        String base = GOLD.n("excal");
+        int frames = Vfx.sheet(base + "_00").frames();
+        for (int r = 0; r < 4; r++) {
+            for (int s = 0; s < 2; s++) {
+                Vfx.Sprite sp = fx.sprite(base + "_" + r + "0", hands);
+                if (s == 1) sp.mirror();
+                sp.play(fx.age(), (int) (Kit.rand() * frames), frames, 2, true);
+                out[r * 2 + s] = sp;
+            }
+        }
+        excalPose(out, hands, dir, right, len, 0);
+        return out;
+    }
+
+    /**
+     * 땅에서 솟구치는 빛의 검 (ak_excal 1 × 4 — 세로축 빌보드, 엑스칼리버 검격 뒤): 땅 g · 높이 h 칸 — 땅속에서 3틱에 솟아 hold 틱 머문 뒤 5틱에 옅어짐 · 밑동 섬광
+     */
+    static void risingSword(ServerLevel level, Vec3 g, double h, int hold) {
+        String base = GOLD.n("excal");
+        if (!has(GOLD, "excal_00")) return;
+        int frames = Vfx.sheet(base + "_00").frames();
+        Vfx.Fx fx = Vfx.at(level, g, 3 + hold + 10);
+        double t = h / 4;
+        Vec3 low = V.up(g, -h * 0.6);
+        Vec3 high = V.up(g, h * 0.385); // 코등이 (그림 아래에서 0.115) 가 땅에 — 손잡이는 땅속
+        for (int r = 0; r < 4; r++) {
+            Vfx.Sprite sp = fx.sprite(base + "_" + r + "0", low);
+            sp.vertical();
+            sp.size(t);
+            sp.offset(0, (1.5 - r) * t);
+            sp.play(0, (int) (Kit.rand() * frames), frames, 2, true);
+            fx.on(1, () -> sp.to(high, t, 3));
+            sp.fade(3 + hold, 5);
+        }
+        flash(level, GOLD, V.up(g, 0.3), h * 0.45);
+    }
+
+    /** 불꽃 고리 (br_flame — 단조 불꽃을 땅 고리를 따라 세움, 소드마스터 용의 피): 가운데 땅 c · 반지름 R · 불꽃 높이 h · 한 번 솟았다 사그라듦 */
+    static void flameRing(ServerLevel level, Vec3 c, double R, double h) {
+        int count = Math.max(10, (int) Math.round(2 * Math.PI * R / 0.9));
+        for (int i = 0; i < count; i++) {
+            double a = i * 2 * Math.PI / count;
+            Vec3 p = ground(level, new Vec3(c.x + Math.cos(a) * R, c.y + 1, c.z + Math.sin(a) * R));
+            flame(level, FORGE, p, h * (0.8 + Kit.rand() * 0.4), 1);
+        }
+    }
+
+    /** 빛의 대검 모습: 손 hands · 칼끝 쪽 dir · 오른쪽 축 right · 길이 len (그림 높이 — 손은 그림 아래에서 0.075 높이) · ticks 틱 보간 */
+    static void excalPose(Vfx.Sprite[] tiles, Vec3 hands, Vec3 dir, Vec3 right, double len, int ticks) {
+        Vec3 ey = V.unit(dir);
+        Vec3 ex = V.sub(right, V.scale(ey, V.dot(right, ey)));
+        ex = V.len(ex) < 1e-3 ? V.rightOf(V.flat(ey)) : V.unit(ex);
+        Vec3 ez = V.cross(ex, ey);
+        Quaternionf q = Vfx.basis(ex, ey, ez);
+        double t = len / 4;
+        Vec3 center = V.add(hands, ey, len * (0.5 - 0.075));
+        for (int r = 0; r < 4; r++) {
+            for (int s = 0; s < 2; s++) {
+                Vfx.Sprite sp = tiles[r * 2 + s];
+                if (sp == null) continue;
+                sp.offset(0, (1.5 - r) * t);
+                if (ticks <= 0) sp.fixed(q);
+                else sp.face(q, ticks);
+                sp.to(center, t, ticks);
+            }
+        }
     }
 }

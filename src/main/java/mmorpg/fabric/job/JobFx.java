@@ -193,6 +193,13 @@ final class JobFx {
     static void slash(ServerPlayer sp, Jobs.Job j, double ahead, double down, double size, double tilt, double life) {
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 눈앞 칼빛 초승달 (주인의 1인칭에만) + 같은 자리 · 같은 모습의 세상 판 (3인칭 · 다른 사람)
+            PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt);
+            PhantomFx.card(sp.level(), L, at, look, tilt, size * 1.8, PhantomFx.hide1p(sp));
+            return;
+        }
         Opt own = only1p(sp);
         // 0.50.0 직업 큰 베기 그림 (재설계표 — 검사 은빛 초승달 · 전사 도끼 궤적 · 마검사 두 겹 칼빛 · 사신 큰 낫 초승달, 나머지는 공통)
         String name = slashName(j);
@@ -241,6 +248,13 @@ final class JobFx {
      * 0 = 아래로 불룩, 판 모델은 그림을 180° 돌려 불룩한 날이 +Y 라 그 사람 눈에 그림 그대로). UP: 면 = 위, 불룩한 날 = dir 의 수평을 위에서 tilt 도 돌린 쪽
      */
     static void slashCard(ServerLevel level, Vec3 at, Vec3 dir, double tilt, double size, double life, Vec3 vel, Jobs.Job j, Opt view, CardFace face) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            // 2026-11-15 원소 공용 묶음: 칼빛 초승달 판 (앞을 봄 — 앞뒤 두 면 · 땅에 누움)
+            if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, size, PhantomFx.who(view));
+            else PhantomFx.card(level, L, at, dir, tilt, size, PhantomFx.who(view));
+            return;
+        }
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
         double lf = Math.max(0.05, life);
         double roll = -tilt;
@@ -272,6 +286,12 @@ final class JobFx {
     static void wave(ServerPlayer sp, Jobs.Job j, Vec3 at, Vec3 dir, double speed, double life, Opt o) {
         ServerLevel level = sp.level();
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 (카메라를 봄 — 눈앞 베기와 같은 기울기 뜻: 검기 기울기 = 베기 + 180)
+            PhantomFx.wave(level, L, at, d, speed, o.num("size", 1) * 0.9, o.num("spin", 0) + 180, life, null, o.num("alpha", 1));
+            return;
+        }
         two(level, slashName(j), slashFrames(j), at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
         slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp), CardFace.SWING);
     }
@@ -300,6 +320,11 @@ final class JobFx {
         Object[] snd = j == null ? null : JobTraits14.WK.equals(j.id()) ? new Object[] {"entity.player.hurt_sweet_berry_bush", 0.85, 0.45} : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) { // 2026-11-15 원소 공용 묶음: X 베기 · 섬광 (피 = 피 튐) · 날아가는 작은 그림
+            PhantomFx.hit(level, L, e, scale);
+            return;
+        }
         if (PhantomArcher.family(j)) { // 2026-11-15 팬텀 아처 · 2차 둘: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark — 직업 색)
             PhantomArcher.hitMark(level, e, size, PhantomArcher.accent(j)); // 2026-11-15 아스널 킹은 금빛 (루비 빨강이 금빛 묶음과 어긋났음)
             mmorpg.fabric.skill.SkillFx.sparks(level, Kit.bodyPoint(e), inner(j), 5, 3.5 + scale);
@@ -334,6 +359,11 @@ final class JobFx {
      * 보이지 않음). o: alpha · coreAlpha · fade · view · owner · grow · vel
      */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) { // 2026-11-15 원소 공용 묶음: 한 바퀴 베기 (강철 spin — 짧은 것) · 오래 머무는 범위 고리는 땅 고리
+            PhantomFx.spin(level, L, center, radius, reverse, o.num("alpha", 1), (int) Math.round(life * 20), PhantomFx.who(o));
+            return;
+        }
         if (j != null && "priest".equals(fid(j))) {
             // 0.50.0 사제는 베는 고리 대신 빛 고리 (재설계표 "빛 고리") — 조금 바깥의 옅은 고리 한 겹
             halo(level, center, radius, j, life, o);
@@ -425,6 +455,11 @@ final class JobFx {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.2) return;
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null && PhantomFx.has(L, "cut")) { // 2026-11-15 원소 공용 묶음: 일섬 (그어짐 → 잠깐 머묾 → 터져 벌어짐)
+            PhantomFx.cut(level, L, from, to, Math.max(1, (int) Math.round(life * 20) - 6), true, PhantomFx.who(o));
+            return;
+        }
         two(level, "jline2", LINE, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), outer(j), inner(j));
         streakSparks(level, from, to, j, o);
     }
@@ -439,6 +474,11 @@ final class JobFx {
 
     /** 터짐 (rfx_jburst — 카메라를 봄) */
     static void burst(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) { // 2026-11-15 원소 공용 묶음: 섬광 · 작은 폭발 · 큰 폭발 (크기에 따라)
+            PhantomFx.burst(level, L, at, size, PhantomFx.who(o));
+            return;
+        }
         two(level, "jburst2", BURST, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
         // 0.47.0 더 화려하게: 크게 번지는 옅은 빛 한 겹 · (큰 터짐은) 불티
         double a = o.num("alpha", 1);
@@ -488,6 +528,11 @@ final class JobFx {
 
     /** 땅에 눕는 내려찍기 (rfx_jsmash): 충격 고리 반지름 radius 칸 (그림 고리 끝 = 반 크기 × 0.92) · 금 · 튀는 돌조각 */
     static void smash(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) { // 2026-11-15 원소 공용 묶음: 충격파 · 땅 자국 · 흙먼지
+            PhantomFx.smash(level, L, at, radius, PhantomFx.who(o));
+            return;
+        }
         if (j != null && "warrior".equals(fid(j))) {
             quake(level, at, radius, j, life * 1.25, o); // 0.50.0 전사는 갈라지는 땅 · 돌조각 12장 (재설계표 "내려찍기 v2")
             return;
@@ -1067,6 +1112,11 @@ final class JobFx {
 
     /** 칼끝 섬광 (rfx_jglint — 카메라를 봄): 네 뿔 별 · 긴 가로 빛줄기 · 작은 고리가 번쩍 (0 ~ 1) → 작아지며 돌아 사라짐. 크기 약 size × 2 칸 */
     static void glint(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) { // 2026-11-15 원소 공용 묶음: 섬광 + (길면) 깜박이는 반짝임
+            PhantomFx.glint(level, L, at, size, life, o.has("vel") ? o.vec("vel", V.ZERO) : null, PhantomFx.who(o));
+            return;
+        }
         two(level, "jglint", GLINT, at, life, o.with("size", size, "fade", o.num("fade", 0.3)), outer(j), inner(j));
     }
 
@@ -1187,6 +1237,15 @@ final class JobFx {
         double[] g = glow != null ? glow : outer(j);
         double[] c = core != null ? core : inner(j);
         double a = o.num("alpha", 1.0);
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 (카메라를 봄) — 쓴 사람의 1인칭에서는 0.6배 · 0.8칸 앞에서 (눈앞을 덮지 않게)
+            if (sp != null) {
+                PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.hide1p(sp), a);
+                PhantomFx.wave(level, L, V.add(at, d, 0.8), d, speed, size * 0.6, tilt, life, PhantomFx.only1p(sp), a);
+            } else PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.who(o), a);
+            return;
+        }
         Opt b = o.with("dir", d, "speed", speed, "spin", tilt, "fade", o.num("fade", 0.18));
         if (sp != null) {
             Opt far = b.with("view", 1.0, "owner", (double) sp.getId());
@@ -1259,6 +1318,11 @@ final class JobFx {
      */
     static void charge(ServerPlayer sp, Jobs.Job j, Vec3 rel, int ticks, double size) {
         if (sp == null || ticks <= 0) return;
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            chargeLib(sp, j, L, rel, ticks, size);
+            return;
+        }
         String life = RuneKit.lifeToken(sp);
         ring(sp.level(), V.up(sp.position(), 0.08), 1.4, j, false, ticks / 20.0 + 0.1, Opt.of("alpha", 0.7));
         SkillFx.play(sp.level(), "block.respawn_anchor.charge", sp.position(), 1.3, 0.45);
@@ -1285,6 +1349,50 @@ final class JobFx {
             Vec3 f = Kit.facingOf(sp);
             Vec3 p = V.up(V.add(V.add(sp.position(), V.rightOf(f), rel.x), f, rel.z), rel.y);
             glint(sp.level(), p, size * 1.4, j, 0.2, Opt.of("vel", RuneKit.bodyVel(sp)));
+        });
+    }
+
+    /** 쓴 사람 기준 rel ([오른쪽, 위, 앞] 칸) 자리 */
+    private static Vec3 relPoint(ServerPlayer sp, Vec3 rel) {
+        Vec3 f = Kit.facingOf(sp);
+        return V.up(V.add(V.add(sp.position(), V.rightOf(f), rel.x), f, rel.z), rel.y);
+    }
+
+    /**
+     * 2026-11-15 원소 공용 묶음의 힘 모으기: 발밑 땅 고리 (모으는 동안) · rel 자리의 모으는 빛 (charge — 되풀이, 몸을 따라가며 커짐) · 빨려 드는 빛 알갱이 (2틱마다) ·
+     * 끝에 섬광
+     */
+    private static void chargeLib(ServerPlayer sp, Jobs.Job j, PhantomFx.Lib L, Vec3 rel, int ticks, double size) {
+        String life = RuneKit.lifeToken(sp);
+        PhantomFx.ring(sp.level(), L, PhantomFx.ground(sp.level(), sp.position()), 1.4, 3, Math.max(2, ticks - 2), null, 0.8);
+        SkillFx.play(sp.level(), "block.respawn_anchor.charge", sp.position(), 1.3, 0.45);
+        Vec3 p0 = relPoint(sp, rel);
+        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(sp.level(), p0, ticks + 6);
+        mmorpg.fabric.vfx.Vfx.Sprite s = PhantomFx.charge(fx, L, p0, size * 0.6);
+        for (int t = 0; t < ticks; t += 2) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) {
+                    fx.end();
+                    return;
+                }
+                ServerLevel lv = sp.level();
+                Vec3 p = relPoint(sp, rel);
+                double q = Math.min(1, (tt + 2.0) / ticks);
+                s.to(p, size * (0.6 + 1.1 * q), 2);
+                for (int i = 0; i < 3; i++) {
+                    Vec3 r = V.unit(new Vec3(Kit.rand() - 0.5, (Kit.rand() - 0.4) * 0.8, Kit.rand() - 0.5));
+                    Vec3 from = V.add(p, r, 1.3 + Kit.rand() * 0.5);
+                    SkillFx.fx(lv, "rpg:arrow_spark", from, Opt.of("dir", V.scale(r, -1), "speed", 6.0, "size", 0.12, "grow", 0.3, "life", 0.24, "color", i % 2 == 0
+                            ? inner(j) : outer(j), "alpha", 1.0));
+                }
+                if (tt % 4 == 0) SkillFx.play(lv, "block.amethyst_block.resonate", p, 0.8 + 0.6 * q, 0.35);
+            });
+        }
+        RuneKit.later(ticks, () -> {
+            fx.end();
+            if (!RuneKit.sameLife(sp, life)) return;
+            PhantomFx.flash(sp.level(), L, relPoint(sp, rel), size * 2.6);
         });
     }
 

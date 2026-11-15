@@ -236,10 +236,13 @@ from jobvfx import phantom as _jobvfx_phantom  # noqa: E402
 # 2026-11-15 궁수 2차 둘: 아스널 킹 ak_* (금빛 문 · 빛 폭발) · 블레이드 레인저 br_* (달아오른 베기 · 쇳물 폭발)
 from jobvfx import arsenal as _jobvfx_arsenal  # noqa: E402
 from jobvfx import forge as _jobvfx_forge  # noqa: E402
+# 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표") — 강철 el_steel (검사) · 피 el_blood (블러드 나이트) · 금 ak_slash … (소드마스터 — 아스널 킹 묶음에 더함)
+from jobvfx import element as _jobvfx_element  # noqa: E402
 
 SPRITES += _jobvfx_phantom.sprites()
 SPRITES += _jobvfx_arsenal.sprites()
 SPRITES += _jobvfx_forge.sprites()
+SPRITES += _jobvfx_element.sprites()
 
 
 def build():
@@ -253,8 +256,9 @@ def build():
         cw, ch = cells[0].size
         assert cw <= 256 and ch <= 256, (name, cw, ch)
         assert all(c.size == (cw, ch) for c in cells), name
-        cols = min(COLS, len(cells))
-        rows = (len(cells) + cols - 1) // cols
+        # 2026-11-15 빈 칸 줄임: 글꼴 그림판은 접속할 때 통째로 풀려 메모리에 올라감 (빈 칸도 자리를 차지) — 줄 수를 먼저 정하고 한 줄 칸 수를 고르게 (10칸 = 5 × 2 · 예전 8 × 2)
+        rows = (len(cells) + COLS - 1) // COLS
+        cols = (len(cells) + rows - 1) // rows
         sheet = Image.new("RGBA", (cols * cw, rows * ch), (0, 0, 0, 0))
         chars = []
         lines = []

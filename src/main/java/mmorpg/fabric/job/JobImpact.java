@@ -66,7 +66,13 @@ final class JobImpact {
         double p = Math.max(0.6, power);
         Vec3 b = Kit.bodyPoint(e);
         double body = 0.8 + Kit.bodyPad(e) * 0.6;
-        if (RuneKit.fxQuota("jobImpact", 10)) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null && RuneKit.fxQuota("jobImpact", 10)) {
+            // 2026-11-15 원소 공용 묶음: 맞은 자리 (X 베기 · 섬광 · 작은 그림) 를 1차보다 크게 · 센 타격은 작은 폭발 한 겹
+            PhantomFx.hit(level, L, e, 1.25 * p);
+            if (p >= 1.4) PhantomFx.burst(level, L, b, body * (0.6 + 0.35 * p), null);
+            SkillFx.sparks(level, b, JobFx.inner(j), (int) Math.round(3 + 3 * p), 4.0 + 1.5 * p);
+        } else if (L == null && RuneKit.fxQuota("jobImpact", 10)) {
             // 직업의 맞은 자리를 1차보다 크게 · 타격 섬광 (흰 심지 → 직업 빛 가시 → 고리) · 섬광 한 겹 더 (센 타격)
             JobFx.hit(e, j, 1.15 * p);
             double size = body * (0.95 + 0.45 * p);

@@ -367,6 +367,11 @@ public final class JobTraits5 {
 
     /** 피 튀김 (rfx_jblood — 카메라를 봄: 빛 0 ~ 5 · 심지 6 ~ 11): 가운데에서 핏방울이 튀어 흩어짐 */
     static void blood(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L == PhantomFx.BLOOD) { // 2026-11-15 원소 공용 묶음 (피): 맞은 자리 피 튐 (물보라 · 방울 · 윤기)
+            PhantomFx.flash(level, L, at, size * 2.0, PhantomFx.who(o));
+            return;
+        }
         double[] glow = j == null ? BLOOD : JobFx.outer(j);
         double[] core = j == null ? BLOOD_LIGHT : JobFx.inner(j);
         JobFx.two(level, "jblood", BLOOD_FRAMES, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "fade", o.num("fade",

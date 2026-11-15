@@ -138,7 +138,9 @@ final class BloodknightSkills {
         JobFx.groundWave(level, sp, g, f, 1.9, 6.0, 24, j); // 0.51.0 내리찍은 자리에서 땅을 타고 달리는 세로 검기
         JobFx.smash(level, V.up(g, 0.05), r + 0.6, j, 0.55, Opt.empty());
         splash(level, V.up(g, 0.5), 2.6, j, 14);
-        crack(level, g, f, 4.0);
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) PhantomFx.rift(level, L, V.add(g, f, -0.8), f, 4.8, 40, 2.4); // 2026-11-15 원소 공용 묶음 (피): 검붉게 갈라진 땅
+        else crack(level, g, f, 4.0);
         RuneKit.rockBurst(level, V.up(g, 0.2), 8, 4.2, 0.18);
         SkillFx.sparks(level, V.up(g, 0.2), DUST, 10, 4.0);
         SkillFx.play(level, "item.mace.smash_ground_heavy", g, 0.9, 1.0);
@@ -424,8 +426,12 @@ final class BloodknightSkills {
         // 앞 하늘의 핏빛 달 (보름달 · 붉은 테 — 천천히 커짐) · 종소리 · 낮은 울림
         double moonLife = (pillarAt + 30) / 20.0;
         Vec3 moonAt = V.up(V.add(c0, f, 21), 8.5); // 영상 1: 11칸 위면 3인칭 화면 위 끝에 잘렸음
-        JobFx.moon(level0, moonAt, 6.5, 0, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.95, "grow", 0.12), MOON_GLOW, MOON_CORE);
-        JobFx.moon(level0, moonAt, 7.4, 7, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.55, "grow", 0.12), MOON_GLOW, MOON_CORE);
+        PhantomFx.Lib Lm = PhantomFx.elem(j);
+        if (Lm != null) PhantomFx.moon(level0, Lm, moonAt, 13.5, 16, (int) Math.round(moonLife * 20)); // 2026-11-15 손으로 칠한 핏빛 달 (el_blood_moon — 구덩이 · 붉은 무리 · 흘러내리는 피)
+        else {
+            JobFx.moon(level0, moonAt, 6.5, 0, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.95, "grow", 0.12), MOON_GLOW, MOON_CORE);
+            JobFx.moon(level0, moonAt, 7.4, 7, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.55, "grow", 0.12), MOON_GLOW, MOON_CORE);
+        }
         SkillFx.play(level0, "block.bell.resonate", c0, 0.5, 1.0);
         SkillFx.play(level0, "ambient.cave", c0, 0.6, 0.8);
         SkillFx.play(level0, "mob.wither.ambient", c0, 0.6, 0.5);
@@ -488,7 +494,9 @@ final class BloodknightSkills {
         double half = k.num("width", 4) / 2;
         double speed = Math.max(10, k.num("speed", 30));
         Vec3 hit = ground(level, V.add(c0, f, lead - 0.5));
-        JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(hit, 0.8), 0.35, Opt.of("size", 2.2, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), MOON_CORE);
+        PhantomFx.Lib Lc = PhantomFx.elem(j);
+        if (Lc != null) PhantomFx.flash(level, Lc, V.up(hit, 0.8), 4.4);
+        else JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(hit, 0.8), 0.35, Opt.of("size", 2.2, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), MOON_CORE);
         JobFx.burst(level, V.up(hit, 0.6), 2.4, j, 0.42, Opt.empty());
         JobFx.smash(level, V.up(hit, 0.05), 3.2, j, 0.5, Opt.empty());
         splash(level, V.up(hit, 0.8), 1.6, j, 10);
@@ -496,7 +504,8 @@ final class BloodknightSkills {
         Vec3 low = V.up(V.add(c0, f, lead), 1.5);
         JobFx.bigWave(level, sp, low, f, speed, 3.8, 0, len / speed + 0.15, j, Opt.empty());
         RuneKit.later(2, () -> JobFx.bigWave(level, null, low, f, speed, 3.0, 6, len / speed + 0.1, j, MOON_GLOW, MOON_CORE, Opt.of("alpha", 0.6)));
-        WarlordSkills.rift(level, ground(level, V.add(c0, f, lead)), f, len, JobFx.outer(j), 1.6, speed);
+        if (Lc != null) PhantomFx.rift(level, Lc, ground(level, V.add(c0, f, lead)), f, len, speed, 2.6);
+        else WarlordSkills.rift(level, ground(level, V.add(c0, f, lead)), f, len, JobFx.outer(j), 1.6, speed);
         SkillFx.shock(level, V.up(hit, 0.1), JobFx.outer(j), 4.0, 0.5);
         RuneKit.rockBurst(level, V.up(hit, 0.3), 10, 6.5, 0.2);
         JobFx.slash(sp, j, 2.3, 0.2, 3.2, 96.0, 0.3);
@@ -531,7 +540,9 @@ final class BloodknightSkills {
                 Vec3 g = ground(lv, V.add(V.add(c0, f, ss), right, (Kit.rand() - 0.5) * 0.7));
                 double q = 1 - (ss - lead) / Math.max(1, len) * 0.3;
                 JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 15.0, 1.8 * q, (Kit.rand() - 0.5) * 20, 0.36, j, Opt.empty()); // 2026-11-14 위로 불룩 (위를 봄)
-                JobFx.spikeLife(lv, g, 1.1 * q, 0.1, 0.4, Opt.empty(), MOON_GLOW, MOON_CORE);
+                PhantomFx.Lib Lp = PhantomFx.elem(j);
+                if (Lp != null) PhantomFx.pillar(lv, Lp, g, 3.6 * q, 1); // 2026-11-15 피 기둥 (el_blood_pillar — 솟구쳐 왕관처럼 터지는 피)
+                else JobFx.spikeLife(lv, g, 1.1 * q, 0.1, 0.4, Opt.empty(), MOON_GLOW, MOON_CORE);
                 JobTraits5.blood(lv, V.up(g, 1.4), 1.4 * q, j, 0.4, Opt.empty());
                 SkillFx.sparks(lv, V.up(g, 1.0), JobFx.inner(j), 8, 6.0);
                 if (((int) Math.round(ss / 1.5)) % 2 == 0) SkillFx.play(lv, "random.explode", g, 1.2, 0.5);

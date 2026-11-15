@@ -54,9 +54,27 @@ if [ $up -eq 1 ]; then
   mkdir -p run-probe
   printf 'onboardAccessibility:false\nskipMultiplayerWarning:true\njoinedFirstServer:true\ntutorialStep:none\npauseOnLostFocus:false\nrenderDistance:6\nsimulationDistance:6\nguiScale:2\nnarrator:0\nsoundCategory_master:0.0\n' > run-probe/options.txt
   set +e
+  # 2026-11-15 클라이언트 메모리 재기 (글꼴 그림판은 접속 때 통째로 풀려 메모리에 올라감 — 예산 확인): 5초마다 클라이언트 java (서버 · gradle 빼고 가장 큰 것) 의 RSS
+  ( while true; do
+      best=0
+      for pid in $(pgrep java); do
+        cmd=$(tr '\0' ' ' < /proc/$pid/cmdline 2>/dev/null)
+        case "$cmd" in *server.jar*|*GradleDaemon*|*gradle-launcher*|*GradleWorkerMain*|*GradleWrapperMain*) continue ;; esac
+        rss=$(awk '/VmRSS/ {print $2}' /proc/$pid/status 2>/dev/null)
+        [ -n "$rss" ] && [ "$rss" -gt "$best" ] && best=$rss
+      done
+      echo "$(date +%s) $best" >> ci-out/client-mem${SUF}.txt
+      sleep 5
+    done ) &
+  MEMPID=$!
   timeout 1200 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew probeClient --stacktrace --console=plain > ci-out/vanilla-client${SUF}.txt 2>&1
   pcode=$?
+  kill $MEMPID 2>/dev/null
   echo "[vanilla] probe client exit $pcode"
+  if [ -f ci-out/client-mem${SUF}.txt ]; then
+    echo "[vanilla] client RSS MB (5s steps): $(awk '{printf "%d ", $2/1024}' ci-out/client-mem${SUF}.txt)"
+    echo "[vanilla] client RSS max MB: $(awk 'BEGIN{m=0} {if ($2>m) m=$2} END{printf "%d", m/1024}' ci-out/client-mem${SUF}.txt)"
+  fi
   grep -h "\[vanilla-client\]" ci-out/vanilla-client${SUF}.txt | head -n 60
   grep -h "\[vanilla-probe\] check\|\[vanilla-probe\] skills" "$dir/out.log" | sed 's/^.*\[vanilla-probe\] /  /' | head -n 80
   if grep -q "\[vanilla-probe\] done" "$dir/out.log" && grep -q "\[vanilla-client\] done" ci-out/vanilla-client${SUF}.txt \

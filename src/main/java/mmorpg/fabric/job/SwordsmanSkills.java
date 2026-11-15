@@ -509,8 +509,15 @@ final class SwordsmanSkills {
         Vec3 tip = V.add(g, f, 1.2);
         JobFx.slash(sp, j, 2.3, -0.1, 3.0, 95.0, 0.34);
         JobFx.slashCard(level, V.up(V.add(c, f, 1.0), 1.4), f, 95.0, 3.8, 0.32, V.ZERO, j, JobFx.hide1p(sp));
-        JobFx.smash(level, V.up(tip, 0.05), R, j, 0.6, Opt.empty());
-        JobFx.burst(level, V.up(tip, 0.4), 1.6, j, 0.35, Opt.empty());
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            // 2026-11-15 원소 공용 묶음 (강철): 내리꽂은 자리의 빛 폭발 (2 × 2 — 별 빛살 · 빛 구슬 · 두 겹 고리 · 빛 조각) + 땅 충격파 · 자국 · 흙먼지
+            PhantomFx.boom(level, L, V.up(tip, 0.3), 2.0);
+            PhantomFx.smash(level, L, V.up(tip, 0.05), R * 0.85, null);
+        } else {
+            JobFx.smash(level, V.up(tip, 0.05), R, j, 0.6, Opt.empty());
+            JobFx.burst(level, V.up(tip, 0.4), 1.6, j, 0.35, Opt.empty());
+        }
         RuneKit.rockBurst(level, V.up(tip, 0.2), 10, 5.0, 0.2);
         SkillFx.sparks(level, V.up(tip, 0.2), DUST, 14, 5);
         Ult.flash(level, V.up(c, 1.0), glow, Opt.empty(), sp);
@@ -522,6 +529,8 @@ final class SwordsmanSkills {
         double len = Math.max(2, RuneKit.rayLength(level, V.up(g, 0.6), f, range));
         double piece = 2.5;
         double spin = Math.toDegrees(Math.atan2(f.z, -f.x));
+        // 2026-11-15 원소 공용 묶음 (강철): 땅 가르기 토막 (rift — 흰 금 번쩍 → 벌어진 짙은 틈 · 푸른 흰 가장자리 → 식음) 이 닿는 틱에 차례로
+        if (L != null) PhantomFx.rift(level, L, g, f, len, SPLIT_SPEED, 3.0);
         for (double s = 0.6; s < len; s += piece) {
             double a0 = s;
             double a1 = Math.min(len, s + piece * 1.3);
@@ -530,11 +539,13 @@ final class SwordsmanSkills {
                 Vec3 mid = V.add(g, f, (a0 + a1) / 2);
                 Vec3 m = new Vec3(mid.x, RuneKit.groundAt(level, mid, g.y), mid.z);
                 double size = (a1 - a0) / 2 * 1.25;
-                Opt base = Opt.of("dir", V.UP, "size", size, "life", 2.0, "fade", 0.35, "spin", spin + (Kit.rand() < 0.5 ? 180 : 0));
-                RuneKit.rfx(level, "fissure", V.up(m, 0.035), base.with("cell", 0.0, "color", RIFT, "alpha", 0.92));
-                RuneKit.rfx(level, "fissure", V.up(m, 0.055), base.with("cell", 1.0, "color", glow, "alpha", 0.95));
-                RuneKit.rfx(level, "fissure", V.up(m, 0.075), base.with("cell", 2.0, "color", WHITE, "alpha", 1.0));
-                RuneKit.glowCrack(level, m, 1.5, glow, WHITE, Opt.of("life", 1.6, "v", a0 % 5 < 2.5 ? 1.0 : 0.0));
+                if (L == null) {
+                    Opt base = Opt.of("dir", V.UP, "size", size, "life", 2.0, "fade", 0.35, "spin", spin + (Kit.rand() < 0.5 ? 180 : 0));
+                    RuneKit.rfx(level, "fissure", V.up(m, 0.035), base.with("cell", 0.0, "color", RIFT, "alpha", 0.92));
+                    RuneKit.rfx(level, "fissure", V.up(m, 0.055), base.with("cell", 1.0, "color", glow, "alpha", 0.95));
+                    RuneKit.rfx(level, "fissure", V.up(m, 0.075), base.with("cell", 2.0, "color", WHITE, "alpha", 1.0));
+                    RuneKit.glowCrack(level, m, 1.5, glow, WHITE, Opt.of("life", 1.6, "v", a0 % 5 < 2.5 ? 1.0 : 0.0));
+                } else if (a0 % 5 < 2.5) PhantomFx.flash(level, L, V.up(m, 0.4), 1.6);
                 RuneKit.rockBurst(level, V.up(m, 0.15), 3, 3.0, 0.15);
                 SkillFx.sparks(level, V.up(m, 0.15), DUST, 4, 2.5);
             });

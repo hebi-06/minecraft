@@ -146,7 +146,16 @@ public final class Vfx {
 
     /** at (세계 자리) 에 붙은 효과 하나 — life 틱 뒤 스스로 사라짐 */
     public static Fx at(ServerLevel level, Vec3 at, int life) {
+        return at(level, at, life, null);
+    }
+
+    /**
+     * 2026-11-15 같은 것 — 볼 사람을 붙이기 전에 정함 (붙는 순간 그 자리를 보는 사람에게 보내지므로 뒤에 정하면 늦음): 1인칭 눈앞 그림 (주인의 1인칭에만) · 몸 앞 판
+     * (주인이 1인칭이면 숨김)
+     */
+    public static Fx at(ServerLevel level, Vec3 at, int life, Predicate<ServerPlayer> viewers) {
         Fx fx = new Fx(level, at, life);
+        fx.viewers = viewers;
         if (ACTIVE.size() >= MAX_FX) ACTIVE.get(0).end();
         ACTIVE.add(fx);
         ChunkAttachment.ofTicking(fx, level, at);
@@ -294,6 +303,18 @@ public final class Vfx {
             sprites.add(s);
             spritesMade++;
             return s;
+        }
+
+        /** 2026-11-15 이 효과의 그림을 모두 delta 만큼 ticks 틱 (보간 — 59틱까지) 에 옮김 (날아가는 검기 — 조각 그림이 함께) */
+        public Fx shift(Vec3 delta, int ticks) {
+            for (Sprite s : sprites) s.to(s.pos.add(delta), -1, Math.min(59, Math.max(0, ticks)));
+            return this;
+        }
+
+        /** 2026-11-15 이 효과의 그림을 모두 ticks 틱에 옅어져 사라지게 (지금부터) */
+        public Fx fadeAll(int ticks) {
+            for (Sprite s : sprites) s.fade(age, ticks);
+            return this;
         }
 
         /** 이 효과를 볼 사람 (null = 모두) — 띄우기 전에 */

@@ -98,20 +98,39 @@ final class SwordmasterSkills {
             Vec3 look = sp.getViewVector(1F);
             // 0.51.0 뽑는 순간 앞으로 퍼지는 거대한 금빛 초승달 검기 (사용자 "커다란 검기가 나오면서 때리면")
             JobFx.slashWave(sp, j, 184.0, R * 0.48, R + 2.0, 30);
-            // 1인칭: 눈앞 칼자국 다발 (rfx_jcuts — 카메라를 봄)
-            JobFx.two(lv, "jcuts", CUTS, V.add(sp.getEyePosition(), look, 2.3), 0.42, JobFx.only1p(sp).with("size", 2.5, "spin", Kit.rand() * 16 - 8, "vel",
-                    RuneKit.bodyVel(sp), "fade", 0.25), JobFx.outer(j), JobFx.inner(j));
-            // 3인칭 · 다른 사람: 부채꼴 안 칼자국 판 (한 틱에 둘)
-            for (int i = 0; i < n; i++) {
-                int ii = i;
-                RuneKit.later(ii / 2, () -> {
-                    if (!RuneKit.sameLife(sp, life)) return;
-                    Vec3 ff = Kit.facingOf(sp);
-                    double side = (Kit.rand() * 2 - 1) * R * 0.32;
-                    Vec3 at = V.up(V.add(V.add(sp.position(), ff, R * (0.42 + 0.38 * Kit.rand())), V.rightOf(ff), side), 0.75 + 0.75 * Kit.rand());
-                    JobFx.slashCard(sp.level(), at, ff, CUT_TILT[ii % CUT_TILT.length] + Kit.rand() * 14 - 7, 2.7 + Kit.rand() * 0.9, 0.24, V.ZERO, j, JobFx.hide1p(sp));
-                    JobFx.glint(sp.level(), at, 0.35, j, 0.2, Opt.empty());
-                });
+            PhantomFx.Lib L = PhantomFx.elem(j);
+            if (L != null) {
+                // 2026-11-15 원소 공용 묶음 (금): 부채꼴 안에 금빛 일섬 (ak_cut — 그어짐 → 잠깐 머묾 → 터져 벌어짐) 이 한 틱에 둘씩 — 1인칭 · 3인칭 모두 (세상에 그어진 칼자국)
+                for (int i = 0; i < n; i++) {
+                    int ii = i;
+                    RuneKit.later(ii / 2, () -> {
+                        if (!RuneKit.sameLife(sp, life)) return;
+                        Vec3 ff = Kit.facingOf(sp);
+                        double side = (Kit.rand() * 2 - 1) * R * 0.32;
+                        Vec3 at = V.up(V.add(V.add(sp.position(), ff, R * (0.42 + 0.38 * Kit.rand())), V.rightOf(ff), side), 0.75 + 0.75 * Kit.rand());
+                        double a = Math.toRadians(CUT_TILT[ii % CUT_TILT.length] + Kit.rand() * 14 - 7);
+                        Vec3 dir = V.add(V.scale(V.rightOf(ff), Math.cos(a)), V.UP, Math.sin(a));
+                        double half = (2.7 + Kit.rand() * 0.9) * 0.5;
+                        PhantomFx.cut(sp.level(), L, V.add(at, dir, -half), V.add(at, dir, half), 2, true, null);
+                        JobFx.glint(sp.level(), at, 0.35, j, 0.2, Opt.empty());
+                    });
+                }
+            } else {
+                // 1인칭: 눈앞 칼자국 다발 (rfx_jcuts — 카메라를 봄)
+                JobFx.two(lv, "jcuts", CUTS, V.add(sp.getEyePosition(), look, 2.3), 0.42, JobFx.only1p(sp).with("size", 2.5, "spin", Kit.rand() * 16 - 8, "vel",
+                        RuneKit.bodyVel(sp), "fade", 0.25), JobFx.outer(j), JobFx.inner(j));
+                // 3인칭 · 다른 사람: 부채꼴 안 칼자국 판 (한 틱에 둘)
+                for (int i = 0; i < n; i++) {
+                    int ii = i;
+                    RuneKit.later(ii / 2, () -> {
+                        if (!RuneKit.sameLife(sp, life)) return;
+                        Vec3 ff = Kit.facingOf(sp);
+                        double side = (Kit.rand() * 2 - 1) * R * 0.32;
+                        Vec3 at = V.up(V.add(V.add(sp.position(), ff, R * (0.42 + 0.38 * Kit.rand())), V.rightOf(ff), side), 0.75 + 0.75 * Kit.rand());
+                        JobFx.slashCard(sp.level(), at, ff, CUT_TILT[ii % CUT_TILT.length] + Kit.rand() * 14 - 7, 2.7 + Kit.rand() * 0.9, 0.24, V.ZERO, j, JobFx.hide1p(sp));
+                        JobFx.glint(sp.level(), at, 0.35, j, 0.2, Opt.empty());
+                    });
+                }
             }
             // 마지막: 칼을 다 뽑아 크게 가로로 (눈앞 · 3인칭 판) — 뽑은 뒤 4틱 (줄 수와 상관없이 · 동작의 마지막 되돌려 베기와 같은 때)
             RuneKit.later(4, () -> {
@@ -175,7 +194,11 @@ final class SwordmasterSkills {
         Vec3 dir = V.unit(d);
         Vec3 at = V.up(V.add(sp.position(), dir, 0.9), 1.3);
         // 쨍 — 흰 섬광 · 금빛 불티 · 큰 쇳소리
-        JobFx.two(level, "jimpact", JobImpact.IMPACT, at, 0.32, Opt.of("size", 1.6, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), WHITE);
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            PhantomFx.flash(level, L, at, 3.4); // 2026-11-15 원소 공용 묶음 (금): 큰 섬광 · 작은 폭발
+            PhantomFx.burst(level, L, at, 1.2, null);
+        } else JobFx.two(level, "jimpact", JobImpact.IMPACT, at, 0.32, Opt.of("size", 1.6, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), WHITE);
         SkillFx.sparks(level, at, JobFx.inner(j), 16, 6.0);
         SkillFx.play(level, "item.shield.block", at, 1.4, 1.0);
         SkillFx.play(level, "block.anvil.land", at, 1.8, 0.5);
@@ -334,8 +357,16 @@ final class SwordmasterSkills {
                         Vec3 at = V.add(mid, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.35);
                         double len = 3.0 + Kit.rand() * 1.0 + (e != null ? Kit.bodyPad(e) : 0);
                         double hold = Math.max(0.1, (sheath - stance - (ii + 1) * every) / 20.0);
-                        JobFx16.echo(l2, at, dir, len, 0, 1, 0.05, false, Opt.empty(), JobFx.outer(j), WHITE);
-                        RuneKit.later(1, () -> JobFx16.echo(sp.level(), at, dir, len, 1, 4, hold - 0.05, true, Opt.of("fade", 0.0, "alpha", 1.0), JobFx.outer(j), WHITE));
+                        PhantomFx.Lib L = PhantomFx.elem(j);
+                        if (L != null) {
+                            // 2026-11-15 원소 공용 묶음 (금): 허공에 걸린 금빛 일섬 (ak_cut — 그어짐 → 칼집에 넣을 때까지 머묾 → 그 틱에 터져 벌어짐)
+                            int holdT = Math.max(1, sheath - stance - (ii + 1) * every - 2);
+                            PhantomFx.cut(l2, L, V.add(at, dir, -len / 2), V.add(at, dir, len / 2), holdT, true, null);
+                        } else {
+                            JobFx16.echo(l2, at, dir, len, 0, 1, 0.05, false, Opt.empty(), JobFx.outer(j), WHITE);
+                            RuneKit.later(1, () -> JobFx16.echo(sp.level(), at, dir, len, 1, 4, hold - 0.05, true, Opt.of("fade", 0.0, "alpha", 1.0), JobFx.outer(j),
+                                    WHITE));
+                        }
                         cuts.add(new Vec3[] {at, dir, new Vec3(len, 0, 0)});
                     }
                     JobFx.glint(l2, mid, 0.5, j, 0.2, Opt.empty());
@@ -359,8 +390,9 @@ final class SwordmasterSkills {
             SkillFx.play(lv, "block.iron_trapdoor.close", c, 1.7, 0.8);
             SkillFx.play(lv, "entity.player.attack.sweep", c, 1.3, 1.0);
             SkillFx.play(lv, "block.amethyst_block.break", c, 1.6, 1.0);
+            boolean lib = PhantomFx.elem(j) != null;
             for (Vec3[] cut : cuts) {
-                JobFx16.echo(lv, cut[0], cut[1], cut[2].x * 1.3, 5, 3, 0.3, false, Opt.empty(), JobFx.outer(j), WHITE);
+                if (!lib) JobFx16.echo(lv, cut[0], cut[1], cut[2].x * 1.3, 5, 3, 0.3, false, Opt.empty(), JobFx.outer(j), WHITE); // 묶음은 걸린 일섬이 스스로 터짐
                 JobFx.glint(lv, cut[0], 0.7, j, 0.2, Opt.empty());
             }
             JobFx.ring(lv, V.up(c, 0.1), R, j, false, 0.35, Opt.of("alpha", 1.0));
@@ -369,7 +401,8 @@ final class SwordmasterSkills {
             for (LivingEntity e : Kit.around(sp, V.up(c, 1.0), R, 3.0)) {
                 if (Math.hypot(e.getX() - c.x, e.getZ() - c.z) > R + Kit.bodyPad(e)) continue;
                 Vec3 b = Kit.bodyPoint(e);
-                JobFx.two(lv, "jcuts", CUTS, b, 0.35, JobFx.hide1p(sp).with("size", 1.8 + Kit.bodyPad(e), "spin", Kit.rand() * 360, "fade", 0.3), JobFx.outer(j),
+                if (lib) PhantomFx.xslash(lv, PhantomFx.elem(j), b, 3.2 + Kit.bodyPad(e) * 1.5, Kit.rand() * 360); // 2026-11-15 금빛 X 베기
+                else JobFx.two(lv, "jcuts", CUTS, b, 0.35, JobFx.hide1p(sp).with("size", 1.8 + Kit.bodyPad(e), "spin", Kit.rand() * 360, "fade", 0.3), JobFx.outer(j),
                         JobFx.inner(j));
                 JobKit.strikeSplit(sp, e, j, P, k.total(), lines, 1, false, true, life, 0, d -> JobImpact.hit(sp, e, j, 1.4));
             }
@@ -379,6 +412,10 @@ final class SwordmasterSkills {
 
     /** 고리를 따라 서 있는 불꽃 (rfx_jflame — 이어 돌림): life 초 · 불티 (드래곤 블러드) */
     private static void fireRing(ServerLevel level, Vec3 cg, double R, double life, Jobs.Job j) {
+        if (PhantomFx.elem(j) != null) { // 2026-11-15 단조 불꽃 (br_flame — 손으로 칠한 불꽃 혀) 을 고리를 따라 세움
+            PhantomFx.flameRing(level, cg, R, 1.3);
+            return;
+        }
         int count = Math.max(12, (int) Math.round(2 * Math.PI * R / 1.15));
         for (int i = 0; i < count; i++) {
             double a = i * 2 * Math.PI / count;
@@ -473,10 +510,17 @@ final class SwordmasterSkills {
         }
         RuneKit.godRays(sp, level0, c0, 1.8, 7, JobKit.glow(j), JobKit.core(j), JobFx.hide1p(sp).with("h", 14.0, "life", swingAt / 20.0, "alpha", 0.6));
         JobFx.charge(sp, j, new Vec3(0.0, 2.3, 0.12), swingAt - 2, 1.2);
+        // 2026-11-15 원소 공용 묶음 (금): 빛의 대검 = 미리 칠한 그림 (ak_excal 1 × 4 — 손잡이 · 금 코등이 · 빛의 칼날 · 아지랑이 · 반짝임) 을 세상에 고정해 틱마다 돌리고 늘림
+        boolean lib = PhantomFx.elem(j) != null;
+        mmorpg.fabric.vfx.Vfx.Fx swordFx = lib ? mmorpg.fabric.vfx.Vfx.at(level0, c0, afterAt + 12) : null;
+        mmorpg.fabric.vfx.Vfx.Sprite[][] sword = {null};
         for (int t = 1; t < swingAt; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
+                if (!RuneKit.sameLife(sp, life)) {
+                    if (swordFx != null) swordFx.end();
+                    return;
+                }
                 ServerLevel lv = sp.level();
                 Vec3 hands = raisedHands(sp);
                 // 빛의 대검: 0 ~ 3 모여 듦 → 4 ~ 11 자라남 → 12 번쩍 → 빛남 (이어 돌림)
@@ -484,7 +528,11 @@ final class SwordmasterSkills {
                 int full = Math.min(swingAt - 2, 12);
                 double len = tt < grow0 ? 3.0 : Math.min(EXCAL_LEN, 3.0 + (EXCAL_LEN - 3.0) * (tt - grow0) / (double) Math.max(1, full - grow0));
                 int frame = tt < grow0 ? 0 : tt < full ? 1 : tt == full ? 2 : 3 + (tt % 3);
-                JobFx16.excal(lv, hands, V.UP, len, frame, 1, 0.12, false, Opt.of("solo", EXCAL_SOLO, "owner", (double) sp.getId(), "fade", 0.0, "vel",
+                if (lib) {
+                    Vec3 right = V.rightOf(Kit.facingOf(sp));
+                    if (sword[0] == null) sword[0] = PhantomFx.excal(swordFx, hands, V.UP, right, len);
+                    else PhantomFx.excalPose(sword[0], hands, V.UP, right, len, 1);
+                } else JobFx16.excal(lv, hands, V.UP, len, frame, 1, 0.12, false, Opt.of("solo", EXCAL_SOLO, "owner", (double) sp.getId(), "fade", 0.0, "vel",
                         RuneKit.bodyVel(sp), "alpha", tt < grow0 ? 0.55 : 1.0), gold, ivory);
                 // 둘레 6칸에서 칼날로 빨려 드는 금빛 알갱이 (2틱마다)
                 if (tt % 2 == 0) {
@@ -516,7 +564,8 @@ final class SwordmasterSkills {
                 double ang = Math.toRadians(90 - 118 * u); // 위 (90°) → 앞 아래 (−28°)
                 Vec3 dir = V.unit(V.add(V.scale(f, Math.cos(ang)), V.UP, Math.sin(ang)));
                 Vec3 hands = V.up(V.add(sp.position(), f, 0.12 + 0.55 * u), 2.25 - 1.0 * u);
-                JobFx16.excal(lv, hands, dir, EXCAL_LEN, 6, 1, 0.12, false, Opt.of("solo", EXCAL_SOLO, "owner", (double) sp.getId(), "fade", 0.0),
+                if (lib && sword[0] != null) PhantomFx.excalPose(sword[0], hands, dir, V.rightOf(f), EXCAL_LEN, 1);
+                else if (!lib) JobFx16.excal(lv, hands, dir, EXCAL_LEN, 6, 1, 0.12, false, Opt.of("solo", EXCAL_SOLO, "owner", (double) sp.getId(), "fade", 0.0),
                         gold, ivory);
                 if (tt == 0) {
                     SkillFx.play(lv, "item.trident.riptide_3", sp.position(), 0.9, 1.0);
@@ -526,7 +575,7 @@ final class SwordmasterSkills {
         }
         RuneKit.later(hitAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            beamStrike(sp, j, k, P, range, half, near, life);
+            beamStrike(sp, j, k, P, range, half, near, life, swordFx, sword[0]);
         });
         RuneKit.later(afterAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -541,7 +590,8 @@ final class SwordmasterSkills {
                 Vec3 g = ground(lv, V.add(V.add(g0, f, s), V.rightOf(f), side));
                 int delay = (int) (s / 8.0);
                 RuneKit.later(delay, () -> {
-                    JobFx16.risingBlade(sp.level(), g, 4.5 + Kit.rand() * 2.0, 0.55, Opt.empty(), gold, ivory);
+                    if (lib) PhantomFx.risingSword(sp.level(), g, 4.5 + Kit.rand() * 2.0, 8); // 2026-11-15 땅에서 솟구치는 빛의 검 (ak_excal)
+                    else JobFx16.risingBlade(sp.level(), g, 4.5 + Kit.rand() * 2.0, 0.55, Opt.empty(), gold, ivory);
                     SkillFx.sparks(sp.level(), V.up(g, 0.4), ivory, 4, 3.5);
                 });
             }
@@ -559,7 +609,8 @@ final class SwordmasterSkills {
      * 엑스칼리버의 검격 (hitAt): 발 앞 터짐 · 앞으로 달리는 거대한 금빛 세로 검기 (셋이 겹쳐 — 가운데 가장 큼) · 땅을 달리는 빛의 길 (넓은 빛줄기) · 길 끝 하늘로
      * 빛살 · 1인칭 눈앞 세로 베기 · 섬광 — 앞 range 칸 (폭 2 × half) · 발 앞 둘레 near 칸의 적에게 beam (큰 숫자)
      */
-    private static void beamStrike(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double range, double half, double near, String life) {
+    private static void beamStrike(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double range, double half, double near, String life,
+            mmorpg.fabric.vfx.Vfx.Fx swordFx, mmorpg.fabric.vfx.Vfx.Sprite[] sword) {
         ServerLevel lv = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 g0 = ground(lv, sp.position());
@@ -569,10 +620,18 @@ final class SwordmasterSkills {
         double L = Math.max(2.0, RuneKit.rayLength(lv, V.up(g0, 1.0), f, range));
         double speed = 60.0;
         Vec3 bladeDir = V.unit(V.add(V.scale(f, Math.cos(Math.toRadians(-28))), V.UP, Math.sin(Math.toRadians(-28))));
-        JobFx16.excal(lv, V.up(V.add(g0, f, 0.67), 1.25), bladeDir, EXCAL_LEN, 7, 1, 0.3, false, Opt.of("solo", EXCAL_SOLO, "owner", (double) sp.getId()), gold,
-                ivory);
-        // 발 앞: 큰 타격 · 터짐 · 금빛 고리 · 충격파
-        JobFx.two(lv, "jimpact", JobImpact.IMPACT, V.up(hit, 0.6), 0.35, Opt.of("size", 2.6, "spin", Kit.rand() * 360, "fade", 0.25), gold, WHITE);
+        PhantomFx.Lib Lb = PhantomFx.elem(j);
+        if (Lb != null && sword != null) {
+            // 2026-11-15 빛의 대검이 앞 아래로 내리꽂힌 채 6틱 머문 뒤 옅어짐 · 발 앞 큰 섬광
+            PhantomFx.excalPose(sword, V.up(V.add(g0, f, 0.67), 1.25), bladeDir, V.rightOf(f), EXCAL_LEN, 1);
+            if (swordFx != null) swordFx.on(swordFx.age() + 6, () -> swordFx.fadeAll(6));
+            PhantomFx.flash(lv, Lb, V.up(hit, 0.6), 5.5);
+        } else {
+            JobFx16.excal(lv, V.up(V.add(g0, f, 0.67), 1.25), bladeDir, EXCAL_LEN, 7, 1, 0.3, false, Opt.of("solo", EXCAL_SOLO, "owner", (double) sp.getId()), gold,
+                    ivory);
+            // 발 앞: 큰 타격 · 터짐 · 금빛 고리 · 충격파
+            JobFx.two(lv, "jimpact", JobImpact.IMPACT, V.up(hit, 0.6), 0.35, Opt.of("size", 2.6, "spin", Kit.rand() * 360, "fade", 0.25), gold, WHITE);
+        }
         JobFx.burst(lv, V.up(hit, 0.8), 3.2, j, 0.45, Opt.empty());
         JobFx.ring(lv, V.up(hit, 0.08), near, j, false, 0.45, Opt.of("alpha", 1.0));
         SkillFx.shock(lv, V.up(hit, 0.1), gold, near * 1.3, 0.45);
