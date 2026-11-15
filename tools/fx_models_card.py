@@ -32,7 +32,7 @@ FRAMES = 5
 def add(mod):
     global fx
     fx = mod
-    fns = [slash_wave] + [_job_slash_fn(n) for n in JOB_SLASHES] + [slash_basic, slash_basic_l, slash_basic_w, slash_basic_wl, slash_thrust, slash_bash, hit_spark]
+    fns = [slash_wave] + [_job_slash_fn(n) for n in JOB_SLASHES] + [slash_basic, slash_basic_l, slash_basic_w, slash_basic_wl, slash_thrust, slash_bash, hit_spark, streak_trail]
     for shape in SLASH_SHAPES:
         fns.append(_slash_fn(shape, False))
         fns.append(_slash_fn(shape, True))
@@ -246,6 +246,11 @@ def slash_bash():
 
 def hit_spark():
     return _basic_card("hit_spark", "spark")
+
+
+def streak_trail():
+    """2026-11-15 잔상 줄기 판 (tools/basic_slash_art.py streak — 원점 = 출발 · +Y = 가는 쪽 · scale = 길이 칸): 날아가는 칼 · 보물 · 돌진 뒤에 남는 빛 꼬리"""
+    return _basic_card("streak_trail", "streak")
 
 
 def _job_slash_fn(name):

@@ -53,18 +53,21 @@ final class BladeRangerSkills {
         Vec3 d = V.unit(dir);
         Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 6, life));
         PhantomArcher.Pal p = PhantomArcher.FORGE_PAL;
-        RuneSwords.Blade b = RuneSwords.phantom(fx, hilt, d, PhantomArcher.faceOf(d), len, 0.05, p.blade(), p.gem());
+        RuneSwords.Blade b = RuneSwords.phantom(fx, p.sword(), hilt, d, PhantomArcher.faceOf(d), len, 0.05, p.blade(), p.gem());
         fx.on(Math.max(1, appear), () -> b.grow(1, 2));
         return b;
     }
 
-    /** 베기 호: 가슴 c · 앞 f (가로) · 기울기 tilt (오른쪽에 위를 섞음) · dirSign +1 왼 → 오른 · 반지름 r */
+    /**
+     * 베기 호 2026-11-15 2D (사용자 "참격이나 잔상 남는 연출도 넣어서 그런거는 2D 연출로" · "잔상 느낌으로 진짜 조금만 천천히"): 가슴 c · 앞 f (가로) · 기울기 tilt
+     * (오른쪽에 위를 섞음) · dirSign +1 왼 → 오른 · 반지름 r — 기운 판의 참격 판 (slash_basic — 날카로운 머리 · 두꺼운 잔상, 0.75초에 천천히 거둬짐)
+     */
     static void slashArc(ServerLevel level, Vec3 c, Vec3 f, double tilt, int dirSign, double r, double[] glow, int sweep, int life) {
         Vec3 ff = V.unit(V.flat(f));
         if (V.len(ff) < 1e-3) ff = new Vec3(1, 0, 0);
         Vec3 v = V.unit(V.add(V.rightOf(ff), V.UP, tilt));
-        double a = dirSign > 0 ? -1.3 : 1.3;
-        BlockFx.arc(level, c, ff, v, r, a, -a, 11, 0.42, glow, sweep, life);
+        Vec3 n = V.unit(V.cross(v, ff));
+        PhantomArcher.slash2d(level, c, n, ff, r, 1.0, PhantomArcher.SLASH_LIFE, 0, glow, BlockFx.hot(glow), false, dirSign > 0);
     }
 
     /** 칼이 호를 따라 휘두름 (각 a0 → a1 · ticks 틱 — 자루는 가슴 c 에서 hilt 칸 바깥) */
@@ -237,7 +240,7 @@ final class BladeRangerSkills {
             double L = V.len(dv);
             Vec3 land = L > 1.4 ? V.add(from, V.unit(dv), L - 1.3) : from;
             JobMove.run(sp, JobMove.to(0, 5, JobMove.at(ground(sp.level(), land)), 1));
-            BlockFx.beam(sp.level(), V.up(from, 1.0), V.up(land, 1.0), 0.2, glow, 7);
+            PhantomArcher.trail2d(sp.level(), V.up(from, 1.0), V.up(land, 1.0), 0.25, 0.9, glow, BlockFx.hot(glow)); // 2026-11-15 2D 잔상 (끌려간 길)
             SkillFx.play(sp.level(), "entity.enderman.teleport", from, 1.5, 0.5);
         });
         for (int t = crossAt + 1; t < spinAt; t++) {
@@ -261,8 +264,9 @@ final class BladeRangerSkills {
             Vec3 ff = Kit.facingOf(sp);
             double sr = k.num("spinRadius", 2.5);
             Vec3 rgt = V.rightOf(ff);
-            BlockFx.arc(level, c, ff, rgt, sr * 0.9, -Math.PI, 0, 12, 0.45, glow, 2, 7);
-            BlockFx.arc(level, c, ff, rgt, sr * 0.9, 0, Math.PI, 12, 0.45, glow, 2, 7);
+            // 2026-11-15 2D 돌며 베기: 누운 두꺼운 참격 판 둘 (앞 · 뒤 — 0.08초 늦게) · 잔상이 천천히
+            PhantomArcher.sweep2d(level, c, ff, sr * 0.95, PhantomArcher.SLASH_LIFE, 0, glow, BlockFx.hot(glow), true, false);
+            PhantomArcher.sweep2d(level, c, V.scale(ff, -1), sr * 0.95, PhantomArcher.SLASH_LIFE, 0.08, glow, BlockFx.hot(glow), true, false);
             BlockFx.ring(level, V.up(sp.position(), 0.05), 0.4, sr * 1.2, 18, 0.25, glow, 6);
             for (int s = 0; s < 2; s++) swing(bl[s], c, ff, 0.05, s * Math.PI, s * Math.PI + Math.PI * 1.6, 0.4, 3);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9, 1.0);
@@ -335,8 +339,8 @@ final class BladeRangerSkills {
                 Vec3 ff = Kit.facingOf(sp);
                 Vec3 u = V.add(V.scale(ff, Math.cos(hh * 1.1)), V.rightOf(ff), Math.sin(hh * 1.1));
                 Vec3 v = V.rightOf(V.unit(u));
-                BlockFx.arc(level, c, V.unit(u), v, r * 0.85, -Math.PI, 0, 12, 0.38, glow, 2, 6);
-                BlockFx.arc(level, c, V.unit(u), v, r * 0.85, 0, Math.PI, 12, 0.38, glow, 2, 6);
+                // 2026-11-15 2D: 칼 여섯이 도는 자리를 누운 참격 판이 휩씀 (번갈아 거꾸로 · 잔상 천천히)
+                PhantomArcher.sweep2d(level, c, V.unit(u), r * 0.9, PhantomArcher.SLASH_LIFE, 0, glow, BlockFx.hot(glow), hh % 2 == 1, hh % 2 == 1);
                 if (hh == hits - 1) BlockFx.ring(level, V.up(sp.position(), 0.05), 0.5, r * 1.3, 24, 0.3, glow, 7);
                 SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + hh * 0.06, 0.9);
                 for (LivingEntity e : Kit.around(sp, sp.position(), r, 2.2)) {
@@ -491,7 +495,8 @@ final class BladeRangerSkills {
         SkillFx.play(level0, "block.anvil.use", c0, 0.6, 1.2);
         SkillFx.play(level0, "block.amethyst_block.resonate", c0, 0.6, 1.4);
         BlockFx.ring(level0, V.up(c0, 0.1), 0.5, k.num("field", 7), 40, 0.3, glow, 12);
-        BlockFx.halo(level0, V.up(c0, 0.6), k.num("field", 7), 36, 0.5, glow, 8, finalAt);
+        // 2026-11-15 HD: 세운 주황 띠 고리 (장난감처럼 보였음) 대신 땅에 단조 마법진 (톱니 · 엇갈린 칼 · 푸른 강철 고리)
+        BlockFx.sigil(level0, V.up(c0, 0.04), k.num("field", 7) * 1.12, PhantomArcher.SIGIL_FORGE, 8, finalAt, 60);
         // 둘레 땅에 칼이 꽂힘 (뽑히면 그 자리 칼이 사라짐)
         int m = Math.max(8, (int) k.num("swords", 20));
         List<RuneSwords.Blade> field = new ArrayList<>();
@@ -518,8 +523,9 @@ final class BladeRangerSkills {
             RuneKit.later(hitAt - 5, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                List<LivingEntity> in = Kit.around(sp, c0, R, 5);
-                LivingEntity e = in.isEmpty() ? null : in.get(ww % in.size());
+                List<LivingEntity> in = new ArrayList<>(Kit.around(sp, c0, R, 5));
+                in.sort(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(sp))); // 2026-11-15 가까운 적부터 차례로 (세상 순서는 들쭉날쭉)
+                LivingEntity e = in.isEmpty() ? null : in.get(ww % Math.min(3, in.size()));
                 last[0] = e;
                 Vec3 from = sp.position();
                 Vec3 to;
@@ -530,7 +536,7 @@ final class BladeRangerSkills {
                 } else to = V.add(from, V.rightOf(Kit.facingOf(sp)), (ww % 2 == 0 ? 1 : -1) * 2.0);
                 Vec3 land = ground(level, to);
                 JobMove.run(sp, JobMove.to(0, 4, JobMove.at(land), 1));
-                BlockFx.beam(level, V.up(from, 1.0), V.up(land, 1.0), 0.22, glow, 7);
+                PhantomArcher.trail2d(level, V.up(from, 1.0), V.up(land, 1.0), 0.2, 1.0, glow, BlockFx.hot(glow)); // 2026-11-15 2D 잔상 (날아든 길)
                 // 땅의 칼 하나가 손으로 날아듦
                 if (!field.isEmpty()) {
                     RuneSwords.Blade b = field.remove(0);
@@ -549,7 +555,14 @@ final class BladeRangerSkills {
                 PhantomArcher.cross2d(level, c, V.sub(c, sp.getEyePosition()), 1.9, glow, core);
                 JobTraits9.twinBlades(level, sp, c, j, 1.5, 6);
                 SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + ww * 0.06, 1.0);
-                for (LivingEntity x : Kit.around(sp, c, cut, 2.5)) {
+                // 2026-11-15 칼 들판 둘레 (radius 칸) 의 적 모두 — 날아든 적 둘레만 치면 둘레 다른 몹 (시험의 이웃 구조물 몹 포함) 을 고른 물결이 빗나갔음
+                // (CI 43654499840 아이언 템페스트 1462 ≥ 2340 — 여섯 물결 가운데 셋). 날아든 적이 아닌 적에게는 작은 2D X 베기
+                Set<UUID> struck = new HashSet<>();
+                for (LivingEntity x : Kit.around(sp, c, cut, 2.5)) struck.add(x.getUUID());
+                for (LivingEntity x : Kit.around(sp, c0, R, 5)) struck.add(x.getUUID());
+                for (LivingEntity x : Kit.around(sp, c0, Math.max(R, V.hdist(c0, c) + cut), 5)) {
+                    if (!struck.contains(x.getUUID())) continue;
+                    if (x != e && RuneKit.fxQuota("tempestCross", 6)) PhantomArcher.cross2d(level, Kit.bodyPoint(x), V.sub(Kit.bodyPoint(x), sp.getEyePosition()), 1.2, glow, core);
                     JobKit.strikeSplit(sp, x, j, P, k.num("wave", 7), 2, 2, false, false, life, 0, d -> {
                         if (RuneKit.fxQuota("tempestHit", 8)) JobFx.hit(x, j, 1.0);
                     });
@@ -573,7 +586,7 @@ final class BladeRangerSkills {
             RuneKit.later(4, () -> {
                 if (giant[0] != null) giant[0].pose(top, V.DOWN, PhantomArcher.faceOf(V.DOWN), 6);
             });
-            BlockFx.halo(level, V.up(spot[0], 6.0), 3.8, 26, 0.5, glow, 4, 10);
+            BlockFx.sigil(level, V.up(spot[0], 0.05), k.num("finalRadius", 4) * 1.05, PhantomArcher.SIGIL_FORGE, 5, 12, 120); // 2026-11-15 세운 띠 고리 대신 땅 마법진
             SkillFx.play(level, "block.anvil.use", spot[0], 0.5, 1.4);
         });
         RuneKit.later(finalAt - 2, () -> {

@@ -43,6 +43,8 @@ KINDS = {
     "thrust": {"W": 96, "H": 256, "XL": -0.2025, "XR": 0.2025, "YB": -0.04, "YT": 1.04, "frames": FRAMES},
     "bash": {"W": 256, "H": 160, "XL": -0.96, "XR": 0.96, "YB": -0.1, "YT": 1.1, "frames": FRAMES},
     "spark": {"W": 128, "H": 128, "XL": -1.0, "XR": 1.0, "YB": -1.0, "YT": 1.0, "frames": 5},
+    # 2026-11-15 잔상 줄기 (날아가는 칼 · 보물 · 돌진의 빛 꼬리 — 원점 = 출발 · +Y = 가는 쪽 · 길이 1 = scale 칸)
+    "streak": {"W": 64, "H": 256, "XL": -0.125, "XR": 0.125, "YB": -0.02, "YT": 1.02, "frames": FRAMES},
 }
 
 
@@ -292,6 +294,67 @@ def thrust(k):
     return lum, np.clip(body, 0, 1), core
 
 
+# ------------------------------------------------------------ streak (2026-11-15)
+
+def streak_params(k):
+    """칸 k → (머리 y, 꼬리 y, 폭 배율, 어둡게, 전체 알파, 날 알파, 흩어짐) — 창 찌르기와 같은 박자 (머리가 SWEEP 칸 동안 끝까지 · 남은 칸에 꼬리부터
+    천천히 거둬짐 — 사용자 "너무 빨리 사라져서 잘 안보이게 하지 말고 잔상 느낌으로 진짜 조금만 천천히")"""
+    if k < SWEEP:
+        return (0.3, 0.6, 0.86, 1.0)[k], 0.0, 1.0, 0.0, 1.0, 1.0, 0.0
+    q = (k - SWEEP + 1) / (FRAMES - SWEEP)
+    return 1.0, 0.82 * q ** 1.15, 1.0 + 0.3 * q, 0.18 * q, (1 - q) ** 0.5 if q < 1 else 0.06, (1 - q) ** 1.2, q * 0.9
+
+
+def streak(k):
+    """잔상 줄기 (2026-11-15 사용자 "참격이나 잔상 남는 연출도 넣어서 그런거는 2D 연출로"): 머리 (+Y 끝) 는 바늘처럼 가늘고 흰 심이 밝음, 뒤로 갈수록 넓어지며 짙어지는
+    꼬리 · 흐르는 결 · 양옆으로 남는 가는 속도선 · 머리 섬광 — 창 찌르기 판 (thrust) 에서 창끝 · 공기 고리 · 감은 바람을 뺀 것"""
+    x, y, px = _grid("streak")
+    yh, yt, kw, dark, ga, ra, dis = streak_params(k)
+    d = yh - y
+    dc = np.clip(d, 0, None)
+    L = max(1e-3, yh - yt)
+    tail_t = _ss(yt, yt + 0.35 * L + 0.02, y)
+    t_head, t_max = 0.004, 0.085
+    w = (t_head + (t_max - t_head) * (1 - np.exp(-dc / 0.35))) * kw * (0.35 + 0.65 * tail_t)
+    ax = np.abs(x)
+    rho = ax / np.maximum(w, 1e-4)
+    a_side = 1 - _ss(0.6, 1.0, rho)
+    a_head = _ss(-0.004, 0.01, d)
+    a_tail = tail_t * _ss(yt - 0.01, yt + 0.03, y)
+    along = np.clip(dc / L, 0, 1)
+    sn = 0.6 * _noise(y * 2.0, x * 60.0 + 5.0, 15) + 0.4 * _noise(y * 3.5 + 2.0, x * 100.0, 16)
+    fine = _noise(y * 2.5 + 4.0, x * 140.0, 41)
+    strands = _ss(0.22, 0.5, fine + 0.65 * (1 - along))
+    body = a_side * a_head * a_tail * ga * 0.92 * (0.85 + 0.15 * _ss(0.3, 0.7, sn)) * strands
+    halo = 0.22 * np.exp(-np.clip(ax - w, 0, None) / 0.02) * (rho > 1) * np.exp(-dc / 0.3) * a_head * a_tail * ga
+    if dis > 0:
+        keep = 0.6 * fine + 0.4 * (1 - along)
+        t = dis * 1.1
+        m = _ss(t - 0.05, t + 0.05, keep)
+        body, halo = body * m, halo * m
+    lum = (0.6 + 0.4 * (1 - np.clip(rho, 0, 1)) ** 1.3) * (1 - 0.3 * along) * (1 - 0.5 * dark) * (0.9 + 0.2 * (sn - 0.5))
+    lum = np.clip(lum + 0.25 * np.exp(-dc / 0.06), 0.45, 1.0)
+    lum, body = _merge(body, lum, halo)
+    t_c = 0.004 + 0.014 * np.exp(-dc / 0.12)
+    line = (1 - _ss(t_c - 0.6 * px, t_c + 0.6 * px, ax)) * np.exp(-dc / 0.5) * a_head * a_tail * ra
+    flare = np.exp(-((ax / 0.03) ** 2 + (d / 0.035) ** 2)) * ra * (1.0 if k < SWEEP + 2 else 0.0)
+    rng = np.random.RandomState(919)
+    segs = []
+    for i in range(10):
+        b = int(rng.randint(1, SWEEP + 1))
+        age = k - b
+        if age < 0 or age > 4:
+            continue
+        side = 1 if i % 2 else -1
+        y0 = (0.6, 0.86, 1.0, 1.0)[min(3, b - 1)] - 0.08 - rng.rand() * 0.25
+        cx = side * (0.05 + 0.012 * age + rng.rand() * 0.03)
+        cy = y0 - 0.05 * age
+        ln = 0.1 + rng.rand() * 0.12
+        segs.append((cx, cy + ln / 2, cx, cy - ln / 2, 0.0028, (1 - age / 5.0) ** 1.2))
+    core = np.clip(line + flare + _segments(x, y, segs, px), 0, 1)
+    return lum, np.clip(body, 0, 1), core
+
+
 # ------------------------------------------------------------ bash
 
 def bash_params(k):
@@ -385,7 +448,7 @@ def kind_frames(kind):
     """판 kind 의 칸들 [(몸 밝기, 몸 알파, 날 알파)] (arc 는 frames())"""
     if kind == "arc":
         return frames()
-    fn = {"thrust": thrust, "bash": bash, "spark": spark}[kind]
+    fn = {"thrust": thrust, "bash": bash, "spark": spark, "streak": streak}[kind]
     return [fn(k) for k in range(KINDS[kind]["frames"])]
 
 
@@ -413,7 +476,7 @@ def preview(outdir):
     os.makedirs(outdir, exist_ok=True)
     looks = {"sword": (0.47, 0.84, 1.0), "greatsword": (0.75, 0.35, 1.0), "lance": (1.0, 0.86, 0.45), "shield": (0.62, 0.8, 1.0), "axe": (1.0, 0.55, 0.2)}
     sets = (("arc_r", frames(), "sword"), ("arc_w", frames(thick=True), "greatsword"), ("thrust", kind_frames("thrust"), "lance"),
-            ("bash", kind_frames("bash"), "shield"), ("spark", kind_frames("spark"), "axe"))
+            ("bash", kind_frames("bash"), "shield"), ("spark", kind_frames("spark"), "axe"), ("streak", kind_frames("streak"), "axe"))
     for name, fr, look in sets:
         glow = np.array(looks[look])
         core = glow + (1 - glow) * 0.75

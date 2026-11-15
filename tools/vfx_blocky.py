@@ -342,9 +342,10 @@ class BModel:
     def mat(self, name, m):
         self.mats[name] = m
 
-    def box(self, mat, f, t, rot=None, faces=None, name=None):
+    def box(self, mat, f, t, rot=None, faces=None, name=None, d=None):
+        """d = 이 상자만의 밀도 (모델 1 픽셀당 텍셀 — 없으면 모델의 d)"""
         self.parts.append({"mat": mat, "from": [float(v) for v in f], "to": [float(v) for v in t], "rot": rot, "faces": faces,
-                           "name": name or mat})
+                           "name": name or mat, "d": d})
 
     # 면의 크기 (모델 픽셀 — 가로 · 세로)
     @staticmethod
@@ -363,9 +364,10 @@ class BModel:
             dims = self.dims(p["from"], p["to"])
             fl = [fn for fn in ("north", "south", "east", "west", "up", "down") if p["faces"] is None or fn in p["faces"]]
             base_faces, ov_faces = {}, {}
+            dd = p.get("d") or self.d
             for fn in fl:
-                w = max(1, int(round(dims[fn][0] * self.d)))
-                h = max(1, int(round(dims[fn][1] * self.d)))
+                w = max(1, int(round(dims[fn][0] * dd)))
+                h = max(1, int(round(dims[fn][1] * dd)))
                 frames_b, frames_o = [], []
                 for fi in range(nf):
                     rng = np.random.default_rng(seed_of(self.name, k, fn, p["mat"]))
@@ -2613,6 +2615,11 @@ def main():
     ap.add_argument("--preview")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
+    # 2026-11-15 HD 칠 (tools/vfx_hd.py — 이펙트 상자 · 칼 · 보물 · 금빛 문 · 사슬 · 땅 마법진): 같은 이름은 HD 가 대신함
+    import vfx_hd
+    BUILD.update(vfx_hd.BUILD)
+    TINTS.update(vfx_hd.TINTS)
+    VIEWS_OF.update(vfx_hd.VIEWS_OF)
     names = a.names or list(BUILD)
     built = {}
     for n in names:

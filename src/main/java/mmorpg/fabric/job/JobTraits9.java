@@ -113,7 +113,7 @@ public final class JobTraits9 {
         double len = 1.5;
         Vfx.Fx fx = RuneProps.fx(level, g, 24);
         Vec3 face = PhantomArcher.faceOf(d);
-        RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(g, d, -len * 0.6), d, face, len, 0.05, p.blade(), p.gem());
+        RuneSwords.Blade b = RuneSwords.phantom(fx, PhantomArcher.treasure((int) (Kit.rand() * 3)), V.add(g, d, -len * 0.6), d, face, len, 0.05, p.blade(), p.gem());
         fx.on(1, () -> {
             b.grow(1, 2);
             b.pose(V.add(g, d, -len * 0.2), d, face, 2);
@@ -123,7 +123,7 @@ public final class JobTraits9 {
             Vec3 dd = V.unit(V.sub(at, b.hilt()));
             int t = Math.max(1, ArrowFx.flyTicks(b.hilt(), at, 70));
             b.pose(V.add(at, dd, -b.reach() * 0.8), dd, PhantomArcher.faceOf(dd), t);
-            BlockFx.beam(level, V.add(b.hilt(), dd, 0.5), at, 0.08, p.gem(), t + 3);
+            PhantomArcher.trail2d(level, V.add(b.hilt(), dd, 0.5), at, t / 20.0, 0.3, JobKit.glow(j), BlockFx.hot(JobKit.glow(j))); // 2026-11-15 2D 잔상
             fx.on(4 + t, b::remove);
         });
         SkillFx.play(level, "block.amethyst_block.resonate", g, 1.9, 0.35);
@@ -168,7 +168,7 @@ public final class JobTraits9 {
             Vec3 d0 = V.unit(V.add(V.add(V.UP, right, -side * 0.9), f, 0.4));
             Vec3 d1 = V.unit(V.add(V.add(V.scale(V.UP, -0.6), right, side * 0.9), f, 0.5));
             Vec3 h = V.add(at, right, side * 0.45);
-            RuneSwords.Blade b = RuneSwords.phantom(fx, h, d0, V.scale(f, -1), len, 0.4, p.blade(), p.gem());
+            RuneSwords.Blade b = RuneSwords.phantom(fx, p.sword(), h, d0, V.scale(f, -1), len, 0.4, p.blade(), p.gem());
             fx.on(1, () -> b.grow(1, 1).pose(h, d1, V.scale(f, -1), 2));
             fx.on(life, () -> b.grow(0.1, 4));
             fx.on(life + 5, b::remove);

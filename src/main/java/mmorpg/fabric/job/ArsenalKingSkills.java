@@ -51,13 +51,19 @@ final class ArsenalKingSkills {
         return V.add(V.up(V.add(sp.position(), f, -back), h0 + arch * (1 - u * u)), right, u * spread);
     }
 
-    /** 보물 하나: 문 g 에서 dir 쪽으로 칼끝부터 나옴 (appear 틱에 3틱 동안 커지며 앞으로) — 금빛 칼 (fx 수명 life 틱) */
+    /** 2026-11-15 보물 차례 (장검 · 창 · 도끼를 돌아가며) */
+    private static int treasureN;
+
+    /**
+     * 보물 하나: 문 g 에서 dir 쪽으로 칼끝부터 나옴 (appear 틱에 3틱 동안 커지며 앞으로) — 2026-11-15 HD 보물 셋 (금빛 장검 · 창 · 도끼 — 사파이어 · 에메랄드 · 루비 ·
+     * 자수정, 돌아가며) (fx 수명 life 틱)
+     */
     static RuneSwords.Blade treasure(ServerLevel level, Vec3 g, Vec3 dir, double len, int appear, int life) {
         Vec3 d = V.unit(dir);
         Vec3 face = PhantomArcher.faceOf(d);
         PhantomArcher.Pal p = PhantomArcher.GOLD_PAL;
         Vfx.Fx fx = RuneProps.fx(level, g, Math.max(appear + 8, life));
-        RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(g, d, -len * 0.6), d, face, len, 0.05, p.blade(), p.gem());
+        RuneSwords.Blade b = RuneSwords.phantom(fx, PhantomArcher.treasure(treasureN++), V.add(g, d, -len * 0.6), d, face, len, 0.05, p.blade(), p.gem());
         fx.on(Math.max(1, appear), () -> b.grow(1, 3).pose(V.add(g, d, -len * 0.2), d, face, 3));
         return b;
     }
@@ -247,14 +253,19 @@ final class ArsenalKingSkills {
         double[] core = JobKit.core(j);
         Set<UUID> rooted = new HashSet<>();
         List<RuneSwords.Blade> stuck = new ArrayList<>();
-        // 하늘 문 (둥글게 · 높이 · 기울기 조금씩 다름)
+        // 하늘 문 2026-11-15 HD: 과녁 자리 앞쪽 (쓴 사람 쪽) 하늘에 활처럼 늘어서 과녁 쪽 (앞 아래) 을 봄 — 쓴 사람 뒤 카메라에는 위를 보는 문의 뒷면이 보임 (마크 면
+        // 밝기: 아래를 보는 판은 0.4 라 검은 흙빛이었음)
+        Vec3 fw = V.flat(V.sub(center, sp.position()));
+        fw = V.len(fw) < 1e-3 ? Kit.facingOf(sp) : V.unit(fw);
+        Vec3 rt = V.rightOf(fw);
         Vec3[] gp = new Vec3[gates];
         for (int g = 0; g < gates; g++) {
-            double a = Math.PI * 2 * g / gates + Kit.rand() * 0.25;
-            double rr = r * (0.75 + Kit.rand() * 0.3);
-            gp[g] = V.add(V.up(center, sky + Kit.rand() * 1.6), new Vec3(Math.cos(a), 0, Math.sin(a)), rr);
+            double u = gates <= 1 ? 0 : g / (double) (gates - 1) * 2 - 1;
+            double back = r * (0.55 + 0.35 * u * u) + Kit.rand() * 0.6;
+            gp[g] = V.add(V.add(V.up(center, sky + (1 - u * u) * 1.4 + Kit.rand() * 0.8), fw, -back), rt, u * r * 1.15);
             BlockFx.gate(level0, gp[g], V.sub(V.up(center, 0.5), gp[g]), 0.75, 14, glow, 3 + g / 3, finalAt - 3 - g / 3 + 2);
         }
+        BlockFx.sigil(level0, V.up(center, 0.04), r * 1.05, PhantomArcher.SIGIL_GOLD, 6, finalAt + 4, 70);
         SkillFx.play(level0, "block.beacon.activate", center, 1.6, 1.0);
         SkillFx.play(level0, "block.amethyst_block.resonate", center, 1.2, 1.0);
         // 물결: 문마다 보물이 나와 (hit − 6) 날아가 (hit − t) 땅에 꽂힘 · hit 틱에 피해
@@ -309,21 +320,22 @@ final class ArsenalKingSkills {
                 }
             });
         }
-        // 가운데 큰 문 · 거대한 보물
+        // 가운데 큰 문 · 거대한 보물 (2026-11-15 HD: 과녁 자리 앞쪽 위에서 비스듬히 내려다봄)
         int bigAt = finalAt - 16;
-        Vec3 bigGate = V.up(center, sky + 2.6);
+        Vec3 bigGate = V.add(V.up(center, sky + 2.6), fw, -r * 0.7);
+        Vec3 bigDir = V.unit(V.sub(center, bigGate));
         RuneSwords.Blade[] giant = {null};
         RuneKit.later(bigAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
-            BlockFx.gate(level, bigGate, V.DOWN, 2.2, 28, glow, 5, 18);
-            giant[0] = treasure(level, bigGate, V.DOWN, k.num("bigLen", 4.6), 4, 40);
+            BlockFx.gate(level, bigGate, bigDir, 2.2, 28, glow, 5, 18);
+            giant[0] = treasure(level, bigGate, bigDir, k.num("bigLen", 4.6), 4, 40);
             SkillFx.play(level, "block.beacon.power_select", center, 0.7, 1.4);
         });
         RuneKit.later(finalAt - 3, () -> {
             if (giant[0] == null) return;
             RuneSwords.Blade b = giant[0];
-            b.pose(V.up(center, b.reach() * 0.3), V.DOWN, PhantomArcher.faceOf(V.DOWN), 3);
+            b.pose(V.add(V.up(center, 0.3), bigDir, -b.reach() * 0.7), bigDir, PhantomArcher.faceOf(bigDir), 3);
             PhantomArcher.streak2d(sp.level(), bigGate, center, 0.3, glow, null);
         });
         RuneKit.later(finalAt, () -> {
@@ -367,16 +379,21 @@ final class ArsenalKingSkills {
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
-        Vec3 top = V.up(spot[0], sky);
-        BlockFx.gate(level0, top, V.DOWN, 2.6, 30, glow, 6, hitAt);
+        // 2026-11-15 HD: 큰 문은 과녁 앞쪽 (쓴 사람 쪽) 위에서 비스듬히 과녁을 내려다봄 (아래만 보는 판은 마크 면 밝기 0.4 로 어두웠음) · 땅에 금빛 마법진
+        Vec3 fw = V.flat(V.sub(spot[0], sp.position()));
+        fw = V.len(fw) < 1e-3 ? Kit.facingOf(sp) : V.unit(fw);
+        Vec3 top = V.add(V.up(spot[0], sky), fw, -sky * 0.45);
+        Vec3 gdir = V.unit(V.sub(spot[0], top));
+        BlockFx.gate(level0, top, gdir, 2.6, 30, glow, 6, hitAt);
+        BlockFx.sigil(level0, V.up(ground(level0, spot[0]), 0.04), k.num("radius", 4) * 0.9, PhantomArcher.SIGIL_GOLD, 6, blastAt - 4, 80);
         SkillFx.play(level0, "block.beacon.activate", sp.position(), 1.2, 1.0);
         SkillFx.play(level0, "block.amethyst_block.resonate", spot[0], 0.7, 1.4);
-        RuneSwords.Blade b = treasure(level0, top, V.DOWN, len, 5, blastAt + 30);
+        RuneSwords.Blade b = treasure(level0, top, gdir, len, 5, blastAt + 30);
         // 천천히 내려옴 (나옴 → hitAt − 3)
         RuneKit.later(9, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             if (hitE != null && !hitE.isRemoved() && hitE.isAlive()) spot[0] = Kit.bodyPoint(hitE);
-            b.pose(V.up(top, -len * 0.55), V.DOWN, PhantomArcher.faceOf(V.DOWN), hitAt - 12);
+            b.pose(V.add(top, gdir, len * 0.45), gdir, PhantomArcher.faceOf(gdir), hitAt - 12);
         });
         for (int t = 9; t < hitAt - 3; t += 3) {
             int tt = t;
@@ -419,7 +436,6 @@ final class ArsenalKingSkills {
             double rad = k.num("radius", 4);
             PhantomArcher.blast(l2, j, c, rad * 0.9);
             BlockFx.ring(l2, V.up(ground(l2, c), 0.05), rad * 0.4, rad * 1.5, 30, 0.45, PhantomArcher.GOLD_PAL.fire(), 9);
-            BlockFx.halo(l2, V.up(ground(l2, c), 3.0), rad * 0.8, 24, 0.45, glow, 2, 6);
             Ult.flash(l2, c, PhantomArcher.GOLD_PAL.fire(), Opt.of("radius", 6.0, "time", new double[] {0.02, 0.04, 0.25}), sp);
             SkillFx.play(l2, "entity.generic.explode", c, 0.8, 1.2);
             if (!RuneKit.sameLife(sp, life)) return;
@@ -472,7 +488,7 @@ final class ArsenalKingSkills {
             Vec3 out = V.add(V.scale(f0, -Math.cos(ang)), right, Math.sin(ang));
             // 2026-11-15 게임 영상: 문이 작고 몸에 붙어 보였음 → 더 크게 · 더 멀리
             gp[g] = V.add(V.up(c0, (low ? 3.2 : 6.0) + Kit.rand() * 0.6 + (1 - u * u) * 0.9), out, low ? 4.4 : 3.6);
-            Vec3 face = V.add(V.scale(f0, 1), V.UP, -0.15);
+            Vec3 face = V.add(V.scale(f0, 1), V.UP, -0.4); // 2026-11-15 HD: 앞 아래를 봄 — 뒤 카메라에는 위를 보는 밝은 뒷면
             Vec3 pos = gp[g];
             int open = 2 + g;
             RuneKit.later(open, () -> {
@@ -521,24 +537,31 @@ final class ArsenalKingSkills {
         }
         // 마지막: 가장 큰 문 · 거대한 보물
         Vec3[] spot = {null};
+        Vec3[] top0 = {null};
+        Vec3[] gdir0 = {V.DOWN};
         RuneSwords.Blade[] giant = {null};
         RuneKit.later(finalAt - 16, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             LivingEntity t = Kit.pickTarget(sp, k.num("range", 24), 20);
             spot[0] = t != null ? ground(level, t.position()) : ground(level, Kit.aimPoint(sp, k.num("range", 24)));
-            Vec3 top = V.up(spot[0], 9.0);
-            BlockFx.gate(level, top, V.DOWN, 3.4, 36, glow, 6, 16);
-            BlockFx.halo(level, V.up(spot[0], 8.6), 4.6, 28, 0.5, glow, 4, 14);
-            giant[0] = treasure(level, top, V.DOWN, k.num("giantLen", 7.0), 5, 40);
+            // 2026-11-15 HD: 가장 큰 문은 겨눈 곳 앞쪽 위에서 비스듬히 (아래만 보는 판은 어두웠음) · 하늘 띠 고리 대신 땅에 금빛 마법진
+            Vec3 fw = V.flat(V.sub(spot[0], sp.position()));
+            fw = V.len(fw) < 1e-3 ? f0 : V.unit(fw);
+            top0[0] = V.add(V.up(spot[0], 9.0), fw, -4.2);
+            gdir0[0] = V.unit(V.sub(spot[0], top0[0]));
+            BlockFx.gate(level, top0[0], gdir0[0], 3.4, 36, glow, 6, 16);
+            BlockFx.sigil(level, V.up(spot[0], 0.04), k.num("finalRadius", 4) * 1.1, PhantomArcher.SIGIL_GOLD, 6, 20, 90);
+            giant[0] = treasure(level, top0[0], gdir0[0], k.num("giantLen", 7.0), 5, 40);
             SkillFx.play(level, "block.beacon.power_select", spot[0], 0.6, 1.4);
             SkillFx.play(level, "block.amethyst_block.resonate", spot[0], 0.6, 1.2);
         });
         RuneKit.later(finalAt - 3, () -> {
             if (spot[0] == null || giant[0] == null) return;
             RuneSwords.Blade b = giant[0];
-            b.pose(V.up(spot[0], b.reach() * 0.25), V.DOWN, PhantomArcher.faceOf(V.DOWN), 3);
-            PhantomArcher.streak2d(sp.level(), V.up(spot[0], 9.0), spot[0], 0.35, glow, null);
+            Vec3 gd = gdir0[0];
+            b.pose(V.add(V.up(spot[0], 0.2), gd, -b.reach() * 0.75), gd, PhantomArcher.faceOf(gd), 3);
+            PhantomArcher.streak2d(sp.level(), top0[0] != null ? top0[0] : V.up(spot[0], 9.0), spot[0], 0.35, glow, null);
             SkillFx.play(sp.level(), "item.trident.riptide_3", spot[0], 0.9, 1.2);
         });
         RuneKit.later(finalAt, () -> {
@@ -547,7 +570,6 @@ final class ArsenalKingSkills {
             double fr = k.num("finalRadius", 4);
             PhantomArcher.blast(level, j, V.up(spot[0], 1.0), fr);
             BlockFx.ring(level, V.up(spot[0], 0.05), fr * 0.3, fr * 1.8, 32, 0.45, PhantomArcher.GOLD_PAL.fire(), 10);
-            BlockFx.halo(level, V.up(spot[0], 1.2), fr * 0.6, 22, 0.6, core, 2, 5);
             Ult.flash(level, spot[0], PhantomArcher.GOLD_PAL.fire(), Opt.of("radius", 8.0, "time", new double[] {0.02, 0.05, 0.3}), sp);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             if (giant[0] != null) RuneKit.later(12, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.5));

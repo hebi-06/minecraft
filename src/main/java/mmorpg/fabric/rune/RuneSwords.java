@@ -98,7 +98,15 @@ public final class RuneSwords {
 
     /** 2026-11-15 팬텀 아처의 투영 장검 하나 (blade 와 같은 쥔 곳 · 길이 — 불투명 밝은 강철 날 · 진홍 홈) */
     public static Blade phantom(Vfx.Fx fx, Vec3 hilt, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
-        return new Blade(fx, RuneProps.PHANTOM_SWORD, HILT, HILT_TO_TIP, RuneProps.SWORD_LEN, hilt, dir, face, len, k0, glow, core);
+        return phantom(fx, RuneProps.PHANTOM_SWORD, hilt, dir, face, len, k0, glow, core);
+    }
+
+    /**
+     * 2026-11-15 HD 칼 모델 하나 (tools/vfx_hd.py — 투영 장검 · 단조 검 · 보물 장검 · 창 · 도끼: 쥔 곳 (8, −3.5, 8) · 칼끝 y 31 이 같은 틀, 구운 색이라 물들임은
+     * 쓰지 않음)
+     */
+    public static Blade phantom(Vfx.Fx fx, String model, Vec3 hilt, Vec3 dir, Vec3 face, double len, double k0, double[] glow, double[] core) {
+        return new Blade(fx, model, HILT, HILT_TO_TIP, RuneProps.SWORD_LEN, hilt, dir, face, len, k0, glow, core);
     }
 
     /** 2026-11-13 룬 빛 화살 하나 (쥔 곳 = 오늬 nock · 촉 방향 dir · 촉 두 판의 넓은 면 face · 길이 len 칸) */

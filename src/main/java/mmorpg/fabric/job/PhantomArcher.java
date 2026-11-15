@@ -14,6 +14,7 @@ import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.RuneSwords;
 import mmorpg.fabric.skill.Kit;
+import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
 import mmorpg.fabric.vfx.Vfx;
@@ -44,12 +45,28 @@ public final class PhantomArcher {
     static final double[] FIRE = {1.0, 0.36, 0.12};
     static final double[] FIRE_CORE = {1.0, 0.82, 0.3};
 
-    /** 2026-11-15 직업마다 칼 · 폭발 색 (팬텀 아처 진홍 · 2차 아스널 킹 금빛 보물 · 2차 블레이드 레인저 단조 불빛) */
-    record Pal(double[] blade, double[] gem, double[] fire, double[] fireCore) {}
+    /**
+     * 2026-11-15 직업마다 칼 · 폭발 색 (팬텀 아처 진홍 · 2차 아스널 킹 금빛 보물 · 2차 블레이드 레인저 단조 불빛) · HD 칼 모델 (tools/vfx_hd.py — 구운 색: 강철 · 금 ·
+     * 보석 · 가죽) · 땅 마법진 모델
+     */
+    record Pal(double[] blade, double[] gem, double[] fire, double[] fireCore, String sword, String sigil) {}
 
-    static final Pal CRIMSON_PAL = new Pal(BLADE, GEM, FIRE, FIRE_CORE);
-    static final Pal GOLD_PAL = new Pal(new double[] {1.0, 0.86, 0.42}, new double[] {0.95, 0.18, 0.14}, new double[] {1.0, 0.66, 0.12}, new double[] {1.0, 0.95, 0.62});
-    static final Pal FORGE_PAL = new Pal(BLADE, new double[] {1.0, 0.42, 0.08}, new double[] {1.0, 0.42, 0.08}, new double[] {1.0, 0.86, 0.36});
+    static final String SIGIL_CRIMSON = "rpg:vfx/sigil_crimson";
+    static final String SIGIL_GOLD = "rpg:vfx/sigil_gold";
+    static final String SIGIL_FORGE = "rpg:vfx/sigil_forge";
+    static final String FORGE_SWORD = "rpg:vfx/forge_sword";
+    /** 아스널 킹 보물 셋 (금빛 장검 · 창 · 도끼 — 원작에 없는 새 디자인, 쥔 곳 · 칼끝은 투영 장검과 같음) */
+    static final String[] TREASURES = {"rpg:vfx/treasure_sword", "rpg:vfx/treasure_spear", "rpg:vfx/treasure_axe"};
+
+    static final Pal CRIMSON_PAL = new Pal(BLADE, GEM, FIRE, FIRE_CORE, RuneProps.PHANTOM_SWORD, SIGIL_CRIMSON);
+    static final Pal GOLD_PAL = new Pal(new double[] {1.0, 0.86, 0.42}, new double[] {0.95, 0.18, 0.14}, new double[] {1.0, 0.66, 0.12}, new double[] {1.0, 0.95, 0.62},
+            TREASURES[0], SIGIL_GOLD);
+    static final Pal FORGE_PAL = new Pal(BLADE, new double[] {1.0, 0.42, 0.08}, new double[] {1.0, 0.42, 0.08}, new double[] {1.0, 0.86, 0.36}, FORGE_SWORD, SIGIL_FORGE);
+
+    /** 2026-11-15 아스널 킹 보물 하나 (돌아가며 — 장검 · 창 · 도끼) */
+    static String treasure(int i) {
+        return TREASURES[Math.floorMod(i, TREASURES.length)];
+    }
 
     static Pal pal(Jobs.Job j) {
         if (j == null) return CRIMSON_PAL;
@@ -100,8 +117,10 @@ public final class PhantomArcher {
 
     /** 칼의 넓은 면 (옆 · 조금 위 — 3인칭 옆에서도 1인칭 뒤에서도 날이 보이게) */
     static Vec3 faceOf(Vec3 d) {
-        Vec3 side = Math.abs(d.y) > 0.95 ? new Vec3(1, 0, 0) : V.rightOf(V.flat(d));
-        return V.unit(V.add(side, V.UP, 0.6));
+        // 2026-11-15 HD: 넓은 면을 왼쪽 위 45° 로 (마크 면 밝기 — 위를 보는 면은 1, 아래를 보는 면은 0.4: 전에는 오른쪽 위 31° 라 왼쪽 뒤 영상 카메라 ·
+        // 위에서 보는 눈에는 아래를 보는 어두운 면이 보였음 → 칼이 잿빛으로 가라앉았음)
+        Vec3 side = Math.abs(d.y) > 0.95 ? new Vec3(-1, 0, 0) : V.scale(V.rightOf(V.flat(d)), -1);
+        return V.unit(V.add(side, V.UP, 1.0));
     }
 
     // ------------------------------------------------------------ 투영
@@ -137,12 +156,14 @@ public final class PhantomArcher {
         Vec3 v = V.unit(V.cross(u, f));
         double a0 = Math.toRadians(30 + Kit.rand() * 25);
         Vec3 at = V.add(b, f, -0.35);
+        // 2026-11-15 2D 베인 자리 (사용자 "참격이나 잔상 남는 연출도 … 2D 연출로"): 작은 참격 판 둘이 X 로 (둘째 0.05초 늦게) · 맞은 자리 섬광
+        double[] core = mmorpg.fabric.vfx.BlockFx.hot(color);
         for (int s = 0; s < 2; s++) {
             double a = s == 0 ? a0 : Math.PI - a0 + (Kit.rand() - 0.5) * 0.3;
-            Vec3 dir = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
-            mmorpg.fabric.vfx.BlockFx.slash(level, at, dir, f, size * 1.35, color, s);
+            Vec3 bulge = V.add(V.scale(u, Math.cos(a + Math.PI / 2)), v, Math.sin(a + Math.PI / 2));
+            slash2d(level, V.add(at, bulge, -size * 0.32), V.scale(f, -1), bulge, size * 0.75, 0.38, SLASH_LIFE * 0.8, s * 0.05, color, core, false, s == 1);
         }
-        mmorpg.fabric.vfx.BlockFx.star(level, at, size * 0.75, color);
+        spark2d(level, at, size * 0.9, color, core);
     }
 
     /** 투영 선: 칼 윤곽 (자루 · 코등이 · 날 양쪽 · 칼끝) 을 가는 푸른 흰빛 줄 다섯으로 — life 초 동안 가늘어지며 사라짐 */
@@ -163,31 +184,90 @@ public final class PhantomArcher {
         mmorpg.fabric.vfx.BlockFx.beam(level, sb, tip, th, TRACE, t);
     }
 
-    /** 칼 궤적: 진홍 빛 줄 (흰 심지) — from → to, life 초 동안 가늘어짐 */
+    /**
+     * 칼 궤적 2026-11-15 2D 잔상 (사용자 "참격이나 잔상 남는 연출도 넣어서 그런거는 2D 연출로" — 상자 빛 줄 대신 잔상 줄기 판 streak_trail): from → to 를 머리가
+     * 나아가고 (life 초 — 칼이 날아가는 동안) 꼬리부터 천천히 거둬짐
+     */
     static void streak2d(ServerLevel level, Vec3 from, Vec3 to, double life, double[] glow, double[] core) {
-        mmorpg.fabric.vfx.BlockFx.beam(level, from, to, 0.16, glow, Math.max(3, (int) Math.round(life * 20)));
+        trail2d(level, from, to, life, 0.42, glow, core == null ? mmorpg.fabric.vfx.BlockFx.hot(glow) : core);
+    }
+
+    // ------------------------------------------------------------ 2026-11-15 2D 참격 · 잔상 · 섬광
+    // (사용자 "3d만 쓰지 말고 참격이나 잔상 남는 연출도 넣어서 그런거는 2D 연출로 해버려" · "참격 나갈떄 너무 빨리 사라져서 잘 안보이게 하지 말고 잔상 느낌으로
+    // 진짜 조금만 천천히 사려져봐" — 256 픽셀 글자 판 fxmodel slash_basic · streak_trail · hit_spark, 모드 없는 클라이언트도 같은 그림)
+
+    /** 참격 판 삶 (초): 머리가 휩쓰는 몫 0.4 · 남은 0.6 동안 잔상이 꼬리부터 천천히 (예전 상자 호는 0.3초 남짓에 꺼졌음) */
+    static final double SLASH_LIFE = 0.75;
+
+    /**
+     * 참격 판 하나 (slash_basic — 가늘고 날카로운 머리 · 뒤로 두꺼워지며 짙어지는 잔상): 가운데 c · 판의 면 face (보는 사람 쪽) · 볼록한 쪽 bulge · 반지름 r 칸 ·
+     * 볼록한 쪽 납작하게 squash · 삶 life 초 · 늦춤 delay 초 · 빛깔 glow (몸) · core (날), wide = 두꺼운 띠, mirror = 거꾸로 휩쓺
+     */
+    static void slash2d(ServerLevel level, Vec3 c, Vec3 face, Vec3 bulge, double r, double squash, double life, double delay, double[] glow, double[] core,
+            boolean wide, boolean mirror) {
+        String model = "slash_basic" + (wide ? "_w" : "") + (mirror ? "_l" : "");
+        double lf = Math.max(0.2, life);
+        mmorpg.fabric.Fx3d.spawn(level, model, c, Opt.of("dir", V.unit(bulge), "face", V.unit(face), "roll", 0.0, "scale", r, "life", lf, "delay", delay, "grow", 0.06,
+                "anim", "play", "animSpeed", 1.0 / lf, "fadeIn", 0.0, "fadeOut", lf * 0.25, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", 0.95, "shine", 0.12,
+                "stretch", new Vec3(1, squash, 1)));
+    }
+
+    /** 몸 둘레에 누운 참격 판 (가로 휘두름 · 돌며 베기): 가운데 c · 앞 f (볼록한 쪽) · 반지름 r · 위아래 옅은 겹 (같은 높이 눈에서 옆선이 되지 않게) */
+    static void sweep2d(ServerLevel level, Vec3 c, Vec3 f, double r, double life, double delay, double[] glow, double[] core, boolean wide, boolean mirror) {
+        Vec3 ff = V.len(V.flat(f)) < 1e-3 ? new Vec3(0, 0, 1) : V.unit(V.flat(f));
+        slash2d(level, c, V.UP, ff, r, 1.0, life, delay, glow, core, wide, mirror);
+        for (double dy : new double[] {-0.14, 0.14}) {
+            String model = "slash_basic" + (wide ? "_w" : "") + (mirror ? "_l" : "");
+            double lf = Math.max(0.2, life);
+            mmorpg.fabric.Fx3d.spawn(level, model, V.up(c, dy), Opt.of("dir", ff, "face", V.UP, "roll", 0.0, "scale", r * 0.97, "life", lf, "delay", delay, "grow", 0.06,
+                    "anim", "play", "animSpeed", 1.0 / lf, "fadeIn", 0.0, "fadeOut", lf * 0.25, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", 0.45, "shine", 0.1));
+        }
+    }
+
+    /** 잔상 줄기 판 하나 (streak_trail): from → to · 머리가 travel 초 동안 나아감 (판 삶의 0.4) · 가장 두꺼운 폭 width 칸 · 보는 사람 쪽으로 돎 */
+    static void trail2d(ServerLevel level, Vec3 from, Vec3 to, double travel, double width, double[] glow, double[] core) {
+        Vec3 d = V.sub(to, from);
+        double L = V.len(d);
+        if (L < 0.25) return;
+        double life = Math.max(0.6, travel / 0.4);
+        double sx = Math.max(0.15, width / (2 * 0.085 * L));
+        mmorpg.fabric.Fx3d.spawn(level, "streak_trail", from, Opt.of("dir", V.scale(d, 1 / L), "faceCam", 1.0, "roll", 0.0, "scale", L, "life", life, "grow", 0.0,
+                "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.0, "fadeOut", life * 0.3, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", 0.92, "shine", 0.1,
+                "stretch", new Vec3(sx, 1, 1)));
+    }
+
+    /** 맞은 자리 섬광 판 (hit_spark — 빛살 여덟 · 가운데 섬광 · 퍼지는 고리, 보는 사람을 봄): 크기 size 칸 */
+    static void spark2d(ServerLevel level, Vec3 at, double size, double[] glow, double[] core) {
+        double life = 0.32;
+        mmorpg.fabric.Fx3d.spawn(level, "hit_spark", at, Opt.of("scale", size, "life", life, "anim", "play", "animSpeed", 1.0 / life, "faceCam", 1.0, "fadeIn", 0.0,
+                "fadeOut", life * 0.15, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", 1.0, "roll", Kit.rand() * 90));
     }
 
     /** 착탄 섬광: 흰 심 · 진홍 겉 상자가 터졌다 꺼짐 · 강철 조각 여섯 */
     static void impact2d(ServerLevel level, Vec3 at, double size, double[] glow, double[] core) {
         mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.8, glow, mmorpg.fabric.vfx.BlockFx.WHITE, 6);
         mmorpg.fabric.vfx.BlockFx.shards(level, at, 6, size * 1.4, size * 0.4, BLADE, 8);
+        spark2d(level, at, size * 1.1, glow, core == null ? mmorpg.fabric.vfx.BlockFx.hot(glow) : core);
     }
 
-    /** X 베기: 보는 쪽 (facing — 쓴 사람 → 과녁) 에 수직인 판에서 엇갈린 빛 호 둘 */
+    /**
+     * X 베기 2026-11-15 2D (사용자 "참격이나 잔상 남는 연출도 … 2D 연출로"): 보는 쪽 (facing — 쓴 사람 → 과녁) 을 보는 참격 판 둘이 엇갈려 (둘째 0.06초 늦게 ·
+     * 거꾸로 휩쓺) · 잔상이 천천히 거둬짐 · 맞은 자리 섬광 + 작은 3D 터짐
+     */
     static void cross2d(ServerLevel level, Vec3 at, Vec3 facing, double size, double[] glow, double[] core) {
-        Vec3 u = V.rightOf(V.flat(facing));
+        Vec3 f = V.len(facing) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(facing);
+        Vec3 u = V.rightOf(V.flat(f));
         if (V.len(u) < 1e-3) u = new Vec3(1, 0, 0);
-        Vec3 v = V.UP;
-        double Rc = size * 2.2;
-        double span = size * 1.15 / Rc;
+        u = V.unit(u);
+        Vec3 v = V.unit(V.cross(u, f));
+        double[] cc = core == null ? mmorpg.fabric.vfx.BlockFx.hot(glow) : core;
+        Vec3 c = V.add(at, f, -0.25);
         for (int s = 0; s < 2; s++) {
-            Vec3 dd = V.unit(s == 0 ? V.sub(u, v) : V.add(V.scale(u, -1), V.scale(v, -1)));
-            Vec3 n = V.unit(s == 0 ? V.add(u, v) : V.sub(u, v));
-            Vec3 center = V.add(at, n, Rc);
-            mmorpg.fabric.vfx.BlockFx.arc(level, center, V.scale(n, -1), dd, Rc, -span, span, 9, size * 0.22, glow, 3, 8);
+            Vec3 bulge = V.unit(s == 0 ? V.add(u, v) : V.sub(v, u));
+            slash2d(level, V.add(c, bulge, -size * 0.42), V.scale(f, -1), bulge, size * 1.05, 0.42, SLASH_LIFE, s * 0.06, glow, cc, size > 1.6, s == 1);
         }
-        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.45, glow, mmorpg.fabric.vfx.BlockFx.WHITE, 6);
+        spark2d(level, c, size * 0.8, glow, cc);
+        mmorpg.fabric.vfx.BlockFx.burst(level, at, size * 0.35, glow, mmorpg.fabric.vfx.BlockFx.WHITE, 6);
     }
 
     /** 폭발: 진홍 · 주황 상자 볼륨 · 흰 심 · 땅 충격파 고리 · 강철 조각 */
@@ -217,7 +297,7 @@ public final class PhantomArcher {
         Vec3 face = faceOf(d);
         if (lines) traceLines(level, hilt, d, face, len, Math.max(0.15, (appear + 3) / 20.0));
         Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 4, life));
-        RuneSwords.Blade b = RuneSwords.phantom(fx, hilt, d, face, len, 0.05, BLADE, GEM);
+        RuneSwords.Blade b = RuneSwords.phantom(fx, RuneProps.PHANTOM_SWORD, hilt, d, face, len, 0.05, BLADE, GEM);
         fx.on(Math.max(1, appear), () -> b.grow(1, 2));
         return b;
     }
@@ -302,7 +382,7 @@ public final class PhantomArcher {
             Vec3 off = V.sub(hilt, body);
             Vec3 face = faceOf(d);
             Vfx.Fx fx = RuneProps.fx(level, hilt, life + 12);
-            RuneSwords.Blade b = RuneSwords.phantom(fx, V.add(hilt, d, -0.35), d, face, len, 0.6, pal(j).blade(), pal(j).gem());
+            RuneSwords.Blade b = RuneSwords.phantom(fx, pal(j).sword(), V.add(hilt, d, -0.35), d, face, len, 0.6, pal(j).blade(), pal(j).gem());
             Stuck s = new Stuck(b, now + life);
             fx.on(1, () -> {
                 b.grow(1, 1);
@@ -411,7 +491,7 @@ public final class PhantomArcher {
         Vec3 start = V.add(from, d, 0.2);
         Vfx.Fx fx = RuneProps.fx(level, start, ticks + 14);
         Vec3 face = faceOf(d);
-        RuneSwords.Blade b = RuneSwords.phantom(fx, start, d, face, len, 0.35, pal(j).blade(), pal(j).gem());
+        RuneSwords.Blade b = RuneSwords.phantom(fx, pal(j).sword(), start, d, face, len, 0.35, pal(j).blade(), pal(j).gem());
         double reach = b.reach() / 0.35;
         Vec3 end = V.add(from, d, Math.max(0.6, dist - reach * (target != null ? 0.75 : 1.0)));
         fx.on(1, () -> {
@@ -425,8 +505,9 @@ public final class PhantomArcher {
         }
         // 2026-11-15 1인칭: 눈앞 0.5칸 별은 평타마다 화면을 덮음 → 1.6칸 앞 · 작게
         if (RuneKit.fxQuota("phantomShotGlint", 6)) mmorpg.fabric.vfx.BlockFx.star(level, V.add(from, d, 1.6), 0.45, TRACE);
-        // 2026-11-15 날아가는 칼 뒤 가는 진홍 빛 줄 (평타가 잦아 가늘게 · 몫 8)
-        if (RuneKit.fxQuota("phantomShotTrail", 8)) mmorpg.fabric.vfx.BlockFx.beam(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), 0.07, pal(j).gem(), ticks + 3);
+        // 2026-11-15 날아가는 칼 뒤 2D 잔상 줄기 (평타가 잦아 가늘게 · 몫 8)
+        if (RuneKit.fxQuota("phantomShotTrail", 8)) trail2d(level, V.add(from, d, 0.6), V.add(end, d, reach * 0.5), ticks / 20.0, 0.24, pal(j).gem(),
+                mmorpg.fabric.vfx.BlockFx.hot(pal(j).gem()));
         SkillFx.play(level, "item.trident.throw", from, 1.5 + Kit.rand() * 0.2, 0.3);
     }
 

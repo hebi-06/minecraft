@@ -297,7 +297,8 @@ final class PhantomArcherSkills {
         // 2026-11-15 사용자 "남은 2D 고리 블록으로 바꿔": 땅 예고 고리 · 퍼지는 고리 · 하늘 고리 = 단색 블록 (BlockFx)
         mmorpg.fabric.vfx.BlockFx.ringHold(level0, V.up(center, 0.04), r, 30, 0.24, glow, 5, burstAt);
         mmorpg.fabric.vfx.BlockFx.ring(level0, V.up(center, 0.05), r * 0.3, r, 24, 0.3, glow, 8);
-        mmorpg.fabric.vfx.BlockFx.halo(level0, V.up(center, sky), r * 0.8, 26, 0.5, glow, 4, burstAt - 8); // 2026-11-15 세운 띠 (눕힌 고리는 아래에서 검붉게 보였음)
+        // 2026-11-15 HD: 하늘 띠 고리 (장난감처럼 보였음) 대신 땅에 진홍 마법진 (육망성 · 칼 문장 · 금빛 룬 — 위를 보는 판은 마크 면 밝기 1)
+        mmorpg.fabric.vfx.BlockFx.sigil(level0, V.up(center, 0.045), r * 1.02, PhantomArcher.SIGIL_CRIMSON, 5, burstAt - 2, 60);
         for (int w = 0; w < waves; w++) {
             int ww = w;
             int hitAt = first + w * gap;
@@ -539,6 +540,8 @@ final class PhantomArcherSkills {
             mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.04), R, 48, 0.32, glow, 4, finalAt - ringTicks + 6); // 2026-11-15 2D 칼날 고리 대신 단색 블록 테두리
             // 2026-11-15 마법진 (미리보기에서 맞춤): 육망성 (세모 둘 · 반지름 0.97R — 2틱마다 한 변씩 그어짐) + 그 안쪽 고리 (0.485R)
             mmorpg.fabric.vfx.BlockFx.ringHold(level, V.up(c0, 0.035), R * 0.485, 30, 0.18, glow, 6, finalAt - ringTicks + 2);
+            // 2026-11-15 HD: 안쪽 고리 안을 진홍 마법진 (육망성 · 칼 문장 · 금빛 룬) 이 채움
+            mmorpg.fabric.vfx.BlockFx.sigil(level, V.up(c0, 0.045), R * 0.5, PhantomArcher.SIGIL_CRIMSON, 8, finalAt - ringTicks + 2, 45);
             double rho = R * 0.97;
             for (int tri = 0; tri < 2; tri++) {
                 for (int e = 0; e < 3; e++) {

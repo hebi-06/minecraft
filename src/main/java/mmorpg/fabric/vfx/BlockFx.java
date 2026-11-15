@@ -8,28 +8,70 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 
 /**
- * 2026-11-15 단색 블록 볼륨 이펙트 (사용자 "이런식이면 그냥 위르드처럼 해야 할거 같은데" · "그냥 도트처럼 보이는게 문제임" — claude/archer-remake.md):
- * 무늬 없는 흰 상자 (tools/vfx_blocky.py flat_cube — 물들임 0 · 스스로 빛남) 를 물들이고 축마다 늘여 (Vfx.Prop.stretch) 빛 줄 · 호 · 폭발 · 고리 · 조각 · 불꽃을
- * 만듦. 바닐라가 보간으로 부드럽게 그림 · 면에 픽셀 무늬가 없어 크게 띄워도 도트로 보이지 않음. 2D 글꼴 그림 대신 큰 이펙트의 본체.
+ * 2026-11-15 블록 볼륨 이펙트 (사용자 "이런식이면 그냥 위르드처럼 해야 할거 같은데" · "그냥 도트처럼 보이는게 문제임" — claude/archer-remake.md): 상자를 물들이고
+ * 축마다 늘여 (Vfx.Prop.stretch) 빛 줄 · 호 · 폭발 · 고리 · 조각 · 불꽃을 만듦. 2026-11-15 HD 칠 (사용자 "색칠한게 너무 발로 한거 같음" · "단색이 아니라 색을
+ * 좀 예쁘게 다양하게" — tools/vfx_hd.py): 줄 · 보석 · 덩이 · 불꽃 상자는 색조를 옮긴 그늘 (물들임 0) + 뜨거운 심 (물들임 1 = hot), 금빛 문 · 사슬 · 땅 마법진은
+ * 구운 색 모델 하나. 참격 · 잔상은 2D (PhantomArcher.slash2d · trail2d — 사용자 "참격이나 잔상 남는 연출도 넣어서 그런거는 2D 연출로")
  */
 public final class BlockFx {
     private BlockFx() {}
 
-    /** 2026-11-15 사용자 "큐브들에 그라데이션 · 명암 · 그림": 줄 상자 (가로 그라데이션 · 흰 심 — tools/vfx_blocky.py fx_bar) — 모든 상자의 바탕 */
+    /**
+     * 2026-11-15 HD 칠 (사용자 "색칠한게 너무 발로 한거 같음" · "AI가 만든 느낌을 줄이고 단색이 아니라 색을 좀 예쁘게 다양하게" — tools/vfx_hd.py): 줄 상자 — 가로 셀 띠
+     * (물들임 0 = 색 · 가장자리는 와인 · 보라 쪽으로 옮긴 그늘) + 가운데 뜨거운 심 (물들임 1 = hot(색)). 모든 상자의 바탕
+     */
     public static final String CUBE = "rpg:vfx/fx_bar";
-    /** 그림 상자 (그라데이션 · 깎은 테두리 + 마술 회로 겹 무늬 — 물들임 0 = 몸 · 1 = 무늬, fx_cube): 불덩이 · 불꽃 · 연기 · 금빛 문 판 */
+    /** 보석 상자 (네 빗면 · 뜨거운 마름모 — 물들임 0 · 1, fx_cube): 반짝 조각 · 불티 · 번쩍 별 심 */
     public static final String GLYPH = "rpg:vfx/fx_cube";
+    /** 2026-11-15 둥근 덩이 (빛 받은 공 · 뜨거운 덮개 — fx_orb): 불덩이 · 연기 · 폭발 심 */
+    public static final String ORB = "rpg:vfx/fx_orb";
+    /** 2026-11-15 불꽃 혀 (휘는 계단 불꽃 · 아래 흰 심 — fx_flame, 쥔 곳 = 밑 (8, 0, 8) · 높이 28.4 픽셀) */
+    public static final String FLAME = "rpg:vfx/fx_flame";
+    /** 2026-11-15 금빛 문 (모델 하나 — 금빛 물결 판 · 금 테 · 보석 넷 색 · 햇살 가시, gold_gate: 테 반지름 7.25 픽셀 · 얇은 축 Z) */
+    public static final String GATE = "rpg:vfx/gold_gate";
+    /** 2026-11-15 금 사슬 고리 (gold_link — 긴 축 Y 11.2 픽셀) */
+    public static final String LINK = "rpg:vfx/gold_link";
     public static final double[] WHITE = {1.0, 1.0, 1.0};
     /** 연기 (짙은 붉은 잿빛 — 폭발의 번쩍임 뒤 대비) */
     public static final double[] SMOKE = {0.32, 0.17, 0.17};
 
-    /** 상자 하나: 가운데 c · 회전 rot (모델 y = 긴 축) · 크기 (칸) · 색 — 처음부터 그 모습 */
+    /**
+     * 2026-11-15 뜨거운 심 색 (물들임 1): 흰빛 쪽으로 — 따뜻한 색 (빨강 ≥ 파랑) 은 크림 · 노랑 쪽, 차가운 색은 하늘빛 쪽 (한 색을 밝기만 바꾸지 않게)
+     */
+    public static double[] hot(double[] c) {
+        boolean warm = c[0] >= c[2];
+        double[] w = warm ? new double[] {1.0, 0.95, 0.8} : new double[] {0.9, 0.97, 1.0};
+        double k = 0.72;
+        return new double[] {c[0] + (w[0] - c[0]) * k, c[1] + (w[1] - c[1]) * k, c[2] + (w[2] - c[2]) * k};
+    }
+
+    /** 상자 하나: 가운데 c · 회전 rot (모델 y = 긴 축) · 크기 (칸) · 색 — 처음부터 그 모습 (심 = hot(색)) */
     public static Vfx.Prop box(Vfx.Fx fx, Vec3 c, Quaternionf rot, double sx, double sy, double sz, double[] color) {
         return fx.prop(CUBE, c, p -> {
             p.grip(8, 8, 8).bright();
-            p.tint(color);
+            p.tint(color, hot(color));
             p.to(c, rot, 1, 0);
             p.stretch(sx, sy, sz, 0);
+        });
+    }
+
+    /** 2026-11-15 둥근 덩이 하나 (fx_orb — 지름 size 칸 · 색 color · 빛 받는 쪽 덮개 hot) */
+    public static Vfx.Prop orb(Vfx.Fx fx, Vec3 c, Quaternionf rot, double size, double[] color, double[] hot) {
+        return fx.prop(ORB, c, p -> {
+            p.grip(8, 8, 8).bright();
+            p.tint(color, hot);
+            p.to(c, rot, 1, 0);
+            p.stretch(size, size, size, 0);
+        });
+    }
+
+    /** 2026-11-15 보석 상자 하나 (fx_cube — 한 변 size 칸 · 색 color · 심 hot(색)) */
+    public static Vfx.Prop crystal(Vfx.Fx fx, Vec3 c, Quaternionf rot, double size, double[] color) {
+        return fx.prop(GLYPH, c, p -> {
+            p.grip(8, 8, 8).bright();
+            p.tint(color, hot(color));
+            p.to(c, rot, 1, 0);
+            p.stretch(size, size, size, 0);
         });
     }
 
@@ -75,16 +117,10 @@ public final class BlockFx {
             double seg = len / n * 1.02;
             double th = thick * (0.45 + 0.55 * (i + 1) / n);
             int li = Math.max(2, (int) Math.round(L * (0.55 + 0.45 * (i + 1) / n)));
+            // 2026-11-15 HD: 흰 심지 상자 대신 줄 상자의 뜨거운 심 겹 (상자 수 반)
             Vfx.Prop o = box(fx, mid, rot, th, seg, th, color);
-            Vfx.Prop k = box(fx, mid, rot, th * 0.4, seg * 1.01, th * 0.4, WHITE);
-            fx.on(1, () -> {
-                o.stretch(0.0, seg * 0.96, 0.0, li - 1);
-                k.stretch(0.0, seg, 0.0, li - 1);
-            });
-            fx.on(li + 1, () -> {
-                o.remove();
-                k.remove();
-            });
+            fx.on(1, () -> o.stretch(0.0, seg * 0.96, 0.0, li - 1));
+            fx.on(li + 1, o::remove);
         }
     }
 
@@ -112,20 +148,16 @@ public final class BlockFx {
             int at = sweep * i / n;
             fx.on(at, () -> {
                 Vfx.Prop o = box(fx, p, rot, w * 0.3, segLen * 0.5, w * 0.25, color);
-                Vfx.Prop m = box(fx, V.add(p, radial, w * 0.12), rot, w * 0.2, segLen * 0.5, w * 0.2, hot);
-                Vfx.Prop k = box(fx, V.add(p, radial, w * 0.22), rot, w * 0.1, segLen * 0.5, w * 0.12, WHITE);
+                Vfx.Prop m = box(fx, V.add(p, radial, w * 0.16), rot, w * 0.2, segLen * 0.5, w * 0.2, hot);
                 o.stretch(w, segLen, w * 0.4, 1);
-                m.stretch(w * 0.55, segLen * 1.01, w * 0.42, 1);
-                k.stretch(w * 0.22, segLen * 1.02, w * 0.44, 1);
+                m.stretch(w * 0.5, segLen * 1.01, w * 0.42, 1);
                 fx.on(fx.age + 2, () -> {
                     o.stretch(0.0, segLen * 0.9, 0.0, li);
                     m.stretch(0.0, segLen * 0.95, 0.0, Math.max(2, li - 1));
-                    k.stretch(0.0, segLen, 0.0, Math.max(2, li - 2));
                 });
                 fx.on(fx.age + li + 3, () -> {
                     o.remove();
                     m.remove();
-                    k.remove();
                 });
             });
         }
@@ -153,7 +185,7 @@ public final class BlockFx {
         }
         // 흰 심
         Quaternionf wq = new Quaternionf().rotateXYZ(0.785F, 0.615F, 0F);
-        Vfx.Prop w = box(fx, c, wq, 0.05, 0.05, 0.05, core);
+        Vfx.Prop w = orb(fx, c, wq, 0.05, core, WHITE); // 2026-11-15 HD: 둥근 덩이 (빛 받은 공)
         fx.on(1, () -> w.stretch(size * 0.62, size * 0.62, size * 0.62, 2));
         fx.on(4, () -> w.turn(new Quaternionf(wq).rotateY(0.8F), 4).stretch(0.0, 0.0, 0.0, 5));
         fx.on(10, w::remove);
@@ -164,7 +196,7 @@ public final class BlockFx {
             Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6 - 0.2, Kit.rand() - 0.5), size * 0.45);
             double sz = Math.min(1.1, size * (0.3 + Kit.rand() * 0.25));
             double[] fc = k < 2 ? core : color;
-            Vfx.Prop f = boxG(fx, V.add(c, off), rq, 0.05, 0.05, 0.05, fc, lighten(fc, 0.8));
+            Vfx.Prop f = orb(fx, V.add(c, off), rq, 0.05, fc, hot(fc)); // 2026-11-15 HD: 상자 대신 둥근 불덩이
             Vec3 axis = V.unit(new Vec3(Kit.rand() + 0.01, Kit.rand(), Kit.rand()));
             Quaternionf rq2 = new Quaternionf(rq).rotateAxis(1.4F, (float) axis.x, (float) axis.y, (float) axis.z);
             fx.on(1, () -> f.stretch(sz, sz, sz, 3).move(V.add(c, off, 1.6), 3));
@@ -178,7 +210,7 @@ public final class BlockFx {
             Vec3 off = V.scale(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.4, Kit.rand() - 0.5), size * 0.7);
             double sz = size * (0.26 + Kit.rand() * 0.14);
             fx.on(3, () -> {
-                Vfx.Prop m = boxG(fx, V.add(c, off), rq, sz * 0.4, sz * 0.4, sz * 0.4, SMOKE, lighten(SMOKE, 0.35));
+                Vfx.Prop m = orb(fx, V.add(c, off), rq, sz * 0.4, SMOKE, lighten(SMOKE, 0.22));
                 m.stretch(sz, sz, sz, 3).move(V.up(V.add(c, off, 1.4), size * 0.3), 3);
                 // 2026-11-15 게임 영상: 오래 떠 있던 짙은 상자가 흙 덩이처럼 보였음 → 짧게 · 낮게
                 int sl = Math.max(4, L / 2);
@@ -192,22 +224,12 @@ public final class BlockFx {
             double len = size * (0.8 + Kit.rand() * 0.5);
             Vec3 mid0 = V.add(c, d, size * 0.3);
             Quaternionf rot = along(d, null);
-            Vfx.Prop o = box(fx, mid0, rot, size * 0.07, 0.05, size * 0.07, color);
-            Vfx.Prop kk = box(fx, mid0, rot, size * 0.028, 0.05, size * 0.028, WHITE);
+            Vfx.Prop o = box(fx, mid0, rot, size * 0.08, 0.05, size * 0.08, color);
             Vec3 mid1 = V.add(c, d, size * 0.3 + len * 0.5);
             Vec3 tip = V.add(c, d, size * 0.3 + len * 1.05);
-            fx.on(1, () -> {
-                o.move(mid1, 2).stretch(size * 0.07, len, size * 0.07, 2);
-                kk.move(mid1, 2).stretch(size * 0.028, len * 1.02, size * 0.028, 2);
-            });
-            fx.on(4, () -> {
-                o.move(tip, L - 4).stretch(0.0, 0.0, 0.0, L - 4);
-                kk.move(tip, L - 5).stretch(0.0, 0.0, 0.0, Math.max(2, L - 5));
-            });
-            fx.on(L + 2, () -> {
-                o.remove();
-                kk.remove();
-            });
+            fx.on(1, () -> o.move(mid1, 2).stretch(size * 0.08, len, size * 0.08, 2));
+            fx.on(4, () -> o.move(tip, L - 4).stretch(0.0, 0.0, 0.0, L - 4));
+            fx.on(L + 2, o::remove);
         }
         // 불티 열
         for (int k = 0; k < 10; k++) {
@@ -215,7 +237,7 @@ public final class BlockFx {
             double e = size * (0.08 + Kit.rand() * 0.06);
             Vec3 pk = V.up(V.add(c, d, size * (0.6 + Kit.rand() * 0.8)), size * (0.5 + Kit.rand() * 0.6));
             Vec3 end = V.up(V.add(pk, d, size * 0.4), -size * (0.6 + Kit.rand() * 0.4));
-            Vfx.Prop em = box(fx, c, along(new Vec3(Kit.rand(), Kit.rand() + 0.1, Kit.rand()), null), e, e, e, k % 2 == 1 ? gold : hot);
+            Vfx.Prop em = crystal(fx, c, along(new Vec3(Kit.rand(), Kit.rand() + 0.1, Kit.rand()), null), e, k % 2 == 1 ? gold : hot); // 2026-11-15 보석 불티
             fx.on(1, () -> em.move(pk, 4));
             fx.on(5, () -> em.move(end, L).stretch(0.0, 0.0, 0.0, L));
             fx.on(L + 6, em::remove);
@@ -239,8 +261,8 @@ public final class BlockFx {
             fx.on(5, st::remove);
         }
         Quaternionf q = new Quaternionf().rotateXYZ(0.785F, 0.615F, 0F);
-        Vfx.Prop k = box(fx, c, q, size * 0.05, size * 0.05, size * 0.05, WHITE);
-        fx.on(1, () -> k.stretch(size * 0.2, size * 0.2, size * 0.2, 1));
+        Vfx.Prop k = crystal(fx, c, q, size * 0.05, color);
+        fx.on(1, () -> k.stretch(size * 0.22, size * 0.22, size * 0.22, 1));
         fx.on(2, () -> k.turn(new Quaternionf(q).rotateY(0.9F), 3).stretch(0.0, 0.0, 0.0, 3));
         fx.on(6, k::remove);
     }
@@ -256,20 +278,11 @@ public final class BlockFx {
         Quaternionf rot = along(d, nrm); // x = 법선 (두께) · y = 줄 · z = 보이는 너비
         double w = len * 0.09;
         Vec3 a = V.add(c, d, -len * 0.5);
-        Vec3 front = V.scale(nrm, -0.03); // 흰 심은 보는 쪽으로 조금 앞
         fx.on(delay, () -> {
             Vfx.Prop o = box(fx, a, rot, 0.03, 0.05, w, color);
-            Vfx.Prop k = box(fx, V.add(a, front), rot, 0.035, 0.05, w * 0.35, WHITE);
             o.move(c, 1).stretch(0.03, len, w, 1);
-            k.move(V.add(c, front), 1).stretch(0.035, len * 1.02, w * 0.35, 1);
-            fx.on(fx.age + 2, () -> {
-                o.stretch(0.0, len * 1.12, 0.0, 4);
-                k.stretch(0.0, len * 1.14, 0.0, 3);
-            });
-            fx.on(fx.age + 7, () -> {
-                o.remove();
-                k.remove();
-            });
+            fx.on(fx.age + 2, () -> o.stretch(0.0, len * 1.12, 0.0, 4));
+            fx.on(fx.age + 7, o::remove);
         });
     }
 
@@ -310,17 +323,9 @@ public final class BlockFx {
             int at = G * i / n;
             fx.on(at, () -> {
                 Vfx.Prop o = box(fx, V.add(c, radial, r), rot, 0.02, seg * 0.3, 0.02, color);
-                Vfx.Prop k = box(fx, V.up(V.add(c, radial, r - thick * 0.15), thick * 0.12), rot, 0.01, seg * 0.3, 0.01, WHITE);
                 o.stretch(thick, seg, thick * 0.3, 2);
-                k.stretch(thick * 0.28, seg * 1.02, thick * 0.12, 2);
-                fx.on(G + H, () -> {
-                    o.stretch(0.0, seg, 0.0, 4);
-                    k.stretch(0.0, seg, 0.0, 4);
-                });
-                fx.on(G + H + 5, () -> {
-                    o.remove();
-                    k.remove();
-                });
+                fx.on(G + H, () -> o.stretch(0.0, seg, 0.0, 4));
+                fx.on(G + H + 5, o::remove);
             });
         }
     }
@@ -343,17 +348,9 @@ public final class BlockFx {
             int at = G * i / n;
             fx.on(at, () -> {
                 Vfx.Prop o = box(fx, V.add(c, radial, r), rot, height * 0.12, seg * 0.3, 0.02, color);
-                Vfx.Prop k = box(fx, V.add(c, radial, r - height * 0.08), rot, height * 0.05, seg * 0.3, 0.02, WHITE);
                 o.stretch(height * 0.12, seg, height, 2);
-                k.stretch(height * 0.05, seg * 1.02, height * 0.35, 2);
-                fx.on(G + H, () -> {
-                    o.stretch(height * 0.12, seg, 0.0, 4);
-                    k.stretch(height * 0.05, seg, 0.0, 4);
-                });
-                fx.on(G + H + 5, () -> {
-                    o.remove();
-                    k.remove();
-                });
+                fx.on(G + H, () -> o.stretch(height * 0.12, seg, 0.0, 4));
+                fx.on(G + H + 5, o::remove);
             });
         }
     }
@@ -366,8 +363,10 @@ public final class BlockFx {
     }
 
     /**
-     * 금빛 문 (가운데 c · 보물이 나오는 쪽 facing · 반지름 r · 겉 고리 마디 segs): 겉 고리 (색) · 안 고리 (흰) 가 0.2r 에서 r 로 grow 틱 동안 펼쳐지고, 안을 밝은 빛 판
-     * (세 겹 돌린 네모 — 열두 모 별) 이 채움, 펼쳐질 때 번쩍 별 · (segs 14 넘으면) 물결 고리 하나가 1.5r 로 번짐 → hold 틱 머문 뒤 4틱에 오므라들어 사라짐
+     * 금빛 문 2026-11-15 HD (사용자 "퀄이 너무 낮잖아" — 상자 고리 · 판 마흔 개 대신 모델 하나 gold_gate: 금빛 물결 판 · 금 테 · 보석 넷 색 · 햇살 가시): 가운데 c ·
+     * 보물이 나오는 쪽 facing · 테 반지름 r 칸. grow 틱 동안 돌며 (−92° → 0°) 커져 열리고 · 번쩍 별, hold 틱 동안 천천히 돎 (26°) → 4틱에 돌며 오므라들어 사라짐.
+     * segs 14 넘는 큰 문은 열릴 때 물결 고리 하나가 1.5r 로 번짐 (색 color — 뜨거운 색). 마크 면 밝기: 판이 아래를 보면 아랫면이 어두움 → 부르는 쪽이 문을
+     * 과녁 쪽 · 옆으로 세움 (아스널 킹)
      */
     public static void gate(ServerLevel level, Vec3 c, Vec3 facing, double r, int segs, double[] color, int grow, int hold) {
         Vec3 f = V.len(facing) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(facing);
@@ -378,62 +377,45 @@ public final class BlockFx {
         int G = Math.max(1, grow);
         int H = Math.max(1, hold);
         Vfx.Fx fx = RuneProps.fx(level, c, G + H + 12);
-        double[] hot = lighten(color, 0.55);
-        // 2026-11-15 게임 영상: 아래를 보는 문 (하늘의 문) 은 아래에서 보면 판 · 고리의 아랫면이 어둡게 (마크 면 밝기 0.4 ~ 0.5) 그려져 검은 흙빛이었음 →
-        // 빛 판을 빼고 고리를 세운 띠로 (옆면이 보임 — 하늘 고리 halo 와 같은 까닭)
-        boolean down = f.y < -0.45;
-        // 안을 채운 빛 판 (2026-11-15 그림 상자 둘을 45° 돌려 겹침 — 판마다 마술 회로 무늬 · 겹 판이 같은 면에서 깜빡이지 않게 앞뒤로 조금 띄움)
-        for (int q = 0; q < (down ? 0 : 2); q++) {
-            double b = Math.PI / 4 * q;
-            Vec3 x = V.add(V.scale(u, Math.cos(b)), v, Math.sin(b));
-            Vec3 y = V.add(V.scale(u, -Math.sin(b)), v, Math.cos(b));
-            Quaternionf rot = Vfx.basis(x, y, back);
-            Vec3 cq = V.add(c, f, (q - 0.5) * 0.05);
-            Vfx.Prop d = boxG(fx, cq, rot, r * 0.2, r * 0.2, 0.12, q == 0 ? color : hot, WHITE);
-            fx.on(1, () -> d.stretch(r * 1.12, r * 1.12, 0.12, G));
-            fx.on(1 + G + H, () -> d.stretch(0.0, 0.0, 0.0, 4));
-            fx.on(G + H + 6, d::remove);
-        }
-        // 겉 고리 (색) · 안 고리 (흰)
-        for (int ring = 0; ring < 2; ring++) {
-            int m = ring == 0 ? n : Math.max(8, n * 3 / 4);
-            double rr = ring == 0 ? r : r * 0.74;
-            double th = down ? (ring == 0 ? r * 0.05 : r * 0.035) : ring == 0 ? r * 0.13 : r * 0.06;
-            double dz = down ? (ring == 0 ? r * 0.32 : r * 0.2) : ring == 0 ? 0.08 : 0.1;
-            double[] col = ring == 0 ? color : WHITE;
-            double seg = Math.PI * 2 * rr / m * 1.12;
+        double s = r / (7.25 / 16.0);
+        Vfx.Prop g = fx.prop(GATE, c, p -> {
+            p.grip(8, 8, 8).bright();
+            p.to(c, roll(u, v, back, -1.6), s * 0.05, 0);
+        });
+        fx.on(1, () -> g.to(c, roll(u, v, back, 0), s, G));
+        fx.on(1 + G, () -> g.turn(roll(u, v, back, 0.45), H));
+        fx.on(1 + G + H, () -> g.to(c, roll(u, v, back, 1.4), s * 0.02, 4));
+        fx.on(G + H + 6, g::remove);
+        double[] hot = hot(color);
+        // 물결 고리 (큰 문만)
+        if (n > 14) {
+            int m = 20;
+            double seg = Math.PI * 2 * r / m * 1.12;
             for (int i = 0; i < m; i++) {
                 double a = Math.PI * 2 * i / m;
                 Vec3 radial = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
                 Vec3 tan = V.add(V.scale(u, -Math.sin(a)), v, Math.cos(a));
                 Quaternionf rot = Vfx.basis(radial, tan, back);
-                Vfx.Prop o = box(fx, V.add(c, radial, rr * 0.2), rot, th * 0.3, seg * 0.2, dz, col);
-                fx.on(1, () -> o.move(V.add(c, radial, rr), G).stretch(th, seg, dz, G));
-                fx.on(1 + G + H, () -> o.move(V.add(c, radial, rr * 0.3), 4).stretch(0.0, seg * 0.3, 0.0, 4));
-                fx.on(G + H + 6, o::remove);
-            }
-        }
-        // 물결 고리 (큰 문만)
-        if (n > 14) {
-            double seg = Math.PI * 2 * r / n * 1.12;
-            for (int i = 0; i < n; i++) {
-                double a = Math.PI * 2 * i / n;
-                Vec3 radial = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
-                Vec3 tan = V.add(V.scale(u, -Math.sin(a)), v, Math.cos(a));
-                Quaternionf rot = Vfx.basis(radial, tan, back);
                 fx.on(1 + G, () -> {
-                    Vfx.Prop w = box(fx, V.add(c, radial, r), rot, r * 0.08, seg, 0.05, hot);
-                    w.move(V.add(c, radial, r * 1.5), 6).stretch(0.0, seg * 1.5, 0.0, 6);
-                    fx.on(fx.age + 7, w::remove);
+                    Vfx.Prop w = box(fx, V.add(c, radial, r), rot, r * 0.07, seg, 0.05, hot);
+                    w.move(V.add(c, radial, r * 1.55), 7).stretch(0.0, seg * 1.55, 0.0, 7);
+                    fx.on(fx.age + 8, w::remove);
                 });
             }
         }
         fx.on(1 + G / 2, () -> star(level, c, r * 1.1, color));
     }
 
+    /** 2026-11-15 판의 둘레 돌림 (금빛 문): 모델 x = u · y = v 를 축 back 둘레로 a 라디안 돌린 회전 */
+    static Quaternionf roll(Vec3 u, Vec3 v, Vec3 back, double a) {
+        Vec3 x = V.add(V.scale(u, Math.cos(a)), v, Math.sin(a));
+        Vec3 y = V.add(V.scale(u, -Math.sin(a)), v, Math.cos(a));
+        return Vfx.basis(x, y, back);
+    }
+
     /**
-     * 사슬 (a → b · 고리 크기 link 칸): grow 틱 동안 a 에서 b 로 고리가 차례로 뻗어 나옴 (고리마다 90° 엇갈림 — 고리 하나 = 나란한 가는 막대 둘) → hold 틱 → 3틱에 작아져
-     * 사라짐
+     * 사슬 (a → b · 고리 크기 link 칸) 2026-11-15 HD: 금 사슬 고리 모델 (gold_link — 고리마다 90° 엇갈려 22% 겹침) 이 grow 틱 동안 a 에서 b 로 차례로 뻗어 나옴 →
+     * hold 틱 → 3틱에 작아져 사라짐 (색 color 는 쓰지 않음 — 금)
      */
     public static void chain(ServerLevel level, Vec3 a, Vec3 b, double link, double[] color, int grow, int hold) {
         Vec3 dv = V.sub(b, a);
@@ -442,24 +424,24 @@ public final class BlockFx {
         Vec3 y = V.scale(dv, 1 / L);
         Vec3 side = Math.abs(y.y) > 0.95 ? new Vec3(1, 0, 0) : V.unit(V.rightOf(V.flat(y)));
         Vec3 side2 = V.unit(V.cross(side, y));
-        int n = Math.min(40, Math.max(2, (int) Math.ceil(L / (link * 0.85))));
+        int n = Math.min(44, Math.max(2, (int) Math.ceil(L / (link * 0.78))));
         int G = Math.max(1, grow);
         int H = Math.max(1, hold);
+        double k = link / (11.2 / 16.0);
         Vfx.Fx fx = RuneProps.fx(level, V.lerp(a, b, 0.5), G + H + 8);
         for (int i = 0; i < n; i++) {
             Vec3 p = V.add(a, y, (i + 0.5) * L / n);
-            Vec3 sd = i % 2 == 0 ? side : side2;
-            Quaternionf rot = along(y, sd);
+            Quaternionf rot = along(y, i % 2 == 0 ? side : side2);
             int at = G * i / n;
-            for (int bar = 0; bar < 2; bar++) {
-                Vec3 q = V.add(p, sd, (bar == 0 ? -1 : 1) * link * 0.17);
-                fx.on(at, () -> {
-                    Vfx.Prop o = box(fx, q, rot, link * 0.1, link * 0.2, link * 0.1, color);
-                    o.stretch(link * 0.11, link * 0.95, link * 0.11, 1);
-                    fx.on(G + H, () -> o.stretch(0.0, link * 0.4, 0.0, 3));
-                    fx.on(G + H + 4, o::remove);
+            fx.on(at, () -> {
+                Vfx.Prop o = fx.prop(LINK, p, q -> {
+                    q.grip(8, 8, 8).bright();
+                    q.to(p, rot, k * 0.3, 0);
                 });
-            }
+                o.size(k, 1);
+                fx.on(G + H, () -> o.size(k * 0.3, 3));
+                fx.on(G + H + 4, o::remove);
+            });
         }
     }
 
@@ -486,30 +468,60 @@ public final class BlockFx {
     // ------------------------------------------------------------ 불꽃
 
     /**
-     * 불꽃 4판 (발 foot · 높이 h): 혀 넷 (겉 색 크게 · 높이 솟음 → 뜨거운 색 → 속 색 → 흰 작게 · 낮게) 이 차례로 (0 · 1 · 2 · 2틱) 발밑에서 솟으며 돌고 고르게
-     * 작아짐 (2026-11-15 미리보기: 3판의 세운 기둥은 가늘어지며 막대처럼 보였음)
+     * 불꽃 5판 2026-11-15 HD (불꽃 혀 모델 fx_flame — 상자 대신 휘는 계단 불꽃 · 아래 흰 심 · 위로 붉어짐): 발 foot · 높이 h 칸 — 혀 셋 (겉 색 크게 → 섞은 색 →
+     * 속 색 작게 · 0 · 1 · 2틱) 이 2틱에 솟아 커졌다 돌며 떠올라 작아짐 (life 틱)
      */
     public static void flame(ServerLevel level, Vec3 foot, double h, double[] outer, double[] inner, int life) {
         int L = Math.max(4, life);
         Vfx.Fx fx = RuneProps.fx(level, foot, L + 6);
-        double[] hot = {Math.min(1, outer[0] * 0.5 + inner[0] * 0.5), Math.min(1, outer[1] * 0.5 + inner[1] * 0.5), Math.min(1, outer[2] * 0.5 + inner[2] * 0.5)};
-        double[][] cols = {outer, hot, inner, WHITE};
-        double[] sk = {0.42, 0.36, 0.28, 0.14}, rk = {1.15, 0.85, 0.6, 0.35};
-        int[] dl = {0, 1, 2, 2};
-        for (int i = 0; i < 4; i++) {
+        double[] mid = Vfx.mix(outer, inner, 0.5);
+        double[][] cols = {outer, mid, inner};
+        double[] hk = {1.0, 0.7, 0.48};
+        double[][] off = {{0, 0}, {-0.2, 0.12}, {0.18, -0.14}};
+        int[] dl = {0, 1, 2};
+        double yaw = Kit.rand() * Math.PI * 2;
+        for (int i = 0; i < 3; i++) {
             double[] col = cols[i];
-            double sz = h * sk[i];
+            double hh = h * hk[i];
+            double k = hh / (28.4 / 16.0);
             int li = Math.max(3, L - dl[i]);
-            Quaternionf q0 = new Quaternionf().rotateXYZ(0.6F, (float) (Kit.rand() * Math.PI), 0.6F);
-            Quaternionf q1 = new Quaternionf(q0).rotateY(1.6F);
-            Vec3 top = V.add(foot, new Vec3((Kit.rand() - 0.5) * h * 0.35, h * rk[i], (Kit.rand() - 0.5) * h * 0.35));
+            double c = Math.cos(yaw), sn = Math.sin(yaw);
+            Vec3 base = V.add(foot, new Vec3((off[i][0] * c - off[i][1] * sn) * h, 0, (off[i][0] * sn + off[i][1] * c) * h));
+            Quaternionf q0 = new Quaternionf().rotateY((float) (yaw + i * 2.1));
+            Quaternionf q1 = new Quaternionf(q0).rotateY((float) ((i % 2 == 0 ? 1 : -1) * 0.9));
             fx.on(dl[i], () -> {
-                Vfx.Prop o = boxG(fx, V.up(foot, sz * 0.5), q0, sz * 0.4, sz * 0.4, sz * 0.4, col, lighten(col, 0.75));
-                o.stretch(sz, sz, sz, 2).move(V.up(foot, sz * 0.7 + h * 0.1), 2);
-                fx.on(fx.age + 2, () -> o.move(top, li - 2).turn(q1, li - 2).stretch(0.0, 0.0, 0.0, li - 2));
+                Vfx.Prop o = fx.prop(FLAME, base, p -> {
+                    p.grip(8, 0, 8).bright();
+                    p.tint(col, hot(col));
+                    p.to(base, q0, k * 0.3, 0);
+                });
+                o.to(base, q0, k, 2);
+                fx.on(fx.age + 2, () -> o.to(V.up(base, hh * 0.3), q1, k * 0.12, li - 2));
                 fx.on(fx.age + li + 1, o::remove);
             });
         }
+    }
+
+    /**
+     * 2026-11-15 땅 마법진 (모델 하나 — sigil_crimson · sigil_gold · sigil_forge: 윗면에 그린 빛 고리 · 룬 띠 · 직업 도형 · 문장, 마크 면 밝기 1): 가운데 c (땅 위 0.04칸쯤) ·
+     * 반지름 r 칸 — grow 틱 동안 돌며 (−70°) 커지고, hold 틱 동안 spin 도 천천히 돎 → 5틱에 돌며 오므라듦
+     */
+    public static Vfx.Prop sigil(ServerLevel level, Vec3 c, double r, String model, int grow, int hold, double spin) {
+        int G = Math.max(1, grow);
+        int H = Math.max(1, hold);
+        Vfx.Fx fx = RuneProps.fx(level, c, G + H + 10);
+        double s = r * 2.0;
+        double yaw = Kit.rand() * Math.PI * 2;
+        double sp = Math.toRadians(Math.max(-170, Math.min(170, spin)));
+        Vfx.Prop p = fx.prop(model, c, q -> {
+            q.grip(8, 8, 8).bright();
+            q.to(c, new Quaternionf().rotateY((float) (yaw - 1.2)), s * 0.12, 0);
+        });
+        fx.on(1, () -> p.to(c, new Quaternionf().rotateY((float) yaw), s, G));
+        fx.on(1 + G, () -> p.turn(new Quaternionf().rotateY((float) (yaw + sp)), H));
+        fx.on(1 + G + H, () -> p.to(c, new Quaternionf().rotateY((float) (yaw + sp + 0.9)), s * 0.04, 5));
+        fx.on(G + H + 7, p::remove);
+        return p;
     }
 
     /** 땅에 그은 줄 (a → b · 굵기 thick · 흰 심): grow 틱 동안 a 에서 b 로 뻗음 → hold 틱 → 4틱에 가늘어져 사라짐 (2026-11-15 소드 생추어리 마법진 육망성) */
@@ -525,18 +537,8 @@ public final class BlockFx {
         Vec3 mid = V.lerp(a, b, 0.5);
         Vfx.Fx fx = RuneProps.fx(level, mid, G + H + 8);
         Vfx.Prop o = box(fx, a, rot, thick, 0.05, thick * 0.3, color);
-        Vfx.Prop k = box(fx, V.up(a, 0.01), rot, thick * 0.3, 0.05, thick * 0.32, WHITE);
-        fx.on(1, () -> {
-            o.move(mid, G).stretch(thick, len, thick * 0.3, G);
-            k.move(V.up(mid, 0.01), G).stretch(thick * 0.3, len, thick * 0.32, G);
-        });
-        fx.on(1 + G + H, () -> {
-            o.stretch(0.0, len, 0.0, 4);
-            k.stretch(0.0, len, 0.0, 4);
-        });
-        fx.on(G + H + 6, () -> {
-            o.remove();
-            k.remove();
-        });
+        fx.on(1, () -> o.move(mid, G).stretch(thick, len, thick * 0.3, G));
+        fx.on(1 + G + H, () -> o.stretch(0.0, len, 0.0, 4));
+        fx.on(G + H + 6, o::remove);
     }
 }
