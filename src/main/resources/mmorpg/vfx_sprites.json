@@ -201,21 +201,15 @@
    "aspect": 1.0,
    "colored": true
   },
-  "pb_glow": {
-   "chars": "",
-   "frames": 1,
+  "pb_ember": {
+   "chars": "",
+   "frames": 4,
    "aspect": 1.0,
    "colored": true
   },
-  "pb_glow_cyan": {
-   "chars": "",
-   "frames": 1,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "pb_spark": {
-   "chars": "",
-   "frames": 1,
+  "pb_shard": {
+   "chars": "",
+   "frames": 8,
    "aspect": 1.0,
    "colored": true
   }

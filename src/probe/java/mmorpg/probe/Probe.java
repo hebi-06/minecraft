@@ -142,6 +142,9 @@ public final class Probe implements ClientModInitializer {
             filmLeft = Integer.parseInt(a[2]);
             filmIndex = 0;
             FILM_TICKS.clear();
+            // 2026-11-15 시범 2판: 시야 효과 끔 (느려짐의 화면 확대 · 축소 — 팬텀 버스트 1판 영상이 세 번 줌인 · 줌아웃) · 채팅 지움 (1인칭 영상에 [probe] 줄이 보였음)
+            fovEffectsOff(mc);
+            clearChat(mc);
             log("film start " + filmName + " " + filmLeft);
         } else if (cmd.startsWith("inv ") && mc.player != null) {
             mc.gui.setScreen(new InventoryScreen(mc.player));
@@ -306,6 +309,48 @@ public final class Probe implements ClientModInitializer {
         log("film done " + filmName + " " + filmIndex);
         filmName = null;
         wait = 5;
+    }
+
+    /** 시야 효과 (FOV Effects) 0 — 이름이 판마다 바뀌어도 컴파일되게 리플렉션 (실패하면 기록만) */
+    private static void fovEffectsOff(Minecraft mc) {
+        try {
+            Object opt = mc.options.getClass().getMethod("fovEffectScale").invoke(mc.options);
+            opt.getClass().getMethod("set", Object.class).invoke(opt, 0.0);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            log("fov effects off failed " + e);
+        }
+    }
+
+    /** 채팅 줄 지움 (ChatComponent.clearMessages — gui 안을 리플렉션으로 찾음, 실패하면 기록만) */
+    private static void clearChat(Minecraft mc) {
+        try {
+            Object chat = findChat(mc.gui, 0);
+            if (chat == null) {
+                log("clear chat: no chat component");
+                return;
+            }
+            chat.getClass().getMethod("clearMessages", boolean.class).invoke(chat, false);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            log("clear chat failed " + e);
+        }
+    }
+
+    private static Object findChat(Object o, int depth) throws IllegalAccessException {
+        if (o == null || depth > 2) return null;
+        if (o.getClass().getSimpleName().equals("ChatComponent")) return o;
+        for (Class<?> c = o.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
+                if (!f.getType().getName().startsWith("net.minecraft.client.gui")) continue;
+                f.setAccessible(true);
+                Object v = f.get(o);
+                if (v == null) continue;
+                if (v.getClass().getSimpleName().equals("ChatComponent")) return v;
+                Object r = findChat(v, depth + 1);
+                if (r != null) return r;
+            }
+        }
+        return null;
     }
 
     private static void shot(Minecraft mc, String name) {

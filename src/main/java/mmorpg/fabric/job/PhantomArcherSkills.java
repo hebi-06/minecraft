@@ -388,17 +388,16 @@ final class PhantomArcherSkills {
         SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 0.9, 1.0);
         SkillFx.play(level0, "block.beacon.power_select", sp.position(), 1.6, 0.6);
         // 2026-11-15 시범 HD (사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐 나는 압도적인 퀄을 중요하게 여김" — PhantomFx): 칼 발광 (외곽선 → 리소스 팩 후처리가
-        // 부드러운 빛 번짐) · 칼날을 따라 빛 무리 셋 · 칼끝에 모으는 빛 (미리 렌더링한 2D 되풀이) · 나타날 때 푸른 흰 섬광
+        // 부드러운 빛 번짐 — 2판 자체 가우스 흐림) · 칼끝에 모으는 빛 (미리 렌더링한 2D 되풀이) · 나타날 때 섬광. 2판: 칼 둘레 2D 빛 무리 뺌 (밝은 3D 칼에 가려 안 보였음)
         b.prop.outline(PhantomFx.GLOW_CRIMSON);
-        PhantomFx.Aura[] aura = {null};
         Vfx.Fx chargeFx = Vfx.at(level0, h0, draw + 6);
         Vfx.Sprite[] charge = {null};
         RuneKit.later(6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            PhantomFx.flash(lv, V.lerp(b.hilt(), b.tip(), 0.5), 2.6);
-            aura[0] = new PhantomFx.Aura(lv, b, 1.15, draw + blastDelay + 90, false);
-            charge[0] = PhantomFx.single(chargeFx, "pb_charge", b.tip(), 0.9, 0, 1, true);
+            PhantomFx.flash(lv, V.lerp(b.hilt(), b.tip(), 0.5), 3.4);
+            PhantomFx.embers(lv, V.lerp(b.hilt(), b.tip(), 0.5), 8, 1.4, 0.32, 14);
+            charge[0] = PhantomFx.single(chargeFx, "pb_charge", b.tip(), 1.0, 0, 1, true);
         });
         // 당김: 활을 따라 겨눔 · 조금씩 뒤로 당겨짐 · 칼끝에 빛이 모임 · 끝무렵 떨림
         for (int t = 1; t < draw; t++) {
@@ -411,10 +410,9 @@ final class PhantomArcherSkills {
                 Vec3 h = V.add(V.add(RuneKit.bowHand(sp), V.rightOf(V.flat(f)), 0.3), f, pull);
                 if (tt > draw - 5) h = V.add(h, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.04);
                 b.pose(h, f, PhantomArcher.faceOf(f), 1);
-                // 2026-11-15 시범: 빛 무리 · 모으는 빛이 칼을 따라감 (당길수록 커짐)
+                // 2026-11-15 시범: 모으는 빛이 칼끝을 따라감 (당길수록 커짐)
                 double kk = tt / (double) draw;
-                if (aura[0] != null) aura[0].follow(b, 1, 1.0 + 0.35 * kk);
-                if (charge[0] != null) charge[0].to(V.add(b.tip(), f, 0.15), 0.9 + 1.5 * kk, 1);
+                if (charge[0] != null) charge[0].to(V.add(b.tip(), f, 0.15), 1.0 + 1.3 * kk, 1);
             });
         }
         RuneKit.later(draw, () -> {
@@ -435,11 +433,9 @@ final class PhantomArcherSkills {
             int t = Math.max(1, ArrowFx.flyTicks(from, to, speed));
             double reach = b.reach();
             b.pose(V.add(to, d, -reach * 0.7), d, PhantomArcher.faceOf(d), t);
-            // 2026-11-15 시범: 시위를 떠날 때 섬광 (모으는 빛은 사라짐) · 빛 무리가 칼과 함께 날아감
-            PhantomFx.flash(level, V.add(from, d, reach * 0.9), 3.2);
+            // 2026-11-15 시범: 시위를 떠날 때 섬광 (모으는 빛은 사라짐)
+            PhantomFx.flash(level, V.add(from, d, reach * 0.9), 3.4);
             if (charge[0] != null) charge[0].remove();
-            Vec3 hiltTo = V.add(to, d, -reach * 0.7);
-            if (aura[0] != null) aura[0].flyTo(hiltTo, V.add(hiltTo, d, reach), t, 1.2);
             // 2026-11-15 1인칭 미리보기: 자루 (눈앞) 에서 시작한 굵은 빛 줄이 화면 아래를 덮었음 → 1.5칸 앞에서
             Vec3 s0 = V.add(from, d, 1.5);
             PhantomArcher.streak2d(level, s0, to, Math.max(0.25, t / 20.0 + 0.2), glow, core);
@@ -449,38 +445,40 @@ final class PhantomArcherSkills {
             Vec3 off = hitE != null ? V.sub(V.add(to, d, -reach * 0.7), Kit.bodyPoint(hitE)) : null;
             RuneKit.later(t, () -> {
                 ServerLevel lv = sp.level();
-                // 2026-11-15 시범: 꽂힐 때 섬광 · 그을린 땅 (금이 달아올랐다 식음 — 2 × 2 조각) · 불티
-                PhantomFx.flash(lv, to, 3.6);
+                // 2026-11-15 시범: 꽂힐 때 섬광 · 그을린 땅 (금이 달아올랐다 식음 — 2 × 2 조각) · 불씨
+                PhantomFx.flash(lv, to, 4.4);
                 PhantomFx.tiled(lv, "pb_crack", 2, PhantomFx.ground(lv, to), 3.4, PhantomFx.flat(Kit.rand() * 360), 0, 0, 5);
-                PhantomFx.sparks(lv, to, 14, 2.2, 0.55, 18);
+                PhantomFx.embers(lv, to, 14, 2.2, 0.42, 18);
                 SkillFx.play(lv, "item.trident.hit", to, 0.6, 1.0);
                 if (hitE != null && RuneKit.sameLife(sp, life)) JobKit.strike(sp, hitE, j, P, k.num("hit", 5.6), false, false, life, 0, dd -> {
                     PhantomArcher.lodge(sp, j, hitE, 1, from);
                     JobFx.hit(hitE, j, 1.1);
                 });
-                // 꽂힌 채 빛이 부풂 (적을 따라감)
+                // 꽂힌 채 빛이 부풂 (적을 따라감) — 2판: 꽂힌 자리에 모으는 빛이 커지며 터지기 직전을 알림 (1판 칼 둘레 빛 무리 대신)
+                Vfx.Fx swellFx = Vfx.at(lv, to, blastDelay + 4);
+                Vfx.Sprite swell = PhantomFx.single(swellFx, "pb_charge", V.lerp(b.hilt(), b.tip(), 0.62), 1.2, 0, 1, true);
                 for (int q = 1; q < blastDelay; q++) {
                     int qq = q;
                     RuneKit.later(q, () -> {
                         if (hitE != null && !hitE.isRemoved()) b.pose(V.add(Kit.bodyPoint(hitE), off), d, PhantomArcher.faceOf(d), 1);
-                        // 2026-11-15 시범: 꽂힌 칼의 빛 무리가 부풂 (터지기 직전)
-                        if (aura[0] != null) aura[0].follow(b, 1, 1.2 + qq * 0.09);
+                        swell.to(V.lerp(b.hilt(), b.tip(), 0.62), 1.2 + 2.4 * qq / (double) blastDelay, 1);
                     });
                 }
                 RuneKit.later(blastDelay, () -> {
+                    swell.remove();
                     ServerLevel l2 = sp.level();
                     Vec3 c = hitE != null && !hitE.isRemoved() ? Kit.bodyPoint(hitE) : to;
-                    PhantomArcher.shatter(l2, b, 2.5);
-                    if (aura[0] != null) aura[0].end(3);
+                    // 2026-11-15 2판: 3D 별 · 3D 조각 (1인칭에서 회색 막대) 대신 2D 칼 조각
+                    b.remove();
                     double rad = k.num("radius", 4);
-                    // 2026-11-15 시범 HD: 미리 렌더링한 진홍 대폭발 (2 × 2 조각 · 20칸 — 흰 섬광 → 불덩이 → 불빛 받은 연기) · 땅 충격파 (푸른 흰 앞 날 · 진홍 뒤 빛) ·
-                    // 그을린 땅 (오래 — 금이 식어 감) · 불티 · 3D 칼 조각 (예전 상자 폭발 · 상자 고리 대신)
+                    // 2026-11-15 시범 HD: 미리 렌더링한 진홍 대폭발 (2 × 2 조각 · 20칸 — 흰 섬광 → 불덩이 → 옅어지는 연기) · 땅 충격파 (속이 빈 고리 — 흰 심 · 푸른 흰 앞 날 ·
+                    // 진홍 뒤 빛) · 그을린 땅 (오래 — 금이 식어 감) · 불씨 · 칼 조각 (예전 상자 폭발 · 상자 고리 대신). 2판: 폭발 2.1 → 1.9 (1인칭에서 화면을 덮었음)
                     Vec3 gc = PhantomFx.ground(l2, c);
-                    PhantomFx.tiled(l2, "pb_boom", 2, V.up(c, 0.9), rad * 2.1, null, Kit.rand() * 30 - 15, 0, 1);
+                    PhantomFx.tiled(l2, "pb_boom", 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
                     PhantomFx.tiled(l2, "pb_shock", 2, V.up(gc, 0.02), rad * 3.2, PhantomFx.flat(Kit.rand() * 360), 0, 0, 1);
                     PhantomFx.tiled(l2, "pb_crack", 2, gc, rad * 1.7, PhantomFx.flat(Kit.rand() * 360), 0, 2, 7);
-                    PhantomFx.sparks(l2, V.up(c, 0.4), 26, rad * 1.1, 0.75, 26);
-                    PhantomArcher.shards(l2, c, 14, 9.0, 0.5);
+                    PhantomFx.embers(l2, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
+                    PhantomFx.shards(l2, V.up(c, 0.3), 12, rad * 1.2, 0.5, 22);
                     Ult.flash(l2, c, PhantomArcher.FIRE, Opt.of("radius", 6.0, "time", new double[] {0.02, 0.04, 0.25}), sp);
                     SkillFx.play(l2, "entity.generic.explode", c, 0.8, 1.2);
                     if (!RuneKit.sameLife(sp, life)) return;

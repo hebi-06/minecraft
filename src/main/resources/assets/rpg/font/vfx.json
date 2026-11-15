@@ -317,29 +317,20 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfx/pb_glow.png",
+   "file": "rpg:font/vfx/pb_ember.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfx/pb_glow_cyan.png",
+   "file": "rpg:font/vfx/pb_shard.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
-   ]
-  },
-  {
-   "type": "bitmap",
-   "file": "rpg:font/vfx/pb_spark.png",
-   "height": 64,
-   "ascent": 30,
-   "chars": [
-    ""
+    ""
    ]
   }
  ]

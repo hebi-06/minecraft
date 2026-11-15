@@ -11,8 +11,9 @@ import org.joml.Quaternionf;
 
 /**
  * 2026-11-15 시범 — 팬텀 버스트 (사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐 나는 압도적인 퀄을 중요하게 여김"): 미리 렌더링한 칠한 2D 프레임 (tools/vfx_pilot_art.py —
- * 글자 표시는 명암 계산이 없어 칠한 색 그대로 · 큰 그림은 2 × 2 조각 512 픽셀) · 날아가는 불티 · 3D 칼 둘레 빛 무리 (블룸 흉내) · 발광 외곽선 (리소스 팩 후처리
- * post_effect/entity_outline 이 부드러운 빛 번짐으로 바꿈).
+ * 글자 표시는 명암 계산이 없어 칠한 색 그대로 · 큰 그림은 2 × 2 조각 512 픽셀) · 날아가는 불씨 · 칼 조각 · 발광 외곽선 (리소스 팩 후처리
+ * post_effect/entity_outline 이 부드러운 빛 번짐으로 바꿈 — 2판: 자체 가우스 흐림 shaders/post/vfx_blur.fsh). 1판의 칼 둘레 2D 빛 무리 (Aura) 는 밝은 3D 칼에
+ * 가려 안 보여 뺐음.
  */
 final class PhantomFx {
     private PhantomFx() {}
@@ -68,62 +69,43 @@ final class PhantomFx {
     }
 
     /**
-     * 3D 칼 둘레 빛 무리 (블룸 흉내 — pb_glow 진홍 · pb_glow_cyan 푸른 흰): 칼날을 따라 셋 (25 · 55 · 85%), 칼이 움직이면 follow 를 틱마다 부름. 반환 = 따라가기 (매
-     * 틱 · 크기 몫 k)
+     * 불씨 n 개 (pb_ember — 2판: 둥근 흰 금빛 심 · 주황 · 진홍 겉빛, 네 칸 깜박임. 1판 길쭉한 불티는 카메라를 보는 그림이라 늘 세로로 서서 촛불처럼 보였음):
+     * 가운데 c 에서 사방 (위로 쏠림) 으로 dist 칸 솟았다가 떨어지며 작아지고 옅어짐 (life 틱)
      */
-    static final class Aura {
-        final Vfx.Fx fx;
-        final Vfx.Sprite[] s = new Vfx.Sprite[3];
-        final double[] at = {0.25, 0.55, 0.85};
-        final double size;
-
-        Aura(ServerLevel level, RuneSwords.Blade b, double size, int life, boolean cyan) {
-            this.size = size;
-            fx = Vfx.at(level, b.hilt(), life);
-            for (int i = 0; i < 3; i++) {
-                s[i] = fx.sprite(cyan ? "pb_glow_cyan" : "pb_glow", V.lerp(b.hilt(), b.tip(), at[i]));
-                s[i].size(size * (i == 1 ? 1.15 : 0.95));
-                s[i].alpha(0.9);
-            }
-        }
-
-        /** 칼의 지금 자리로 (ticks 틱 보간) · 크기 몫 k */
-        void follow(RuneSwords.Blade b, int ticks, double k) {
-            for (int i = 0; i < 3; i++) s[i].to(V.lerp(b.hilt(), b.tip(), at[i]), size * k * (i == 1 ? 1.15 : 0.95), ticks);
-        }
-
-        /** 칼이 날아갈 곳으로 (같은 틱 수 — 칼과 함께) */
-        void flyTo(Vec3 hilt, Vec3 tip, int ticks, double k) {
-            for (int i = 0; i < 3; i++) s[i].to(V.lerp(hilt, tip, at[i]), size * k * (i == 1 ? 1.15 : 0.95), ticks);
-        }
-
-        void end(int ticks) {
-            for (Vfx.Sprite x : s) x.fade(fx.age(), Math.max(1, ticks));
-        }
+    static void embers(ServerLevel level, Vec3 c, int n, double dist, double size, int life) {
+        fly(level, c, n, dist, size, life, "pb_ember", 1.0);
     }
 
     /**
-     * 날아가는 불티 n 개 (pb_spark — 흰 금빛 심 · 주황 꼬리): 가운데 c 에서 사방 (위로 쏠림) 으로 dist 칸 솟았다 떨어지며 작아지고 옅어짐 (life 틱)
+     * 칼 조각 n 개 (pb_shard — 2판: 납작한 강철 조각이 구르는 여덟 칸 · 깨진 가장자리가 진홍으로 달아오름. 1판 3D 상자 조각은 1인칭에서 큰 회색 막대로 보였음):
+     * 불씨보다 낮고 멀리 · 빨리 떨어짐
      */
-    static void sparks(ServerLevel level, Vec3 c, int n, double dist, double size, int life) {
+    static void shards(ServerLevel level, Vec3 c, int n, double dist, double size, int life) {
+        fly(level, c, n, dist, size, life, "pb_shard", 0.55);
+    }
+
+    /** 날아가는 작은 그림 (불씨 · 조각): 솟음 → 둥글게 넘어감 → 떨어짐 (세 토막 보간) · 칸은 되풀이 (불씨는 깜박임 · 조각은 구름) */
+    private static void fly(ServerLevel level, Vec3 c, int n, double dist, double size, int life, String sheet, double lift) {
         int L = Math.max(8, life);
         Vfx.Fx fx = Vfx.at(level, c, L + 4);
+        Vfx.Sheet sh = Vfx.sheet(sheet);
         for (int i = 0; i < n; i++) {
             double a = Kit.rand() * Math.PI * 2;
-            double up = 0.25 + Kit.rand() * 0.9;
+            double up = (0.2 + Kit.rand() * 0.9) * lift;
             Vec3 d = V.unit(new Vec3(Math.cos(a), up, Math.sin(a)));
-            double dd = dist * (0.55 + Kit.rand() * 0.6);
+            double dd = dist * (0.5 + Kit.rand() * 0.65);
             double sz = size * (0.6 + Kit.rand() * 0.7);
             Vec3 p1 = V.add(c, d, dd * 0.55);
-            Vec3 p2 = V.up(V.add(c, V.flat(d), dd * 0.9), dd * 0.25 * up - 0.2);
-            Vec3 p3 = V.up(V.add(c, V.flat(d), dd * 1.15), -dd * 0.35);
-            Vfx.Sprite s = fx.sprite("pb_spark", c);
-            s.size(sz * 0.5);
-            int t1 = 3 + (int) (Kit.rand() * 2);
+            Vec3 p2 = V.up(V.add(c, V.flat(d), dd * 0.9), dd * 0.3 * up - 0.15);
+            Vec3 p3 = V.up(V.add(c, V.flat(d), dd * 1.12), -dd * 0.4 - 0.4);
+            Vfx.Sprite s = fx.sprite(sheet, c);
+            s.size(sz * 0.4);
+            if (sh.frames() > 1) s.play(0, (int) (Kit.rand() * sh.frames()), sh.frames(), 1 + (int) (Kit.rand() * 2), true);
+            int t1 = 2 + (int) (Kit.rand() * 2);
             int t2 = Math.max(3, L / 3);
             fx.on(1, () -> s.to(p1, sz, t1));
             fx.on(1 + t1, () -> s.to(p2, sz * 0.8, t2));
-            fx.on(1 + t1 + t2, () -> s.to(p3, sz * 0.3, Math.max(2, L - t1 - t2 - 1)));
+            fx.on(1 + t1 + t2, () -> s.to(p3, sz * 0.35, Math.max(2, L - t1 - t2 - 1)));
             s.fade(L - 6, 6);
         }
     }

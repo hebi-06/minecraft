@@ -1383,6 +1383,9 @@ final class VanillaProbe {
             SPAWNED.add(e);
         }
         String id = k.id();
+        // 2026-11-15 시범 (팬텀 버스트 — 사용자 "너가 추천한거 다 넣어서 시범으로"): 해 질 녘 (빛 효과가 어두운 땅 · 노을 하늘에 또렷), 다른 영상은 한낮.
+        // 2판: 찍기 30틱 전에 (1판은 찍기 시작과 같은 틱이라 첫 세 장이 한낮이었음)
+        run(server, id.equals("archer_burst") ? "time set 12850" : "time set noon");
         boolean fp = a.length > 3 && a[3].equals("fp");
         String name = (fp ? "vanilla_jobfp_" : "vanilla_job_") + id;
         int[] time = jobTime(j.id(), slot);
@@ -1678,8 +1681,6 @@ final class VanillaProbe {
     /** 게이지 차림 (RpgJobGallery.prepare 의 서버 쪽 — 과녁은 드라우그, 아군 · 시험 허스크만 쓰는 것은 뺌) */
     private static void jobPrepare(ServerPlayer sp, mmorpg.core.Jobs.Job j, String id, List<net.minecraft.world.entity.LivingEntity> foes, int y) {
         String job = j.id();
-        // 2026-11-15 시범 (팬텀 버스트 — 사용자 "너가 추천한거 다 넣어서 시범으로"): 해 질 녘 (빛 효과가 어두운 땅 · 노을 하늘에 또렷), 다른 영상은 한낮
-        run(sp.level().getServer(), id.equals("archer_burst") ? "time set 12850" : "time set noon");
         net.minecraft.world.entity.LivingEntity front = foes.isEmpty() ? null : foes.get(0);
         if (id.equals("swordsman_flurry")) mmorpg.fabric.job.JobTraits.setStacks(sp, 3);
         if (id.equals("warrior_crush")) mmorpg.fabric.job.JobTraitsMore.setRage(sp, 60);

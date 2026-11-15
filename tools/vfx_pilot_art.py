@@ -179,7 +179,7 @@ def boom_frame(f, n=512, seed=11):
     cloud = 1 - sstep(Rs * 0.82, Rs * 1.02, r)
     thr = 0.12 + 0.34 * sstep(0.3, 1.0, u)
     puff = sstep(thr, thr + 0.22, q2 + 0.18 * (1 - r / np.maximum(Rs, 1e-3)))
-    s_alpha = cloud * puff * (0.8 - 0.32 * u) * (1 - sstep(0.86, 1.0, u))
+    s_alpha = cloud * puff * (0.62 - 0.3 * u) * (1 - sstep(0.7, 1.0, u))
     # 불 (안 — 식으며 줄어듦)
     Rf = R * (1.0 - 0.5 * sstep(0.25, 0.95, u)) * (0.82 + 0.34 * lick + 0.12 * (q - 0.5))
     fire = 1 - sstep(Rf * 0.86, Rf * 1.02, r)
@@ -191,7 +191,8 @@ def boom_frame(f, n=512, seed=11):
     shade = np.clip(0.45 + 0.5 * (yy / np.maximum(Rs, 1e-3)) + 0.35 * (q2 - 0.5), 0, 1)  # 위가 밝은 뭉게 (빛 받은 연기)
     s_col = SMOKE(shade) * (1 - 0.7 * heat_near[..., None]) + FIRE(0.3 + 0.2 * heat_near) * (0.7 * heat_near[..., None])
     layers.append((s_col, s_alpha))
-    f_alpha = fire * np.clip(T * 2.2 + 0.2, 0, 1) * (1 - sstep(0.8, 1.0, u))
+    # 2026-11-15 2판: 식은 불 (낮은 온도 — 검붉은 색) 은 옅게 · 불은 u 0.45 ~ 0.78 에 사라짐 (1인칭 영상: 늦은 칸의 검붉은 덩이가 화면을 오래 덮었음)
+    f_alpha = fire * np.clip(T * 2.2 + 0.2, 0, 1) * np.clip((T - 0.12) * 4.0, 0, 1) * (1 - sstep(0.45, 0.78, u))
     layers.append((FIRE(Tb), f_alpha))
     # 흰 섬광 (처음): 원판 · 빛살 여덟 (긴 넷 푸른 흰 · 짧은 넷 진홍)
     if f <= 4:
@@ -241,36 +242,71 @@ def boom():
     return [to_img(*boom_frame(f)) for f in range(BOOM_FRAMES)]
 
 
+# ------------------------------------------------------------------ 모양 도구 (2판)
+
+def spike(x, y, a0, L, w0, p=1.0, aa=0.01):
+    """가운데에서 a0 방향으로 뻗는 뾰족한 빛살 (밑동 반폭 w0 → 끝 L 에서 0, 굵기 곡선 p) — 가장자리 부드럽게 aa"""
+    ca, sa = math.cos(a0), math.sin(a0)
+    along = x * ca + y * sa
+    perp = np.abs(-x * sa + y * ca)
+    t = np.clip(along / L, 0, 1)
+    w = w0 * (1 - t) ** p
+    return (1 - sstep(w - aa, w + aa, perp)) * sstep(-aa, aa, along) * (1 - sstep(L - aa, L + aa, along))
+
+
+def star_shape(r, th, K, r_in, outs, rot, sharp=2.2, jitter=None):
+    """뾰족한 별 테두리 반지름 R(th) — 꼭짓점 K 개 (바깥 반지름 outs[i])"""
+    prof = np.zeros_like(r)
+    for i in range(K):
+        a0 = i * 2 * math.pi / K + rot + (0 if jitter is None else jitter[i])
+        d = np.abs((th - a0 + math.pi) % (2 * math.pi) - math.pi)
+        hw = math.pi / K
+        prof = np.maximum(prof, np.clip(1 - d / hw, 0, 1) ** sharp * outs[i])
+    return r_in + prof
+
+
+WHITE = H("#FFFDF6")
+
+
 # ------------------------------------------------------------------ 땅 충격파 (2 × 2 — 땅에 눕혀 씀)
 
 SHOCK_FRAMES = 12
 
 
 def shock_frame(f, n=512, seed=21):
-    """땅의 충격파 (위에서 봄): 푸른 흰빛 앞 날 + 진홍 · 주황 뒤 빛이 0.12 → 0.96 으로 번지며 얇아지고 옅어짐 · 앞 날 둘레 흙먼지 결 · 바깥으로 긁힌 줄"""
+    """땅의 충격파 (위에서 봄 — 2판: 속이 빈 고리): 흰 심 앞 날 + 푸른 흰빛 · 바로 뒤 짧은 진홍 빛 띠 (속은 비움 — 1판은 속을 채워 갈색 접시처럼 보였음) ·
+    앞 날 바깥 흙먼지 띠 · 앞 날에서 바깥으로 짧게 긁힌 빛 줄. 비스듬히 보여도 읽히게 고리를 굵게"""
     N = Noise3(seed)
     x, y = grid(n)
     r = np.hypot(x, y)
     th = np.arctan2(y, x)
     u = f / (SHOCK_FRAMES - 1)
-    R = 0.12 + 0.84 * (1 - (1 - u) ** 2.4)
-    w = 0.05 * (1 - u) + 0.012
-    jag = (N.fbm(np.cos(th) * 3 + 2, np.sin(th) * 3, f * 0.3, 3) - 0.5) * 0.04
+    R = 0.14 + 0.8 * (1 - (1 - u) ** 2.2)
+    jag = (N.fbm(np.cos(th) * 3 + 2, np.sin(th) * 3, f * 0.3, 3) - 0.5) * 0.035
     d = r - (R + jag)
-    front = np.exp(-(d / (w * 0.45)) ** 2) * (1 - u) ** 0.7
-    trail = np.exp(-(np.clip(-d, 0, None) / (w * 3.2 + 0.05)) ** 1.4) * (d < 0) * (1 - u) ** 1.2 * 0.75
-    dust = (N.fbm(x * 6 + 5, y * 6, f * 0.4, 4) - 0.35) * np.exp(-(d / (w * 2.5)) ** 2) * (1 - u) * 0.9
+    k = (1 - u) ** 0.9
+    w = 0.03 * (1 - 0.5 * u) + 0.012
+    core = np.exp(-(d / (w * 0.5)) ** 2) * k
+    edge = np.exp(-(d / (w * 1.4)) ** 2) * k
+    trail = np.exp(-(np.clip(-d, 0, None) / (0.09 + 0.05 * u)) ** 1.5) * (d < 0) * k
+    trail = trail * (0.75 + 0.5 * (N.fbm(x * 5, y * 5, f * 0.5 + 3, 3) - 0.5))
+    dust_n = N.fbm(x * 7 + 5, y * 7, f * 0.4, 4)
+    dust = np.clip((dust_n - 0.3) * 2.2, 0, 1) * np.exp(-((d - w * 2.2) / (w * 2.6 + 0.02)) ** 2) * (1 - u) ** 0.6 * 0.75
     lines = np.zeros_like(r)
     rng = np.random.default_rng(seed)
-    for i in range(28):
+    for i in range(36):
         a0 = rng.uniform(0, 2 * math.pi)
+        L = rng.uniform(0.04, 0.11)
         dth = np.abs((th - a0 + math.pi) % (2 * math.pi) - math.pi) * r
-        lines = np.maximum(lines, (1 - sstep(0.002, 0.007, dth)) * sstep(R * 0.55, R * 0.8, r) * (1 - sstep(R * 0.95, R * 1.05, r)))
-    lines *= (1 - u) * 0.7
-    layers = [(FIRE(0.45 + 0.35 * trail), trail), (SMOKE(0.8) * 0.6 + H("#7A3A2A") * 0.4, np.clip(dust, 0, 1) * 0.6),
-              (FIRE(0.8), lines), (CYAN(0.6 + 0.4 * front), front)]
+        lines = np.maximum(lines, (1 - sstep(0.002, 0.006, dth)) * sstep(R - 0.005, R + 0.01, r) * (1 - sstep(R + L * 0.6, R + L, r)))
+    lines *= (1 - u) ** 1.2 * 0.85
+    layers = [(SMOKE(0.55) * 0.55 + H("#4A2A22") * 0.45, dust),
+              (FIRE(0.42 + 0.3 * trail), trail),
+              (FIRE(0.82), lines),
+              (CYAN(0.55 + 0.4 * edge), edge * 0.9),
+              (WHITE, core)]
     rgb, a = compose(layers, n)
-    rgb, a = bloom(rgb, a, n, thresh=0.6, sigma=0.02, gain=0.8 * (1 - u))
+    rgb, a = bloom(rgb, a, n, thresh=0.6, sigma=0.018, gain=0.85 * k)
     a = a * (1 - sstep(0.93, 0.99, r))
     return rgb, a
 
@@ -285,33 +321,59 @@ FLASH_FRAMES = 8
 
 
 def flash_frame(f, n=256, seed=31):
-    """쏠 때 · 꽂힐 때 섬광: 푸른 흰 긴 빛살 넷 + 진홍 짧은 빛살 넷 (45°) + 흰 심 + 퍼지는 고리 + 튀는 불티 — 칸마다 커졌다 가늘어짐"""
+    """섬광 (2판 — 화면에서 또렷하게: 굵은 모양): 0 ~ 2 칸 단단한 흰 별 모양 (꼭짓점 열 — 금빛 테) 이 터지고 → 굵은 빛살 여덟 (긴 넷 흰 심 · 푸른 겉,
+    짧은 넷 흰 심 · 금 · 진홍 겉) 이 가늘어지며 → 퍼지는 금빛 고리 · 부드러운 진홍 빛 무리"""
+    rng = np.random.default_rng(seed)
     x, y = grid(n)
     r = np.hypot(x, y)
     th = np.arctan2(y, x)
     u = f / (FLASH_FRAMES - 1)
-    k = (1 - u) ** 1.2
-    core = np.exp(-(r / (0.12 + 0.1 * u)) ** 2) * k
-    rays_c = np.zeros_like(r)
-    rays_r = np.zeros_like(r)
+    aa = 1.6 / n
+    grow = min(1.0, (f + 1) / 2.0)
+    k = (1 - u) ** 1.15
+    rot = 0.2
+    layers = []
+    glow = np.exp(-(r / (0.34 + 0.18 * u)) ** 2) * 0.8 * k
+    layers.append((FIRE(0.6 + 0.3 * np.exp(-(r / 0.22) ** 2)), glow))
+    # 퍼지는 고리
+    ring_r = 0.2 + 0.72 * (1 - (1 - u) ** 1.6)
+    ring = np.exp(-((r - ring_r) / (0.03 + 0.025 * u)) ** 2) * (1 - u) ** 1.3
+    layers.append((FIRE(0.78 + 0.12 * ring), ring * 0.9))
+    # 빛살 여덟 (긴 넷 · 짧은 넷)
+    thin = (1 - 0.65 * sstep(0.15, 1.0, u))
+    long_len = (0.62 + 0.36 * grow) * (1 - 0.25 * u)
+    short_len = (0.4 + 0.22 * grow) * (1 - 0.35 * u)
+    outer_l = np.zeros_like(r)
+    inner_l = np.zeros_like(r)
+    outer_s = np.zeros_like(r)
+    inner_s = np.zeros_like(r)
     for i in range(8):
-        a0 = i * math.pi / 4
-        long_ = i % 2 == 0
-        L = (0.98 if long_ else 0.62) * (0.55 + 0.45 * min(1.0, u * 3))
-        d_ang = np.abs((th - a0 + math.pi) % (2 * math.pi) - math.pi)
-        w = (0.01 + 0.035 * np.clip(1 - r / L, 0, 1)) * (1 - 0.5 * u)
-        ray = (1 - sstep(0.0, w, d_ang * np.maximum(r, 1e-3))) * (1 - sstep(L * 0.55, L, r))
-        if long_:
-            rays_c = np.maximum(rays_c, ray)
+        a0 = rot + i * math.pi / 4
+        if i % 2 == 0:
+            outer_l = np.maximum(outer_l, spike(x, y, a0, long_len, 0.07 * thin, 1.3, aa))
+            inner_l = np.maximum(inner_l, spike(x, y, a0, long_len * 0.82, 0.03 * thin, 1.3, aa))
         else:
-            rays_r = np.maximum(rays_r, ray)
-    ring_r = 0.18 + 0.7 * u
-    ring = np.exp(-((r - ring_r) / (0.025 + 0.02 * u)) ** 2) * (1 - u) ** 1.5
-    layers = [(FIRE(0.55 + 0.3 * rays_r), rays_r * k), (CYAN(0.55 + 0.45 * rays_c), rays_c * k), (FIRE(0.8), ring * 0.8),
-              (np.ones((n, n, 3)) * H("#FFFBEA"), core)]
+            outer_s = np.maximum(outer_s, spike(x, y, a0, short_len, 0.06 * thin, 1.1, aa))
+            inner_s = np.maximum(inner_s, spike(x, y, a0, short_len * 0.75, 0.025 * thin, 1.1, aa))
+    layers.append((FIRE(0.6), outer_s * k))
+    layers.append((CYAN(0.62), outer_l * k))
+    layers.append((FIRE(0.9), inner_s * k))
+    layers.append((WHITE, inner_l * k))
+    # 단단한 흰 별 모양 (처음 세 칸)
+    if f <= 2:
+        K = 10
+        outs = rng.uniform(0.2, 0.42, K)
+        jit = rng.uniform(-0.15, 0.15, K)
+        R = star_shape(r, th, K, 0.12, outs * grow, rot + 0.15, 2.0, jit) * (1 - 0.35 * f / 2)
+        shape = 1 - sstep(R - aa, R + aa, r)
+        body = shape * sstep(R * 0.5, R * 0.95, r)
+        layers.append((FIRE(0.86), shape))
+        layers.append((WHITE, shape * (1 - body * 0.85)))
+    core = np.exp(-(r / (0.09 + 0.05 * grow)) ** 2) * k * 1.3
+    layers.append((WHITE, np.clip(core, 0, 1)))
     rgb, a = compose(layers, n)
-    rgb, a = bloom(rgb, a, n, thresh=0.55, sigma=0.045, gain=0.9 * k)
-    a = a * (1 - sstep(0.92, 0.99, np.maximum(np.abs(x), np.abs(y))))
+    rgb, a = bloom(rgb, a, n, thresh=0.6, sigma=0.03, gain=0.7 * k)
+    a = a * (1 - sstep(0.93, 0.995, np.maximum(np.abs(x), np.abs(y))))
     return rgb, a
 
 
@@ -325,33 +387,54 @@ CHARGE_FRAMES = 12
 
 
 def charge_frame(f, n=256, seed=41):
-    """시위를 당기는 동안 모이는 빛 (되풀이): 진홍 · 금빛 나선 줄기 넷이 가운데로 감겨 들어옴 · 안으로 빨려 드는 빛 점 · 맥박치는 흰 금빛 심 · 바깥 옅은 고리"""
+    """시위를 당기는 동안 칼끝에 모이는 빛 (2판 — 굵게, 되풀이 12칸): 맥박치는 흰 금빛 심 + 진홍 빛 무리 · 바깥에서 안으로 빨려 드는 굵은 빛 줄기
+    (끝이 뾰족 — 흰 심 · 진홍 겉) · 천천히 도는 끊긴 고리 셋 (금빛)"""
+    rng = np.random.default_rng(seed)
     x, y = grid(n)
     r = np.hypot(x, y)
     th = np.arctan2(y, x)
     ph = f / CHARGE_FRAMES
-    arms = np.zeros_like(r)
-    for i in range(4):
-        a = th - (i * math.pi / 2) + 2 * math.pi * ph + np.log(np.maximum(r, 0.02)) * 2.6
-        d = np.abs((a + math.pi) % (2 * math.pi) - math.pi) * r
-        arms = np.maximum(arms, (1 - sstep(0.004, 0.03 * r + 0.006, d)) * sstep(0.05, 0.2, r) * (1 - sstep(0.6, 0.95, r)))
-    dots = np.zeros_like(r)
-    rng = np.random.default_rng(seed)
-    for i in range(30):
+    aa = 1.6 / n
+    layers = []
+    pulse = 0.88 + 0.12 * math.sin(ph * 2 * math.pi * 2)
+    halo = np.exp(-(r / (0.36 * pulse)) ** 2) * 0.7
+    layers.append((FIRE(0.5 + 0.35 * np.exp(-(r / 0.2) ** 2)), halo))
+    # 끊긴 고리 셋 (돎)
+    ring_r = 0.66
+    ring = np.exp(-((r - ring_r) / 0.022) ** 2)
+    gaps = np.zeros_like(r)
+    for i in range(3):
+        a0 = i * 2 * math.pi / 3 + ph * 2 * math.pi / 3
+        dd = np.abs((th - a0 + math.pi) % (2 * math.pi) - math.pi)
+        gaps = np.maximum(gaps, 1 - sstep(0.62, 0.78, dd))
+    layers.append((FIRE(0.84), ring * gaps * 0.9))
+    # 빨려 드는 빛 줄기 (열 개 — 시작 차례가 다름)
+    outer = np.zeros_like(r)
+    inner = np.zeros_like(r)
+    for i in range(10):
         a0 = rng.uniform(0, 2 * math.pi)
         s0 = rng.uniform(0, 1)
-        rr = 0.92 * (1 - ((s0 + ph) % 1.0)) + 0.06
-        px, py = rr * math.cos(a0 + rr * 2.0), rr * math.sin(a0 + rr * 2.0)
-        dd = np.hypot(x - px, y - py)
-        dots = np.maximum(dots, np.exp(-(dd / 0.012) ** 2) * (0.3 + 0.7 * (1 - rr)))
-    pulse = 0.85 + 0.15 * math.sin(ph * 2 * math.pi * 2)
-    core = np.exp(-(r / (0.16 * pulse)) ** 2)
-    halo = np.exp(-(r / 0.42) ** 2) * 0.35
-    ring = np.exp(-((r - 0.82) / 0.02) ** 2) * (0.35 + 0.25 * math.sin(ph * 2 * math.pi))
-    layers = [(FIRE(0.42), halo), (FIRE(0.5 + 0.4 * arms), arms * 0.95), (CYAN(0.75), ring * 0.7), (FIRE(0.92), dots),
-              (np.ones((n, n, 3)) * H("#FFF4D0"), core)]
+        q = (s0 + ph) % 1.0                       # 0 → 1: 바깥 → 안
+        head = 0.95 - 0.8 * q                     # 줄기 머리 (안쪽 끝)
+        L = 0.16 + 0.12 * (1 - q)
+        # 머리에서 바깥으로 뻗는 줄기 (끝이 뾰족 — 바깥쪽이 꼬리)
+        ca, sa = math.cos(a0), math.sin(a0)
+        along = x * ca + y * sa - head
+        perp = np.abs(-x * sa + y * ca)
+        t = np.clip(along / L, 0, 1)
+        w = 0.026 * (1 - t) ** 0.8 * (0.6 + 0.4 * q)
+        m = (1 - sstep(w - aa, w + aa, perp)) * sstep(-aa, aa, along) * (1 - sstep(L - aa, L + aa, along))
+        fade = np.sin(math.pi * min(1.0, q * 1.15)) ** 0.6
+        outer = np.maximum(outer, m * fade)
+        w2 = w * 0.4
+        m2 = (1 - sstep(w2 - aa, w2 + aa, perp)) * sstep(-aa, aa, along) * (1 - sstep(L * 0.8 - aa, L * 0.8 + aa, along))
+        inner = np.maximum(inner, m2 * fade)
+    layers.append((FIRE(0.58), outer))
+    layers.append((FIRE(0.95), inner))
+    core = np.exp(-(r / (0.12 * pulse)) ** 2) * 1.25
+    layers.append((WHITE, np.clip(core, 0, 1)))
     rgb, a = compose(layers, n)
-    rgb, a = bloom(rgb, a, n, thresh=0.55, sigma=0.04, gain=0.8)
+    rgb, a = bloom(rgb, a, n, thresh=0.6, sigma=0.035, gain=0.75)
     a = a * (1 - sstep(0.9, 0.99, r))
     return rgb, a
 
@@ -360,39 +443,75 @@ def charge():
     return [to_img(*charge_frame(f)) for f in range(CHARGE_FRAMES)]
 
 
-# ------------------------------------------------------------------ 빛 무리 · 불티 · 그을린 땅
+# ------------------------------------------------------------------ 불씨 · 칼 조각 (날아가는 작은 그림)
 
-def glow():
-    """빛 무리 (3D 칼 · 보물 둘레 — 블룸 흉내, 1 장): 흰 금빛 심 → 진홍 → 투명 (두 겹 가우스)"""
-    n = TILE
-    x, y = grid(n)
-    r = np.hypot(x, y)
-    a = np.clip(np.exp(-(r / 0.5) ** 2) * 0.55 + np.exp(-(r / 0.2) ** 2) * 0.55, 0, 1)
-    t = np.clip(1 - r / 0.8, 0, 1)
-    col = FIRE(0.45 + 0.5 * t ** 1.4)
-    a = a * (1 - sstep(0.85, 0.99, r))
-    return [to_img(col, a)]
+EMBER_FRAMES = 4
 
 
-def glow_cyan():
-    """푸른 흰 빛 무리 (투영의 빛 — 칼이 나타날 때 · 투영 선 둘레)"""
-    n = TILE
-    x, y = grid(n)
-    r = np.hypot(x, y)
-    a = np.clip(np.exp(-(r / 0.48) ** 2) * 0.5 + np.exp(-(r / 0.16) ** 2) * 0.6, 0, 1)
-    col = CYAN(0.35 + 0.65 * np.clip(1 - r / 0.7, 0, 1))
-    a = a * (1 - sstep(0.85, 0.99, r))
-    return [to_img(col, a)]
-
-
-def spark():
-    """불티 하나 (길쭉한 빛 — 1 장 128): 흰 금빛 심 · 주황 꼬리"""
+def ember():
+    """불씨 (2판 — 1판 길쭉한 불티는 카메라를 보는 그림이라 늘 세로로 서서 촛불처럼 보였음 → 둥근 불씨): 흰 금빛 심 · 주황 빛 · 진홍 겉빛,
+    네 칸 깜박임 (심 크기 · 밝기) — 1 장 128"""
     n = 128
     x, y = grid(n)
-    d = np.hypot(x * 4.0, np.where(y > 0, y * 1.2, y * 0.55))
-    a = np.clip(np.exp(-(d / 0.5) ** 2) * 1.1, 0, 1)
-    col = FIRE(0.62 + 0.38 * np.clip(1 - d, 0, 1))
-    return [to_img(col, a)]
+    r = np.hypot(x, y)
+    out = []
+    for f in range(EMBER_FRAMES):
+        k = [1.0, 0.82, 0.94, 0.74][f]
+        halo = np.exp(-(r / (0.62 * (0.9 + 0.1 * k))) ** 2) * 0.55
+        mid = np.exp(-(r / (0.3 * k)) ** 2) * 0.95
+        core = np.exp(-(r / (0.13 * k)) ** 2) * 1.3
+        rgb, a = compose([(FIRE(0.5), halo), (FIRE(0.78), mid), (WHITE * 0.6 + H("#FFE7A0") * 0.4, np.clip(core, 0, 1))], n)
+        a = a * (1 - sstep(0.88, 0.99, r))
+        out.append(to_img(rgb, a))
+    return out
+
+
+SHARD_FRAMES = 8
+
+
+def shard():
+    """칼 조각 (2판 — 1판 3D 상자 조각은 1인칭에서 큰 회색 막대로 보였음): 납작한 강철 조각 (세모 · 네모가 섞인 꼴) 이 3D 로 구르는 모습을 여덟 칸으로 —
+    빛 받는 면은 푸른 흰 강철, 어두운 면은 남색 강철, 깨진 가장자리는 진홍으로 달아오름 · 둘레 옅은 진홍 빛 (1 장 128 · 되풀이)"""
+    n = 128
+    x, y = grid(n)
+    aa = 1.6 / n
+    poly = np.array([[-0.62, -0.1, 0], [-0.1, 0.34, 0], [0.66, 0.12, 0], [0.32, -0.3, 0]])  # 조각 (평면)
+    light = np.array([-0.4, 0.75, 0.55])
+    light = light / np.linalg.norm(light)
+    STEEL = ramp([(0.0, "#1B2240"), (0.35, "#3C4C7A"), (0.65, "#9DB4E0"), (0.9, "#E8F2FF"), (1.0, "#FFFFFF")])
+    out = []
+    for f in range(SHARD_FRAMES):
+        a1 = f / SHARD_FRAMES * 2 * math.pi
+        # 두 축으로 구름 (뒤집힘 + 돎)
+        rx = np.array([[1, 0, 0], [0, math.cos(a1), -math.sin(a1)], [0, math.sin(a1), math.cos(a1)]])
+        a2 = a1 * 0.5 + 0.6
+        rz = np.array([[math.cos(a2), -math.sin(a2), 0], [math.sin(a2), math.cos(a2), 0], [0, 0, 1]])
+        m = rz @ rx
+        P = poly @ m.T
+        nrm = m @ np.array([0, 0, 1.0])
+        lit = abs(float(nrm @ light))
+        facing = abs(float(nrm[2]))
+        # 다각형 안 (화면에 비친 꼴)
+        px, py = P[:, 0], P[:, 1]
+        inside = np.ones_like(x)
+        sd = np.full_like(x, 9.0)
+        orient = np.sign((px[1] - px[0]) * (py[2] - py[0]) - (py[1] - py[0]) * (px[2] - px[0])) or 1.0
+        for i in range(4):
+            x0, y0, x1, y1 = px[i], py[i], px[(i + 1) % 4], py[(i + 1) % 4]
+            ex, ey = x1 - x0, y1 - y0
+            el = math.hypot(ex, ey) + 1e-9
+            dist = ((x - x0) * ey - (y - y0) * ex) / el * -orient  # 안이 +
+            sd = np.minimum(sd, dist)
+        body = sstep(-aa, aa, sd) * (0.35 + 0.65 * min(1.0, facing * 1.6 + 0.25))
+        edge = np.exp(-(np.clip(sd, 0, None) / 0.035) ** 2) * body
+        shade = lit * 0.75 + 0.25 * (y * 0.5 + 0.5)
+        col = STEEL(np.clip(shade, 0, 1))
+        hot = FIRE(0.7)
+        halo = np.exp(-(np.clip(-sd, 0, None) / 0.1) ** 2) * (sd < 0) * 0.5
+        rgb, a = compose([(FIRE(0.5), halo), (col, body), (hot, edge * 0.9)], n)
+        a = a * (1 - sstep(0.9, 0.99, np.maximum(np.abs(x), np.abs(y))))
+        out.append(to_img(rgb, a))
+    return out
 
 
 CRACK_FRAMES = 6
@@ -457,13 +576,13 @@ def _tiled(name, make, k=2):
 
 def sprites():
     return (_tiled("pb_boom", boom) + _tiled("pb_shock", shock) + _tiled("pb_crack", crack)
-            + [("pb_flash", flash, True), ("pb_charge", charge, True), ("pb_glow", glow, True), ("pb_glow_cyan", glow_cyan, True), ("pb_spark", spark, True)])
+            + [("pb_flash", flash, True), ("pb_charge", charge, True), ("pb_ember", ember, True), ("pb_shard", shard, True)])
 
 
 def preview(out):
     os.makedirs(out, exist_ok=True)
     bgs = {"dark": (0.06, 0.06, 0.09), "grass": (0.36, 0.5, 0.26), "dusk": (0.42, 0.3, 0.38)}
-    sets = {"boom": boom(), "shock": shock(), "flash": flash(), "charge": charge(), "crack": crack(), "glow": glow() + glow_cyan() + spark()}
+    sets = {"boom": boom(), "shock": shock(), "flash": flash(), "charge": charge(), "crack": crack(), "small": ember() + shard()}
     for name, frames in sets.items():
         for bgn, bg in bgs.items():
             ims = []
