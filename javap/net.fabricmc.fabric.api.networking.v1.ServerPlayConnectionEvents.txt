@@ -1,0 +1,14 @@
+Compiled from "ServerPlayConnectionEvents.java"
+public final class net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Init> INIT;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Join> JOIN;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Disconnect> DISCONNECT;
+  private net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents();
+  private static net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Disconnect lambda$static$4(net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Disconnect[]);
+  private static void lambda$static$5(net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Disconnect[], net.minecraft.server.network.ServerGamePacketListenerImpl, net.minecraft.server.MinecraftServer);
+  private static net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Join lambda$static$2(net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Join[]);
+  private static void lambda$static$3(net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Join[], net.minecraft.server.network.ServerGamePacketListenerImpl, net.fabricmc.fabric.api.networking.v1.PacketSender, net.minecraft.server.MinecraftServer);
+  private static net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Init lambda$static$0(net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Init[]);
+  private static void lambda$static$1(net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents$Init[], net.minecraft.server.network.ServerGamePacketListenerImpl, net.minecraft.server.MinecraftServer);
+  static {};
+}

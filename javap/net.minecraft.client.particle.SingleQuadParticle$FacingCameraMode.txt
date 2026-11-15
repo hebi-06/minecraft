@@ -1,0 +1,9 @@
+Compiled from "SingleQuadParticle.java"
+public interface net.minecraft.client.particle.SingleQuadParticle$FacingCameraMode {
+  public static final net.minecraft.client.particle.SingleQuadParticle$FacingCameraMode LOOKAT_XYZ;
+  public static final net.minecraft.client.particle.SingleQuadParticle$FacingCameraMode LOOKAT_Y;
+  public abstract void setRotation(org.joml.Quaternionf, net.minecraft.client.Camera, float);
+  private static void lambda$static$1(org.joml.Quaternionf, net.minecraft.client.Camera, float);
+  private static void lambda$static$0(org.joml.Quaternionf, net.minecraft.client.Camera, float);
+  static {};
+}

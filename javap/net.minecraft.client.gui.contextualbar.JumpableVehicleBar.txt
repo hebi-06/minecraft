@@ -1,0 +1,12 @@
+Compiled from "JumpableVehicleBar.java"
+public class net.minecraft.client.gui.contextualbar.JumpableVehicleBar implements net.minecraft.client.gui.contextualbar.ContextualBar {
+  private static final net.minecraft.resources.Identifier JUMP_BAR_BACKGROUND_SPRITE;
+  private static final net.minecraft.resources.Identifier JUMP_BAR_COOLDOWN_SPRITE;
+  private static final net.minecraft.resources.Identifier JUMP_BAR_PROGRESS_SPRITE;
+  private final net.minecraft.client.Minecraft minecraft;
+  private final net.minecraft.world.entity.PlayerRideableJumping playerJumpableVehicle;
+  public net.minecraft.client.gui.contextualbar.JumpableVehicleBar(net.minecraft.client.Minecraft);
+  public void extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.client.DeltaTracker);
+  public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.client.DeltaTracker);
+  static {};
+}

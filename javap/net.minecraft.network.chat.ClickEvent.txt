@@ -1,0 +1,7 @@
+Compiled from "ClickEvent.java"
+public interface net.minecraft.network.chat.ClickEvent {
+  public static final com.mojang.serialization.Codec<net.minecraft.network.chat.ClickEvent> CODEC;
+  public abstract net.minecraft.network.chat.ClickEvent$Action action();
+  private static com.mojang.serialization.MapCodec lambda$static$0(net.minecraft.network.chat.ClickEvent$Action);
+  static {};
+}

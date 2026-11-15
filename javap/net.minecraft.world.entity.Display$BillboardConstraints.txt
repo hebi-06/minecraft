@@ -1,0 +1,19 @@
+Compiled from "Display.java"
+public final class net.minecraft.world.entity.Display$BillboardConstraints extends java.lang.Enum<net.minecraft.world.entity.Display$BillboardConstraints> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.entity.Display$BillboardConstraints FIXED;
+  public static final net.minecraft.world.entity.Display$BillboardConstraints VERTICAL;
+  public static final net.minecraft.world.entity.Display$BillboardConstraints HORIZONTAL;
+  public static final net.minecraft.world.entity.Display$BillboardConstraints CENTER;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.Display$BillboardConstraints> CODEC;
+  public static final java.util.function.IntFunction<net.minecraft.world.entity.Display$BillboardConstraints> BY_ID;
+  private final byte id;
+  private final java.lang.String name;
+  private static final net.minecraft.world.entity.Display$BillboardConstraints[] $VALUES;
+  public static net.minecraft.world.entity.Display$BillboardConstraints[] values();
+  public static net.minecraft.world.entity.Display$BillboardConstraints valueOf(java.lang.String);
+  private net.minecraft.world.entity.Display$BillboardConstraints(byte, java.lang.String);
+  public java.lang.String getSerializedName();
+  private byte getId();
+  private static net.minecraft.world.entity.Display$BillboardConstraints[] $values();
+  static {};
+}

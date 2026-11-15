@@ -1,0 +1,27 @@
+Compiled from "RangeSelectItemModel.java"
+public final class net.minecraft.client.renderer.item.RangeSelectItemModel$Unbaked extends java.lang.Record implements net.minecraft.client.renderer.item.ItemModel$Unbaked {
+  private final java.util.Optional<com.mojang.math.Transformation> transformation;
+  private final net.minecraft.client.renderer.item.properties.numeric.RangeSelectItemModelProperty property;
+  private final float scale;
+  private final java.util.List<net.minecraft.client.renderer.item.RangeSelectItemModel$Entry> entries;
+  private final java.util.Optional<net.minecraft.client.renderer.item.ItemModel$Unbaked> fallback;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.client.renderer.item.RangeSelectItemModel$Unbaked> MAP_CODEC;
+  public net.minecraft.client.renderer.item.RangeSelectItemModel$Unbaked(java.util.Optional<com.mojang.math.Transformation>, net.minecraft.client.renderer.item.properties.numeric.RangeSelectItemModelProperty, float, java.util.List<net.minecraft.client.renderer.item.RangeSelectItemModel$Entry>, java.util.Optional<net.minecraft.client.renderer.item.ItemModel$Unbaked>);
+  public com.mojang.serialization.MapCodec<net.minecraft.client.renderer.item.RangeSelectItemModel$Unbaked> type();
+  public net.minecraft.client.renderer.item.ItemModel bake(net.minecraft.client.renderer.item.ItemModel$BakingContext, org.joml.Matrix4fc);
+  public void resolveDependencies(net.minecraft.client.resources.model.ResolvableModel$Resolver);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.util.Optional<com.mojang.math.Transformation> transformation();
+  public net.minecraft.client.renderer.item.properties.numeric.RangeSelectItemModelProperty property();
+  public float scale();
+  public java.util.List<net.minecraft.client.renderer.item.RangeSelectItemModel$Entry> entries();
+  public java.util.Optional<net.minecraft.client.renderer.item.ItemModel$Unbaked> fallback();
+  private static void lambda$resolveDependencies$1(net.minecraft.client.resources.model.ResolvableModel$Resolver, net.minecraft.client.renderer.item.RangeSelectItemModel$Entry);
+  private static void lambda$resolveDependencies$0(net.minecraft.client.resources.model.ResolvableModel$Resolver, net.minecraft.client.renderer.item.ItemModel$Unbaked);
+  private static net.minecraft.client.renderer.item.ItemModel lambda$bake$1(net.minecraft.client.renderer.item.ItemModel$BakingContext, org.joml.Matrix4fc);
+  private static net.minecraft.client.renderer.item.ItemModel lambda$bake$0(net.minecraft.client.renderer.item.ItemModel$BakingContext, org.joml.Matrix4fc, net.minecraft.client.renderer.item.ItemModel$Unbaked);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

@@ -1,0 +1,7 @@
+Compiled from "ButtonListDialog.java"
+public interface net.minecraft.server.dialog.ButtonListDialog extends net.minecraft.server.dialog.Dialog {
+  public abstract com.mojang.serialization.MapCodec<? extends net.minecraft.server.dialog.ButtonListDialog> codec();
+  public abstract int columns();
+  public abstract java.util.Optional<net.minecraft.server.dialog.ActionButton> exitAction();
+  public default java.util.Optional<net.minecraft.server.dialog.action.Action> onCancel();
+}

@@ -1,0 +1,25 @@
+Compiled from "NumberRangeInput.java"
+public final class net.minecraft.server.dialog.input.NumberRangeInput$RangeInfo extends java.lang.Record {
+  private final float start;
+  private final float end;
+  private final java.util.Optional<java.lang.Float> initial;
+  private final java.util.Optional<java.lang.Float> step;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.input.NumberRangeInput$RangeInfo> MAP_CODEC;
+  public net.minecraft.server.dialog.input.NumberRangeInput$RangeInfo(float, float, java.util.Optional<java.lang.Float>, java.util.Optional<java.lang.Float>);
+  public float computeScaledValue(float);
+  private boolean isOutOfRange(float);
+  private float initialScaledValue();
+  public float initialSliderValue();
+  private float scaledValueToSlider(float);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public float start();
+  public float end();
+  public java.util.Optional<java.lang.Float> initial();
+  public java.util.Optional<java.lang.Float> step();
+  private static com.mojang.serialization.DataResult lambda$static$1(net.minecraft.server.dialog.input.NumberRangeInput$RangeInfo);
+  private static java.lang.String lambda$static$2(double, double, double);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

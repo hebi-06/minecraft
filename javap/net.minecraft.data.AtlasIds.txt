@@ -1,0 +1,17 @@
+Compiled from "AtlasIds.java"
+public class net.minecraft.data.AtlasIds {
+  public static final net.minecraft.resources.Identifier BANNER_PATTERNS;
+  public static final net.minecraft.resources.Identifier BLOCKS;
+  public static final net.minecraft.resources.Identifier ITEMS;
+  public static final net.minecraft.resources.Identifier CHESTS;
+  public static final net.minecraft.resources.Identifier DECORATED_POT;
+  public static final net.minecraft.resources.Identifier GUI;
+  public static final net.minecraft.resources.Identifier MAP_DECORATIONS;
+  public static final net.minecraft.resources.Identifier PAINTINGS;
+  public static final net.minecraft.resources.Identifier PARTICLES;
+  public static final net.minecraft.resources.Identifier SHIELD_PATTERNS;
+  public static final net.minecraft.resources.Identifier SHULKER_BOXES;
+  public static final net.minecraft.resources.Identifier CELESTIALS;
+  public net.minecraft.data.AtlasIds();
+  static {};
+}

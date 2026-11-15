@@ -1,0 +1,20 @@
+Compiled from "BiomeManager.java"
+public class net.minecraft.world.level.biome.BiomeManager {
+  public static final int CHUNK_CENTER_QUART;
+  private static final int ZOOM_BITS = 2;
+  private static final int ZOOM = 4;
+  private static final int ZOOM_MASK = 3;
+  private final net.minecraft.world.level.biome.BiomeResolver noiseBiomeSource;
+  private final long biomeZoomSeed;
+  public net.minecraft.world.level.biome.BiomeManager(net.minecraft.world.level.biome.BiomeResolver, long);
+  public static long obfuscateSeed(long);
+  public net.minecraft.world.level.biome.BiomeManager withDifferentSource(net.minecraft.world.level.biome.BiomeResolver);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getBiome(net.minecraft.core.BlockPos);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getBiome(int, int, int);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiomeAtPosition(double, double, double);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiomeAtPosition(net.minecraft.core.BlockPos);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiomeAtQuart(int, int, int);
+  private static double getFiddledDistance(long, int, int, int, double, double, double);
+  private static double getFiddle(long);
+  static {};
+}

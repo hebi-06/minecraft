@@ -1,0 +1,19 @@
+Compiled from "EffectsInInventory.java"
+public class net.minecraft.client.gui.screens.inventory.EffectsInInventory {
+  private static final net.minecraft.resources.Identifier EFFECT_BACKGROUND_SPRITE;
+  private static final net.minecraft.resources.Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE;
+  private static final int ICON_SIZE = 18;
+  public static final int SPACING = 7;
+  private static final int TEXT_X_OFFSET = 32;
+  public static final int SPRITE_SQUARE_SIZE = 32;
+  private final net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen;
+  private final net.minecraft.client.Minecraft minecraft;
+  public net.minecraft.client.gui.screens.inventory.EffectsInInventory(net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>);
+  public boolean canSeeEffects();
+  public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, int, int);
+  private void extractEffects(net.minecraft.client.gui.GuiGraphicsExtractor, java.util.Collection<net.minecraft.world.effect.MobEffectInstance>, int, int, int, int, int);
+  private int extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.client.gui.Font, net.minecraft.network.chat.Component, net.minecraft.network.chat.Component, int, int, boolean, int);
+  private void extractText(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.network.chat.Component, net.minecraft.network.chat.Component, net.minecraft.client.gui.Font, int, int, int, int, int, int);
+  private net.minecraft.network.chat.Component getEffectName(net.minecraft.world.effect.MobEffectInstance);
+  static {};
+}

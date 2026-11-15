@@ -1,0 +1,31 @@
+Compiled from "ItemUseAnimation.java"
+public final class net.minecraft.world.item.ItemUseAnimation extends java.lang.Enum<net.minecraft.world.item.ItemUseAnimation> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.item.ItemUseAnimation NONE;
+  public static final net.minecraft.world.item.ItemUseAnimation EAT;
+  public static final net.minecraft.world.item.ItemUseAnimation DRINK;
+  public static final net.minecraft.world.item.ItemUseAnimation BLOCK;
+  public static final net.minecraft.world.item.ItemUseAnimation BOW;
+  public static final net.minecraft.world.item.ItemUseAnimation TRIDENT;
+  public static final net.minecraft.world.item.ItemUseAnimation CROSSBOW;
+  public static final net.minecraft.world.item.ItemUseAnimation SPYGLASS;
+  public static final net.minecraft.world.item.ItemUseAnimation TOOT_HORN;
+  public static final net.minecraft.world.item.ItemUseAnimation BRUSH;
+  public static final net.minecraft.world.item.ItemUseAnimation BUNDLE;
+  public static final net.minecraft.world.item.ItemUseAnimation SPEAR;
+  private static final java.util.function.IntFunction<net.minecraft.world.item.ItemUseAnimation> BY_ID;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.ItemUseAnimation> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.item.ItemUseAnimation> STREAM_CODEC;
+  private final int id;
+  private final java.lang.String name;
+  private final boolean customArmTransform;
+  private static final net.minecraft.world.item.ItemUseAnimation[] $VALUES;
+  public static net.minecraft.world.item.ItemUseAnimation[] values();
+  public static net.minecraft.world.item.ItemUseAnimation valueOf(java.lang.String);
+  private net.minecraft.world.item.ItemUseAnimation(int, java.lang.String);
+  private net.minecraft.world.item.ItemUseAnimation(int, java.lang.String, boolean);
+  public int getId();
+  public java.lang.String getSerializedName();
+  public boolean hasCustomArmTransform();
+  private static net.minecraft.world.item.ItemUseAnimation[] $values();
+  static {};
+}

@@ -1,0 +1,15 @@
+Compiled from "TextInput.java"
+public final class net.minecraft.server.dialog.input.TextInput$MultilineOptions extends java.lang.Record {
+  private final java.util.Optional<java.lang.Integer> maxLines;
+  private final java.util.Optional<java.lang.Integer> height;
+  public static final int MAX_HEIGHT = 512;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.input.TextInput$MultilineOptions> CODEC;
+  public net.minecraft.server.dialog.input.TextInput$MultilineOptions(java.util.Optional<java.lang.Integer>, java.util.Optional<java.lang.Integer>);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.util.Optional<java.lang.Integer> maxLines();
+  public java.util.Optional<java.lang.Integer> height();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

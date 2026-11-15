@@ -1,0 +1,19 @@
+Compiled from "BiomeSource.java"
+public abstract class net.minecraft.world.level.biome.BiomeSource {
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.biome.BiomeSource> CODEC;
+  private final java.util.function.Supplier<java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>> possibleBiomes;
+  protected net.minecraft.world.level.biome.BiomeSource();
+  protected abstract com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.biome.BiomeSource> codec();
+  protected abstract java.util.stream.Stream<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> collectPossibleBiomes();
+  public java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> possibleBiomes();
+  public com.mojang.datafixers.util.Pair<net.minecraft.core.BlockPos, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> findBiomeHorizontal(int, int, int, int, java.util.function.Predicate<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.util.RandomSource, net.minecraft.world.level.levelgen.RandomState);
+  public com.mojang.datafixers.util.Pair<net.minecraft.core.BlockPos, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> findClosestBiome3d(net.minecraft.core.BlockPos, int, int, int, java.util.function.Predicate<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.LevelReader);
+  public com.mojang.datafixers.util.Pair<net.minecraft.core.BlockPos, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> findBiomeHorizontal(int, int, int, int, int, java.util.function.Predicate<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.util.RandomSource, boolean, net.minecraft.world.level.levelgen.RandomState);
+  public final net.minecraft.world.level.biome.BiomeResolver createUncachedResolver(net.minecraft.world.level.levelgen.RandomState);
+  public final net.minecraft.world.level.biome.BiomeResolver createCachingResolver(net.minecraft.world.level.levelgen.RandomState);
+  public abstract net.minecraft.world.level.biome.BiomeResolver createResolver(net.minecraft.world.level.biome.Climate$Sampler);
+  public net.minecraft.world.level.biome.BiomeResolver createResolverForChunk(net.minecraft.world.level.biome.Climate$Sampler, int, int, int, int, int, int);
+  public void addDebugInfo(java.util.List<java.lang.String>, net.minecraft.core.BlockPos, net.minecraft.world.level.biome.Climate$Sampler);
+  private java.util.Set lambda$new$0();
+  static {};
+}

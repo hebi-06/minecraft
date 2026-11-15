@@ -1,0 +1,25 @@
+Compiled from "TextInput.java"
+public final class net.minecraft.server.dialog.input.TextInput extends java.lang.Record implements net.minecraft.server.dialog.input.InputControl {
+  private final int width;
+  private final net.minecraft.network.chat.Component label;
+  private final boolean labelVisible;
+  private final java.lang.String initial;
+  private final int maxLength;
+  private final java.util.Optional<net.minecraft.server.dialog.input.TextInput$MultilineOptions> multiline;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.input.TextInput> MAP_CODEC;
+  public net.minecraft.server.dialog.input.TextInput(int, net.minecraft.network.chat.Component, boolean, java.lang.String, int, java.util.Optional<net.minecraft.server.dialog.input.TextInput$MultilineOptions>);
+  public com.mojang.serialization.MapCodec<net.minecraft.server.dialog.input.TextInput> mapCodec();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int width();
+  public net.minecraft.network.chat.Component label();
+  public boolean labelVisible();
+  public java.lang.String initial();
+  public int maxLength();
+  public java.util.Optional<net.minecraft.server.dialog.input.TextInput$MultilineOptions> multiline();
+  private static com.mojang.serialization.DataResult lambda$static$1(net.minecraft.server.dialog.input.TextInput);
+  private static java.lang.String lambda$static$2();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

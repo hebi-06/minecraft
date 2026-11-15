@@ -1,0 +1,17 @@
+Compiled from "SamplerContext.java"
+public class net.minecraft.world.level.levelgen.densityfunction.SamplerContext {
+  public static final net.minecraft.world.level.levelgen.densityfunction.SamplerContext EMPTY_UNCACHED;
+  private static final int CACHE_SIZE_STEP = 16;
+  private final net.minecraft.util.context.ContextMap userFields;
+  private final net.minecraft.world.level.levelgen.densityfunction.DensityBufferArena bufferArena;
+  private net.minecraft.world.level.levelgen.densityfunction.SamplerContext$CacheCell[] cacheCells;
+  private net.minecraft.world.level.levelgen.densityfunction.SamplerContext(net.minecraft.util.context.ContextMap, net.minecraft.world.level.levelgen.densityfunction.DensityBufferArena, boolean);
+  public static net.minecraft.world.level.levelgen.densityfunction.SamplerContext$Builder builder();
+  public <T> T getField(net.minecraft.util.context.ContextKey<T>);
+  public <T> T getFieldOrDefault(net.minecraft.util.context.ContextKey<? extends T>, T);
+  public net.minecraft.world.level.levelgen.densityfunction.ScopedDensityBuffer acquireBuffer(net.minecraft.world.level.levelgen.densityfunction.DensityVolume);
+  private net.minecraft.world.level.levelgen.densityfunction.SamplerContext$CacheCell getCacheCell(int);
+  void sampleVolumeCached(int, net.minecraft.world.level.levelgen.densityfunction.DensitySampler, net.minecraft.world.level.levelgen.densityfunction.DensityBuffer, net.minecraft.world.level.levelgen.densityfunction.DensityVolume);
+  float sampleValueCached(int, net.minecraft.world.level.levelgen.densityfunction.DensitySampler, int, int, int);
+  static {};
+}

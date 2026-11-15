@@ -1,0 +1,48 @@
+Compiled from "DataFixTypes.java"
+public final class net.minecraft.util.datafix.DataFixTypes extends java.lang.Enum<net.minecraft.util.datafix.DataFixTypes> {
+  public static final net.minecraft.util.datafix.DataFixTypes LEVEL;
+  public static final net.minecraft.util.datafix.DataFixTypes LEVEL_SUMMARY;
+  public static final net.minecraft.util.datafix.DataFixTypes PLAYER;
+  public static final net.minecraft.util.datafix.DataFixTypes CHUNK;
+  public static final net.minecraft.util.datafix.DataFixTypes HOTBAR;
+  public static final net.minecraft.util.datafix.DataFixTypes OPTIONS;
+  public static final net.minecraft.util.datafix.DataFixTypes STRUCTURE;
+  public static final net.minecraft.util.datafix.DataFixTypes STATS;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_COMMAND_STORAGE;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_CUSTOM_BOSS_EVENTS;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_ENDER_DRAGON_FIGHT;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_GAME_RULES;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_FORCED_CHUNKS;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_MAP_DATA;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_MAP_INDEX;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_RAIDS;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_RANDOM_SEQUENCES;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_SCHEDULED_EVENTS;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_SCOREBOARD;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_STOPWATCHES;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_STRUCTURE_FEATURE_INDICES;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_WANDERING_TRADER;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_WEATHER;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_WORLD_BORDER;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_WORLD_CLOCKS;
+  public static final net.minecraft.util.datafix.DataFixTypes SAVED_DATA_WORLD_GEN_SETTINGS;
+  public static final net.minecraft.util.datafix.DataFixTypes ADVANCEMENTS;
+  public static final net.minecraft.util.datafix.DataFixTypes POI_CHUNK;
+  public static final net.minecraft.util.datafix.DataFixTypes WORLD_GEN_SETTINGS;
+  public static final net.minecraft.util.datafix.DataFixTypes ENTITY_CHUNK;
+  public static final net.minecraft.util.datafix.DataFixTypes DEBUG_PROFILE;
+  public static final java.util.Set<com.mojang.datafixers.DSL$TypeReference> TYPES_FOR_LEVEL_LIST;
+  private final com.mojang.datafixers.DSL$TypeReference type;
+  private static final net.minecraft.util.datafix.DataFixTypes[] $VALUES;
+  public static net.minecraft.util.datafix.DataFixTypes[] values();
+  public static net.minecraft.util.datafix.DataFixTypes valueOf(java.lang.String);
+  private net.minecraft.util.datafix.DataFixTypes(com.mojang.datafixers.DSL$TypeReference);
+  private static int currentVersion();
+  public <A> com.mojang.serialization.Codec<A> wrapCodec(com.mojang.serialization.Codec<A>, com.mojang.datafixers.DataFixer, int);
+  public <T> com.mojang.serialization.Dynamic<T> update(com.mojang.datafixers.DataFixer, com.mojang.serialization.Dynamic<T>, int, int);
+  public <T> com.mojang.serialization.Dynamic<T> updateToCurrentVersion(com.mojang.datafixers.DataFixer, com.mojang.serialization.Dynamic<T>, int);
+  public net.minecraft.nbt.CompoundTag update(com.mojang.datafixers.DataFixer, net.minecraft.nbt.CompoundTag, int, int);
+  public net.minecraft.nbt.CompoundTag updateToCurrentVersion(com.mojang.datafixers.DataFixer, net.minecraft.nbt.CompoundTag, int);
+  private static net.minecraft.util.datafix.DataFixTypes[] $values();
+  static {};
+}

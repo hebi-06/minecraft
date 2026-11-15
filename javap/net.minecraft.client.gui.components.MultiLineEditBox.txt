@@ -1,0 +1,35 @@
+Compiled from "MultiLineEditBox.java"
+public class net.minecraft.client.gui.components.MultiLineEditBox extends net.minecraft.client.gui.components.AbstractTextAreaWidget {
+  private static final int CURSOR_COLOR = -3092272;
+  private static final int PLACEHOLDER_TEXT_COLOR;
+  private final net.minecraft.client.gui.Font font;
+  private final net.minecraft.network.chat.Component placeholder;
+  private final net.minecraft.client.gui.components.MultilineTextField textField;
+  private final int textColor;
+  private final boolean textShadow;
+  private final int cursorColor;
+  private net.minecraft.client.gui.components.IMEPreeditOverlay preeditOverlay;
+  private long focusedTime;
+  private net.minecraft.client.gui.components.MultiLineEditBox(net.minecraft.client.gui.Font, int, int, int, int, net.minecraft.network.chat.Component, net.minecraft.network.chat.Component, int, boolean, int, boolean, boolean);
+  public void setCharacterLimit(int);
+  public void setLineLimit(int);
+  public void setValueListener(java.util.function.Consumer<java.lang.String>);
+  public void setValue(java.lang.String);
+  public void setValue(java.lang.String, boolean);
+  public java.lang.String getValue();
+  public void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput);
+  public void onClick(net.minecraft.client.input.MouseButtonEvent, boolean);
+  protected void onDrag(net.minecraft.client.input.MouseButtonEvent, double, double);
+  public boolean keyPressed(net.minecraft.client.input.KeyEvent);
+  public boolean charTyped(net.minecraft.client.input.CharacterEvent);
+  public boolean capturesInput();
+  public boolean preeditUpdated(net.minecraft.client.input.PreeditEvent);
+  protected void extractContents(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  protected void extractDecorations(net.minecraft.client.gui.GuiGraphicsExtractor);
+  public int getInnerHeight();
+  private void scrollToCursor();
+  private void seekCursorScreen(double, double);
+  public void setFocused(boolean);
+  public static net.minecraft.client.gui.components.MultiLineEditBox$Builder builder();
+  static {};
+}

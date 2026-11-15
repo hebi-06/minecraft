@@ -1,0 +1,9 @@
+Compiled from "EntityModelSet.java"
+public class net.minecraft.client.model.geom.EntityModelSet {
+  public static final net.minecraft.client.model.geom.EntityModelSet EMPTY;
+  private final java.util.Map<net.minecraft.client.model.geom.ModelLayerLocation, net.minecraft.client.model.geom.builders.LayerDefinition> roots;
+  public net.minecraft.client.model.geom.EntityModelSet(java.util.Map<net.minecraft.client.model.geom.ModelLayerLocation, net.minecraft.client.model.geom.builders.LayerDefinition>);
+  public net.minecraft.client.model.geom.ModelPart bakeLayer(net.minecraft.client.model.geom.ModelLayerLocation);
+  public static net.minecraft.client.model.geom.EntityModelSet vanilla();
+  static {};
+}

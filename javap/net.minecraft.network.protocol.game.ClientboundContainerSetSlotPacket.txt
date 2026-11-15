@@ -1,0 +1,19 @@
+Compiled from "ClientboundContainerSetSlotPacket.java"
+public class net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> {
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket> STREAM_CODEC;
+  private final int containerId;
+  private final int stateId;
+  private final int slot;
+  private final net.minecraft.world.item.ItemStack itemStack;
+  public net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket(int, int, int, net.minecraft.world.item.ItemStack);
+  private net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket(net.minecraft.network.RegistryFriendlyByteBuf);
+  private void write(net.minecraft.network.RegistryFriendlyByteBuf);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ClientGamePacketListener);
+  public int getContainerId();
+  public int getSlot();
+  public net.minecraft.world.item.ItemStack getItem();
+  public int getStateId();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

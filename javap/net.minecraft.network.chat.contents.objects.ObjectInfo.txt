@@ -1,0 +1,6 @@
+Compiled from "ObjectInfo.java"
+public interface net.minecraft.network.chat.contents.objects.ObjectInfo {
+  public abstract net.minecraft.network.chat.FontDescription fontDescription();
+  public abstract java.lang.String defaultFallback();
+  public abstract com.mojang.serialization.MapCodec<? extends net.minecraft.network.chat.contents.objects.ObjectInfo> codec();
+}

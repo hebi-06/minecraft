@@ -1,0 +1,10 @@
+Compiled from "WitherSkeletonRenderer.java"
+public class net.minecraft.client.renderer.entity.WitherSkeletonRenderer extends net.minecraft.client.renderer.entity.AbstractSkeletonRenderer<net.minecraft.world.entity.monster.skeleton.WitherSkeleton, net.minecraft.client.renderer.entity.state.SkeletonRenderState> {
+  private static final net.minecraft.resources.Identifier WITHER_SKELETON_LOCATION;
+  public net.minecraft.client.renderer.entity.WitherSkeletonRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context);
+  public net.minecraft.resources.Identifier getTextureLocation(net.minecraft.client.renderer.entity.state.SkeletonRenderState);
+  public net.minecraft.client.renderer.entity.state.SkeletonRenderState createRenderState();
+  public net.minecraft.resources.Identifier getTextureLocation(net.minecraft.client.renderer.entity.state.LivingEntityRenderState);
+  public net.minecraft.client.renderer.entity.state.EntityRenderState createRenderState();
+  static {};
+}

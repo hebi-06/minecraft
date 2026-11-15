@@ -1,0 +1,16 @@
+Compiled from "BodyRotationControl.java"
+public class net.minecraft.world.entity.ai.control.BodyRotationControl implements net.minecraft.world.entity.ai.control.Control {
+  private final net.minecraft.world.entity.Mob mob;
+  private static final int HEAD_STABLE_ANGLE = 15;
+  private static final int DELAY_UNTIL_STARTING_TO_FACE_FORWARD = 10;
+  private static final int HOW_LONG_IT_TAKES_TO_FACE_FORWARD = 10;
+  private int headStableTime;
+  private float lastStableYHeadRot;
+  public net.minecraft.world.entity.ai.control.BodyRotationControl(net.minecraft.world.entity.Mob);
+  public void clientTick();
+  private void rotateBodyIfNecessary();
+  private void rotateHeadIfNecessary();
+  private void rotateHeadTowardsFront();
+  private boolean notCarryingMobPassengers();
+  private boolean isMoving();
+}

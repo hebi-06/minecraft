@@ -1,0 +1,17 @@
+Compiled from "WitherSkeleton.java"
+public class net.minecraft.world.entity.monster.skeleton.WitherSkeleton extends net.minecraft.world.entity.monster.skeleton.AbstractSkeleton {
+  public net.minecraft.world.entity.monster.skeleton.WitherSkeleton(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.monster.skeleton.WitherSkeleton>, net.minecraft.world.level.Level);
+  protected void registerGoals();
+  protected net.minecraft.sounds.SoundEvent getAmbientSound();
+  protected net.minecraft.sounds.SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource);
+  protected net.minecraft.sounds.SoundEvent getDeathSound();
+  protected net.minecraft.sounds.SoundEvent getStepSound();
+  public net.minecraft.tags.TagKey<net.minecraft.world.item.Item> getPreferredWeaponType();
+  public boolean canHoldItem(net.minecraft.world.item.ItemStack);
+  protected void populateDefaultEquipmentSlots(net.minecraft.util.RandomSource, net.minecraft.world.DifficultyInstance);
+  protected void populateDefaultEquipmentEnchantments(net.minecraft.world.level.ServerLevelAccessor, net.minecraft.util.RandomSource, net.minecraft.world.DifficultyInstance);
+  public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor, net.minecraft.world.DifficultyInstance, net.minecraft.world.entity.EntitySpawnReason, net.minecraft.world.entity.SpawnGroupData);
+  public boolean doHurtTarget(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity);
+  protected net.minecraft.world.entity.projectile.arrow.AbstractArrow getArrow(net.minecraft.world.item.ItemStack, float, net.minecraft.world.item.ItemStack);
+  public boolean canBeAffected(net.minecraft.world.effect.MobEffectInstance);
+}

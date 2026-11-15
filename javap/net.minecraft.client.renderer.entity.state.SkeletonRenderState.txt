@@ -1,0 +1,7 @@
+Compiled from "SkeletonRenderState.java"
+public class net.minecraft.client.renderer.entity.state.SkeletonRenderState extends net.minecraft.client.renderer.entity.state.HumanoidRenderState {
+  public boolean isAggressive;
+  public boolean isShaking;
+  public boolean isHoldingBow;
+  public net.minecraft.client.renderer.entity.state.SkeletonRenderState();
+}

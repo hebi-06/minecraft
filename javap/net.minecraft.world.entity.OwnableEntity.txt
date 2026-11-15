@@ -1,0 +1,7 @@
+Compiled from "OwnableEntity.java"
+public interface net.minecraft.world.entity.OwnableEntity {
+  public abstract net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity> getOwnerReference();
+  public abstract net.minecraft.world.level.Level level();
+  public default net.minecraft.world.entity.LivingEntity getOwner();
+  public default net.minecraft.world.entity.LivingEntity getRootOwner();
+}

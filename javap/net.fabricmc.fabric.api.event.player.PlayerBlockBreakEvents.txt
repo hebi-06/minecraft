@@ -1,0 +1,14 @@
+Compiled from "PlayerBlockBreakEvents.java"
+public final class net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Before> BEFORE;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$After> AFTER;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Canceled> CANCELED;
+  private net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents();
+  private static net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Canceled lambda$static$4(net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Canceled[]);
+  private static void lambda$static$5(net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Canceled[], net.minecraft.world.level.Level, net.minecraft.world.entity.player.Player, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.entity.BlockEntity);
+  private static net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$After lambda$static$2(net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$After[]);
+  private static void lambda$static$3(net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$After[], net.minecraft.world.level.Level, net.minecraft.world.entity.player.Player, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.entity.BlockEntity);
+  private static net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Before lambda$static$0(net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Before[]);
+  private static boolean lambda$static$1(net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents$Before[], net.minecraft.world.level.Level, net.minecraft.world.entity.player.Player, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.entity.BlockEntity);
+  static {};
+}

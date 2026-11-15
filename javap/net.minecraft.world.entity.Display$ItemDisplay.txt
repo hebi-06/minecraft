@@ -1,0 +1,22 @@
+Compiled from "Display.java"
+public class net.minecraft.world.entity.Display$ItemDisplay extends net.minecraft.world.entity.Display {
+  private static final java.lang.String TAG_ITEM = "item";
+  private static final java.lang.String TAG_ITEM_DISPLAY = "item_display";
+  private static final net.minecraft.network.syncher.EntityDataAccessor<net.minecraft.world.item.ItemStack> DATA_ITEM_STACK_ID;
+  private static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Byte> DATA_ITEM_DISPLAY_ID;
+  private final net.minecraft.world.entity.SlotAccess slot;
+  private net.minecraft.world.entity.Display$ItemDisplay$ItemRenderState itemRenderState;
+  public net.minecraft.world.entity.Display$ItemDisplay(net.minecraft.world.entity.EntityType<?>, net.minecraft.world.level.Level);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  public void onSyncedDataUpdated(net.minecraft.network.syncher.EntityDataAccessor<?>);
+  public final net.minecraft.world.item.ItemStack getItemStack();
+  public final void setItemStack(net.minecraft.world.item.ItemStack);
+  public final void setItemTransform(net.minecraft.world.item.ItemDisplayContext);
+  public final net.minecraft.world.item.ItemDisplayContext getItemTransform();
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  public net.minecraft.world.entity.SlotAccess getSlot(int);
+  public net.minecraft.world.entity.Display$ItemDisplay$ItemRenderState itemRenderState();
+  protected void updateRenderSubState(boolean, float);
+  static {};
+}

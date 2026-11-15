@@ -1,0 +1,11 @@
+Compiled from "FogData.java"
+public class net.minecraft.client.renderer.fog.FogData implements net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState {
+  public float environmentalStart;
+  public float renderDistanceStart;
+  public float environmentalEnd;
+  public float renderDistanceEnd;
+  public float skyEnd;
+  public float cloudEnd;
+  public org.joml.Vector4f color;
+  public net.minecraft.client.renderer.fog.FogData();
+}

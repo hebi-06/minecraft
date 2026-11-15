@@ -1,0 +1,25 @@
+Compiled from "CustomModelData.java"
+public final class net.minecraft.world.item.component.CustomModelData extends java.lang.Record {
+  private final java.util.List<java.lang.Float> floats;
+  private final java.util.List<java.lang.Boolean> flags;
+  private final java.util.List<java.lang.String> strings;
+  private final java.util.List<java.lang.Integer> colors;
+  public static final net.minecraft.world.item.component.CustomModelData EMPTY;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.component.CustomModelData> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.item.component.CustomModelData> STREAM_CODEC;
+  public net.minecraft.world.item.component.CustomModelData(java.util.List<java.lang.Float>, java.util.List<java.lang.Boolean>, java.util.List<java.lang.String>, java.util.List<java.lang.Integer>);
+  private static <T> T getSafe(java.util.List<T>, int);
+  public java.lang.Float getFloat(int);
+  public java.lang.Boolean getBoolean(int);
+  public java.lang.String getString(int);
+  public java.lang.Integer getColor(int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.util.List<java.lang.Float> floats();
+  public java.util.List<java.lang.Boolean> flags();
+  public java.util.List<java.lang.String> strings();
+  public java.util.List<java.lang.Integer> colors();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

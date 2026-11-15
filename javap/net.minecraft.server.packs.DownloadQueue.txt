@@ -1,0 +1,16 @@
+Compiled from "DownloadQueue.java"
+public class net.minecraft.server.packs.DownloadQueue implements java.lang.AutoCloseable {
+  private static final org.slf4j.Logger LOGGER;
+  private static final int MAX_KEPT_PACKS = 20;
+  private final java.nio.file.Path cacheDir;
+  private final net.minecraft.util.eventlog.JsonEventLog<net.minecraft.server.packs.DownloadQueue$LogEntry> eventLog;
+  private final net.minecraft.util.thread.ConsecutiveExecutor tasks;
+  public net.minecraft.server.packs.DownloadQueue(java.nio.file.Path) throws java.io.IOException;
+  private net.minecraft.server.packs.DownloadQueue$BatchResult runDownload(net.minecraft.server.packs.DownloadQueue$BatchConfig, java.util.Map<java.util.UUID, net.minecraft.server.packs.DownloadQueue$DownloadRequest>);
+  private com.mojang.datafixers.util.Either<java.lang.String, net.minecraft.server.packs.DownloadQueue$FileInfoEntry> getFileInfo(java.nio.file.Path);
+  public java.util.concurrent.CompletableFuture<net.minecraft.server.packs.DownloadQueue$BatchResult> downloadBatch(net.minecraft.server.packs.DownloadQueue$BatchConfig, java.util.Map<java.util.UUID, net.minecraft.server.packs.DownloadQueue$DownloadRequest>);
+  public void close() throws java.io.IOException;
+  private net.minecraft.server.packs.DownloadQueue$BatchResult lambda$downloadBatch$0(net.minecraft.server.packs.DownloadQueue$BatchConfig, java.util.Map);
+  private void lambda$runDownload$0(net.minecraft.server.packs.DownloadQueue$BatchConfig, net.minecraft.server.packs.DownloadQueue$BatchResult, java.util.UUID, net.minecraft.server.packs.DownloadQueue$DownloadRequest);
+  static {};
+}

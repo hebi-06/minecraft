@@ -1,0 +1,20 @@
+Compiled from "ArmorModelSet.java"
+public final class net.minecraft.client.renderer.entity.ArmorModelSet<T> extends java.lang.Record {
+  private final T head;
+  private final T chest;
+  private final T legs;
+  private final T feet;
+  public net.minecraft.client.renderer.entity.ArmorModelSet(T, T, T, T);
+  public T get(net.minecraft.world.entity.EquipmentSlot);
+  public <U> net.minecraft.client.renderer.entity.ArmorModelSet<U> map(java.util.function.Function<? super T, ? extends U>);
+  public void putFrom(net.minecraft.client.renderer.entity.ArmorModelSet<net.minecraft.client.model.geom.builders.LayerDefinition>, com.google.common.collect.ImmutableMap$Builder<T, net.minecraft.client.model.geom.builders.LayerDefinition>);
+  public static <M extends net.minecraft.client.model.HumanoidModel<?>> net.minecraft.client.renderer.entity.ArmorModelSet<M> bake(net.minecraft.client.renderer.entity.ArmorModelSet<net.minecraft.client.model.geom.ModelLayerLocation>, net.minecraft.client.model.geom.EntityModelSet, java.util.function.Function<net.minecraft.client.model.geom.ModelPart, M>);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public T head();
+  public T chest();
+  public T legs();
+  public T feet();
+  private static net.minecraft.client.model.HumanoidModel lambda$bake$0(java.util.function.Function, net.minecraft.client.model.geom.EntityModelSet, net.minecraft.client.model.geom.ModelLayerLocation);
+}

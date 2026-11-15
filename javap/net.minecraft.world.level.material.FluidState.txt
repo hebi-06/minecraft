@@ -1,0 +1,31 @@
+Compiled from "FluidState.java"
+public final class net.minecraft.world.level.material.FluidState extends net.minecraft.world.level.block.state.StateHolder<net.minecraft.world.level.material.Fluid, net.minecraft.world.level.material.FluidState> implements net.minecraft.core.TypedInstance<net.minecraft.world.level.material.Fluid> {
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.material.FluidState> CODEC;
+  public static final int AMOUNT_MAX = 9;
+  public static final int AMOUNT_FULL = 8;
+  public net.minecraft.world.level.material.FluidState(net.minecraft.world.level.material.Fluid, net.minecraft.world.level.block.state.properties.Property<?>[], java.lang.Comparable<?>[]);
+  public net.minecraft.world.level.material.Fluid getType();
+  public boolean isSource();
+  public boolean isSourceOfType(net.minecraft.world.level.material.Fluid);
+  public boolean isEmpty();
+  public float getHeight(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  public float getHeightForCamera(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  public float getOwnHeight();
+  public boolean isFull();
+  public int getAmount();
+  public boolean shouldRenderBackwardUpFace(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  public void tick(net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  public void animateTick(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  public boolean isRandomlyTicking();
+  public void randomTick(net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  public net.minecraft.world.phys.Vec3 getFlow(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  public net.minecraft.world.level.block.state.BlockState createLegacyBlock();
+  public net.minecraft.core.particles.ParticleOptions getDripParticle();
+  public net.minecraft.core.Holder<net.minecraft.world.level.material.Fluid> typeHolder();
+  public float getExplosionResistance();
+  public boolean canBeReplacedWith(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.level.material.Fluid, net.minecraft.core.Direction);
+  public net.minecraft.world.phys.shapes.VoxelShape getShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  public net.minecraft.world.phys.AABB getAABB(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  public void entityInside(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.entity.Entity, net.minecraft.world.entity.InsideBlockEffectApplier);
+  static {};
+}

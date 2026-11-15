@@ -1,0 +1,8 @@
+Compiled from "MobEffectFogEnvironment.java"
+public abstract class net.minecraft.client.renderer.fog.environment.MobEffectFogEnvironment extends net.minecraft.client.renderer.fog.environment.FogEnvironment {
+  public net.minecraft.client.renderer.fog.environment.MobEffectFogEnvironment();
+  public abstract net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> getMobEffect();
+  public boolean providesColor();
+  public boolean modifiesDarkness();
+  public boolean isApplicable(net.minecraft.world.level.material.FogType, net.minecraft.world.entity.Entity);
+}

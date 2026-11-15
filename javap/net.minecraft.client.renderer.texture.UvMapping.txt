@@ -1,0 +1,6 @@
+Compiled from "UvMapping.java"
+public interface net.minecraft.client.renderer.texture.UvMapping {
+  public abstract float getU(float);
+  public abstract float getV(float);
+  public default com.mojang.blaze3d.vertex.VertexConsumer wrap(com.mojang.blaze3d.vertex.VertexConsumer);
+}

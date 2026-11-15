@@ -1,0 +1,7 @@
+Compiled from "ObjectInfos.java"
+public class net.minecraft.network.chat.contents.objects.ObjectInfos {
+  private static final net.minecraft.util.ExtraCodecs$LateBoundIdMapper<java.lang.String, com.mojang.serialization.MapCodec<? extends net.minecraft.network.chat.contents.objects.ObjectInfo>> ID_MAPPER;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.network.chat.contents.objects.ObjectInfo> CODEC;
+  public net.minecraft.network.chat.contents.objects.ObjectInfos();
+  static {};
+}

@@ -1,0 +1,5 @@
+Compiled from "SlotProvider.java"
+public interface net.minecraft.world.entity.SlotProvider {
+  public abstract net.minecraft.world.entity.SlotAccess getSlot(int);
+  public default net.minecraft.world.item.slot.SlotCollection getSlotsFromRange(it.unimi.dsi.fastutil.ints.IntList);
+}

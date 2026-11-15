@@ -1,0 +1,17 @@
+Compiled from "DownloadQueue.java"
+public final class net.minecraft.server.packs.DownloadQueue$BatchConfig extends java.lang.Record {
+  private final com.google.common.hash.HashFunction hashFunction;
+  private final int maxSize;
+  private final java.util.Map<java.lang.String, java.lang.String> headers;
+  private final java.net.Proxy proxy;
+  private final net.minecraft.util.HttpUtil$DownloadProgressListener listener;
+  public net.minecraft.server.packs.DownloadQueue$BatchConfig(com.google.common.hash.HashFunction, int, java.util.Map<java.lang.String, java.lang.String>, java.net.Proxy, net.minecraft.util.HttpUtil$DownloadProgressListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public com.google.common.hash.HashFunction hashFunction();
+  public int maxSize();
+  public java.util.Map<java.lang.String, java.lang.String> headers();
+  public java.net.Proxy proxy();
+  public net.minecraft.util.HttpUtil$DownloadProgressListener listener();
+}

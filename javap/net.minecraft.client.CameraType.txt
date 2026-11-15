@@ -1,0 +1,18 @@
+Compiled from "CameraType.java"
+public final class net.minecraft.client.CameraType extends java.lang.Enum<net.minecraft.client.CameraType> {
+  public static final net.minecraft.client.CameraType FIRST_PERSON;
+  public static final net.minecraft.client.CameraType THIRD_PERSON_BACK;
+  public static final net.minecraft.client.CameraType THIRD_PERSON_FRONT;
+  private static final net.minecraft.client.CameraType[] VALUES;
+  private final boolean firstPerson;
+  private final boolean mirrored;
+  private static final net.minecraft.client.CameraType[] $VALUES;
+  public static net.minecraft.client.CameraType[] values();
+  public static net.minecraft.client.CameraType valueOf(java.lang.String);
+  private net.minecraft.client.CameraType(boolean, boolean);
+  public boolean isFirstPerson();
+  public boolean isMirrored();
+  public net.minecraft.client.CameraType cycle();
+  private static net.minecraft.client.CameraType[] $values();
+  static {};
+}

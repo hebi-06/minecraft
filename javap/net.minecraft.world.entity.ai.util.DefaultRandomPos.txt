@@ -1,0 +1,11 @@
+Compiled from "DefaultRandomPos.java"
+public class net.minecraft.world.entity.ai.util.DefaultRandomPos {
+  public net.minecraft.world.entity.ai.util.DefaultRandomPos();
+  public static net.minecraft.world.phys.Vec3 getPos(net.minecraft.world.entity.PathfinderMob, int, int);
+  public static net.minecraft.world.phys.Vec3 getPosTowards(net.minecraft.world.entity.PathfinderMob, int, int, net.minecraft.world.phys.Vec3, double);
+  public static net.minecraft.world.phys.Vec3 getPosAway(net.minecraft.world.entity.PathfinderMob, int, int, net.minecraft.world.phys.Vec3);
+  private static net.minecraft.core.BlockPos generateRandomPosTowardDirection(net.minecraft.world.entity.PathfinderMob, int, boolean, net.minecraft.core.BlockPos);
+  private static net.minecraft.core.BlockPos lambda$getPosAway$0(net.minecraft.world.entity.PathfinderMob, int, int, net.minecraft.world.phys.Vec3, boolean);
+  private static net.minecraft.core.BlockPos lambda$getPosTowards$0(net.minecraft.world.entity.PathfinderMob, int, int, net.minecraft.world.phys.Vec3, double, boolean);
+  private static net.minecraft.core.BlockPos lambda$getPos$0(net.minecraft.world.entity.PathfinderMob, int, int, boolean);
+}

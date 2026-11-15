@@ -1,0 +1,19 @@
+Compiled from "ArmedEntityRenderState.java"
+public class net.minecraft.client.renderer.entity.state.ArmedEntityRenderState extends net.minecraft.client.renderer.entity.state.LivingEntityRenderState {
+  public net.minecraft.world.entity.HumanoidArm mainArm;
+  public net.minecraft.client.model.HumanoidModel$ArmPose rightArmPose;
+  public final net.minecraft.client.renderer.item.ItemStackRenderState rightHandItemState;
+  public net.minecraft.world.item.ItemStack rightHandItemStack;
+  public net.minecraft.client.model.HumanoidModel$ArmPose leftArmPose;
+  public final net.minecraft.client.renderer.item.ItemStackRenderState leftHandItemState;
+  public net.minecraft.world.item.ItemStack leftHandItemStack;
+  public net.minecraft.world.entity.LivingEntity$SwingDescription currentSwing;
+  public float swingAnimation;
+  public net.minecraft.client.renderer.entity.state.ArmedEntityRenderState();
+  public net.minecraft.client.renderer.item.ItemStackRenderState getMainHandItemState();
+  public net.minecraft.world.item.ItemStack getMainHandItemStack();
+  public net.minecraft.world.item.ItemStack getUseItemStackForArm(net.minecraft.world.entity.HumanoidArm);
+  public net.minecraft.client.model.HumanoidModel$ArmPose getArmPose(net.minecraft.world.entity.HumanoidArm);
+  public float ticksUsingItem(net.minecraft.world.entity.HumanoidArm);
+  public static void extractArmedEntityRenderState(net.minecraft.world.entity.LivingEntity, net.minecraft.client.renderer.entity.state.ArmedEntityRenderState, net.minecraft.client.renderer.item.ItemModelResolver, float);
+}

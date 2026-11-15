@@ -1,0 +1,6 @@
+Compiled from "EyesLayer.java"
+public abstract class net.minecraft.client.renderer.entity.layers.EyesLayer<S extends net.minecraft.client.renderer.entity.state.EntityRenderState, M extends net.minecraft.client.model.EntityModel<S>> extends net.minecraft.client.renderer.entity.layers.RenderLayer<S, M> {
+  public net.minecraft.client.renderer.entity.layers.EyesLayer(net.minecraft.client.renderer.entity.RenderLayerParent<S, M>);
+  public void submit(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, S, float, float);
+  public abstract net.minecraft.client.renderer.rendertype.RenderType renderType();
+}

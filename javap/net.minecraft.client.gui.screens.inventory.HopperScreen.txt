@@ -1,0 +1,7 @@
+Compiled from "HopperScreen.java"
+public class net.minecraft.client.gui.screens.inventory.HopperScreen extends net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<net.minecraft.world.inventory.HopperMenu> {
+  private static final net.minecraft.resources.Identifier HOPPER_LOCATION;
+  public net.minecraft.client.gui.screens.inventory.HopperScreen(net.minecraft.world.inventory.HopperMenu, net.minecraft.world.entity.player.Inventory, net.minecraft.network.chat.Component);
+  public void extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  static {};
+}

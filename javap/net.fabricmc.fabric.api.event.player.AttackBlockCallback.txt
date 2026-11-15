@@ -1,0 +1,8 @@
+Compiled from "AttackBlockCallback.java"
+public interface net.fabricmc.fabric.api.event.player.AttackBlockCallback {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.player.AttackBlockCallback> EVENT;
+  public abstract net.minecraft.world.InteractionResult interact(net.minecraft.world.entity.player.Player, net.minecraft.world.level.Level, net.minecraft.world.InteractionHand, net.minecraft.core.BlockPos, net.minecraft.core.Direction);
+  private static net.fabricmc.fabric.api.event.player.AttackBlockCallback lambda$static$0(net.fabricmc.fabric.api.event.player.AttackBlockCallback[]);
+  private static net.minecraft.world.InteractionResult lambda$static$1(net.fabricmc.fabric.api.event.player.AttackBlockCallback[], net.minecraft.world.entity.player.Player, net.minecraft.world.level.Level, net.minecraft.world.InteractionHand, net.minecraft.core.BlockPos, net.minecraft.core.Direction);
+  static {};
+}

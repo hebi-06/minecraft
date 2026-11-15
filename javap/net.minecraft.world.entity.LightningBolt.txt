@@ -1,0 +1,35 @@
+Compiled from "LightningBolt.java"
+public class net.minecraft.world.entity.LightningBolt extends net.minecraft.world.entity.Entity {
+  private static final int START_LIFE = 2;
+  private static final double DAMAGE_RADIUS = 3.0d;
+  private static final double DETECTION_RADIUS = 15.0d;
+  private int life;
+  public long seed;
+  private int flashes;
+  private boolean visualOnly;
+  private net.minecraft.server.level.ServerPlayer cause;
+  private final java.util.Set<net.minecraft.world.entity.Entity> hitEntities;
+  private int blocksSetOnFire;
+  public net.minecraft.world.entity.LightningBolt(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.LightningBolt>, net.minecraft.world.level.Level);
+  public void setVisualOnly(boolean);
+  public net.minecraft.sounds.SoundSource getSoundSource();
+  public net.minecraft.server.level.ServerPlayer getCause();
+  public void setCause(net.minecraft.server.level.ServerPlayer);
+  private void powerLightningRod();
+  public void tick();
+  private net.minecraft.core.BlockPos getStrikePosition();
+  private void spawnFire(int);
+  private static void clearCopperOnLightningStrike(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  private static void randomWalkCleaningCopper(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.core.BlockPos$MutableBlockPos, int);
+  private static java.util.Optional<net.minecraft.core.BlockPos> randomStepCleaningCopper(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  public boolean shouldRenderAtSqrDistance(double);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  public int getBlocksSetOnFire();
+  public java.util.stream.Stream<net.minecraft.world.entity.Entity> getHitEntities();
+  public final boolean hurtServer(net.minecraft.server.level.ServerLevel, net.minecraft.world.damagesource.DamageSource, float);
+  private static void lambda$randomStepCleaningCopper$0(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private boolean lambda$tick$1(net.minecraft.server.level.ServerPlayer);
+  private boolean lambda$tick$0(net.minecraft.world.entity.Entity);
+}

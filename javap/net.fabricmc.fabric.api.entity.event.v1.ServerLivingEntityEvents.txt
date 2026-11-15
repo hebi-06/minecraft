@@ -1,0 +1,20 @@
+Compiled from "ServerLivingEntityEvents.java"
+public final class net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDamage> ALLOW_DAMAGE;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDamage> AFTER_DAMAGE;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDeath> ALLOW_DEATH;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDeath> AFTER_DEATH;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$MobConversion> MOB_CONVERSION;
+  private net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents();
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$MobConversion lambda$static$8(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$MobConversion[]);
+  private static void lambda$static$9(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$MobConversion[], net.minecraft.world.entity.Mob, net.minecraft.world.entity.Mob, net.minecraft.world.entity.ConversionParams);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDeath lambda$static$6(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDeath[]);
+  private static void lambda$static$7(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDeath[], net.minecraft.world.entity.LivingEntity, net.minecraft.world.damagesource.DamageSource);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDeath lambda$static$4(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDeath[]);
+  private static boolean lambda$static$5(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDeath[], net.minecraft.world.entity.LivingEntity, net.minecraft.world.damagesource.DamageSource, float);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDamage lambda$static$2(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDamage[]);
+  private static void lambda$static$3(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AfterDamage[], net.minecraft.world.entity.LivingEntity, net.minecraft.world.damagesource.DamageSource, float, float, boolean);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDamage lambda$static$0(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDamage[]);
+  private static boolean lambda$static$1(net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents$AllowDamage[], net.minecraft.world.entity.LivingEntity, net.minecraft.world.damagesource.DamageSource, float);
+  static {};
+}

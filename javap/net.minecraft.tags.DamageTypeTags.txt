@@ -1,0 +1,41 @@
+Compiled from "DamageTypeTags.java"
+public interface net.minecraft.tags.DamageTypeTags {
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> DAMAGES_HELMET;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_ARMOR;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_SHIELD;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_INVULNERABILITY;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_COOLDOWN;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_EFFECTS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_RESISTANCE;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_ENCHANTMENTS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_FIRE;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_PROJECTILE;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> WITCH_RESISTANT_TO;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_EXPLOSION;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_FALL;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_DROWNING;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_FREEZING;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_LIGHTNING;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> NO_ANGER;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> NO_WOLF_RETALIATION;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> NO_IMPACT;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> ALWAYS_MOST_SIGNIFICANT_FALL;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> WITHER_IMMUNE_TO;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> SULFUR_CUBE_WITH_BLOCK_IMMUNE_TO;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IGNITES_ARMOR_STANDS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BURNS_ARMOR_STANDS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> AVOIDS_GUARDIAN_THORNS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> ALWAYS_TRIGGERS_SILVERFISH;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> ALWAYS_HURTS_ENDER_DRAGONS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> NO_KNOCKBACK;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> ALWAYS_KILLS_ARMOR_STANDS;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> CAN_BREAK_ARMOR_STAND;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BYPASSES_WOLF_ARMOR;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_PLAYER_ATTACK;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> BURN_FROM_STEPPING;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> PANIC_CAUSES;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> PANIC_ENVIRONMENTAL_CAUSES;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> IS_MACE_SMASH;
+  private static net.minecraft.tags.TagKey<net.minecraft.world.damagesource.DamageType> create(java.lang.String);
+  static {};
+}

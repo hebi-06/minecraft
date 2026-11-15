@@ -1,0 +1,22 @@
+Compiled from "Heightmap.java"
+public class net.minecraft.world.level.levelgen.Heightmap {
+  private static final org.slf4j.Logger LOGGER;
+  private static final java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> NOT_AIR;
+  private static final java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> MATERIAL_MOTION_BLOCKING;
+  private final net.minecraft.util.BitStorage data;
+  private final java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> isOpaque;
+  private final net.minecraft.world.level.chunk.ChunkAccess chunk;
+  public net.minecraft.world.level.levelgen.Heightmap(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.Heightmap$Types);
+  public static void primeHeightmaps(net.minecraft.world.level.chunk.ChunkAccess, java.util.Set<net.minecraft.world.level.levelgen.Heightmap$Types>);
+  public boolean update(int, int, int, net.minecraft.world.level.block.state.BlockState);
+  public int getFirstAvailable(int, int);
+  public int getHighestTaken(int, int);
+  private int getFirstAvailable(int);
+  private void setHeight(int, int, int);
+  public void setRawData(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.Heightmap$Types, long[]);
+  public long[] getRawData();
+  private static int getIndex(int, int);
+  private static boolean lambda$static$1(net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$static$0(net.minecraft.world.level.block.state.BlockState);
+  static {};
+}

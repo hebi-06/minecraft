@@ -1,0 +1,20 @@
+Compiled from "Climate.java"
+public final class net.minecraft.world.level.biome.Climate$Sampler extends java.lang.Record {
+  private final net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound temperature;
+  private final net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound humidity;
+  private final net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound continentalness;
+  private final net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound erosion;
+  private final net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound depth;
+  private final net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound weirdness;
+  public net.minecraft.world.level.biome.Climate$Sampler(net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound, net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound, net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound, net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound, net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound, net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound);
+  public net.minecraft.world.level.biome.Climate$TargetPoint sample(int, int, int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound temperature();
+  public net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound humidity();
+  public net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound continentalness();
+  public net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound erosion();
+  public net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound depth();
+  public net.minecraft.world.level.levelgen.densityfunction.DensitySampler$Bound weirdness();
+}

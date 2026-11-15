@@ -1,0 +1,10 @@
+Compiled from "ClientboundClearDialogPacket.java"
+public class net.minecraft.network.protocol.common.ClientboundClearDialogPacket implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.common.ClientCommonPacketListener> {
+  public static final net.minecraft.network.protocol.common.ClientboundClearDialogPacket INSTANCE;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.network.protocol.common.ClientboundClearDialogPacket> STREAM_CODEC;
+  private net.minecraft.network.protocol.common.ClientboundClearDialogPacket();
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.common.ClientboundClearDialogPacket> type();
+  public void handle(net.minecraft.network.protocol.common.ClientCommonPacketListener);
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

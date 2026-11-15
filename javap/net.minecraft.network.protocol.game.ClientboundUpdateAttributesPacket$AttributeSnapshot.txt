@@ -1,0 +1,16 @@
+Compiled from "ClientboundUpdateAttributesPacket.java"
+public final class net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot extends java.lang.Record {
+  private final net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute;
+  private final double base;
+  private final java.util.Collection<net.minecraft.world.entity.ai.attributes.AttributeModifier> modifiers;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.ai.attributes.AttributeModifier> MODIFIER_STREAM_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot> STREAM_CODEC;
+  public net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, double, java.util.Collection<net.minecraft.world.entity.ai.attributes.AttributeModifier>);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute();
+  public double base();
+  public java.util.Collection<net.minecraft.world.entity.ai.attributes.AttributeModifier> modifiers();
+  static {};
+}

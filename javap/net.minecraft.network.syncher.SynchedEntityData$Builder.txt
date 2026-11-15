@@ -1,0 +1,8 @@
+Compiled from "SynchedEntityData.java"
+public class net.minecraft.network.syncher.SynchedEntityData$Builder {
+  private final net.minecraft.network.syncher.SyncedDataHolder entity;
+  private final net.minecraft.network.syncher.SynchedEntityData$DataItem<?>[] itemsById;
+  public net.minecraft.network.syncher.SynchedEntityData$Builder(net.minecraft.network.syncher.SyncedDataHolder);
+  public <T> net.minecraft.network.syncher.SynchedEntityData$Builder define(net.minecraft.network.syncher.EntityDataAccessor<T>, T);
+  public net.minecraft.network.syncher.SynchedEntityData build();
+}

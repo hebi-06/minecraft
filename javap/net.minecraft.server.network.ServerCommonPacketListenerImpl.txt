@@ -1,0 +1,44 @@
+Compiled from "ServerCommonPacketListenerImpl.java"
+public abstract class net.minecraft.server.network.ServerCommonPacketListenerImpl implements net.minecraft.network.protocol.common.ServerCommonPacketListener,net.fabricmc.fabric.api.networking.v1.context.PacketContextProvider {
+  private static final org.slf4j.Logger LOGGER;
+  public static final int LATENCY_CHECK_INTERVAL = 15000;
+  private static final int CLOSED_LISTENER_TIMEOUT = 15000;
+  private static final net.minecraft.network.chat.Component TIMEOUT_DISCONNECTION_MESSAGE;
+  static final net.minecraft.network.chat.Component DISCONNECT_UNEXPECTED_QUERY;
+  protected final net.minecraft.server.MinecraftServer server;
+  protected final net.minecraft.network.Connection connection;
+  private final boolean transferred;
+  private long keepAliveTime;
+  private boolean keepAlivePending;
+  private long keepAliveChallenge;
+  private long closedListenerTime;
+  private boolean closed;
+  private int latency;
+  private volatile boolean suspendFlushingOnServerThread;
+  public net.minecraft.server.network.ServerCommonPacketListenerImpl(net.minecraft.server.MinecraftServer, net.minecraft.network.Connection, net.minecraft.server.network.CommonListenerCookie);
+  private void close();
+  public void onDisconnect(net.minecraft.network.DisconnectionDetails);
+  public void onPacketError(net.minecraft.network.protocol.Packet, java.lang.Exception) throws net.minecraft.ReportedException;
+  public void handleKeepAlive(net.minecraft.network.protocol.common.ServerboundKeepAlivePacket);
+  public void handlePong(net.minecraft.network.protocol.common.ServerboundPongPacket);
+  public void handleCustomPayload(net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket);
+  public void handleCustomClickAction(net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket);
+  public void handleResourcePackResponse(net.minecraft.network.protocol.common.ServerboundResourcePackPacket);
+  public void handleCookieResponse(net.minecraft.network.protocol.cookie.ServerboundCookieResponsePacket);
+  protected void keepConnectionAlive();
+  private boolean checkIfClosed(long);
+  public void suspendFlushing();
+  public void resumeFlushing();
+  public void send(net.minecraft.network.protocol.Packet<?>);
+  public void send(net.minecraft.network.protocol.Packet<?>, io.netty.channel.ChannelFutureListener);
+  public void disconnect(net.minecraft.network.chat.Component);
+  public void disconnect(net.minecraft.network.DisconnectionDetails);
+  protected boolean isSingleplayerOwner();
+  protected abstract com.mojang.authlib.GameProfile playerProfile();
+  public com.mojang.authlib.GameProfile getOwner();
+  public int latency();
+  protected net.minecraft.server.network.CommonListenerCookie createCookie(net.minecraft.server.level.ClientInformation);
+  private void lambda$disconnect$0(net.minecraft.network.DisconnectionDetails);
+  private static java.lang.String lambda$send$0(net.minecraft.network.protocol.Packet) throws java.lang.Exception;
+  static {};
+}

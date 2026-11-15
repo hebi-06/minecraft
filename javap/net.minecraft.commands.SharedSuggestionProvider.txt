@@ -1,0 +1,44 @@
+Compiled from "SharedSuggestionProvider.java"
+public interface net.minecraft.commands.SharedSuggestionProvider extends net.minecraft.server.permissions.PermissionSetSupplier {
+  public static final com.google.common.base.CharMatcher MATCH_SPLITTER;
+  public abstract java.util.Collection<java.lang.String> getOnlinePlayerNames();
+  public default java.util.Collection<java.lang.String> getCustomTabSuggestions();
+  public default java.util.Collection<java.lang.String> getSelectedEntities();
+  public abstract java.util.Collection<java.lang.String> getAllTeams();
+  public abstract java.util.stream.Stream<net.minecraft.resources.Identifier> getAvailableSounds();
+  public abstract java.util.stream.Stream<net.minecraft.resources.Identifier> getAvailablePostEffects();
+  public abstract java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> customSuggestion(com.mojang.brigadier.context.CommandContext<?>);
+  public default java.util.Collection<net.minecraft.commands.SharedSuggestionProvider$TextCoordinates> getRelevantCoordinates();
+  public default java.util.Collection<net.minecraft.commands.SharedSuggestionProvider$TextCoordinates> getAbsoluteCoordinates();
+  public abstract java.util.Set<net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level>> levels();
+  public abstract net.minecraft.core.RegistryAccess registryAccess();
+  public abstract net.minecraft.world.flag.FeatureFlagSet enabledFeatures();
+  public default <E> void suggestRegistryElements(net.minecraft.core.HolderLookup<E>, net.minecraft.commands.SharedSuggestionProvider$ElementSuggestionType, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Predicate<E>);
+  public static <S, E> java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> listSuggestions(com.mojang.brigadier.context.CommandContext<S>, com.mojang.brigadier.suggestion.SuggestionsBuilder, net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<E>>, net.minecraft.commands.SharedSuggestionProvider$ElementSuggestionType);
+  public static <S, E> java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> listSuggestions(com.mojang.brigadier.context.CommandContext<S>, com.mojang.brigadier.suggestion.SuggestionsBuilder, net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<E>>, net.minecraft.commands.SharedSuggestionProvider$ElementSuggestionType, java.util.function.Predicate<E>);
+  public abstract <E> java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestRegistryElements(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<E>>, net.minecraft.commands.SharedSuggestionProvider$ElementSuggestionType, com.mojang.brigadier.suggestion.SuggestionsBuilder, com.mojang.brigadier.context.CommandContext<?>, java.util.function.Predicate<E>);
+  public static <T> void filterResources(java.lang.Iterable<T>, java.lang.String, java.util.function.Function<T, net.minecraft.resources.Identifier>, java.util.function.Consumer<T>);
+  public static <T> void filterResources(java.lang.Iterable<T>, java.lang.String, java.lang.String, java.util.function.Function<T, net.minecraft.resources.Identifier>, java.util.function.Consumer<T>);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestResource(java.lang.Iterable<net.minecraft.resources.Identifier>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.lang.String);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestResource(java.util.stream.Stream<net.minecraft.resources.Identifier>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.lang.String);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestResource(java.lang.Iterable<net.minecraft.resources.Identifier>, com.mojang.brigadier.suggestion.SuggestionsBuilder);
+  public static <T> java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestResource(java.lang.Iterable<T>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Function<T, net.minecraft.resources.Identifier>, java.util.function.Function<T, com.mojang.brigadier.Message>);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestResource(java.util.stream.Stream<net.minecraft.resources.Identifier>, com.mojang.brigadier.suggestion.SuggestionsBuilder);
+  public static <T> java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestResource(java.util.stream.Stream<T>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Function<T, net.minecraft.resources.Identifier>, java.util.function.Function<T, com.mojang.brigadier.Message>);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestCoordinates(java.lang.String, java.util.Collection<net.minecraft.commands.SharedSuggestionProvider$TextCoordinates>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Predicate<java.lang.String>);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggest2DCoordinates(java.lang.String, java.util.Collection<net.minecraft.commands.SharedSuggestionProvider$TextCoordinates>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Predicate<java.lang.String>);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggest(java.lang.Iterable<java.lang.String>, com.mojang.brigadier.suggestion.SuggestionsBuilder);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggest(java.util.stream.Stream<java.lang.String>, com.mojang.brigadier.suggestion.SuggestionsBuilder);
+  public static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggest(java.lang.String[], com.mojang.brigadier.suggestion.SuggestionsBuilder);
+  public static <T> java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggest(java.lang.Iterable<T>, com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Function<T, java.lang.String>, java.util.function.Function<T, com.mojang.brigadier.Message>);
+  public static boolean matchesSubStr(java.lang.String, java.lang.String);
+  private static boolean lambda$suggest$0(java.lang.String, java.lang.String);
+  private static void lambda$suggestResource$4(com.mojang.brigadier.suggestion.SuggestionsBuilder, java.util.function.Function, java.util.function.Function, java.lang.Object);
+  private static void lambda$suggestResource$3(com.mojang.brigadier.suggestion.SuggestionsBuilder, net.minecraft.resources.Identifier);
+  private static net.minecraft.resources.Identifier lambda$suggestResource$2(net.minecraft.resources.Identifier);
+  private static void lambda$suggestResource$1(com.mojang.brigadier.suggestion.SuggestionsBuilder, java.lang.String, net.minecraft.resources.Identifier);
+  private static net.minecraft.resources.Identifier lambda$suggestResource$0(net.minecraft.resources.Identifier);
+  private static boolean lambda$listSuggestions$0(java.lang.Object);
+  private static boolean lambda$suggestRegistryElements$0(java.util.function.Predicate, net.minecraft.core.Holder$Reference);
+  static {};
+}

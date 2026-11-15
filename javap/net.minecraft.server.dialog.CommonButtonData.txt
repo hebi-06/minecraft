@@ -1,0 +1,18 @@
+Compiled from "CommonButtonData.java"
+public final class net.minecraft.server.dialog.CommonButtonData extends java.lang.Record {
+  private final net.minecraft.network.chat.Component label;
+  private final java.util.Optional<net.minecraft.network.chat.Component> tooltip;
+  private final int width;
+  public static final int DEFAULT_WIDTH = 150;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.CommonButtonData> MAP_CODEC;
+  public net.minecraft.server.dialog.CommonButtonData(net.minecraft.network.chat.Component, int);
+  public net.minecraft.server.dialog.CommonButtonData(net.minecraft.network.chat.Component, java.util.Optional<net.minecraft.network.chat.Component>, int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.network.chat.Component label();
+  public java.util.Optional<net.minecraft.network.chat.Component> tooltip();
+  public int width();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

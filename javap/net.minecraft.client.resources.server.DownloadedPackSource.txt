@@ -1,0 +1,45 @@
+Compiled from "DownloadedPackSource.java"
+public class net.minecraft.client.resources.server.DownloadedPackSource implements java.lang.AutoCloseable {
+  private static final net.minecraft.network.chat.Component SERVER_NAME;
+  private static final java.util.regex.Pattern SHA1;
+  private static final org.slf4j.Logger LOGGER;
+  private static final net.minecraft.server.packs.repository.RepositorySource EMPTY_SOURCE;
+  private static final net.minecraft.server.packs.PackSelectionConfig DOWNLOADED_PACK_SELECTION;
+  private static final net.minecraft.client.resources.server.PackLoadFeedback LOG_ONLY_FEEDBACK;
+  private final net.minecraft.client.Minecraft minecraft;
+  private net.minecraft.server.packs.repository.RepositorySource packSource;
+  private net.minecraft.client.resources.server.PackReloadConfig$Callbacks pendingReload;
+  private final net.minecraft.client.resources.server.ServerPackManager manager;
+  private final net.minecraft.server.packs.DownloadQueue downloadQueue;
+  private net.minecraft.server.packs.repository.PackSource packType;
+  private net.minecraft.client.resources.server.PackLoadFeedback packFeedback;
+  private int packIdSerialNumber;
+  public net.minecraft.client.resources.server.DownloadedPackSource(net.minecraft.client.Minecraft, java.nio.file.Path, net.minecraft.client.main.GameConfig$UserData);
+  private net.minecraft.util.HttpUtil$DownloadProgressListener createDownloadNotifier(int);
+  private net.minecraft.client.resources.server.PackDownloader createDownloader(net.minecraft.server.packs.DownloadQueue, java.util.concurrent.Executor, net.minecraft.client.User, java.net.Proxy);
+  private java.lang.Runnable createUpdateScheduler(java.util.concurrent.Executor);
+  private net.minecraft.client.resources.server.PackReloadConfig createReloadConfig();
+  private java.util.List<net.minecraft.server.packs.repository.Pack> loadRequestedPacks(java.util.List<net.minecraft.client.resources.server.PackReloadConfig$IdAndPath>);
+  public net.minecraft.server.packs.repository.RepositorySource createRepositorySource();
+  private static net.minecraft.server.packs.repository.RepositorySource configureSource(java.util.List<net.minecraft.server.packs.repository.Pack>);
+  private void startReload(net.minecraft.client.resources.server.PackReloadConfig$Callbacks);
+  public void onRecovery();
+  public void onRecoveryFailure();
+  public void onReloadSuccess();
+  private static com.google.common.hash.HashCode tryParseSha1Hash(java.lang.String);
+  public void pushPack(java.util.UUID, java.net.URL, java.lang.String);
+  public void pushLocalPack(java.util.UUID, java.nio.file.Path);
+  public void popPack(java.util.UUID);
+  public void popAll();
+  private static net.minecraft.client.resources.server.PackLoadFeedback createPackResponseSender(net.minecraft.network.Connection);
+  public void configureForServerControl(net.minecraft.network.Connection, net.minecraft.client.resources.server.ServerPackManager$PackPromptStatus);
+  public void configureForLocalWorld();
+  public void allowServerPacks();
+  public void rejectServerPacks();
+  public java.util.concurrent.CompletableFuture<java.lang.Void> waitForPackFeedback(java.util.UUID);
+  public void cleanupAfterDisconnect();
+  public void close() throws java.io.IOException;
+  private void lambda$createRepositorySource$0(java.util.function.Consumer);
+  private static void lambda$static$0(java.util.function.Consumer);
+  static {};
+}

@@ -1,0 +1,17 @@
+Compiled from "CollisionContext.java"
+public interface net.minecraft.world.phys.shapes.CollisionContext {
+  public static net.minecraft.world.phys.shapes.CollisionContext empty();
+  public static net.minecraft.world.phys.shapes.CollisionContext emptyWithFluidCollisions();
+  public static net.minecraft.world.phys.shapes.CollisionContext of(net.minecraft.world.entity.Entity);
+  public static net.minecraft.world.phys.shapes.CollisionContext of(net.minecraft.world.entity.Entity, boolean);
+  public static net.minecraft.world.phys.shapes.CollisionContext positionContext(double);
+  public static net.minecraft.world.phys.shapes.CollisionContext placementContext(net.minecraft.world.entity.player.Player);
+  public static net.minecraft.world.phys.shapes.CollisionContext withPosition(net.minecraft.world.entity.Entity, double);
+  public abstract boolean isDescending();
+  public abstract boolean isAbove(net.minecraft.world.phys.shapes.VoxelShape, net.minecraft.core.BlockPos, boolean);
+  public abstract boolean isHoldingItem(net.minecraft.world.item.Item);
+  public abstract boolean alwaysCollideWithFluid();
+  public abstract boolean canStandOnFluid(net.minecraft.world.level.material.FluidState, net.minecraft.world.level.material.FluidState);
+  public abstract net.minecraft.world.phys.shapes.VoxelShape getCollisionShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.CollisionGetter, net.minecraft.core.BlockPos);
+  public default boolean isPlacement();
+}

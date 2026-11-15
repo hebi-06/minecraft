@@ -1,0 +1,16 @@
+Compiled from "CommonListenerCookie.java"
+public final class net.minecraft.server.network.CommonListenerCookie extends java.lang.Record {
+  private final com.mojang.authlib.GameProfile gameProfile;
+  private final int latency;
+  private final net.minecraft.server.level.ClientInformation clientInformation;
+  private final boolean transferred;
+  public net.minecraft.server.network.CommonListenerCookie(com.mojang.authlib.GameProfile, int, net.minecraft.server.level.ClientInformation, boolean);
+  public static net.minecraft.server.network.CommonListenerCookie createInitial(com.mojang.authlib.GameProfile, boolean);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public com.mojang.authlib.GameProfile gameProfile();
+  public int latency();
+  public net.minecraft.server.level.ClientInformation clientInformation();
+  public boolean transferred();
+}

@@ -1,0 +1,16 @@
+Compiled from "ParticleRenderType.java"
+public final class net.minecraft.client.particle.ParticleRenderType extends java.lang.Record {
+  private final java.lang.String name;
+  private final java.lang.String shorthand;
+  public static final net.minecraft.client.particle.ParticleRenderType SINGLE_QUADS;
+  public static final net.minecraft.client.particle.ParticleRenderType ITEM_PICKUP;
+  public static final net.minecraft.client.particle.ParticleRenderType ELDER_GUARDIANS;
+  public static final net.minecraft.client.particle.ParticleRenderType NO_RENDER;
+  public net.minecraft.client.particle.ParticleRenderType(java.lang.String, java.lang.String);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.lang.String name();
+  public java.lang.String shorthand();
+  static {};
+}

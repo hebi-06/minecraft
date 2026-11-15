@@ -1,0 +1,19 @@
+Compiled from "CuboidRotation.java"
+public final class net.minecraft.client.resources.model.cuboid.CuboidRotation extends java.lang.Record {
+  private final org.joml.Vector3fc origin;
+  private final net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue value;
+  private final boolean rescale;
+  private final org.joml.Matrix4fc transform;
+  public net.minecraft.client.resources.model.cuboid.CuboidRotation(org.joml.Vector3fc, net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue, boolean);
+  public net.minecraft.client.resources.model.cuboid.CuboidRotation(org.joml.Vector3fc, net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue, boolean, org.joml.Matrix4fc);
+  private static org.joml.Matrix4f computeTransform(net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue, boolean);
+  private static org.joml.Vector3fc computeRescale(org.joml.Matrix4fc);
+  private static float scaleFactorForAxis(org.joml.Matrix4fc, net.minecraft.core.Direction$Axis, org.joml.Vector3f);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public org.joml.Vector3fc origin();
+  public net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue value();
+  public boolean rescale();
+  public org.joml.Matrix4fc transform();
+}

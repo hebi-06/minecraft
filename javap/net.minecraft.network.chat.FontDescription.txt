@@ -1,0 +1,8 @@
+Compiled from "FontDescription.java"
+public interface net.minecraft.network.chat.FontDescription {
+  public static final com.mojang.serialization.Codec<net.minecraft.network.chat.FontDescription> CODEC;
+  public static final net.minecraft.network.chat.FontDescription$Resource DEFAULT;
+  private static com.mojang.serialization.DataResult lambda$static$0(net.minecraft.network.chat.FontDescription);
+  private static java.lang.String lambda$static$1(net.minecraft.network.chat.FontDescription);
+  static {};
+}

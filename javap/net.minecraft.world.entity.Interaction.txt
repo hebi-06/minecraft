@@ -1,0 +1,41 @@
+Compiled from "Interaction.java"
+public class net.minecraft.world.entity.Interaction extends net.minecraft.world.entity.Entity implements net.minecraft.world.entity.Attackable,net.minecraft.world.entity.Targeting {
+  private static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Float> DATA_WIDTH_ID;
+  private static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Float> DATA_HEIGHT_ID;
+  private static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Boolean> DATA_RESPONSE_ID;
+  private static final java.lang.String TAG_WIDTH = "width";
+  private static final java.lang.String TAG_HEIGHT = "height";
+  private static final java.lang.String TAG_ATTACK = "attack";
+  private static final java.lang.String TAG_INTERACTION = "interaction";
+  private static final java.lang.String TAG_RESPONSE = "response";
+  private static final float DEFAULT_WIDTH = 1.0f;
+  private static final float DEFAULT_HEIGHT = 1.0f;
+  private static final boolean DEFAULT_RESPONSE = false;
+  private net.minecraft.world.entity.Interaction$PlayerAction attack;
+  private net.minecraft.world.entity.Interaction$PlayerAction interaction;
+  public net.minecraft.world.entity.Interaction(net.minecraft.world.entity.EntityType<?>, net.minecraft.world.level.Level);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  public void onSyncedDataUpdated(net.minecraft.network.syncher.EntityDataAccessor<?>);
+  public boolean canBeHitByProjectile();
+  public boolean isPickable();
+  public net.minecraft.world.level.material.PushReaction getPistonPushReaction();
+  public boolean isIgnoringBlockTriggers();
+  public boolean skipAttackInteraction(net.minecraft.world.entity.Entity);
+  public final boolean hurtServer(net.minecraft.server.level.ServerLevel, net.minecraft.world.damagesource.DamageSource, float);
+  public net.minecraft.world.InteractionResult interact(net.minecraft.world.entity.player.Player, net.minecraft.world.InteractionHand, net.minecraft.world.phys.Vec3);
+  public void tick();
+  public net.minecraft.world.entity.LivingEntity getLastAttacker();
+  public net.minecraft.world.entity.LivingEntity getTarget();
+  public final void setWidth(float);
+  public final float getWidth();
+  public final void setHeight(float);
+  public final float getHeight();
+  public final void setResponse(boolean);
+  public final boolean getResponse();
+  private net.minecraft.world.entity.EntityDimensions getDimensions();
+  public net.minecraft.world.entity.EntityDimensions getDimensions(net.minecraft.world.entity.Pose);
+  protected net.minecraft.world.phys.AABB makeBoundingBox(net.minecraft.world.phys.Vec3);
+  static {};
+}

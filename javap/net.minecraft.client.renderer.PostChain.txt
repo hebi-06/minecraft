@@ -1,0 +1,24 @@
+Compiled from "PostChain.java"
+public class net.minecraft.client.renderer.PostChain implements java.lang.AutoCloseable {
+  public static final net.minecraft.resources.Identifier MAIN_TARGET_ID;
+  private final net.minecraft.resources.Identifier id;
+  private final java.util.List<net.minecraft.client.renderer.PostPass> passes;
+  private final java.util.Map<net.minecraft.resources.Identifier, net.minecraft.client.renderer.PostChainConfig$InternalTarget> internalTargets;
+  private final java.util.Set<net.minecraft.resources.Identifier> externalTargets;
+  private final java.util.Map<net.minecraft.resources.Identifier, com.mojang.blaze3d.pipeline.RenderTarget> persistentTargets;
+  private final net.minecraft.client.renderer.Projection projection;
+  private final net.minecraft.client.renderer.ProjectionMatrixBuffer projectionMatrixBuffer;
+  private net.minecraft.client.renderer.PostChain(net.minecraft.resources.Identifier, java.util.List<net.minecraft.client.renderer.PostPass>, java.util.Map<net.minecraft.resources.Identifier, net.minecraft.client.renderer.PostChainConfig$InternalTarget>, java.util.Set<net.minecraft.resources.Identifier>, net.minecraft.client.renderer.Projection, net.minecraft.client.renderer.ProjectionMatrixBuffer);
+  public net.minecraft.resources.Identifier id();
+  public static net.minecraft.client.renderer.PostChain load(net.minecraft.client.renderer.PostChainConfig, net.minecraft.client.renderer.texture.TextureManager, java.util.Set<net.minecraft.resources.Identifier>, net.minecraft.resources.Identifier, net.minecraft.client.renderer.Projection, net.minecraft.client.renderer.ProjectionMatrixBuffer) throws net.minecraft.client.renderer.ShaderManager$CompilationException;
+  public static java.util.Set<net.minecraft.resources.Identifier> getReferencedExternalTargets(net.minecraft.client.renderer.PostChainConfig);
+  private static net.minecraft.client.renderer.PostPass createPass(net.minecraft.client.renderer.texture.TextureManager, net.minecraft.client.renderer.PostChainConfig$Pass, net.minecraft.resources.Identifier) throws net.minecraft.client.renderer.ShaderManager$CompilationException;
+  public void addToFrame(com.mojang.blaze3d.framegraph.FrameGraphBuilder, int, int, net.minecraft.client.renderer.PostChain$TargetBundle);
+  public void process(com.mojang.blaze3d.pipeline.RenderTarget, com.mojang.blaze3d.resource.GraphicsResourceAllocator);
+  private com.mojang.blaze3d.pipeline.RenderTarget getOrCreatePersistentTarget(net.minecraft.resources.Identifier, com.mojang.blaze3d.resource.RenderTargetDescriptor);
+  public void closePersistentTargets();
+  public void close();
+  private static java.lang.String lambda$createPass$0(java.lang.String);
+  private static boolean lambda$getReferencedExternalTargets$0(net.minecraft.client.renderer.PostChainConfig, net.minecraft.resources.Identifier);
+  static {};
+}

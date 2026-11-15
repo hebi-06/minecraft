@@ -1,0 +1,9 @@
+Compiled from "SpecialModelRenderers.java"
+public class net.minecraft.client.renderer.special.SpecialModelRenderers {
+  public static final net.minecraft.util.ExtraCodecs$LateBoundIdMapper<net.minecraft.resources.Identifier, com.mojang.serialization.MapCodec<? extends net.minecraft.client.renderer.special.SpecialModelRenderer$Unbaked<?>>> ID_MAPPER;
+  public static final com.mojang.serialization.Codec<net.minecraft.client.renderer.special.SpecialModelRenderer$Unbaked<?>> CODEC;
+  public net.minecraft.client.renderer.special.SpecialModelRenderers();
+  public static void bootstrap();
+  private static com.mojang.serialization.MapCodec lambda$static$0(com.mojang.serialization.MapCodec);
+  static {};
+}

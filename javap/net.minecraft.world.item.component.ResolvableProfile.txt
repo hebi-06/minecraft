@@ -1,0 +1,26 @@
+Compiled from "ResolvableProfile.java"
+public abstract class net.minecraft.world.item.component.ResolvableProfile implements net.minecraft.world.item.component.TooltipProvider {
+  private static final com.mojang.serialization.Codec<net.minecraft.world.item.component.ResolvableProfile> FULL_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.component.ResolvableProfile> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.item.component.ResolvableProfile> STREAM_CODEC;
+  protected final com.mojang.authlib.GameProfile partialProfile;
+  protected final net.minecraft.world.entity.player.PlayerSkin$Patch skinPatch;
+  private static net.minecraft.world.item.component.ResolvableProfile create(com.mojang.datafixers.util.Either<com.mojang.authlib.GameProfile, net.minecraft.world.item.component.ResolvableProfile$Partial>, net.minecraft.world.entity.player.PlayerSkin$Patch);
+  public static net.minecraft.world.item.component.ResolvableProfile createResolved(com.mojang.authlib.GameProfile);
+  public static net.minecraft.world.item.component.ResolvableProfile createUnresolved(java.lang.String);
+  public static net.minecraft.world.item.component.ResolvableProfile createUnresolved(java.util.UUID);
+  protected abstract com.mojang.datafixers.util.Either<com.mojang.authlib.GameProfile, net.minecraft.world.item.component.ResolvableProfile$Partial> unpack();
+  protected net.minecraft.world.item.component.ResolvableProfile(com.mojang.authlib.GameProfile, net.minecraft.world.entity.player.PlayerSkin$Patch);
+  public abstract java.util.concurrent.CompletableFuture<com.mojang.authlib.GameProfile> resolveProfile(net.minecraft.server.players.ProfileResolver);
+  public com.mojang.authlib.GameProfile partialProfile();
+  public net.minecraft.world.entity.player.PlayerSkin$Patch skinPatch();
+  private static com.mojang.authlib.GameProfile createPartialProfile(java.util.Optional<java.lang.String>, java.util.Optional<java.util.UUID>, com.mojang.authlib.properties.PropertyMap);
+  public abstract java.util.Optional<java.lang.String> name();
+  private static java.util.UUID lambda$createPartialProfile$0(java.util.Optional);
+  private static net.minecraft.world.item.component.ResolvableProfile lambda$create$1(net.minecraft.world.entity.player.PlayerSkin$Patch, net.minecraft.world.item.component.ResolvableProfile$Partial);
+  private static net.minecraft.world.item.component.ResolvableProfile$Dynamic lambda$create$3(net.minecraft.world.item.component.ResolvableProfile$Partial, net.minecraft.world.entity.player.PlayerSkin$Patch);
+  private static net.minecraft.world.item.component.ResolvableProfile$Dynamic lambda$create$2(net.minecraft.world.entity.player.PlayerSkin$Patch, java.lang.String);
+  private static net.minecraft.world.item.component.ResolvableProfile lambda$create$0(net.minecraft.world.entity.player.PlayerSkin$Patch, com.mojang.authlib.GameProfile);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

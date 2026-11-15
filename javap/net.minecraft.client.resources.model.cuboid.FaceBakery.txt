@@ -1,0 +1,20 @@
+Compiled from "FaceBakery.java"
+public class net.minecraft.client.resources.model.cuboid.FaceBakery {
+  private static final org.joml.Vector3fc BLOCK_MIDDLE;
+  public net.minecraft.client.resources.model.cuboid.FaceBakery();
+  static net.minecraft.client.resources.model.cuboid.CuboidFace$UVs defaultFaceUV(org.joml.Vector3fc, org.joml.Vector3fc, net.minecraft.core.Direction);
+  private static com.mojang.blaze3d.platform.Transparency computeMaterialTransparency(net.minecraft.client.resources.model.sprite.Material$Baked, net.minecraft.client.resources.model.cuboid.CuboidFace$UVs);
+  public static net.minecraft.client.resources.model.geometry.BakedQuad bakeQuad(net.minecraft.client.resources.model.ModelBaker, org.joml.Vector3fc, org.joml.Vector3fc, net.minecraft.client.resources.model.cuboid.CuboidFace, net.minecraft.client.resources.model.sprite.Material$Baked, net.minecraft.core.Direction, net.minecraft.client.renderer.block.dispatch.ModelState, net.minecraft.client.resources.model.cuboid.CuboidRotation, net.minecraft.core.Direction, int);
+  public static net.minecraft.client.resources.model.geometry.BakedQuad bakeQuad(net.minecraft.client.resources.model.ModelBaker$Interner, org.joml.Vector3fc, org.joml.Vector3fc, net.minecraft.client.resources.model.cuboid.CuboidFace$UVs, com.mojang.math.Quadrant, net.minecraft.client.resources.model.geometry.BakedQuad$MaterialInfo, net.minecraft.core.Direction, net.minecraft.client.renderer.block.dispatch.ModelState, net.minecraft.client.resources.model.cuboid.CuboidRotation);
+  private static void bakeVertex(int, net.minecraft.client.renderer.FaceInfo, net.minecraft.client.resources.model.cuboid.CuboidFace$UVs, com.mojang.math.Quadrant, org.joml.Matrix4fc, org.joml.Vector3fc, org.joml.Vector3fc, net.minecraft.client.resources.model.geometry.BakedQuad$MaterialInfo, com.mojang.math.Transformation, net.minecraft.client.resources.model.cuboid.CuboidRotation, org.joml.Vector3fc[], long[], net.minecraft.client.resources.model.ModelBaker$Interner);
+  private static float cornerToCenter(float);
+  private static float centerToCorner(float);
+  private static void rotateVertexBy(org.joml.Vector3f, org.joml.Vector3fc, org.joml.Matrix4fc);
+  private static net.minecraft.core.Direction calculateFacing(org.joml.Vector3fc[]);
+  private static net.minecraft.core.Direction findClosestDirection(org.joml.Vector3f);
+  private static void recalculateWinding(org.joml.Vector3fc[], long[], net.minecraft.core.Direction);
+  private static int findVertex(org.joml.Vector3fc[], int, float, float, float);
+  private static void swap(org.joml.Vector3fc[], int, int);
+  private static void swap(long[], int, int);
+  static {};
+}

@@ -1,0 +1,25 @@
+Compiled from "RecordCodecBuilder.java"
+public final class com.mojang.serialization.codecs.RecordCodecBuilder<O, F> implements com.mojang.datafixers.kinds.App<com.mojang.serialization.codecs.RecordCodecBuilder$Mu<O>, F> {
+  private final java.util.function.Function<O, F> getter;
+  private final java.util.function.Function<O, com.mojang.serialization.MapEncoder<F>> encoder;
+  private final com.mojang.serialization.MapDecoder<F> decoder;
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> unbox(com.mojang.datafixers.kinds.App<com.mojang.serialization.codecs.RecordCodecBuilder$Mu<O>, F>);
+  private com.mojang.serialization.codecs.RecordCodecBuilder(java.util.function.Function<O, F>, java.util.function.Function<O, com.mojang.serialization.MapEncoder<F>>, com.mojang.serialization.MapDecoder<F>);
+  public static <O> com.mojang.serialization.codecs.RecordCodecBuilder$Instance<O> instance();
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> of(java.util.function.Function<O, F>, java.lang.String, com.mojang.serialization.Codec<F>);
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> of(java.util.function.Function<O, F>, com.mojang.serialization.MapCodec<F>);
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> point(F);
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> stable(F);
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> deprecated(F, int);
+  public static <O, F> com.mojang.serialization.codecs.RecordCodecBuilder<O, F> point(F, com.mojang.serialization.Lifecycle);
+  public static <O> com.mojang.serialization.Codec<O> create(java.util.function.Function<com.mojang.serialization.codecs.RecordCodecBuilder$Instance<O>, ? extends com.mojang.datafixers.kinds.App<com.mojang.serialization.codecs.RecordCodecBuilder$Mu<O>, O>>);
+  public static <O> com.mojang.serialization.MapCodec<O> mapCodec(java.util.function.Function<com.mojang.serialization.codecs.RecordCodecBuilder$Instance<O>, ? extends com.mojang.datafixers.kinds.App<com.mojang.serialization.codecs.RecordCodecBuilder$Mu<O>, O>>);
+  public <E> com.mojang.serialization.codecs.RecordCodecBuilder<O, E> dependent(java.util.function.Function<O, E>, com.mojang.serialization.MapEncoder<E>, java.util.function.Function<? super F, ? extends com.mojang.serialization.MapDecoder<E>>);
+  public static <O> com.mojang.serialization.MapCodec<O> build(com.mojang.datafixers.kinds.App<com.mojang.serialization.codecs.RecordCodecBuilder$Mu<O>, O>);
+  private static com.mojang.serialization.MapEncoder lambda$dependent$5(com.mojang.serialization.MapEncoder, java.lang.Object);
+  private static com.mojang.serialization.MapEncoder lambda$point$4(com.mojang.serialization.Lifecycle, java.lang.Object);
+  private static java.lang.Object lambda$point$3(java.lang.Object, java.lang.Object);
+  private static com.mojang.serialization.MapEncoder lambda$point$2(java.lang.Object);
+  private static java.lang.Object lambda$point$1(java.lang.Object, java.lang.Object);
+  private static com.mojang.serialization.MapEncoder lambda$of$0(com.mojang.serialization.MapCodec, java.lang.Object);
+}

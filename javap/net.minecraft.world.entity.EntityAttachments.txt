@@ -1,0 +1,14 @@
+Compiled from "EntityAttachments.java"
+public class net.minecraft.world.entity.EntityAttachments {
+  private final java.util.Map<net.minecraft.world.entity.EntityAttachment, java.util.List<net.minecraft.world.phys.Vec3>> attachments;
+  private net.minecraft.world.entity.EntityAttachments(java.util.Map<net.minecraft.world.entity.EntityAttachment, java.util.List<net.minecraft.world.phys.Vec3>>);
+  public static net.minecraft.world.entity.EntityAttachments createDefault(float, float);
+  public static net.minecraft.world.entity.EntityAttachments$Builder builder();
+  public net.minecraft.world.entity.EntityAttachments scale(float, float, float);
+  public net.minecraft.world.phys.Vec3 getNullable(net.minecraft.world.entity.EntityAttachment, int, float);
+  public net.minecraft.world.phys.Vec3 get(net.minecraft.world.entity.EntityAttachment, int, float);
+  public net.minecraft.world.phys.Vec3 getAverage(net.minecraft.world.entity.EntityAttachment);
+  public net.minecraft.world.phys.Vec3 getClamped(net.minecraft.world.entity.EntityAttachment, int, float);
+  private static net.minecraft.world.phys.Vec3 transformPoint(net.minecraft.world.phys.Vec3, float);
+  private java.util.List lambda$scale$0(float, float, float, net.minecraft.world.entity.EntityAttachment);
+}

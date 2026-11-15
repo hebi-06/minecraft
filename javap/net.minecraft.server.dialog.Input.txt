@@ -1,0 +1,14 @@
+Compiled from "Input.java"
+public final class net.minecraft.server.dialog.Input extends java.lang.Record {
+  private final java.lang.String key;
+  private final net.minecraft.server.dialog.input.InputControl control;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.Input> CODEC;
+  public net.minecraft.server.dialog.Input(java.lang.String, net.minecraft.server.dialog.input.InputControl);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.lang.String key();
+  public net.minecraft.server.dialog.input.InputControl control();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

@@ -1,0 +1,6 @@
+Compiled from "SpecialModelRenderer.java"
+public interface net.minecraft.client.renderer.special.SpecialModelRenderer<T> {
+  public abstract void submit(T, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, int, boolean, int);
+  public abstract void getExtents(java.util.function.Consumer<org.joml.Vector3fc>);
+  public abstract T extractArgument(net.minecraft.world.item.ItemStack);
+}

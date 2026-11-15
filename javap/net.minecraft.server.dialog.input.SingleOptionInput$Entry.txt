@@ -1,0 +1,20 @@
+Compiled from "SingleOptionInput.java"
+public final class net.minecraft.server.dialog.input.SingleOptionInput$Entry extends java.lang.Record {
+  private final java.lang.String id;
+  private final java.util.Optional<net.minecraft.network.chat.Component> display;
+  private final boolean initial;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.input.SingleOptionInput$Entry> FULL_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.input.SingleOptionInput$Entry> CODEC;
+  public net.minecraft.server.dialog.input.SingleOptionInput$Entry(java.lang.String, java.util.Optional<net.minecraft.network.chat.Component>, boolean);
+  public net.minecraft.network.chat.Component displayOrDefault();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.lang.String id();
+  public java.util.Optional<net.minecraft.network.chat.Component> display();
+  public boolean initial();
+  private net.minecraft.network.chat.Component lambda$displayOrDefault$0();
+  private static net.minecraft.server.dialog.input.SingleOptionInput$Entry lambda$static$1(java.lang.String);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

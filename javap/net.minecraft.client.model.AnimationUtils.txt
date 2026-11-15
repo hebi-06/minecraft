@@ -1,0 +1,10 @@
+Compiled from "AnimationUtils.java"
+public class net.minecraft.client.model.AnimationUtils {
+  public net.minecraft.client.model.AnimationUtils();
+  public static void animateCrossbowHold(net.minecraft.client.model.geom.ModelPart, net.minecraft.client.model.geom.ModelPart, net.minecraft.client.model.geom.ModelPart, boolean);
+  public static void animateCrossbowCharge(net.minecraft.client.model.geom.ModelPart, net.minecraft.client.model.geom.ModelPart, float, float, boolean);
+  public static void swingWeaponDown(net.minecraft.client.model.geom.ModelPart, net.minecraft.client.model.geom.ModelPart, net.minecraft.world.entity.HumanoidArm, float, float);
+  public static void bobModelPart(net.minecraft.client.model.geom.ModelPart, float, float);
+  public static void bobArms(net.minecraft.client.model.geom.ModelPart, net.minecraft.client.model.geom.ModelPart, float);
+  public static <T extends net.minecraft.client.renderer.entity.state.UndeadRenderState> void animateZombieArms(net.minecraft.client.model.geom.ModelPart, net.minecraft.client.model.geom.ModelPart, boolean, T);
+}

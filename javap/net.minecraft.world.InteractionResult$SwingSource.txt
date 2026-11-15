@@ -1,0 +1,12 @@
+Compiled from "InteractionResult.java"
+public final class net.minecraft.world.InteractionResult$SwingSource extends java.lang.Enum<net.minecraft.world.InteractionResult$SwingSource> {
+  public static final net.minecraft.world.InteractionResult$SwingSource NONE;
+  public static final net.minecraft.world.InteractionResult$SwingSource PREDICTED;
+  public static final net.minecraft.world.InteractionResult$SwingSource SERVER_ONLY;
+  private static final net.minecraft.world.InteractionResult$SwingSource[] $VALUES;
+  public static net.minecraft.world.InteractionResult$SwingSource[] values();
+  public static net.minecraft.world.InteractionResult$SwingSource valueOf(java.lang.String);
+  private net.minecraft.world.InteractionResult$SwingSource();
+  private static net.minecraft.world.InteractionResult$SwingSource[] $values();
+  static {};
+}

@@ -1,0 +1,16 @@
+Compiled from "SwingAnimation.java"
+public final class net.minecraft.world.item.component.SwingAnimation extends java.lang.Record {
+  private final net.minecraft.world.item.SwingAnimationType type;
+  private final int duration;
+  public static final net.minecraft.world.item.component.SwingAnimation DEFAULT;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.component.SwingAnimation> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.item.component.SwingAnimation> STREAM_CODEC;
+  public net.minecraft.world.item.component.SwingAnimation(net.minecraft.world.item.SwingAnimationType, int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.world.item.SwingAnimationType type();
+  public int duration();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

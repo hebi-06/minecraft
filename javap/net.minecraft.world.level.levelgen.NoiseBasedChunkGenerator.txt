@@ -1,0 +1,42 @@
+Compiled from "NoiseBasedChunkGenerator.java"
+public final class net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator extends net.minecraft.world.level.chunk.ChunkGenerator {
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator> CODEC;
+  private static final net.minecraft.world.level.block.state.BlockState AIR;
+  private static final java.text.DecimalFormat DEBUG_DENSITY_FORMAT;
+  private final net.minecraft.core.Holder<net.minecraft.world.level.levelgen.NoiseGeneratorSettings> settings;
+  private final java.util.function.Supplier<net.minecraft.world.level.levelgen.Aquifer$FluidPicker> globalFluidPicker;
+  public net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator(net.minecraft.world.level.biome.BiomeSource, net.minecraft.core.Holder<net.minecraft.world.level.levelgen.NoiseGeneratorSettings>);
+  private static net.minecraft.world.level.levelgen.Aquifer$FluidPicker createFluidPicker(net.minecraft.world.level.levelgen.NoiseGeneratorSettings);
+  protected net.minecraft.world.level.biome.BiomeResolver decorateBiomeResolver(net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.biome.BiomeResolver);
+  private net.minecraft.world.level.levelgen.NoiseChunk createNoiseChunk(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.StructureManager, net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.levelgen.NoiseSettings);
+  private static net.minecraft.world.level.levelgen.densityfunction.DensityVolume chunkVolume(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.NoiseSettings);
+  public net.minecraft.world.level.ChunkPos getOrigin(net.minecraft.world.level.levelgen.RandomState);
+  protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec();
+  public net.minecraft.core.Holder<net.minecraft.world.level.levelgen.NoiseGeneratorSettings> generatorSettings();
+  public boolean stable(net.minecraft.resources.ResourceKey<net.minecraft.world.level.levelgen.NoiseGeneratorSettings>);
+  public int getBaseHeight(int, int, net.minecraft.world.level.levelgen.Heightmap$Types, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState);
+  public net.minecraft.world.level.NoiseColumn getBaseColumn(int, int, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState);
+  public void addDebugScreenInfo(java.util.List<java.lang.String>, net.minecraft.world.level.levelgen.RandomState, net.minecraft.core.BlockPos, net.minecraft.world.level.levelgen.densityfunction.SamplerContext);
+  private java.util.OptionalInt iterateNoiseColumn(net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState, int, int, org.apache.commons.lang3.mutable.MutableObject<net.minecraft.world.level.NoiseColumn>, java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState>);
+  private void buildSurface(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.NoiseChunk, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.biome.BiomeManager, java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.world.level.levelgen.material.rule.MaterialRule);
+  private void generateCarvers(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.levelgen.NoiseChunk, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.biome.BiomeManager, net.minecraft.server.level.WorldGenRegion, net.minecraft.world.level.levelgen.material.rule.MaterialRule);
+  private void applyCarvingMask(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.chunk.CarvingMask, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.levelgen.material.rule.MaterialRule, net.minecraft.world.level.levelgen.WorldGenerationContext, net.minecraft.world.level.levelgen.NoiseChunk, java.util.function.Function<net.minecraft.core.BlockPos, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.world.level.chunk.CarvingMask$Filter);
+  private net.minecraft.world.level.biome.BiomeGenerationSettings getBiomeGenerationSettingsForCarver(net.minecraft.world.level.biome.BiomeResolver, net.minecraft.world.level.ChunkPos);
+  public java.util.concurrent.CompletableFuture<net.minecraft.world.level.chunk.ChunkAccess> buildTerrain(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.StructureManager, net.minecraft.world.level.biome.BiomeManager, net.minecraft.server.level.WorldGenRegion, java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>);
+  private void doFill(net.minecraft.world.level.levelgen.NoiseChunk, net.minecraft.world.level.chunk.ChunkAccess);
+  private net.minecraft.world.level.block.state.BlockState debugPreliminarySurfaceLevel(net.minecraft.world.level.levelgen.NoiseChunk, int, int, int, net.minecraft.world.level.block.state.BlockState);
+  public int getGenDepth();
+  public int getSeaLevel();
+  public int getMinY();
+  public void spawnOriginalMobs(net.minecraft.server.level.WorldGenRegion);
+  private net.minecraft.world.level.chunk.ChunkAccess lambda$buildTerrain$0(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.StructureManager, net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.levelgen.NoiseSettings, net.minecraft.world.level.biome.BiomeManager, java.util.Set, net.minecraft.server.level.WorldGenRegion);
+  private static void lambda$applyCarvingMask$0(net.minecraft.world.level.ChunkPos, net.minecraft.world.level.chunk.CarvingMask$Filter, net.minecraft.core.BlockPos$MutableBlockPos, net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.Aquifer, net.minecraft.core.BlockPos$MutableBlockPos, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.levelgen.material.rule.MaterialRule, net.minecraft.world.level.levelgen.WorldGenerationContext, java.util.function.Function, net.minecraft.world.level.levelgen.NoiseChunk, int, int, int, int);
+  private static void lambda$applyCarvingMask$1(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.core.BlockPos$MutableBlockPos, net.minecraft.world.level.block.state.BlockState);
+  private net.minecraft.world.level.biome.BiomeGenerationSettings lambda$generateCarvers$0(net.minecraft.world.level.biome.BiomeResolver, net.minecraft.world.level.ChunkPos);
+  private static net.minecraft.world.level.levelgen.Aquifer$FluidStatus lambda$createFluidPicker$0(net.minecraft.world.level.levelgen.Aquifer$FluidStatus, int, net.minecraft.world.level.levelgen.Aquifer$FluidStatus, net.minecraft.world.level.levelgen.Aquifer$FluidStatus, int, int, int);
+  private static net.minecraft.world.level.levelgen.Aquifer$FluidPicker lambda$new$0(net.minecraft.core.Holder);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  private static net.minecraft.core.Holder lambda$static$2(net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator);
+  private static net.minecraft.world.level.biome.BiomeSource lambda$static$1(net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator);
+  static {};
+}

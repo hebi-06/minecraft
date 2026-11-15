@@ -1,0 +1,6 @@
+Compiled from "WorldGenLevel.java"
+public interface net.minecraft.world.level.WorldGenLevel extends net.minecraft.world.level.ServerLevelAccessor {
+  public abstract long getSeed();
+  public default boolean ensureCanWrite(net.minecraft.core.BlockPos);
+  public default void setCurrentlyGenerating(java.util.function.Supplier<java.lang.String>);
+}

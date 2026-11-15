@@ -1,0 +1,23 @@
+Compiled from "ItemBody.java"
+public final class net.minecraft.server.dialog.body.ItemBody extends java.lang.Record implements net.minecraft.server.dialog.body.DialogBody {
+  private final net.minecraft.world.item.ItemStackTemplate item;
+  private final java.util.Optional<net.minecraft.server.dialog.body.PlainMessage> description;
+  private final boolean showDecorations;
+  private final boolean showTooltip;
+  private final int width;
+  private final int height;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.body.ItemBody> MAP_CODEC;
+  public net.minecraft.server.dialog.body.ItemBody(net.minecraft.world.item.ItemStackTemplate, java.util.Optional<net.minecraft.server.dialog.body.PlainMessage>, boolean, boolean, int, int);
+  public com.mojang.serialization.MapCodec<net.minecraft.server.dialog.body.ItemBody> mapCodec();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.world.item.ItemStackTemplate item();
+  public java.util.Optional<net.minecraft.server.dialog.body.PlainMessage> description();
+  public boolean showDecorations();
+  public boolean showTooltip();
+  public int width();
+  public int height();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

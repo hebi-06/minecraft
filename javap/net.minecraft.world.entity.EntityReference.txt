@@ -1,0 +1,30 @@
+Compiled from "EntityReference.java"
+public final class net.minecraft.world.entity.EntityReference<StoredEntityType extends net.minecraft.world.level.entity.UniquelyIdentifyable> {
+  private static final com.mojang.serialization.Codec<? extends net.minecraft.world.entity.EntityReference<?>> CODEC;
+  private static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, ? extends net.minecraft.world.entity.EntityReference<?>> STREAM_CODEC;
+  private com.mojang.datafixers.util.Either<java.util.UUID, StoredEntityType> entity;
+  public static <Type extends net.minecraft.world.level.entity.UniquelyIdentifyable> com.mojang.serialization.Codec<net.minecraft.world.entity.EntityReference<Type>> codec();
+  public static <Type extends net.minecraft.world.level.entity.UniquelyIdentifyable> net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.EntityReference<Type>> streamCodec();
+  private net.minecraft.world.entity.EntityReference(StoredEntityType);
+  private net.minecraft.world.entity.EntityReference(java.util.UUID);
+  public static <T extends net.minecraft.world.level.entity.UniquelyIdentifyable> net.minecraft.world.entity.EntityReference<T> of(T);
+  public static <T extends net.minecraft.world.level.entity.UniquelyIdentifyable> net.minecraft.world.entity.EntityReference<T> of(java.util.UUID);
+  public java.util.UUID getUUID();
+  public StoredEntityType getEntity(net.minecraft.world.level.entity.UUIDLookup<? extends net.minecraft.world.level.entity.UniquelyIdentifyable>, java.lang.Class<StoredEntityType>);
+  public StoredEntityType getEntity(net.minecraft.world.level.Level, java.lang.Class<StoredEntityType>);
+  private StoredEntityType resolve(net.minecraft.world.level.entity.UniquelyIdentifyable, java.lang.Class<StoredEntityType>);
+  public boolean matches(StoredEntityType);
+  public void store(net.minecraft.world.level.storage.ValueOutput, java.lang.String);
+  public static void store(net.minecraft.world.entity.EntityReference<?>, net.minecraft.world.level.storage.ValueOutput, java.lang.String);
+  public static <StoredEntityType extends net.minecraft.world.level.entity.UniquelyIdentifyable> StoredEntityType get(net.minecraft.world.entity.EntityReference<StoredEntityType>, net.minecraft.world.level.Level, java.lang.Class<StoredEntityType>);
+  public static net.minecraft.world.entity.Entity getEntity(net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.Entity>, net.minecraft.world.level.Level);
+  public static net.minecraft.world.entity.LivingEntity getLivingEntity(net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity>, net.minecraft.world.level.Level);
+  public static net.minecraft.world.entity.player.Player getPlayer(net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.player.Player>, net.minecraft.world.level.Level);
+  public static <StoredEntityType extends net.minecraft.world.level.entity.UniquelyIdentifyable> net.minecraft.world.entity.EntityReference<StoredEntityType> read(net.minecraft.world.level.storage.ValueInput, java.lang.String);
+  public static <StoredEntityType extends net.minecraft.world.level.entity.UniquelyIdentifyable> net.minecraft.world.entity.EntityReference<StoredEntityType> readWithOldOwnerConversion(net.minecraft.world.level.storage.ValueInput, java.lang.String, net.minecraft.world.level.Level);
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  private static java.util.UUID lambda$readWithOldOwnerConversion$0(net.minecraft.world.level.Level, java.lang.String);
+  private static java.util.UUID lambda$getUUID$0(java.util.UUID);
+  static {};
+}

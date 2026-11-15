@@ -1,0 +1,16 @@
+Compiled from "DoubleBlockHalf.java"
+public final class net.minecraft.world.level.block.state.properties.DoubleBlockHalf extends java.lang.Enum<net.minecraft.world.level.block.state.properties.DoubleBlockHalf> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.level.block.state.properties.DoubleBlockHalf UPPER;
+  public static final net.minecraft.world.level.block.state.properties.DoubleBlockHalf LOWER;
+  private final net.minecraft.core.Direction directionToOther;
+  private static final net.minecraft.world.level.block.state.properties.DoubleBlockHalf[] $VALUES;
+  public static net.minecraft.world.level.block.state.properties.DoubleBlockHalf[] values();
+  public static net.minecraft.world.level.block.state.properties.DoubleBlockHalf valueOf(java.lang.String);
+  private net.minecraft.world.level.block.state.properties.DoubleBlockHalf(net.minecraft.core.Direction);
+  public net.minecraft.core.Direction getDirectionToOther();
+  public java.lang.String toString();
+  public java.lang.String getSerializedName();
+  public net.minecraft.world.level.block.state.properties.DoubleBlockHalf getOtherHalf();
+  private static net.minecraft.world.level.block.state.properties.DoubleBlockHalf[] $values();
+  static {};
+}

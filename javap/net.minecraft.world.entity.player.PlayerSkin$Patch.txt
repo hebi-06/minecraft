@@ -1,0 +1,21 @@
+Compiled from "PlayerSkin.java"
+public final class net.minecraft.world.entity.player.PlayerSkin$Patch extends java.lang.Record {
+  private final java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture> body;
+  private final java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture> cape;
+  private final java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture> elytra;
+  private final java.util.Optional<net.minecraft.world.entity.player.PlayerModelType> model;
+  public static final net.minecraft.world.entity.player.PlayerSkin$Patch EMPTY;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.entity.player.PlayerSkin$Patch> MAP_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.player.PlayerSkin$Patch> STREAM_CODEC;
+  public net.minecraft.world.entity.player.PlayerSkin$Patch(java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture>, java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture>, java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture>, java.util.Optional<net.minecraft.world.entity.player.PlayerModelType>);
+  public static net.minecraft.world.entity.player.PlayerSkin$Patch create(java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture>, java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture>, java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture>, java.util.Optional<net.minecraft.world.entity.player.PlayerModelType>);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture> body();
+  public java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture> cape();
+  public java.util.Optional<net.minecraft.core.ClientAsset$ResourceTexture> elytra();
+  public java.util.Optional<net.minecraft.world.entity.player.PlayerModelType> model();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

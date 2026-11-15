@@ -1,0 +1,28 @@
+Compiled from "CandleBlock.java"
+public class net.minecraft.world.level.block.CandleBlock extends net.minecraft.world.level.block.AbstractCandleBlock implements net.minecraft.world.level.block.SimpleWaterloggedBlock {
+  public static final int MIN_CANDLES = 1;
+  public static final int MAX_CANDLES = 4;
+  public static final net.minecraft.world.level.block.state.properties.IntegerProperty CANDLES;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty LIT;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty WATERLOGGED;
+  public static final java.util.function.ToIntFunction<net.minecraft.world.level.block.state.BlockState> LIGHT_EMISSION;
+  private static final it.unimi.dsi.fastutil.ints.Int2ObjectMap<java.util.List<net.minecraft.world.phys.Vec3>> PARTICLE_OFFSETS;
+  private static final net.minecraft.world.phys.shapes.VoxelShape[] SHAPES;
+  public net.minecraft.world.level.block.CandleBlock(net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected net.minecraft.world.InteractionResult useItemOn(net.minecraft.world.item.ItemStack, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.entity.player.Player, net.minecraft.world.InteractionHand, net.minecraft.world.phys.BlockHitResult);
+  protected boolean canBeReplaced(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.item.context.BlockPlaceContext);
+  public net.minecraft.world.level.block.state.BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext);
+  protected net.minecraft.world.level.block.state.BlockState updateShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.LevelReader, net.minecraft.world.level.ScheduledTickAccess, net.minecraft.core.BlockPos, net.minecraft.core.Direction, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.util.RandomSource);
+  protected net.minecraft.world.level.material.FluidState getFluidState(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.phys.shapes.VoxelShape getShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.phys.shapes.CollisionContext);
+  protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition$Builder<net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.BlockState>);
+  public boolean placeLiquid(net.minecraft.world.level.LevelAccessor, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.material.FluidState);
+  public static boolean canLight(net.minecraft.world.level.block.state.BlockState);
+  protected java.lang.Iterable<net.minecraft.world.phys.Vec3> getParticleOffsets(net.minecraft.world.level.block.state.BlockState);
+  protected boolean canBeLit(net.minecraft.world.level.block.state.BlockState);
+  protected boolean canSurvive(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.LevelReader, net.minecraft.core.BlockPos);
+  private static boolean lambda$canLight$0(net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase);
+  private static void lambda$static$1(it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap);
+  private static int lambda$static$0(net.minecraft.world.level.block.state.BlockState);
+  static {};
+}

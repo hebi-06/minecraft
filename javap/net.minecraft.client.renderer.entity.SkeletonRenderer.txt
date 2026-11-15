@@ -1,0 +1,10 @@
+Compiled from "SkeletonRenderer.java"
+public class net.minecraft.client.renderer.entity.SkeletonRenderer extends net.minecraft.client.renderer.entity.AbstractSkeletonRenderer<net.minecraft.world.entity.monster.skeleton.Skeleton, net.minecraft.client.renderer.entity.state.SkeletonRenderState> {
+  private static final net.minecraft.resources.Identifier SKELETON_LOCATION;
+  public net.minecraft.client.renderer.entity.SkeletonRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context);
+  public net.minecraft.resources.Identifier getTextureLocation(net.minecraft.client.renderer.entity.state.SkeletonRenderState);
+  public net.minecraft.client.renderer.entity.state.SkeletonRenderState createRenderState();
+  public net.minecraft.resources.Identifier getTextureLocation(net.minecraft.client.renderer.entity.state.LivingEntityRenderState);
+  public net.minecraft.client.renderer.entity.state.EntityRenderState createRenderState();
+  static {};
+}

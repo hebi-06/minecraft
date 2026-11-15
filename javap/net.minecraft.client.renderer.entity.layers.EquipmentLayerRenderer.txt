@@ -1,0 +1,13 @@
+Compiled from "EquipmentLayerRenderer.java"
+public class net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer {
+  private static final int NO_LAYER_COLOR = 0;
+  private final net.minecraft.client.resources.model.EquipmentAssetManager equipmentAssets;
+  private final java.util.function.Function<net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer$LayerTextureKey, net.minecraft.resources.Identifier> layerTextureLookup;
+  private final java.util.function.Function<net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer$TrimTextureKey, net.minecraft.client.resources.palette.PalettedTextureManager$Handle> trimTextureLookup;
+  public net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer(net.minecraft.client.resources.model.EquipmentAssetManager, net.minecraft.client.resources.palette.PalettedTextureManager);
+  public <S> void renderLayers(net.minecraft.client.resources.model.EquipmentClientInfo$LayerType, net.minecraft.resources.ResourceKey<net.minecraft.world.item.equipment.EquipmentAsset>, net.minecraft.client.model.Model<? super S>, S, net.minecraft.world.item.ItemStack, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, int);
+  public <S> void renderLayers(net.minecraft.client.resources.model.EquipmentClientInfo$LayerType, net.minecraft.resources.ResourceKey<net.minecraft.world.item.equipment.EquipmentAsset>, net.minecraft.client.model.Model<? super S>, S, net.minecraft.world.item.ItemStack, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, net.minecraft.resources.Identifier, int, int);
+  private static int getColorForLayer(net.minecraft.client.resources.model.EquipmentClientInfo$Layer, int);
+  private static net.minecraft.client.resources.palette.PalettedTextureManager$Handle lambda$new$1(net.minecraft.client.resources.palette.PalettedTextureManager, net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer$TrimTextureKey);
+  private static net.minecraft.resources.Identifier lambda$new$0(net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer$LayerTextureKey);
+}

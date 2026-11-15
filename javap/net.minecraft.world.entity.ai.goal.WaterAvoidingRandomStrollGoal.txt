@@ -1,0 +1,8 @@
+Compiled from "WaterAvoidingRandomStrollGoal.java"
+public class net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal extends net.minecraft.world.entity.ai.goal.RandomStrollGoal {
+  public static final float PROBABILITY = 0.001f;
+  protected final float probability;
+  public net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal(net.minecraft.world.entity.PathfinderMob, double);
+  public net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal(net.minecraft.world.entity.PathfinderMob, double, float);
+  protected net.minecraft.world.phys.Vec3 getPosition();
+}

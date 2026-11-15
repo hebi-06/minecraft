@@ -1,0 +1,24 @@
+Compiled from "FlatLevelSource.java"
+public class net.minecraft.world.level.levelgen.FlatLevelSource extends net.minecraft.world.level.chunk.ChunkGenerator {
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.level.levelgen.FlatLevelSource> CODEC;
+  private final net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings settings;
+  public net.minecraft.world.level.levelgen.FlatLevelSource(net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings);
+  public net.minecraft.world.level.chunk.ChunkGeneratorStructureState createState(net.minecraft.core.HolderLookup<net.minecraft.world.level.levelgen.structure.StructureSet>, net.minecraft.world.level.levelgen.RandomState, long);
+  protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec();
+  public net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings settings();
+  public int getSpawnHeight(net.minecraft.world.level.LevelHeightAccessor);
+  public java.util.concurrent.CompletableFuture<net.minecraft.world.level.chunk.ChunkAccess> buildTerrain(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.StructureManager, net.minecraft.world.level.biome.BiomeManager, net.minecraft.server.level.WorldGenRegion, java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>);
+  public int getBaseHeight(int, int, net.minecraft.world.level.levelgen.Heightmap$Types, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState);
+  public net.minecraft.world.level.NoiseColumn getBaseColumn(int, int, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState);
+  public void addDebugScreenInfo(java.util.List<java.lang.String>, net.minecraft.world.level.levelgen.RandomState, net.minecraft.core.BlockPos, net.minecraft.world.level.levelgen.densityfunction.SamplerContext);
+  public void spawnOriginalMobs(net.minecraft.server.level.WorldGenRegion);
+  public int getMinY();
+  public int getGenDepth();
+  public int getSeaLevel();
+  private static net.minecraft.world.level.block.state.BlockState[] lambda$getBaseColumn$1(int);
+  private static net.minecraft.world.level.block.state.BlockState lambda$getBaseColumn$0(net.minecraft.world.level.block.state.BlockState);
+  private static java.util.stream.Stream lambda$createState$0(net.minecraft.core.HolderLookup);
+  private static net.minecraft.core.Holder lambda$createState$1(net.minecraft.core.Holder$Reference);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

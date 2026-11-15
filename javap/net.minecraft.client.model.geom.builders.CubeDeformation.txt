@@ -1,0 +1,12 @@
+Compiled from "CubeDeformation.java"
+public class net.minecraft.client.model.geom.builders.CubeDeformation {
+  public static final net.minecraft.client.model.geom.builders.CubeDeformation NONE;
+  final float growX;
+  final float growY;
+  final float growZ;
+  public net.minecraft.client.model.geom.builders.CubeDeformation(float, float, float);
+  public net.minecraft.client.model.geom.builders.CubeDeformation(float);
+  public net.minecraft.client.model.geom.builders.CubeDeformation extend(float);
+  public net.minecraft.client.model.geom.builders.CubeDeformation extend(float, float, float);
+  static {};
+}

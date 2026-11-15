@@ -1,0 +1,7 @@
+Compiled from "TestSingleplayerContext.java"
+public interface net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext extends java.lang.AutoCloseable {
+  public abstract net.fabricmc.fabric.api.client.gametest.v1.world.TestWorldSave getWorldSave();
+  public abstract net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection getConnection();
+  public abstract net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext getServer();
+  public abstract void close();
+}

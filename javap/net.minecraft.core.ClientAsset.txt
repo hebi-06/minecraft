@@ -1,0 +1,4 @@
+Compiled from "ClientAsset.java"
+public interface net.minecraft.core.ClientAsset {
+  public abstract net.minecraft.resources.Identifier id();
+}

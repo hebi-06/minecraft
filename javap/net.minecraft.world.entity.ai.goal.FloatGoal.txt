@@ -1,0 +1,10 @@
+Compiled from "FloatGoal.java"
+public class net.minecraft.world.entity.ai.goal.FloatGoal extends net.minecraft.world.entity.ai.goal.Goal {
+  private final net.minecraft.world.entity.Mob mob;
+  protected final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> fluid;
+  public net.minecraft.world.entity.ai.goal.FloatGoal(net.minecraft.world.entity.Mob);
+  public net.minecraft.world.entity.ai.goal.FloatGoal(net.minecraft.world.entity.Mob, net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid>);
+  public boolean canUse();
+  public boolean requiresUpdateEveryTick();
+  public void tick();
+}

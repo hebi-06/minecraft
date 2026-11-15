@@ -1,0 +1,38 @@
+Compiled from "ServerExplosion.java"
+public class net.minecraft.world.level.ServerExplosion implements net.minecraft.world.level.Explosion {
+  private static final net.minecraft.world.level.ExplosionDamageCalculator EXPLOSION_DAMAGE_CALCULATOR;
+  private static final int MAX_DROPS_PER_COMBINED_STACK = 16;
+  private static final float LARGE_EXPLOSION_RADIUS = 2.0f;
+  private final boolean fire;
+  private final net.minecraft.world.level.Explosion$BlockInteraction blockInteraction;
+  private final net.minecraft.server.level.ServerLevel level;
+  private final net.minecraft.world.phys.Vec3 center;
+  private final net.minecraft.world.entity.Entity source;
+  private final float radius;
+  private final net.minecraft.world.damagesource.DamageSource damageSource;
+  private final net.minecraft.world.level.ExplosionDamageCalculator damageCalculator;
+  private final java.util.Map<net.minecraft.world.entity.player.Player, net.minecraft.world.phys.Vec3> hitPlayers;
+  public net.minecraft.world.level.ServerExplosion(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity, net.minecraft.world.damagesource.DamageSource, net.minecraft.world.level.ExplosionDamageCalculator, net.minecraft.world.phys.Vec3, float, boolean, net.minecraft.world.level.Explosion$BlockInteraction);
+  private net.minecraft.world.level.ExplosionDamageCalculator makeDamageCalculator(net.minecraft.world.entity.Entity);
+  public static float getSeenPercent(net.minecraft.world.phys.Vec3, net.minecraft.world.entity.Entity);
+  public float radius();
+  public net.minecraft.world.phys.Vec3 center();
+  private java.util.List<net.minecraft.core.BlockPos> calculateExplodedPositions();
+  private void hurtEntities();
+  private void interactWithBlocks(java.util.List<net.minecraft.core.BlockPos>);
+  private void createFire(java.util.List<net.minecraft.core.BlockPos>);
+  public int explode();
+  private static void addOrAppendStack(java.util.List<net.minecraft.world.level.ServerExplosion$StackCollector>, net.minecraft.world.item.ItemStack, net.minecraft.core.BlockPos);
+  private boolean interactsWithBlocks();
+  public java.util.Map<net.minecraft.world.entity.player.Player, net.minecraft.world.phys.Vec3> getHitPlayers();
+  public net.minecraft.server.level.ServerLevel level();
+  public net.minecraft.world.entity.LivingEntity getIndirectSourceEntity();
+  public net.minecraft.world.entity.Entity getDirectSourceEntity();
+  public net.minecraft.world.damagesource.DamageSource getDamageSource();
+  public net.minecraft.world.level.Explosion$BlockInteraction getBlockInteraction();
+  public boolean canTriggerBlocks();
+  public boolean shouldAffectBlocklikeEntities();
+  public boolean isSmall();
+  private static void lambda$interactWithBlocks$0(java.util.List, net.minecraft.world.item.ItemStack, net.minecraft.core.BlockPos);
+  static {};
+}

@@ -1,0 +1,8 @@
+Compiled from "DialogBody.java"
+public interface net.minecraft.server.dialog.body.DialogBody {
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.body.DialogBody> DIALOG_BODY_CODEC;
+  public static final com.mojang.serialization.Codec<java.util.List<net.minecraft.server.dialog.body.DialogBody>> COMPACT_LIST_CODEC;
+  public abstract com.mojang.serialization.MapCodec<? extends net.minecraft.server.dialog.body.DialogBody> mapCodec();
+  private static com.mojang.serialization.MapCodec lambda$static$0(com.mojang.serialization.MapCodec);
+  static {};
+}

@@ -1,0 +1,7 @@
+Compiled from "HoverEvent.java"
+public interface net.minecraft.network.chat.HoverEvent {
+  public static final com.mojang.serialization.Codec<net.minecraft.network.chat.HoverEvent> CODEC;
+  public abstract net.minecraft.network.chat.HoverEvent$Action action();
+  private static com.mojang.serialization.MapCodec lambda$static$0(net.minecraft.network.chat.HoverEvent$Action);
+  static {};
+}

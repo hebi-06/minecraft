@@ -1,0 +1,7 @@
+Compiled from "FabricRenderState.java"
+public interface net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState {
+  public default <T> T getData(net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<T>);
+  public default <T> T getDataOrDefault(net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<T>, T);
+  public default <T> void setData(net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<T>, T);
+  public default void clearExtraData();
+}

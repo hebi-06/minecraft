@@ -1,0 +1,33 @@
+Compiled from "BlockAttachedEntity.java"
+public abstract class net.minecraft.world.entity.decoration.BlockAttachedEntity extends net.minecraft.world.entity.Entity {
+  public static final java.lang.String TAG_BLOCK_POS = "block_pos";
+  private static final org.slf4j.Logger LOGGER;
+  private static final int CHECK_INTERVAL = 100;
+  private int ticksSinceLastCheck;
+  protected net.minecraft.core.BlockPos pos;
+  protected net.minecraft.world.entity.decoration.BlockAttachedEntity(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.decoration.BlockAttachedEntity>, net.minecraft.world.level.Level);
+  protected net.minecraft.world.entity.decoration.BlockAttachedEntity(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.decoration.BlockAttachedEntity>, net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  protected abstract void recalculateBoundingBox();
+  public void tick();
+  protected void tickAtCheckInterval();
+  public abstract boolean survives();
+  public boolean isPickable();
+  public boolean skipAttackInteraction(net.minecraft.world.entity.Entity);
+  public void kill(net.minecraft.server.level.ServerLevel);
+  public void kill(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity);
+  protected void onKilled();
+  public boolean hurtClient(net.minecraft.world.damagesource.DamageSource);
+  public boolean hurtServer(net.minecraft.server.level.ServerLevel, net.minecraft.world.damagesource.DamageSource, float);
+  public boolean ignoreExplosion(net.minecraft.world.level.Explosion);
+  public void move(net.minecraft.world.entity.MoverType, net.minecraft.world.phys.Vec3);
+  public void push(double, double, double);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  public abstract void dropItem(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity);
+  protected boolean repositionEntityAfterLoad();
+  public void setPos(double, double, double);
+  public net.minecraft.core.BlockPos getPos();
+  public void thunderHit(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.LightningBolt);
+  public void refreshDimensions();
+  static {};
+}

@@ -1,0 +1,13 @@
+Compiled from "HumanoidMobRenderer.java"
+public abstract class net.minecraft.client.renderer.entity.HumanoidMobRenderer<T extends net.minecraft.world.entity.Mob, S extends net.minecraft.client.renderer.entity.state.HumanoidRenderState, M extends net.minecraft.client.model.HumanoidModel<S>> extends net.minecraft.client.renderer.entity.AgeableMobRenderer<T, S, M> {
+  public net.minecraft.client.renderer.entity.HumanoidMobRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, M, float);
+  public net.minecraft.client.renderer.entity.HumanoidMobRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, M, M, float);
+  public net.minecraft.client.renderer.entity.HumanoidMobRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, M, M, float, net.minecraft.client.renderer.entity.layers.CustomHeadLayer$Transforms);
+  protected net.minecraft.client.model.HumanoidModel$ArmPose getArmPose(T, net.minecraft.world.entity.HumanoidArm);
+  public static boolean usesSpearPose(net.minecraft.world.item.ItemStack, net.minecraft.world.entity.HumanoidArm, net.minecraft.world.entity.LivingEntity);
+  public void extractRenderState(T, S, float);
+  public static void extractHumanoidRenderState(net.minecraft.world.entity.LivingEntity, net.minecraft.client.renderer.entity.state.HumanoidRenderState, float, net.minecraft.client.renderer.item.ItemModelResolver);
+  private static net.minecraft.world.item.ItemStack getEquipmentIfRenderable(net.minecraft.world.entity.LivingEntity, net.minecraft.world.entity.EquipmentSlot);
+  public void extractRenderState(net.minecraft.world.entity.LivingEntity, net.minecraft.client.renderer.entity.state.LivingEntityRenderState, float);
+  public void extractRenderState(net.minecraft.world.entity.Entity, net.minecraft.client.renderer.entity.state.EntityRenderState, float);
+}

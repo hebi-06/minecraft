@@ -1,0 +1,43 @@
+Compiled from "ProtoChunk.java"
+public class net.minecraft.world.level.chunk.ProtoChunk extends net.minecraft.world.level.chunk.ChunkAccess {
+  private static final org.slf4j.Logger LOGGER;
+  private volatile net.minecraft.world.level.lighting.LevelLightEngine lightEngine;
+  private volatile net.minecraft.world.level.chunk.status.ChunkStatus status;
+  private final java.util.List<net.minecraft.nbt.CompoundTag> entities;
+  private net.minecraft.world.level.levelgen.BelowZeroRetrogen belowZeroRetrogen;
+  private final net.minecraft.world.ticks.ProtoChunkTicks<net.minecraft.world.level.block.Block> blockTicks;
+  private final net.minecraft.world.ticks.ProtoChunkTicks<net.minecraft.world.level.material.Fluid> fluidTicks;
+  public net.minecraft.world.level.chunk.ProtoChunk(net.minecraft.world.level.ChunkPos, net.minecraft.world.level.chunk.UpgradeData, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.chunk.PalettedContainerFactory, net.minecraft.world.level.levelgen.blending.BlendingData);
+  public net.minecraft.world.level.chunk.ProtoChunk(net.minecraft.world.level.ChunkPos, net.minecraft.world.level.chunk.UpgradeData, net.minecraft.world.level.chunk.LevelChunkSection[], net.minecraft.world.ticks.ProtoChunkTicks<net.minecraft.world.level.block.Block>, net.minecraft.world.ticks.ProtoChunkTicks<net.minecraft.world.level.material.Fluid>, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.chunk.PalettedContainerFactory, net.minecraft.world.level.levelgen.blending.BlendingData);
+  public net.minecraft.world.ticks.TickContainerAccess<net.minecraft.world.level.block.Block> getBlockTicks();
+  public net.minecraft.world.ticks.TickContainerAccess<net.minecraft.world.level.material.Fluid> getFluidTicks();
+  public net.minecraft.world.level.chunk.ChunkAccess$PackedTicks getTicksForSerialization(long);
+  public net.minecraft.world.level.block.state.BlockState getBlockState(net.minecraft.core.BlockPos);
+  public net.minecraft.world.level.material.FluidState getFluidState(net.minecraft.core.BlockPos);
+  public net.minecraft.world.level.block.state.BlockState setBlockState(net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, int);
+  public void setBlockEntity(net.minecraft.world.level.block.entity.BlockEntity);
+  public net.minecraft.world.level.block.entity.BlockEntity getBlockEntity(net.minecraft.core.BlockPos);
+  public java.util.Map<net.minecraft.core.BlockPos, net.minecraft.world.level.block.entity.BlockEntity> getBlockEntities();
+  public void addEntity(net.minecraft.nbt.CompoundTag);
+  public void addEntity(net.minecraft.world.entity.Entity);
+  public void setStartForStructure(net.minecraft.world.level.levelgen.structure.Structure, net.minecraft.world.level.levelgen.structure.StructureStart);
+  public java.util.List<net.minecraft.nbt.CompoundTag> getEntities();
+  public net.minecraft.world.level.chunk.status.ChunkStatus getPersistedStatus();
+  public void setPersistedStatus(net.minecraft.world.level.chunk.status.ChunkStatus);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiome(int, int, int);
+  public static short packOffsetCoordinates(net.minecraft.core.BlockPos);
+  public static net.minecraft.core.BlockPos unpackOffsetCoordinates(short, int, net.minecraft.world.level.ChunkPos);
+  public void markPosForPostProcessing(net.minecraft.core.BlockPos);
+  public void addPackedPostProcess(it.unimi.dsi.fastutil.shorts.ShortList, int);
+  public java.util.Map<net.minecraft.core.BlockPos, net.minecraft.nbt.CompoundTag> getBlockEntityNbts();
+  public net.minecraft.nbt.CompoundTag getBlockEntityNbtForSaving(net.minecraft.core.BlockPos, net.minecraft.core.HolderLookup$Provider);
+  public void removeBlockEntity(net.minecraft.core.BlockPos);
+  public void setLightEngine(net.minecraft.world.level.lighting.LevelLightEngine);
+  public void setBelowZeroRetrogen(net.minecraft.world.level.levelgen.BelowZeroRetrogen);
+  public net.minecraft.world.level.levelgen.BelowZeroRetrogen getBelowZeroRetrogen();
+  private static <T> net.minecraft.world.ticks.LevelChunkTicks<T> unpackTicks(net.minecraft.world.ticks.ProtoChunkTicks<T>);
+  public net.minecraft.world.ticks.LevelChunkTicks<net.minecraft.world.level.block.Block> unpackBlockTicks();
+  public net.minecraft.world.ticks.LevelChunkTicks<net.minecraft.world.level.material.Fluid> unpackFluidTicks();
+  public net.minecraft.world.level.LevelHeightAccessor getHeightAccessorForGeneration();
+  static {};
+}

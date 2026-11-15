@@ -1,0 +1,17 @@
+Compiled from "LevelStem.java"
+public final class net.minecraft.world.level.dimension.LevelStem extends java.lang.Record {
+  private final net.minecraft.core.Holder<net.minecraft.world.level.dimension.DimensionType> type;
+  private final net.minecraft.world.level.chunk.ChunkGenerator generator;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.dimension.LevelStem> CODEC;
+  public static final net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem> OVERWORLD;
+  public static final net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem> NETHER;
+  public static final net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem> END;
+  public net.minecraft.world.level.dimension.LevelStem(net.minecraft.core.Holder<net.minecraft.world.level.dimension.DimensionType>, net.minecraft.world.level.chunk.ChunkGenerator);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.Holder<net.minecraft.world.level.dimension.DimensionType> type();
+  public net.minecraft.world.level.chunk.ChunkGenerator generator();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

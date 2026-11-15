@@ -1,0 +1,10 @@
+Compiled from "SlotAccess.java"
+public interface net.minecraft.world.entity.SlotAccess {
+  public abstract net.minecraft.world.item.ItemStack get();
+  public abstract boolean set(net.minecraft.world.item.ItemStack);
+  public static net.minecraft.world.entity.SlotAccess of(java.util.function.Supplier<net.minecraft.world.item.ItemStack>, java.util.function.Consumer<net.minecraft.world.item.ItemStack>);
+  public static net.minecraft.world.entity.SlotAccess forEquipmentSlot(net.minecraft.world.entity.LivingEntity, net.minecraft.world.entity.EquipmentSlot, java.util.function.Predicate<net.minecraft.world.item.ItemStack>);
+  public static net.minecraft.world.entity.SlotAccess forEquipmentSlot(net.minecraft.world.entity.LivingEntity, net.minecraft.world.entity.EquipmentSlot);
+  public static net.minecraft.world.entity.SlotAccess forListElement(java.util.List<net.minecraft.world.item.ItemStack>, int);
+  private static boolean lambda$forEquipmentSlot$0(net.minecraft.world.item.ItemStack);
+}

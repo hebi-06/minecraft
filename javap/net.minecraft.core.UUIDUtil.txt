@@ -1,0 +1,27 @@
+Compiled from "UUIDUtil.java"
+public final class net.minecraft.core.UUIDUtil {
+  public static final com.mojang.serialization.Codec<java.util.UUID> CODEC;
+  public static final com.mojang.serialization.Codec<java.util.Set<java.util.UUID>> CODEC_SET;
+  public static final com.mojang.serialization.Codec<java.util.Set<java.util.UUID>> CODEC_LINKED_SET;
+  public static final com.mojang.serialization.Codec<java.util.UUID> STRING_CODEC;
+  public static final com.mojang.serialization.Codec<java.util.UUID> AUTHLIB_CODEC;
+  public static final com.mojang.serialization.Codec<java.util.UUID> LENIENT_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, java.util.UUID> STREAM_CODEC;
+  public static final int UUID_BYTES = 16;
+  private static final java.lang.String UUID_PREFIX_OFFLINE_PLAYER = "OfflinePlayer:";
+  private net.minecraft.core.UUIDUtil();
+  public static java.util.UUID uuidFromIntArray(int[]);
+  public static int[] uuidToIntArray(java.util.UUID);
+  private static int[] leastMostToIntArray(long, long);
+  public static byte[] uuidToByteArray(java.util.UUID);
+  public static java.util.UUID readUUID(com.mojang.serialization.Dynamic<?>);
+  public static java.util.UUID createOfflinePlayerUUID(java.lang.String);
+  public static com.mojang.authlib.GameProfile createOfflineProfile(java.lang.String);
+  private static com.mojang.serialization.DataResult lambda$static$4(java.lang.String);
+  private static java.lang.String lambda$static$5(java.lang.String, java.lang.IllegalArgumentException);
+  private static com.mojang.serialization.DataResult lambda$static$2(java.lang.String);
+  private static java.lang.String lambda$static$3(java.lang.String, java.lang.IllegalArgumentException);
+  private static java.util.stream.IntStream lambda$static$1(java.util.UUID);
+  private static com.mojang.serialization.DataResult lambda$static$0(java.util.stream.IntStream);
+  static {};
+}

@@ -1,0 +1,24 @@
+Compiled from "ClientGameTestContext.java"
+public interface net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext {
+  public static final int NO_TIMEOUT = -1;
+  public static final int DEFAULT_TIMEOUT = 200;
+  public abstract void waitTick();
+  public abstract void waitTicks(int);
+  public abstract int waitFor(java.util.function.Predicate<net.minecraft.client.Minecraft>);
+  public abstract int waitFor(java.util.function.Predicate<net.minecraft.client.Minecraft>, int);
+  public abstract int waitForScreen(java.lang.Class<? extends net.minecraft.client.gui.screens.Screen>);
+  public abstract void setScreen(java.util.function.Supplier<net.minecraft.client.gui.screens.Screen>);
+  public abstract void clickScreenButton(java.lang.String);
+  public abstract boolean tryClickScreenButton(java.lang.String);
+  public default java.nio.file.Path takeScreenshot(java.lang.String);
+  public abstract java.nio.file.Path takeScreenshot(net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions);
+  public default void assertScreenshotEquals(java.lang.String);
+  public abstract void assertScreenshotEquals(net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions);
+  public default org.joml.Vector2i assertScreenshotContains(java.lang.String);
+  public abstract org.joml.Vector2i assertScreenshotContains(net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions);
+  public abstract net.fabricmc.fabric.api.client.gametest.v1.TestInput getInput();
+  public abstract net.fabricmc.fabric.api.client.gametest.v1.world.TestWorldBuilder worldBuilder();
+  public abstract void restoreDefaultGameOptions();
+  public abstract <E extends java.lang.Throwable> void runOnClient(org.apache.commons.lang3.function.FailableConsumer<net.minecraft.client.Minecraft, E>) throws E;
+  public abstract <T, E extends java.lang.Throwable> T computeOnClient(org.apache.commons.lang3.function.FailableFunction<net.minecraft.client.Minecraft, T, E>) throws E;
+}

@@ -1,0 +1,19 @@
+Compiled from "Goal.java"
+public abstract class net.minecraft.world.entity.ai.goal.Goal {
+  private final java.util.EnumSet<net.minecraft.world.entity.ai.goal.Goal$Flag> flags;
+  public net.minecraft.world.entity.ai.goal.Goal();
+  public abstract boolean canUse();
+  public boolean canContinueToUse();
+  public boolean isInterruptable();
+  public void start();
+  public void stop();
+  public boolean requiresUpdateEveryTick();
+  public void tick();
+  public void setFlags(java.util.EnumSet<net.minecraft.world.entity.ai.goal.Goal$Flag>);
+  public java.lang.String toString();
+  public java.util.EnumSet<net.minecraft.world.entity.ai.goal.Goal$Flag> getFlags();
+  protected int adjustedTickDelay(int);
+  protected static int reducedTickDelay(int);
+  protected static net.minecraft.server.level.ServerLevel getServerLevel(net.minecraft.world.entity.Entity);
+  protected static net.minecraft.server.level.ServerLevel getServerLevel(net.minecraft.world.level.Level);
+}

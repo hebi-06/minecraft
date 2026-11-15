@@ -1,0 +1,15 @@
+Compiled from "DifficultyInstance.java"
+public class net.minecraft.world.DifficultyInstance {
+  private static final float DIFFICULTY_TIME_GLOBAL_OFFSET = -72000.0f;
+  private static final float MAX_DIFFICULTY_TIME_GLOBAL = 1440000.0f;
+  private static final float MAX_DIFFICULTY_TIME_LOCAL = 3600000.0f;
+  private final net.minecraft.world.Difficulty base;
+  private final float effectiveDifficulty;
+  public net.minecraft.world.DifficultyInstance(net.minecraft.world.Difficulty, long, long, float);
+  public net.minecraft.world.Difficulty getDifficulty();
+  public float getEffectiveDifficulty();
+  public boolean isHard();
+  public boolean isHarderThan(float);
+  public float getSpecialMultiplier();
+  private float calculateDifficulty(net.minecraft.world.Difficulty, long, long, float);
+}

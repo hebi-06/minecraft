@@ -1,0 +1,24 @@
+Compiled from "CubeListBuilder.java"
+public class net.minecraft.client.model.geom.builders.CubeListBuilder {
+  private static final java.util.Set<net.minecraft.core.Direction> ALL_VISIBLE;
+  private final java.util.List<net.minecraft.client.model.geom.builders.CubeDefinition> cubes;
+  private int xTexOffs;
+  private int yTexOffs;
+  private boolean mirror;
+  public net.minecraft.client.model.geom.builders.CubeListBuilder();
+  public net.minecraft.client.model.geom.builders.CubeListBuilder texOffs(int, int);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder mirror();
+  public net.minecraft.client.model.geom.builders.CubeListBuilder mirror(boolean);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(java.lang.String, float, float, float, int, int, int, net.minecraft.client.model.geom.builders.CubeDeformation, int, int);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(java.lang.String, float, float, float, int, int, int, int, int);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(float, float, float, float, float, float);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(float, float, float, float, float, float, java.util.Set<net.minecraft.core.Direction>);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(java.lang.String, float, float, float, float, float, float);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(java.lang.String, float, float, float, float, float, float, net.minecraft.client.model.geom.builders.CubeDeformation);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(float, float, float, float, float, float, boolean);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(float, float, float, float, float, float, net.minecraft.client.model.geom.builders.CubeDeformation, float, float);
+  public net.minecraft.client.model.geom.builders.CubeListBuilder addBox(float, float, float, float, float, float, net.minecraft.client.model.geom.builders.CubeDeformation);
+  public java.util.List<net.minecraft.client.model.geom.builders.CubeDefinition> getCubes();
+  public static net.minecraft.client.model.geom.builders.CubeListBuilder create();
+  static {};
+}

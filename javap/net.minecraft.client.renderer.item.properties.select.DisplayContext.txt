@@ -1,0 +1,14 @@
+Compiled from "DisplayContext.java"
+public final class net.minecraft.client.renderer.item.properties.select.DisplayContext extends java.lang.Record implements net.minecraft.client.renderer.item.properties.select.SelectItemModelProperty<net.minecraft.world.item.ItemDisplayContext> {
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.ItemDisplayContext> VALUE_CODEC;
+  public static final net.minecraft.client.renderer.item.properties.select.SelectItemModelProperty$Type<net.minecraft.client.renderer.item.properties.select.DisplayContext, net.minecraft.world.item.ItemDisplayContext> TYPE;
+  public net.minecraft.client.renderer.item.properties.select.DisplayContext();
+  public net.minecraft.world.item.ItemDisplayContext get(net.minecraft.world.item.ItemStack, net.minecraft.client.multiplayer.ClientLevel, net.minecraft.world.entity.LivingEntity, int, net.minecraft.world.item.ItemDisplayContext);
+  public net.minecraft.client.renderer.item.properties.select.SelectItemModelProperty$Type<net.minecraft.client.renderer.item.properties.select.DisplayContext, net.minecraft.world.item.ItemDisplayContext> type();
+  public com.mojang.serialization.Codec<net.minecraft.world.item.ItemDisplayContext> valueCodec();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.lang.Object get(net.minecraft.world.item.ItemStack, net.minecraft.client.multiplayer.ClientLevel, net.minecraft.world.entity.LivingEntity, int, net.minecraft.world.item.ItemDisplayContext);
+  static {};
+}

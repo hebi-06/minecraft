@@ -1,0 +1,6 @@
+Compiled from "SpriteSet.java"
+public interface net.minecraft.client.particle.SpriteSet {
+  public abstract net.minecraft.client.renderer.texture.TextureAtlasSprite get(int, int);
+  public abstract net.minecraft.client.renderer.texture.TextureAtlasSprite get(net.minecraft.util.RandomSource);
+  public abstract net.minecraft.client.renderer.texture.TextureAtlasSprite first();
+}

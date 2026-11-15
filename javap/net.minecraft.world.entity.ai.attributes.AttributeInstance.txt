@@ -1,0 +1,38 @@
+Compiled from "AttributeInstance.java"
+public class net.minecraft.world.entity.ai.attributes.AttributeInstance {
+  private final net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute;
+  private final java.util.Map<net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation, java.util.Map<net.minecraft.resources.Identifier, net.minecraft.world.entity.ai.attributes.AttributeModifier>> modifiersByOperation;
+  private final java.util.Map<net.minecraft.resources.Identifier, net.minecraft.world.entity.ai.attributes.AttributeModifier> modifierById;
+  private final java.util.Map<net.minecraft.resources.Identifier, net.minecraft.world.entity.ai.attributes.AttributeModifier> permanentModifiers;
+  private double baseValue;
+  private boolean dirty;
+  private double cachedValue;
+  private final java.util.function.Consumer<net.minecraft.world.entity.ai.attributes.AttributeInstance> onDirty;
+  public net.minecraft.world.entity.ai.attributes.AttributeInstance(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, java.util.function.Consumer<net.minecraft.world.entity.ai.attributes.AttributeInstance>);
+  public net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> getAttribute();
+  public double getBaseValue();
+  public void setBaseValue(double);
+  java.util.Map<net.minecraft.resources.Identifier, net.minecraft.world.entity.ai.attributes.AttributeModifier> getModifiers(net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation);
+  public java.util.Set<net.minecraft.world.entity.ai.attributes.AttributeModifier> getModifiers();
+  public java.util.Set<net.minecraft.world.entity.ai.attributes.AttributeModifier> getPermanentModifiers();
+  public net.minecraft.world.entity.ai.attributes.AttributeModifier getModifier(net.minecraft.resources.Identifier);
+  public boolean hasModifier(net.minecraft.resources.Identifier);
+  private void addModifier(net.minecraft.world.entity.ai.attributes.AttributeModifier);
+  public void addOrUpdateTransientModifier(net.minecraft.world.entity.ai.attributes.AttributeModifier);
+  public void addTransientModifier(net.minecraft.world.entity.ai.attributes.AttributeModifier);
+  public void addOrReplacePermanentModifier(net.minecraft.world.entity.ai.attributes.AttributeModifier);
+  public void addPermanentModifier(net.minecraft.world.entity.ai.attributes.AttributeModifier);
+  public void addPermanentModifiers(java.util.Collection<net.minecraft.world.entity.ai.attributes.AttributeModifier>);
+  protected void setDirty();
+  public void removeModifier(net.minecraft.world.entity.ai.attributes.AttributeModifier);
+  public boolean removeModifier(net.minecraft.resources.Identifier);
+  public void removeModifiers();
+  public double getValue();
+  private double calculateValue();
+  private java.util.Collection<net.minecraft.world.entity.ai.attributes.AttributeModifier> getModifiersOrEmpty(net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation);
+  public void replaceFrom(net.minecraft.world.entity.ai.attributes.AttributeInstance);
+  public net.minecraft.world.entity.ai.attributes.AttributeInstance$Packed pack();
+  public void apply(net.minecraft.world.entity.ai.attributes.AttributeInstance$Packed);
+  private void lambda$replaceFrom$0(net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation, java.util.Map);
+  private static java.util.Map lambda$getModifiers$0(net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation);
+}

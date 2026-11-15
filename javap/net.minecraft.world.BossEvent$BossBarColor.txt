@@ -1,0 +1,22 @@
+Compiled from "BossEvent.java"
+public final class net.minecraft.world.BossEvent$BossBarColor extends java.lang.Enum<net.minecraft.world.BossEvent$BossBarColor> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.BossEvent$BossBarColor PINK;
+  public static final net.minecraft.world.BossEvent$BossBarColor BLUE;
+  public static final net.minecraft.world.BossEvent$BossBarColor RED;
+  public static final net.minecraft.world.BossEvent$BossBarColor GREEN;
+  public static final net.minecraft.world.BossEvent$BossBarColor YELLOW;
+  public static final net.minecraft.world.BossEvent$BossBarColor PURPLE;
+  public static final net.minecraft.world.BossEvent$BossBarColor WHITE;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.BossEvent$BossBarColor> CODEC;
+  private final java.lang.String name;
+  private final net.minecraft.ChatFormatting formatting;
+  private static final net.minecraft.world.BossEvent$BossBarColor[] $VALUES;
+  public static net.minecraft.world.BossEvent$BossBarColor[] values();
+  public static net.minecraft.world.BossEvent$BossBarColor valueOf(java.lang.String);
+  private net.minecraft.world.BossEvent$BossBarColor(java.lang.String, net.minecraft.ChatFormatting);
+  public net.minecraft.ChatFormatting getFormatting();
+  public java.lang.String getName();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.BossEvent$BossBarColor[] $values();
+  static {};
+}

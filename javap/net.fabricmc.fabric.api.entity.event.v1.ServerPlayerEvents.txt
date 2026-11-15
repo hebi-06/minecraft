@@ -1,0 +1,21 @@
+Compiled from "ServerPlayerEvents.java"
+public final class net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$CopyFrom> COPY_FROM;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AfterRespawn> AFTER_RESPAWN;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Join> JOIN;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Leave> LEAVE;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AllowDeath> ALLOW_DEATH;
+  private net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents();
+  private static boolean lambda$static$10(net.minecraft.world.entity.LivingEntity, net.minecraft.world.damagesource.DamageSource, float);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AllowDeath lambda$static$8(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AllowDeath[]);
+  private static boolean lambda$static$9(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AllowDeath[], net.minecraft.server.level.ServerPlayer, net.minecraft.world.damagesource.DamageSource, float);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Leave lambda$static$6(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Leave[]);
+  private static void lambda$static$7(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Leave[], net.minecraft.server.level.ServerPlayer);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Join lambda$static$4(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Join[]);
+  private static void lambda$static$5(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$Join[], net.minecraft.server.level.ServerPlayer);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AfterRespawn lambda$static$2(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AfterRespawn[]);
+  private static void lambda$static$3(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$AfterRespawn[], net.minecraft.server.level.ServerPlayer, net.minecraft.server.level.ServerPlayer, boolean);
+  private static net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$CopyFrom lambda$static$0(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$CopyFrom[]);
+  private static void lambda$static$1(net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents$CopyFrom[], net.minecraft.server.level.ServerPlayer, net.minecraft.server.level.ServerPlayer, boolean);
+  static {};
+}

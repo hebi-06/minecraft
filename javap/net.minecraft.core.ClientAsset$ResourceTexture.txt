@@ -1,0 +1,17 @@
+Compiled from "ClientAsset.java"
+public final class net.minecraft.core.ClientAsset$ResourceTexture extends java.lang.Record implements net.minecraft.core.ClientAsset$Texture {
+  private final net.minecraft.resources.Identifier id;
+  private final net.minecraft.resources.Identifier texturePath;
+  public static final com.mojang.serialization.Codec<net.minecraft.core.ClientAsset$ResourceTexture> CODEC;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.core.ClientAsset$ResourceTexture> DEFAULT_FIELD_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.core.ClientAsset$ResourceTexture> STREAM_CODEC;
+  public net.minecraft.core.ClientAsset$ResourceTexture(net.minecraft.resources.Identifier);
+  public net.minecraft.core.ClientAsset$ResourceTexture(net.minecraft.resources.Identifier, net.minecraft.resources.Identifier);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier id();
+  public net.minecraft.resources.Identifier texturePath();
+  private static java.lang.String lambda$new$0(java.lang.String);
+  static {};
+}

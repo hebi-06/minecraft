@@ -1,0 +1,7 @@
+Compiled from "ZombieRenderer.java"
+public class net.minecraft.client.renderer.entity.ZombieRenderer extends net.minecraft.client.renderer.entity.AbstractZombieRenderer<net.minecraft.world.entity.monster.zombie.Zombie, net.minecraft.client.renderer.entity.state.ZombieRenderState, net.minecraft.client.model.monster.zombie.ZombieModel<net.minecraft.client.renderer.entity.state.ZombieRenderState>> {
+  public net.minecraft.client.renderer.entity.ZombieRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context);
+  public net.minecraft.client.renderer.entity.state.ZombieRenderState createRenderState();
+  public net.minecraft.client.renderer.entity.ZombieRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, net.minecraft.client.model.geom.ModelLayerLocation, net.minecraft.client.model.geom.ModelLayerLocation, net.minecraft.client.renderer.entity.ArmorModelSet<net.minecraft.client.model.geom.ModelLayerLocation>, net.minecraft.client.renderer.entity.ArmorModelSet<net.minecraft.client.model.geom.ModelLayerLocation>);
+  public net.minecraft.client.renderer.entity.state.EntityRenderState createRenderState();
+}

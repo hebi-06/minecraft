@@ -1,0 +1,21 @@
+Compiled from "ClientboundSetEntityDataPacket.java"
+public final class net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket extends java.lang.Record implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> {
+  private final int id;
+  private final java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>> packedItems;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket> STREAM_CODEC;
+  public static final int EOF_MARKER = 255;
+  private net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket(net.minecraft.network.RegistryFriendlyByteBuf);
+  public net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket(int, java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>>);
+  private static void pack(java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>>, net.minecraft.network.RegistryFriendlyByteBuf);
+  private static java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>> unpack(net.minecraft.network.RegistryFriendlyByteBuf);
+  private void write(net.minecraft.network.RegistryFriendlyByteBuf);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ClientGamePacketListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int id();
+  public java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>> packedItems();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

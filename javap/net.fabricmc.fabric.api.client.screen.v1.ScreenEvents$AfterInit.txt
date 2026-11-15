@@ -1,0 +1,4 @@
+Compiled from "ScreenEvents.java"
+public interface net.fabricmc.fabric.api.client.screen.v1.ScreenEvents$AfterInit {
+  public abstract void afterInit(net.minecraft.client.Minecraft, net.minecraft.client.gui.screens.Screen, int, int);
+}

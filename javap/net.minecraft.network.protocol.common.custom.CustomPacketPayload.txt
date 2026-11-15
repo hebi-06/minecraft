@@ -1,0 +1,8 @@
+Compiled from "CustomPacketPayload.java"
+public interface net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+  public abstract net.minecraft.network.protocol.common.custom.CustomPacketPayload$Type<? extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> type();
+  public static <B extends io.netty.buffer.ByteBuf, T extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> net.minecraft.network.codec.StreamCodec<B, T> codec(net.minecraft.network.codec.StreamMemberEncoder<B, T>, net.minecraft.network.codec.StreamDecoder<B, T>);
+  public static <T extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> net.minecraft.network.protocol.common.custom.CustomPacketPayload$Type<T> createType(java.lang.String);
+  public static <B extends net.minecraft.network.FriendlyByteBuf> net.minecraft.network.codec.StreamCodec<B, net.minecraft.network.protocol.common.custom.CustomPacketPayload> codec(net.minecraft.network.protocol.common.custom.CustomPacketPayload$FallbackProvider<B>, java.util.List<net.minecraft.network.protocol.common.custom.CustomPacketPayload$TypeAndCodec<? super B, ?>>);
+  private static net.minecraft.resources.Identifier lambda$codec$0(net.minecraft.network.protocol.common.custom.CustomPacketPayload$TypeAndCodec);
+}

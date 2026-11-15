@@ -1,0 +1,24 @@
+Compiled from "GenerationStep.java"
+public final class net.minecraft.world.level.levelgen.GenerationStep$Decoration extends java.lang.Enum<net.minecraft.world.level.levelgen.GenerationStep$Decoration> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration RAW_GENERATION;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration LAKES;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration LOCAL_MODIFICATIONS;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration UNDERGROUND_STRUCTURES;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration SURFACE_STRUCTURES;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration STRONGHOLDS;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration UNDERGROUND_ORES;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration UNDERGROUND_DECORATION;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration FLUID_SPRINGS;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration VEGETAL_DECORATION;
+  public static final net.minecraft.world.level.levelgen.GenerationStep$Decoration TOP_LAYER_MODIFICATION;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.levelgen.GenerationStep$Decoration> CODEC;
+  private final java.lang.String name;
+  private static final net.minecraft.world.level.levelgen.GenerationStep$Decoration[] $VALUES;
+  public static net.minecraft.world.level.levelgen.GenerationStep$Decoration[] values();
+  public static net.minecraft.world.level.levelgen.GenerationStep$Decoration valueOf(java.lang.String);
+  private net.minecraft.world.level.levelgen.GenerationStep$Decoration(java.lang.String);
+  public java.lang.String getName();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.level.levelgen.GenerationStep$Decoration[] $values();
+  static {};
+}

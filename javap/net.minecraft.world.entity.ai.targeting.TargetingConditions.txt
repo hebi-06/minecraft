@@ -1,0 +1,20 @@
+Compiled from "TargetingConditions.java"
+public class net.minecraft.world.entity.ai.targeting.TargetingConditions {
+  public static final net.minecraft.world.entity.ai.targeting.TargetingConditions DEFAULT;
+  private static final double MIN_VISIBILITY_DISTANCE_FOR_INVISIBLE_TARGET = 2.0d;
+  private final boolean isCombat;
+  private double range;
+  private boolean checkLineOfSight;
+  private boolean testInvisible;
+  private net.minecraft.world.entity.ai.targeting.TargetingConditions$Selector selector;
+  private net.minecraft.world.entity.ai.targeting.TargetingConditions(boolean);
+  public static net.minecraft.world.entity.ai.targeting.TargetingConditions forCombat();
+  public static net.minecraft.world.entity.ai.targeting.TargetingConditions forNonCombat();
+  public net.minecraft.world.entity.ai.targeting.TargetingConditions copy();
+  public net.minecraft.world.entity.ai.targeting.TargetingConditions range(double);
+  public net.minecraft.world.entity.ai.targeting.TargetingConditions ignoreLineOfSight();
+  public net.minecraft.world.entity.ai.targeting.TargetingConditions ignoreInvisibilityTesting();
+  public net.minecraft.world.entity.ai.targeting.TargetingConditions selector(net.minecraft.world.entity.ai.targeting.TargetingConditions$Selector);
+  public boolean test(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.LivingEntity, net.minecraft.world.entity.LivingEntity);
+  static {};
+}
