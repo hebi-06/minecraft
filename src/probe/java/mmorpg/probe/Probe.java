@@ -167,6 +167,7 @@ public final class Probe implements ClientModInitializer {
             mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
         } else if (cmd.equals("cam first")) {
             mc.options.setCameraType(CameraType.FIRST_PERSON);
+            clearChat(mc); // 2026-11-15 1인칭 영상 첫 장에 [probe] cam 줄이 남았음
         } else if (cmd.startsWith("shiftslot ") && mc.player != null && mc.gameMode != null) {
             // Shift + 좌클릭 (빠르게 옮기기 — 마우스로 누를 때와 같은 패킷)
             int n = Integer.parseInt(cmd.substring(10).trim());

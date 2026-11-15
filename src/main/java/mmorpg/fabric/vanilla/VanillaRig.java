@@ -346,15 +346,22 @@ public final class VanillaRig {
             shown++;
             // 내 모션 보기: 내 화면에도 (Polymer 는 엔티티를 보는 사람 (추적) 에게만 붙임 — 자기 자신은 그 목록에 없음)
             if (SELF.contains(sp.getUUID()) && VanillaClients.isVanilla(sp)) startWatching(sp.connection);
-            // 태우기: 홀더가 엔티티에 붙은 뒤에야 Polymer 가 태우는 패킷에 뼈 번호를 실음 (VanillaModels 와 같음)
+            sendMount();
+            pushBody(sp);
+            // 2026-11-15 태우는 패킷을 2틱 뒤 한 번 더 보내고 그다음 틱에 보이게: 처음 패킷이 듣지 않으면 뼈가 생긴 자리 (발 높이) 에 남음 — 영상 CI 43667952448
+            // (팬텀 버스트 3인칭) 에서 네 장 동안 머리가 땅에 붙은 채 보였음
+            mmorpg.fabric.Tasks.later(2, this::sendMount);
+            mmorpg.fabric.Tasks.later(3, this::reveal);
+        }
+
+        /** 태우기: 홀더가 엔티티에 붙은 뒤에야 Polymer 가 태우는 패킷에 뼈 번호를 실음 (VanillaModels 와 같음) */
+        void sendMount() {
+            if (sp.isRemoved()) return;
             Set<ServerGamePacketListenerImpl> to = new HashSet<>(getWatchingPlayers());
             to.addAll(tag.getWatchingPlayers());
-            if (!to.isEmpty()) {
-                ClientboundSetPassengersPacket mount = new ClientboundSetPassengersPacket(sp);
-                for (ServerGamePacketListenerImpl c : to) c.send(mount);
-            }
-            pushBody(sp);
-            mmorpg.fabric.Tasks.later(2, this::reveal);
+            if (to.isEmpty()) return;
+            ClientboundSetPassengersPacket mount = new ClientboundSetPassengersPacket(sp);
+            for (ServerGamePacketListenerImpl c : to) c.send(mount);
         }
 
         @Override
