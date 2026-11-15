@@ -447,10 +447,18 @@ final class PhantomFx {
 
     /**
      * 1인칭 눈앞 큰 베기 (주인의 1인칭에만 — 카메라를 봄): 가운데 at · 칼빛 너비 width 칸 · 기울기 tilt (JobFx.slash 와 같은 뜻 — 0 = 왼쪽에서 아래로 불룩하게 오른쪽으로 ·
-     * 180 = 위로 불룩하게 오른쪽에서 왼쪽으로 · 95 = 위에서 아래로 내리침 · 275 = 아래에서 위로): 미리 뒤집은 그림판 (slashm — 위로 불룩 · 오른쪽 → 왼쪽) 을 180 − tilt 돌림
+     * 180 = 위로 불룩하게 오른쪽에서 왼쪽으로 · 95 = 위에서 아래로 내리침 · 275 = 아래에서 위로): 미리 뒤집은 그림판 (slashm — 위로 불룩 · 오른쪽 → 왼쪽 = 예전 판 모델
+     * slash_job 의 그림) 을 180 + tilt 돌림 (화면에서 반시계 — 예전 rfx_jslash 의 spin · JobFx.slashCard FRONT 의 불룩한 날 = 화면 아래를 tilt 도 반시계로 돌린 쪽과 같음).
+     * 2026-11-15 사용자 "이전은 참격이 앞을 잘보고 있는데 왜 새로 만든건 위를 보고 있고 아래를보고 있고 옆을 보고 있고" — 180 − tilt 는 예전의 좌우 거울이었음
+     * (기울기 95 내리침이 오른쪽 대신 왼쪽으로 불룩 · 200 이 왼쪽 위 대신 오른쪽 위로)
      */
     static void eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt) {
-        tiled(sp.level(), L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 - tilt, 0, 1, false, null, only1p(sp), 1.0);
+        eyeSlash(sp, L, at, width, tilt, 1.0);
+    }
+
+    /** 같은 것 — 불투명 alpha (옅은 잔상 겹) */
+    static void eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt, double alpha) {
+        tiled(sp.level(), L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 + tilt, 0, 1, false, null, only1p(sp), alpha);
     }
 
     /**
@@ -458,7 +466,7 @@ final class PhantomFx {
      * 첫 영상 (CI 43693784623) 에서 쓴 사람 뒤를 보게 고정한 판은 옆 · 앞에서 비스듬히 얇게 보였음 → 늘 보는 사람 쪽 (어느 쪽에서도 화면에서 같은 기울기)
      */
     static void slashBill(ServerLevel level, Lib L, Vec3 at, double width, double tilt, Predicate<ServerPlayer> who) {
-        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 - tilt, 0, 1, false, null, who, 1.0);
+        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 + tilt, 0, 1, false, null, who, 1.0);
     }
 
     /**
@@ -551,7 +559,8 @@ final class PhantomFx {
     static Vfx.Fx card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who, double alpha, int every) {
         Vec3[] ax = screenAxes(dir);
         Quaternionf q = Vfx.basis(ax[2], ax[1], V.scale(ax[0], -1));
-        return tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180 - tilt, 0, Math.max(1, every), true, L.n("slash"), who, alpha);
+        // 180 + tilt: 그림 위쪽 (slashm 의 불룩한 날) 이 −위 · cos(tilt) + 오른쪽 · sin(tilt) — 예전 JobFx.slashCard FRONT 의 불룩한 날 · 판 X 와 똑같음 (eyeSlash 참고)
+        return tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180 + tilt, 0, Math.max(1, every), true, L.n("slash"), who, alpha);
     }
 
     /**
@@ -567,13 +576,72 @@ final class PhantomFx {
         if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
     }
 
+    /**
+     * 2026-11-15 날아가는 검기 판 — 예전 JobFx.wave 의 3인칭 판 (CardFace.SWING + RuneKit.faceCamIfFlat) 그대로 (사용자 "이전은 참격이 앞을 잘보고 있는데"): 불룩한 날 =
+     * 날아가는 쪽 dir (그림 위쪽 Y), 면 = 위 (Z) 를 dir 둘레로 −tilt 돌림 — 다만 판이 누운 쪽이면 (cos tilt 의 크기 0.5 이상) 면이 보는 사람의 눈 (영상이면 영상 카메라 —
+     * PBridge.eyeOf) 쪽 · 돌림 0 / 180. 그림 = slashm (예전 판 모델 slash_job 그림 — 위로 불룩 · 오른쪽 → 왼쪽), 앞뒤 두 면. at 에서 speed 칸/초 · life 초
+     */
+    static void cardSwing(ServerLevel level, Lib L, ServerPlayer owner, Vec3 at, Vec3 dir, double speed, double width, double tilt, double life,
+            Predicate<ServerPlayer> who, double alpha) {
+        Vec3 Y = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        // RuneKit.screenSpin(d, UP, −tilt) 와 같은 셈 (주인 눈에서 본 판의 기울기)
+        Vec3 r = V.cross(Y, V.UP);
+        double spin;
+        if (V.len(r) < 1e-4) spin = tilt;
+        else {
+            r = V.unit(r);
+            Vec3 u = V.cross(r, Y);
+            spin = -(Math.toDegrees(Math.atan2(V.dot(V.UP, r), V.dot(V.UP, u))) - tilt);
+        }
+        double c = Math.cos(Math.toRadians(-spin));
+        Vec3 Z;
+        double roll;
+        if (Math.abs(c) >= 0.5) {
+            ServerPlayer viewer = owner;
+            if (viewer == null && level.getNearestPlayer(at.x, at.y, at.z, 64, false) instanceof ServerPlayer np) viewer = np;
+            Vec3 eye = viewer != null ? mmorpg.fabric.vfx.PBridge.eyeOf(viewer) : V.add(at, Y, -4.0);
+            Z = V.sub(eye, at);
+            roll = c >= 0 ? 0 : 180;
+        } else {
+            Z = V.UP;
+            roll = -tilt;
+        }
+        Z = V.sub(Z, V.scale(Y, V.dot(Z, Y)));
+        if (V.len(Z) < 1e-4) {
+            Z = Math.abs(Y.y) < 0.9 ? V.UP : new Vec3(1, 0, 0);
+            Z = V.sub(Z, V.scale(Y, V.dot(Z, Y)));
+        }
+        Z = V.unit(Z);
+        Vec3 X = V.unit(V.cross(Y, Z));
+        // 판 Y 둘레로 roll 도 (예전 R.rotateY(roll)): X' = X cos − Z sin · Z' = X sin + Z cos
+        double a = Math.toRadians(roll);
+        Vec3 X2 = V.add(V.scale(X, Math.cos(a)), Z, -Math.sin(a));
+        Vec3 Z2 = V.add(V.scale(X, Math.sin(a)), Z, Math.cos(a));
+        Quaternionf q = Vfx.basis(V.unit(X2), Y, V.unit(Z2));
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        int frames = Vfx.sheet(L.n("slashm_00")).frames();
+        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 0, 0, Math.max(1, (int) Math.round(ticks / (double) frames)), true, L.n("slash"), who,
+                alpha);
+        if (speed > 0) fx.shift(V.scale(Y, speed * ticks / 20.0), ticks);
+    }
+
+    /**
+     * 2026-11-15 1인칭 눈앞 칼자국 하나 (주인의 1인칭에만 — 카메라를 봄, 예전 rfx_jcuts 대신 일섬 그림 cut): 가운데 at · 길이 len 칸 · 화면에서 줄의 각 deg (반시계 —
+     * 0 = 가로) — 그어짐 → 잠깐 머묾 → 터짐 (8틱)
+     */
+    static void cutEye(ServerPlayer sp, Lib L, Vec3 at, double len, double deg) {
+        if (!has(L, "cut")) return;
+        Vfx.Fx fx = Vfx.at(sp.level(), at, 14, only1p(sp));
+        single(fx, L.n("cut"), at, len / 0.92, deg, 1, false);
+    }
+
     /** 땅에 눕힌 참격 판 (JobFx.CardFace.UP — 면이 위): 불룩한 날 = dir 의 수평을 위에서 tilt 도 돌린 쪽 · 칼빛 너비 width 칸 */
     static void cardUp(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who) {
         Vec3 h = V.flat(dir);
         h = V.len(h) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(h);
         Vec3 bulge = V.turnY(h, tilt);
         Quaternionf q = Vfx.basis(V.unit(V.cross(bulge, V.UP)), bulge, V.UP);
-        tiled(level, L.n("slash"), 2, at, width / SLASH_FILL, q, 0, 0, 1, false, null, who, 1.0);
+        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 0, 0, 1, false, null, who, 1.0); // slashm = 예전 판 모델 그림 (위로 불룩 · 오른쪽 → 왼쪽)
     }
 
     /**
@@ -586,7 +654,8 @@ final class PhantomFx {
         int ticks = Math.max(2, (int) Math.round(life * 20));
         int frames = Vfx.sheet(L.n("slashm_00")).frames();
         int every = Math.max(1, (int) Math.round(ticks / (double) frames));
-        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, half * 2, null, -waveTilt, 0, every, false, null, who, alpha);
+        // +waveTilt (화면에서 반시계 — 예전 rfx_jwave 의 spin: 0 = 위로 불룩 · 90 = 왼쪽으로 불룩). 2026-11-15 −waveTilt 는 좌우 거울이었음
+        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, half * 2, null, waveTilt, 0, every, false, null, who, alpha);
         if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
     }
 
@@ -696,26 +765,33 @@ final class PhantomFx {
     }
 
     /**
-     * 일섬 · 걸린 칼자국 (JobFx.line · 블레이드 에코 — cut: 0 ~ 1 그어짐 → 2 ~ 4 머묾 (되풀이) → 5 ~ 7 터져 벌어짐): from → to 를 품은 두 판 (줄을 축으로 눕힌 판 · 세운 판,
-     * 앞뒤 두 면 — 어느 쪽에서 봐도 보임) · hold 틱 머문 뒤 터짐 (burst false 면 머문 뒤 옅어짐). 반환 = 효과
+     * 일섬 · 걸린 칼자국 (JobFx.line · 블레이드 에코 — cut: 0 ~ 1 그어짐 → 2 ~ 4 머묾 (되풀이) → 5 ~ 7 터져 벌어짐): from → to 를 품은 한 판이 줄을 축으로 보는 사람의
+     * 눈 (가장 가까운 사람 — 영상이면 영상 카메라, PBridge.eyeOf) 쪽을 봄 (앞뒤 두 면) — 예전 rfx_jline2 · rfx_jecho (가는 쪽으로 누워 눈 쪽을 봄) 와 같음. 2026-11-15 사용자
+     * "위를 보고 있고 … 옆을 보고 있고" — 전에는 줄을 축으로 눕힌 판 · 세운 판 둘이라 영상에서 위 · 옆을 보는 판으로 보였음. hold 틱 머문 뒤 터짐 (burst false 면 옅어짐)
      */
     static Vfx.Fx cut(ServerLevel level, Lib L, Vec3 from, Vec3 to, int hold, boolean burst, Predicate<ServerPlayer> who) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.2 || !has(L, "cut")) return null;
         Vec3 ex = V.scale(d, 1 / len);
-        Vec3 side = V.cross(ex, V.UP);
-        side = V.len(side) < 1e-3 ? new Vec3(1, 0, 0) : V.unit(side);
-        Vec3 n1 = V.unit(V.cross(ex, side));
-        Quaternionf flatQ = Vfx.basis(ex, side, V.unit(V.cross(ex, side)));
-        Quaternionf upQ = Vfx.basis(ex, n1, V.unit(V.cross(ex, n1)));
         Vec3 mid = V.lerp(from, to, 0.5);
+        net.minecraft.world.entity.player.Player near = level.getNearestPlayer(mid.x, mid.y, mid.z, 64, false);
+        Vec3 eye = near instanceof ServerPlayer np ? mmorpg.fabric.vfx.PBridge.eyeOf(np) : V.up(mid, 2.0);
+        Vec3 ez = V.sub(eye, mid);
+        ez = V.sub(ez, V.scale(ex, V.dot(ez, ex)));
+        if (V.len(ez) < 1e-4) {
+            ez = V.cross(ex, V.UP);
+            if (V.len(ez) < 1e-4) ez = new Vec3(1, 0, 0);
+        }
+        ez = V.unit(ez);
+        Vec3 ey = V.unit(V.cross(ez, ex));
+        Quaternionf faceQ = Vfx.basis(ex, ey, ez);
         int H = Math.max(1, hold);
         int life = 2 + H + (burst ? 4 : 5) + 2;
         Vfx.Fx fx = Vfx.at(level, mid, life, who);
         String name = L.n("cut");
         double size = len / 0.92;
-        for (Quaternionf q : new Quaternionf[] {flatQ, upQ}) {
+        for (Quaternionf q : new Quaternionf[] {faceQ}) {
             for (int s = 0; s < 2; s++) {
                 Vfx.Sprite sp = fx.sprite(name, mid);
                 sp.fixed(q);

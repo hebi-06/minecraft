@@ -199,8 +199,9 @@ final class JobFx {
             // (+ 조금 크고 7° 기운 옅은 잔상 판 — 예전과 같음). 사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?" — 모두가 카메라를 보는 한 벌은 높은 3인칭 · 영상 카메라
             // 쪽으로 뒤로 누워 위를 보는 것처럼 보였음
             PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt);
-            PhantomFx.card(sp.level(), L, at, look, tilt, size * 1.8, PhantomFx.hide1p(sp));
-            PhantomFx.card(sp.level(), L, V.add(at, look, 0.15), look, tilt + 7, size * 1.8 * 1.14, PhantomFx.hide1p(sp), 0.45, 1);
+            PhantomFx.eyeSlash(sp, L, V.add(at, look, 0.15), size * 1.8 * 1.14, tilt + 7, 0.42); // 예전 1인칭 잔상 겹 (조금 크고 7° 기움 · 옅게)
+            PhantomFx.card(sp.level(), L, at, look, tilt, size * CARD * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp));
+            PhantomFx.card(sp.level(), L, V.add(at, look, 0.15), look, tilt + 7, size * CARD * 1.14 * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp), 0.45, 1);
             return;
         }
         Opt own = only1p(sp);
@@ -255,8 +256,11 @@ final class JobFx {
         if (L != null) {
             // 2026-11-15 원소 공용 묶음: 칼빛 초승달 판 — 앞을 보고 섬 (앞뒤 두 면) · UP 은 땅에 누움. 사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?" (카메라를 보는
             // 판은 높은 카메라 쪽으로 뒤로 누워 위를 보는 것처럼 보였음) → 2026-11-14 메모 때 정한 앞을 보는 판으로 되돌림
-            if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, size, PhantomFx.who(view));
-            else PhantomFx.card(level, L, at, dir, tilt, size, PhantomFx.who(view), view.num("alpha", 1.0), 1);
+            // 크기: 예전 판 모델 slash_job 은 scale 1 에 가로 2칸 (칼빛은 그 0.9) — size 그대로 쓰면 예전의 반이었음
+            double w = size * 2 * PhantomFx.SLASH_FILL;
+            if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, w, PhantomFx.who(view));
+            else if (face == CardFace.SWING) PhantomFx.cardSwing(level, L, null, at, dir, V.len(vel), w, tilt, life, PhantomFx.who(view), view.num("alpha", 1.0));
+            else PhantomFx.card(level, L, at, dir, tilt, w, PhantomFx.who(view), view.num("alpha", 1.0), 1);
             return;
         }
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
@@ -295,7 +299,9 @@ final class JobFx {
             // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 — 1인칭 (주인) 은 카메라를 봄 (눈앞 베기와 같은 기울기 뜻: 검기 기울기 = 베기 + 180), 3인칭 · 다른 사람은
             // 앞을 보고 선 판이 날아감 (사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?")
             PhantomFx.wave(level, L, at, d, speed, o.num("size", 1) * 0.9, o.num("spin", 0) + 180, life, PhantomFx.only1p(sp), o.num("alpha", 1));
-            PhantomFx.cardFly(level, L, at, d, speed, o.num("size", 1) * 1.8, o.num("spin", 0), life, PhantomFx.hide1p(sp), o.num("alpha", 1));
+            // 3인칭 · 다른 사람: 예전과 같은 날아가는 휘두른 판 (불룩한 날 = 날아가는 쪽 · 누운 판이면 보는 사람 쪽) — 예전 크기 size × CARD × 1.1 (판 모델 가로 2칸)
+            PhantomFx.cardSwing(level, L, sp, at, d, speed, o.num("size", 1) * CARD * 1.1 * 2 * PhantomFx.SLASH_FILL, o.num("spin", 0), life, PhantomFx.hide1p(sp), o.num(
+                    "alpha", 1));
             return;
         }
         two(level, slashName(j), slashFrames(j), at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));

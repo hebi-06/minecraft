@@ -100,7 +100,19 @@ final class SwordmasterSkills {
             JobFx.slashWave(sp, j, 184.0, R * 0.48, R + 2.0, 30);
             PhantomFx.Lib L = PhantomFx.elem(j);
             if (L != null) {
-                // 2026-11-15 원소 공용 묶음 (금): 부채꼴 안에 금빛 일섬 (ak_cut — 그어짐 → 잠깐 머묾 → 터져 벌어짐) 이 한 틱에 둘씩 — 1인칭 · 3인칭 모두 (세상에 그어진 칼자국)
+                // 2026-11-15 원소 공용 묶음 (금) — 사용자 "이전은 참격이 앞을 잘보고 있는데 왜 새로 만든건 위를 보고 … 옆을 보고": 예전 구성 그대로 — 1인칭 = 눈앞 칼자국 다발
+                // (금빛 일섬 cut 을 카메라를 보게 · 각 CUT_TILT — 예전 rfx_jcuts 자리 · 크기), 3인칭 · 다른 사람 = 부채꼴 안 앞을 보는 칼자국 판 (한 틱에 둘 — 예전과 같은
+                // slashCard). 전에는 줄을 축으로 눕힌 판 · 세운 판 일섬이라 영상에서 위 · 옆을 보는 판으로 보였음
+                Vec3 eye = sp.getEyePosition();
+                Vec3 up0 = JobFx.screenUp(look);
+                Vec3 right0 = V.cross(look, up0);
+                right0 = V.len(right0) > 1e-4 ? V.unit(right0) : V.rightOf(Kit.facingOf(sp));
+                Vec3 c1 = V.add(eye, look, 2.3);
+                for (int q = 0; q < 7; q++) {
+                    double deg = CUT_TILT[q % CUT_TILT.length] + Kit.rand() * 16 - 8;
+                    Vec3 at = V.add(V.add(c1, right0, (Kit.rand() * 2 - 1) * 0.95), up0, (Kit.rand() * 2 - 1) * 0.55);
+                    PhantomFx.cutEye(sp, L, at, 1.4 + Kit.rand() * 0.6, deg);
+                }
                 for (int i = 0; i < n; i++) {
                     int ii = i;
                     RuneKit.later(ii / 2, () -> {
@@ -108,10 +120,7 @@ final class SwordmasterSkills {
                         Vec3 ff = Kit.facingOf(sp);
                         double side = (Kit.rand() * 2 - 1) * R * 0.32;
                         Vec3 at = V.up(V.add(V.add(sp.position(), ff, R * (0.42 + 0.38 * Kit.rand())), V.rightOf(ff), side), 0.75 + 0.75 * Kit.rand());
-                        double a = Math.toRadians(CUT_TILT[ii % CUT_TILT.length] + Kit.rand() * 14 - 7);
-                        Vec3 dir = V.add(V.scale(V.rightOf(ff), Math.cos(a)), V.UP, Math.sin(a));
-                        double half = (2.7 + Kit.rand() * 0.9) * 0.5;
-                        PhantomFx.cut(sp.level(), L, V.add(at, dir, -half), V.add(at, dir, half), 2, true, null);
+                        JobFx.slashCard(sp.level(), at, ff, CUT_TILT[ii % CUT_TILT.length] + Kit.rand() * 14 - 7, 2.7 + Kit.rand() * 0.9, 0.24, V.ZERO, j, JobFx.hide1p(sp));
                         JobFx.glint(sp.level(), at, 0.35, j, 0.2, Opt.empty());
                     });
                 }

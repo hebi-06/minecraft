@@ -131,7 +131,7 @@ public final class PBridge {
     }
 
     /** 그림의 앞면을 돌릴 이 사람의 눈: 시험 영상이면 영상 카메라 자리 (Probe.filmCamera 와 같은 셈), 아니면 몸의 눈 */
-    static Vec3 eyeOf(ServerPlayer sp) {
+    public static Vec3 eyeOf(ServerPlayer sp) {
         double[] c = FILM.get(sp.getId());
         if (c == null || !isThird(sp)) return sp.getEyePosition();
         double fx = c[9];
