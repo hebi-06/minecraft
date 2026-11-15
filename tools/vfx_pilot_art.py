@@ -457,8 +457,9 @@ def ember():
     out = []
     for f in range(EMBER_FRAMES):
         k = [1.0, 0.82, 0.94, 0.74][f]
-        halo = np.exp(-(r / (0.62 * (0.9 + 0.1 * k))) ** 2) * 0.55
-        mid = np.exp(-(r / (0.3 * k)) ** 2) * 0.95
+        # 2026-11-15 2판 다듬기: 겉빛을 작고 옅게 (1인칭에서 눈앞을 지나는 불씨가 검붉은 공처럼 보였음 — CI 43668850426)
+        halo = np.exp(-(r / (0.46 * (0.9 + 0.1 * k))) ** 2) * 0.38
+        mid = np.exp(-(r / (0.27 * k)) ** 2) * 0.95
         core = np.exp(-(r / (0.13 * k)) ** 2) * 1.3
         rgb, a = compose([(FIRE(0.5), halo), (FIRE(0.78), mid), (WHITE * 0.6 + H("#FFE7A0") * 0.4, np.clip(core, 0, 1))], n)
         a = a * (1 - sstep(0.88, 0.99, r))
