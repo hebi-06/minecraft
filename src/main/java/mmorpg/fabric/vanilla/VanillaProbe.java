@@ -1385,6 +1385,8 @@ final class VanillaProbe {
             return;
         }
         run(server, "tick rate 20");
+        // 2026-11-15 앞 영상의 남은 연출 · 태세를 죽은 것처럼 끝냄 (룬 영상과 같은 RuneKit.filmReset — 미러 블레이드 태세의 날개가 다음 블레이드 아포칼립스 영상에 남았음, CI 43693784623)
+        mmorpg.fabric.rune.RuneKit.filmReset(p);
         clearStrays(server);
         run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
         String type = j.weapons().isEmpty() ? "sword" : j.weapons().get(0);

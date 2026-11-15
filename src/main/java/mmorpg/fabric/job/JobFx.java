@@ -195,9 +195,9 @@ final class JobFx {
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
-            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 눈앞 칼빛 초승달 (주인의 1인칭에만) + 같은 자리 · 같은 모습의 세상 판 (3인칭 · 다른 사람)
-            PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt);
-            PhantomFx.card(sp.level(), L, at, look, tilt, size * 1.8, PhantomFx.hide1p(sp));
+            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 눈앞 칼빛 초승달 — 카메라를 보는 한 벌을 모두가 봄 (1인칭 눈앞 · 3인칭 · 다른 사람 — 같은 자리 ·
+            // 화면에서 같은 기울기)
+            PhantomFx.slashBill(sp.level(), L, at, size * 1.8, tilt, null);
             return;
         }
         Opt own = only1p(sp);
@@ -252,7 +252,7 @@ final class JobFx {
         if (L != null) {
             // 2026-11-15 원소 공용 묶음: 칼빛 초승달 판 (앞을 봄 — 앞뒤 두 면 · 땅에 누움)
             if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, size, PhantomFx.who(view));
-            else PhantomFx.card(level, L, at, dir, tilt, size, PhantomFx.who(view));
+            else PhantomFx.slashBill(level, L, at, size, tilt, PhantomFx.who(view)); // 카메라를 봄 (옆 · 앞에서도 넓은 면)
             return;
         }
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
@@ -976,6 +976,8 @@ final class JobFx {
      * 동안 날개가 다리 아래에 남았음). 1인칭에서는 숨김 (등 뒤라 눈앞을 가리지 않게)
      */
     static void valWings(ServerPlayer sp, Jobs.Job j, double size, int ticks, double alpha) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null && PhantomFx.wings(sp, L, size, ticks, alpha)) return; // 2026-11-15 손으로 칠한 깃털 날개 (el_steel_wings — 날갯짓)
         String life = RuneKit.lifeToken(sp);
         double phase = Kit.rand() * VALWING;
         Vec3[] last = {null};
@@ -1364,7 +1366,8 @@ final class JobFx {
      */
     private static void chargeLib(ServerPlayer sp, Jobs.Job j, PhantomFx.Lib L, Vec3 rel, int ticks, double size) {
         String life = RuneKit.lifeToken(sp);
-        PhantomFx.ring(sp.level(), L, PhantomFx.ground(sp.level(), sp.position()), 1.4, 3, Math.max(2, ticks - 2), null, 0.8);
+        // 발밑 고리는 주인 1인칭에서 숨김 (눈 바로 아래 · 비스듬한 그림은 픽셀이 크게 늘어나 화면 가장자리에 덩어리로 보였음 — CI 43693784623)
+        PhantomFx.ring(sp.level(), L, PhantomFx.ground(sp.level(), sp.position()), 1.4, 3, Math.max(2, ticks - 2), PhantomFx.hide1p(sp), 0.8);
         SkillFx.play(sp.level(), "block.respawn_anchor.charge", sp.position(), 1.3, 0.45);
         Vec3 p0 = relPoint(sp, rel);
         mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(sp.level(), p0, ticks + 6);

@@ -173,16 +173,21 @@ def slash_frame(S, f, n=512):
     cool = sstep(2.0, 9.2, f)
     band = 0.5 + 0.5 * np.sin((rho - SLASH_R) * 2 * math.pi * 15 + (N.fbm(s * 3 + 1, rho * 3, 0.5, 3) - 0.5) * 9)
     streak = sstep(0.6, 0.8, band) * (1 - rel) ** 0.6
-    T = (1 - rel) ** 1.4 * (0.62 + 0.38 * sp_) + 0.2 * streak + 0.06 - 0.3 * cool * (1 - sp_)
+    solid = S.kind != "gold"  # 금은 빛 (짙은 테 없이 · 밝고 속이 옅게 — 첫 영상에서 짙은 테 · 띠가 바나나 껍질처럼 보였음)
+    T = (1 - rel) ** 1.4 * (0.62 + 0.38 * sp_) + 0.2 * streak + 0.06 - 0.3 * cool * (1 - sp_) + (0.0 if solid else 0.16)
     Tb = banded(np.clip(T, 0, 1), [0.3, 0.45, 0.6, 0.74, 0.86])
-    A = body * (0.97 - 0.52 * rel ** 1.5) * (0.6 + 0.4 * sp_ ** 0.6)
+    if solid:
+        A = body * (0.97 - 0.52 * rel ** 1.5) * (0.6 + 0.4 * sp_ ** 0.6)
+    else:
+        A = body * (0.92 * (1 - rel) ** 1.2 + 0.06) * (0.6 + 0.4 * sp_ ** 0.6)
     layers = []
-    glow = ndimage.gaussian_filter(body * (0.35 + 0.65 * sp_), n * 0.022)
-    layers.append((S.main(0.55), np.clip(glow * 1.9, 0, 1) * 0.7 * k))
+    glow = ndimage.gaussian_filter(body * (0.35 + 0.65 * sp_), n * (0.022 if solid else 0.03))
+    layers.append((S.main(0.55 if solid else 0.7), np.clip(glow * (1.9 if solid else 2.3), 0, 1) * (0.7 if solid else 0.8) * k))
     smear = vis * (1 - sstep(w * 1.8, w * 1.8 + aa * 3, -d)) * sstep(-0.02, 0.0, -d) * (1 - sp_) ** 0.3 * 0.22
-    layers.append((S.main(0.45), smear * k))
+    layers.append((S.main(0.45 if solid else 0.7), smear * k))
     outl = body * sstep(0.8, 0.95, rel) * (w > 0.02)
-    layers.append((S.main(0.14), outl * 0.85 * k))
+    if solid:
+        layers.append((S.main(0.14), outl * 0.85 * k))
     layers.append((S.main(0.32 + 0.68 * Tb), A * k))
     rim_in = body * np.exp(-((rel - 0.7) / 0.06) ** 2) * (w > 0.03) * (0.35 + 0.65 * sp_) * 0.8
     layers.append((S.accent(0.82), rim_in * k))
@@ -299,8 +304,9 @@ def xslash_frame(S, f, n=512):
     cool = sstep(2.5, 7.5, f)
     glow = ndimage.gaussian_filter(body_all, n * 0.02)
     layers.append((S.main(0.5), np.clip(glow * 1.6, 0, 1) * 0.75))
-    layers.append((S.main(0.62 - 0.2 * cool + 0.15 * core_all), body_all))
-    layers.append((S.main(0.16), rim_all * 0.75))
+    layers.append((S.main(0.62 - 0.2 * cool + 0.15 * core_all + (0.0 if S.kind != "gold" else 0.14)), body_all))
+    if S.kind != "gold":
+        layers.append((S.main(0.16), rim_all * 0.75))
     layers.append((S.main(0.9 - 0.18 * cool), core_all))
     layers.append((WHITE, np.clip(hot_all * 1.2 + core_all * 0.3 * (1 - cool), 0, 1)))
     if 2 <= f <= 4:
@@ -1214,6 +1220,98 @@ def excal_frame(S, f, w=256, h=1024):
     return rgb, a
 
 
+# ------------------------------------------------------------------ 직업 대표: 발키리의 날개 (2 × 2 — 카메라를 봄, 날갯짓 되풀이, 강철)
+
+WINGS_FRAMES = 6
+
+
+def _bezier(p0, p1, p2, u):
+    return ((1 - u) ** 2 * p0[0] + 2 * (1 - u) * u * p1[0] + u * u * p2[0], (1 - u) ** 2 * p0[1] + 2 * (1 - u) * u * p1[1] + u * u * p2[1])
+
+
+def _feather(x, y, rx, ry, dx, dy, L, w, aa):
+    """깃털 한 장 (뿌리 rx, ry · 쪽 dx, dy · 길이 L · 반폭 w): 잎 모양 마스크 · 길이 쪽 t · 가로 쪽 b (−1 ~ 1)"""
+    a = (x - rx) * dx + (y - ry) * dy
+    b = -(x - rx) * dy + (y - ry) * dx
+    t = a / L
+    hw = w * np.clip(4 * t * (1 - t), 0, 1) ** 0.6 * (1 - 0.3 * np.clip(t, 0, 1)) + 1e-4
+    m = (1 - sstep(hw - aa, hw + aa, np.abs(b))) * (t >= 0) * (t <= 1)
+    return m, np.clip(t, 0, 1), np.clip(b / hw, -1, 1)
+
+
+def wings_frame(S, f, n=512):
+    """발키리의 날개 한 쌍 (등 뒤 — 카메라를 봄): 어깨에서 위 · 바깥으로 휜 날개 줄기 (흰 빛 띠) 아래로 깃털 세 겹 (긴 첫째 깃 · 둘째 깃 · 덮깃 — 바깥일수록 길고
+    바깥으로 기욺) · 깃마다 뿌리 쪽 밝음 → 끝 쪽 짙음 · 깃대 · 빛나는 가장자리, 넓은 빛 무리 · 떨어지는 반짝임. 여섯 칸 날갯짓 (어깨 둘레로 ±11° · 깃이 벌어졌다 모임)"""
+    rng = np.random.default_rng(581 + S.seed)
+    x, y = grid(n)
+    aa = 1.6 / n
+    ph = f / WINGS_FRAMES * 2 * math.pi
+    flap = math.radians(11) * math.sin(ph)
+    spread = 1 + 0.08 * math.cos(ph)
+    layers = []
+    masks = []
+    edge_all = np.zeros_like(x)
+    for side in (-1, 1):
+        sx = 0.07 * side
+        sy = -0.06
+        ca, sa = math.cos(flap * side), math.sin(flap * side)
+
+        def rot(px, py):
+            # 어깨 둘레로 돌림 (오른쪽 날개 + 는 위로 · 왼쪽은 거울)
+            qx, qy = px - sx, py - sy
+            return sx + qx * ca - qy * sa, sy + qx * sa + qy * ca
+        P0 = (sx, sy)
+        P1 = rot(0.36 * side, 0.8)
+        P2 = rot(0.88 * side, 0.62)
+        for row, (cnt, lscale, wscale, shade0) in enumerate([(13, 1.0, 1.0, 0.0), (11, 0.62, 0.95, 0.08), (9, 0.33, 0.8, 0.16)]):
+            for i in range(cnt):
+                u = 0.1 + 0.88 * i / (cnt - 1)
+                ex, ey = _bezier(P0, P1, P2, u)
+                beta = math.radians(8 + 50 * u ** 1.3) * spread
+                # 아래 (0, −1) 를 바깥쪽으로 beta 돌림 → 날개마다 거울
+                dx, dy = math.sin(beta) * side, -math.cos(beta)
+                ang = math.atan2(dy, dx) + flap * side * 0.6
+                dx, dy = math.cos(ang), math.sin(ang)
+                L = (0.42 + 0.55 * u ** 1.2) * lscale * (1 + rng.uniform(-0.04, 0.04))
+                w = (0.05 + 0.025 * (1 - u)) * wscale
+                m, t, b = _feather(x, y, ex, ey, dx, dy, L, w, aa)
+                if not m.any():
+                    continue
+                T = 0.42 + 0.34 * (1 - t) ** 0.8 + 0.1 * b * side + shade0
+                layers.append((S.main(0.16), np.clip(ndimage.gaussian_filter(m, 1.2) * 1.2, 0, 1) * 0.55))
+                layers.append((S.main(np.clip(T, 0, 1)), m * 0.92))
+                rim = m * sstep(0.7, 0.95, np.abs(b))
+                layers.append((S.main(0.93), rim * 0.8))
+                rach = m * np.exp(-((b * w) / 0.004) ** 2) * (1 - t) ** 0.6
+                layers.append((WHITE, rach * 0.6))
+                masks.append(m)
+        # 날개 줄기 (흰 빛 띠 — 어깨에서 끝으로 가늘어짐)
+        for i in range(24):
+            u0, u1 = i / 24, (i + 1) / 24
+            ax, ay = _bezier(P0, P1, P2, u0)
+            bx, by = _bezier(P0, P1, P2, u1)
+            d, sv = seg_dist(x, y, ax, ay, bx, by)
+            wl = 0.018 * (1 - 0.7 * (u0 + (u1 - u0) * sv)) + 0.003
+            edge_all = np.maximum(edge_all, 1 - sstep(wl - aa, wl + aa, d))
+    body = np.clip(np.sum(np.stack(masks), 0), 0, 1) if masks else np.zeros_like(x)
+    glow = ndimage.gaussian_filter(np.maximum(body, edge_all), n * 0.03)
+    base = [(S.main(0.6), np.clip(glow * 1.6, 0, 1) * 0.55)]
+    layers = base + layers + [(S.main(0.9), edge_all), (WHITE, edge_all * 0.8)]
+    sp_m = np.zeros_like(x)
+    for i in range(16):
+        px = rng.uniform(-0.9, 0.9)
+        py0 = rng.uniform(-0.6, 0.6)
+        q = (rng.uniform(0, 1) + f / WINGS_FRAMES) % 1.0
+        py = py0 - 0.35 * q
+        tw = math.sin(math.pi * q)
+        L = 0.03 * (0.6 + 0.4 * tw)
+        sp_m = np.maximum(sp_m, star4(x, y, px, py, L, L * 0.16, 0.2, aa) * tw * (abs(px) > 0.15))
+    layers += [(S.main(0.92), np.clip(sp_m * 1.2, 0, 1)), (WHITE, np.clip(sp_m * 1.3 - 0.4, 0, 1))]
+    rgb, a = compose(layers, n)
+    rgb, a = bloom(rgb, a, n, thresh=0.62, sigma=0.02, gain=0.6)
+    return rgb, a * edge_fade(x, y, 0.92, 0.99)
+
+
 # ------------------------------------------------------------------ 원소 결
 
 STYLES = {
@@ -1279,6 +1377,8 @@ def frames_of(S, name):
         return [to_img(*moon_frame(S, f)) for f in range(MOON_FRAMES)]
     if name == "excal":
         return [to_img(*excal_frame(S, f)) for f in range(EXCAL_FRAMES)]
+    if name == "wings":
+        return [to_img(*wings_frame(S, f)) for f in range(WINGS_FRAMES)]
     raise KeyError(name)
 
 
@@ -1322,7 +1422,8 @@ def sets_for(S):
               (p + "charge", fr("charge"), True), (p + "ember", lambda: ember(S), True), (p + "shard", lambda: shard(S), True),
               (p + "pillar", fr("pillar"), True), (p + "dust", fr("dust"), True)])
     if S.kind == "steel":
-        out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "rift", fr("rift"), True), (p + "cut", fr("cut"), True)]
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "rift", fr("rift"), True), (p + "cut", fr("cut"), True)]
+                + tiled(p + "wings", fr("wings")))
     if S.kind == "blood":
         out += tiled(p + "moon", fr("moon")) + [(p + "rift", fr("rift"), True)]
     return out

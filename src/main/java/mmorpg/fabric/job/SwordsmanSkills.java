@@ -175,7 +175,7 @@ final class SwordsmanSkills {
         String life = RuneKit.lifeToken(sp);
         // 출발: 쓴 자리의 잔상 · 발밑 작은 둥근 베기 · 1인칭 빠른 줄 · 소리
         RuneKit.shadeClone(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.5, "fade", 0.6, "alpha", 0.85));
-        JobFx.ring(level, V.up(start, 0.06), 0.9, j, false, 0.3, Opt.of("alpha", 0.85));
+        JobFx.ring(level, V.up(start, 0.06), 0.9, j, false, 0.3, JobFx.hide1p(sp).with("alpha", 0.85));
         SkillFx.play(level, "item.trident.riptide_1", start, 1.6, 0.8);
         SkillFx.play(level, "item.spear.attack_miss", start, 1.5, 0.9);
         Kit.noFall(sp, 30);
@@ -405,7 +405,7 @@ final class SwordsmanSkills {
         else JobMove.run(sp, JobMove.to(0, rush, JobMove.at(stop), JobMove.OUT), JobMove.hold(rush, hop0), JobMove.hop(hop0, finalAt, from -> from, k.num("hop",
                 0.8)));
         // 발동: 발을 굴러 땅이 울림 (작은 땅 터짐 · 흙먼지) · 짧게 솟는 투지 (0.4초 — 몸의 동작을 가리지 않게 길게 두지 않음) · 1인칭 눈앞 고리
-        JobFx.smash(level0, V.up(c0, 0.05), 1.6, j, 0.35, Opt.of("alpha", 0.8));
+        JobFx.smash(level0, V.up(c0, 0.05), 1.6, j, 0.35, JobFx.hide1p(sp).with("alpha", 0.8));
         SkillFx.sparks(level0, V.up(c0, 0.2), DUST, 10, 3.5);
         JobFx.aura(sp, j, 2.4, 0.4, 0.6);
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.4);

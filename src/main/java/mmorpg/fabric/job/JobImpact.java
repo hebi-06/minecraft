@@ -70,7 +70,7 @@ final class JobImpact {
         if (L != null && RuneKit.fxQuota("jobImpact", 10)) {
             // 2026-11-15 원소 공용 묶음: 맞은 자리 (X 베기 · 섬광 · 작은 그림) 를 1차보다 크게 · 센 타격은 작은 폭발 한 겹
             PhantomFx.hit(level, L, e, 1.25 * p);
-            if (p >= 1.4) PhantomFx.burst(level, L, b, body * (0.6 + 0.35 * p), null);
+            if (p >= 1.4) PhantomFx.burst(level, L, PhantomFx.front(e, b), body * (0.6 + 0.35 * p), null);
             SkillFx.sparks(level, b, JobFx.inner(j), (int) Math.round(3 + 3 * p), 4.0 + 1.5 * p);
         } else if (L == null && RuneKit.fxQuota("jobImpact", 10)) {
             // 직업의 맞은 자리를 1차보다 크게 · 타격 섬광 (흰 심지 → 직업 빛 가시 → 고리) · 섬광 한 겹 더 (센 타격)

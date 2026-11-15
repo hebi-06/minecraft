@@ -217,7 +217,7 @@ final class BloodknightSkills {
             JobFx.slash(sp, j, 2.2, -0.05, 2.8, 95.0, 0.28);
             JobFx.slashCard(lv, tip, face, 95.0, 3.8, 0.28, V.ZERO, j, JobFx.hide1p(sp));
             JobFx.groundWave(lv, sp, sp.position(), face, 1.6, 5.0, 22, j); // 0.51.0 내려 박은 칼에서 앞으로 달리는 세로 검기
-            JobFx.smash(lv, V.up(sp.position(), 0.05), 1.6, j, 0.4, Opt.of("alpha", 0.85));
+            JobFx.smash(lv, V.up(sp.position(), 0.05), 1.6, j, 0.4, JobFx.hide1p(sp).with("alpha", 0.85));
             SkillFx.play(lv, "item.trident.hit", tip, 0.8, 1.0);
             SkillFx.play(lv, "entity.player.attack.crit", tip, 0.9, 0.8);
             if (e == null) return;

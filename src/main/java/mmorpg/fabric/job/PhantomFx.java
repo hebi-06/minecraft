@@ -433,6 +433,79 @@ final class PhantomFx {
         tiled(sp.level(), L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 - tilt, 0, 1, false, null, only1p(sp), 1.0);
     }
 
+    /**
+     * 2026-11-15 카메라를 보는 칼빛 초승달 (JobFx.slash · slashCard — 1인칭 · 3인칭 · 다른 사람 모두): 가운데 at · 칼빛 너비 width 칸 · 기울기 tilt (eyeSlash 와 같은 뜻).
+     * 첫 영상 (CI 43693784623) 에서 쓴 사람 뒤를 보게 고정한 판은 옆 · 앞에서 비스듬히 얇게 보였음 → 늘 보는 사람 쪽 (어느 쪽에서도 화면에서 같은 기울기)
+     */
+    static void slashBill(ServerLevel level, Lib L, Vec3 at, double width, double tilt, Predicate<ServerPlayer> who) {
+        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 - tilt, 0, 1, false, null, who, 1.0);
+    }
+
+    /**
+     * 맞은 자리 그림을 몸 앞으로 (때린 사람 쪽 — 몸 겉 너머): 몸 가운데의 카메라를 보는 그림은 몸에 가려 거의 안 보였음 (CI 43693784623 — X 베기 · 섬광). 때린 사람을 모르면 가장
+     * 가까운 사람 쪽 · 둘 다 없으면 몸 가운데
+     */
+    static Vec3 front(LivingEntity e, Vec3 b) {
+        LivingEntity by = e.getLastHurtByMob();
+        Vec3 eye = by != null && by.distanceToSqr(e) < 400 ? by.getEyePosition() : null;
+        if (eye == null && e.level() instanceof ServerLevel lv) {
+            net.minecraft.world.entity.player.Player p = lv.getNearestPlayer(e, 16);
+            if (p != null) eye = p.getEyePosition();
+        }
+        if (eye == null) return b;
+        Vec3 d = V.sub(eye, b);
+        double len = V.len(d);
+        if (len < 0.6) return b;
+        return V.add(b, V.scale(d, 1 / len), Math.min(len * 0.5, Kit.bodyPad(e) + 0.55));
+    }
+
+    /**
+     * 발키리의 날개 (el_steel_wings 2 × 2 — 카메라를 봄 · 날갯짓 되풀이): 등 뒤 (몸 뒤 0.35 · 높이 1.3) 를 2틱마다 따라감 · 4틱에 커지며 나타나 ticks 틱 뒤 6틱에 옅어짐 ·
+     * 주인 1인칭에서는 숨김. 그림판이 없으면 false (예전 길)
+     */
+    static boolean wings(ServerPlayer sp, Lib L, double size, int ticks, double alpha) {
+        if (!has(L, "wings_")) return false;
+        String base = L.n("wings");
+        String life = RuneKit.lifeToken(sp);
+        Vec3 at0 = wingAt(sp);
+        int T = Math.max(8, ticks);
+        Vfx.Fx fx = Vfx.at(sp.level(), at0, T + 10, hide1p(sp));
+        int frames = Vfx.sheet(base + "_00").frames();
+        double t = size * 2.4 / 2;
+        java.util.List<Vfx.Sprite> tiles = new java.util.ArrayList<>();
+        int start = (int) (Kit.rand() * frames);
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                Vfx.Sprite w = fx.sprite(base + "_" + r + c, at0);
+                double ox = (c - 0.5) * t;
+                double oy = (0.5 - r) * t;
+                w.size(t * 0.6);
+                w.offset(ox * 0.6, oy * 0.6);
+                if (alpha < 0.999) w.alpha(alpha);
+                w.play(0, start, frames, 2, true);
+                fx.on(1, () -> {
+                    w.offset(ox, oy);
+                    w.to(null, t, 4);
+                });
+                tiles.add(w);
+            }
+        }
+        fx.each(2, T, 2, age -> {
+            if (!RuneKit.sameLife(sp, life)) {
+                fx.end();
+                return;
+            }
+            Vec3 at = wingAt(sp);
+            for (Vfx.Sprite w : tiles) w.to(at, -1, 2);
+        });
+        fx.on(T, () -> fx.fadeAll(6));
+        return true;
+    }
+
+    private static Vec3 wingAt(ServerPlayer sp) {
+        return V.up(V.add(sp.position(), Kit.facingOf(sp), -0.35), 1.3);
+    }
+
     /** 화면 위쪽 축 (dir 에 수직 — dir 이 거의 위 · 아래면 북쪽) · 오른쪽 축 */
     private static Vec3[] screenAxes(Vec3 dir) {
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : new Vec3(0, 0, 1);
@@ -477,7 +550,7 @@ final class PhantomFx {
 
     /** 맞은 자리 (JobFx.hit · JobImpact): X 베기 · 섬광 (피 = 맞은 자리 피 튐) · 날아가는 작은 그림 — 몸 가운데 · power (1 = 보통) */
     static void hit(ServerLevel level, Lib L, LivingEntity e, double power) {
-        Vec3 b = Kit.bodyPoint(e);
+        Vec3 b = front(e, Kit.bodyPoint(e));
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * power;
         xslash(level, L, b, size * 1.7, Kit.rand() * 360);
         flash(level, L, b, size * 1.9);
@@ -506,7 +579,11 @@ final class PhantomFx {
 
     /** 땅 자국 한 장 (crack_s — 눕힘, 2틱부터 6틱마다): 땅 g · 지름 size 칸 */
     static void crackS(ServerLevel level, Lib L, Vec3 g, double size) {
-        Vfx.Fx cx = Vfx.at(level, g, 40);
+        crackS(level, L, g, size, null);
+    }
+
+    static void crackS(ServerLevel level, Lib L, Vec3 g, double size, Predicate<ServerPlayer> who) {
+        Vfx.Fx cx = Vfx.at(level, g, 40, who);
         Vfx.Sprite cr = cx.sprite(L.n("crack_s"), V.up(g, 0.012));
         cr.fixed(flat(Kit.rand() * 360));
         cr.size(size);
@@ -517,8 +594,10 @@ final class PhantomFx {
     static void smash(ServerLevel level, Lib L, Vec3 at, double radius, Predicate<ServerPlayer> who) {
         Vec3 g = ground(level, at);
         tiled(level, L.n("shock"), 2, V.up(g, 0.03), radius * 2.3, flat(Kit.rand() * 360), 0, 0, 1, false, null, who, 1.0);
-        crackS(level, L, g, radius * 1.5);
-        dust(level, L, g, Math.min(4.5, radius * 1.2));
+        crackS(level, L, g, radius * 1.5, who);
+        Vfx.Fx dx = Vfx.at(level, g, 14, who);
+        double ds = Math.min(4.5, radius * 1.2);
+        single(dx, L.n("dust"), V.up(g, ds * 0.25), ds, 0, 1, false);
         if (who == null) embers(level, L, V.up(g, 0.3), 6 + (int) (radius * 2), radius * 0.8, 0.4, 18);
     }
 

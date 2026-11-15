@@ -145,6 +145,10 @@ public final class Probe implements ClientModInitializer {
             // 2026-11-15 시범 2판: 시야 효과 끔 (느려짐의 화면 확대 · 축소 — 팬텀 버스트 1판 영상이 세 번 줌인 · 줌아웃) · 채팅 지움 (1인칭 영상에 [probe] 줄이 보였음)
             fovEffectsOff(mc);
             clearChat(mc);
+            if (!fontMeasured) {
+                fontMeasured = true;
+                fontMemory(mc);
+            }
             log("film start " + filmName + " " + filmLeft);
         } else if (cmd.startsWith("inv ") && mc.player != null) {
             mc.gui.setScreen(new InventoryScreen(mc.player));
@@ -323,6 +327,67 @@ public final class Probe implements ClientModInitializer {
     }
 
     /** 채팅 줄 지움 (ChatComponent.clearMessages — gui 안을 리플렉션으로 찾음, 실패하면 기록만) */
+    private static boolean fontMeasured;
+
+    /**
+     * 2026-11-15 글꼴 그림판 메모리 (원소 공용 그림 예산 — 비트맵 글꼴은 그림판을 통째로 풀어 들고 있다가 처음 쓰는 글자만 텍스처에 올림): 글꼴 관리자에서 닿는 그림
+     * (NativeImage) 의 수 · 풀린 크기 (가로 × 세로 × 4) 합
+     */
+    private static void fontMemory(Minecraft mc) {
+        try {
+            Object fm = null;
+            for (java.lang.reflect.Field f : Minecraft.class.getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || !f.getType().getSimpleName().equals("FontManager")) continue;
+                f.setAccessible(true);
+                fm = f.get(mc);
+            }
+            java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+            long[] acc = {0, 0, 0};
+            walkImages(fm, 0, seen, acc);
+            log("font images " + acc[0] + " decoded MB " + acc[1] / 1_000_000 + " (largest " + acc[2] / 1_000_000 + " MB)");
+        } catch (Throwable e) {
+            log("font memory failed " + e);
+        }
+    }
+
+    private static void walkImages(Object o, int depth, java.util.Set<Object> seen, long[] acc) throws ReflectiveOperationException {
+        if (o == null || depth > 10 || !seen.add(o)) return;
+        Class<?> c = o.getClass();
+        if (o instanceof NativeImage ni) {
+            long w = ni.getWidth();
+            long h = ni.getHeight();
+            acc[0]++;
+            acc[1] += w * h * 4;
+            acc[2] = Math.max(acc[2], w * h * 4);
+            return;
+        }
+        if (o instanceof java.util.Map<?, ?> m) {
+            for (Object v : m.values()) walkImages(v, depth + 1, seen, acc);
+            return;
+        }
+        if (o instanceof Iterable<?> it) {
+            for (Object v : it) walkImages(v, depth + 1, seen, acc);
+            return;
+        }
+        if (c.isArray()) {
+            if (!c.getComponentType().isPrimitive()) for (Object v : (Object[]) o) walkImages(v, depth + 1, seen, acc);
+            return;
+        }
+        String n = c.getName();
+        if (!n.startsWith("net.minecraft.client.gui.font") && !n.startsWith("com.mojang.blaze3d")) return;
+        for (Class<?> k = c; k != null && k != Object.class; k = k.getSuperclass()) {
+            for (java.lang.reflect.Field f : k.getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
+                try {
+                    f.setAccessible(true);
+                    walkImages(f.get(o), depth + 1, seen, acc);
+                } catch (RuntimeException ignored) {
+                    // 모듈이 막은 칸
+                }
+            }
+        }
+    }
+
     private static void clearChat(Minecraft mc) {
         try {
             Object chat = findChat(mc.gui, 0);
