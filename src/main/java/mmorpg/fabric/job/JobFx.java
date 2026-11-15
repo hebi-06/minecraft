@@ -198,10 +198,13 @@ final class JobFx {
             // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 (주인) = 카메라를 보는 눈앞 칼빛 초승달, 3인칭 · 다른 사람 = 같은 자리에 앞을 보고 선 판
             // (+ 조금 크고 7° 기운 옅은 잔상 판 — 예전과 같음). 사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?" — 모두가 카메라를 보는 한 벌은 높은 3인칭 · 영상 카메라
             // 쪽으로 뒤로 누워 위를 보는 것처럼 보였음
-            PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt);
-            PhantomFx.eyeSlash(sp, L, V.add(at, look, 0.15), size * 1.8 * 1.14, tilt + 7, 0.42); // 예전 1인칭 잔상 겹 (조금 크고 7° 기움 · 옅게)
-            PhantomFx.card(sp.level(), L, at, look, tilt, size * CARD * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp));
-            PhantomFx.card(sp.level(), L, V.add(at, look, 0.15), look, tilt + 7, size * CARD * 1.14 * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp), 0.45, 1);
+            // 예전처럼 몸과 같이 움직임 (vel = 몸의 빠르기 — 돌진 중 베기가 뒤에 남지 않게)
+            Vec3 vel = RuneKit.bodyVel(sp);
+            PhantomFx.follow(PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt), vel, 11);
+            PhantomFx.follow(PhantomFx.eyeSlash(sp, L, V.add(at, look, 0.15), size * 1.8 * 1.14, tilt + 7, 0.42), vel, 11); // 예전 1인칭 잔상 겹 (조금 크고 7° 기움)
+            PhantomFx.card(sp.level(), L, at, look, tilt, size * CARD * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp), 0.95, life, vel);
+            PhantomFx.card(sp.level(), L, V.add(at, look, 0.15), look, tilt + 7, size * CARD * 1.14 * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp), 0.45, life * 0.9,
+                    vel);
             return;
         }
         Opt own = only1p(sp);
@@ -260,7 +263,7 @@ final class JobFx {
             double w = size * 2 * PhantomFx.SLASH_FILL;
             if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, w, PhantomFx.who(view));
             else if (face == CardFace.SWING) PhantomFx.cardSwing(level, L, null, at, dir, V.len(vel), w, tilt, life, PhantomFx.who(view), view.num("alpha", 1.0));
-            else PhantomFx.card(level, L, at, dir, tilt, w, PhantomFx.who(view), view.num("alpha", 1.0), 1);
+            else PhantomFx.card(level, L, at, dir, tilt, w, PhantomFx.who(view), view.num("alpha", 0.95), life, vel);
             return;
         }
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;

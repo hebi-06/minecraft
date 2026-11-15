@@ -452,13 +452,13 @@ final class PhantomFx {
      * 2026-11-15 사용자 "이전은 참격이 앞을 잘보고 있는데 왜 새로 만든건 위를 보고 있고 아래를보고 있고 옆을 보고 있고" — 180 − tilt 는 예전의 좌우 거울이었음
      * (기울기 95 내리침이 오른쪽 대신 왼쪽으로 불룩 · 200 이 왼쪽 위 대신 오른쪽 위로)
      */
-    static void eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt) {
-        eyeSlash(sp, L, at, width, tilt, 1.0);
+    static Vfx.Fx eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt) {
+        return eyeSlash(sp, L, at, width, tilt, 1.0);
     }
 
     /** 같은 것 — 불투명 alpha (옅은 잔상 겹) */
-    static void eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt, double alpha) {
-        tiled(sp.level(), L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 + tilt, 0, 1, false, null, only1p(sp), alpha);
+    static Vfx.Fx eyeSlash(ServerPlayer sp, Lib L, Vec3 at, double width, double tilt, double alpha) {
+        return tiled(sp.level(), L.n("slashm"), 2, at, width / SLASH_FILL, null, 180 + tilt, 0, 1, false, null, only1p(sp), alpha);
     }
 
     /**
@@ -545,7 +545,7 @@ final class PhantomFx {
 
     /**
      * 몸 앞 참격 판 (세상에 고정 · 앞뒤 두 면 — 3인칭 · 다른 사람): 가운데 at · 앞면이 dir 의 반대 (쓴 사람 뒤에서 보면 앞면 — eyeSlash 와 같은 모습이 같은 자리에) ·
-     * 기울기 tilt (eyeSlash 와 같은 뜻) · 칼빛 너비 width 칸. 앞면 slashm · 뒷면 slash (세계에서 같은 그림 — 휘두르는 쪽이 칼과 같음)
+     * 기울기 tilt (JobFx.slash 의 뜻) · 칼빛 너비 width 칸. 앞면 slashm · 뒷면 slashm 의 거울 (예전 모드 없는 클라이언트 판과 같은 모습 — 아래 card 참고)
      */
     static void card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who) {
         card(level, L, at, dir, tilt, width, who, 1.0, 1);
@@ -559,8 +559,30 @@ final class PhantomFx {
     static Vfx.Fx card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who, double alpha, int every) {
         Vec3[] ax = screenAxes(dir);
         Quaternionf q = Vfx.basis(ax[2], ax[1], V.scale(ax[0], -1));
-        // 180 + tilt: 그림 위쪽 (slashm 의 불룩한 날) 이 −위 · cos(tilt) + 오른쪽 · sin(tilt) — 예전 JobFx.slashCard FRONT 의 불룩한 날 · 판 X 와 똑같음 (eyeSlash 참고)
-        return tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180 + tilt, 0, Math.max(1, every), true, L.n("slash"), who, alpha);
+        // 돌림 = tilt (2026-11-15 셋째 고침 — 예전 영상 CI 43560411558 (81ca2389) 과 장면마다 맞춤): 예전 모드 없는 클라이언트의 판 (PBridge.Card) 은 판 모델
+        // slash_job 을 글자로 구울 때 (tools/vfx_particles.py card_layers) 모델의 180° 돌림을 버리고 rfx_jslash2 그림을 그대로 (아래로 불룩 · 왼쪽 → 오른쪽) 판
+        // (X = Y × Z · Y = 불룩한 날 −위 · cos(tilt) + 오른쪽 · sin(tilt) · Z = dir 의 반대) 에 붙였음 → 화면에 보인 불룩한 날은 그 반대 (tilt 0 = 위로 불룩 ∩ ·
+        // 172 = 아래로 불룩 ∪). rfx_jslash2 = slashm 을 180° 돌린 그림이라 slashm 을 tilt 만큼 돌리면 예전과 같음. 180 + tilt 는 예전과 위아래가 뒤집혔음
+        // (블레이드 아포칼립스 첫 베기 · 블러드 클레이브 큰 판). 뒷면 = 같은 그림판 slashm 의 거울 (예전 판은 한 면 — 보는 사람 쪽으로 판 세로 축 둘레 반 바퀴 돌려
+        // 그림이 늘 바로 읽혔음)
+        return tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, tilt, 0, Math.max(1, every), true, L.n("slashm"), who, alpha);
+    }
+
+    /**
+     * 같은 것 — 수명 life 초에 칸을 맞춤 (짧으면 한 틱에 한 칸) · 판이 vel (칸/초) 로 같이 움직임 (예전 판의 vel — 몸과 같이 움직이는 눈앞 판 · 패링 막기 판)
+     */
+    static Vfx.Fx card(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double tilt, double width, Predicate<ServerPlayer> who, double alpha, double life, Vec3 vel) {
+        int frames = Vfx.sheet(L.n("slashm_00")).frames();
+        int every = Math.max(1, (int) Math.round(Math.max(1, life * 20) / frames));
+        Vfx.Fx fx = card(level, L, at, dir, tilt, width, who, alpha, every);
+        follow(fx, vel, frames * every + 1);
+        return fx;
+    }
+
+    /** 효과의 그림을 모두 vel (칸/초) 로 ticks 틱 동안 옮김 (0 이면 그대로) */
+    static void follow(Vfx.Fx fx, Vec3 vel, int ticks) {
+        if (vel == null || V.len(vel) < 1e-3) return;
+        fx.shift(V.scale(vel, ticks / 20.0), ticks);
     }
 
     /**
@@ -579,7 +601,7 @@ final class PhantomFx {
     /**
      * 2026-11-15 날아가는 검기 판 — 예전 JobFx.wave 의 3인칭 판 (CardFace.SWING + RuneKit.faceCamIfFlat) 그대로 (사용자 "이전은 참격이 앞을 잘보고 있는데"): 불룩한 날 =
      * 날아가는 쪽 dir (그림 위쪽 Y), 면 = 위 (Z) 를 dir 둘레로 −tilt 돌림 — 다만 판이 누운 쪽이면 (cos tilt 의 크기 0.5 이상) 면이 보는 사람의 눈 (영상이면 영상 카메라 —
-     * PBridge.eyeOf) 쪽 · 돌림 0 / 180. 그림 = slashm (예전 판 모델 slash_job 그림 — 위로 불룩 · 오른쪽 → 왼쪽), 앞뒤 두 면. at 에서 speed 칸/초 · life 초
+     * PBridge.eyeOf) 쪽 · 돌림 0 / 180. 그림 = slashm 을 판 안에서 반 바퀴 (예전 모드 없는 클라이언트 판의 rfx_jslash2 그대로 — 불룩한 날이 판의 −Y), 앞뒤 두 면. at 에서 speed 칸/초 · life 초
      */
     static void cardSwing(ServerLevel level, Lib L, ServerPlayer owner, Vec3 at, Vec3 dir, double speed, double width, double tilt, double life,
             Predicate<ServerPlayer> who, double alpha) {
@@ -620,8 +642,10 @@ final class PhantomFx {
         Quaternionf q = Vfx.basis(V.unit(X2), Y, V.unit(Z2));
         int ticks = Math.max(2, (int) Math.round(life * 20));
         int frames = Vfx.sheet(L.n("slashm_00")).frames();
-        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 0, 0, Math.max(1, (int) Math.round(ticks / (double) frames)), true, L.n("slash"), who,
-                alpha);
+        // 판 안 돌림 180 (2026-11-15 셋째 고침): 예전 모드 없는 클라이언트 판은 rfx_jslash2 그림을 그대로 붙여 (card 참고) 불룩한 날이 판의 −Y — slashm 을 반 바퀴
+        // 돌린 것과 같음. 뒷면 = 같은 그림판의 거울 (예전 한 면 판이 보는 사람 쪽으로 반 바퀴 돌던 것과 같음)
+        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180, 0, Math.max(1, (int) Math.round(ticks / (double) frames)), true, L.n("slashm"),
+                who, alpha);
         if (speed > 0) fx.shift(V.scale(Y, speed * ticks / 20.0), ticks);
     }
 
@@ -641,7 +665,9 @@ final class PhantomFx {
         h = V.len(h) < 1e-6 ? new Vec3(0, 0, 1) : V.unit(h);
         Vec3 bulge = V.turnY(h, tilt);
         Quaternionf q = Vfx.basis(V.unit(V.cross(bulge, V.UP)), bulge, V.UP);
-        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 0, 0, 1, false, null, who, 1.0); // slashm = 예전 판 모델 그림 (위로 불룩 · 오른쪽 → 왼쪽)
+        // 판 안 돌림 180 (2026-11-15 셋째 고침 — card 참고): 예전 모드 없는 클라이언트 판의 그림은 rfx_jslash2 그대로라 보인 불룩한 날은 bulge 의 반대 (쓴 사람 쪽).
+        // 앞뒤 두 면 (뒷면 = 같은 그림판의 거울 — 예전 한 면 판이 보는 사람 쪽으로 반 바퀴 돌던 것과 같음)
+        tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180, 0, 1, true, L.n("slashm"), who, 1.0);
     }
 
     /**
