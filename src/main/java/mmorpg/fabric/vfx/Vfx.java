@@ -704,8 +704,8 @@ public final class Vfx {
         int fadeFrom = -1;
         int fadeTicks;
         double fadeStart = 1;
-        /** 2026-11-15 뒷면 (크기 z 를 뒤집음 — 앞면이 반대쪽: 글자는 한쪽 면만 그려져 고정 그림은 앞 · 뒤 두 장) */
-        boolean backFace;
+        /** 2026-11-15 좌우 거울 (크기 x 를 뒤집음 — 꼭짓점이 거울 자리로 가 삼각형 감김이 뒤집혀 뒷면에서 보임) */
+        boolean mirrored;
 
         Sprite(Fx fx, Sheet sheet, Vec3 at) {
             this.fx = fx;
@@ -826,11 +826,12 @@ public final class Vfx {
         }
 
         /**
-         * 2026-11-15 뒷면: 크기 z 를 뒤집어 (판의 두께는 0 — 모양 · 자리는 그대로, 세 축 행렬식이 음수라 삼각형 감김이 뒤집힘) 앞면이 반대쪽을 봄. 같은 자리 · 같은 방향 ·
-         * 같은 그림의 앞면 한 장과 겹치면 투명한 판처럼 양쪽에서 보이고 그림의 모든 점이 같은 세계 자리 (180° 돌린 판은 좌우가 바뀜 — 휘두르는 쪽이 거꾸로 보였을 것)
+         * 2026-11-15 좌우 거울 (고정 그림의 뒷면): 크기 x 를 뒤집어 글자 판의 꼭짓점이 거울 자리로 감 → 삼각형 감김이 뒤집혀 반대쪽에서 보임 (글자는 한쪽 면만 그려짐).
+         * 그림은 세계에서 좌우가 바뀜 — 같은 세계 그림이 필요하면 미리 뒤집은 그림판을 씀 (PhantomFx.tiled 두 면). 처음 판 (크기 z 를 뒤집음) 은 판의 두께가 0 이라
+         * 꼭짓점이 그대로여서 뒷면이 생기지 않았음 (CI 43681025801 — 아스널 게이트 등 뒤 문 · 블레이드 스톰 베기 절반이 안 보였음)
          */
-        public Sprite back() {
-            backFace = true;
+        public Sprite mirror() {
+            mirrored = true;
             transform();
             return this;
         }
@@ -896,7 +897,7 @@ public final class Vfx {
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
             e.setTranslation(hidden ? new Vector3f() : q.transform(new Vector3f(offset)));
             e.setLeftRotation(q);
-            e.setScale(new Vector3f(s, s, backFace ? -s : s));
+            e.setScale(new Vector3f(mirrored ? -s : s, s, s));
             e.setRightRotation(new Quaternionf());
         }
 

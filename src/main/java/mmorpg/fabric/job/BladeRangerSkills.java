@@ -639,7 +639,8 @@ final class BladeRangerSkills {
             ServerLevel level = sp.level();
             double fr = k.num("finalRadius", 4);
             // 2026-11-15 직업 전용: 쇳물 대폭발 (예전 상자 폭발 · 상자 고리 대신)
-            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.4);
+            // 1인칭 영상 (CI 43681025801): 1.4 는 내려친 사람 바로 옆이라 화면을 1초 가까이 주황으로 덮었음 → 1.2
+            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.2);
             Ult.flash(level, spot[0], glow, Opt.of("radius", 8.0, "time", new double[] {0.02, 0.05, 0.3}), sp);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             SkillFx.play(level, "block.anvil.land", spot[0], 0.5, 1.2);

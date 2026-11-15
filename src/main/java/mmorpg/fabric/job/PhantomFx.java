@@ -66,7 +66,10 @@ final class PhantomFx {
         return tiled(level, base, k, at, size, facing, roll, from, every, false);
     }
 
-    /** 위와 같고 twoSided 면 고정 그림 (facing) 의 뒷면도 (조각마다 {@link Vfx.Sprite#back} 한 장 더 — 휘두른 면의 베기 · 허공의 문) */
+    /**
+     * 위와 같고 twoSided 면 고정 그림 (facing) 의 뒷면도: 조각마다 거울 ({@link Vfx.Sprite#mirror}) 한 장 더 — 자리 (r, c) 에 조각 (r, k−1−c) 를 거울로 놓으면 그림 전체의
+     * 거울이 됨, 미리 뒤집은 그림판 (base + "m") 이 있으면 그것을 써서 뒷면도 세계에서 같은 그림 (휘두르는 쪽이 칼과 같음)
+     */
     static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every, boolean twoSided) {
         Vfx.Sheet s0 = Vfx.sheet(base + "_00");
         int frames = s0.frames();
@@ -74,13 +77,14 @@ final class PhantomFx {
         Vfx.Fx fx = Vfx.at(level, at, life);
         double t = size / k;
         int sides = twoSided && facing != null ? 2 : 1;
+        String backBase = Vfx.sheetNames(base + "m_").isEmpty() ? base : base + "m";
         fx.on(Math.max(0, from), () -> {
             for (int r = 0; r < k; r++) {
                 for (int c = 0; c < k; c++) {
                     for (int side = 0; side < sides; side++) {
-                        Vfx.Sprite sp = fx.sprite(base + "_" + r + c, at);
+                        Vfx.Sprite sp = fx.sprite(side == 0 ? base + "_" + r + c : backBase + "_" + r + (k - 1 - c), at);
                         if (facing != null) sp.fixed(facing);
-                        if (side == 1) sp.back();
+                        if (side == 1) sp.mirror();
                         if (roll != 0) sp.roll(roll, 0);
                         sp.size(t);
                         sp.offset((c - (k - 1) / 2.0) * t, ((k - 1) / 2.0 - r) * t);
@@ -301,7 +305,7 @@ final class PhantomFx {
         for (int b = 0; b < 2; b++) {
             Vfx.Sprite sp = fx.sprite(name, c);
             sp.fixed(q);
-            if (b == 1) sp.back();
+            if (b == 1) sp.mirror(); // 뒷면 (문 그림은 거의 좌우 같음)
             sp.size(side * 0.12);
             sp.play(0, start, frames, 2, true);
             fx.on(1, () -> sp.to(null, side, G));

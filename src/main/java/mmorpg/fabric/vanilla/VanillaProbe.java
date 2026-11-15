@@ -1295,15 +1295,17 @@ final class VanillaProbe {
             case "archer_burst" -> new double[] {4.4, 1.9, 1.5, 0.7};
             // 2026-11-15 아스널 킹: 등 뒤 문 (뒤 · 위 3 ~ 6칸) 이 보이게 옆에서 · 하늘 문 · 거대한 보물은 멀리 위를
             case "arsenalking_volley" -> new double[] {5.5, 2.4, 2.4, 0.6};
-            case "arsenalking_chain" -> new double[] {6.5, 2.6, 1.8, 0.5};
-            case "arsenalking_rain" -> new double[] {9.5, 3.6, 3.2, 0.5};
-            case "arsenalking_judge" -> new double[] {8.0, 3.0, 3.4, 0.5};
-            case "arsenalking_ult" -> new double[] {13.0, 4.8, 2.0, 0.3};
+            // 2026-11-15 직업 전용 그림 영상 (CI 43681025801): 하늘 문 · 큰 문이 화면 위로 잘렸음 → 위를 봄, 킹스 체인은 작아 가까이
+            case "arsenalking_chain" -> new double[] {5.4, 2.3, 1.8, 0.5};
+            case "arsenalking_rain" -> new double[] {10.5, 3.0, 5.0, 0.5};
+            case "arsenalking_judge" -> new double[] {9.0, 2.6, 4.8, 0.5};
+            case "arsenalking_ult" -> new double[] {13.0, 4.4, 3.6, 0.3};
             // 블레이드 레인저: 가까이 (쌍검 베기) · 블레이드 스톰 · 아이언 템페스트는 둘레가 보이게
             case "bladeranger_twin" -> new double[] {4.6, 1.9, 1.6, 0.7};
-            case "bladeranger_boomerang" -> new double[] {6.0, 2.4, 1.6, 0.5};
+            // 2026-11-15 직업 전용 그림 영상: 블레이드 부메랑 · 포지 브레이커가 작게 보였음 → 가까이
+            case "bladeranger_boomerang" -> new double[] {5.0, 2.2, 1.5, 0.5};
             case "bladeranger_storm" -> new double[] {5.5, 2.6, 1.4, 0.6};
-            case "bladeranger_forge" -> new double[] {6.0, 2.6, 1.8, 0.6};
+            case "bladeranger_forge" -> new double[] {5.2, 2.6, 2.0, 0.6};
             case "bladeranger_ult" -> new double[] {11.0, 4.2, 1.8, 0.35};
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};

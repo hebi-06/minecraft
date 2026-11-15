@@ -128,8 +128,19 @@ def slash_frame(f, n=512, seed=201):
     return rgb, a * edge_fade(x, y)
 
 
+_SLASH = {}
+
+
 def slash():
-    return [to_img(*slash_frame(f)) for f in range(SLASH_FRAMES)]
+    if "f" not in _SLASH:
+        _SLASH["f"] = [to_img(*slash_frame(f)) for f in range(SLASH_FRAMES)]
+    return _SLASH["f"]
+
+
+def slash_mirror():
+    """좌우를 뒤집은 베기 (br_slashm — 자바 PhantomFx.tiled 두 면의 뒷면: 거울로 놓아 세계에서 앞면과 같은 그림)"""
+    from PIL import Image
+    return [im.transpose(Image.FLIP_LEFT_RIGHT) for im in slash()]
 
 
 # ------------------------------------------------------------------ X 베기 (2 × 2)
@@ -688,7 +699,7 @@ def dust():
 
 def sprites():
     p = LIB + "_"
-    return (tiled(p + "slash", slash) + tiled(p + "xslash", xslash) + tiled(p + "boom", boom) + tiled(p + "shock", shock) + tiled(p + "crack", crack)
+    return (tiled(p + "slash", slash) + tiled(p + "slashm", slash_mirror) + tiled(p + "xslash", xslash) + tiled(p + "boom", boom) + tiled(p + "shock", shock) + tiled(p + "crack", crack)
             + tiled(p + "ring", ring)
             + [(p + "boom_s", boom_s, True), (p + "shock_s", shock_s, True), (p + "crack_s", crack_s, True), (p + "flash", flash, True),
                (p + "charge", charge, True), (p + "spark", spark, True), (p + "shard", shard, True), (p + "flame", flame, True), (p + "dust", dust, True)])
