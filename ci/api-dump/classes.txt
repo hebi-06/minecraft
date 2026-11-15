@@ -653,3 +653,11 @@ net.minecraft.world.phys.shapes.Shapes
 net.minecraft.world.phys.shapes.VoxelShape
 org.joml.Matrix3x2f
 org.joml.Matrix3x2fStack
+net.minecraft.client.renderer.PostChain
+net.minecraft.client.renderer.PostChainConfig
+net.minecraft.client.renderer.PostChainConfig$InternalTarget
+net.minecraft.client.renderer.PostChainConfig$Pass
+net.minecraft.client.renderer.PostChainConfig$TargetInput
+net.minecraft.client.renderer.PostChainConfig$Input
+net.minecraft.client.renderer.PostPass
+net.minecraft.client.renderer.PostPass$TargetInput
