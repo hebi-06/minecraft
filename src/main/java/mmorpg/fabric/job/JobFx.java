@@ -1403,8 +1403,9 @@ final class JobFx {
                 for (int i = 0; i < 3; i++) {
                     Vec3 r = V.unit(new Vec3(Kit.rand() - 0.5, (Kit.rand() - 0.4) * 0.8, Kit.rand() - 0.5));
                     Vec3 from = V.add(p, r, 1.3 + Kit.rand() * 0.5);
-                    SkillFx.fx(lv, "rpg:arrow_spark", from, Opt.of("dir", V.scale(r, -1), "speed", 6.0, "size", 0.12, "grow", 0.3, "life", 0.24, "color", i % 2 == 0
-                            ? inner(j) : outer(j), "alpha", 1.0));
+                    Opt so = Opt.of("dir", V.scale(r, -1), "speed", 6.0, "size", 0.12, "grow", 0.3, "life", 0.24, "color", i % 2 == 0 ? inner(j) : outer(j), "alpha", 1.0);
+                    // 눈 바로 앞으로 빨려 드는 알갱이 (가루) 는 주인 1인칭에서 숨김 — 얼굴 둘레 붉은 네모 (블러드 문 1인칭 영상 2)
+                    SkillFx.fx(lv, "rpg:arrow_spark", from, nearEye ? so.with("view", 1.0, "owner", (double) sp.getId()) : so);
                 }
                 if (tt % 4 == 0) SkillFx.play(lv, "block.amethyst_block.resonate", p, 0.8 + 0.6 * q, 0.35);
             });

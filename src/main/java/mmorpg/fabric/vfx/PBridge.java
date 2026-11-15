@@ -268,8 +268,17 @@ public final class PBridge {
         dusts++;
     }
 
+    /**
+     * 2026-11-15 1인칭 눈 바로 앞 가루는 보내지 않음 (1인칭 영상 2 — 블러드 문 모으는 빛 · 헬 체인 사슬 밑동: 가루 하나가 0.2 ~ 0.3칸 네모라 눈에서 1칸 남짓이면 화면에서
+     * 100 ~ 300 픽셀 붉은 네모로 보였음). 3인칭은 카메라가 몸 뒤라 그대로
+     */
+    static final double DUST_NEAR_EYE = 1.3;
+
     private static void send(ServerLevel level, List<ServerPlayer> who, DustParticleOptions o, double x, double y, double z) {
-        for (ServerPlayer sp : who) level.sendParticles(sp, o, true, true, x, y, z, 1, 0, 0, 0, 0);
+        for (ServerPlayer sp : who) {
+            if (!isThird(sp) && sp.getEyePosition().distanceToSqr(x, y, z) < DUST_NEAR_EYE * DUST_NEAR_EYE) continue;
+            level.sendParticles(sp, o, true, true, x, y, z, 1, 0, 0, 0, 0);
+        }
     }
 
     static int rgb(double r, double g, double b) {

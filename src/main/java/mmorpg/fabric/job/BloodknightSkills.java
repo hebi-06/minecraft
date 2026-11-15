@@ -337,8 +337,16 @@ final class BloodknightSkills {
             }
             if (any) {
                 Vec3 g = V.up(front, 0.05);
-                JobFx.smash(lv, g, 2.4, j, 0.5, Opt.empty());
-                splash(lv, V.up(front, 0.6), 2.0, j, 10);
+                // 2026-11-15 1인칭 영상 3: 끌려온 자리 (눈앞 1.3칸) 의 큰 내려찍기 · 피 튐 (지름 4칸) 이 1인칭 화면을 붉은 가시로 통째로 덮었음 → 주인 1인칭에서는 숨기고
+                // 0.9칸 더 앞에 작게
+                boolean lib = PhantomFx.elem(j) != null;
+                JobFx.smash(lv, g, 2.4, j, 0.5, lib ? JobFx.hide1p(sp) : Opt.empty());
+                splash(lv, V.up(front, 0.6), 2.0, j, 10, lib ? JobFx.hide1p(sp) : Opt.empty());
+                if (lib) {
+                    Vec3 far1 = V.add(front, f, 0.9);
+                    PhantomFx.smash(lv, PhantomFx.elem(j), V.up(far1, 0.05), 1.3, PhantomFx.only1p(sp));
+                    JobTraits5.blood(lv, V.up(far1, 0.6), 1.1, j, 0.45, JobFx.only1p(sp));
+                }
                 SkillFx.play(lv, "item.mace.smash_ground", front, 0.85, 1.0);
                 SkillFx.play(lv, "block.chain.break", front, 0.6, 1.0);
                 JobKit.motion(sp, "bloodknight_chains:pull");
