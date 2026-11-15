@@ -536,6 +536,21 @@ final class JobFx {
                 solo > 0 ? solo * 2 + 1 : null));
     }
 
+    /**
+     * 2026-11-15 이 직업의 그림 묶음 (PhantomFx.elem) 에 그림 art 가 있으면 예전 rfx (cells 와 같은 값 — fps 0 = 수명에 맞춤 · loop) 와 같은 자리 · 크기 · 방향 ·
+     * 움직임으로 그 칠한 그림을 그림 (true) — 없으면 false (예전 길). k = 조각 (2 = 2 × 2) · facing = PhantomFx.BILL · FACE_DIR · VERT · sy = 세로 몫
+     */
+    static boolean art(ServerLevel level, Jobs.Job j, String art, int k, int first, int count, Vec3 at, double life, double fps, boolean loop, Opt o, int facing,
+            double sy) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L == null || !PhantomFx.has(L, art)) return false;
+        double f = fps > 0 ? fps : count / Math.max(0.05, life);
+        Opt b = o.with("life", life, "frames", (double) count, "fps", f, "fade", o.num("fade", 0.2), "loop", loop ? 1.0 : null, "phase",
+                loop ? (o.has("phase") ? o.num("phase", 0) : Kit.rand() * count) : null);
+        PhantomFx.rfx(level, L.n(art), k, first, at, b, facing, sy);
+        return true;
+    }
+
     /** 이어 돌리는 그림 (회전 칼날 · 회오리 · 구체 · 책장 …): 장 frames 개를 fps 로 되풀이 */
     static void loop(ServerLevel level, String name, int frames, Vec3 at, double life, double fps, Opt o, double[] glow, double[] core) {
         cells(level, name, frames, 0, frames, at, life, fps, true, o, glow, core);
@@ -726,13 +741,16 @@ final class JobFx {
 
     /** 꽃 (rfx_jpetal 0 ~ 3 — 카메라를 봄, 이어 돌림): 다섯 꽃잎 (표식 · 낙화). 꽃 지름 약 size × 1.6 칸 */
     static void blossom(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        cells(level, "jpetal2", PETAL, 0, 4, at, life, 8, true, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        Opt b = o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360);
+        if (art(level, j, "blossom", 1, 0, 4, at, life, 8, true, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 표식 꽃
+        cells(level, "jpetal2", PETAL, 0, 4, at, life, 8, true, b, outer(j), inner(j));
     }
 
     /** 꽃잎 하나 (rfx_jpetal 4 ~ 7 — 카메라를 봄, 팔랑임): dir (단위) 쪽으로 speed 칸/초 */
     static void petal(ServerLevel level, Vec3 at, Vec3 dir, double speed, double size, Jobs.Job j, double life, Opt o) {
-        cells(level, "jpetal2", PETAL, 4, 4, at, life, 10, true, o.with("dir", dir, "speed", speed, "size", size, "spin", Kit.rand() * 360, "spinRate",
-                (Kit.rand() - 0.5) * 500), outer(j), inner(j));
+        Opt b = o.with("dir", dir, "speed", speed, "size", size, "spin", Kit.rand() * 360, "spinRate", (Kit.rand() - 0.5) * 500);
+        if (art(level, j, "petal", 1, 0, 4, at, life, 10, true, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 꽃잎 (팔랑임 넷)
+        cells(level, "jpetal2", PETAL, 4, 4, at, life, 10, true, b, outer(j), inner(j));
     }
 
     /** 꽃잎 흩날림: at 에서 n 장이 사방 (조금 위쪽) 으로 */
@@ -750,8 +768,10 @@ final class JobFx {
         double len = V.len(d);
         double life = Math.max(0.05, ticks / 20.0);
         // 0.50.0 v2 휜 단검 (rfx_jdagger2 — 여덟 장이 한 바퀴 · 가는 원 꼬리): 장이 돌림 (24장/초 = 초당 세 바퀴 — 그림을 더 돌리지 않음)
-        loop(level, "jdagger2", DAGGER2, from, life, o.num("fps", 24), o.with("dir", len > 1e-3 ? V.scale(d, 1 / len) : V.UP, "speed", len / life, "size", size * 1.1,
-                "spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 0), "fade", o.num("fade", 0.1)), outer(j), inner(j));
+        Opt b = o.with("dir", len > 1e-3 ? V.scale(d, 1 / len) : V.UP, "speed", len / life, "size", size * 1.1, "spin", Kit.rand() * 360, "spinRate", o.num(
+                "spinRate", 0), "fade", o.num("fade", 0.1));
+        if (art(level, j, "dagger", 1, 0, 8, from, life, o.num("fps", 24), true, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 도는 비수
+        loop(level, "jdagger2", DAGGER2, from, life, o.num("fps", 24), b, outer(j), inner(j));
     }
 
     /** 그림자 연기 (rfx_jsmoke — 카메라를 봄): 뭉게뭉게 퍼지며 사라짐 (반지름 약 size 칸). 색 = 짙은 빛 · 그보다 옅은 빛 (어두운 연기는 섞는 그림이라 어둡게 보임) */
@@ -761,13 +781,18 @@ final class JobFx {
 
     /** 직업의 짙은 연기 (어두운 둘째 빛 · 그 반쯤) */
     static void smoke(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        // 2026-11-15 그림자 묶음: 칠한 그림자 연기 (예전 rfx_jsmoke2 와 같은 자리 · 크기 · 옅어짐)
+        if (art(level, j, "smoke", 1, 0, SMOKE, at, life, 0, false, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "fade", o.num(
+                "fade", 0.45)), PhantomFx.BILL, 1)) return;
         double[] c = JobKit.core(j);
         smoke(level, at, size, new double[] {c[0] * 0.45, c[1] * 0.45, c[2] * 0.45}, c, life, o);
     }
 
     /** 엇갈린 두 베기 (rfx_jcross — 카메라를 봄): X 자로 그어졌다 사라짐 (반 크기 size) */
     static void cross(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jcross2", CROSS, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        Opt b = o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360);
+        if (art(level, j, "cross", 1, 0, CROSS, at, life, 0, false, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 엇갈린 두 베기
+        two(level, "jcross2", CROSS, at, life, b, outer(j), inner(j));
     }
 
     /** 같은 것 — 색을 정함 (2026-11-07 트릭스터 거울 속 나의 X 자국 — 청록 환영빛) */
@@ -777,7 +802,9 @@ final class JobFx {
 
     /** 찌르기 번쩍 (rfx_jstab — 카메라를 봄): 길쭉한 창끝 빛 · 가로 충격 줄 · 퍼지는 고리 (반 크기 size) */
     static void stab(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jstab2", STAB, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : (Kit.rand() - 0.5) * 50), outer(j), inner(j));
+        Opt b = o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : (Kit.rand() - 0.5) * 50);
+        if (art(level, j, "stab", 1, 0, STAB, at, life, 0, false, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 찌르기 번쩍
+        two(level, "jstab2", STAB, at, life, b, outer(j), inner(j));
     }
 
     /** 도는 창 (rfx_jspin — 면이 normal 쪽, 이어 돌림): 양끝 창날이 도는 원판 — 날 끝 반지름 radius 칸 (= 반 크기 × 0.86) */
@@ -1015,6 +1042,15 @@ final class JobFx {
 
     /** 검은 해 (rfx_jeclipse — 카메라를 봄): 커지며 나타남 (0 ~ 3) 뒤 일렁이는 코로나가 맥동 (4 ~ 7 이어 돌림). 지름 약 size × 1.6 칸 */
     static void eclipse(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null && PhantomFx.has(L, "eclipse_")) {
+            // 2026-11-15 그림자 묶음: 칠한 검은 해 (2 × 2) — 예전과 같은 두 마디 (커지며 나타남 0 ~ 3 → 코로나 맥동 4 ~ 7 이어 돌림)
+            double grow = Math.min(0.5, life * 0.3);
+            art(level, j, "eclipse", 2, 0, 4, at, grow, 0, false, o.with("size", size, "fade", 0.0), PhantomFx.BILL, 1);
+            RuneKit.later(Math.max(1, (int) Math.round(grow * 20) - 1), () -> art(level, j, "eclipse", 2, 4, 4, at, Math.max(0.1, life - grow), 8, true, o.with(
+                    "size", size, "fade", o.num("fade", 0.25)), PhantomFx.BILL, 1));
+            return;
+        }
         eclipse(level, at, size, outer(j), inner(j), life, o);
     }
 
@@ -1028,8 +1064,9 @@ final class JobFx {
 
     /** 검은 장미 (rfx_jrose — 카메라를 봄): 피어나 (0 ~ 4) 꽃잎이 흩어짐 (5 ~ 7). 지름 약 size × 1.5 칸 */
     static void rose(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jrose", ROSE, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 30 - 15, "fade", o.num("fade", 0.2)),
-                outer(j), inner(j));
+        Opt b = o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 30 - 15, "fade", o.num("fade", 0.2));
+        if (art(level, j, "rose", 1, 0, ROSE, at, life, 0, false, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 검은 장미
+        two(level, "jrose", ROSE, at, life, b, outer(j), inner(j));
     }
 
     /** 얼음 결정 표시 (rfx_jfrost — 카메라를 봄): 자라나 (빙결) 금이 가며 깨짐 — 몸 가운데 · 몸 크기에 맞춤, ticks 동안. 색 = 얼음 빛 (glow · core) */

@@ -52,6 +52,9 @@ final class PhantomFx {
     static final Lib STEEL = new Lib("el_steel", GLOW_STEEL, GLOW_STEEL, "ember");
     /** 피 (블러드 나이트 — el_blood: 핏빛 초승달 · 피 물보라 · 맞은 자리 피 튐 · 피 기둥 · 핏빛 달 · 핏방울) */
     static final Lib BLOOD = new Lib("el_blood", GLOW_BLOOD, GLOW_BLOOD, "ember");
+    /** 2026-11-15 그림자 (암살자 — el_shadow: 짙은 보라 · 자홍 — 그림자 연기 · 엇갈린 베기 · 검은 장미 · 꽃 · 꽃잎 · 도는 비수 · 찌르기 · 일식, tools/jobvfx/shadow.py) */
+    static final int GLOW_SHADOW = 0xC45CFF;
+    static final Lib SHADOW = new Lib("el_shadow", GLOW_SHADOW, GLOW_SHADOW, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -62,6 +65,7 @@ final class PhantomFx {
             case "bladeranger" -> FORGE;
             case "swordsman" -> STEEL;
             case "bloodknight" -> BLOOD;
+            case "assassin" -> SHADOW;
             default -> null;
         };
     }
@@ -971,5 +975,113 @@ final class PhantomFx {
                 sp.to(center, t, ticks);
             }
         }
+    }
+
+    // ------------------------------------------------------------ 2026-11-15 예전 rfx 파티클을 칠한 그림판 한 장으로 (암살자 그림자 묶음)
+
+    /** rfx 방향: 카메라를 봄 (rotate_xyz) */
+    static final int BILL = 0;
+    /** rfx 방향: 면이 dir (direction_z — 위 = 세계 위를 dir 에 수직으로, 뒷면은 거울) */
+    static final int FACE_DIR = 1;
+    /** rfx 방향: 세로축만 카메라를 봄 (lookat_y) */
+    static final int VERT = 2;
+
+    /**
+     * 예전 rfx 파티클 한 벌 (빛 + 심지 두 장 — JobFx.two · cells) 을 칠한 그림판 한 장으로 (사용자 "예전 방향 · 자리 · 크기는 그대로, 그림만"): 모드 없는
+     * 클라이언트 다리 (PBridge · PSim) 의 셈 그대로 — 자리 = at + (dir × speed + vel) × 시간 · 그림 높이 = 반 크기 size × 2 × sy (세로 몫) × (1 + grow × 시간 몫) ·
+     * 화면 돌림 = spin + spinRate × 시간 (반시계) · 방향 facing (BILL · FACE_DIR · VERT) · 칸 = first + (loop 면 ⌊시간 × fps + phase⌋ mod count, 아니면
+     * min(count − 1, ⌊시간 × fps⌋)) · 마지막 fade 몫 동안 옅어짐 · 볼 사람 view · owner. 그림판 sheet (k = 2 면 조각 sheet_rc 넷). b = two · cells 가 만든 값
+     */
+    static Vfx.Fx rfx(ServerLevel level, String sheet, int k, int first, Vec3 at, Opt b, int facing, double sy) {
+        double life = Math.max(0.05, b.num("life", 0.3));
+        int ticks = Math.max(1, (int) Math.round(life * 20));
+        int count = Math.max(1, (int) b.num("frames", 1));
+        double fps = b.num("fps", 0);
+        boolean loop = b.truthy("loop");
+        double phase = b.num("phase", 0);
+        Vec3 dir = b.vec("dir", V.UP);
+        double dl = V.len(dir);
+        Vec3 d = dl > 1e-6 ? V.scale(dir, 1 / dl) : V.UP;
+        Vec3 mv = V.add(V.scale(dir, b.num("speed", 0)), b.vec("vel", V.ZERO));
+        double h0 = 2 * b.num("size", 0) * sy;
+        double grow = b.num("grow", 0);
+        double spin = b.num("spin", 0);
+        double spinRate = b.num("spinRate", 0);
+        double fade = Math.max(0, Math.min(1, b.num("fade", 0)));
+        double alpha = b.num("alpha", 1);
+        Vfx.Fx fx = Vfx.at(level, at, ticks + 2, who(b));
+        Quaternionf q = facing == FACE_DIR ? dirFace(d) : null;
+        int sides = facing == FACE_DIR ? 2 : 1;
+        java.util.List<Vfx.Sprite> all = new java.util.ArrayList<>();
+        double[] off = new double[k * k * sides * 2];
+        int i = 0;
+        for (int r = 0; r < k; r++) {
+            for (int c = 0; c < k; c++) {
+                for (int side = 0; side < sides; side++) {
+                    String name = k == 1 ? sheet : sheet + "_" + r + (side == 0 ? c : k - 1 - c);
+                    Vfx.Sprite sp = fx.sprite(name, at);
+                    if (facing == VERT) sp.vertical();
+                    else if (q != null) sp.fixed(q);
+                    if (side == 1) sp.mirror();
+                    off[i * 2] = c - (k - 1) / 2.0;
+                    off[i * 2 + 1] = (k - 1) / 2.0 - r;
+                    all.add(sp);
+                    i++;
+                }
+            }
+        }
+        java.util.function.IntUnaryOperator frameAt = t -> {
+            if (count <= 1) return first;
+            double u = t / 20.0 * fps;
+            return first + (loop ? Math.floorMod((int) Math.floor(u + phase), count) : Math.min(count - 1, (int) Math.floor(u)));
+        };
+        for (int n = 0; n < all.size(); n++) {
+            Vfx.Sprite sp = all.get(n);
+            double t0 = h0 / k;
+            sp.size(t0);
+            if (k > 1) sp.offset(off[n * 2] * t0, off[n * 2 + 1] * t0);
+            if (spin != 0) sp.roll(spin, 0);
+            sp.frame(frameAt.applyAsInt(0));
+            if (alpha < 0.999) sp.alpha(alpha);
+        }
+        boolean moves = V.len(mv) > 1e-4;
+        boolean turns = Math.abs(spinRate) > 1e-3;
+        boolean grows = Math.abs(grow) > 1e-4;
+        int step = turns ? (Math.abs(spinRate) > 400 ? 1 : 2) : 4;
+        int[] shown = {frameAt.applyAsInt(0)};
+        fx.each(1, ticks, 1, t -> {
+            int f = frameAt.applyAsInt(t);
+            if (f != shown[0]) {
+                shown[0] = f;
+                for (Vfx.Sprite sp : all) sp.frame(f);
+            }
+            if ((moves || turns || grows) && (t - 1) % step == 0) {
+                int t1 = Math.min(ticks, t - 1 + step);
+                int dur = t1 - (t - 1);
+                Vec3 p = V.add(at, mv, t1 / 20.0);
+                double h = h0 * (1 + grow * t1 / (double) ticks);
+                for (int n = 0; n < all.size(); n++) {
+                    Vfx.Sprite sp = all.get(n);
+                    double tt = h / k;
+                    if (k > 1) sp.offset(off[n * 2] * tt, off[n * 2 + 1] * tt);
+                    sp.to(moves ? p : null, tt, dur);
+                    if (turns) sp.roll(spin + spinRate * t1 / 20.0, dur);
+                }
+            }
+        });
+        int from = fade > 0 ? (int) Math.round((1 - fade) * ticks) : ticks;
+        for (Vfx.Sprite sp : all) {
+            if (fade > 0) sp.fade(Math.max(1, from), Math.max(1, ticks - from));
+            else sp.until(ticks + 1);
+        }
+        return fx;
+    }
+
+    /** rfx direction_z 의 판 방향 (PBridge.fixed — 위 = 세계 위 (dir 이 거의 위 · 아래면 남쪽) 를 dir 에 수직으로 · X = 위 × dir · 앞면 = dir) */
+    static Quaternionf dirFace(Vec3 d) {
+        Vec3 ref = Math.abs(d.y) < 0.999 ? V.UP : new Vec3(0, 0, 1);
+        Vec3 y = V.unit(V.sub(ref, V.scale(d, V.dot(ref, d))));
+        Vec3 x = V.unit(V.cross(y, d));
+        return Vfx.basis(x, y, d);
     }
 }

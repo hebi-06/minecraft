@@ -1336,6 +1336,13 @@ STYLES = {
                   accent=ramp([(0.0, "#3A2A16"), (0.5, "#C8A56A"), (0.8, "#FFF0C0"), (1.0, "#FFFFFF")]),
                   smoke=ramp([(0.0, "#1A120C"), (0.45, "#3E2C1C"), (0.8, "#6E5236"), (1.0, "#A8875A")]),
                   seed=5),
+    # 2026-11-15 그림자 (암살자 — 자홍 · 짙은 보라: jobs.json assassin 의 빛): 그림자 연기 · 엇갈린 베기 · 검은 장미 · 꽃 · 비수 · 일식 (tools/jobvfx/shadow.py)
+    "shadow": Style("el_shadow", "shadow",
+                    main=ramp([(0.0, "#06020A"), (0.12, "#14061F"), (0.26, "#2A0C44"), (0.4, "#45136E"), (0.52, "#6A1D9C"), (0.64, "#9333C8"),
+                               (0.76, "#BC5FE6"), (0.86, "#DE9DF6"), (0.94, "#F5DDFD"), (1.0, "#FFFFFF")]),
+                    accent=ramp([(0.0, "#1A0514"), (0.5, "#B0217F"), (0.8, "#FF6CCB"), (1.0, "#FFE0F4")]),
+                    smoke=ramp([(0.0, "#050208"), (0.45, "#150B22"), (0.8, "#2C1C42"), (1.0, "#4E3A6C")]),
+                    ring="ticks", smoke_alpha=0.5, seed=7),
 }
 
 
@@ -1426,12 +1433,16 @@ def sets_for(S):
                 + tiled(p + "wings", fr("wings")))
     if S.kind == "blood":
         out += tiled(p + "moon", fr("moon")) + [(p + "rift", fr("rift"), True)]
+    if S.kind == "shadow":
+        # 한 바퀴 베기 (JobFx.ring) · 일섬 (JobFx.line) 은 공용 그림을 그림자 빛으로, 암살자 대표 그림은 tools/jobvfx/shadow.py
+        from . import shadow
+        out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + shadow.sprites()
     return out
 
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold"):
+    for key in ("steel", "blood", "gold", "shadow"):
         out += sets_for(STYLES[key])
     return out
 
