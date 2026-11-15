@@ -1,12 +1,17 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : enable
 
-// 2026-11-15 발광 외곽선 → 부드러운 빛 번짐 (블룸 흉내 — 사용자 "너가 추천한거 다 넣어서 시범으로 만들어봐", post_effect/entity_outline.json):
-// In = 실루엣을 네 번 흐린 것 (rgb = 발광 색 × 덮인 몫 · a = 덮인 몫), Mask = 흐리기 전 실루엣. 몸 바깥에만 빛 (몸 안은 Mask 로 지움 — 모델을 덮지 않게)
+// 2026-11-15 VFX glow (post_effect/entity_outline.json, last pass).
+// In   = glowing-entity silhouette blurred four times (rgb = glow colour * coverage, a = coverage)
+// Mask = the silhouette before blurring (used to keep the glow outside the model)
+// Comments stay ASCII: some GL drivers reject non-ASCII bytes even inside comments.
+// The extension line is required for "layout(location = N) in" in a 330 fragment shader
+// (CI 43663823750: glslang "location qualifier on input" -> post chain failed -> client disconnected).
 uniform sampler2D InSampler;
 uniform sampler2D MaskSampler;
 
 layout(std140) uniform GlowConfig {
-    vec4 GlowParams; // x = 세기 · y = 몸 안 지우는 몫
+    vec4 GlowParams; // x = strength, y = how much of the glow inside the silhouette is removed
 };
 
 layout(location = 0) in vec2 texCoord;

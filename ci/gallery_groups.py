@@ -54,7 +54,8 @@ def groups(only):
             elif k == "vcensus":
                 vfilm = "census"
         vanilla = "vanilla" in keys or bool(vfilm)
-        keys = [k for k in keys if k not in ("prod", "vanilla", "vfilm", "vcensus") and not k.startswith("vfilm=")]
+        # 2026-11-15 shaderprobe 는 build 작업의 셰이더 시험 단계만 켬 (모드 클라이언트 묶음을 만들지 않음)
+        keys = [k for k in keys if k not in ("prod", "vanilla", "vfilm", "vcensus", "shaderprobe") and not k.startswith("vfilm=")]
         out.append({"name": "g%d" % (i + 1), "only": ",".join(keys) if keys else "none", "prod": prod, "vanilla": vanilla, "vfilm": vfilm})
     return out
 

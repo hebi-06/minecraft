@@ -10,8 +10,8 @@ echo "[shader-probe] jar ${J:-none}"
 [ -n "$J" ] || exit 0
 echo "----- shader · post_effect files"
 unzip -Z1 "$J" | grep -E "^assets/minecraft/(shaders|post_effect)/" | sort
-DECL='^\s*(#version|#moj_import|#define|#ifdef|#ifndef|#if |#if\(|#else|#elif|#endif|layout|uniform|in |out |flat |struct |(vec[234]|float|int|void|mat[34]|bool) [a-zA-Z_0-9]+\s*\()'
-for f in $(unzip -Z1 "$J" | grep -E "^assets/minecraft/shaders/(core/(entity|rendertype_item|rendertype_entity_translucent|rendertype_text|text|item)|include/|post/(entity_outline|box_blur|blit|blur|bloom))"); do
+DECL='^\s*(#version|#extension|#moj_import|#define|#ifdef|#ifndef|#if |#if\(|#else|#elif|#endif|layout|uniform|in |out |flat |struct |(vec[234]|float|int|void|mat[34]|bool) [a-zA-Z_0-9]+\s*\()'
+for f in $(unzip -Z1 "$J" | grep -E "^assets/minecraft/shaders/(core/(entity|rendertype_item|rendertype_entity_translucent|rendertype_text|text|item)|include/|post/(entity_outline|entity_sobel|box_blur|blit|blur|bloom))"); do
   echo "----- $f (선언 · 분기 줄만)"
   unzip -p "$J" "$f" | grep -E "$DECL"
 done
