@@ -190,7 +190,8 @@ final class PhantomFx {
     static void boom(ServerLevel level, Lib L, Vec3 c, double rad) {
         Vec3 gc = ground(level, c);
         tiled(level, L.n("boom"), 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
-        tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 3.2, flat(Kit.rand() * 360), 0, 0, 1);
+        // 2026-11-15 영상 (팬텀 버스트 3인칭 · 1인칭): 지름 3.2 × rad 는 고리 앞 날이 카메라 밑까지 와서 화면 아래를 흰 띠로 가로질렀음 → 2.5 × rad
+        tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 2.5, flat(Kit.rand() * 360), 0, 0, 1);
         tiled(level, L.n("crack"), 2, gc, rad * 1.7, flat(Kit.rand() * 360), 0, 2, 7);
         embers(level, L, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
         shards(level, L, V.up(c, 0.3), 12, rad * 1.2, 0.5, 22);

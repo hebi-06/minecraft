@@ -7,6 +7,11 @@
 // so the composite pass (vfx_glow.fsh) gets a soft coverage falloff.
 // Comments stay ASCII: some GL drivers reject non-ASCII bytes even inside comments.
 // Same header as the vanilla 26.3 post shaders.
+// 2026-11-15 cost: the chain blurs into fixed low-resolution targets (tight 960x540, wide 480x270 -
+// PostChainConfig.InternalTarget width/height). Full-screen blurs took about 240M texture reads per frame
+// at 1080p (a software renderer drew one frame per second, CI 43672651858); now about 23M.
+// Reading a larger input into a smaller output is a 2x box downsample (bilinear at texel corners).
+// Sigma stays in screen pixels at 1080 lines whatever the target size (InSize.y / 1080).
 uniform sampler2D InSampler;
 
 layout(std140) uniform SamplerInfo {

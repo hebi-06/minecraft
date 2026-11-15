@@ -540,7 +540,8 @@ final class PhantomArcherSkills {
         SkillFx.play(level0, "item.firecharge.use", c0, 0.6, 1.0);
         // 2026-11-15 직업 전용: 발밑 섬광 · 작은 충격파 (예전 발밑 흰 상자 고리 대신)
         Vec3 g0 = PhantomFx.ground(level0, c0);
-        PhantomFx.flash(level0, L, V.up(c0, 1.0), 2.6);
+        // 2026-11-15 영상 (1인칭): 몸 높이 (1칸) 의 섬광 2.6칸은 눈앞에서 화면을 덮었음 (픽셀 띠 · 누런 막) → 발밑 땅 (눈 아래라 1인칭에서는 안 보이고 3인칭에서는 발밑 섬광)
+        PhantomFx.flash(level0, L, V.up(g0, 0.2), 2.4);
         PhantomFx.shock(level0, L, g0, 6.0, 1);
         Vfx.Fx fx = RuneProps.fx(level0, c0, finalAt + 40);
         List<Planted> field = new ArrayList<>();
@@ -552,10 +553,10 @@ final class PhantomArcherSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 if (ri < 2.5) return; // 1인칭: 발 둘레 불꽃은 눈앞을 덮음
-                for (int q = 0; q < 9; q++) {
+                for (int q = 0; q < 10; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), ri));
-                    PhantomFx.flame(level, L, p, 1.2 + Kit.rand() * 0.6, 1);
+                    PhantomFx.flame(level, L, p, 1.5 + Kit.rand() * 0.8, 1); // 2026-11-15 영상: 1.2 ~ 1.8칸은 촛불처럼 작았음
                 }
             });
         }
@@ -565,12 +566,12 @@ final class PhantomArcherSkills {
             ServerLevel level = sp.level();
             int hold = finalAt - ringTicks + 6;
             Vfx.Fx ff = Vfx.at(level, c0, hold + 8);
-            int nf = 32;
+            int nf = 48; // 2026-11-15 영상 (3인칭): 서른둘 · 2 ~ 2.9칸은 촛불처럼 작고 성겼음 → 마흔여덟 · 2.8 ~ 3.8칸 (불의 벽)
             int frames = Vfx.sheet(L.n("flame")).frames();
             for (int q = 0; q < nf; q++) {
                 double a = Math.PI * 2 * (q + Kit.rand() * 0.6) / nf;
                 Vec3 p = ground(level, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), R + (Kit.rand() - 0.5) * 0.5));
-                Vfx.Sprite fl = PhantomFx.flame(ff, L, p, 2.0 + Kit.rand() * 0.9, 1 + (q % 2), true, (int) (Kit.rand() * frames));
+                Vfx.Sprite fl = PhantomFx.flame(ff, L, p, 2.8 + Kit.rand() * 1.0, 1 + (q % 2), true, (int) (Kit.rand() * frames));
                 fl.fade(hold, 6);
             }
         });
@@ -592,15 +593,16 @@ final class PhantomArcherSkills {
                     Vec3 pa = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a0), 0, Math.sin(a0)), rho);
                     Vec3 pb = V.add(V.up(c0, 0.03), new Vec3(Math.cos(a1), 0, Math.sin(a1)), rho);
                     RuneKit.later(delay, () -> {
-                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.2, glow, 4, finalAt - ringTicks - delay, L.glow());
+                        // 2026-11-15 영상: 굵기 0.2 + 발광은 3인칭에서 굵은 붉은 관 · 1인칭에서 화면을 가로지르는 붉은 막대 (가장 눈에 띄는 것이 됨) → 0.1 · 발광 없음
+                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.vfx.BlockFx.line(sp.level(), pa, pb, 0.1, glow, 4, finalAt - ringTicks - delay);
                     });
                 }
             }
             SkillFx.play(level, "block.fire.ambient", c0, 0.8, 1.0);
         });
-        // 칼이 솟음 (가까운 데부터 — 번지는 고리를 따라)
+        // 칼이 솟음 (가까운 데부터 — 번지는 고리를 따라). 2026-11-15 영상 (1인칭): 쓴 사람 1.3칸 안에 솟은 칼이 눈앞을 덮었음 → 둘레 fieldIn 칸 밖 (고리 안 넓이에 고르게)
         for (int i = 0; i < nSw; i++) {
-            double rad = R * Math.sqrt((i + 0.5) / nSw) * 0.95;
+            double rad = fieldRad(R, (i + 0.5) / nSw);
             int at = 3 + (int) (rad / R * ringTicks) + (i % 3);
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
@@ -634,7 +636,7 @@ final class PhantomArcherSkills {
                         if (e == null && RuneKit.fxQuota("sanctuaryMiss", 6)) PhantomFx.flash(sp.level(), L, to, 1.1);
                     });
                     RuneKit.later(fly + 2, () -> {
-                        if (RuneKit.sameLife(sp, life)) plant(sp.level(), fx, field, c0, R * Math.sqrt(Kit.rand()) * 0.95);
+                        if (RuneKit.sameLife(sp, life)) plant(sp.level(), fx, field, c0, fieldRad(R, Kit.rand()));
                     });
                 }
                 SkillFx.play(level, "item.trident.throw", c0, 0.75 + ww * 0.06, 1.0);
@@ -696,7 +698,8 @@ final class PhantomArcherSkills {
             ServerLevel level = sp.level();
             double fr = k.num("finalRadius", 4);
             // 2026-11-15 직업 전용: 큰 폭발 (불덩이 · 땅 충격파 · 그을린 땅 · 불씨 · 칼 조각 — 예전 상자 폭발 · 상자 고리 · 상자 조각 대신)
-            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.05);
+            // 2026-11-15 영상: 궁극기 마지막 폭발이 3인칭 (13칸 카메라) 에서 작았음 — fr × 1.05 → 1.5 (불덩이 지름 약 11칸)
+            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.5);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             if (!RuneKit.sameLife(sp, life)) return;
             for (LivingEntity e : Kit.around(sp, spot[0], fr, 4)) JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
@@ -712,6 +715,13 @@ final class PhantomArcherSkills {
             for (Planted p : field) p.b.remove();
         });
         return true;
+    }
+
+    /** 들판 칼이 솟는 거리: 쓴 사람 둘레 2.8칸 (1인칭 눈앞) 밖 ~ 0.95R, 넓이에 고르게 (u = 0 ~ 1) */
+    private static double fieldRad(double R, double u) {
+        double in = Math.min(2.8, R * 0.4);
+        double out = R * 0.95;
+        return Math.sqrt(in * in + (out * out - in * in) * Math.max(0, Math.min(1, u)));
     }
 
     /** 고리 안 rad 칸 (각도는 아무렇게나) 땅에 칼 하나가 솟아 꽂힘 */

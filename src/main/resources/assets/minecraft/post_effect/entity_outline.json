@@ -1,9 +1,22 @@
 {
   "targets": {
     "mask": {},
-    "a": {},
-    "tight": {},
-    "wide": {}
+    "h2": {
+      "width": 960,
+      "height": 540
+    },
+    "tight": {
+      "width": 960,
+      "height": 540
+    },
+    "h4": {
+      "width": 480,
+      "height": 270
+    },
+    "wide": {
+      "width": 480,
+      "height": 270
+    }
   },
   "passes": [
     {
@@ -41,7 +54,7 @@
           "bilinear": true
         }
       ],
-      "output": "a",
+      "output": "h2",
       "uniforms": {
         "VfxBlur": [
           {
@@ -63,7 +76,7 @@
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "a",
+          "target": "h2",
           "bilinear": true
         }
       ],
@@ -93,7 +106,7 @@
           "bilinear": true
         }
       ],
-      "output": "a",
+      "output": "h4",
       "uniforms": {
         "VfxBlur": [
           {
@@ -102,7 +115,7 @@
             "value": [
               1.0,
               0.0,
-              14.0,
+              13.5,
               0.0
             ]
           }
@@ -115,7 +128,7 @@
       "inputs": [
         {
           "sampler_name": "In",
-          "target": "a",
+          "target": "h4",
           "bilinear": true
         }
       ],
@@ -128,7 +141,7 @@
             "value": [
               0.0,
               1.0,
-              14.0,
+              13.5,
               0.0
             ]
           }
