@@ -1009,7 +1009,11 @@ final class PhantomFx {
         double spinRate = b.num("spinRate", 0);
         double fade = Math.max(0, Math.min(1, b.num("fade", 0)));
         double alpha = b.num("alpha", 1);
-        Vfx.Fx fx = Vfx.at(level, at, ticks + 2, who(b));
+        // 1인칭 눈 바로 앞 거름 (CI 43716691507 1인칭 — 눈앞을 지나는 연기 · 꽃잎이 픽셀 덩어리로 화면을 덮음): 그림 크기에 맞춘 반지름 (nearR — 빛 0.25 × 높이) ·
+        // 예전 다리가 가루로 바꾸던 작은 알갱이 (반 크기 0.11 아래) 는 가루처럼 눈에서 1.3칸 (PBridge.DUST_NEAR_EYE) 안이면 그 사람에게 보내지 않음
+        double half = b.num("size", 0) * sy;
+        Predicate<ServerPlayer> who = farEye(who(b), at, Math.max(half < 0.11 ? 1.3 : 0, h0 * 0.25 / k));
+        Vfx.Fx fx = Vfx.at(level, at, ticks + 2, who);
         Quaternionf q = facing == FACE_DIR ? dirFace(d) : null;
         int sides = facing == FACE_DIR ? 2 : 1;
         java.util.List<Vfx.Sprite> all = new java.util.ArrayList<>();
