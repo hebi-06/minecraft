@@ -1343,6 +1343,13 @@ STYLES = {
                     accent=ramp([(0.0, "#1A0514"), (0.5, "#B0217F"), (0.8, "#FF6CCB"), (1.0, "#FFE0F4")]),
                     smoke=ramp([(0.0, "#050208"), (0.45, "#150B22"), (0.8, "#2C1C42"), (1.0, "#4E3A6C")]),
                     ring="ticks", smoke_alpha=0.5, seed=7),
+    # 2026-11-15 환영 (트릭스터 — 자홍 · 짙은 보라 + 청록 유리빛): 거울 · 깨지는 거울 · 손거울 · 띠 고리 (tools/jobvfx/mirror.py). 아직 글꼴에 넣지 않음 (sprites())
+    "illusion": Style("el_illusion", "illusion",
+                      main=ramp([(0.0, "#0E0210"), (0.12, "#2A0626"), (0.26, "#520C46"), (0.4, "#80156A"), (0.52, "#AC2188"), (0.64, "#D23BA6"),
+                                 (0.76, "#EE66C2"), (0.86, "#FF9FDA"), (0.94, "#FFD8F0"), (1.0, "#FFFFFF")]),
+                      accent=ramp([(0.0, "#04161C"), (0.5, "#147A8C"), (0.8, "#6FE6F4"), (1.0, "#E8FFFF")]),
+                      smoke=ramp([(0.0, "#07030A"), (0.45, "#1A0A20"), (0.8, "#36183F"), (1.0, "#5A3466")]),
+                      ring="ticks", smoke_alpha=0.45, seed=9),
 }
 
 
@@ -1421,8 +1428,10 @@ def sets_for(S):
     def mirrored(name):
         return lambda: [im.transpose(Image.FLIP_LEFT_RIGHT) for im in fr(name)()]
     if S.kind == "gold":
+        # 2026-11-15 한 바퀴 베기 (spin · spinm — JobFx.ring): 없으면 얇은 땅 고리로 바뀌어 예전 칼날 고리 (rfx_jring2 — 도는 초승달) 와 달랐음 (리포스트 · 블레이드 에코)
         return (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash"))
-                + [(p + "cut", fr("cut"), True)] + grid_tiles(p + "excal", fr("excal"), 4, 1))
+                + [(p + "cut", fr("cut"), True)] + grid_tiles(p + "excal", fr("excal"), 4, 1) + tiled(p + "spin", fr("spin"))
+                + tiled(p + "spinm", mirrored("spin")))
     out = (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
            + tiled(p + "shock", fr("shock")) + tiled(p + "ring", fr("ring"))
            + [(p + "boom_s", fr("boom_s"), True), (p + "shock_s", fr("shock_s"), True), (p + "crack_s", fr("crack"), True), (p + "flash", fr("flash"), True),
@@ -1432,7 +1441,8 @@ def sets_for(S):
         out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "rift", fr("rift"), True), (p + "cut", fr("cut"), True)]
                 + tiled(p + "wings", fr("wings")))
     if S.kind == "blood":
-        out += tiled(p + "moon", fr("moon")) + [(p + "rift", fr("rift"), True)]
+        # 2026-11-15 한 바퀴 베기 (spin · spinm — JobFx.ring): 예전 칼날 고리처럼 도는 핏빛 초승달 (크림슨 다이브 · 블러드 클레이브)
+        out += tiled(p + "moon", fr("moon")) + [(p + "rift", fr("rift"), True)] + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin"))
     if S.kind == "shadow":
         # 한 바퀴 베기 (JobFx.ring) · 일섬 (JobFx.line) 은 공용 그림을 그림자 빛으로, 암살자 대표 그림은 tools/jobvfx/shadow.py
         from . import shadow
