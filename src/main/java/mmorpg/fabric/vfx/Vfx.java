@@ -128,6 +128,11 @@ public final class Vfx {
         return longest + 2;
     }
 
+    /** 2026-11-16 이 이름의 그림판이 있는지 (자주 묻는 곳 — sheetNames 는 모두 훑음) */
+    public static boolean hasSheet(String name) {
+        return SHEETS.containsKey(name);
+    }
+
     public static Sheet sheet(String name) {
         Sheet s = SHEETS.get(name);
         if (s == null) throw new IllegalArgumentException("vfx sprite " + name);

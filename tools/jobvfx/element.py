@@ -1357,6 +1357,22 @@ STYLES = {
                     accent=ramp([(0.0, "#2A1A06"), (0.5, "#C8962E"), (0.8, "#FFE28A"), (1.0, "#FFFBEA")]),
                     smoke=ramp([(0.0, "#0C0606"), (0.45, "#221012"), (0.8, "#3E2024"), (1.0, "#5E3A3C")]),
                     ring="ticks", smoke_alpha=0.4, seed=11),
+    # 2026-11-16 비전 (매지션 · 아크메이지 — 남빛 · 금빛: jobs.json mage 의 빛 [0.3, 0.36, 0.95] · [1, 0.84, 0.36]): 떠도는 별 · 별 마탄 · 광선 · 깨지는 방패 ·
+    # 금서의 주문 · 별자리의 별 · 별똥 · 별의 소용돌이 · 빛 고리 · 빛의 방패 (tools/jobvfx/arcane.py). 맞은 자리는 X 베기 대신 별빛 (arcane.starhit_frame)
+    "arcane": Style("el_arcane", "arcane",
+                    main=ramp([(0.0, "#05061A"), (0.12, "#0E1240"), (0.26, "#1B2470"), (0.4, "#2A3BA8"), (0.52, "#3F57D8"), (0.64, "#5D7CF2"),
+                               (0.76, "#86A4FF"), (0.86, "#B5C8FF"), (0.94, "#E2EAFF"), (1.0, "#FFFFFF")]),
+                    accent=ramp([(0.0, "#2A1A04"), (0.5, "#B07A1A"), (0.8, "#FFD25A"), (1.0, "#FFF6D6")]),
+                    smoke=ramp([(0.0, "#04050E"), (0.45, "#0E1226"), (0.8, "#1E2444"), (1.0, "#343C66")]),
+                    ring="ticks", smoke_alpha=0.35, seed=13),
+    # 2026-11-16 혼 (네크로맨서 — 녹색 혼불 · 뼈빛: jobs.json necromancer 의 빛 [0.3, 0.92, 0.45] · [0.92, 0.88, 0.74]): 혼불 · 해골 · 갈라진 땅 · 무덤 · 뼈 창 ·
+    # 망자의 손 · 연기 (tools/jobvfx/soul.py)
+    "soul": Style("el_soul", "soul",
+                  main=ramp([(0.0, "#020A05"), (0.12, "#06200E"), (0.26, "#0C3E1C"), (0.4, "#14662E"), (0.52, "#1F9244"), (0.64, "#35BC5E"),
+                             (0.76, "#62DE84"), (0.86, "#A0F2B4"), (0.94, "#DAFCE2"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#1A160C"), (0.5, "#8C8266"), (0.8, "#EAE0BE"), (1.0, "#FFFBEE")]),
+                  smoke=ramp([(0.0, "#030604"), (0.45, "#0C1A10"), (0.8, "#1E3424"), (1.0, "#3A5440")]),
+                  ring="ticks", smoke_alpha=0.5, seed=15),
 }
 
 
@@ -1365,6 +1381,13 @@ def frames_of(S, name):
     if name == "slash":
         return [to_img(*slash_frame(S, f)) for f in range(SLASH_FRAMES)]
     if name == "xslash":
+        # 2026-11-16 비전 · 혼 묶음의 맞은 자리는 X 베기 대신 별빛 (arcane.starhit) · 혼 터짐 (soul.soulhit) — 같은 자리 (PhantomFx.hit · 2 × 2)
+        if S.kind == "arcane":
+            from . import arcane
+            return arcane.frames_of("starhit", S)
+        if S.kind == "soul":
+            from . import soul
+            return soul.frames_of("soulhit", S)
         return [to_img(*xslash_frame(S, f)) for f in range(XSLASH_FRAMES)]
     if name == "boom":
         return [to_img(*boom_frame(S, f)) for f in range(BOOM_FRAMES)]
@@ -1439,6 +1462,16 @@ def sets_for(S):
         return (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash"))
                 + [(p + "cut", fr("cut"), True)] + grid_tiles(p + "excal", fr("excal"), 4, 1) + tiled(p + "spin", fr("spin"))
                 + tiled(p + "spinm", mirrored("spin")))
+    if S.kind in ("arcane", "soul"):
+        # 2026-11-16 매지션 라인 (사용자 "다음 직업으로 마법사 작업"): 마법 직업은 베기 · 땅 찍기를 쓰지 않음 — 맞은 자리 (xslash 자리에 별빛 · 혼 터짐) · 섬광 · 터짐 ·
+        # 날아가는 작은 그림 + (매지션) 한 바퀴 고리 · 땅 고리 + 직업 대표 그림 (tools/jobvfx/arcane.py · soul.py). 글꼴 무게를 줄이려 쓰지 않는 공용 그림은 뺌
+        out = (tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
+               + [(p + "boom_s", fr("boom_s"), True), (p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "shard", lambda: shard(S), True)])
+        if S.kind == "arcane":
+            from . import arcane
+            return out + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + tiled(p + "ring", fr("ring")) + arcane.sprites()
+        from . import soul
+        return out + soul.sprites()
     out = (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
            + tiled(p + "shock", fr("shock")) + tiled(p + "ring", fr("ring"))
            + [(p + "boom_s", fr("boom_s"), True), (p + "shock_s", fr("shock_s"), True), (p + "crack_s", fr("crack"), True), (p + "flash", fr("flash"), True),
@@ -1459,7 +1492,7 @@ def sets_for(S):
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul"):
         out += sets_for(STYLES[key])
     return out
 

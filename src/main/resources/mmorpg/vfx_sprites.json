@@ -1688,6 +1688,414 @@
    "frames": 8,
    "aspect": 1.0,
    "colored": true
+  },
+  "el_arcane_xslash_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_xslash_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_xslash_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_xslash_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_boom_00": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_boom_01": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_boom_10": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_boom_11": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spin_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spin_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spin_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spin_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spinm_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spinm_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spinm_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_spinm_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_ring_00": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_ring_01": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_ring_10": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_ring_11": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_star": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_bolt": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 3.0,
+   "colored": true
+  },
+  "el_arcane_beam": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_arcane_shatter": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_fireball": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 2.6667,
+   "colored": true
+  },
+  "el_arcane_icelance": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_arcane_sparkorb": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 2.0,
+   "colored": true
+  },
+  "el_arcane_frost": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_dash": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_arcane_aura": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 0.5,
+   "colored": true
+  },
+  "el_arcane_starnode": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_fallstar": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 2.6667,
+   "colored": true
+  },
+  "el_arcane_aegis": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 0.7969,
+   "colored": true
+  },
+  "el_arcane_galaxy_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_galaxy_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_galaxy_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_galaxy_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_halo_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_halo_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_halo_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_arcane_halo_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_xslash_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_xslash_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_xslash_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_xslash_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_boom_00": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_boom_01": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_boom_10": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_boom_11": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_soul": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_skull": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_rift": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 0.3984,
+   "colored": true
+  },
+  "el_soul_bonespear": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_soul_hand": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 0.5,
+   "colored": true
+  },
+  "el_soul_smoke": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_aura": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 0.5,
+   "colored": true
+  },
+  "el_soul_halo_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_halo_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_halo_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soul_halo_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
   }
  }
 }

@@ -55,6 +55,15 @@ final class PhantomFx {
     /** 2026-11-15 그림자 (암살자 — el_shadow: 짙은 보라 · 자홍 — 그림자 연기 · 엇갈린 베기 · 검은 장미 · 꽃 · 꽃잎 · 도는 비수 · 찌르기 · 일식, tools/jobvfx/shadow.py) */
     static final int GLOW_SHADOW = 0xC45CFF;
     static final Lib SHADOW = new Lib("el_shadow", GLOW_SHADOW, GLOW_SHADOW, "ember");
+    /**
+     * 2026-11-16 비전 (매지션 · 아크메이지 — el_arcane: 남빛 · 금빛 — 떠도는 별 · 별 마탄 · 광선 · 깨지는 방패 · 금서의 주문 · 눈꽃 · 순간 이동 줄기 · 솟는 별빛 ·
+     * 별자리의 별 · 별똥 · 별의 소용돌이 · 빛 고리 · 빛의 방패 · 별빛 맞음, tools/jobvfx/arcane.py)
+     */
+    static final int GLOW_ARCANE = 0x8FA8FF;
+    static final Lib ARCANE = new Lib("el_arcane", GLOW_ARCANE, GLOW_ARCANE, "ember");
+    /** 2026-11-16 혼 (네크로맨서 — el_soul: 녹색 혼불 · 뼈빛 — 혼불 · 해골 · 갈라진 땅 · 뼈 창 · 망자의 손 · 망자의 연기 · 혼 고리 · 혼 터짐, tools/jobvfx/soul.py) */
+    static final int GLOW_SOUL = 0x5CF08A;
+    static final Lib SOUL = new Lib("el_soul", GLOW_SOUL, GLOW_SOUL, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -66,6 +75,8 @@ final class PhantomFx {
             case "swordsman" -> STEEL;
             case "bloodknight" -> BLOOD;
             case "assassin" -> SHADOW;
+            case "mage", "arcmage" -> ARCANE;
+            case "necromancer" -> SOUL;
             default -> null;
         };
     }
@@ -985,6 +996,90 @@ final class PhantomFx {
     static final int FACE_DIR = 1;
     /** rfx 방향: 세로축만 카메라를 봄 (lookat_y) */
     static final int VERT = 2;
+    /**
+     * 2026-11-16 rfx 방향: 가는 쪽으로 누워 보는 사람의 눈 쪽을 봄 (lookat_direction — 그림 +x = dir · 면 = 눈 쪽을 dir 에 수직으로): 보는 사람마다 한 장
+     * (PBridge 는 기준 눈 하나 — 다른 사람에게는 옆 · 뒤가 보였음)
+     */
+    static final int LOOK_DIR = 3;
+
+    /** 2026-11-16 예전 rfx 이름 → 묶음의 칠한 그림 (조각 k · 방향 · 세로 몫 sy · 크기 몫 — 예전 그림과 같은 틀) */
+    record Paint(String art, int k, int facing, double sy, double scale) {}
+
+    /**
+     * 2026-11-16 매지션 라인 (사용자 "다음 직업으로 마법사 작업"): 칠한 그림이 있는 예전 rfx — 예전 그림판의 칸 크기 (세로 몫) · 머리 자리 · 고리 반지름에 맞춰 그림.
+     * jburst2 (색을 정한 터짐 — 프리즘 레이 갈래 끝) 는 섬광 (PhantomFx.burst 의 작은 터짐과 같은 크기 몫 1.3), jring2 (세운 고리 · 눈앞 고리) 는 한 바퀴 고리
+     * (예전 고리 반지름 0.88 · 그림 0.8)
+     */
+    static final java.util.Map<String, Paint> PAINT = java.util.Map.ofEntries(
+            java.util.Map.entry("jstar", new Paint("star", 1, BILL, 1, 1)),
+            java.util.Map.entry("jbolt2", new Paint("bolt", 1, LOOK_DIR, 1 / 3.0, 1)),
+            java.util.Map.entry("jbeam2", new Paint("beam", 1, LOOK_DIR, 0.25, 1)),
+            java.util.Map.entry("jshatter2", new Paint("shatter", 1, BILL, 1, 1)),
+            java.util.Map.entry("jfireball", new Paint("fireball", 1, LOOK_DIR, 0.375, 1)),
+            java.util.Map.entry("jicelance", new Paint("icelance", 1, LOOK_DIR, 0.25, 1)),
+            java.util.Map.entry("jsparkorb", new Paint("sparkorb", 1, LOOK_DIR, 0.5, 1)),
+            java.util.Map.entry("jfrost", new Paint("frost", 1, BILL, 1, 1)),
+            java.util.Map.entry("jdash2", new Paint("dash", 1, LOOK_DIR, 0.25, 1)),
+            java.util.Map.entry("jaura2", new Paint("aura", 1, VERT, 2, 1)),
+            java.util.Map.entry("jstarnode", new Paint("starnode", 1, BILL, 1, 1)),
+            java.util.Map.entry("jfallstar", new Paint("fallstar", 1, LOOK_DIR, 0.375, 1)),
+            java.util.Map.entry("jgalaxy", new Paint("galaxy", 2, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jhalo", new Paint("halo", 2, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jaegis2", new Paint("aegis", 1, VERT, 1.25, 1)),
+            java.util.Map.entry("jsoul2", new Paint("soul", 1, BILL, 1, 1)),
+            java.util.Map.entry("jskull", new Paint("skull", 1, BILL, 1, 1)),
+            java.util.Map.entry("jrift", new Paint("rift", 1, FACE_DIR, 2.5, 1)),
+            java.util.Map.entry("jbonespear", new Paint("bonespear", 1, LOOK_DIR, 0.25, 1)),
+            java.util.Map.entry("jhand2", new Paint("hand", 1, VERT, 2, 1)),
+            java.util.Map.entry("jsmoke2", new Paint("smoke", 1, BILL, 1, 1)),
+            java.util.Map.entry("jburst2", new Paint("flash", 1, BILL, 1, 1.3)),
+            java.util.Map.entry("jring2", new Paint("spin", 2, FACE_DIR, 1, 0.88 / 0.8)));
+
+    /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
+    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer"};
+    /** 스킬이 직업 빛 대신 쓰는 빛 묶음 (같은 배열) → 묶음: 아크메이지 밤빛 · 금서의 세 주문 빛 · 프리즘 레이 다섯 빛 (무지개 대신 비전 광선) · 망자의 연기 */
+    private static java.util.Map<double[], Lib> palette;
+
+    /** 빛 glow 로 그린 예전 rfx 를 칠할 묶음 (없으면 null — 예전 길) */
+    static Lib painter(double[] glow) {
+        if (glow == null) return null;
+        if (palette == null) {
+            java.util.Map<double[], Lib> m = new java.util.IdentityHashMap<>();
+            m.put(JobTraits8.NIGHT, ARCANE);
+            for (double[][] c : MageSkills.SPELLS) m.put(c[0], ARCANE);
+            for (double[][] c : MageSkills.PRISM) m.put(c[0], ARCANE);
+            m.put(NecroCrew.DEEP, SOUL); // 네크로맨서 망자의 연기 (짙은 녹색 · 혼불)
+            palette = m;
+        }
+        Lib L = palette.get(glow);
+        if (L != null) return L;
+        for (String id : PAINTED_JOBS) {
+            Jobs.Job j = Jobs.job(id);
+            if (j != null && (j.color()[0] == glow || j.color()[1] == glow)) return lib(j);
+        }
+        return null;
+    }
+
+    /**
+     * 2026-11-16 예전 rfx 한 벌 (JobFx.two · cells — 빛 glow · 값 b) 을 칠한 그림 한 장으로: glow 가 칠한 직업의 빛 (painter) 이고 그 묶음에 이 rfx 의 그림 (PAINT) 이
+     * 있으면 rfx 다리로 같은 자리 · 크기 · 방향 · 움직임에 그리고 true (사용자 "예전 방향 · 자리 · 크기는 그대로, 그림만")
+     */
+    static boolean painted(ServerLevel level, String rfx, int first, Vec3 at, Opt b, double[] glow) {
+        Paint p = PAINT.get(rfx);
+        if (p == null) return false;
+        Lib L = painter(glow);
+        if (L == null) return false;
+        String sheet = L.n(p.art());
+        String probe = p.k() > 1 ? sheet + "_00" : sheet;
+        if (!Vfx.hasSheet(probe)) return false;
+        int n = Vfx.sheet(probe).frames();
+        int f0 = Math.floorMod(first, n);
+        int count = Math.max(1, Math.min((int) b.num("frames", 1), n - f0));
+        Opt bb = b.with("frames", (double) count);
+        if (p.scale() != 1) bb = bb.with("size", b.num("size", 0) * p.scale());
+        rfx(level, sheet, p.k(), f0, at, bb, p.facing(), p.sy());
+        return true;
+    }
 
     /**
      * 예전 rfx 파티클 한 벌 (빛 + 심지 두 장 — JobFx.two · cells) 을 칠한 그림판 한 장으로 (사용자 "예전 방향 · 자리 · 크기는 그대로, 그림만"): 모드 없는
@@ -993,6 +1088,21 @@ final class PhantomFx {
      * min(count − 1, ⌊시간 × fps⌋)) · 마지막 fade 몫 동안 옅어짐 · 볼 사람 view · owner. 그림판 sheet (k = 2 면 조각 sheet_rc 넷). b = two · cells 가 만든 값
      */
     static Vfx.Fx rfx(ServerLevel level, String sheet, int k, int first, Vec3 at, Opt b, int facing, double sy) {
+        if (facing != LOOK_DIR) return rfx1(level, sheet, k, first, at, b, facing, sy, who(b), null);
+        // 가는 쪽으로 누운 그림: 보는 사람마다 그 사람의 눈 쪽을 보는 한 장
+        Predicate<ServerPlayer> base = who(b);
+        Vfx.Fx last = null;
+        for (ServerPlayer p : level.players()) {
+            if (p.distanceToSqr(at) > 128 * 128 || (base != null && !base.test(p))) continue;
+            int id = p.getId();
+            Predicate<ServerPlayer> one = q -> q.getId() == id;
+            last = rfx1(level, sheet, k, first, at, b, facing, sy, base == null ? one : base.and(one), p);
+        }
+        return last;
+    }
+
+    private static Vfx.Fx rfx1(ServerLevel level, String sheet, int k, int first, Vec3 at, Opt b, int facing, double sy, Predicate<ServerPlayer> viewer,
+            ServerPlayer looker) {
         double life = Math.max(0.05, b.num("life", 0.3));
         int ticks = Math.max(1, (int) Math.round(life * 20));
         int count = Math.max(1, (int) b.num("frames", 1));
@@ -1012,9 +1122,10 @@ final class PhantomFx {
         // 1인칭 눈 바로 앞 거름 (CI 43716691507 1인칭 — 눈앞을 지나는 연기 · 꽃잎이 픽셀 덩어리로 화면을 덮음): 그림 크기에 맞춘 반지름 (nearR — 빛 0.25 × 높이) ·
         // 예전 다리가 가루로 바꾸던 작은 알갱이 (반 크기 0.11 아래) 는 가루처럼 눈에서 1.3칸 (PBridge.DUST_NEAR_EYE) 안이면 그 사람에게 보내지 않음
         double half = b.num("size", 0) * sy;
-        Predicate<ServerPlayer> who = farEye(who(b), at, Math.max(half < 0.11 ? 1.3 : 0, h0 * 0.25 / k));
+        Predicate<ServerPlayer> who = farEye(viewer, at, Math.max(half < 0.11 ? 1.3 : 0, h0 * 0.25 / k));
         Vfx.Fx fx = Vfx.at(level, at, ticks + 2, who);
-        Quaternionf q = facing == FACE_DIR ? dirFace(d) : null;
+        boolean look = facing == LOOK_DIR;
+        Quaternionf q = facing == FACE_DIR ? dirFace(d) : look ? lookDir(d, at, looker) : null;
         int sides = facing == FACE_DIR ? 2 : 1;
         java.util.List<Vfx.Sprite> all = new java.util.ArrayList<>();
         double[] off = new double[k * k * sides * 2];
@@ -1044,14 +1155,14 @@ final class PhantomFx {
             double t0 = h0 / k;
             sp.size(t0);
             if (k > 1) sp.offset(off[n * 2] * t0, off[n * 2 + 1] * t0);
-            if (spin != 0) sp.roll(spin, 0);
+            if (spin != 0 && !look) sp.roll(spin, 0);
             sp.frame(frameAt.applyAsInt(0));
             if (alpha < 0.999) sp.alpha(alpha);
         }
         boolean moves = V.len(mv) > 1e-4;
-        boolean turns = Math.abs(spinRate) > 1e-3;
+        boolean turns = Math.abs(spinRate) > 1e-3 && !look;
         boolean grows = Math.abs(grow) > 1e-4;
-        int step = turns ? (Math.abs(spinRate) > 400 ? 1 : 2) : 4;
+        int step = turns ? (Math.abs(spinRate) > 400 ? 1 : 2) : look ? 2 : 4;
         int[] shown = {frameAt.applyAsInt(0)};
         fx.each(1, ticks, 1, t -> {
             int f = frameAt.applyAsInt(t);
@@ -1059,17 +1170,19 @@ final class PhantomFx {
                 shown[0] = f;
                 for (Vfx.Sprite sp : all) sp.frame(f);
             }
-            if ((moves || turns || grows) && (t - 1) % step == 0) {
+            if ((moves || turns || grows || look) && (t - 1) % step == 0) {
                 int t1 = Math.min(ticks, t - 1 + step);
                 int dur = t1 - (t - 1);
                 Vec3 p = V.add(at, mv, t1 / 20.0);
                 double h = h0 * (1 + grow * t1 / (double) ticks);
+                Quaternionf qq = look ? lookDir(d, p, looker) : null;
                 for (int n = 0; n < all.size(); n++) {
                     Vfx.Sprite sp = all.get(n);
                     double tt = h / k;
                     if (k > 1) sp.offset(off[n * 2] * tt, off[n * 2 + 1] * tt);
                     sp.to(moves ? p : null, tt, dur);
                     if (turns) sp.roll(spin + spinRate * t1 / 20.0, dur);
+                    if (qq != null) sp.face(qq, dur);
                 }
             }
         });
@@ -1079,6 +1192,22 @@ final class PhantomFx {
             else sp.until(ticks + 1);
         }
         return fx;
+    }
+
+    /**
+     * 2026-11-16 rfx lookat_direction 의 판 방향 (PBridge.fixed 와 같은 셈 — 기준 눈 대신 보는 사람 looker 의 눈 PBridge.eyeOf): 그림 +x = d · 면 = 눈 쪽을 d 에 수직으로 ·
+     * 그림 +y = 면 × d
+     */
+    static Quaternionf lookDir(Vec3 d, Vec3 at, ServerPlayer looker) {
+        Vec3 eye = looker != null ? PBridge.eyeOf(looker) : V.up(at, 2.0);
+        Vec3 to = V.sub(eye, at);
+        Vec3 n = V.sub(to, V.scale(d, V.dot(to, d)));
+        if (V.len(n) < 1e-5) {
+            Vec3 r = Math.abs(d.y) < 0.9 ? V.UP : new Vec3(1, 0, 0);
+            n = V.sub(r, V.scale(d, V.dot(r, d)));
+        }
+        n = V.unit(n);
+        return Vfx.basis(d, V.unit(V.cross(n, d)), n);
     }
 
     /** rfx direction_z 의 판 방향 (PBridge.fixed — 위 = 세계 위 (dir 이 거의 위 · 아래면 남쪽) 를 dir 에 수직으로 · X = 위 × dir · 앞면 = dir) */

@@ -175,6 +175,8 @@ final class JobFx {
     static void two(ServerLevel level, String name, int frames, int base, Vec3 at, double life, Opt o, double[] glow, double[] core) {
         double fps = frames / Math.max(0.05, life);
         Opt b = o.with("life", life, "frames", (double) frames, "fps", fps, "fade", o.num("fade", 0.2));
+        // 2026-11-16 칠한 직업 (매지션 라인 — 직업 빛 · 스킬 빛 묶음): 예전 rfx 와 같은 자리 · 크기 · 방향 · 움직임의 칠한 그림 한 장 (PhantomFx.painted)
+        if (PhantomFx.painted(level, name, base, at, b, glow)) return;
         RuneKit.rfx(level, name, at, b.with("color", glow, "cell", (double) base));
         RuneKit.rfx(level, name, at, b.with("color", core, "cell", (double) (base + frames), "alpha", o.num("coreAlpha", o.num("alpha", 1))));
     }
@@ -517,6 +519,7 @@ final class JobFx {
         Opt o = hide1p(sp).with("size", height * 0.3, "loop", 1.0, "alpha", alpha, "coreAlpha", alpha * 0.8, "vel", RuneKit.bodyVel(sp), "fade", 0.3);
         double fps = AURA / 0.45; // 한 바퀴 0.45초
         Opt base = o.with("life", life, "frames", (double) AURA, "fps", fps);
+        if (PhantomFx.painted(sp.level(), "jaura2", 0, c, base, outer(j))) return; // 2026-11-16 칠한 직업: 솟는 별빛 · 녹색 혼불 띠
         RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", outer(j), "cell", 0.0));
         RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", inner(j), "cell", (double) AURA, "alpha", alpha * 0.8));
     }
@@ -529,6 +532,7 @@ final class JobFx {
         double f = fps > 0 ? fps : count / Math.max(0.05, life);
         Opt b = o.with("life", life, "frames", (double) count, "fps", f, "fade", o.num("fade", 0.2), "loop", loop ? 1.0 : null, "phase",
                 loop ? (o.has("phase") ? o.num("phase", 0) : Kit.rand() * count) : null);
+        if (PhantomFx.painted(level, name, start, at, b, glow)) return; // 2026-11-16 칠한 직업 (two 와 같음)
         // 0.29.0 solo (주인마다 하나만 — owner 가 있어야 함): 빛 · 심지가 서로를 지우지 않게 번호를 나눔
         double solo = o.num("solo", 0);
         RuneKit.rfx(level, name, at, b.with("color", glow, "cell", (double) start, "solo", solo > 0 ? solo * 2 : null));
