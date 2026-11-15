@@ -1370,8 +1370,25 @@ final class JobFx {
         PhantomFx.ring(sp.level(), L, PhantomFx.ground(sp.level(), sp.position()), 1.4, 3, Math.max(2, ticks - 2), PhantomFx.hide1p(sp), 0.8);
         SkillFx.play(sp.level(), "block.respawn_anchor.charge", sp.position(), 1.3, 0.45);
         Vec3 p0 = relPoint(sp, rel);
-        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(sp.level(), p0, ticks + 6);
+        // 2026-11-15 1인칭 영상 2 (블러드 문 얼굴 앞 · 뛰어오른 머리 위 · 엑스칼리버 머리 위): 모으는 자리가 눈 바로 앞 · 위면 (끝 섬광이 눈에서 그 크기의 0.4 배 안)
+        // 주인 1인칭에서는 그 자리의 빛 · 섬광을 숨기고 눈앞 1.6칸에 반 크기로 따로 둠 — 눈에 붙은 그림은 한 픽셀이 화면 수십 픽셀로 늘어나 화면을 네모 덩어리로 덮었음
+        boolean nearEye = p0.distanceTo(sp.getEyePosition()) < size * 2.6 * 0.4;
+        java.util.function.Predicate<ServerPlayer> who3 = nearEye ? PhantomFx.hide1p(sp) : null;
+        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(sp.level(), p0, ticks + 6, who3);
         mmorpg.fabric.vfx.Vfx.Sprite s = PhantomFx.charge(fx, L, p0, size * 0.6);
+        mmorpg.fabric.vfx.Vfx.Fx fx1 = nearEye ? mmorpg.fabric.vfx.Vfx.at(sp.level(), eyeCharge(sp, rel), ticks + 6, PhantomFx.only1p(sp)) : null;
+        if (fx1 != null) {
+            mmorpg.fabric.vfx.Vfx.Sprite s1 = PhantomFx.charge(fx1, L, eyeCharge(sp, rel), size * 0.3);
+            // 몸을 따라 틱마다 (뛰어오르는 동안 2틱 간격이면 눈앞 빛이 화면 아래로 처졌음)
+            fx1.each(1, ticks, 1, age -> {
+                if (!RuneKit.sameLife(sp, life)) {
+                    fx1.end();
+                    return;
+                }
+                double q = Math.min(1, (age + 1.0) / ticks);
+                s1.to(eyeCharge(sp, rel), size * 0.5 * (0.6 + 1.1 * q), 1);
+            });
+        }
         for (int t = 0; t < ticks; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
@@ -1394,9 +1411,21 @@ final class JobFx {
         }
         RuneKit.later(ticks, () -> {
             fx.end();
+            if (fx1 != null) fx1.end();
             if (!RuneKit.sameLife(sp, life)) return;
-            PhantomFx.flash(sp.level(), L, relPoint(sp, rel), size * 2.6);
+            PhantomFx.flash(sp.level(), L, relPoint(sp, rel), size * 2.6, who3);
+            if (nearEye) PhantomFx.flash(sp.level(), L, eyeCharge(sp, rel), size * 1.3, PhantomFx.only1p(sp));
         });
+    }
+
+    /**
+     * 주인 1인칭의 모으는 빛 자리 (chargeLib — 모으는 자리가 눈 바로 앞 · 위일 때): 눈앞 1.6칸 · 옆은 rel.x 의 0.6 배 · 높이는 rel 의 눈 기준 높이에서 0.3 내려
+     * −0.55 ~ +0.45 (얼굴 앞 칼 → 화면 가운데 조금 아래 · 머리 위 → 화면 위쪽)
+     */
+    private static Vec3 eyeCharge(ServerPlayer sp, Vec3 rel) {
+        Vec3 f = Kit.facingOf(sp);
+        double dy = Math.max(-0.55, Math.min(0.45, rel.y - sp.getEyeHeight() - 0.3));
+        return V.up(V.add(V.add(sp.getEyePosition(), V.rightOf(f), rel.x * 0.6), f, 1.6), dy);
     }
 
     /** 망자의 비명 (rfx_jwail — 카메라를 봄): 연기가 비명 지르는 얼굴이 되어 (0 ~ 4) 찢겨 흩어짐 (5 ~ 7). 크기 약 size × 2 칸 */

@@ -98,6 +98,27 @@ final class PhantomFx {
         return p -> p.getId() == id && !PBridge.thirdPersonOf(p);
     }
 
+    /**
+     * 2026-11-15 눈 바로 앞 그림 거름 (1인칭 영상 2 — 블러드 문 · 새비지 프렌지 · 엑스칼리버): 그림 한 장은 256 픽셀이라 눈에서 가까우면 한 픽셀이 화면에서 수십 픽셀로
+     * 늘어나 붉은 · 금빛 네모 덩어리로 화면을 덮었음 → 1인칭으로 보는 사람의 눈이 at 에서 r 칸 안이면 보내지 않음 (3인칭은 카메라가 몸 뒤라 그대로 — 쓴 사람의 눈앞에
+     * 보여야 할 그림은 스킬이 1인칭 자리에 따로 둠)
+     */
+    static Predicate<ServerPlayer> farEye(Predicate<ServerPlayer> who, Vec3 at, double r) {
+        if (r <= 0) return who;
+        double r2 = r * r;
+        Predicate<ServerPlayer> far = p -> PBridge.thirdPersonOf(p) || p.getEyePosition().distanceToSqr(at) >= r2;
+        return who == null ? far : who.and(far);
+    }
+
+    /**
+     * 눈앞 거름 반지름 — 한 장 그림 (256 픽셀) 크기 size 의 몇 배 (1080p · 시야 70도에서 한 픽셀 ≈ 3.45 × size / 거리 픽셀): 날이 선 피 그림 (물보라 가시 · 방울) 은
+     * 약 9 픽셀 넘게 늘어나면 (0.38 — 새비지 프렌지 2.5칸 앞 맞은 자리 피 튐 6 픽셀은 그대로) · 부드러운 빛 (강철 · 금 · 불 섬광) 은 아주 가까울 때만 (0.25 — 엑스칼리버
+     * 발 앞 큰 섬광은 그대로). 2 × 2 그림은 조각이 반 크기라 이 값의 반
+     */
+    static double nearR(Lib L, double size) {
+        return size * (L == BLOOD ? 0.38 : 0.25);
+    }
+
     /** 땅에 눕힌 그림 (그림 앞면이 위 — 그림 위쪽이 yaw 쪽) */
     static Quaternionf flat(double yawDeg) {
         return Vfx.flat(yawDeg);
@@ -189,8 +210,7 @@ final class PhantomFx {
     }
 
     static void flash(ServerLevel level, Lib L, Vec3 at, double size) {
-        Vfx.Fx fx = Vfx.at(level, at, 12);
-        single(fx, L.n("flash"), at, size, Kit.rand() * 40 - 20, 1, false);
+        flash(level, L, at, size, null);
     }
 
     /** 모으는 빛 (되풀이 — 스킬이 to · remove 로 다룸): fx 안 · 가운데 at · 크기 size */
@@ -341,7 +361,7 @@ final class PhantomFx {
 
     /** X 베기 (2 × 2 xslash — 두 줄기가 차례로 그어지고 교차점 섬광): 가운데 c · 크기 size 칸 · 화면 돌림 roll 도 (카메라를 봄) */
     static void xslash(ServerLevel level, Lib L, Vec3 c, double size, double roll) {
-        tiled(level, L.n("xslash"), 2, c, size, null, roll, 0, 1);
+        tiled(level, L.n("xslash"), 2, c, size, null, roll, 0, 1, false, null, farEye(null, c, nearR(L, size) * 0.5), 1.0);
     }
 
     // ------------------------------------------------------------ 2026-11-15 아스널 킹 · 블레이드 레인저
@@ -419,9 +439,9 @@ final class PhantomFx {
      */
     static final double SLASH_FILL = 0.9;
 
-    /** 섬광 — 볼 사람을 정함 */
+    /** 섬광 — 볼 사람을 정함 (1인칭 눈 바로 앞이면 거름 — {@link #farEye}) */
     static void flash(ServerLevel level, Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
-        Vfx.Fx fx = Vfx.at(level, at, 12, who);
+        Vfx.Fx fx = Vfx.at(level, at, 12, farEye(who, at, nearR(L, size)));
         single(fx, L.n("flash"), at, size, Kit.rand() * 40 - 20, 1, false);
     }
 
@@ -564,13 +584,13 @@ final class PhantomFx {
             return;
         }
         if (size < 2.0) {
-            Vfx.Fx fx = Vfx.at(level, at, 20, who);
+            Vfx.Fx fx = Vfx.at(level, at, 20, farEye(who, at, nearR(L, size * 1.8)));
             single(fx, L.n("boom_s"), at, size * 1.8, Kit.rand() * 30 - 15, 1, false);
             flash(level, L, at, size * 1.5, who);
             if (who == null) embers(level, L, at, 4 + (int) (size * 3), size, 0.35, 16);
             return;
         }
-        tiled(level, L.n("boom"), 2, at, size * 1.6, null, Kit.rand() * 30 - 15, 0, 1, false, null, who, 1.0);
+        tiled(level, L.n("boom"), 2, at, size * 1.6, null, Kit.rand() * 30 - 15, 0, 1, false, null, farEye(who, at, nearR(L, size * 1.6) * 0.5), 1.0);
         if (who == null) {
             embers(level, L, at, 14, size * 0.8, 0.45, 22);
             shards(level, L, at, 6, size * 0.8, 0.4, 18);
@@ -606,7 +626,7 @@ final class PhantomFx {
         int ticks = Math.max(2, (int) Math.round(life * 20));
         flash(level, L, at, size * 2.0, who);
         if (ticks <= 7) return;
-        Vfx.Fx fx = Vfx.at(level, at, ticks + 6, who);
+        Vfx.Fx fx = Vfx.at(level, at, ticks + 6, farEye(who, at, nearR(L, size * 1.5)));
         Vfx.Sprite s = single(fx, L.n(L.ember()), at, size * 1.5, Kit.rand() * 40 - 20, 1, true);
         if (vel != null && V.len(vel) > 1e-3) s.to(V.add(at, vel, ticks / 20.0), -1, Math.min(59, ticks));
         s.fade(Math.max(1, ticks - 4), 4);
@@ -740,10 +760,15 @@ final class PhantomFx {
 
     /** 세로 그림 하나 (pillar — 빛기둥 · 피 기둥, 세로축 빌보드): 발 자리 foot · 높이 h 칸 · every 틱마다 한 칸 */
     static void pillar(ServerLevel level, Lib L, Vec3 foot, double h, int every) {
+        pillar(level, L, foot, h, every, null);
+    }
+
+    /** 같은 것 — 볼 사람을 정함 (1인칭 눈 바로 앞 기둥은 거름: 그림 128 × 256 이라 한 픽셀 = h / 256 칸) */
+    static void pillar(ServerLevel level, Lib L, Vec3 foot, double h, int every, Predicate<ServerPlayer> who) {
         String name = L.n("pillar");
         if (Vfx.sheetNames(name).isEmpty()) return;
         Vfx.Sheet s = Vfx.sheet(name);
-        Vfx.Fx fx = Vfx.at(level, foot, s.frames() * Math.max(1, every) + 4);
+        Vfx.Fx fx = Vfx.at(level, foot, s.frames() * Math.max(1, every) + 4, farEye(who, V.up(foot, h * 0.5), nearR(L, h)));
         Vfx.Sprite sp = fx.sprite(name, V.up(foot, h * 0.5));
         sp.vertical();
         sp.size(h);

@@ -42,7 +42,12 @@ final class BloodknightSkills {
 
     /** 피 튀김 + 핏방울이 사방으로 */
     static void splash(ServerLevel level, Vec3 at, double size, Jobs.Job j, int drops) {
-        JobTraits5.blood(level, at, size, j, 0.45, Opt.empty());
+        splash(level, at, size, j, drops, Opt.empty());
+    }
+
+    /** 같은 것 — 피 튐을 볼 사람 (view · owner — 제 몸의 피 튐은 주인 1인칭에서 숨김: 눈 바로 아래 큰 그림은 화면을 붉은 네모로 덮었음) */
+    static void splash(ServerLevel level, Vec3 at, double size, Jobs.Job j, int drops, Opt view) {
+        JobTraits5.blood(level, at, size, j, 0.45, view);
         for (int q = 0; q < drops; q++) {
             double a = Kit.rand() * Math.PI * 2;
             Vec3 d = V.unit(new Vec3(Math.cos(a), 0.35 + Kit.rand() * 0.6, Math.sin(a)));
@@ -253,7 +258,7 @@ final class BloodknightSkills {
         List<LivingEntity> bound = new ArrayList<>();
         // 칼을 땅에 꽂아 사슬을 부름 (땅의 붉은 고리 · 피 튀김)
         JobFx.ring(level, V.up(sp.position(), 0.07), R, j, false, 0.45, Opt.of("alpha", 0.9));
-        JobTraits5.blood(level, V.up(sp.position(), 0.4), 1.2, j, 0.4, Opt.empty());
+        JobTraits5.blood(level, V.up(sp.position(), 0.4), 1.2, j, 0.4, JobFx.hide1p(sp)); // 2026-11-15 제 발밑 피 튐은 주인 1인칭에서 숨김 (화면 아래 붉은 네모)
         SkillFx.play(level, "block.chain.place", sp.position(), 0.7, 1.0);
         SkillFx.play(level, "entity.wither.shoot", sp.position(), 0.6, 0.4);
         RuneKit.later(first, () -> {
@@ -373,7 +378,7 @@ final class BloodknightSkills {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         String life = RuneKit.lifeToken(sp);
-        splash(level, V.up(c, 1.2), 1.8, j, 12);
+        splash(level, V.up(c, 1.2), 1.8, j, 12, JobFx.hide1p(sp)); // 2026-11-15 제 몸의 피 튐 — 1인칭 영상 2 에서 화면을 분홍 네모로 덮었음
         JobFx.aura(sp, j, 3.0, 0.8, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.45);
         for (int i = 0; i < 2; i++) {
@@ -495,11 +500,18 @@ final class BloodknightSkills {
         double speed = Math.max(10, k.num("speed", 30));
         Vec3 hit = ground(level, V.add(c0, f, lead - 0.5));
         PhantomFx.Lib Lc = PhantomFx.elem(j);
-        if (Lc != null) PhantomFx.flash(level, Lc, V.up(hit, 0.8), 4.4);
-        else JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(hit, 0.8), 0.35, Opt.of("size", 2.2, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), MOON_CORE);
-        JobFx.burst(level, V.up(hit, 0.6), 2.4, j, 0.42, Opt.empty());
-        JobFx.smash(level, V.up(hit, 0.05), 3.2, j, 0.5, Opt.empty());
-        splash(level, V.up(hit, 0.8), 1.6, j, 10);
+        // 2026-11-15 1인칭 영상 2: 내리꽂은 자리 (발 앞 0.3칸) 의 섬광 · 폭발 · 내려찍기 · 피 튐은 쓴 사람 1인칭에서 눈 바로 아래라 화면을 붉은 네모 덩어리로 덮었음 →
+        // 주인 1인칭에서는 숨기고 앞 2.4칸 땅에 작게 따로 (섬광 · 작은 폭발)
+        Opt mine = Lc != null ? JobFx.hide1p(sp) : Opt.empty();
+        if (Lc != null) {
+            PhantomFx.flash(level, Lc, V.up(hit, 0.8), 4.4, PhantomFx.hide1p(sp));
+            Vec3 ahead = V.up(V.add(hit, f, 2.4), 0.6);
+            PhantomFx.flash(level, Lc, ahead, 3.0, PhantomFx.only1p(sp));
+            PhantomFx.burst(level, Lc, ahead, 1.4, PhantomFx.only1p(sp));
+        } else JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(hit, 0.8), 0.35, Opt.of("size", 2.2, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), MOON_CORE);
+        JobFx.burst(level, V.up(hit, 0.6), 2.4, j, 0.42, mine);
+        JobFx.smash(level, V.up(hit, 0.05), 3.2, j, 0.5, mine);
+        splash(level, V.up(hit, 0.8), 1.6, j, 10, mine);
         // 2026-11-14 사용자 도감 메모 "참격이 위를 보게": 세로 초승달 (90°) → 위로 불룩한 가로 초승달 (0°) 이 땅을 스치며 달림 — 아래 끝이 땅에 묻히지 않게 조금 낮춤
         Vec3 low = V.up(V.add(c0, f, lead), 1.5);
         JobFx.bigWave(level, sp, low, f, speed, 3.8, 0, len / speed + 0.15, j, Opt.empty());
@@ -539,11 +551,15 @@ final class BloodknightSkills {
                 ServerLevel lv = sp.level();
                 Vec3 g = ground(lv, V.add(V.add(c0, f, ss), right, (Kit.rand() - 0.5) * 0.7));
                 double q = 1 - (ss - lead) / Math.max(1, len) * 0.3;
-                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 15.0, 1.8 * q, (Kit.rand() - 0.5) * 20, 0.36, j, Opt.empty()); // 2026-11-14 위로 불룩 (위를 봄)
+                // 2026-11-15 1인칭 영상 2: 쓴 사람 바로 앞 (2.6칸 안) 기둥 · 솟는 검기 · 피 튐은 주인 1인칭에서 숨김 — 눈앞 0.8칸에서 솟아 화면을 덮었음 (먼 기둥은 그대로
+                // 차례로 솟음)
+                boolean nearMe = V.len(V.flat(V.sub(g, sp.position()))) < 2.6;
+                Opt view = nearMe ? JobFx.hide1p(sp) : Opt.empty();
+                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 15.0, 1.8 * q, (Kit.rand() - 0.5) * 20, 0.36, j, view); // 2026-11-14 위로 불룩 (위를 봄)
                 PhantomFx.Lib Lp = PhantomFx.elem(j);
-                if (Lp != null) PhantomFx.pillar(lv, Lp, g, 3.6 * q, 1); // 2026-11-15 피 기둥 (el_blood_pillar — 솟구쳐 왕관처럼 터지는 피)
-                else JobFx.spikeLife(lv, g, 1.1 * q, 0.1, 0.4, Opt.empty(), MOON_GLOW, MOON_CORE);
-                JobTraits5.blood(lv, V.up(g, 1.4), 1.4 * q, j, 0.4, Opt.empty());
+                if (Lp != null) PhantomFx.pillar(lv, Lp, g, 3.6 * q, 1, nearMe ? PhantomFx.hide1p(sp) : null); // 2026-11-15 피 기둥 (el_blood_pillar — 솟구쳐 왕관처럼 터지는 피)
+                else JobFx.spikeLife(lv, g, 1.1 * q, 0.1, 0.4, view, MOON_GLOW, MOON_CORE);
+                JobTraits5.blood(lv, V.up(g, 1.4), 1.4 * q, j, 0.4, view);
                 SkillFx.sparks(lv, V.up(g, 1.0), JobFx.inner(j), 8, 6.0);
                 if (((int) Math.round(ss / 1.5)) % 2 == 0) SkillFx.play(lv, "random.explode", g, 1.2, 0.5);
             });
