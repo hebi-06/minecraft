@@ -1419,13 +1419,13 @@ final class JobFx {
     }
 
     /**
-     * 주인 1인칭의 모으는 빛 자리 (chargeLib — 모으는 자리가 눈 바로 앞 · 위일 때): 눈앞 1.6칸 · 옆은 rel.x 의 0.6 배 · 높이는 rel 의 눈 기준 높이에서 0.3 내려
-     * −0.55 ~ +0.45 (얼굴 앞 칼 → 화면 가운데 조금 아래 · 머리 위 → 화면 위쪽)
+     * 주인 1인칭의 모으는 빛 자리 (chargeLib — 모으는 자리가 눈 바로 앞 · 위일 때): 눈앞 1.6칸 · 옆은 rel.x 의 0.6 배 + 오른쪽 0.35 (쥔 칼 쪽 — 가운데 과녁을 가리지
+     * 않게) · 높이는 rel 의 눈 기준 높이에서 0.3 내려 −0.55 ~ +0.45 (얼굴 앞 칼 → 화면 가운데 조금 아래 · 머리 위 → 화면 위쪽)
      */
     private static Vec3 eyeCharge(ServerPlayer sp, Vec3 rel) {
         Vec3 f = Kit.facingOf(sp);
         double dy = Math.max(-0.55, Math.min(0.45, rel.y - sp.getEyeHeight() - 0.3));
-        return V.up(V.add(V.add(sp.getEyePosition(), V.rightOf(f), rel.x * 0.6), f, 1.6), dy);
+        return V.up(V.add(V.add(sp.getEyePosition(), V.rightOf(f), rel.x * 0.6 + 0.35), f, 1.6), dy);
     }
 
     /** 망자의 비명 (rfx_jwail — 카메라를 봄): 연기가 비명 지르는 얼굴이 되어 (0 ~ 4) 찢겨 흩어짐 (5 ~ 7). 크기 약 size × 2 칸 */
