@@ -661,3 +661,6 @@ net.minecraft.client.renderer.PostChainConfig$TargetInput
 net.minecraft.client.renderer.PostChainConfig$Input
 net.minecraft.client.renderer.PostPass
 net.minecraft.client.renderer.PostPass$TargetInput
+net.minecraft.client.resources.server.DownloadedPackSource
+net.minecraft.server.packs.DownloadQueue$BatchConfig
+net.minecraft.server.packs.DownloadQueue
