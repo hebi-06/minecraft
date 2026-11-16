@@ -1543,17 +1543,20 @@ final class PhantomFx {
                 if (!Vfx.hasSheet(L.n("shock_s"))) return false;
                 int frames = Vfx.sheet(L.n("shock_s")).frames();
                 double life = Math.max(0.1, o.num("life", 0.4));
-                Opt b = Opt.of("dir", o.vec("dir", V.UP), "speed", o.num("speed", 0), "size", o.num("size", 1), "life", life, "frames", (double) frames, "fps",
+                // 예전 고리는 반 크기 size × (1 + 1.4 × 시간 몫) 까지 (rpg:bash_ring) — 칠한 고리는 그림 안에서 퍼지므로 끝 크기로
+                Opt b = Opt.of("dir", o.vec("dir", V.UP), "speed", o.num("speed", 0), "size", o.num("size", 1) * 2.4, "life", life, "frames", (double) frames, "fps",
                         frames / life, "fade", 0.3, "alpha", o.num("alpha", 0.9), "view", o.num("view", 0), "owner", o.num("owner", 0));
                 rfx(level, L.n("shock_s"), 1, 0, at, b, FACE_DIR, 1);
             }
             case "rpg:shock_ring" -> {
                 if (!has(L, "shock")) return false;
-                shock(level, L, V.up(at, -0.12), Math.max(0.6, o.num("size", 1) * 2.0), o.num("life", 0.4) >= 0.5 ? 2 : 1, who);
+                // 2026-11-16 예전 고리는 반 크기 size × (1 + 1.6 × 시간 몫) 까지 퍼짐 (rpg:shock_ring) → 끝 지름 약 4.6 × size (그림의 테 0.9). 1판 (× 2) 은 고리가 예전의
+                // 0.4배라 룬 영상에서 영역 고리 (zonePulse) 가 거의 보이지 않았음 (CI 43915612802 암살 · 검 영웅)
+                shock(level, L, V.up(at, -0.12), Math.max(0.6, o.num("size", 1) * 4.6), o.num("life", 0.4) >= 0.5 ? 2 : 1, who);
             }
             default -> {
                 if (!has(L, "flash")) return false;
-                flash(level, L, at, Math.max(0.4, o.num("size", 1) * 2.0), who);
+                flash(level, L, at, Math.max(0.4, o.num("size", 1) * 3.0), who); // 예전 터짐은 반 크기 size × 1.5 까지 (rpg:bash_burst)
             }
         }
         return true;
@@ -1629,7 +1632,7 @@ final class PhantomFx {
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
         switch (name) {
-            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave" -> {
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade" -> {
             }
             default -> {
                 return false;
@@ -1702,6 +1705,13 @@ final class PhantomFx {
                 double alpha = Math.min(1, o.num("alpha", 1));
                 moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
                 if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+            }
+            case "shade" -> {
+                // 분신 (RuneKit.shadeClone — 발 고정 · 세로축 빌보드 · 칸 = 자세 + 왼쪽이면 4): 그 묶음의 분신 (JobFx.shade 와 같은 틀 · 가운데 = 발 + 크기)
+                if (!Vfx.hasSheet(L.n("shade"))) return false;
+                Opt b = Opt.of("size", size, "life", life, "fade", o.num("fade", 0.5), "grow", o.num("grow", 0), "alpha", Math.min(1, o.num("alpha", 0.92)), "frames",
+                        1.0, "vel", o.vec("vel", V.ZERO), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                rfx(level, L.n("shade"), 1, Math.max(0, Math.min(7, (int) Math.round(o.num("cell", 0)))), V.up(at, size), b, VERT, 1);
             }
             case "wave" -> {
                 // 카메라를 보는 초승달 (예전 rfx_wave — spin 0 = 위로 불룩): 칠한 초승달 (PhantomFx.wave — 같은 뜻의 기울기)
