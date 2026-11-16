@@ -21,9 +21,10 @@ import org.joml.Quaternionf;
  *   <li>도트 2D: 칠한 연출 그대로 (소용돌이 · 고리 · 별빛 · 섬광 — 그림판은 tools/jobvfx/pixel.py 의 도트)</li>
  *   <li>바닐라 파티클: 크게 키운 색 먼지 덩이 (파랑 · 남보라 — 위르드의 파란 + 덩이) · 회색 연기 뭉치 (poof · cloud) · 흰 반짝임 (end_rod · firework) ·
  *       빨려 드는 보랏빛 (portal · enchant) · 맞음 (crit · enchanted_hit) · 무너짐 (sonic_boom · explosion · 자수정 부스러기)</li>
- *   <li>3D: 바닐라 아이템 모델을 두께 있는 도트 소품으로 (네더의 별 다섯 · 자수정 조각 여섯 — 돌며 안쪽으로 감김) · 무너질 때 하늘빛 유리 상자가 부풀었다 꺼짐</li>
+ *   <li>3D: 직접 만든 복셀 소품 (tools/wyrd_props.py — 사용자 "바닐라 아이템 스킨은 금지"): 금빛 별 다섯 · 남보라 결정 조각 여섯 (돌며 안쪽으로 감김) ·
+ *       무너질 때 하늘빛 에너지 상자가 부풀었다 꺼짐 — 서버가 원소 색으로 물들임</li>
  * </ul>
- * 글꼴 그림을 더 쓰지 않음 (바닐라 파티클 · 아이템 그림은 이미 있는 것). 화면 흔들림 없음.
+ * 글꼴 그림을 더 쓰지 않음 (바닐라 파티클 · 소품 견본은 아이템 아틀라스의 작은 그림). 화면 흔들림 없음.
  */
 final class WyrdMix {
     private WyrdMix() {}
@@ -32,9 +33,13 @@ final class WyrdMix {
     static boolean VORTEX = true;
 
     static final int BLUE = 0x3F57D8, VIOLET = 0x6A4CFF, LIGHT = 0x9DB4FF, PALE = 0xD6E0FF;
-    static final String STAR = "minecraft:nether_star";
-    static final String SHARD = "minecraft:amethyst_shard";
-    static final String GLASS = "minecraft:light_blue_stained_glass";
+    /** 직접 만든 소품 (tools/wyrd_props.py) · 물들임 {몸, 심} */
+    static final String STAR = "rpg:vfx/wy_star";
+    static final String SHARD = "rpg:vfx/wy_shard";
+    static final String CUBE = "rpg:vfx/wy_cube";
+    static final double[] GOLD = {1.0, 0.82, 0.36}, GOLD_CORE = {1.0, 0.97, 0.88};
+    static final double[] AMETHYST = {0.45, 0.33, 1.0}, AMETHYST_CORE = {0.86, 0.9, 1.0};
+    static final double[] SKY = {0.6, 0.7, 1.0}, SKY_CORE = {1.0, 1.0, 1.0};
 
     static void p(ServerLevel l, ParticleOptions o, Vec3 at, int count, double dx, double dy, double dz, double speed) {
         l.sendParticles(o, true, true, at.x, at.y, at.z, count, dx, dy, dz, speed);
@@ -79,18 +84,19 @@ final class WyrdMix {
 
     // ------------------------------------------------------------ 소용돌이 (formAt 부터 life 틱)
 
-    /** 바닐라 아이템 모델 소품 (두께 있는 도트 그림 · 늘 밝게) */
-    static Vfx.Prop item(Vfx.Fx fx, String model, Vec3 at, Quaternionf rot, double size) {
+    /** 직접 만든 복셀 소품 (늘 밝게 · 물들임 {몸, 심}) */
+    static Vfx.Prop item(Vfx.Fx fx, String model, Vec3 at, Quaternionf rot, double size, double[] body, double[] core) {
         return fx.prop(model, at, pr -> {
             pr.grip(8, 8, 8).bright();
+            pr.tint(body, core);
             pr.to(at, rot, size, 0);
         });
     }
 
     /**
-     * 소용돌이 몸: 판정 둘레에 큰 먼지 덩이 고리 · 회색 연기 → 네더의 별 다섯 (가슴 높이, 소용돌이 쪽으로 돌며 안쪽으로) · 자수정 조각 여섯 (낮게, 거꾸로 돌며 구름) ·
+     * 소용돌이 몸: 판정 둘레에 큰 먼지 덩이 고리 · 회색 연기 → 금빛 별 다섯 (가슴 높이, 소용돌이 쪽으로 돌며 안쪽으로) · 결정 조각 여섯 (낮게, 거꾸로 돌며 구름) ·
      * 2틱마다 팔을 따라 먼지 덩이 · 빨려 드는 portal · enchant · 솟는 reverse_portal · 반짝임. 끝 squeeze 틱 동안 소품이 가운데로 조여 듦 →
-     * life 틱 (무너짐) 에 별은 사라지고 조각은 밖으로 튕겨 나가며 작아짐 · 하늘빛 유리 상자가 부풀었다 꺼짐
+     * life 틱 (무너짐) 에 별은 사라지고 조각은 밖으로 튕겨 나가며 작아짐 · 하늘빛 에너지 상자가 부풀었다 꺼짐
      */
     static void body(ServerLevel l, Vec3 c, double R, int life, int squeeze, double spin0, double rate) {
         double s0 = Math.toRadians(spin0);
@@ -105,8 +111,8 @@ final class WyrdMix {
         int nk = 6;
         Vfx.Prop[] stars = new Vfx.Prop[ns];
         Vfx.Prop[] shards = new Vfx.Prop[nk];
-        for (int i = 0; i < ns; i++) stars[i] = item(fx, STAR, starAt(c, R, i, ns, 0, life, squeeze, s0, rate), new Quaternionf(), 0.05);
-        for (int i = 0; i < nk; i++) shards[i] = item(fx, SHARD, shardAt(c, R, i, nk, 0, life, squeeze, s0, rate), tumble(i, 0), 0.05);
+        for (int i = 0; i < ns; i++) stars[i] = item(fx, STAR, starAt(c, R, i, ns, 0, life, squeeze, s0, rate), new Quaternionf(), 0.05, GOLD, GOLD_CORE);
+        for (int i = 0; i < nk; i++) shards[i] = item(fx, SHARD, shardAt(c, R, i, nk, 0, life, squeeze, s0, rate), tumble(i, 0), 0.05, AMETHYST, AMETHYST_CORE);
         fx.on(1, () -> {
             for (Vfx.Prop st : stars) st.size(0.8, 4);
             for (Vfx.Prop sh : shards) sh.size(0.6, 4);
@@ -140,14 +146,14 @@ final class WyrdMix {
                 p(l, ParticleTypes.END_ROD, ring(c, R * (0.4 + Kit.rand() * 0.5), b, 0.4 + Kit.rand() * 1.3), 1, 0, 0, 0, 0.02);
             }
         });
-        // 무너짐: 별은 가운데에서 작아지며 사라짐 · 조각은 밖으로 튕겨 나가며 돎 → 작아짐 · 유리 상자 부풀었다 꺼짐
+        // 무너짐: 별은 가운데에서 작아지며 사라짐 · 조각은 밖으로 튕겨 나가며 돎 → 작아짐 · 에너지 상자 부풀었다 꺼짐
         fx.on(life, () -> {
             for (Vfx.Prop st : stars) st.size(0.01, 3);
             for (int i = 0; i < nk; i++) {
                 double a = s0 + i * Math.PI * 2 / nk + 0.4;
                 shards[i].to(ring(c, R * 1.15, a, 0.5 + (i % 2) * 0.6), tumble(i, life + 40), 0.75, 8);
             }
-            Vfx.Prop glass = item(fx, GLASS, V.up(c, 1.0), new Quaternionf().rotateY(0.6F).rotateX(0.5F), 0.3);
+            Vfx.Prop glass = item(fx, CUBE, V.up(c, 1.0), new Quaternionf().rotateY(0.6F).rotateX(0.5F), 0.3, SKY, SKY_CORE);
             fx.on(life + 1, () -> glass.to(V.up(c, 1.0), new Quaternionf().rotateY(1.4F).rotateX(0.9F), 3.4, 5));
             fx.on(life + 6, () -> glass.size(0.01, 3));
             fx.on(life + 9, glass::remove);
