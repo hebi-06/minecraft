@@ -188,6 +188,9 @@ def wy_orb():
 
 
 BUILD = {"wy_star": wy_star, "wy_shard": wy_shard, "wy_cube": wy_cube, "wy_panel": wy_panel, "wy_orb": wy_orb}
+# 2026-11-16 모두 치움 (팩에 넣지 않음 — 사용자 "저거 3d 별도 빼라 어줍잔게 넣으니깐 진짜 없어보인다 차라리 그림으로 넣어"): 작은 소품 (별 · 조각 · 상자) 은 도트 2D
+# 그림으로. 3D 는 제대로 만든 큰 모델에만 (위르드의 새 · 판처럼) — 그때 여기서 새로 짜서 SHELVED 에서 뺌
+SHELVED = set(BUILD)
 
 
 def outputs(names=None):
@@ -195,6 +198,8 @@ def outputs(names=None):
     built = {}
     for name, fn in BUILD.items():
         if names and name not in names:
+            continue
+        if name in SHELVED and not names:
             continue
         m = fn()
         tex, animated = m.texture()
