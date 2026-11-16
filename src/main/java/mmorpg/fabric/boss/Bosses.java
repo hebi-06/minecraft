@@ -1552,6 +1552,9 @@ public final class Bosses {
     private static void tick() {
         long now = Tasks.now();
         for (Enc enc : new ArrayList<>(encs.values())) {
+            // 2026-11-17 보스 위르드식 맥락 (Tasks.tag "boss:<key>" — Tasks.later 로 미룬 패턴도 이어받음): 보스가 부른 예전 불티 · 고리 · 터짐 · 금을 그 보스의
+            // 빛에 맞는 칠한 묶음으로 (job.PhantomFx.bossLib)
+            String prevTag = Tasks.tag("boss:" + enc.key);
             try {
                 if ("summon".equals(enc.state)) {
                     summonFx(enc, now);
@@ -1561,6 +1564,8 @@ public final class Bosses {
                 if ("fight".equals(enc.state)) fightTick(enc, now);
             } catch (RuntimeException e) {
                 LOG.warn("[mmorpg] boss tick " + enc.key, e);
+            } finally {
+                Tasks.tag(prevTag);
             }
         }
         BossKit.cleanOwn(now);

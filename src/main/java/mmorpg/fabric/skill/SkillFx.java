@@ -68,9 +68,28 @@ public final class SkillFx {
 
     public static Painted painted;
 
+    /**
+     * 2026-11-17 위르드식 남은 예전 그림 찾기 (시험 영상 셈 — VanillaProbe 가 켬, 보통은 null): 칠한 다리가 그리지 않고 예전 파티클로 보낸 것을
+     * "파티클 이름#빛@맥락" (맥락 = 룬 · 보스 꼬리표 Tasks.tag · 직업 스킬 job · 없음 -) 으로 셈 — 어느 빛 · 맥락이 남았는지
+     */
+    public static Map<String, Integer> diag;
+
+    /** 셈 열쇠 (diag) — 이름 · 빛 (6자리 16진) · 맥락 */
+    public static String diagKey(String id, Object color) {
+        String hex = "-";
+        if (color instanceof double[] c && c.length >= 3) {
+            hex = String.format(java.util.Locale.ROOT, "%02x%02x%02x", (int) Math.round(Math.max(0, Math.min(1, c[0])) * 255),
+                    (int) Math.round(Math.max(0, Math.min(1, c[1])) * 255), (int) Math.round(Math.max(0, Math.min(1, c[2])) * 255));
+        }
+        String tag = mmorpg.fabric.Tasks.tag();
+        String ctx = tag != null ? tag : mmorpg.fabric.Tasks.paint() != null ? "job" : "-";
+        return id.replace("rpg:", "") + "#" + hex + "@" + ctx;
+    }
+
     /** 애드온 파티클 하나 (모두에게) */
     public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
         if (painted != null && painted.draw(level, id, at, o)) return;
+        if (diag != null) diag.merge(diagKey(id, o.get("color")), 1, Integer::sum);
         AddonFx.spawn(level, id, at, vars(o));
     }
 

@@ -1109,9 +1109,22 @@ CUT_FRAMES = 8
 def cut_frame(S, f, n=256):
     """일섬 · 허공에 걸린 칼자국: 0 ~ 1 왼쪽에서 오른쪽으로 그어짐 (머리 흰빛) → 2 ~ 4 머묾 (이어 돌림 — 빛이 숨쉼) → 5 터짐 (굵어지며 흰 섬광 · 튀는 줄기) →
     6 ~ 7 두 갈래로 벌어지며 사라짐"""
-    rng = np.random.default_rng(551 + S.seed)
     x, y = grid(n)
-    aa = 1.6 / n
+    return _cut(S, f, x, y, 1.6 / n, n)
+
+
+def cutl_frame(S, f, w=256, h=40):
+    """2026-11-17 긴 일섬 (예전 rpg:light_cut 의 긴 줄 — 룬 무간참역 · 하늘 가르기 · 꿰뚫는 줄): 일섬과 같은 모양을 가로로 긴 칸 (6.4 : 1) 에. 정사각 일섬을 9칸 넘게
+    키우면 한 텍셀 줄이 디더링으로 점선처럼 끊겨 사탕 막대처럼 보였음 (CI 43977395799 무간참역) — 긴 칸은 줄을 따라 텍셀이 256 이라 길어도 촘촘함"""
+    from .arcane import rect
+    x, y, ky = rect(w, h)
+    rgb, a = _cut(S, f, x, y, 1.6 / w, (h, w))
+    return rgb, a * (1 - sstep(ky * 0.7, ky * 0.98, np.abs(y)))
+
+
+def _cut(S, f, x, y, aa, n):
+    """일섬 칸 하나 (x · y = 칸의 자리 — 가로 [-1, 1], aa = 가장자리 부드러움, n = 칸 크기 한 변 또는 (높이, 너비))"""
+    rng = np.random.default_rng(551 + S.seed)
     X0, X1 = -0.92, 0.92
     t = np.clip((x - X0) / (X1 - X0), 0, 1)
     prof = np.clip(1 - np.abs(2 * t - 1) ** 2.2, 0, 1) ** 0.6
@@ -1600,6 +1613,8 @@ def frames_of(S, name):
         return [to_img(*speed_frame(S, f)) for f in range(SPEED_FRAMES)]
     if name == "cut":
         return [to_img(*cut_frame(S, f)) for f in range(CUT_FRAMES)]
+    if name == "cutl":
+        return [to_img(*cutl_frame(S, f)) for f in range(CUT_FRAMES)]
     if name == "moon":
         return [to_img(*moon_frame(S, f)) for f in range(MOON_FRAMES)]
     if name == "excal":
@@ -1857,10 +1872,17 @@ def sets_for(S):
     return out
 
 
+# 2026-11-17 긴 일섬 (cutl) 을 갖는 묶음: 룬 계열 · 원소 묶음 (PhantomFx.runeLib · elementLib — 룬이 부른 예전 rpg:light_cut 을 그 묶음의 일섬으로)
+CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw", "bear", "holy", "tyrant", "frost", "element")
+
+
 def sprites():
     out = []
     for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element", "holy", "petal", "hex", "ward", "maw", "thunder", "tyrant", "reap", "soulreap", "exec", "lance", "gale", "dragon", "phoenix"):
-        out += sets_for(STYLES[key])
+        S = STYLES[key]
+        out += sets_for(S)
+        if key in CUTL_KEYS:
+            out.append((S.lib + "_cutl", lambda S=S: frames_of(S, "cutl"), True))
     return out
 
 

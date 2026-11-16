@@ -953,6 +953,19 @@ final class VanillaProbe {
                     FILM_FRAMES.add(motionFrames(k.substring(9)));
                     continue;
                 }
+                if (k.startsWith("boss:") || k.startsWith("bossab:")) {
+                    // 2026-11-17 보스 영상 (boss:<보스 key> — 그 보스의 신전을 지어 부르고 싸움을 찍음: films/vanilla_boss_<key>) · bossab: 는 예전 그림 (보스 위르드식
+                    // 끔 — films/vanilla_boss_<key>_old) 을 먼저
+                    boolean bab = k.startsWith("bossab:");
+                    String key = k.substring(bab ? 7 : 5);
+                    if (bab) {
+                        FILM_RUNES.add("boss:" + key + ":old");
+                        FILM_FRAMES.add(BOSS_FRAMES);
+                    }
+                    FILM_RUNES.add("boss:" + key);
+                    FILM_FRAMES.add(BOSS_FRAMES);
+                    continue;
+                }
                 // 2026-11-16 룬 위르드식 견주기 (runeab:<계열 또는 계열_등급>): 룬마다 예전 그림 (old: — PhantomFx.RUNE_WYRD 끔 · films/vanilla_<계열>_<등급>_old) 과 새 그림을 차례로
                 boolean ab = k.startsWith("runeab:");
                 if (ab) k = k.substring(7);
@@ -1062,6 +1075,7 @@ final class VanillaProbe {
         SPAWNED.clear();
         if (i >= FILM_RUNES.size()) {
             mmorpg.fabric.job.JobSystem.RUNE_WYRD = true;
+            mmorpg.fabric.job.JobSystem.BOSS_WYRD = true;
             run(server, "tick rate 20");
             mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
             mmorpg.fabric.vfx.PBridge.filmCamOff(p);
@@ -1074,8 +1088,13 @@ final class VanillaProbe {
             return;
         }
         mmorpg.fabric.job.JobSystem.RUNE_WYRD = true; // 2026-11-16 앞 영상이 예전 그림 견주기 (old:) 였어도 되돌림
+        mmorpg.fabric.job.JobSystem.BOSS_WYRD = true;
         if (FILM_RUNES.get(i).startsWith("job:")) {
             jobFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("boss:")) {
+            bossFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         if (FILM_RUNES.get(i).startsWith("motion:")) {
@@ -1165,6 +1184,9 @@ final class VanillaProbe {
      * 그림판=수@가장 큰 크기): 지금부터 frames 틱 뒤에 로그
      */
     static void censusWatch(String name, int frames) {
+        // 2026-11-17 남은 예전 그림의 빛 · 맥락 셈 (SkillFx.diag — 칠한 다리가 그리지 않은 것: 이름#빛@맥락)
+        if (mmorpg.fabric.skill.SkillFx.diag == null) mmorpg.fabric.skill.SkillFx.diag = new java.util.TreeMap<>();
+        java.util.Map<String, Integer> diag0 = new java.util.TreeMap<>(mmorpg.fabric.skill.SkillFx.diag);
         java.util.Map<String, Integer> seen0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.PBridge.SEEN);
         java.util.Map<String, Integer> used0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.Vfx.USED);
         int[] c0 = {mmorpg.fabric.vfx.PBridge.made, mmorpg.fabric.vfx.PBridge.dusts, mmorpg.fabric.vfx.PBridge.dropped, mmorpg.fabric.vfx.PBridge.noGlyph,
@@ -1187,7 +1209,130 @@ final class VanillaProbe {
                     + (mmorpg.fabric.vfx.PBridge.dropped - c0[2]) + " noGlyph " + (mmorpg.fabric.vfx.PBridge.noGlyph - c0[3]) + " cards "
                     + (mmorpg.fabric.vfx.PBridge.cards - c0[4]) + " solo " + (mmorpg.fabric.vfx.PBridge.soloReused - c0[5]) + " peak " + peak[0] + " | "
                     + sb.toString().trim() + " || sheets " + ub.toString().trim());
+            // 2026-11-17 남은 예전 그림 (많은 차례 30개) — 따로 한 줄 (jobcensus 줄을 읽는 셈 도구가 그대로 읽게)
+            List<java.util.Map.Entry<String, Integer>> miss = new ArrayList<>();
+            for (var e : mmorpg.fabric.skill.SkillFx.diag.entrySet()) {
+                int d = e.getValue() - diag0.getOrDefault(e.getKey(), 0);
+                if (d > 0) miss.add(java.util.Map.entry(e.getKey(), d));
+            }
+            miss.sort((a, b) -> b.getValue() - a.getValue());
+            StringBuilder mb = new StringBuilder();
+            for (int k = 0; k < Math.min(30, miss.size()); k++) mb.append(miss.get(k).getKey()).append('=').append(miss.get(k).getValue()).append(' ');
+            log("jobmiss " + name + " " + mb.toString().trim());
         });
+    }
+
+    /** 2026-11-17 보스 영상의 장 수 (부름 60틱 · 등장 · 싸움 — 패턴 사이를 줄여 여럿이 나오게) */
+    static final int BOSS_FRAMES = 420;
+    /** 보스 영상 동안 패턴 사이 배율 (Unit.cdMult — 보통 1) */
+    static final double BOSS_FILM_CD = 0.4;
+
+    /**
+     * 2026-11-17 보스 영상 (boss:&lt;key&gt;[:old]): 영상마다 먼 곳 (x 4000 + 300 × 차례) 에 그 보스의 신전을 지어 (ArenaBuild — 못 지으면 돌 바닥) 부르고, 가운데에서
+     * 남쪽으로 떨어져 보스를 보며 섬 → 뒤 위 카메라로 부름 · 등장 · 싸움을 찍음 (사람은 무적 — 맞아도 그대로). :old = 예전 그림 (JobSystem.BOSS_WYRD 끔)
+     */
+    private static void bossFilm(ServerPlayer p, int step, String entry, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        String[] a = entry.split(":");
+        String key = a[1];
+        boolean old = a.length > 2 && a[2].equals("old");
+        if (mmorpg.fabric.boss.Bosses.module(key) == null || mmorpg.fabric.boss.Arena.BOSSES.objOrNull(key) == null) {
+            check("film boss " + entry, false);
+            Tasks.later(2, () -> film(p, step + 1));
+            return;
+        }
+        run(server, "tick rate 20");
+        mmorpg.fabric.rune.RuneKit.filmReset(p);
+        clearStrays(server);
+        mmorpg.fabric.job.JobSystem.BOSS_WYRD = !old;
+        // 짓기 규칙의 높이 (바닥 아래 4칸이 세계 바닥 + 5칸 위) — 평지 세계면 땅보다 조금 위
+        int bx = 4000 + step * 300;
+        int bz = 4000;
+        int by = Math.max(y, level.getMinY() + 10);
+        BlockPos pos = new BlockPos(bx, by, bz);
+        // 몸을 먼저 옮겨 둘레 땅을 불러옴 (짓는 동안 떠 있음)
+        p.getAbilities().mayfly = true;
+        p.getAbilities().flying = true;
+        p.onUpdateAbilities();
+        run(server, "tp " + NAME + " " + bx + " " + (by + 8) + " " + (bz + 10) + " 180 20");
+        Tasks.later(40, () -> {
+            if (p.isRemoved()) return;
+            level.setBlock(pos, mmorpg.fabric.boss.AltarBlocks.block(key).defaultBlockState(), Block.UPDATE_ALL);
+            mmorpg.fabric.boss.Arena.Altar al = mmorpg.fabric.boss.Arena.addAltar(key, mmorpg.fabric.npc.NpcData.dimId(level), pos);
+            al.cooldownUntil = 0;
+            boolean building = mmorpg.fabric.boss.ArenaBuild.buildArena(al, null);
+            log("film boss " + key + " build " + building + (building ? "" : " — " + mmorpg.fabric.boss.ArenaBuild.buildProblem(al)));
+            if (!building) {
+                stoneField(level, pos, mmorpg.fabric.boss.Arena.arenaSize(al).radius());
+                al.built = true;
+            }
+            bossWait(p, step, key, old, frames, al, 0);
+        });
+    }
+
+    /** 신전을 다 지을 때까지 (최대 2분) 기다린 뒤 부름 */
+    private static void bossWait(ServerPlayer p, int step, String key, boolean old, int frames, mmorpg.fabric.boss.Arena.Altar al, int waited) {
+        if (p.isRemoved()) return;
+        if ((mmorpg.fabric.boss.ArenaBuild.isBuilding(al) || !al.built) && waited < 2400) {
+            Tasks.later(20, () -> bossWait(p, step, key, old, frames, al, waited + 20));
+            return;
+        }
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        log("film boss " + key + " built " + al.built + " after " + waited + " ticks · errors " + mmorpg.fabric.boss.ArenaBuild.lastErrors(al));
+        Vec3 c = mmorpg.fabric.boss.Arena.arenaCenter(al);
+        double R = mmorpg.fabric.boss.Arena.arenaSize(al).radius();
+        double dz = Math.min(14, R * 0.55);
+        p.getAbilities().flying = false;
+        p.getAbilities().mayfly = false;
+        p.onUpdateAbilities();
+        mmorpg.fabric.RpgHealth.healFull(p);
+        run(server, String.format(java.util.Locale.ROOT, "tp %s %.2f %d %.2f 180 8", NAME, c.x, al.y, c.z + dz));
+        String name = "vanilla_boss_" + key + (old ? "_old" : "");
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+        Tasks.later(10, () -> {
+            if (p.isRemoved()) return;
+            // 카메라: 사람 뒤 오른쪽 위에서 가운데 (보스) 쪽을 봄 — 보스가 크고 필드가 넓어 직업 영상보다 멀리 · 높이
+            String cam = String.format(java.util.Locale.ROOT, "%.1f %.1f %.1f %.1f %.2f", 11.0, 6.5, 4.0, dz, 0.2);
+            say(p, "cam film 150 " + cam);
+            mmorpg.fabric.vfx.PBridge.filmCam(p, 150, 11.0, 6.5, 4.0, dz, 0.2);
+            mmorpg.fabric.boss.Bosses.Enc enc = mmorpg.fabric.boss.Bosses.summon(al, p);
+            check("film boss summon " + key, enc != null);
+            run(server, "tick rate " + JOB_FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            Tasks.later(3, () -> censusWatch(name, frames));
+            // 등장이 끝난 뒤 패턴 사이를 줄임 (영상 안에 여럿)
+            Tasks.later(90, () -> {
+                if (enc == null) return;
+                enc.cdMult = BOSS_FILM_CD;
+                for (mmorpg.fabric.boss.Bosses.Unit u : enc.units) u.cdMult = BOSS_FILM_CD;
+            });
+            Tasks.later(frames + 20, () -> {
+                if (enc != null && mmorpg.fabric.boss.Bosses.encounterAt(al) == enc) mmorpg.fabric.boss.Bosses.endEncounter(enc, "manual");
+                mmorpg.fabric.boss.Arena.removeAltar(al);
+                film(p, step + 1);
+            });
+        });
+    }
+
+    /** 신전을 못 지을 때의 돌 바닥 (게임 시험 RpgNidhoggTests.field 와 같음 — 반지름 + 6 · 위 10칸 비움) */
+    private static void stoneField(ServerLevel level, BlockPos pos, int radius) {
+        net.minecraft.world.level.block.state.BlockState stone = net.minecraft.world.level.block.Blocks.STONE.defaultBlockState();
+        net.minecraft.world.level.block.state.BlockState air = net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int dx = -(radius + 6); dx <= radius + 6; dx++) {
+            for (int dz = -(radius + 6); dz <= radius + 6; dz++) {
+                m.set(pos.getX() + dx, pos.getY() - 1, pos.getZ() + dz);
+                level.setBlock(m, stone, Block.UPDATE_CLIENTS);
+                for (int dy = 0; dy < 10; dy++) {
+                    if (dx == 0 && dz == 0 && dy == 0) continue; // 제단 블록
+                    m.set(pos.getX() + dx, pos.getY() + dy, pos.getZ() + dz);
+                    if (!level.getBlockState(m).isAir()) level.setBlock(m, air, Block.UPDATE_CLIENTS);
+                }
+            }
+        }
     }
 
     /**

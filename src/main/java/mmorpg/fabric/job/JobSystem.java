@@ -61,6 +61,9 @@ public final class JobSystem {
     /** 2026-11-16 룬 위르드식 (PhantomFx.runeLib — 룬 계열 → 칠한 묶음). 영상 견주기 (VanillaProbe runeab: 의 old: 영상) 만 끔 */
     public static boolean RUNE_WYRD = true;
 
+    /** 2026-11-17 보스 위르드식 (PhantomFx.bossLib — 보스 빛 → 칠한 묶음). 영상 견주기 (VanillaProbe bossab: 의 :old 영상) 만 끔 */
+    public static boolean BOSS_WYRD = true;
+
     public static void init() {
         JobSkills.provider = JobSystem::slot;
         JobSkills.header = JobSystem::header;

@@ -545,7 +545,7 @@ final class JobFx {
         double len = V.len(d);
         if (len < 0.2) return;
         PhantomFx.Lib L = PhantomFx.elem(j);
-        if (L != null && PhantomFx.has(L, "cut")) { // 2026-11-15 원소 공용 묶음: 일섬 (그어짐 → 잠깐 머묾 → 터져 벌어짐)
+        if (L != null && PhantomFx.hasArt(L, "cut")) { // 2026-11-15 원소 공용 묶음: 일섬 (그어짐 → 잠깐 머묾 → 터져 벌어짐)
             PhantomFx.cut(level, L, from, to, Math.max(1, (int) Math.round(life * 20) - 6), true, PhantomFx.who(o));
             return;
         }
@@ -559,7 +559,7 @@ final class JobFx {
         double len = V.len(d);
         if (len < 0.2) return;
         PhantomFx.Lib L = PhantomFx.painter(glow);
-        if (L != null && PhantomFx.has(L, "cut")) { // 2026-11-16 칠한 직업 빛 (트릭스터 거울 속 나의 일섬 등): 그 묶음의 일섬
+        if (L != null && PhantomFx.hasArt(L, "cut")) { // 2026-11-16 칠한 직업 빛 (트릭스터 거울 속 나의 일섬 등): 그 묶음의 일섬
             PhantomFx.cut(level, L, from, to, Math.max(1, (int) Math.round(life * 20) - 6), true, PhantomFx.who(o));
             return;
         }

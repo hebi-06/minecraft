@@ -500,6 +500,7 @@ public final class RuneKit {
      */
     public static void rfx(ServerLevel level, String name, Vec3 at, Opt o) {
         if (painted != null && o.get("color") instanceof double[] c && painted.draw(level, name, at, o, c)) return;
+        if (SkillFx.diag != null) SkillFx.diag.merge(SkillFx.diagKey("rfx_" + name, o.get("color")), 1, Integer::sum); // 2026-11-17 남은 예전 그림 셈
         rfx0(level, name, at, o);
     }
 
@@ -553,6 +554,7 @@ public final class RuneKit {
     private static void rfx2fx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core, int[] cells, Double coreAlpha) {
         if (painted != null && glow != null && painted.draw(level, name, at, o.with("cell", (double) (cells != null ? cells : RFX.getOrDefault(name,
                 new int[] {0, 1}))[0] + o.num("cell", 0)), glow)) return; // 2026-11-16 위르드식 다리 (빛 · 심지 두 장을 칠한 그림 하나로)
+        if (SkillFx.diag != null) SkillFx.diag.merge(SkillFx.diagKey("rfx_" + name, glow), 1, Integer::sum); // 2026-11-17 남은 예전 그림 셈
         int[] c = cells != null ? cells : RFX.getOrDefault(name, new int[] {0, 1});
         double cell = o.num("cell", 0);
         double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔

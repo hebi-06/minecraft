@@ -192,6 +192,14 @@ final class PhantomFx {
     }
 
     /**
+     * 2026-11-17 이 묶음에 그 이름의 그림판이 꼭 그대로 있는지 (has 는 앞이 같은 이름도 셈 — 긴 일섬 cutl 이 생긴 뒤 has(L, "cut") 가 cutl 만 있는 묶음 (분노 · 곰 ·
+     * 서리 · 피) 에서도 참이 되어 없는 cut 그림판을 찾았음)
+     */
+    static boolean hasArt(Lib L, String name) {
+        return Vfx.hasSheet(L.n(name));
+    }
+
+    /**
      * 2026-11-16 가까운 묶음 (이 묶음에 없는 대표 그림을 빌림 — 같은 계열 · 비슷한 빛): 트릭스터 환영 → 암살자 그림자 (꽃잎 · 엇갈린 베기 · 검은 장미 · 찌르기 · 비수 ·
      * 연기 — CI 43872303193 트릭스터 영상에 예전 rfx_jpetal2 234 장이 남았었음). 없으면 null
      */
@@ -860,7 +868,7 @@ final class PhantomFx {
      * 0 = 가로) — 그어짐 → 잠깐 머묾 → 터짐 (8틱)
      */
     static void cutEye(ServerPlayer sp, Lib L, Vec3 at, double len, double deg) {
-        if (!has(L, "cut")) return;
+        if (!hasArt(L, "cut")) return;
         Vfx.Fx fx = Vfx.at(sp.level(), at, 14, only1p(sp));
         single(fx, L.n("cut"), at, len / 0.92, deg, 1, false);
     }
@@ -1191,9 +1199,17 @@ final class PhantomFx {
      * "위를 보고 있고 … 옆을 보고 있고" — 전에는 줄을 축으로 눕힌 판 · 세운 판 둘이라 영상에서 위 · 옆을 보는 판으로 보였음. hold 틱 머문 뒤 터짐 (burst false 면 옅어짐)
      */
     static Vfx.Fx cut(ServerLevel level, Lib L, Vec3 from, Vec3 to, int hold, boolean burst, Predicate<ServerPlayer> who) {
+        return cut(level, L, from, to, hold, burst, who, "cut");
+    }
+
+    /**
+     * 같은 것 — art = 그림판 (cut = 정사각 일섬 · 2026-11-17 cutl = 가로로 긴 일섬: 같은 모양을 6.4 : 1 칸에 — 칸 높이 = 길이 ÷ 0.92 ÷ 가로세로 비. 정사각 일섬을
+     * 9칸 넘게 키우면 한 텍셀 줄이 점선처럼 끊겼음 — CI 43977395799 무간참역)
+     */
+    static Vfx.Fx cut(ServerLevel level, Lib L, Vec3 from, Vec3 to, int hold, boolean burst, Predicate<ServerPlayer> who, String art) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
-        if (len < 0.2 || !has(L, "cut")) return null;
+        if (len < 0.2 || !hasArt(L, art)) return null;
         Vec3 ex = V.scale(d, 1 / len);
         Vec3 mid = V.lerp(from, to, 0.5);
         net.minecraft.world.entity.player.Player near = level.getNearestPlayer(mid.x, mid.y, mid.z, 64, false);
@@ -1210,8 +1226,8 @@ final class PhantomFx {
         int H = Math.max(1, hold);
         int life = 2 + H + (burst ? 4 : 5) + 2;
         Vfx.Fx fx = Vfx.at(level, mid, life, who);
-        String name = L.n("cut");
-        double size = len / 0.92;
+        String name = L.n(art);
+        double size = len / 0.92 / Math.max(1, Vfx.sheet(name).aspect());
         for (Quaternionf q : new Quaternionf[] {faceQ}) {
             for (int s = 0; s < 2; s++) {
                 Vfx.Sprite sp = fx.sprite(name, mid);
@@ -1540,13 +1556,15 @@ final class PhantomFx {
             case "rpg:arrow_spark" -> WyrdKit.spark(level, L, at, o.vec("dir", V.UP), o.num("speed", 1.5), who);
             case "rpg:arrow_trail" -> WyrdKit.trail(level, L, at, o.vec("dir", V.UP), o.num("size", 0.3), who);
             case "rpg:light_cut" -> {
-                // 2026-11-16 빛의 일섬 (예전 rpg:light_cut — 방향으로 누운 가는 줄, 반 길이 size): 그 묶음의 일섬 (PhantomFx.cut — 앞뒤 두 면)
-                if (!Vfx.hasSheet(L.n("cut"))) return false;
+                // 2026-11-16 빛의 일섬 (예전 rpg:light_cut — 방향으로 누운 가는 줄, 반 길이 size): 그 묶음의 일섬 (PhantomFx.cut — 앞뒤 두 면).
+                // 2026-11-17 긴 일섬 (cutl — 룬 계열 · 원소 묶음) 이 있으면 그것 (길어도 줄이 촘촘함)
+                String art = Vfx.hasSheet(L.n("cutl")) ? "cutl" : "cut";
+                if (!Vfx.hasSheet(L.n(art))) return false;
                 Vec3 d = o.vec("dir", V.UP);
                 if (V.len(d) < 1e-6) return false;
                 double half = Math.max(0.15, o.num("size", 0.5));
                 int hold = Math.max(1, (int) Math.round(o.num("life", 0.4) * 20) - 9);
-                cut(level, L, V.add(at, V.unit(d), -half), V.add(at, V.unit(d), half), hold, false, who);
+                cut(level, L, V.add(at, V.unit(d), -half), V.add(at, V.unit(d), half), hold, false, who, art);
             }
             case "rpg:slash_x" -> {
                 // X 베기 (예전 rpg:slash_x — 카메라를 봄, 반 크기 size): 그 묶음의 X 베기 (2 × 2)
@@ -1604,7 +1622,7 @@ final class PhantomFx {
      */
     static Lib jobLib(double[] glow) {
         String tag = mmorpg.fabric.Tasks.tag();
-        if (tag != null) return runeColorLib(tag, glow); // 2026-11-16 룬을 쓰는 동안 (룬 계열 묶음)
+        if (tag != null) return tagLib(tag, glow); // 2026-11-16 룬을 쓰는 동안 (룬 계열 묶음) · 2026-11-17 보스 싸움 (보스 빛 묶음)
         Lib L = painter(glow, false);
         if (L != null) return L;
         if (!(mmorpg.fabric.Tasks.paint() instanceof Lib K)) return null;
@@ -1649,6 +1667,57 @@ final class PhantomFx {
         if (near(glow, col[0]) || near(glow, col[1]) || glow[0] + glow[1] + glow[2] > 2.7) return L;
         Lib E = elementOf(glow);
         return E != null && JobSystem.RUNE_WYRD ? E : null;
+    }
+
+    /** 2026-11-17 꼬리표 맥락의 칠할 묶음: 보스 싸움 ("boss:key") 이면 bossLib, 아니면 룬 ("계열:등급") */
+    static Lib tagLib(String tag, double[] glow) {
+        return tag.startsWith("boss:") ? bossLib(tag.substring(5), glow) : runeColorLib(tag, glow);
+    }
+
+    /**
+     * 2026-11-17 보스마다 칠할 묶음들 (앞 = 대표 — 흰빛): 보스가 부르는 빛 (상수 · 설정의 rgb · 섞은 빛) 을 색조가 가장 가까운 묶음으로. 헬 = 혼 (푸른 혼불) · 금빛,
+     * 공허 기사 = 그림자 · 폭군 (보랏빛) · 환영 (분홍), 요르문간드 = 질풍 (청록 바다) · 혼 (독) · 폭군 · 분노 · 피, 크라켄 = 서리 (바다) · 폭군 (먹물) · 성광 · 혼 (회복),
+     * 니드호그 = 폭군 · 혼 · 피 · 분노, 허수아비 킹 = 분노 (호박 불) · 그림자 (까마귀) · 성광, 전갈 = 곰 (모래) · 혼 (독) · 피, 스콜과 하티 = 용 (해) · 성광 · 서리 (달) ·
+     * 폭군 (노을), 수르트 = 용 (불) · 성광 · 서리 · 피, 거대 웜 = 곰 (흙) · 분노 · 피 · 서리 (소리), 이미르 = 서리 · 용 · 피
+     */
+    private static java.util.Map<String, Lib[]> bossLibs;
+
+    static Lib bossLib(String key, double[] glow) {
+        if (!JobSystem.BOSS_WYRD || glow == null || glow.length < 3) return null;
+        if (bossLibs == null) {
+            java.util.Map<String, Lib[]> m = new java.util.HashMap<>();
+            m.put("hel", new Lib[] {SOULREAP, HOLY});
+            m.put("void_knight", new Lib[] {SHADOW, TYRANT, ILLUSION});
+            m.put("jormungandr", new Lib[] {GALE, SOUL, TYRANT, RAGE, BLOOD});
+            m.put("kraken", new Lib[] {FROST, TYRANT, HOLY, SOUL});
+            m.put("nidhogg", new Lib[] {TYRANT, SOUL, BLOOD, RAGE});
+            m.put("scarecrow_king", new Lib[] {RAGE, SHADOW, HOLY});
+            m.put("scorpions", new Lib[] {BEAR, SOUL, BLOOD});
+            m.put("skoll_hati", new Lib[] {DRAGONL, HOLY, FROST, TYRANT});
+            m.put("surtr", new Lib[] {DRAGONL, HOLY, FROST, BLOOD});
+            m.put("great_worm", new Lib[] {BEAR, RAGE, BLOOD, FROST});
+            m.put("ymir", new Lib[] {FROST, DRAGONL, BLOOD});
+            bossLibs = m;
+        }
+        Lib[] pal = bossLibs.get(key);
+        if (pal == null) return null;
+        Lib E = elementOf(glow);
+        if (E != null) return E;
+        double[] h = hsv(glow);
+        if (h[1] < 0.15 && h[2] > 0.85) return pal[0]; // 흰빛 · 아주 옅은 빛 → 대표 묶음
+        if (h[1] < 0.35 || h[2] < 0.55) return null; // 잿빛 · 흙먼지 · 먹물 · 뼈 (뜻이 있는 빛 — 예전 그림)
+        Lib best = null;
+        double bd = 1e9;
+        for (Lib L : pal) {
+            double[] lh = hsv(new double[] {(L.glow() >> 16 & 255) / 255.0, (L.glow() >> 8 & 255) / 255.0, (L.glow() & 255) / 255.0});
+            double d = Math.abs(h[0] - lh[0]);
+            d = Math.min(d, 360 - d);
+            if (d < bd) {
+                bd = d;
+                best = L;
+            }
+        }
+        return bd <= 36 ? best : null; // 묶음 빛과 먼 빛 (독 연둣빛 · 쓸개 빛 …) 은 예전 그림
     }
 
     /** 가까운 빛: RGB 거리 0.3 안, 또는 같은 색조 (22° 안 · 둘 다 채도 0.25 넘게 — 계열 빛을 어둡게 · 밝게 섞은 빛) */
@@ -1884,7 +1953,7 @@ final class PhantomFx {
         Paint p = PAINT.get(rfx);
         if (p == null) return false;
         Lib L = painter(glow);
-        if (L == null && mmorpg.fabric.Tasks.tag() != null) L = runeColorLib(mmorpg.fabric.Tasks.tag(), glow); // 2026-11-16 룬을 쓰는 동안 (계열 묶음)
+        if (L == null && mmorpg.fabric.Tasks.tag() != null) L = tagLib(mmorpg.fabric.Tasks.tag(), glow); // 2026-11-16 룬을 쓰는 동안 (계열 묶음) · 보스 싸움
         if (L == null) return false;
         return paintedWith(level, p, L, first, at, b);
     }
