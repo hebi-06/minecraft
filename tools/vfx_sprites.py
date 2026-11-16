@@ -305,9 +305,11 @@ def crop_cells(cells):
 
 
 # 2026-11-16 도트 그림 시범 (사용자 "2번으로 해보자" — 피드백 "스킬을 고퀄 이미지로 하니깐 몹이랑 데미지 피해 표시는 도트여서 괴리감이 든다"): 이 묶음
-# (접두 → tools/jobvfx/element.py STYLES 이름) 의 그림판은 같은 그림을 세계 밀도의 도트 그림으로 (tools/jobvfx/pixel.py — 램프 색 · 꽉 찬 텍셀 · 네모 픽셀).
-# 비우면 칠한 그림 그대로
-PIXEL_LIBS = {"el_arcane": "arcane"}
+# (접두 → tools/jobvfx/element.py STYLES 이름 · "auto" = 그림 자체의 색으로 램프) 의 그림판은 같은 그림을 세계 밀도의 도트 그림으로 (tools/jobvfx/pixel.py —
+# 램프 색 · 꽉 찬 텍셀 · 네모 픽셀). 비우면 칠한 그림 그대로.
+# 2026-11-16 위르드식 확정 (사용자 "이제 위르드식으로 만들어보자" — 도트 2D + 바닐라 파티클 + 직접 만든 3D): 칠한 묶음 모두 도트로 (비전은 원소 램프 그대로 —
+# 시범에서 본 모습, 나머지는 그림 자체의 색 — 그림자 꽃잎 · 팬텀 아처 불꽃처럼 원소 램프 밖의 색이 있음)
+PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el_shadow": "auto", "el_soul": "auto", "pa": "auto", "ak": "auto", "br": "auto"}
 
 
 def build():
@@ -364,6 +366,8 @@ def build():
             index[name]["crop"] = list(crop)
     font = {"providers": providers}
     print("crop: %.1f MB → %.1f MB (decoded RGBA)" % (saved[0] * 4 / 1e6, saved[1] * 4 / 1e6))
+    if _pixel.MISSING:
+        print("pixel: 크기 없음 (DEFAULT_SIZE %.1f 칸) — %s" % (_pixel.DEFAULT_SIZE, " ".join(sorted(_pixel.MISSING))))
     idx = {"_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 (예전 칸) · 미리 칠한 그림인지 · "
                    "crop (빈 가장자리를 자른 칸을 옮길 자리 — 예전 칸 높이 몫, 오른쪽 x · 위 y). 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
            "font": "rpg:vfx", "h": H, "sprites": index}

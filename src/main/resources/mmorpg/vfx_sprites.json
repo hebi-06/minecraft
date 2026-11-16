@@ -179,8 +179,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    -0.015625
+    0.1341,
+    -0.0
    ]
   },
   "pa_boom_01": {
@@ -189,8 +189,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.070312,
-    -0.015625
+    -0.101562,
+    -0.0
    ]
   },
   "pa_boom_10": {
@@ -199,8 +199,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    0.0625
+    0.127747,
+    -0.0
    ]
   },
   "pa_boom_11": {
@@ -209,8 +209,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.046875,
-    0.046875
+    -0.109375,
+    -0.0
    ]
   },
   "pa_shock_00": {
@@ -219,8 +219,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
-    -0.015625
+    0.031857,
+    -0.0
    ]
   },
   "pa_shock_01": {
@@ -229,8 +229,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    -0.015625
+    -0.03125,
+    -0.0
    ]
   },
   "pa_shock_10": {
@@ -239,8 +239,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
-    0.015625
+    0.031857,
+    -0.0
    ]
   },
   "pa_shock_11": {
@@ -249,8 +249,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    0.015625
+    -0.03125,
+    -0.0
    ]
   },
   "pa_crack_00": {
@@ -259,8 +259,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.113281,
-    -0.15625
+    0.190549,
+    -0.0
    ]
   },
   "pa_crack_01": {
@@ -269,8 +269,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.140625,
-    -0.125
+    -0.21875,
+    -0.0
    ]
   },
   "pa_crack_10": {
@@ -279,8 +279,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.097656,
-    0.15625
+    0.084794,
+    -0.0
    ]
   },
   "pa_crack_11": {
@@ -289,8 +289,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.15625,
-    0.109375
+    -0.234375,
+    -0.0
    ]
   },
   "pa_ring_00": {
@@ -299,8 +299,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.027344,
-    -0.015625
+    0.045445,
+    -0.0
    ]
   },
   "pa_ring_01": {
@@ -309,8 +309,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.015625
+    -0.046875,
+    -0.0
    ]
   },
   "pa_ring_10": {
@@ -319,8 +319,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.027344,
-    0.03125
+    0.045445,
+    -0.0
    ]
   },
   "pa_ring_11": {
@@ -329,8 +329,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    0.03125
+    -0.046875,
+    -0.0
    ]
   },
   "pa_xslash_00": {
@@ -339,8 +339,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.148438,
-    -0.140625
+    0.159539,
+    -0.0
    ]
   },
   "pa_xslash_01": {
@@ -349,8 +349,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.148438,
-    -0.171875
+    -0.15625,
+    -0.0
    ]
   },
   "pa_xslash_10": {
@@ -359,8 +359,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.140625,
-    0.109375
+    0.159539,
+    -0.0
    ]
   },
   "pa_xslash_11": {
@@ -369,8 +369,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.125,
-    0.15625
+    -0.15625,
+    -0.0
    ]
   },
   "pa_boom_s": {
@@ -379,19 +379,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
-    0.011719
+    -0.010466,
+    -0.0
    ]
   },
   "pa_shock_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.003906,
-    0.003906
-   ]
+   "colored": true
   },
   "pa_crack_s": {
    "chars": "",
@@ -399,15 +395,19 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    0.015625
+    -0.007223,
+    -0.0
    ]
   },
   "pa_flash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.004018,
+    -0.0
+   ]
   },
   "pa_charge": {
    "chars": "",
@@ -416,14 +416,18 @@
    "colored": true,
    "crop": [
     -0.007812,
-    -0.027344
+    -0.0
    ]
   },
   "pa_ember": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.00071,
+    -0.0
+   ]
   },
   "pa_shard": {
    "chars": "",
@@ -434,11 +438,11 @@
   "pa_flame": {
    "chars": "",
    "frames": 10,
-   "aspect": 0.5,
+   "aspect": 0.4923,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.046875
+    0.006851,
+    -0.0
    ]
   },
   "pa_dust": {
@@ -447,8 +451,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.125
+    -0.012908,
+    -0.141304
    ]
   },
   "ak_boom_00": {
@@ -457,8 +461,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.039062,
-    -0.03125
+    0.113582,
+    -0.0
    ]
   },
   "ak_boom_01": {
@@ -467,8 +471,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.117188,
+    -0.0
    ]
   },
   "ak_boom_10": {
@@ -477,8 +481,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.039062,
-    0.046875
+    0.110405,
+    -0.0
    ]
   },
   "ak_boom_11": {
@@ -487,8 +491,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.046875
+    -0.101562,
+    -0.0
    ]
   },
   "ak_shock_00": {
@@ -497,8 +501,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.023438,
-    -0.015625
+    0.036711,
+    -0.0
    ]
   },
   "ak_shock_01": {
@@ -507,8 +511,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    -0.015625
+    -0.039062,
+    -0.0
    ]
   },
   "ak_shock_10": {
@@ -517,8 +521,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    0.015625
+    0.036711,
+    -0.0
    ]
   },
   "ak_shock_11": {
@@ -527,8 +531,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    0.015625
+    -0.046875,
+    -0.0
    ]
   },
   "ak_crack_00": {
@@ -537,8 +541,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.136719,
-    -0.109375
+    0.25,
+    -0.0
    ]
   },
   "ak_crack_01": {
@@ -547,8 +551,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.132812,
-    -0.109375
+    -0.125,
+    -0.0
    ]
   },
   "ak_crack_10": {
@@ -557,8 +561,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.128906,
-    0.125
+    0.194931,
+    -0.0
    ]
   },
   "ak_crack_11": {
@@ -567,8 +571,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.132812,
-    0.125
+    -0.125,
+    0.25
    ]
   },
   "ak_ring_00": {
@@ -577,8 +581,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.027344,
-    -0.015625
+    0.037716,
+    -0.0
    ]
   },
   "ak_ring_01": {
@@ -587,8 +591,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.015625
+    -0.039062,
+    -0.0
    ]
   },
   "ak_ring_10": {
@@ -597,8 +601,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.027344,
-    0.03125
+    0.037716,
+    -0.0
    ]
   },
   "ak_ring_11": {
@@ -607,8 +611,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    0.03125
+    -0.039062,
+    -0.0
    ]
   },
   "ak_gate": {
@@ -617,7 +621,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
+    -0.003217,
     -0.0
    ]
   },
@@ -625,7 +629,11 @@
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.002131,
+    -0.005682
+   ]
   },
   "ak_boom_s": {
    "chars": "",
@@ -633,8 +641,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
-    0.007812
+    -0.004739,
+    -0.0
    ]
   },
   "ak_shock_s": {
@@ -643,8 +651,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
-    0.007812
+    -0.0007,
+    -0.0
    ]
   },
   "ak_crack_s": {
@@ -653,8 +661,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.019531,
-    0.003906
+    -0.042026,
+    -0.0
    ]
   },
   "ak_charge": {
@@ -664,7 +672,7 @@
    "colored": true,
    "crop": [
     -0.007812,
-    0.007812
+    -0.0
    ]
   },
   "ak_sparkle": {
@@ -673,15 +681,19 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    0.007812
+    -0.000633,
+    -0.0
    ]
   },
   "ak_shard": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003125,
+    -0.0
+   ]
   },
   "ak_dust": {
    "chars": "",
@@ -689,8 +701,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
-    -0.125
+    -0.002653,
+    -0.0
    ]
   },
   "br_slash_00": {
@@ -699,8 +711,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.066406,
-    -0.203125
+    0.055147,
+    -0.0
    ]
   },
   "br_slash_01": {
@@ -710,7 +722,7 @@
    "colored": true,
    "crop": [
     -0.039062,
-    -0.203125
+    -0.0
    ]
   },
   "br_slash_10": {
@@ -719,8 +731,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
-    0.21875
+    -0.234222,
+    -0.0
    ]
   },
   "br_slash_11": {
@@ -729,8 +741,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.082031,
-    0.1875
+    0.20864,
+    -0.0
    ]
   },
   "br_slashm_00": {
@@ -739,8 +751,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    -0.203125
+    0.027574,
+    -0.0
    ]
   },
   "br_slashm_01": {
@@ -750,7 +762,7 @@
    "colored": true,
    "crop": [
     -0.0625,
-    -0.203125
+    -0.0
    ]
   },
   "br_slashm_10": {
@@ -759,8 +771,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.078125,
-    0.1875
+    -0.203125,
+    -0.0
    ]
   },
   "br_slashm_11": {
@@ -769,8 +781,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    0.21875
+    0.224571,
+    -0.0
    ]
   },
   "br_xslash_00": {
@@ -779,8 +791,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.160156,
-    -0.125
+    0.158036,
+    -0.0
    ]
   },
   "br_xslash_01": {
@@ -789,8 +801,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.132812,
-    -0.171875
+    -0.15625,
+    -0.0
    ]
   },
   "br_xslash_10": {
@@ -799,8 +811,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.132812,
-    0.171875
+    0.158036,
+    -0.0
    ]
   },
   "br_xslash_11": {
@@ -809,8 +821,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.101562,
-    0.03125
+    -0.15625,
+    -0.0
    ]
   },
   "br_boom_00": {
@@ -819,8 +831,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.070312,
-    -0.046875
+    0.115689,
+    -0.0
    ]
   },
   "br_boom_01": {
@@ -829,8 +841,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.046875
+    -0.101562,
+    -0.0
    ]
   },
   "br_boom_10": {
@@ -839,8 +851,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    0.0625
+    0.115689,
+    -0.0
    ]
   },
   "br_boom_11": {
@@ -849,8 +861,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.070312,
-    0.0625
+    -0.132812,
+    -0.0
    ]
   },
   "br_shock_00": {
@@ -859,8 +871,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    -0.015625
+    0.030766,
+    -0.0
    ]
   },
   "br_shock_01": {
@@ -869,8 +881,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    -0.015625
+    -0.03125,
+    -0.0
    ]
   },
   "br_shock_10": {
@@ -879,8 +891,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    0.015625
+    0.030766,
+    -0.0
    ]
   },
   "br_shock_11": {
@@ -889,8 +901,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    0.015625
+    -0.03125,
+    -0.0
    ]
   },
   "br_crack_00": {
@@ -899,8 +911,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.183594,
-    -0.171875
+    0.227163,
+    -0.0
    ]
   },
   "br_crack_01": {
@@ -909,8 +921,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.164062,
-    -0.15625
+    -0.242188,
+    -0.0
    ]
   },
   "br_crack_10": {
@@ -919,8 +931,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.117188,
-    0.125
+    0.159014,
+    -0.0
    ]
   },
   "br_crack_11": {
@@ -929,8 +941,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.125,
-    0.140625
+    -0.117188,
+    -0.0
    ]
   },
   "br_ring_00": {
@@ -939,8 +951,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    -0.03125
+    0.037452,
+    -0.0
    ]
   },
   "br_ring_01": {
@@ -950,7 +962,7 @@
    "colored": true,
    "crop": [
     -0.03125,
-    -0.03125
+    -0.0
    ]
   },
   "br_ring_10": {
@@ -959,8 +971,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    0.03125
+    0.037452,
+    -0.0
    ]
   },
   "br_ring_11": {
@@ -970,7 +982,7 @@
    "colored": true,
    "crop": [
     -0.03125,
-    0.03125
+    -0.0
    ]
   },
   "br_boom_s": {
@@ -979,19 +991,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    0.011719
+    -0.003202,
+    -0.0
    ]
   },
   "br_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.0,
-    0.007812
-   ]
+   "colored": true
   },
   "br_crack_s": {
    "chars": "",
@@ -999,8 +1007,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
-    0.015625
+    -0.010776,
+    -0.0
    ]
   },
   "br_flash": {
@@ -1009,19 +1017,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.019531
+    0.030191,
+    -0.0
    ]
   },
   "br_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.0,
-    -0.003906
-   ]
+   "colored": true
   },
   "br_spark": {
    "chars": "",
@@ -1029,8 +1033,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    0.007812
+    0.003057,
+    -0.0
    ]
   },
   "br_shard": {
@@ -1045,7 +1049,7 @@
    "aspect": 0.5,
    "colored": true,
    "crop": [
-    0.003906,
+    -0.003646,
     -0.0
    ]
   },
@@ -1055,8 +1059,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.132812
+    0.011364,
+    -0.159091
    ]
   },
   "el_steel_slash_00": {
@@ -1065,8 +1069,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.046875,
-    -0.15625
+    0.03125,
+    -0.171875
    ]
   },
   "el_steel_slash_01": {
@@ -1075,8 +1079,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    -0.15625
+    0.0,
+    -0.171875
    ]
   },
   "el_steel_slash_10": {
@@ -1085,8 +1089,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.011719,
-    0.21875
+    -0.25,
+    0.203125
    ]
   },
   "el_steel_slash_11": {
@@ -1095,8 +1099,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.1875
+    0.1875,
+    0.171875
    ]
   },
   "el_steel_slashm_00": {
@@ -1105,8 +1109,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
-    -0.15625
+    0.017162,
+    -0.0
    ]
   },
   "el_steel_slashm_01": {
@@ -1115,8 +1119,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.046875,
-    -0.15625
+    -0.039062,
+    -0.0
    ]
   },
   "el_steel_slashm_10": {
@@ -1125,8 +1129,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
-    0.1875
+    -0.210938,
+    -0.0
    ]
   },
   "el_steel_slashm_11": {
@@ -1135,8 +1139,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    0.21875
+    0.267546,
+    -0.0
    ]
   },
   "el_steel_xslash_00": {
@@ -1145,8 +1149,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.167969,
-    -0.15625
+    0.145089,
+    -0.125
    ]
   },
   "el_steel_xslash_01": {
@@ -1155,8 +1159,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.171875,
-    -0.171875
+    -0.140625,
+    -0.125
    ]
   },
   "el_steel_xslash_10": {
@@ -1165,8 +1169,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.167969,
-    0.171875
+    0.145089,
+    0.125
    ]
   },
   "el_steel_xslash_11": {
@@ -1175,8 +1179,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.132812,
-    0.171875
+    -0.140625,
+    0.125
    ]
   },
   "el_steel_boom_00": {
@@ -1185,8 +1189,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.078125,
+    -0.078125
    ]
   },
   "el_steel_boom_01": {
@@ -1195,8 +1199,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.03125
+    -0.0625,
+    -0.078125
    ]
   },
   "el_steel_boom_10": {
@@ -1205,8 +1209,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.03125,
-    0.046875
+    0.078125,
+    0.078125
    ]
   },
   "el_steel_boom_11": {
@@ -1215,8 +1219,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.03125
+    -0.0625,
+    0.078125
    ]
   },
   "el_steel_shock_00": {
@@ -1225,7 +1229,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.023438,
+    0.027845,
     -0.0
    ]
   },
@@ -1235,8 +1239,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    -0.015625
+    -0.023438,
+    -0.0
    ]
   },
   "el_steel_shock_10": {
@@ -1245,8 +1249,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.023438,
-    0.015625
+    0.022837,
+    -0.0
    ]
   },
   "el_steel_shock_11": {
@@ -1255,8 +1259,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    0.015625
+    -0.023438,
+    -0.0
    ]
   },
   "el_steel_ring_00": {
@@ -1265,8 +1269,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    -0.03125
+    0.015625,
+    -0.015625
    ]
   },
   "el_steel_ring_01": {
@@ -1275,8 +1279,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.015625,
+    -0.015625
    ]
   },
   "el_steel_ring_10": {
@@ -1285,8 +1289,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    0.03125
+    0.015625,
+    0.015625
    ]
   },
   "el_steel_ring_11": {
@@ -1295,8 +1299,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.03125
+    -0.015625,
+    0.015625
    ]
   },
   "el_steel_boom_s": {
@@ -1305,19 +1309,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    0.007812
+    0.001875,
+    -0.0
    ]
   },
   "el_steel_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.0,
-    0.007812
-   ]
+   "colored": true
   },
   "el_steel_crack_s": {
    "chars": "",
@@ -1325,8 +1325,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    0.035156
+    -0.06204,
+    -0.0
    ]
   },
   "el_steel_flash": {
@@ -1335,25 +1335,25 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.003906
+    0.042708,
+    -0.041667
    ]
   },
   "el_steel_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.0,
-    0.003906
-   ]
+   "colored": true
   },
   "el_steel_ember": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.020833,
+    0.020833
+   ]
   },
   "el_steel_shard": {
    "chars": "",
@@ -1364,11 +1364,11 @@
   "el_steel_pillar": {
    "chars": "",
    "frames": 10,
-   "aspect": 0.5,
+   "aspect": 0.4906,
    "colored": true,
    "crop": [
-    0.0,
-    -0.011719
+    0.006486,
+    -0.0
    ]
   },
   "el_steel_dust": {
@@ -1377,8 +1377,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    -0.128906
+    -0.006944,
+    -0.145833
    ]
   },
   "el_steel_spin_00": {
@@ -1387,8 +1387,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.053125,
+    -0.0
    ]
   },
   "el_steel_spin_01": {
@@ -1397,8 +1397,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    -0.03125
+    -0.070312,
+    -0.0
    ]
   },
   "el_steel_spin_10": {
@@ -1407,8 +1407,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.0625
+    0.059722,
+    -0.0
    ]
   },
   "el_steel_spin_11": {
@@ -1417,8 +1417,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    0.0625
+    -0.070312,
+    -0.0
    ]
   },
   "el_steel_spinm_00": {
@@ -1427,8 +1427,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    -0.03125
+    0.063021,
+    -0.0
    ]
   },
   "el_steel_spinm_01": {
@@ -1437,8 +1437,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.046875,
+    -0.0
    ]
   },
   "el_steel_spinm_10": {
@@ -1447,8 +1447,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    0.0625
+    0.063021,
+    -0.0
    ]
   },
   "el_steel_spinm_11": {
@@ -1457,8 +1457,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
-    0.0625
+    -0.070312,
+    -0.0
    ]
   },
   "el_steel_rift": {
@@ -1467,59 +1467,39 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    0.035156
+    -0.00024,
+    -0.0
    ]
   },
   "el_steel_cut": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.003906,
-    0.003906
-   ]
+   "colored": true
   },
   "el_steel_wings_00": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.007812,
-    -0.0625
-   ]
+   "colored": true
   },
   "el_steel_wings_01": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    -0.007812,
-    -0.0625
-   ]
+   "colored": true
   },
   "el_steel_wings_10": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.007812,
-    0.3125
-   ]
+   "colored": true
   },
   "el_steel_wings_11": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    -0.007812,
-    0.09375
-   ]
+   "colored": true
   },
   "el_blood_slash_00": {
    "chars": "",
@@ -1527,7 +1507,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
+    0.0,
     -0.140625
    ]
   },
@@ -1538,7 +1518,7 @@
    "colored": true,
    "crop": [
     -0.046875,
-    -0.171875
+    -0.15625
    ]
   },
   "el_blood_slash_10": {
@@ -1547,8 +1527,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    0.21875
+    -0.25,
+    0.203125
    ]
   },
   "el_blood_slash_11": {
@@ -1557,8 +1537,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    0.1875
+    0.1875,
+    0.171875
    ]
   },
   "el_blood_slashm_00": {
@@ -1567,8 +1547,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    -0.171875
+    0.063021,
+    -0.0
    ]
   },
   "el_blood_slashm_01": {
@@ -1577,8 +1557,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    -0.140625
+    -0.023438,
+    -0.0
    ]
   },
   "el_blood_slashm_10": {
@@ -1587,8 +1567,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.046875,
-    0.1875
+    -0.201042,
+    -0.0
    ]
   },
   "el_blood_slashm_11": {
@@ -1597,8 +1577,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
-    0.21875
+    0.239757,
+    -0.0
    ]
   },
   "el_blood_xslash_00": {
@@ -1607,8 +1587,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.171875,
-    -0.15625
+    0.154593,
+    -0.0
    ]
   },
   "el_blood_xslash_01": {
@@ -1617,8 +1597,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.171875,
-    -0.171875
+    -0.164062,
+    -0.0
    ]
   },
   "el_blood_xslash_10": {
@@ -1627,8 +1607,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.128906,
-    0.078125
+    0.154593,
+    -0.0
    ]
   },
   "el_blood_xslash_11": {
@@ -1637,8 +1617,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.125,
-    0.078125
+    -0.148438,
+    -0.0
    ]
   },
   "el_blood_boom_00": {
@@ -1647,8 +1627,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.109375,
-    -0.125
+    0.078125,
+    -0.140625
    ]
   },
   "el_blood_boom_01": {
@@ -1657,8 +1637,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.164062,
-    -0.125
+    -0.140625,
+    -0.140625
    ]
   },
   "el_blood_boom_10": {
@@ -1667,8 +1647,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.113281,
-    0.015625
+    0.078125,
+    -0.0
    ]
   },
   "el_blood_boom_11": {
@@ -1677,8 +1657,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.148438,
-    0.03125
+    -0.15625,
+    0.046875
    ]
   },
   "el_blood_shock_00": {
@@ -1687,8 +1667,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    -0.015625
+    0.02741,
+    -0.0
    ]
   },
   "el_blood_shock_01": {
@@ -1697,8 +1677,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    -0.015625
+    -0.023438,
+    -0.0
    ]
   },
   "el_blood_shock_10": {
@@ -1707,8 +1687,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    0.03125
+    0.02741,
+    -0.0
    ]
   },
   "el_blood_shock_11": {
@@ -1717,8 +1697,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.015625,
-    0.03125
+    -0.023438,
+    -0.0
    ]
   },
   "el_blood_ring_00": {
@@ -1727,8 +1707,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.03125,
-    -0.03125
+    0.02495,
+    -0.0
    ]
   },
   "el_blood_ring_01": {
@@ -1737,8 +1717,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.03125
+    -0.023438,
+    -0.0
    ]
   },
   "el_blood_ring_10": {
@@ -1747,8 +1727,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.03125,
-    0.03125
+    0.02495,
+    -0.0
    ]
   },
   "el_blood_ring_11": {
@@ -1758,7 +1738,7 @@
    "colored": true,
    "crop": [
     -0.03125,
-    0.03125
+    -0.0
    ]
   },
   "el_blood_boom_s": {
@@ -1767,19 +1747,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.070312
+    -0.015104,
+    -0.0
    ]
   },
   "el_blood_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.007812,
-    0.003906
-   ]
+   "colored": true
   },
   "el_blood_crack_s": {
    "chars": "",
@@ -1787,8 +1763,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    0.027344
+    -0.008117,
+    -0.0
    ]
   },
   "el_blood_flash": {
@@ -1797,15 +1773,19 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.023438,
-    -0.066406
+    -0.020802,
+    -0.0
    ]
   },
   "el_blood_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
   },
   "el_blood_ember": {
    "chars": "",
@@ -1813,25 +1793,25 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    0.046875
+    -0.003646,
+    -0.0
    ]
   },
   "el_blood_shard": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
   },
   "el_blood_pillar": {
    "chars": "",
    "frames": 10,
-   "aspect": 0.5,
-   "colored": true,
-   "crop": [
-    0.0,
-    -0.015625
-   ]
+   "aspect": 0.4923,
+   "colored": true
   },
   "el_blood_dust": {
    "chars": "",
@@ -1839,8 +1819,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    -0.140625
+    -0.001923,
+    -0.0
    ]
   },
   "el_blood_moon_00": {
@@ -1849,8 +1829,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.03125,
-    -0.015625
+    0.137153,
+    -0.125
    ]
   },
   "el_blood_moon_01": {
@@ -1859,8 +1839,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.023438,
-    -0.015625
+    -0.140625,
+    -0.125
    ]
   },
   "el_blood_moon_10": {
@@ -1869,8 +1849,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.03125,
-    0.03125
+    0.137153,
+    -0.0
    ]
   },
   "el_blood_moon_11": {
@@ -1879,8 +1859,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.023438,
-    0.03125
+    -0.140625,
+    -0.0
    ]
   },
   "el_blood_rift": {
@@ -1889,8 +1869,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    -0.023438
+    0.0,
+    -0.046875
    ]
   },
   "el_blood_spin_00": {
@@ -1899,8 +1879,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.046875,
-    -0.03125
+    0.053125,
+    -0.0
    ]
   },
   "el_blood_spin_01": {
@@ -1909,8 +1889,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    -0.03125
+    -0.078125,
+    -0.0
    ]
   },
   "el_blood_spin_10": {
@@ -1919,8 +1899,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.058594,
-    0.0625
+    0.0675,
+    -0.0
    ]
   },
   "el_blood_spin_11": {
@@ -1929,8 +1909,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    0.046875
+    -0.078125,
+    -0.0
    ]
   },
   "el_blood_spinm_00": {
@@ -1939,8 +1919,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.070312,
-    -0.03125
+    0.061979,
+    -0.0
    ]
   },
   "el_blood_spinm_01": {
@@ -1950,7 +1930,7 @@
    "colored": true,
    "crop": [
     -0.039062,
-    -0.03125
+    -0.0
    ]
   },
   "el_blood_spinm_10": {
@@ -1959,8 +1939,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.058594,
-    0.046875
+    0.061979,
+    -0.0
    ]
   },
   "el_blood_spinm_11": {
@@ -1970,7 +1950,7 @@
    "colored": true,
    "crop": [
     -0.054688,
-    0.0625
+    -0.0
    ]
   },
   "ak_slash_00": {
@@ -1979,8 +1959,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.046875,
-    -0.140625
+    0.03125,
+    -0.171875
    ]
   },
   "ak_slash_01": {
@@ -1990,7 +1970,7 @@
    "colored": true,
    "crop": [
     -0.015625,
-    -0.1875
+    -0.171875
    ]
   },
   "ak_slash_10": {
@@ -1999,8 +1979,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.011719,
-    0.21875
+    -0.234375,
+    0.203125
    ]
   },
   "ak_slash_11": {
@@ -2009,8 +1989,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.171875
+    0.171875,
+    0.15625
    ]
   },
   "ak_slashm_00": {
@@ -2019,8 +1999,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
-    -0.1875
+    0.037377,
+    -0.0
    ]
   },
   "ak_slashm_01": {
@@ -2029,8 +2009,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.140625
+    -0.070312,
+    -0.0
    ]
   },
   "ak_slashm_10": {
@@ -2039,8 +2019,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
-    0.171875
+    -0.193321,
+    -0.0
    ]
   },
   "ak_slashm_11": {
@@ -2049,8 +2029,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
-    0.21875
+    0.228554,
+    -0.0
    ]
   },
   "ak_xslash_00": {
@@ -2059,7 +2039,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.167969,
+    0.15625,
     -0.15625
    ]
   },
@@ -2069,8 +2049,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.171875,
-    -0.109375
+    -0.15625,
+    -0.15625
    ]
   },
   "ak_xslash_10": {
@@ -2079,7 +2059,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.171875,
+    0.15625,
     0.15625
    ]
   },
@@ -2089,19 +2069,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.148438,
-    0.140625
+    -0.15625,
+    0.15625
    ]
   },
   "ak_cut": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.003906,
-    0.003906
-   ]
+   "colored": true
   },
   "ak_excal_00": {
    "chars": "",
@@ -2109,7 +2085,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
+    0.01875,
     -0.0
    ]
   },
@@ -2119,7 +2095,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
+    -0.016667,
     -0.0
    ]
   },
@@ -2129,7 +2105,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
+    -0.001042,
     -0.0
    ]
   },
@@ -2137,7 +2113,11 @@
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.0
+   ]
   },
   "ak_spin_00": {
    "chars": "",
@@ -2145,8 +2125,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.053005,
+    -0.0
    ]
   },
   "ak_spin_01": {
@@ -2155,8 +2135,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    -0.03125
+    -0.070312,
+    -0.0
    ]
   },
   "ak_spin_10": {
@@ -2165,8 +2145,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.0625
+    0.068269,
+    -0.0
    ]
   },
   "ak_spin_11": {
@@ -2175,8 +2155,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    0.0625
+    -0.078125,
+    -0.0
    ]
   },
   "ak_spinm_00": {
@@ -2185,8 +2165,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    -0.03125
+    0.054008,
+    -0.0
    ]
   },
   "ak_spinm_01": {
@@ -2195,8 +2175,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.03125,
+    -0.0
    ]
   },
   "ak_spinm_10": {
@@ -2205,8 +2185,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    0.0625
+    0.054008,
+    -0.0
    ]
   },
   "ak_spinm_11": {
@@ -2216,7 +2196,7 @@
    "colored": true,
    "crop": [
     -0.054688,
-    0.0625
+    -0.0
    ]
   },
   "el_shadow_slash_00": {
@@ -2226,7 +2206,7 @@
    "colored": true,
    "crop": [
     0.03125,
-    -0.15625
+    -0.1875
    ]
   },
   "el_shadow_slash_01": {
@@ -2245,8 +2225,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.011719,
-    0.21875
+    -0.265625,
+    0.203125
    ]
   },
   "el_shadow_slash_11": {
@@ -2255,8 +2235,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.1875
+    0.1875,
+    0.171875
    ]
   },
   "el_shadow_slashm_00": {
@@ -2276,7 +2256,7 @@
    "colored": true,
    "crop": [
     -0.03125,
-    -0.15625
+    -0.1875
    ]
   },
   "el_shadow_slashm_10": {
@@ -2285,8 +2265,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.050781,
-    0.1875
+    -0.1875,
+    0.171875
    ]
   },
   "el_shadow_slashm_11": {
@@ -2295,8 +2275,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    0.21875
+    0.265625,
+    0.203125
    ]
   },
   "el_shadow_xslash_00": {
@@ -2305,8 +2285,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.152344,
-    -0.125
+    0.120908,
+    -0.0
    ]
   },
   "el_shadow_xslash_01": {
@@ -2315,8 +2295,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.171875,
-    -0.125
+    -0.140625,
+    -0.0
    ]
   },
   "el_shadow_xslash_10": {
@@ -2325,8 +2305,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.167969,
-    0.1875
+    0.120908,
+    -0.0
    ]
   },
   "el_shadow_xslash_11": {
@@ -2335,8 +2315,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.171875,
-    0.140625
+    -0.140625,
+    -0.0
    ]
   },
   "el_shadow_boom_00": {
@@ -2345,8 +2325,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.09375,
+    -0.09375
    ]
   },
   "el_shadow_boom_01": {
@@ -2355,8 +2335,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.03125
+    -0.09375,
+    -0.09375
    ]
   },
   "el_shadow_boom_10": {
@@ -2365,8 +2345,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.027344,
-    0.046875
+    0.09375,
+    0.09375
    ]
   },
   "el_shadow_boom_11": {
@@ -2375,49 +2355,33 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.03125
+    -0.09375,
+    0.09375
    ]
   },
   "el_shadow_shock_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.015625,
-    -0.0
-   ]
+   "colored": true
   },
   "el_shadow_shock_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    -0.015625,
-    -0.015625
-   ]
+   "colored": true
   },
   "el_shadow_shock_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.023438,
-    0.015625
-   ]
+   "colored": true
   },
   "el_shadow_shock_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    -0.015625,
-    0.015625
-   ]
+   "colored": true
   },
   "el_shadow_ring_00": {
    "chars": "",
@@ -2425,8 +2389,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    -0.03125
+    0.015625,
+    -0.015625
    ]
   },
   "el_shadow_ring_01": {
@@ -2435,8 +2399,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.015625,
+    -0.015625
    ]
   },
   "el_shadow_ring_10": {
@@ -2445,8 +2409,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    0.03125
+    0.015625,
+    0.015625
    ]
   },
   "el_shadow_ring_11": {
@@ -2455,8 +2419,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.03125
+    -0.015625,
+    0.015625
    ]
   },
   "el_shadow_boom_s": {
@@ -2465,19 +2429,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    -0.003906
+    -0.013609,
+    -0.0
    ]
   },
   "el_shadow_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.0,
-    0.003906
-   ]
+   "colored": true
   },
   "el_shadow_crack_s": {
    "chars": "",
@@ -2485,8 +2445,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
-    0.003906
+    -0.002064,
+    -0.0
    ]
   },
   "el_shadow_flash": {
@@ -2495,8 +2455,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    -0.003906
+    0.025082,
+    -0.0
    ]
   },
   "el_shadow_charge": {
@@ -2506,29 +2466,37 @@
    "colored": true,
    "crop": [
     -0.007812,
-    0.007812
+    -0.0
    ]
   },
   "el_shadow_ember": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.001116,
+    -0.0
+   ]
   },
   "el_shadow_shard": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
   },
   "el_shadow_pillar": {
    "chars": "",
    "frames": 10,
-   "aspect": 0.5,
+   "aspect": 0.4906,
    "colored": true,
    "crop": [
-    0.0,
-    -0.011719
+    0.006486,
+    -0.0
    ]
   },
   "el_shadow_dust": {
@@ -2537,8 +2505,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    -0.125
+    0.001179,
+    -0.0
    ]
   },
   "el_shadow_spin_00": {
@@ -2547,8 +2515,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.044271,
+    -0.0
    ]
   },
   "el_shadow_spin_01": {
@@ -2557,8 +2525,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    -0.03125
+    -0.070312,
+    -0.0
    ]
   },
   "el_shadow_spin_10": {
@@ -2567,8 +2535,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.054688,
-    0.046875
+    0.061979,
+    -0.0
    ]
   },
   "el_shadow_spin_11": {
@@ -2577,8 +2545,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    0.0625
+    -0.070312,
+    -0.0
    ]
   },
   "el_shadow_spinm_00": {
@@ -2587,8 +2555,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.070312,
-    -0.03125
+    0.046875,
+    -0.015625
    ]
   },
   "el_shadow_spinm_01": {
@@ -2597,8 +2565,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.015625,
+    -0.015625
    ]
   },
   "el_shadow_spinm_10": {
@@ -2607,8 +2575,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.070312,
-    0.0625
+    0.046875,
+    0.03125
    ]
   },
   "el_shadow_spinm_11": {
@@ -2617,8 +2585,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
-    0.046875
+    -0.03125,
+    0.03125
    ]
   },
   "el_shadow_cut": {
@@ -2627,8 +2595,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    -0.003906
+    0.0,
+    -0.003049
    ]
   },
   "el_shadow_smoke": {
@@ -2637,15 +2605,19 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.011719,
-    0.054688
+    -0.016827,
+    -0.0
    ]
   },
   "el_shadow_cross": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.01152,
+    -0.0
+   ]
   },
   "el_shadow_rose": {
    "chars": "",
@@ -2659,19 +2631,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    0.03125
+    0.000992,
+    -0.0
    ]
   },
   "el_shadow_petal": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true,
-   "crop": [
-    0.0,
-    0.007812
-   ]
+   "colored": true
   },
   "el_shadow_dagger": {
    "chars": "",
@@ -2679,7 +2647,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
+    0.003243,
     -0.0
    ]
   },
@@ -2687,7 +2655,11 @@
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
   },
   "el_shadow_eclipse_00": {
    "chars": "",
@@ -2695,8 +2667,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.023438,
-    -0.03125
+    0.20864,
+    -0.0
    ]
   },
   "el_shadow_eclipse_01": {
@@ -2705,8 +2677,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.023438,
-    -0.015625
+    -0.195312,
+    -0.0
    ]
   },
   "el_shadow_eclipse_10": {
@@ -2715,8 +2687,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.03125
+    0.20864,
+    -0.0
    ]
   },
   "el_shadow_eclipse_11": {
@@ -2725,8 +2697,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.023438,
-    0.03125
+    -0.1875,
+    -0.0
    ]
   },
   "el_arcane_xslash_00": {
@@ -3125,8 +3097,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.101562,
-    -0.03125
+    0.098558,
+    -0.0
    ]
   },
   "el_soul_xslash_01": {
@@ -3135,8 +3107,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.09375,
-    -0.0625
+    -0.117188,
+    -0.0
    ]
   },
   "el_soul_xslash_10": {
@@ -3145,8 +3117,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.101562,
-    0.09375
+    0.098558,
+    -0.0
    ]
   },
   "el_soul_xslash_11": {
@@ -3155,8 +3127,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.09375,
-    0.09375
+    -0.117188,
+    -0.0
    ]
   },
   "el_soul_boom_00": {
@@ -3165,8 +3137,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.090461,
+    -0.0
    ]
   },
   "el_soul_boom_01": {
@@ -3175,8 +3147,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.03125
+    -0.09375,
+    -0.0
    ]
   },
   "el_soul_boom_10": {
@@ -3185,8 +3157,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.039062,
-    0.046875
+    0.090461,
+    -0.0
    ]
   },
   "el_soul_boom_11": {
@@ -3195,8 +3167,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.03125
+    -0.09375,
+    -0.0
    ]
   },
   "el_soul_boom_s": {
@@ -3205,8 +3177,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    0.007812
+    -0.001202,
+    -0.0
    ]
   },
   "el_soul_flash": {
@@ -3215,8 +3187,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.003906
+    0.042039,
+    -0.0
    ]
   },
   "el_soul_ember": {
@@ -3237,8 +3209,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0,
-    0.007812
+    0.002604,
+    0.010417
    ]
   },
   "el_soul_skull": {
@@ -3247,17 +3219,17 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
-    0.007812
+    -0.003437,
+    -0.0
    ]
   },
   "el_soul_rift": {
    "chars": "",
    "frames": 6,
-   "aspect": 0.3984,
+   "aspect": 0.4062,
    "colored": true,
    "crop": [
-    -0.003906,
+    -0.015625,
     -0.0
    ]
   },
@@ -3265,20 +3237,16 @@
    "chars": "",
    "frames": 4,
    "aspect": 4.0,
-   "colored": true,
-   "crop": [
-    -0.023438,
-    -0.0
-   ]
+   "colored": true
   },
   "el_soul_hand": {
    "chars": "",
    "frames": 6,
-   "aspect": 0.5,
+   "aspect": 0.5128,
    "colored": true,
    "crop": [
-    0.0,
-    -0.015625
+    -0.013421,
+    -0.0
    ]
   },
   "el_soul_smoke": {
@@ -3287,18 +3255,18 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.011719,
-    0.027344
+    0.01194,
+    -0.0
    ]
   },
   "el_soul_aura": {
    "chars": "",
    "frames": 8,
-   "aspect": 0.5,
+   "aspect": 0.5079,
    "colored": true,
    "crop": [
-    0.0,
-    -0.03125
+    0.000248,
+    -0.0
    ]
   },
   "el_soul_halo_00": {
@@ -3307,7 +3275,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
+    0.017658,
     -0.0
    ]
   },
@@ -3317,7 +3285,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
+    -0.023438,
     -0.0
    ]
   },
@@ -3327,8 +3295,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
-    0.015625
+    0.017658,
+    -0.0
    ]
   },
   "el_soul_halo_11": {
@@ -3337,8 +3305,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    0.015625
+    -0.023438,
+    -0.0
    ]
   }
  }

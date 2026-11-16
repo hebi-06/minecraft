@@ -34,6 +34,21 @@ def oklab(rgb):
     return lms @ M2.T
 
 
+def from_oklab(lab):
+    """OKLab → sRGB (0 ~ 1, 잘라냄)"""
+    lab = np.asarray(lab, float)
+    L, a, b = lab[..., 0], lab[..., 1], lab[..., 2]
+    l_ = L + 0.3963377774 * a + 0.2158037573 * b
+    m_ = L - 0.1055613458 * a - 0.0638541728 * b
+    s_ = L - 0.0894841775 * a - 1.2914855480 * b
+    l, m, s = l_ ** 3, m_ ** 3, s_ ** 3
+    r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
+    g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
+    bb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+    lin = np.clip(np.stack([r, g, bb], -1), 0, 1)
+    return np.where(lin <= 0.0031308, lin * 12.92, 1.055 * lin ** (1 / 2.4) - 0.055)
+
+
 # ------------------------------------------------------------------ 묶음 셈 (원래 픽셀 → 텍셀)
 
 def _bins(H, W, th, tw):
@@ -56,12 +71,48 @@ def _bin_quantile(v, b, nb, q):
     return out
 
 
-class Palette:
-    """원소 묶음의 램프 셋 (main · accent · smoke) → 단계 색"""
+MAIN_LV = (0.34, 0.48, 0.62, 0.76, 0.88, 1.0)
+ACCENT_LV = (0.5, 0.7, 0.85, 1.0)
+SMOKE_LV = (0.45, 0.8, 1.0)
+AUTO_LV = (0.17, 0.33, 0.5, 0.67, 0.83, 1.0)
 
-    def __init__(self, S, main_levels=(0.34, 0.48, 0.62, 0.76, 0.88, 1.0), accent_levels=(0.5, 0.7, 0.85, 1.0), smoke_levels=(0.45, 0.8, 1.0)):
-        self.ramps = [S.main, S.accent, S.smoke]
-        self.levels = [np.array(main_levels), np.array(accent_levels), np.array(smoke_levels)]
+
+def _ramp_from_stops(stops):
+    """OKLab 자리 (n × 3, 어둠 → 밝음) → f(t) (OKLab 에서 고르게 섞어 sRGB)"""
+    ts = np.linspace(0, 1, len(stops))
+
+    def f(t):
+        t = np.clip(np.asarray(t, float), 0, 1)
+        lab = np.stack([np.interp(t, ts, stops[:, k]) for k in range(3)], -1)
+        return from_oklab(lab)
+    return f
+
+
+def _build_ramp(lab, w):
+    """한 색 무리 (OKLab · 무게) → 밝기 분위수 7 자리의 램프"""
+    order = np.argsort(lab[:, 0])
+    lab, w = lab[order], w[order]
+    cw = np.cumsum(w)
+    cw /= cw[-1]
+    stops = []
+    for q in (0.02, 0.15, 0.35, 0.55, 0.75, 0.9, 0.995):
+        lo = np.searchsorted(cw, max(0.0, q - 0.05))
+        hi = max(lo + 1, np.searchsorted(cw, min(1.0, q + 0.05)))
+        stops.append(np.average(lab[lo:hi], axis=0, weights=w[lo:hi]))
+    stops = np.array(stops)
+    stops[:, 0] = np.maximum.accumulate(stops[:, 0])
+    return _ramp_from_stops(stops)
+
+
+class Palette:
+    """램프 셋 → 단계 색. S (원소 묶음 Style — main · accent · smoke) 또는 ramps [(f(t), 단계들, 빛 번짐 자리)]"""
+
+    def __init__(self, S=None, ramps=None):
+        if ramps is None:
+            ramps = [(S.main, MAIN_LV, 0.62), (S.accent, ACCENT_LV, 0.8), (S.smoke, SMOKE_LV, 1.0)]
+        self.ramps = [r[0] for r in ramps]
+        self.levels = [np.array(r[1]) for r in ramps]
+        self.glow = np.array([r[2] for r in ramps])
         ts = np.linspace(0, 1, 97)
         cand, rid, tt = [], [], []
         for k, f in enumerate(self.ramps):
@@ -73,6 +124,59 @@ class Palette:
         self.lab = oklab(self.cand)
         self.rid = np.array(rid)
         self.t = np.array(tt)
+
+    @staticmethod
+    def auto(frames, max_k=4, seed=7):
+        """그림 자체의 색에서 램프 셋을 만듦 (원소 묶음 Style 이 없는 그림 — 팬텀 아처 · 아스널 킹 · 블레이드 레인저 · 그림자 꽃잎 · 앞으로 그릴 룬):
+        보이는 픽셀 (알파 0.2 이상) 을 OKLab 색상각 봉우리 (10° 칸 · 둘레 매끄럽게 · 무게 = 알파 × 채도, 전체의 6% 이상 · 40° 안은 합침 · 많아야 max_k) 로
+        나누고 무채색 (채도 0.03 아래 — 흰 심 · 잿빛 연기) 이 4% 넘으면 따로 → 무리마다 밝기 분위수 7 자리 램프 (단계 6 · 빛 번짐은 가운데 0.5)"""
+        rng = np.random.default_rng(seed)
+        pix, wts = [], []
+        for fr in frames[::max(1, len(frames) // 8)]:
+            A = np.asarray(fr.convert("RGBA"), float) / 255.0
+            a = A[..., 3].ravel()
+            m = a >= 0.2
+            pix.append(A[..., :3].reshape(-1, 3)[m])
+            wts.append(a[m])
+        C = np.concatenate(pix) if pix else np.zeros((0, 3))
+        W = np.concatenate(wts) if wts else np.zeros(0)
+        if len(C) < 16:
+            gray = np.array([[0.2, 0, 0], [0.6, 0, 0], [1.0, 0, 0]])
+            return Palette(ramps=[(_ramp_from_stops(gray), AUTO_LV, 0.5)])
+        if len(C) > 60000:
+            idx = rng.choice(len(C), 60000, replace=False)
+            C, W = C[idx], W[idx]
+        lab = oklab(C)
+        ch = np.hypot(lab[:, 1], lab[:, 2])
+        hue = np.arctan2(lab[:, 2], lab[:, 1])
+        chrom = ch >= 0.03
+        ramps = []
+        if chrom.sum() >= 32:
+            hb = (((hue[chrom] + np.pi) / (2 * np.pi)) * 36).astype(int) % 36
+            hist = np.bincount(hb, weights=W[chrom] * ch[chrom], minlength=36)
+            hs = (np.roll(hist, 1) + 2 * hist + np.roll(hist, -1)) / 4
+            cand = [i for i in range(36) if hs[i] >= hs[(i - 1) % 36] and hs[i] >= hs[(i + 1) % 36] and hs[i] >= 0.06 * hs.sum()]
+            cand.sort(key=lambda i: -hs[i])
+            peaks = []
+            for i in cand:
+                if all(min((i - j) % 36, (j - i) % 36) >= 4 for j in peaks):
+                    peaks.append(i)
+                if len(peaks) >= max_k:
+                    break
+            if not peaks:
+                peaks = [int(np.argmax(hs))]
+            cen = np.array([(p + 0.5) / 36 * 2 * np.pi - np.pi for p in peaks])
+            hc = hue[chrom]
+            d = np.abs(np.angle(np.exp(1j * (hc[:, None] - cen[None, :]))))
+            lab_c, w_c = lab[chrom], W[chrom]
+            asg = d.argmin(1)
+            for k in range(len(peaks)):
+                m = asg == k
+                if m.sum() >= 8:
+                    ramps.append((_build_ramp(lab_c[m], w_c[m]), AUTO_LV, 0.5))
+        if (~chrom).sum() >= 8 and W[~chrom].sum() >= 0.04 * W.sum() or not ramps:
+            ramps.append((_build_ramp(lab[~chrom] if (~chrom).sum() >= 8 else lab, W[~chrom] if (~chrom).sum() >= 8 else W), AUTO_LV, 0.5))
+        return Palette(ramps=ramps)
 
     def nearest(self, rgb):
         """색 (N × 3) → (램프 번호, 램프 자리 t)"""
@@ -136,17 +240,22 @@ def texels(size, aspect=1.0, k=1):
     return max(8, int(round(size * density(size * k * max(1.0, aspect)))))
 
 
-# 2026-11-16 그림판이 화면에서 가장 크게 보인 크기 (칸 높이 — 조각 그림은 조각 하나, CI 영상 jobcensus "|| sheets 이름=수@크기" 의 가장 큰 값)
-SIZES = {
-    "el_arcane_aegis": 1.33, "el_arcane_aura": 3.6, "el_arcane_beam": 0.9, "el_arcane_bolt": 0.31, "el_arcane_boom": 3.68, "el_arcane_boom_s": 3.24,
-    "el_arcane_dash": 1.5, "el_arcane_ember": 0.58, "el_arcane_fallstar": 1.35, "el_arcane_fireball": 0.64, "el_arcane_flash": 3.28,
-    "el_arcane_frost": 2.29, "el_arcane_galaxy": 5.0, "el_arcane_halo": 10.23, "el_arcane_icelance": 0.45, "el_arcane_shard": 0.52,
-    "el_arcane_shatter": 3.0, "el_arcane_sparkorb": 0.75, "el_arcane_spin": 10.0, "el_arcane_spinm": 10.7, "el_arcane_star": 1.4,
-    "el_arcane_starnode": 9.2, "el_arcane_xslash": 0.97,
-}
-DEFAULT_SIZE = 2.0
+# 2026-11-16 그림판이 화면에서 가장 크게 보인 크기 (칸 높이 — 조각 그림은 이름_rc 를 뺀 바탕 이름, CI 영상 jobcensus "|| sheets 이름=수@크기" 의 가장 큰 값):
+# tools/jobvfx/sheet_sizes.json (tools/jobvfx/sheet_sizes.py 가 CI 로그에서 모음 — 손으로 고쳐도 됨). 없는 그림은 DEFAULT_SIZE
+import json as _json
+import os as _os
 
-GLOW_T = (0.62, 0.8, 1.0)  # 빛 번짐 텍셀의 램프 자리 (main · accent · smoke) — 짙은 가운데 색 하나 (옅은 색의 반투명 = 뿌연 안개가 되지 않게)
+SIZES_FILE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "sheet_sizes.json")
+SIZES = {k: v for k, v in _json.load(open(SIZES_FILE)).items() if not k.startswith("_")} if _os.path.exists(SIZES_FILE) else {}
+DEFAULT_SIZE = 2.0
+MISSING = set()  # 크기가 없어 DEFAULT_SIZE 로 옮긴 그림 (vfx_sprites.py 가 알림)
+
+
+def size_of(base):
+    if base in SIZES:
+        return SIZES[base]
+    MISSING.add(base)
+    return DEFAULT_SIZE
 
 
 def pixelize(frames, th, S, cut=0.14, solid=0.5, haze=0.45, glow_r=1, glow_alpha=1.0, q=0.8, cleanup=True, pal=None, tw=None):
@@ -187,12 +296,12 @@ def pixelize(frames, th, S, cut=0.14, solid=0.5, haze=0.45, glow_r=1, glow_alpha
         state = np.where(sol.ravel(), 2, np.where(glow, 1, 0))
         src = np.where((state == 2)[:, None], col, gcol)
         rid, t = pal.nearest(src)
-        t = np.where(state == 1, np.array(GLOW_T)[rid], t)
+        t = np.where(state == 1, pal.glow[rid], t)
         lv, tq = pal.snap(rid, t)
         code = np.where(state == 0, -1, state * 1000 + rid * 100 + lv).reshape(th, tw)
         if cleanup:
             # 밝은 꽉 찬 텍셀 (램프의 맨 위 두 단계 — 별 · 반짝임) 은 외톨이여도 남김
-            top = np.array([len(pal.levels[r]) for r in range(3)])[rid] - 2
+            top = np.array([len(L) for L in pal.levels])[rid] - 2
             bright = ((state == 2) & (lv >= top)).reshape(th, tw)
             code = _cleanup(code, (code >= 0) & ~bright)
             code = np.where(code >= 0, code, -1)
@@ -215,14 +324,21 @@ _PAL = {}
 
 
 def sheet_cells(name, makes, cache, libs):
-    """그림판 name 이 도트 묶음 (libs: 접두 → element.STYLES 이름) 이면 도트 칸들, 아니면 None. 조각 그림 (이름_rc) 은 조각들을 한 그림으로 붙여 도트로 옮긴 뒤
-    다시 나눔 (조각 경계에서 텍셀이 어긋나지 않게). makes = {이름: 만들기}, cache = 조각 묶음 셈 (build 한 번 동안)"""
-    lib = next((l for l in libs if name.startswith(l + "_")), None)
+    """그림판 name 이 도트 묶음 (libs: 접두 → element.STYLES 이름 · "auto" = 그림 자체의 색으로 램프) 이면 도트 칸들, 아니면 None.
+    조각 그림 (이름_rc) 은 조각들을 한 그림으로 붙여 도트로 옮긴 뒤 다시 나눔 (조각 경계에서 텍셀이 어긋나지 않게). makes = {이름: 만들기}, cache = 조각 묶음 셈"""
+    lib = max((l for l in libs if name.startswith(l + "_")), key=len, default=None)
     if lib is None:
         return None
-    from .element import STYLES
-    S = STYLES[libs[lib]]
-    pal = _PAL.setdefault(lib, Palette(S))
+    style = libs[lib]
+    S = None
+    if style != "auto":
+        from .element import STYLES
+        S = STYLES[style]
+
+    def pal_for(frames):
+        if S is not None:
+            return _PAL.setdefault(lib, Palette(S))
+        return Palette.auto(frames)
     m = TILE_RE.match(name)
     if m and m.group(1) + "_00" in makes:
         base = m.group(1)
@@ -232,7 +348,7 @@ def sheet_cells(name, makes, cache, libs):
             R = max(r for r, _ in tiles) + 1
             C = max(c for _, c in tiles) + 1
             tw0, th0 = tiles[(0, 0)][0].size
-            size = SIZES.get(base, DEFAULT_SIZE)
+            size = size_of(base)
             th_t = texels(size, tw0 / th0, max(R, C))
             tw_t = max(1, int(round(tw0 * th_t / th0)))
             full = []
@@ -241,10 +357,10 @@ def sheet_cells(name, makes, cache, libs):
                 for (r, c), cells in tiles.items():
                     im.paste(cells[f], (c * tw0, r * th0))
                 full.append(im)
-            px = pixelize(full, th_t * R, S, pal=pal, tw=tw_t * C)
+            px = pixelize(full, th_t * R, S, pal=pal_for(full), tw=tw_t * C)
             for (r, c) in tiles:
                 cache["%s_%d%d" % (base, r, c)] = [im.crop((c * tw_t, r * th_t, (c + 1) * tw_t, (r + 1) * th_t)) for im in px]
         return cache[name]
     cells = makes[name]()
     w0, h0 = cells[0].size
-    return pixelize(cells, texels(SIZES.get(name, DEFAULT_SIZE), w0 / h0), S, pal=pal)
+    return pixelize(cells, texels(size_of(name), w0 / h0), S, pal=pal_for(cells))
