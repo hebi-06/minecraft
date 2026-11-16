@@ -152,8 +152,8 @@ public final class BearForm {
         JobFx.burst(level, c, 1.6, j, 0.3, Opt.empty());
         JobFx.ring(level, V.up(at, 0.08), 2.2, j, false, 0.35, Opt.empty());
         RuneKit.rockBurst(level, V.up(at, 0.3), 8, 4.5, 0.2);
-        SkillFx.sparks(level, V.up(at, 0.3), DUST, 16, 3.6);
-        SkillFx.sparks(level, c, JobKit.glow(j), 12, 4.0);
+        PhantomFx.dust(level, PhantomFx.BEAR, V.up(at, 0.3), Math.min(2.6, 0.9 + (16) * 0.12));
+        JobFx.sparks(level, c, j, 12, 4.0);
         SkillFx.play(level, "entity.polar_bear.warning", at, 0.7, 0.9);
         SkillFx.play(level, "block.rooted_dirt.break", at, 0.8, 0.7);
         return new Use(d, nf.id);
@@ -272,8 +272,8 @@ public final class BearForm {
                 ServerLevel level = d.level();
                 Vec3 c = V.up(sp != null ? sp.position() : d.pos(), 0.9 * d.scale());
                 JobFx.burst(level, c, 1.2, f.glow, DUST, 0.25, Opt.empty());
-                SkillFx.sparks(level, c, f.glow, 12, 3.4);
-                SkillFx.sparks(level, V.up(c, -0.6), DUST, 12, 2.8);
+                PhantomFx.embers(level, PhantomFx.BEAR, c, Math.max(1, (int) Math.round((12) * 0.75)), Math.max(0.4, (3.4) * 0.3), 0.32, 14);
+                PhantomFx.dust(level, PhantomFx.BEAR, V.up(c, -0.6), Math.min(2.6, 0.9 + (12) * 0.12));
                 SkillFx.play(level, "entity.polar_bear.ambient", c, 0.5, 0.8);
                 d.leave("vanish", 10);
             } else d.discard();

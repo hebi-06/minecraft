@@ -69,7 +69,7 @@ final class WarlordSkills {
                 if (b.alive()) b.size(s);
             });
         }
-        SkillFx.sparks(b.level(), V.up(b.pos(), 0.3), DUST, 14, 3.4);
+        PhantomFx.dust(b.level(), PhantomFx.BEAR, V.up(b.pos(), 0.3), Math.min(2.6, 0.9 + (14) * 0.12));
         RuneKit.rockBurst(b.level(), V.up(b.pos(), 0.3), 6, 4.0, 0.18);
     }
 
@@ -158,8 +158,8 @@ final class WarlordSkills {
         JobFx.burst(level, V.up(g, 0.5), 1.0 * scale, j, 0.32, Opt.empty());
         JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(g, 0.6), 0.3, Opt.of("size", 1.2 * scale, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), WHITE);
         RuneKit.rockBurst(level, V.up(g, 0.2), (int) Math.round(7 * scale), 5.0, 0.17 * scale);
-        SkillFx.sparks(level, V.up(g, 0.3), JobKit.glow(j), (int) Math.round(10 * scale), 5.5);
-        SkillFx.sparks(level, V.up(g, 0.2), DUST, (int) Math.round(9 * scale), 3.4);
+        JobFx.sparks(level, V.up(g, 0.3), j, (int) Math.round(10 * scale), 5.5);
+        JobFx.dirt(level, V.up(g, 0.2), j, (int) Math.round(9 * scale), 3.4, DUST);
         SkillFx.play(level, "mace.heavy_smash_ground", g, 0.8, 0.95);
         SkillFx.play(level, "random.anvil_land", g, 0.45, 0.5);
     }
@@ -208,9 +208,8 @@ final class WarlordSkills {
                 Vec3 f = Kit.facingOf(sp);
                 Vec3 axe = V.up(V.add(V.add(sp.position(), V.rightOf(f), 0.75), f, -0.55), 0.1);
                 if (tt % 2 == 0) {
-                    SkillFx.fx(lv, "rpg:arrow_spark", axe, Opt.of("dir", V.unit(V.add(V.UP, f, -0.6)), "speed", 2.6, "size", 0.14, "grow", 0.6, "life", 0.35, "color",
-                            JobKit.glow(j), "alpha", 1.0));
-                    SkillFx.sparks(lv, axe, DUST, 2, 1.6);
+                    JobFx.sparks(lv, axe, j, 2, 2.6); // 2026-11-16 위르드식 (도끼 끝 불티 — 예전 색 먼지 대신)
+                    if (tt % 4 == 0) JobFx.dirt(lv, axe, j, 2, 1.6, DUST);
                 }
                 if (tt % 4 == 0 || tt == charge) {
                     double c = Math.min(1, tt / (double) charge);
@@ -351,7 +350,7 @@ final class WarlordSkills {
             spike3d(level, ground(level, V.add(den, d, form != null ? 2.3 : 1.5)), 0.75, 0.2, dur / 20.0 - 0.2, JobKit.glow(j));
         }
         JobFx.ring(level, V.up(c0, 0.06), 2.0, j, false, 0.5, Opt.empty());
-        SkillFx.sparks(level, V.up(c0, 0.2), DUST, 12, 3);
+        JobFx.dirt(level, V.up(c0, 0.2), j, 12, 3, DUST);
         SkillFx.play(level, "entity.polar_bear.ambient_baby", c0, 0.6, 0.8);
         SkillFx.play(level, "block.rooted_dirt.place", c0, 0.6, 1.0);
         // 숨 (8틱마다 흙먼지 · 낮은 숨소리 — 곰이 없으면 예전 2D 웅크린 곰)
@@ -362,15 +361,15 @@ final class WarlordSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 if (form != null) {
-                    SkillFx.sparks(lv, BearForm.at(sp, form, 1.7, 0.35), DUST, 3, 1.2); // 웅크린 곰의 코 앞
+                    JobFx.dirt(lv, BearForm.at(sp, form, 1.7, 0.35), j, 3, 1.2, DUST); // 웅크린 곰의 코 앞
                 } else if (bb == null) {
                     Vec3 back = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.3), 1.1);
                     JobFx.bear(lv, back, 1.45, 0.46, 3, 4, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.5, "coreAlpha", 0.85),
                             JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
                 } else if (bb.alive()) {
-                    SkillFx.sparks(lv, V.up(V.add(bb.pos(), bb.forward(), 2.0), 0.3), DUST, 3, 1.2);
+                    JobFx.dirt(lv, V.up(V.add(bb.pos(), bb.forward(), 2.0), 0.3), j, 3, 1.2, DUST);
                 }
-                SkillFx.sparks(lv, V.up(sp.position(), 0.15), DUST, 4, 1.6);
+                JobFx.dirt(lv, V.up(sp.position(), 0.15), j, 4, 1.6, DUST);
                 if (tt % 16 == 2) SkillFx.play(lv, "entity.polar_bear.ambient", sp.position(), 0.5, 0.5);
             });
         }
@@ -458,7 +457,7 @@ final class WarlordSkills {
             bearAnim(b, pullAt, "hug", true);
             bearAnim(b, slamAt - BEAR_SLAM_AT, "hugslam", false);
             bearLeave(b, slamAt + 10);
-            SkillFx.sparks(level, V.up(b.pos(), 0.3), DUST, 14, 3.4);
+            JobFx.dirt(level, V.up(b.pos(), 0.3), j, 14, 3.4, DUST);
             RuneKit.rockBurst(level, V.up(b.pos(), 0.3), 6, 4.0, 0.18);
         }
         // 앞발 둘 (곰이 없을 때만 — 3인칭 · 다른 사람): 양옆 4칸 위에서 가운데로 휩쓸어 모임 · 1인칭: 눈앞 양옆에서
@@ -506,7 +505,7 @@ final class WarlordSkills {
                         Vec3 stand = Kit.standSpot(e.level(), new Vec3(p.x, Math.max(p.y, start.y) + 0.5, p.z), 1.5);
                         if (stand != null) e.teleportTo(stand.x, stand.y, stand.z);
                         e.setDeltaMovement(Vec3.ZERO);
-                        if (tt % 2 == 0 && e.level() instanceof ServerLevel lv) SkillFx.sparks(lv, V.up(e.position(), 0.1), DUST, 3, 1.8);
+                        if (tt % 2 == 0 && e.level() instanceof ServerLevel lv) JobFx.dirt(lv, V.up(e.position(), 0.1), j, 3, 1.8, DUST);
                     });
                 }
             }
@@ -517,7 +516,7 @@ final class WarlordSkills {
             ServerLevel lv = sp.level();
             Vec3 m = V.up(gather, 1.0);
             JobFx.two(lv, "jimpact", JobImpact.IMPACT, m, 0.28, Opt.of("size", 1.4, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), WHITE);
-            SkillFx.sparks(lv, m, JobFx.inner(j), 10, 4);
+            JobFx.sparks(lv, m, j, 10, 4);
             SkillFx.play(lv, "entity.player.attack.knockback", m, 0.7, 1.0);
             SkillFx.play(lv, "block.anvil.land", m, 0.8, 0.45);
         });
@@ -629,7 +628,7 @@ final class WarlordSkills {
         if (b == null && form == null) JobFx.bear(level0, V.up(V.add(c0, f, -0.9), 2.2), 1.6, (leapAt + 3) / 20.0, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.75,
                 "coreAlpha", 0.95), bg, bc);
         if (form == null) JobFx.charge(sp, j, new Vec3(0.0, 2.2, -0.2), leapAt + 1, 0.9);
-        SkillFx.sparks(level0, V.up(c0, 0.2), DUST, 10, 3.0);
+        JobFx.dirt(level0, V.up(c0, 0.2), j, 10, 3.0, DUST);
         SkillFx.play(level0, "mob.polarbear.warning", c0, 0.6, 1.0);
         // 뛰어오름 (포물선) — 내려찍을 자리 땅의 곰 발자국 고리 (경고)
         JobMove.run(sp, JobMove.hop(leapAt, landAt, JobMove.at(dest), JobMove.hopPeak(sp, c0, dest, k.num("peak", 4.5))));
@@ -705,7 +704,7 @@ final class WarlordSkills {
         }
         boulders(level, g, Kit.facingOf(sp), 9, r * 0.55, r * 0.9, 0.5, 0.9, 3.6, JobKit.glow(j));
         RuneKit.rockBurst(level, V.up(g, 0.3), 12, 6.0, 0.2);
-        SkillFx.sparks(level, V.up(g, 0.3), DUST, 16, 4.0);
+        JobFx.dirt(level, V.up(g, 0.3), j, 16, 4.0, DUST);
         SkillFx.play(level, "mace.heavy_smash_ground", g, 0.6, 0.9);
         SkillFx.play(level, "random.explode", g, 0.7, 0.6);
         for (LivingEntity e : Kit.around(sp, g, r, 3.0)) {
@@ -784,17 +783,11 @@ final class WarlordSkills {
                                 "color", JobFx.inner(j), "alpha", 0.25 + 0.3 * q));
                     }
                 }
-                for (int i = 0; i < 3; i++) {
-                    double a = Kit.rand() * Math.PI * 2;
-                    Vec3 dir = new Vec3(Math.cos(a), 0, Math.sin(a));
-                    Vec3 p = V.up(V.add(c, dir, R * (0.6 + Kit.rand() * 0.4)), 0.2 + Kit.rand() * 0.6);
-                    SkillFx.fx(lv, "rpg:arrow_spark", p, Opt.of("dir", V.unit(V.add(V.scale(dir, -1), V.UP, 0.15)), "speed", 6.0 + 4 * q, "size", 0.14, "grow", 0.5,
-                            "life", 0.4, "color", tt % 2 == 0 ? DUST : JobKit.glow(j), "alpha", 1.0));
-                }
+                // 2026-11-16 위르드식: 빨려 드는 흙 · 불티 (예전 색 먼지 대신 묶음의 빨려 듦 겹 — 바닐라 · 둘레에서 가운데로)
+                if (tt % 2 == 0) WyrdKit.pull(lv, PhantomFx.lib(j), V.up(c, 0.5), R * (0.6 + 0.4 * q), 3, null);
                 // 손의 불티 (곰이면 치켜든 두 앞발 사이)
                 Vec3 hand = form != null ? BearForm.at(sp, form, 0.6, 2.6) : V.up(RuneKit.handOf(sp).hand(), 0.1);
-                SkillFx.fx(lv, "rpg:arrow_spark", hand, Opt.of("dir", V.UP, "speed", 1.8, "size", 0.15, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j), "alpha",
-                        1.0));
+                JobFx.sparks(lv, hand, j, 2, 1.8);
                 if (tt % 6 == 0) SkillFx.play(lv, "block.grindstone.use", c, 0.4 + 0.5 * q, 0.4);
             });
         }
@@ -845,7 +838,7 @@ final class WarlordSkills {
         boulders(level, g, Kit.facingOf(sp), 10, edge * 0.8, R * 0.85, 0.6, 1.0, 4.0, JobKit.glow(j)); // 2026-11-13 바깥 고리에서 3D 바위가 솟아 튐
         RuneKit.godRays(sp, level, g, R * 0.7, 8, JobKit.glow(j), JobKit.core(j), Opt.of("h", 7.0, "life", 0.7, "alpha", 0.7, "skipNear", true));
         Ult.flash(level, c, JobKit.glow(j), Opt.empty(), sp);
-        SkillFx.sparks(level, V.up(g, 0.6), JobKit.glow(j), 20, 7);
+        JobFx.sparks(level, V.up(g, 0.6), j, 20, 7);
         SkillFx.play(level, "entity.player.attack.sweep", c, 0.5, 1.0);
         SkillFx.play(level, "item.mace.smash_ground_heavy", c, 0.6, 1.0);
         SkillFx.play(level, "random.explode", c, 0.8, 0.7);

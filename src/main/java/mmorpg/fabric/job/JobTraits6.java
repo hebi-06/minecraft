@@ -139,7 +139,7 @@ public final class JobTraits6 {
         JobFx.aura(sp, j, 3.0, 1.0, 1.0);
         JobFx.smash(level, V.up(c, 0.05), 2.4, j, 0.5, Opt.of("alpha", 0.8));
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
-        SkillFx.sparks(level, V.up(c, 1.0), JobKit.glow(j), 14, 5);
+        JobFx.sparks(level, V.up(c, 1.0), j, 14, 5);
         Ult.flash(level, c, JobKit.glow(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.3}), sp);
         SkillFx.play(level, "entity.polar_bear.warning", c, 0.7, 1.4);
         SkillFx.play(level, "mob.ravager.roar", c, 0.8, 0.9);
@@ -164,7 +164,7 @@ public final class JobTraits6 {
         ServerLevel level = sp.level();
         JobFx.bear(level, V.up(V.add(sp.position(), Kit.facingOf(sp), -0.35), 1.55), 1.9, 0.4, JobFx.BEAR - 1, 1, false, JobFx.hide1p(sp).with("vel",
                 RuneKit.bodyVel(sp), "alpha", 0.6), bearGlow(j), bearCore(j));
-        SkillFx.sparks(level, V.up(sp.position(), 1.2), JobKit.glow(j), 8, 2.5);
+        JobFx.sparks(level, V.up(sp.position(), 1.2), j, 8, 2.5);
         SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 0.6, 0.5);
     }
 
@@ -194,7 +194,7 @@ public final class JobTraits6 {
             ServerLevel level = sp.level();
             Vec3 c = V.up(sp.position(), 0.9);
             JobFx.ringFacing(level, c, 1.1, j, V.UP, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
-            SkillFx.sparks(level, c, JobKit.glow(j), 8, 3.5);
+            JobFx.sparks(level, c, j, 8, 3.5);
             SkillFx.play(level, "entity.polar_bear.hurt", c, 0.6, 0.5);
         }
     }
@@ -242,8 +242,7 @@ public final class JobTraits6 {
         JobFx.bear(level, c, 1.75, 0.46, 3, 4, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.4, "coreAlpha", 0.92), bearGlow(j), bearCore(j));
         JobFx.aura(sp, j, 2.6, 0.5, 0.5);
         RuneKit.Hand h = RuneKit.handOf(sp);
-        SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.13, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j),
-                "alpha", 1.0));
+        JobFx.sparks(level, V.up(h.hand(), 0.1), j, 2, 1.6); // 2026-11-16 위르드식 (손의 불티 — 예전 색 먼지 대신)
     }
 
     /** 태세 줄 (태세가 없을 때): 곰의 화신 {이름, 남은 틱, 전체 틱} — 없으면 null */

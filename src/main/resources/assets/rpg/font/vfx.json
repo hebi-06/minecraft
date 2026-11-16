@@ -3274,8 +3274,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_slashm_00.png",
-   "height": 44,
-   "ascent": 20,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3284,8 +3284,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_slashm_01.png",
-   "height": 44,
-   "ascent": 20,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3294,8 +3294,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_slashm_10.png",
-   "height": 42,
-   "ascent": 19,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3304,8 +3304,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_slashm_11.png",
-   "height": 38,
-   "ascent": 17,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3350,8 +3350,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_boom_00.png",
-   "height": 54,
-   "ascent": 25,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3360,8 +3360,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_boom_01.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3370,8 +3370,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_boom_10.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3380,8 +3380,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_boom_11.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     "",
     ""
@@ -3547,8 +3547,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spin_00.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3556,8 +3556,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spin_01.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3565,8 +3565,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spin_10.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3574,8 +3574,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spin_11.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3583,8 +3583,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spinm_00.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3592,8 +3592,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spinm_01.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3601,8 +3601,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spinm_10.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3610,8 +3610,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_illusion_spinm_11.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3744,8 +3744,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_circus_xslash_00.png",
-   "height": 44,
-   "ascent": 20,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3753,8 +3753,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_circus_xslash_01.png",
-   "height": 44,
-   "ascent": 20,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3762,8 +3762,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_circus_xslash_10.png",
-   "height": 44,
-   "ascent": 20,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -3771,8 +3771,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_circus_xslash_11.png",
-   "height": 44,
-   "ascent": 20,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -4058,8 +4058,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_circus_confetti.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 58,
+   "ascent": 27,
    "chars": [
     ""
    ]
@@ -4089,6 +4089,1352 @@
    "ascent": 30,
    "chars": [
     ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_comet.png",
+   "height": 40,
+   "ascent": 18,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_xslash_00.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_xslash_11.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_boom_00.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_boom_01.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_boom_10.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_boom_11.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_ring_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_ring_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_ring_10.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_ring_11.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_dust.png",
+   "height": 32,
+   "ascent": 14,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spin_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spin_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spin_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spin_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spinm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spinm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spinm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_spinm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_wolf.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_twister.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_whirl.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_comet.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shieldbreak.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_quake.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_xslash_00.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_xslash_11.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_boom_00.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_boom_01.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_boom_10.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_boom_11.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_ring_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_ring_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_ring_10.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_ring_11.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_dust.png",
+   "height": 32,
+   "ascent": 14,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_bear.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_paw.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_quake.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_aura.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_xslash_00.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_xslash_11.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_boom_00.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_boom_01.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_boom_10.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_boom_11.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_ring_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_ring_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_ring_10.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_ring_11.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_dust.png",
+   "height": 32,
+   "ascent": 14,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_halo_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_halo_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_halo_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_halo_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_frost.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_frost_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   }
  ]

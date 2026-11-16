@@ -86,8 +86,8 @@ public final class FrostraiderSkills {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.3) return;
-        for (double s = 0.8; s < len; s += 1.6) SkillFx.fx(level, "rpg:snowfall", V.add(from, V.unit(d), s), Opt.of("size", 0.45, "life", 0.5, "color", WHITE, "alpha",
-                0.7));
+        // 2026-11-16 위르드식: 예전 rpg:snowfall (모드 없는 클라이언트에서 회색 먼지 구름) 대신 바닐라 눈송이
+        for (double s = 0.8; s < len; s += 1.6) WyrdKit.snow(level, V.add(from, V.unit(d), s), 3, 0.25, null);
     }
 
     // ------------------------------------------------------------ 프로스트 바이트
@@ -185,8 +185,8 @@ public final class FrostraiderSkills {
     private static void stuckLoop(ServerPlayer sp, Thrown th) {
         if (!RuneKit.sameLife(sp, th.life) || th.back || THROWN.get(sp.getUUID()) != th) return;
         if (th.target != null && th.target.isAlive() && !th.target.isRemoved()) th.stuck = Kit.bodyPoint(th.target);
-        SkillFx.sparks(sp.level(), th.stuck, WHITE, 2, 1.2);
-        SkillFx.fx(sp.level(), "rpg:snowfall", V.up(th.stuck, 0.3), Opt.of("size", 0.4, "life", 0.5, "color", WHITE, "alpha", 0.6));
+        JobFx.sparks(sp.level(), th.stuck, Jobs.job(JobTraits16.FR), 2, 1.2); // 2026-11-16 위르드식 (서리 불씨 · 눈송이)
+        WyrdKit.snow(sp.level(), V.up(th.stuck, 0.3), 2, 0.2, null);
         RuneKit.later(6, () -> stuckLoop(sp, th));
     }
 
@@ -219,7 +219,7 @@ public final class FrostraiderSkills {
             Vec3 to = V.up(RuneKit.handOf(sp).hand(), 0.3);
             if (th.fx != null) th.fx.end();
             axe(lv, from, to, back, AXE);
-            JobAxe3d.iceShards(lv, from, 6, 1.6, 0.45);
+            PhantomFx.shards(lv, PhantomFx.FROST, from, 6, 1.6, 0.3, 14); // 2026-11-16 위르드식 — 작은 3D 얼음 조각 대신 도트 조각
             frostTrail(lv, from, to, j, JobFx.hide1p(sp));
             SkillFx.play(lv, "block.glass.break", from, 1.2, 0.7);
             SkillFx.play(lv, "entity.player.attack.sweep", from, 1.3, 0.6);
@@ -363,7 +363,8 @@ public final class FrostraiderSkills {
             double pad = t != null ? Kit.bodyPad(t) : 0.3;
             JobAxe3d.crystals(lv, g, 6, pad + 0.4, pad + 0.75, h * 0.8, h * 1.05, 0.3, 10, 20, true, 0, shatterAt - slamAt - 4, 3);
             if (t != null && t.isAlive() && !t.isRemoved()) cageIce.add(IceFx.encase(lv, t, t.position(), shatterAt - slamAt + 3));
-            IceFx.shards(lv, V.up(g, 0.4), 16, 0.6, 0.2, 0.12);
+            PhantomFx.shards(lv, PhantomFx.FROST, V.up(g, 0.4), 4, 0.96, 0.3, 14); // 2026-11-16 위르드식 (얼음 블록 부스러기 대신 도트 조각 · 눈송이)
+            WyrdKit.snow(lv, V.up(g, 0.4), 4, 0.6, null);
             SkillFx.play(lv, "item.mace.smash_ground", g, 1.0, 0.9);
             SkillFx.play(lv, "block.glass.place", g, 0.6, 1.0);
             SkillFx.play(lv, "block.amethyst_block.place", g, 0.5, 0.9);
@@ -385,8 +386,9 @@ public final class FrostraiderSkills {
             double h = t != null ? t.getBbHeight() + 1.0 : 2.4;
             // 2026-11-13 3D 감옥이 깨짐: 얼음 덩어리를 지우고 3D 얼음 조각이 사방으로 튐 (결정은 이 틱에 부서지기 시작)
             for (List<Display> l : cageIce) for (Display d : l) FxDisplays.remove(d);
-            JobAxe3d.iceShards(lv, V.up(g, h * 0.45), 10, 2.8, 0.75);
-            IceFx.shards(lv, V.up(g, h * 0.5), 46, 0.7, h * 0.3, 0.28);
+            // 2026-11-16 위르드식: 작은 3D 얼음 조각 · 얼음 블록 부스러기 (바닐라 그림) 대신 도트 조각 · 눈송이
+            PhantomFx.shards(lv, PhantomFx.FROST, V.up(g, h * 0.45), 12, 2.8, 0.45, 18);
+            WyrdKit.snow(lv, V.up(g, h * 0.5), 18, 0.7, null);
             JobTraits16.shardsFx(lv, V.up(g, h * 0.45), 2.0);
             JobFx.slash(sp, j, 2.0, 0.2, 3.0, 4.0, 0.25);
             JobFx.slashWave(sp, j, 4.0, 2.2, 5.0, 26);
@@ -399,7 +401,7 @@ public final class FrostraiderSkills {
                 JobImpact.hit(sp, t, j, 2.2);
                 // 깨진 적: chill 틱 둔화 (강화 — 깨진 뒤 둔화) · 몸에 남은 서리 김
                 if (!JobKit.isBoss(t)) RuneKit.effect(t, "slowness", JobUpgrades.ticks(sp, k, "chill", (int) k.num("chill", 60)), 1);
-                SkillFx.fx(sp.level(), "rpg:snowfall", V.up(Kit.bodyPoint(t), 0.4), Opt.of("size", 0.8, "life", 0.8, "color", WHITE, "alpha", 0.8));
+                WyrdKit.snow(sp.level(), V.up(Kit.bodyPoint(t), 0.4), 6, 0.35, null);
             });
         });
         return true;
@@ -491,9 +493,10 @@ public final class FrostraiderSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 s = t != null && t.isAlive() && !t.isRemoved() ? t.position() : spot[0];
-                for (int i = 0; i < 6; i++) {
+                // 2026-11-16 위르드식 눈보라 (예전 rpg:snowfall 여섯 — 모드 없는 클라이언트에서 하늘에 회색 먼지 구름 · 영상 먼지 3830): 바닐라 눈송이
+                for (int i = 0; i < 3; i++) {
                     Vec3 p = V.up(V.add(s, new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 9.0), 3 + Kit.rand() * 6);
-                    SkillFx.fx(lv, "rpg:snowfall", p, Opt.of("size", 0.9, "life", 1.2, "color", WHITE, "alpha", 0.85));
+                    WyrdKit.snow(lv, p, 6, 1.2, null);
                 }
             });
         }
@@ -547,7 +550,8 @@ public final class FrostraiderSkills {
             JobFx15.halo(lv, V.up(s, 0.08), R * 2.2, 0.6, Opt.of("alpha", 1.0), ICE, WHITE);
             SkillFx.shock(lv, V.up(s, 0.1), ICE, R * 2.6, 0.5);
             JobTraits16.shardsFx(lv, V.up(s, 1.0), 2.4);
-            IceFx.shards(lv, V.up(s, 0.6), 60, 1.6, 0.6, 0.3);
+            PhantomFx.shards(lv, PhantomFx.FROST, V.up(s, 0.6), 12, 2.56, 0.3, 14); // 2026-11-16 위르드식 (얼음 블록 부스러기 대신 도트 조각 · 눈송이)
+            WyrdKit.snow(lv, V.up(s, 0.6), 15, 1.6, null);
             Ult.flash(lv, s, WHITE, Opt.empty(), sp);
             SkillFx.play(lv, "item.mace.smash_ground_heavy", s, 0.7, 1.0);
             SkillFx.play(lv, "block.glass.place", s, 0.4, 1.0);
@@ -591,9 +595,10 @@ public final class FrostraiderSkills {
             Vec3 s = ground(lv, spot[0]);
             // 2026-11-13 3D 빙하가 깨짐 (결정은 이 틱에 부서지기 시작): 갇힌 얼음 덩어리를 지우고 큰 3D 얼음 조각이 사방으로
             for (List<Display> l : encased) for (Display dd : l) FxDisplays.remove(dd);
-            JobAxe3d.iceShards(lv, V.up(s, 2.4), 14, 5.0, 1.3);
-            JobAxe3d.iceShards(lv, V.up(s, 0.9), 10, 3.6, 0.9);
-            IceFx.shards(lv, V.up(s, 2.0), 90, 2.2, 1.6, 0.35);
+            // 2026-11-16 위르드식: 작은 3D 얼음 조각 · 얼음 블록 부스러기 대신 도트 조각 · 눈송이 (빙하 · 도끼는 3D 그대로)
+            PhantomFx.shards(lv, PhantomFx.FROST, V.up(s, 2.4), 16, 5.0, 0.6, 22);
+            PhantomFx.shards(lv, PhantomFx.FROST, V.up(s, 0.9), 12, 3.6, 0.5, 20);
+            WyrdKit.snow(lv, V.up(s, 2.0), 30, 2.2, null);
             JobTraits16.shardsFx(lv, V.up(s, 2.5), 3.2);
             JobTraits16.shardsFx(lv, V.up(s, 0.8), 2.4);
             JobFx15.halo(lv, V.up(s, 0.1), R * 2.6, 0.5, Opt.of("alpha", 1.0), ICE, WHITE);

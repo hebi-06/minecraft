@@ -311,7 +311,9 @@ def crop_cells(cells):
 # 2026-11-16 위르드식 확정 (사용자 "이제 위르드식으로 만들어보자" — 도트 2D + 바닐라 파티클 + 직접 만든 3D): 칠한 묶음 모두 도트로 (비전은 원소 램프 그대로 —
 # 시범에서 본 모습, 나머지는 그림 자체의 색 — 그림자 꽃잎 · 팬텀 아처 불꽃처럼 원소 램프 밖의 색이 있음)
 PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el_shadow": "auto", "el_soul": "auto", "pa": "auto", "ak": "auto", "br": "auto",
-              "el_illusion": "auto", "el_circus": "auto"}  # 2026-11-16 트릭스터 환영 · 피에로 서커스
+              # 2026-11-16 남은 직업 묶음은 원소 램프 그대로 (auto 는 거울의 청록 유리가 자홍으로 묻혔음 — CI 43872303193 트릭스터 거울):
+              # 트릭스터 환영 · 피에로 서커스 · 전사 분노 · 워로드 곰 · 프로스트 레이더 서리
+              "el_illusion": "illusion", "el_circus": "circus", "el_rage": "rage", "el_bear": "bear", "el_frost": "frost"}
 
 
 def _old_outputs():

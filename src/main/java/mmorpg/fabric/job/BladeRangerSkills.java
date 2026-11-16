@@ -8,7 +8,6 @@ import java.util.UUID;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.rune.RuneKit;
-import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.rune.RuneSwords;
 import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.skill.Kit;
@@ -63,8 +62,8 @@ final class BladeRangerSkills {
      */
     static RuneSwords.Blade blade(ServerLevel level, Vec3 hilt, Vec3 dir, double len, int appear, int life, java.util.function.Predicate<ServerPlayer> who) {
         Vec3 d = V.unit(dir);
-        Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 6, life));
-        if (who != null) fx.viewers(who);
+        // 볼 사람은 붙이기 전에 (Vfx.at — 붙는 순간 보내지므로 뒤에 viewers 로 정하면 늦음: CI 43872303193 1인칭 영상에서 날개 칼이 그대로 보였음)
+        Vfx.Fx fx = Vfx.at(level, hilt, Math.max(appear + 6, life), who);
         PhantomArcher.Pal p = PhantomArcher.FORGE_PAL;
         RuneSwords.Blade b = RuneSwords.phantom(fx, p.sword(), hilt, d, PhantomArcher.faceOf(d), len, 0.05, p.blade(), p.gem());
         b.prop.outline(PhantomFx.FORGE.glow()); // 2026-11-15 직업 전용: 칼이 주황으로 번짐

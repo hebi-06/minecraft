@@ -77,6 +77,8 @@ final class WyrdKit {
     static final Part UNDER = new Part(ParticleTypes.REVERSE_PORTAL, 30);
     static final Part PORTAL = new Part(ParticleTypes.PORTAL, 1, true);
     static final Part ENCHANT = new Part(ParticleTypes.ENCHANT, 1, true);
+    /** 2026-11-16 눈송이 (흰 · 천천히 떨어짐 — 프로스트 레이더의 눈보라 · 예전 rpg:snowfall 대신) */
+    static final Part SNOW = new Part(ParticleTypes.SNOWFLAKE, 6);
 
     /** 검사 — 강철 · 푸른 달빛 (흰 불꽃놀이 불티 · 흰 빛) */
     static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, null, null, END_ROD, WHITE_DOT);
@@ -98,6 +100,12 @@ final class WyrdKit {
     static final Pal ILLUSION = new Pal(0xD23BA6, 0x6FE6F4, SPARKLE, END_ROD, null, PORTAL, PORTAL, WHITE_DOT);
     /** 2026-11-16 서커스 (피에로): 불꽃놀이 · 금빛 밀랍 반짝임 · end_rod · 금빛 점 */
     static final Pal CIRCUS = new Pal(0xE23A44, 0xFFE28A, SPARKLE, WAX, null, END_ROD, END_ROD, WAX);
+    /** 2026-11-16 분노 (전사): 불꽃 불티 · 밀랍 불빛 반짝임 · 작은 불꽃 · 불빛 점 */
+    static final Pal RAGE = new Pal(0xD8261E, 0xFF8F28, FLAME, WAX, null, SMALL_FLAME, FLAME, WAX);
+    /** 2026-11-16 곰 (워로드): 작은 불꽃 불티 (호박빛) · 밀랍 반짝임 · 불빛 점 — 땅 · 흙은 칠한 그림 (흙먼지 · 갈라지는 땅) 과 3D 돌창 */
+    static final Pal BEAR = new Pal(0xA85C24, 0xFFC266, SMALL_FLAME, WAX, null, WAX, SMALL_FLAME, WAX);
+    /** 2026-11-16 서리 (프로스트 레이더): 흰 불꽃놀이 · end_rod 반짝임 · 눈송이 (떠도는 눈) · 흰 빛 점 */
+    static final Pal FROST = new Pal(0x4CAEE6, 0xB4E8FF, SPARKLE, END_ROD, null, SNOW, END_ROD, WHITE_DOT);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -113,6 +121,9 @@ final class WyrdKit {
             case "el_soul" -> SOUL_P;
             case "el_illusion" -> ILLUSION;
             case "el_circus" -> CIRCUS;
+            case "el_rage" -> RAGE;
+            case "el_bear" -> BEAR;
+            case "el_frost" -> FROST;
             default -> null;
         };
     }
@@ -491,6 +502,30 @@ final class WyrdKit {
             double a = off + i * Math.PI / 3;
             dot(l, who, P, new Vec3(p.x + Math.cos(a) * rr, p.y + Math.sin(a * 2) * 0.08, p.z + Math.sin(a) * rr), i % 2 == 1, 0.9 + q * 0.5);
         }
+    }
+
+    /**
+     * 2026-11-16 둘레에서 가운데로 빨려 듦 (워로드 마지막 휘두름 — 예전 색 먼지 불티 대신): 가운데 c 둘레 R 칸 (땅 가까이 수평) 에서 n 개가 가운데로. 묶음의 pull
+     * (빨려 드는 것은 가운데에서 뿌림 · 아닌 것은 바깥에서 가운데 쪽 빠르기)
+     */
+    static void pull(ServerLevel l, PhantomFx.Lib L, Vec3 c, double R, int n, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || P.pull() == null || !go("pull", 4)) return;
+        for (int i = 0; i < n; i++) {
+            double a = Kit.rand() * Math.PI * 2;
+            Vec3 r = new Vec3(Math.cos(a), (Kit.rand() - 0.3) * 0.25, Math.sin(a));
+            if (P.pull().in()) pv(l, who, P.pull().o(), c, V.scale(r, R));
+            else pv(l, who, P.pull().o(), V.add(c, r, R), V.scale(r, -P.pull().v(R)));
+        }
+    }
+
+    /**
+     * 2026-11-16 눈보라 한 줌 (예전 rpg:snowfall — 모드 없는 클라이언트에서 작은 알갱이 수백이 회색 먼지로 바뀌어 하늘에 잿빛 점 구름 · 핌불윈터 먼지 3830): at 둘레 spread 칸에
+     * n 개의 눈송이 (바닐라 snowflake — 천천히 떨어짐)
+     */
+    static void snow(ServerLevel l, Vec3 at, int n, double spread, Predicate<ServerPlayer> who) {
+        if (!ON || !go("snow", 6)) return;
+        p(l, who, ParticleTypes.SNOWFLAKE, at, n, spread, spread * 0.6, spread, 0.02);
     }
 
     /** 힘 모으기 끝 (번쩍): 작은 터짐 · 반짝임 */

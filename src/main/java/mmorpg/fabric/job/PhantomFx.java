@@ -72,6 +72,15 @@ final class PhantomFx {
     /** 2026-11-16 서커스 (피에로 — el_circus: 진홍 · 크림 금빛, 무지개 없이 — 색종이 · 풍선 동물 · 불꽃놀이 · 조명, tools/jobvfx/circus.py · 공용 그림을 서커스 빛으로) */
     static final int GLOW_CIRCUS = 0xFF6A68;
     static final Lib CIRCUS = new Lib("el_circus", GLOW_CIRCUS, 0xFFE28A, "ember");
+    /** 2026-11-16 분노 (전사 — 주황 · 진홍 불씨: tools/jobvfx/beast.py — 불꽃 갈기 늑대 · 회오리 · 도는 도끼날 · 불꽃 꼬리 · 방패 깨짐 · 갈라지는 땅 · 몸의 불꽃) */
+    static final int GLOW_RAGE = 0xFF8F28;
+    static final Lib RAGE = new Lib("el_rage", GLOW_RAGE, 0xFFD050, "ember");
+    /** 2026-11-16 곰 (워로드 — 호박빛 · 갈색: 곰의 혼 · 앞발 · 갈라지는 땅 · 몸의 불꽃. 돌창 · 곰 변신은 3D 그대로) */
+    static final int GLOW_BEAR = 0xFF9A30;
+    static final Lib BEAR = new Lib("el_bear", GLOW_BEAR, 0xFFC266, "ember");
+    /** 2026-11-16 서리 (프로스트 레이더 — 옅은 얼음빛 · 빙하 남빛: 서리 고리 · 얼음 결정 · 서리 띠. 도끼 · 결정 · 얼음 가시는 3D 그대로) */
+    static final int GLOW_FROST = 0x7ED0F8;
+    static final Lib FROST = new Lib("el_frost", GLOW_FROST, 0xE2F7FF, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -87,6 +96,9 @@ final class PhantomFx {
             case "necromancer" -> SOUL;
             case "trickster" -> ILLUSION; // 2026-11-16 남은 직업 위르드식 (트릭스터 · 피에로 — 그림 도구는 2026-11-15 에 있었음)
             case "pierrot" -> CIRCUS;
+            case "warrior" -> RAGE; // 2026-11-16 전사 라인 (tools/jobvfx/beast.py)
+            case "warlord" -> BEAR;
+            case "frostraider" -> FROST;
             default -> null;
         };
     }
@@ -99,6 +111,22 @@ final class PhantomFx {
     /** 이 묶음에 그림판이 있는지 (조각 그림은 이름_00) */
     static boolean has(Lib L, String name) {
         return !Vfx.sheetNames(L.n(name)).isEmpty();
+    }
+
+    /**
+     * 2026-11-16 가까운 묶음 (이 묶음에 없는 대표 그림을 빌림 — 같은 계열 · 비슷한 빛): 트릭스터 환영 → 암살자 그림자 (꽃잎 · 엇갈린 베기 · 검은 장미 · 찌르기 · 비수 ·
+     * 연기 — CI 43872303193 트릭스터 영상에 예전 rfx_jpetal2 234 장이 남았었음). 없으면 null
+     */
+    static Lib kin(Lib L) {
+        return L == ILLUSION ? SHADOW : null;
+    }
+
+    /** 이 묶음 (없으면 가까운 묶음) 에서 그림 name 이 있는 묶음 — 없으면 null */
+    static Lib holder(Lib L, String name) {
+        if (L == null) return null;
+        if (has(L, name)) return L;
+        Lib K = kin(L);
+        return K != null && has(K, name) ? K : null;
     }
 
     // ------------------------------------------------------------ 보는 사람 (JobFx 의 view · owner 값)
@@ -1309,10 +1337,23 @@ final class PhantomFx {
             java.util.Map.entry("jconfetti", new Paint("confetti", 1, BILL, 1, 1)),
             java.util.Map.entry("jballoon", new Paint("balloon", 1, BILL, 1, 1)),
             java.util.Map.entry("jfirework", new Paint("firework", 1, BILL, 1, 1)),
-            java.util.Map.entry("jspot", new Paint("spot", 1, VERT, 384 / 128.0, 1)));
+            java.util.Map.entry("jspot", new Paint("spot", 1, VERT, 384 / 128.0, 1)),
+            // 2026-11-16 전사 라인 (tools/jobvfx/beast.py — 예전 rfx 와 같은 칸 수 · 가로세로 비 · 머리 자리 · 땅 자리 · 도는 쪽)
+            java.util.Map.entry("jwolf", new Paint("wolf", 1, LOOK_DIR, 0.5, 1)),
+            java.util.Map.entry("jtwister2", new Paint("twister", 1, VERT, 2, 1)),
+            java.util.Map.entry("jwhirl2", new Paint("whirl", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jcomet2", new Paint("comet", 1, LOOK_DIR, 0.375, 1)),
+            java.util.Map.entry("jbreak2", new Paint("shieldbreak", 1, BILL, 1, 1)),
+            java.util.Map.entry("jquake", new Paint("quake", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jbear", new Paint("bear", 1, BILL, 1, 1)),
+            java.util.Map.entry("jpaw", new Paint("paw", 1, BILL, 1, 1)),
+            java.util.Map.entry("jspike", new Paint("spike", 1, VERT, 1, 1)),
+            // 2026-11-16 타격 섬광 (JobImpact 예전 길 · 워로드가 직접 부름 — 흰 심지 · 빛 가시 · 고리) · 반짝임 (jglint — 네 뿔 별) 은 묶음의 섬광으로
+            java.util.Map.entry("jimpact", new Paint("flash", 1, BILL, 1, 1)),
+            java.util.Map.entry("jglint", new Paint("flash", 1, BILL, 1, 0.7)));
 
     /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
-    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot"};
+    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot", "warrior", "warlord", "frostraider"};
     /** 스킬이 직업 빛 대신 쓰는 빛 묶음 (같은 배열) → 묶음: 아크메이지 밤빛 · 금서의 세 주문 빛 · 프리즘 레이 다섯 빛 (무지개 대신 비전 광선) · 망자의 연기 */
     private static java.util.Map<double[], Lib> palette;
 
@@ -1330,6 +1371,13 @@ final class PhantomFx {
             for (double[][] c : JobFx.CIRCUS) m.put(c[0], CIRCUS); // 2026-11-16 피에로 색종이 · 풍선 · 불꽃놀이의 서커스 빛 (무지개 대신 서커스 그림)
             m.put(TricksterSkills.ILLUSION, ILLUSION); // 2026-11-16 트릭스터 거울 · 깨지는 거울 · X 자국의 청록 환영빛
             m.put(TricksterSkills.ILLUSION_CORE, ILLUSION);
+            // 2026-11-16 피에로의 금빛 · 붉은 · 흰 빛 (조명 · 터짐 · 연기 — CI 43872303193 에 예전 jspot · jburst2 가 남았었음)
+            m.put(PierrotSkills.GOLD, CIRCUS);
+            m.put(PierrotSkills.RED, CIRCUS);
+            m.put(PierrotSkills.WHITE, CIRCUS);
+            // 2026-11-16 프로스트 레이더의 얼음 · 서리 흰빛 (서리 고리 JobFx15.halo · 얼음 결정)
+            m.put(JobTraits16.ICE, FROST);
+            m.put(JobTraits16.FROST_WHITE, FROST);
             palette = m;
         }
         Lib L = palette.get(glow);
@@ -1365,7 +1413,13 @@ final class PhantomFx {
         }
         String sheet = L.n(art);
         String probe = p.k() > 1 ? sheet + "_00" : sheet;
-        if (!Vfx.hasSheet(probe)) return false;
+        if (!Vfx.hasSheet(probe)) {
+            Lib K = kin(L); // 2026-11-16 이 묶음에 없는 그림은 가까운 묶음 (트릭스터 환영 → 그림자 꽃잎 · X · 장미 · 찌르기)
+            if (K == null) return false;
+            sheet = K.n(art);
+            probe = p.k() > 1 ? sheet + "_00" : sheet;
+            if (!Vfx.hasSheet(probe)) return false;
+        }
         int n = Vfx.sheet(probe).frames();
         int f0 = Math.floorMod(fst, n);
         int count = Math.max(1, Math.min((int) b.num("frames", 1), n - f0));

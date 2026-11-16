@@ -1373,6 +1373,30 @@ STYLES = {
                   accent=ramp([(0.0, "#1A160C"), (0.5, "#8C8266"), (0.8, "#EAE0BE"), (1.0, "#FFFBEE")]),
                   smoke=ramp([(0.0, "#030604"), (0.45, "#0C1A10"), (0.8, "#1E3424"), (1.0, "#3A5440")]),
                   ring="ticks", smoke_alpha=0.5, seed=15),
+    # 2026-11-16 분노 (전사 — 주황 · 진홍 불씨: jobs.json warrior 의 빛 [1, 0.56, 0.16] · [0.9, 0.14, 0.12]): 불꽃 갈기 늑대 · 회오리 · 도는 도끼날 · 불꽃 꼬리 ·
+    # 방패 깨짐 · 갈라지는 땅 (tools/jobvfx/beast.py)
+    "rage": Style("el_rage", "rage",
+                  main=ramp([(0.0, "#140405"), (0.12, "#360A0C"), (0.26, "#661012"), (0.4, "#A0161A"), (0.52, "#D8261E"), (0.64, "#F0521E"),
+                             (0.76, "#FF8F28"), (0.86, "#FFC060"), (0.94, "#FFE8B0"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#2A0E04"), (0.5, "#C86A10"), (0.8, "#FFD050"), (1.0, "#FFFBE0")]),
+                  smoke=ramp([(0.0, "#0C0606"), (0.45, "#2A1612"), (0.8, "#4A2C24"), (1.0, "#6A4A3E")]),
+                  ring="ticks", smoke_alpha=0.45, seed=17),
+    # 2026-11-16 곰 (워로드 — 호박빛 · 갈색: jobs.json warlord 의 빛 [1.0, 0.58, 0.16] · [0.66, 0.36, 0.14]): 곰의 혼 · 앞발 · 돌창 · 갈라지는 땅
+    # (accent = 돌 · 흙빛 — 돌창 몸)
+    "bear": Style("el_bear", "bear",
+                  main=ramp([(0.0, "#100804"), (0.12, "#2A1408"), (0.26, "#4E260E"), (0.4, "#7A4016"), (0.52, "#A85C24"), (0.64, "#D8781E"),
+                             (0.76, "#FF9A30"), (0.86, "#FFC266"), (0.94, "#FFE6B4"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#14100C"), (0.5, "#6A5A48"), (0.8, "#B8A488"), (1.0, "#F0E6D2")]),
+                  smoke=ramp([(0.0, "#0E0A06"), (0.45, "#2C2016"), (0.8, "#4E3C2A"), (1.0, "#6E5A44")]),
+                  ring="ticks", smoke_alpha=0.5, seed=19),
+    # 2026-11-16 서리 (프로스트 레이더 — 옅은 얼음빛 · 빙하 남빛: jobs.json frostraider 의 빛 [0.6, 0.9, 1.0] · [0.94, 0.99, 1.0]): 서리 고리 · 얼음 결정 · 서리 띠
+    # (arcane.halo_frame · frost_frame · aura_frame 을 서리 빛으로). 도끼 · 결정 · 얼음 가시는 3D 그대로
+    "frost": Style("el_frost", "frost",
+                   main=ramp([(0.0, "#040A18"), (0.12, "#0A1A34"), (0.26, "#123A66"), (0.4, "#1E5E96"), (0.52, "#2E86C2"), (0.64, "#4CAEE6"),
+                              (0.76, "#7ED0F8"), (0.86, "#B4E8FF"), (0.94, "#E2F7FF"), (1.0, "#FFFFFF")]),
+                   accent=ramp([(0.0, "#06102A"), (0.5, "#3A64B0"), (0.8, "#A8D2FF"), (1.0, "#F4FBFF")]),
+                   smoke=ramp([(0.0, "#0C1420"), (0.45, "#2A3C52"), (0.8, "#5E7896"), (1.0, "#9AB2CC")]),
+                   ring="ticks", smoke_alpha=0.4, seed=21),
 }
 
 
@@ -1495,14 +1519,29 @@ def sets_for(S):
         out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + mirror.sprites()
     if S.kind == "circus":
         # 2026-11-16 피에로 (서커스): 공용 그림을 서커스 빛으로 + 한 바퀴 베기 · 일섬 + 대표 그림 (tools/jobvfx/circus.py — 색종이 · 풍선 동물 · 불꽃놀이 · 조명)
-        from . import circus
+        from . import circus, beast
         out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + circus.sprites()
+        # 2026-11-16 불꽃놀이 꼬리 (피에로 궁극기의 jcomet2 160 — 예전 그림이 남았었음): 불꽃 꼬리를 서커스 빛으로
+        out += [(p + "comet", lambda: beast.frames_of("comet", S), True)]
+    if S.kind == "frost":
+        # 2026-11-16 프로스트 레이더: 공용 그림 + 한 바퀴 베기 + 서리 고리 (jhalo — 2 × 2) · 얼음 결정 (jfrost — 맞은 자리) · 서리 띠 (jaura2) · 돌진 줄기 (jdash2)
+        from . import arcane
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin"))
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + [(p + "frost", lambda: [to_img(*arcane.frost_frame(f)) for f in range(arcane.FROST_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)])
+    if S.kind in ("rage", "bear"):
+        # 2026-11-16 전사 라인 (남은 직업 위르드식): 공용 그림 + 한 바퀴 베기 (칠한 직업의 JobFx.ring · ringFacing · eyeRing 은 jring2 → spin) + 대표 그림
+        # (tools/jobvfx/beast.py — 늑대 · 회오리 · 도는 도끼날 · 불꽃 꼬리 · 방패 깨짐 · 갈라지는 땅 · 곰의 혼 · 앞발 · 몸의 불꽃 · 돌진 줄기)
+        from . import beast
+        out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + beast.sprites(S)
     return out
 
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost"):
         out += sets_for(STYLES[key])
     return out
 

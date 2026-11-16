@@ -58,8 +58,8 @@ final class WarriorSkills {
         JobFx.smash(level, V.up(ground, 0.05), radius, j, 0.5 + 0.1 * scale, Opt.empty());
         JobFx.burst(level, V.up(ground, 0.45), 0.9 * scale, j, 0.32, Opt.empty());
         RuneKit.rockBurst(level, V.up(ground, 0.2), (int) Math.round(6 * scale), 4.5, 0.16 * scale);
-        SkillFx.sparks(level, V.up(ground, 0.3), JobKit.glow(j), (int) Math.round(8 * scale), 5);
-        SkillFx.sparks(level, V.up(ground, 0.2), DUST, (int) Math.round(6 * scale), 3);
+        JobFx.sparks(level, V.up(ground, 0.3), j, (int) Math.round(8 * scale), 5); // 2026-11-16 위르드식 (분노 묶음 불씨 · 흙먼지 — 예전 색 먼지 불티 대신)
+        JobFx.dirt(level, ground, j, (int) Math.round(6 * scale), 3, DUST);
         JobKit.shake(sp, 10, 0.15 + 0.1 * scale, 0.25);
         SkillFx.play(level, "mace.heavy_smash_ground", ground, 0.9, 0.9);
         SkillFx.play(level, "random.anvil_land", ground, 0.55, 0.45);
@@ -97,8 +97,7 @@ final class WarriorSkills {
         double axeScale = V.len(reach) / JobFx3d.AXE_REACH * (rage ? 1.08 : 1.0);
         JobFx3d.swing(level0, "phantom_axe", grip, V.UP, sweep0, -35, endDeg, windup / 20.0 + 0.04, 0.45, axeScale, JobFx3d.AXE_GRIP, j, Opt.of("shine", rage ? 0.5
                 : 0.35, "glowAlpha", 0.55, "pop", 0.1));
-        SkillFx.fx(level0, "rpg:arrow_spark", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "speed", 2.4, "size", 0.14, "grow", 0.8, "life", 0.3, "color", JobKit.glow(j),
-                "alpha", 1.0));
+        JobFx.sparks(level0, V.up(h.hand(), 0.2), j, 4, 2.4);
         if (rage) {
             JobFx.burst(level0, V.up(V.add(h.hand(), h.f(), 0.5), 0.35), 0.42, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
             JobSystem.note(sp, "§6분노 −" + (int) k.num("rageUse", 30) + " §7(+" + Math.round(k.num("rageBonus", 0.3) * 100) + "%)");
@@ -173,7 +172,7 @@ final class WarriorSkills {
         Kit.noFall(sp, steps + 30);
         // 출발: 발밑 흙먼지 · 어깨 앞 충돌 고리 · 소리
         RuneKit.shadeClone(sp, level, start, f, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.45, "fade", 0.6, "alpha", 0.8));
-        SkillFx.sparks(level, V.up(start, 0.2), DUST, 8, 3);
+        JobFx.dirt(level, start, j, 8, 3, DUST);
         SkillFx.play(level, "mob.ravager.roar", start, 1.3, 0.6);
         SkillFx.play(level, "item.trident.riptide_1", start, 0.8, 0.8);
         boolean[] done = {false};
@@ -211,7 +210,7 @@ final class WarriorSkills {
                 }
                 // 지나온 마디: 돌진 줄기 (1인칭에서는 숨김) · 발밑 흙먼지 · 1인칭 빠른 줄 · 어깨 앞 고리
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
-                SkillFx.sparks(d, V.up(to, 0.15), DUST, 3, 2);
+                if (ss % 2 == 0) JobFx.dirt(d, to, j, 3, 2, DUST);
                 JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.8);
                 if (ss % 2 == 0) JobFx.ringFacing(d, V.up(V.add(to, f, 0.9), 1.0), 0.75, j, V.scale(f, -1), 0.18, JobFx.hide1p(sp));
                 if (ss == marks.size() - 1) {
@@ -235,7 +234,7 @@ final class WarriorSkills {
                 JobFx.ringFacing(e.level() instanceof ServerLevel lv ? lv : d, Kit.bodyPoint(e), 0.8 + Kit.bodyPad(e) * 0.4, j, V.scale(f, -1), 0.3, Opt.empty());
             });
         }
-        SkillFx.sparks(d, V.up(V.add(sp.position(), f, 0.9), 1.1), JobKit.glow(j), 8, 4);
+        JobFx.sparks(d, V.up(V.add(sp.position(), f, 0.9), 1.1), j, 8, 4);
         SkillFx.play(d, "entity.goat.ram_impact", sp.position(), 0.8, 1.0);
         SkillFx.play(d, "entity.player.attack.knockback", sp.position(), 0.7, 0.9);
     }
@@ -271,7 +270,6 @@ final class WarriorSkills {
         double leech = JobUpgrades.num(sp, k, "leech", 0.01); // 0.31.0 강화
         int leechMax = (int) k.num("leechMax", 5);
         String life = RuneKit.lifeToken(sp);
-        double[] glow = JobKit.glow(j);
         // 2026-11-13 3D 도끼 셋 (직업 도감 메모 "도끼 연출을 3d로" — 환영 도끼 판 대신)
         whirlAxes(sp, j, life, dur);
         SkillFx.play(sp.level(), "mob.breeze.whirl", sp.position(), 0.8, 1.0);
@@ -286,11 +284,10 @@ final class WarriorSkills {
                 JobFx.whirl(level, V.up(c, 1.0), r * 0.92, j, 0.14, Opt.of("vel", vel, "phase", (double) ((tt / 2) % JobFx.WHIRL), "fade", 0.1, "alpha", 0.95));
                 if (tt % 8 == 0) JobFx.twister(sp, j, 2.9, 0.48, 0.75);
                 if (tt % 6 == 0) JobFx.slash(sp, j, 2.0, 0.45, 1.5, (tt * 60) % 360, 0.2);
-                for (int i = 0; i < 2; i++) {
+                if (tt % 4 == 0) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = V.up(V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), r * (0.4 + Kit.rand() * 0.6)), 0.3 + Kit.rand() * 1.4);
-                    SkillFx.fx(level, "rpg:arrow_spark", p, Opt.of("dir", V.unit(new Vec3(-Math.sin(a), 0.6, Math.cos(a))), "speed", 2.5, "size", 0.13, "grow", 0.6, "life",
-                            0.4, "color", glow, "alpha", 1.0));
+                    JobFx.sparks(level, p, j, 3, 2.5); // 2026-11-16 위르드식 (흩날리는 불씨 — 예전 색 먼지 불티 대신)
                 }
                 if (tt % 10 == 4) SkillFx.play(level, "entity.player.attack.sweep", c, 0.75 + (tt % 20) * 0.01, 0.6);
             });
@@ -389,7 +386,7 @@ final class WarriorSkills {
             if (RuneKit.sameLife(sp, life)) JobFx.ring(sp.level(), V.up(sp.position(), 0.08), 1.6, j, true, 0.45, Opt.of("alpha", 0.85));
         });
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.5);
-        SkillFx.sparks(level, V.up(c, 1.0), JobKit.glow(j), 14, 5);
+        JobFx.sparks(level, V.up(c, 1.0), j, 14, 5);
         Ult.flash(level, c, JobKit.glow(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         SkillFx.play(level, "mob.ravager.roar", c, 1.0, 1.0);
         SkillFx.play(level, "fire.ignite", c, 0.7, 1.0);
@@ -418,7 +415,7 @@ final class WarriorSkills {
         JobFx.aura(sp, j, 3.0, 0.8, 1.0);
         JobFx.ring(level0, V.up(c0, 0.06), 3.0, j, false, 0.5, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
-        SkillFx.sparks(level0, V.up(c0, 1.0), glow, 12, 4);
+        JobFx.sparks(level0, V.up(c0, 1.0), j, 12, 4);
         SkillFx.play(level0, "mob.ravager.roar", c0, 0.8, 1.0);
         SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.4, 0.5);
         Kit.noFall(sp, finalAt + 40);
@@ -519,7 +516,7 @@ final class WarriorSkills {
         float yaw0 = sp.getYRot();
         float pitch0 = sp.getXRot();
         SkillFx.play(sp.level(), "mob.breeze.jump", from, 0.8, 0.9);
-        SkillFx.sparks(sp.level(), V.up(from, 0.2), DUST, 6, 3);
+        JobFx.dirt(sp.level(), from, j, 6, 3, DUST);
         for (int s = 1; s <= leapTicks; s++) {
             int ss = s;
             RuneKit.later(s, () -> {
@@ -582,7 +579,7 @@ final class WarriorSkills {
         JobFx.burst(level, V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), -0.4), 1.6, j, 0.45, JobFx.only1p(sp));
         RuneKit.godRays(sp, level, at, r * 0.7, 6, glow, core, Opt.of("h", 12.0, "life", 0.9, "alpha", 0.8, "skipNear", true));
         RuneKit.rockBurst(level, V.up(at, 0.3), 14, 6.0, 0.22);
-        SkillFx.sparks(level, V.up(at, 0.5), glow, 20, 7);
+        JobFx.sparks(level, V.up(at, 0.5), j, 20, 7);
         Ult.flash(level, at, glow, Opt.empty(), sp);
         RuneKit.shakeAround(level, at, 16, 0.45, 0.4);
         SkillFx.play(level, "random.explode", at, 0.7, 1.0);

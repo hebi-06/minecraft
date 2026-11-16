@@ -135,8 +135,9 @@ public final class JobTraits16 {
         if (amp >= 0 && !JobKit.isBoss(e)) RuneKit.effect(e, "slowness", (int) trait(j, "frostFor", 120), amp);
         if (e.level() instanceof ServerLevel level) {
             Vec3 b = Kit.bodyPoint(e);
-            SkillFx.sparks(level, b, FROST_WHITE, 3 + to, 2.6);
-            SkillFx.fx(level, "rpg:snowfall", V.up(b, 0.4), Opt.of("size", 0.5 + to * 0.08, "life", 0.6, "color", FROST_WHITE, "alpha", 0.8));
+            // 2026-11-16 위르드식 (서리 불씨 · 눈송이 — 예전 색 먼지 · rpg:snowfall 대신)
+            PhantomFx.embers(level, PhantomFx.FROST, b, 2 + to / 2, 0.8, 0.3, 12);
+            WyrdKit.snow(level, V.up(b, 0.4), 2 + to, 0.3, null);
         }
         if (to >= max && was < max && !frozen(e)) freeze(sp, j, e, (int) trait(j, "freezeFor", 30));
         JobTraits.sendGauge(sp, false);
@@ -230,9 +231,10 @@ public final class JobTraits16 {
 
     /** 얼음 조각이 사방으로 튐 (흰 불티 · 얼음빛 조각 · 결정 그림이 깨짐) */
     static void shardsFx(ServerLevel level, Vec3 at, double size) {
-        SkillFx.sparks(level, at, FROST_WHITE, (int) (10 + size * 6), 6.0 + size * 2);
-        SkillFx.sparks(level, at, ICE, (int) (8 + size * 4), 4.5 + size * 2);
-        RuneKit.rockBurst(level, at, (int) (6 + size * 4), 4.0 + size * 2, 0.12);
+        // 2026-11-16 위르드식: 색 먼지 불티 · 돌 조각 그림 대신 서리 묶음의 도트 조각 · 불씨 · 눈송이
+        PhantomFx.shards(level, PhantomFx.FROST, at, (int) (6 + size * 3), 1.4 + size * 0.6, 0.32 + size * 0.05, 16);
+        PhantomFx.embers(level, PhantomFx.FROST, at, (int) (6 + size * 3), 1.2 + size * 0.5, 0.3, 14);
+        WyrdKit.snow(level, at, (int) (6 + size * 4), 0.5 + size * 0.2, null);
         JobFx.burst(level, at, 0.9 + size * 0.5, ICE, FROST_WHITE, 0.3, Opt.empty());
     }
 
@@ -327,7 +329,8 @@ public final class JobTraits16 {
             JobAxe3d.crystals(lv, gg, 3, 0.2, 0.9, 0.8, 1.3, 0.4, 25, 45, false, 0, 4, 3);
             JobFx15.halo(lv, V.up(gg, 0.08), 1.4, 0.35, Opt.of("alpha", 0.9), ICE, FROST_WHITE);
             shardsFx(lv, V.up(gg, 0.4), 0.7);
-            IceFx.shards(lv, V.up(gg, 0.3), 18, 0.6, 0.2, 0.18);
+            PhantomFx.shards(lv, PhantomFx.FROST, V.up(gg, 0.3), 4, 0.96, 0.3, 14); // 2026-11-16 위르드식 (얼음 블록 부스러기 대신 도트 조각 · 눈송이)
+            WyrdKit.snow(lv, V.up(gg, 0.3), 4, 0.6, null);
             SkillFx.play(lv, "block.glass.break", gg, 0.7, 0.5);
         });
     }

@@ -377,6 +377,10 @@ final class JobFx {
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) { // 2026-11-15 원소 공용 묶음: X 베기 · 섬광 (피 = 피 튐) · 날아가는 작은 그림
             PhantomFx.hit(level, L, e, scale);
+            if (j != null && JobTraits16.FR.equals(j.id())) {
+                // 2026-11-16 프로스트 레이더 서리 묶음: 예전처럼 맞은 자리에 얼음 결정 (칠한 jfrost — 자라나 금 가며 깨짐)
+                two(level, "jfrost", FROST, Kit.bodyPoint(e), 0.32, Opt.of("size", size * 0.85, "spin", Kit.rand() * 40 - 20, "fade", 0.25), outer(j), inner(j));
+            }
             return;
         }
         if (PhantomArcher.family(j)) { // 2026-11-15 팬텀 아처 · 2차 둘: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark — 직업 색)
@@ -589,8 +593,8 @@ final class JobFx {
      */
     static boolean art(ServerLevel level, Jobs.Job j, String art, int k, int first, int count, Vec3 at, double life, double fps, boolean loop, Opt o, int facing,
             double sy) {
-        PhantomFx.Lib L = PhantomFx.elem(j);
-        if (L == null || !PhantomFx.has(L, art)) return false;
+        PhantomFx.Lib L = PhantomFx.holder(PhantomFx.elem(j), art); // 2026-11-16 없으면 가까운 묶음 (트릭스터 → 그림자)
+        if (L == null) return false;
         double f = fps > 0 ? fps : count / Math.max(0.05, life);
         Opt b = o.with("life", life, "frames", (double) count, "fps", f, "fade", o.num("fade", 0.2), "loop", loop ? 1.0 : null, "phase",
                 loop ? (o.has("phase") ? o.num("phase", 0) : Kit.rand() * count) : null);
@@ -603,15 +607,39 @@ final class JobFx {
         cells(level, name, frames, 0, frames, at, life, fps, true, o, glow, core);
     }
 
+    /**
+     * 2026-11-16 위르드식 불티 (남은 직업): 직업 묶음이 있으면 칠한 불씨 (도트) + 바닐라 겹, 없으면 예전 색 먼지 불티 (SkillFx.sparks — rpg:arrow_spark 는 모드 없는
+     * 클라이언트에서 색 먼지라 둘레 빛을 받아 해질녘 검은 점 — 위르드식은 먼지를 피 묶음만). n 개 · speed (칸/초 — 예전 값: 날아가는 거리 ≈ speed × 0.3)
+     */
+    static void sparks(ServerLevel level, Vec3 at, Jobs.Job j, int n, double speed) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L == null) {
+            mmorpg.fabric.skill.SkillFx.sparks(level, at, inner(j), n, speed);
+            return;
+        }
+        PhantomFx.embers(level, L, at, Math.max(1, (int) Math.round(n * 0.75)), Math.max(0.4, speed * 0.3), 0.32, 14);
+    }
+
+    /** 2026-11-16 위르드식 흙먼지 (예전 누런 회색 먼지 불티 SkillFx.sparks(DUST) 대신 묶음의 칠한 흙먼지 한 장 + 바닐라 땅 겹 — 묶음이 없으면 예전 길) */
+    static void dirt(ServerLevel level, Vec3 ground, Jobs.Job j, int n, double speed, double[] dustColor) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L == null) {
+            mmorpg.fabric.skill.SkillFx.sparks(level, V.up(ground, 0.2), dustColor, n, speed);
+            return;
+        }
+        PhantomFx.dust(level, L, ground, Math.min(2.6, 0.9 + n * 0.12));
+    }
+
     /** 땅에 눕는 내려찍기 (rfx_jsmash): 충격 고리 반지름 radius 칸 (그림 고리 끝 = 반 크기 × 0.92) · 금 · 튀는 돌조각 */
     static void smash(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
+        if (j != null && "warrior".equals(fid(j))) {
+            // 0.50.0 전사는 갈라지는 땅 · 돌조각 12장 (재설계표 "내려찍기 v2") — 2026-11-16 분노 묶음이면 같은 자리 · 크기의 칠한 갈라지는 땅 (PAINT jquake) + 원소 충격파
+            quake(level, at, radius, j, life * 1.25, o);
+            return;
+        }
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) { // 2026-11-15 원소 공용 묶음: 충격파 · 땅 자국 · 흙먼지
             PhantomFx.smash(level, L, at, radius, PhantomFx.who(o));
-            return;
-        }
-        if (j != null && "warrior".equals(fid(j))) {
-            quake(level, at, radius, j, life * 1.25, o); // 0.50.0 전사는 갈라지는 땅 · 돌조각 12장 (재설계표 "내려찍기 v2")
             return;
         }
         two(level, "jsmash2", SMASH, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
@@ -1239,6 +1267,13 @@ final class JobFx {
     /** 전사의 내려찍기 (rfx_jquake — 땅에 누움 · 12장): 번쩍 → 갈라져 퍼지는 땅 · 튀어 떨어지는 돌조각 · 먼지 고리 (고리 끝 = 반 크기 × 0.92 — smash 와 같은 뜻) */
     static void quake(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
         two(level, "jquake", QUAKE, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null) {
+            // 2026-11-16 위르드식 (분노 · 곰 묶음): 예전 충격 고리 · 색 먼지 불티 (rpg:arrow_spark — 먼지) 대신 바닐라 겹 충격파 · 불씨 (칠한 땅의 금은 위 jquake)
+            WyrdKit.shock(level, L, at, radius * 1.8, PhantomFx.who(o));
+            PhantomFx.embers(level, L, V.up(at, 0.3), (int) Math.min(14, 5 + radius * 1.5), radius * 0.6, 0.35, 16);
+            return;
+        }
         mmorpg.fabric.skill.SkillFx.shock(level, at, inner(j), radius * 0.9, life * 0.6);
         mmorpg.fabric.skill.SkillFx.sparks(level, V.up(at, 0.2), outer(j), (int) Math.min(12, 4 + radius * 1.5), 3.5 + radius * 0.5);
     }
