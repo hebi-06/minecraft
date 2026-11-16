@@ -303,6 +303,9 @@ final class ArcmageSkills {
         double rate = 110; // 도/초 (팔이 감기는 쪽)
         // 2026-11-16 위르드식 시범 (WyrdFx — 사용자 "위르드 식으로 스킬 아무거나 하나 만들어봐"): 연출만 단색 블록 볼륨 · 예고 → 볼륨 (판정 · 피해는 그대로)
         boolean wyrd = WyrdFx.VORTEX;
+        // 2026-11-16 위르드식 섞기 (WyrdMix — 사용자 "위르드는 마크 기존 이펙트도 사용하고 도트 2d도 쓰고 3d 블록도 쓰는거임"): 도트 2D (칠한 연출 그대로) 위에
+        // 바닐라 파티클 · 바닐라 아이템 모델 소품을 겹침
+        boolean mix = WyrdMix.VORTEX && !wyrd;
         // 완드 끝 → 그곳으로 별빛 줄기 (0 ~ formAt)
         if (wyrd) {
             WyrdFx.vortexCast(level0, wandTip(sp), c, radius, collapseAt);
@@ -310,6 +313,7 @@ final class ArcmageSkills {
             RuneKit.streak(level0, wandTip(sp), V.up(c, 0.4), GOLD, 0.06, 0.25, 0.9, 0);
             RuneKit.streak(level0, wandTip(sp), V.up(c, 0.4), NIGHT, 0.2, 0.22, 0.5, 0);
             JobFx.starNode(level0, V.up(c, 0.6), 0.6, 0, 2, formAt / 20.0 + 0.15, false, Opt.empty(), NIGHT, GOLD);
+            if (mix) WyrdMix.cast(level0, wandTip(sp), c);
         }
         SkillFx.play(level0, "block.beacon.activate", c, 1.6, 0.8);
         // 소용돌이 그림: 펼쳐짐 (formAt ~ +7) → 돎 (first ~ collapseAt − 6) → 조여 듦 · 번쩍 (collapseAt − 6 ~ +7)
@@ -321,6 +325,7 @@ final class ArcmageSkills {
             } else {
                 JobFx.galaxy(d, c, radius, 0, 2, 0.35, false, Opt.of("spin", spin0, "spinRate", rate, "fade", 0.0), NIGHT, GOLD);
                 JobFx.halo(d, V.up(c, 0.05), radius, j, 0.45, Opt.of("alpha", 0.8));
+                if (mix) WyrdMix.body(d, c, radius, collapseAt - formAt, 6, spin0, rate);
             }
             SkillFx.play(d, "block.portal.trigger", c, 1.8, 0.35);
         });
@@ -394,11 +399,13 @@ final class ArcmageSkills {
                 ServerLevel d = sp.level();
                 if (wyrd) WyrdFx.vortexBeat(d, c, radius);
                 else JobFx.halo(d, V.up(c, 0.08), radius * 0.8, j, 0.35, Opt.of("alpha", 0.6));
+                if (mix) WyrdMix.beat(d, c, radius);
                 for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                     JobKit.strikeSplit(sp, e, j, P, k.num("pulse", 1.5), Math.max(1, (int) k.num("split", 2)), 2, true, false, life, 0, x -> {
                         if (!RuneKit.fxQuota("jobVortex", 6)) return;
                         if (wyrd) WyrdFx.vortexHit(d, V.up(c, 2.6), e);
                         else JobFx.hit(e, j, 0.9);
+                        if (mix) WyrdMix.hit(d, e);
                     });
                 }
             });
@@ -416,6 +423,7 @@ final class ArcmageSkills {
                 JobFx.burst(d, m, radius * 0.55, j, 0.4, Opt.empty());
                 JobFx.halo(d, V.up(c, 0.08), radius, j, 0.5, Opt.empty());
                 SkillFx.sparks(d, m, GOLD, 18, 6);
+                if (mix) WyrdMix.collapse(d, c, radius);
             }
             SkillFx.play(d, "firework.large_blast", c, 1.0, 1.2);
             SkillFx.play(d, "entity.illusioner.mirror_move", c, 0.6, 1.0);
@@ -434,6 +442,7 @@ final class ArcmageSkills {
                         } else {
                             RuneKit.streak(lv, Kit.bodyPoint(e), m, GOLD, 0.1, 0.25, 1.0, 0);
                             JobFx.starNode(lv, Kit.bodyPoint(e), 0.6, 7, 1, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                            if (mix) WyrdMix.drain(lv, e, m);
                         }
                         SkillFx.play(lv, "entity.enderman.teleport", e.position(), 1.4, 0.7);
                     }
