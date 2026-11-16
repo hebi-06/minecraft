@@ -301,22 +301,32 @@ final class ArcmageSkills {
         String life = RuneKit.lifeToken(sp);
         double spin0 = Kit.rand() * 360;
         double rate = 110; // 도/초 (팔이 감기는 쪽)
+        // 2026-11-16 위르드식 시범 (WyrdFx — 사용자 "위르드 식으로 스킬 아무거나 하나 만들어봐"): 연출만 단색 블록 볼륨 · 예고 → 볼륨 (판정 · 피해는 그대로)
+        boolean wyrd = WyrdFx.VORTEX;
         // 완드 끝 → 그곳으로 별빛 줄기 (0 ~ formAt)
-        RuneKit.streak(level0, wandTip(sp), V.up(c, 0.4), GOLD, 0.06, 0.25, 0.9, 0);
-        RuneKit.streak(level0, wandTip(sp), V.up(c, 0.4), NIGHT, 0.2, 0.22, 0.5, 0);
-        JobFx.starNode(level0, V.up(c, 0.6), 0.6, 0, 2, formAt / 20.0 + 0.15, false, Opt.empty(), NIGHT, GOLD);
+        if (wyrd) {
+            WyrdFx.vortexCast(level0, wandTip(sp), c, radius, collapseAt);
+        } else {
+            RuneKit.streak(level0, wandTip(sp), V.up(c, 0.4), GOLD, 0.06, 0.25, 0.9, 0);
+            RuneKit.streak(level0, wandTip(sp), V.up(c, 0.4), NIGHT, 0.2, 0.22, 0.5, 0);
+            JobFx.starNode(level0, V.up(c, 0.6), 0.6, 0, 2, formAt / 20.0 + 0.15, false, Opt.empty(), NIGHT, GOLD);
+        }
         SkillFx.play(level0, "block.beacon.activate", c, 1.6, 0.8);
         // 소용돌이 그림: 펼쳐짐 (formAt ~ +7) → 돎 (first ~ collapseAt − 6) → 조여 듦 · 번쩍 (collapseAt − 6 ~ +7)
         RuneKit.later(formAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            JobFx.galaxy(d, c, radius, 0, 2, 0.35, false, Opt.of("spin", spin0, "spinRate", rate, "fade", 0.0), NIGHT, GOLD);
-            JobFx.halo(d, V.up(c, 0.05), radius, j, 0.45, Opt.of("alpha", 0.8));
+            if (wyrd) {
+                WyrdFx.vortexBody(d, c, radius, collapseAt - formAt, 7, spin0, rate);
+            } else {
+                JobFx.galaxy(d, c, radius, 0, 2, 0.35, false, Opt.of("spin", spin0, "spinRate", rate, "fade", 0.0), NIGHT, GOLD);
+                JobFx.halo(d, V.up(c, 0.05), radius, j, 0.45, Opt.of("alpha", 0.8));
+            }
             SkillFx.play(d, "block.portal.trigger", c, 1.8, 0.35);
         });
         int loopFrom = formAt + 6;
         int loopTo = collapseAt - 6;
-        RuneKit.later(loopFrom, () -> {
+        if (!wyrd) RuneKit.later(loopFrom, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             double spin = spin0 + rate * (loopFrom - formAt) / 20.0;
             JobFx.galaxy(sp.level(), c, radius, 2, 4, (loopTo - loopFrom + 1) / 20.0, true, Opt.of("spin", spin, "spinRate", rate, "fade", 0.0, "phase", 0.0), NIGHT,
@@ -325,7 +335,7 @@ final class ArcmageSkills {
         RuneKit.later(loopTo, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             double spin = spin0 + rate * (loopTo - formAt) / 20.0;
-            JobFx.galaxy(sp.level(), c, radius, 6, 1, 0.33, false, Opt.of("spin", spin, "spinRate", rate * 3, "fade", 0.0), NIGHT, GOLD);
+            if (!wyrd) JobFx.galaxy(sp.level(), c, radius, 6, 1, 0.33, false, Opt.of("spin", spin, "spinRate", rate * 3, "fade", 0.0), NIGHT, GOLD);
             SkillFx.play(sp.level(), "block.beacon.power_select", c, 1.8, 0.8);
         });
         // 소용돌이를 따라 감겨 드는 별 (4틱마다 셋 — 가슴 높이에서 안쪽으로 돌며 내려앉음: 땅의 그림만으로는 낮은 카메라에서 납작했음 — 영상 1) · 소리 (8틱마다)
@@ -334,7 +344,7 @@ final class ArcmageSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < (wyrd ? 0 : 3); i++) {
                     double a = Kit.rand() * Math.PI * 2;
                     double r = radius * (0.55 + Kit.rand() * 0.4);
                     Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
@@ -367,7 +377,7 @@ final class ArcmageSkills {
         // 별빛 (first + every × i)
         for (int i = 0; i < pulses; i++) {
             int at = first + every * i;
-            RuneKit.later(at - 3, () -> {
+            if (!wyrd) RuneKit.later(at - 3, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
                 // 팔에서 별똥이 적에게 (3틱)
@@ -382,10 +392,13 @@ final class ArcmageSkills {
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
-                JobFx.halo(d, V.up(c, 0.08), radius * 0.8, j, 0.35, Opt.of("alpha", 0.6));
+                if (wyrd) WyrdFx.vortexBeat(d, c, radius);
+                else JobFx.halo(d, V.up(c, 0.08), radius * 0.8, j, 0.35, Opt.of("alpha", 0.6));
                 for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                     JobKit.strikeSplit(sp, e, j, P, k.num("pulse", 1.5), Math.max(1, (int) k.num("split", 2)), 2, true, false, life, 0, x -> {
-                        if (RuneKit.fxQuota("jobVortex", 6)) JobFx.hit(e, j, 0.9);
+                        if (!RuneKit.fxQuota("jobVortex", 6)) return;
+                        if (wyrd) WyrdFx.vortexHit(d, V.up(c, 2.6), e);
+                        else JobFx.hit(e, j, 0.9);
                     });
                 }
             });
@@ -395,22 +408,33 @@ final class ArcmageSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 m = V.up(c, 0.9);
-            JobFx.galaxy(d, c, radius, 7, 1, 0.35, false, Opt.of("spin", spin0 + rate * (collapseAt - formAt) / 20.0, "fade", 0.3), NIGHT, GOLD);
-            JobFx.starNode(d, m, 1.6, 6, 2, 0.45, false, Opt.empty(), NIGHT, GOLD);
-            JobFx.burst(d, m, radius * 0.55, j, 0.4, Opt.empty());
-            JobFx.halo(d, V.up(c, 0.08), radius, j, 0.5, Opt.empty());
-            SkillFx.sparks(d, m, GOLD, 18, 6);
+            if (wyrd) {
+                WyrdFx.vortexCollapse(d, c, radius);
+            } else {
+                JobFx.galaxy(d, c, radius, 7, 1, 0.35, false, Opt.of("spin", spin0 + rate * (collapseAt - formAt) / 20.0, "fade", 0.3), NIGHT, GOLD);
+                JobFx.starNode(d, m, 1.6, 6, 2, 0.45, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.burst(d, m, radius * 0.55, j, 0.4, Opt.empty());
+                JobFx.halo(d, V.up(c, 0.08), radius, j, 0.5, Opt.empty());
+                SkillFx.sparks(d, m, GOLD, 18, 6);
+            }
             SkillFx.play(d, "firework.large_blast", c, 1.0, 1.2);
             SkillFx.play(d, "entity.illusioner.mirror_move", c, 0.6, 1.0);
             double exec = k.num("execute", 0.12);
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                 JobKit.strike(sp, e, j, P, k.num("collapse", 3.6), true, false, life, 0, x -> {
-                    if (RuneKit.fxQuota("jobVortexEnd", 6)) JobFx.hit(e, j, 1.2);
+                    if (RuneKit.fxQuota("jobVortexEnd", 6)) {
+                        if (wyrd) WyrdFx.flash(e, 5);
+                        else JobFx.hit(e, j, 1.2);
+                    }
                     if (!e.isAlive() || e.isRemoved() || JobKit.isBoss(e) || e.getHealth() > e.getMaxHealth() * exec) return;
                     // 빨려 들어감: 가운데로 · 별빛 조각 → 남은 체력만큼 (처형 — 숫자 크게)
                     if (e.level() instanceof ServerLevel lv) {
-                        RuneKit.streak(lv, Kit.bodyPoint(e), m, GOLD, 0.1, 0.25, 1.0, 0);
-                        JobFx.starNode(lv, Kit.bodyPoint(e), 0.6, 7, 1, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                        if (wyrd) {
+                            WyrdFx.vortexDrain(lv, e, m);
+                        } else {
+                            RuneKit.streak(lv, Kit.bodyPoint(e), m, GOLD, 0.1, 0.25, 1.0, 0);
+                            JobFx.starNode(lv, Kit.bodyPoint(e), 0.6, 7, 1, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                        }
                         SkillFx.play(lv, "entity.enderman.teleport", e.position(), 1.4, 0.7);
                     }
                     Kit.applyJobDamage(sp, e, e.getHealth() + 1, false, Kit.Cause.MAGIC, DamageNumbers.Style.JOB_BIG, JobKit.grad(j));
