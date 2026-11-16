@@ -499,6 +499,22 @@ public final class RuneKit {
      * speed (dir 쪽 칸/초) · grow · cell · frames · fps · loop · phase · fade · vel (몸을 따라오는 속도 칸/초) · view · owner (0.27.0 보는 사람 걸러내기)
      */
     public static void rfx(ServerLevel level, String name, Vec3 at, Opt o) {
+        if (painted != null && o.get("color") instanceof double[] c && painted.draw(level, name, at, o, c)) return;
+        rfx0(level, name, at, o);
+    }
+
+    /**
+     * 2026-11-16 위르드식 다리 (job.PhantomFx.runeFx — JobSystem.init 이 등록): 직업 스킬이 부른 공용 룬 그림 (반짝임 · 빛살 · 충격 고리 · 빛나는 금 · 섬광 · 문양 ·
+     * 손의 검빛) 을 칠한 직업 묶음 그림으로. 빛 glow (두 장 rfx2 는 빛 쪽 하나로 한 번). 그렸으면 true (예전 파티클 없이)
+     */
+    public interface Painted {
+        boolean draw(ServerLevel level, String name, Vec3 at, Opt o, double[] glow);
+    }
+
+    public static Painted painted;
+
+    /** rfx 의 예전 파티클 (다리 없이) */
+    private static void rfx0(ServerLevel level, String name, Vec3 at, Opt o) {
         AddonFx.Rfx r = new AddonFx.Rfx();
         r.dir = o.vec("dir", V_UP);
         r.size = o.num("size", 0);
@@ -535,14 +551,16 @@ public final class RuneKit {
 
     /** rfx2 의 파티클 두 장 (참격 판으로 바꾸지 않음) */
     private static void rfx2fx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core, int[] cells, Double coreAlpha) {
+        if (painted != null && glow != null && painted.draw(level, name, at, o.with("cell", (double) (cells != null ? cells : RFX.getOrDefault(name,
+                new int[] {0, 1}))[0] + o.num("cell", 0)), glow)) return; // 2026-11-16 위르드식 다리 (빛 · 심지 두 장을 칠한 그림 하나로)
         int[] c = cells != null ? cells : RFX.getOrDefault(name, new int[] {0, 1});
         double cell = o.num("cell", 0);
         double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔
-        rfx(level, name, at, o.with("color", glow, "cell", c[0] + cell, "solo", solo > 0 ? solo * 2 : null));
-        rfx(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1), "solo", solo > 0 ? solo * 2 + 1 : null));
+        rfx0(level, name, at, o.with("color", glow, "cell", c[0] + cell, "solo", solo > 0 ? solo * 2 : null));
+        rfx0(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1), "solo", solo > 0 ? solo * 2 + 1 : null));
         // 0.50.0 아래 등급 룬의 물체 그림에 옅은 후광 (빛깔 겹 1.32배 — 다시 그리며 하나만 두는 solo 그림은 겹쳐 쌓이므로 뺌)
         double aura = solo > 0 ? 0 : RuneBoost.lowAura(name);
-        if (aura > 0 && o.num("size", 0) >= 0.3) rfx(level, name, at, o.with("size", o.num("size", 1) * 1.32, "color", glow, "cell", c[0] + cell, "alpha", aura
+        if (aura > 0 && o.num("size", 0) >= 0.3) rfx0(level, name, at, o.with("size", o.num("size", 1) * 1.32, "color", glow, "cell", c[0] + cell, "alpha", aura
                 * o.num("alpha", 1), "solo", null));
     }
 

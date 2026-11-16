@@ -427,7 +427,7 @@ final class PaladinSkills {
         JobFx.smash(level, V.up(center, 0.05), radius * 0.6, j, 0.6, Opt.empty());
         JobFx.burst(level, V.up(center, 0.8), fin ? 2.4 : 1.8, j, 0.4, Opt.empty());
         JobFx.slash(sp, j, 2.3, 0.1, 2.0, 95.0, 0.22);
-        RuneKit.rockBurst(level, V.up(center, 0.3), fin ? 12 : 8, 5.0, 0.2);
+        PhantomFx.rocks(level, V.up(center, 0.3), fin ? 12 : 8, 5.0, 0.2);
         SkillFx.sparks(level, V.up(center, 0.5), JobKit.glow(j), fin ? 20 : 12, 7);
         RuneKit.shakeAround(level, center, 18, fin ? 0.5 : 0.35, 0.35);
         if (fin) {

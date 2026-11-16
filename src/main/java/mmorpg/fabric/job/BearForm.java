@@ -151,7 +151,7 @@ public final class BearForm {
         Vec3 c = V.up(at, 0.8);
         JobFx.burst(level, c, 1.6, j, 0.3, Opt.empty());
         JobFx.ring(level, V.up(at, 0.08), 2.2, j, false, 0.35, Opt.empty());
-        RuneKit.rockBurst(level, V.up(at, 0.3), 8, 4.5, 0.2);
+        PhantomFx.rocks(level, V.up(at, 0.3), 8, 4.5, 0.2);
         PhantomFx.dust(level, PhantomFx.BEAR, V.up(at, 0.3), Math.min(2.6, 0.9 + (16) * 0.12));
         JobFx.sparks(level, c, j, 12, 4.0);
         SkillFx.play(level, "entity.polar_bear.warning", at, 0.7, 0.9);

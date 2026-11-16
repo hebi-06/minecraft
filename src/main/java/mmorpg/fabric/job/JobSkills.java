@@ -298,11 +298,15 @@ public final class JobSkills {
             return false;
         }
         boolean ok;
+        // 2026-11-16 칠할 묶음 맥락 (Tasks.paint — later 가 이어 줌): 이 스킬이 칠한 빛 배열이 아닌 빛으로 부른 예전 불티 · 공용 룬 그림도 직업 묶음으로 (PhantomFx.jobLib)
+        Object paint = Tasks.paint(PhantomFx.ctxOf(sp));
         try {
             ok = s.cast(sp);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] job skill {}", s.id(), e);
             ok = false;
+        } finally {
+            Tasks.paint(paint);
         }
         if (!ok) return false;
         if (JobRecast.pending(sp, s.id())) return true; // 다음 단계를 기다림 — 재사용 대기는 마지막 단계 · 창이 닫힐 때

@@ -547,7 +547,14 @@ public final class JobTraits {
                 }
             }
             // 태세 연출 (8틱마다): 몸에서 솟는 옅은 빛 (3인칭) + 칼의 빛 (명경지수 = 물빛 줄 · 마검 각성 = 마력으로 길어진 칼날)
-            if (now % 8 == 0 && !st.stance.isEmpty() && st.stanceUntil > now && !sp.isSpectator()) stanceFx(sp, j, st);
+            if (now % 8 == 0 && !st.stance.isEmpty() && st.stanceUntil > now && !sp.isSpectator()) {
+                Object paint = Tasks.paint(PhantomFx.ctxOf(sp)); // 2026-11-16 태세 연출의 칠할 묶음 맥락 (JobSkills.press 와 같음)
+                try {
+                    stanceFx(sp, j, st);
+                } finally {
+                    Tasks.paint(paint);
+                }
+            }
             sendGauge(sp, false);
         }
     }

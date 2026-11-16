@@ -35,21 +35,42 @@ public final class Tasks {
         int own = owner;
         String tg = tag;
         Object el = elem;
-        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null && el == null ? run : () -> {
+        Object pt = paint;
+        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null && el == null && pt == null ? run : () -> {
             int prev = owner;
             String prevTag = tag;
             Object prevEl = elem;
+            Object prevPt = paint;
             owner = own;
             tag = tg;
             elem = el;
+            paint = pt;
             try {
                 run.run();
             } finally {
                 owner = prev;
                 tag = prevTag;
                 elem = prevEl;
+                paint = prevPt;
             }
         }));
+    }
+
+    /**
+     * 2026-11-16 지금 효과를 칠할 직업 묶음 (null = 없음 — 직업 스킬을 쓰는 동안 · 태세 연출 동안 JobSkills · JobTraits 가 정함 (job.PhantomFx.Lib), later 가 이어 줌):
+     * 칠한 빛 배열이 아닌 빛 (원소 빛 · 속빛 · 겉빛) 으로 부른 예전 불티 · 공용 룬 그림도 그 직업 묶음으로 (위르드식 남은 예전 그림)
+     */
+    private static Object paint;
+
+    public static Object paint() {
+        return paint;
+    }
+
+    /** 칠할 묶음을 바꾸고 예전 값을 돌려줌 (끝나면 되돌림) */
+    public static Object paint(Object p) {
+        Object prev = paint;
+        paint = p;
+        return prev;
     }
 
     /**

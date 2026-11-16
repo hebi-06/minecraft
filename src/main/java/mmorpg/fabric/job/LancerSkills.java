@@ -209,7 +209,7 @@ final class LancerSkills {
         JobFx.stab(level, V.up(front, 0.4), 1.1, j, 0.3, Opt.empty());
         JobFx.spearFly(level, V.up(front, 5.5), V.up(front, 0.05), j, 60, 1.0, Opt.empty());
         JobFx.slash(sp, j, 2.2, 0.2, 1.7, 95.0, 0.2);
-        RuneKit.rockBurst(level, V.up(ground, 0.2), 8, 4.5, 0.16);
+        PhantomFx.rocks(level, V.up(ground, 0.2), 8, 4.5, 0.16);
         SkillFx.sparks(level, V.up(ground, 0.3), JobKit.glow(j), 10, 5);
         SkillFx.sparks(level, V.up(ground, 0.2), DUST, 8, 3);
         JobKit.shake(sp, 10, 0.3, 0.25);
@@ -594,7 +594,7 @@ final class LancerSkills {
             JobFx.feathers(level, tip, 7, 1.1, 0.22, j, 1.3, Opt.empty());
         });
         JobFx.wind(level, V.up(c, 0.08), 2.8, j, 0.5, Opt.empty());
-        RuneKit.rockBurst(level, V.up(c, 0.2), 7, 3.8, 0.16);
+        PhantomFx.rocks(level, V.up(c, 0.2), 7, 3.8, 0.16);
         SkillFx.sparks(level, V.up(c, 0.2), DUST, 12, 4.5);
         Ult.flash(level, V.up(c, 1.0), glow, Opt.of("time", new double[] {0.02, 0.04, 0.3}), sp);
         RuneKit.shakeAround(level, c, 16, 0.4, 0.45);

@@ -63,6 +63,7 @@ public final class JobSystem {
         JobSkills.header = JobSystem::header;
         // 2026-11-16 위르드식 다리: 칠한 직업 빛으로 부른 예전 파티클 (색 먼지 불티 · 땅 고리 · 터짐) → 묶음 그림 · 바닐라 겹
         mmorpg.fabric.skill.SkillFx.painted = PhantomFx::oldFx;
+        mmorpg.fabric.rune.RuneKit.painted = PhantomFx::runeFx; // 2026-11-16 공용 룬 그림 (반짝임 · 빛살 · 충격 고리 · 금 · 섬광 · 문양) 의 위르드식 다리
         JobTraits.init();
         JobRecast.init(); // 0.51.0 다시 쓰기 (리븐 R · 아트록스 Q)
         ElementSystem.init(); // 2026-11-07 원소 반응 (직업 · 룬의 원소 스킬)

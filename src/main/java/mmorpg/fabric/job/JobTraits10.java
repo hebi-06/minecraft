@@ -238,8 +238,9 @@ public final class JobTraits10 {
                 Vec3 vel = V.add(RuneKit.bodyVel(sp), V.sub(next, at), 10.0);
                 Vec3 f = Kit.facingOf(sp);
                 Vec3 face = (now / 8) % 2 == 0 ? V.rightOf(f) : V.scale(V.rightOf(f), -1); // 춤추듯 좌우로 돎
-                RuneKit.shadeClone(sp, level, at, face, (now / 4) % 3 == 0 ? 1 : 0, JobKit.core(j), TricksterSkills.ILLUSION, Opt.of("life", 0.14, "fade", 0.0,
-                        "alpha", 0.72, "vel", vel));
+                // 2026-11-16 위르드식: 칠한 환영 분신 (JobFx.shade — 거울 유리 몸, 예전 rfx_shade 와 같은 틀 · 자세 · 좌우 — CI 43887309301 팬텀 왈츠 예전 분신 46)
+                JobFx.shade(sp, level, at, face, (now / 4) % 3 == 0 ? 1 : 0, JobKit.core(j), TricksterSkills.ILLUSION, Opt.of("life", 0.14, "fade", 0.0, "alpha",
+                        0.72, "vel", vel));
             }
             if (now % 10 == 0) JobFx.ribbon(level, V.up(sp.position(), 0.9), 1.0, j, 0.55, 22, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.5));
         }

@@ -143,7 +143,7 @@ final class DragoonSkills {
         JobFx.burst(level, V.up(g, 0.7), 1.1 * scale, j, 0.32, Opt.empty());
         JobFx.fire(level, V.up(g, 0.9 * scale), 1.1 * scale, 0.55, Opt.of("spin", 0.0), FIRE_GLOW, FIRE_CORE);
         JobFx.radialWaves(sp, j, g, 6, 0.6, radius + 0.5, 0.5, 0.9 * scale, 0.3, 0);
-        RuneKit.rockBurst(level, V.up(g, 0.2), (int) Math.round(6 * scale), 5.0, 0.16 * scale);
+        PhantomFx.rocks(level, V.up(g, 0.2), (int) Math.round(6 * scale), 5.0, 0.16 * scale);
         SkillFx.sparks(level, V.up(g, 0.3), FIRE_GLOW, (int) Math.round(10 * scale), 5.0);
         SkillFx.sparks(level, V.up(g, 0.2), DUST, (int) Math.round(8 * scale), 3.4);
         SkillFx.play(level, "mace.heavy_smash_ground", g, 0.85, 0.95);

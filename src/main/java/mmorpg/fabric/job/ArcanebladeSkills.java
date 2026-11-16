@@ -565,6 +565,8 @@ final class ArcanebladeSkills {
     private static void tear(ServerLevel level, Vec3 at, Vec3 dir, double size, int from, int count, double life, boolean loop, Jobs.Job j) {
         Opt o = Opt.of("size", size, "fade", 0.15, "phase", 0.0);
         JobFx.cells(level, "jtear", JobFx.TEAR, from, count, at, life, loop ? 10 : 0, loop, o, JobFx.outer(j), VOID);
+        // 2026-11-16 칠한 틈 (el_rune tear — 겉빛 테 · 흰 청록 테 · 검은 속이 한 그림) 이면 흰 청록 겹은 뺌 (CI 43887309301 — 예전 rfx_jtear 겹이 30장 남았었음)
+        if (PhantomFx.paints("jtear", JobFx.outer(j))) return;
         JobFx.cells(level, "jtear", JobFx.TEAR, from, count, V.add(at, dir, -0.02), life, loop ? 10 : 0, loop, o.with("size", size * 0.97, "alpha", 0.85, "coreAlpha", 0.0),
                 EDGE, VOID);
     }

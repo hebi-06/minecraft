@@ -146,7 +146,7 @@ final class BloodknightSkills {
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) PhantomFx.rift(level, L, V.add(g, f, -0.8), f, 4.8, 40, 2.4); // 2026-11-15 원소 공용 묶음 (피): 검붉게 갈라진 땅
         else crack(level, g, f, 4.0);
-        RuneKit.rockBurst(level, V.up(g, 0.2), 8, 4.2, 0.18);
+        PhantomFx.rocks(level, V.up(g, 0.2), 8, 4.2, 0.18);
         SkillFx.sparks(level, V.up(g, 0.2), DUST, 10, 4.0);
         SkillFx.play(level, "item.mace.smash_ground_heavy", g, 0.9, 1.0);
         SkillFx.play(level, "entity.player.attack.crit", g, 0.7, 0.8);
@@ -527,7 +527,7 @@ final class BloodknightSkills {
         if (Lc != null) PhantomFx.rift(level, Lc, ground(level, V.add(c0, f, lead)), f, len, speed, 2.6);
         else WarlordSkills.rift(level, ground(level, V.add(c0, f, lead)), f, len, JobFx.outer(j), 1.6, speed);
         SkillFx.shock(level, V.up(hit, 0.1), JobFx.outer(j), 4.0, 0.5);
-        RuneKit.rockBurst(level, V.up(hit, 0.3), 10, 6.5, 0.2);
+        PhantomFx.rocks(level, V.up(hit, 0.3), 10, 6.5, 0.2);
         JobFx.slash(sp, j, 2.3, 0.2, 3.2, 96.0, 0.3);
         Ult.flash(level, hit, MOON_CORE, Opt.empty(), sp);
         SkillFx.play(level, "random.explode", hit, 0.8, 0.9);

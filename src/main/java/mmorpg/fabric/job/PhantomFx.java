@@ -1530,7 +1530,7 @@ final class PhantomFx {
         boolean group = id.equals("sparks");
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
-        Lib L = painter(glow, false);
+        Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
         Predicate<ServerPlayer> who = who(o);
         switch (id) {
@@ -1549,6 +1549,85 @@ final class PhantomFx {
         return true;
     }
 
+    /** 2026-11-16 직업 스킬 · 태세 동안의 칠할 묶음 맥락 (Tasks.paint — JobSkills.press · JobTraits 태세 연출이 정함): 직업 sp 의 묶음 (그리지 않은 직업은 null) */
+    static Lib ctxOf(ServerPlayer sp) {
+        return sp == null ? null : lib(JobSystem.job(sp));
+    }
+
+    /**
+     * 2026-11-16 빛 glow 로 부른 예전 불티 · 공용 룬 그림을 칠할 묶음: 칠한 빛 배열 (painter) → 직업 스킬 맥락 (Tasks.paint — 룬을 쓰는 동안은 빼고) 이면 원소 빛은 그 원소의
+     * 묶음, 다른 빛 (속빛 · 겉빛 · 테 빛) 은 그 직업 묶음. 없으면 null (예전 길)
+     */
+    static Lib jobLib(double[] glow) {
+        Lib L = painter(glow, false);
+        if (L != null) return L;
+        if (mmorpg.fabric.Tasks.tag() != null || !(mmorpg.fabric.Tasks.paint() instanceof Lib K)) return null;
+        Lib E = elementOf(glow);
+        return E != null ? E : K;
+    }
+
+    /**
+     * 2026-11-16 RuneKit.painted (공용 룬 그림의 다리 — JobSystem.init 이 등록): 직업 스킬이 부른 예전 rfx 를 그 묶음의 그림으로 — 반짝임 (prop 의 glint 칸 · 손의 검빛
+     * sword) = 칠한 섬광 + 바닐라 반짝임, 섬광 (flare) = 칠한 섬광, 빛살 (rays — 세운 빛줄기) = 칠한 빛줄기 (beam 을 세움), 충격 고리 (nova) = 칠한 충격파, 빛나는 금 (crack)
+     * = 칠한 땅 자국, 영역 문양 (sigil) = 칠한 땅 고리. 땅에 눕힌 것만 (dir 이 위). 묶음에 그림이 없으면 false (예전 길)
+     */
+    static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
+        switch (name) {
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil" -> {
+            }
+            default -> {
+                return false;
+            }
+        }
+        Lib L = jobLib(glow);
+        if (L == null) return false;
+        Predicate<ServerPlayer> who = who(o);
+        double size = o.num("size", 0.5);
+        double life = Math.max(0.05, o.num("life", 0.4));
+        double grow = o.num("grow", 0);
+        Vec3 dir = o.vec("dir", V.UP);
+        boolean flat = V.len(dir) < 1e-6 || V.unit(dir).y > 0.97;
+        Vec3 vel = o.has("vel") ? o.vec("vel", V.ZERO) : null;
+        switch (name) {
+            case "prop" -> {
+                if ((int) Math.round(o.num("cell", -1)) != RuneKit.RFX.get("glint")[0] || !has(L, "flash")) return false;
+                glint(level, L, at, size, life, vel, who);
+            }
+            case "sword" -> {
+                if (!has(L, "flash")) return false;
+                glint(level, L, at, size * 0.6, life, vel, who);
+            }
+            case "flare" -> {
+                if (!has(L, "flash")) return false;
+                flash(level, L, at, Math.max(0.4, size * 2 * (1 + grow * 0.5)), who);
+            }
+            case "rays" -> {
+                // 예전 빛살 (세로 빌보드 · 밑동 at · 높이 2 × size, 너비 = 높이의 1/8) → 묶음의 빛줄기 (beam — 길이 : 굵기 4 : 1) 를 세움 (길이 6칸까지 — 더 길면 굵기가
+                // 1.5칸을 넘어 둘레의 빛살 여럿이 벽처럼 보임) + 온 높이를 따라 스스로 빛나는 바닐라 점 (WyrdKit.beam — 위에서 땅으로)
+                if (!has(L, "beam")) return false;
+                double h = size * 2 * (1 + grow * 0.5);
+                double hb = Math.min(h, 6);
+                int frames = Vfx.sheet(L.n("beam")).frames();
+                rfx(level, L.n("beam"), 1, 0, V.up(at, hb / 2), Opt.of("dir", V.UP, "size", hb / 2, "life", life, "frames", (double) frames, "fps", frames / life,
+                        "fade", o.num("fade", 0.4), "alpha", o.num("alpha", 1), "view", o.num("view", 0), "owner", o.num("owner", 0)), LOOK_DIR, 0.25);
+                if (h > 1.2) WyrdKit.beam(level, L, V.up(at, h), at, who);
+            }
+            case "nova" -> {
+                if (!flat || !has(L, "shock_00")) return false;
+                shock(level, L, ground(level, at), Math.max(0.6, 2 * size * (1 + grow)), life >= 0.5 ? 2 : 1, who);
+            }
+            case "crack" -> {
+                if (!flat || !has(L, "crack_s")) return false;
+                crackS(level, L, ground(level, at), size * 2, who);
+            }
+            default -> { // sigil
+                if (!flat || !has(L, "ring_00")) return false;
+                ring(level, L, ground(level, at), size * 0.9, 6, Math.max(4, (int) Math.round(life * 20) - 10));
+            }
+        }
+        return true;
+    }
+
     /** 같은 것 — elements 면 원소 빛도 (엘리멘탈 블레이드가 원소마다 물들인 rfx) */
     static Lib painter(double[] glow, boolean elements) {
         if (glow == null) return null;
@@ -1560,7 +1639,10 @@ final class PhantomFx {
             m.put(NecroCrew.DEEP, SOUL); // 네크로맨서 망자의 연기 (짙은 녹색 · 혼불)
             m.put(JobTraits8.GRAVE_SMOKE, SOUL); // 망자의 군대 무덤이 솟을 때 흙먼지
             m.put(ArcmageSkills.STAR_BLUE, ARCANE); // 헤일로 배리어의 별빛 고리
-            for (double[][] c : JobFx.CIRCUS) m.put(c[0], CIRCUS); // 2026-11-16 피에로 색종이 · 풍선 · 불꽃놀이의 서커스 빛 (무지개 대신 서커스 그림)
+            for (double[][] c : JobFx.CIRCUS) { // 2026-11-16 피에로 색종이 · 풍선 · 불꽃놀이의 서커스 빛 (무지개 대신 서커스 그림)
+                m.put(c[0], CIRCUS);
+                m.put(c[1], CIRCUS); // 속빛 (쇼타임 불티 — CI 43887309301 피에로 궁 색 먼지 192)
+            }
             m.put(TricksterSkills.ILLUSION, ILLUSION); // 2026-11-16 트릭스터 거울 · 깨지는 거울 · X 자국의 청록 환영빛
             m.put(TricksterSkills.ILLUSION_CORE, ILLUSION);
             // 2026-11-16 피에로의 금빛 · 붉은 · 흰 빛 (조명 · 터짐 · 연기 — CI 43872303193 에 예전 jspot · jburst2 가 남았었음)

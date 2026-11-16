@@ -915,6 +915,12 @@ final class JobFx {
     static void cross(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
         Opt b = o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360);
         if (art(level, j, "cross", 1, 0, CROSS, at, life, 0, false, b, PhantomFx.BILL, 1)) return; // 2026-11-15 그림자 묶음: 칠한 엇갈린 두 베기
+        // 2026-11-16 X 자국 그림이 없는 묶음 (룬 · 원소 …) 은 그 묶음의 X 베기 (2 × 2 xslash — CI 43887309301 아케인 블레이드 예전 rfx_jcross2)
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null && PhantomFx.has(L, "xslash_00")) {
+            PhantomFx.xslash(level, L, at, size * 2, b.num("spin", 0));
+            return;
+        }
         two(level, "jcross2", CROSS, at, life, b, outer(j), inner(j));
     }
 
