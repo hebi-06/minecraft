@@ -1132,6 +1132,7 @@ final class VanillaProbe {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);
             Tasks.later(3, () -> {
+                censusWatch(name, frames); // 2026-11-16 룬 영상도 파티클 다리 · 그림판 셈 (위르드식 남은 예전 그림 찾기 — 직업 영상과 같은 줄)
                 boolean ok = mmorpg.fabric.rune.RuneCast.castRune(p, r, false);
                 check("film cast " + name, ok);
                 log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active() + " fx · props " + mmorpg.fabric.vfx.Vfx.propsMade + " · sprites "
@@ -1156,6 +1157,36 @@ final class VanillaProbe {
                 }
             }
             Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /**
+     * 2026-11-16 영상 하나의 파티클 다리 · 칠한 그림판 셈 (jobcensus 줄 — 직업 영상과 같은 모양: 보낸 파티클 ID · 글자 표시 · 가루 · 버림 · 카드 · 가장 많이 떠 있던 수 ||
+     * 그림판=수@가장 큰 크기): 지금부터 frames 틱 뒤에 로그
+     */
+    static void censusWatch(String name, int frames) {
+        java.util.Map<String, Integer> seen0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.PBridge.SEEN);
+        java.util.Map<String, Integer> used0 = new java.util.TreeMap<>(mmorpg.fabric.vfx.Vfx.USED);
+        int[] c0 = {mmorpg.fabric.vfx.PBridge.made, mmorpg.fabric.vfx.PBridge.dusts, mmorpg.fabric.vfx.PBridge.dropped, mmorpg.fabric.vfx.PBridge.noGlyph,
+                mmorpg.fabric.vfx.PBridge.cards, mmorpg.fabric.vfx.PBridge.soloReused};
+        int[] peak = {0};
+        for (int t = 1; t <= frames; t++) Tasks.later(t, () -> peak[0] = Math.max(peak[0], mmorpg.fabric.vfx.PBridge.live()));
+        Tasks.later(frames + 1, () -> {
+            StringBuilder sb = new StringBuilder();
+            for (var e : mmorpg.fabric.vfx.PBridge.SEEN.entrySet()) {
+                int d = e.getValue() - seen0.getOrDefault(e.getKey(), 0);
+                if (d > 0) sb.append(e.getKey().replace("rpg:", "")).append('=').append(d).append(' ');
+            }
+            StringBuilder ub = new StringBuilder();
+            for (var e : mmorpg.fabric.vfx.Vfx.USED.entrySet()) {
+                int d = e.getValue() - used0.getOrDefault(e.getKey(), 0);
+                if (d > 0) ub.append(e.getKey()).append('=').append(d).append('@')
+                        .append(String.format(java.util.Locale.ROOT, "%.2f", mmorpg.fabric.vfx.Vfx.SIZE_MAX.getOrDefault(e.getKey(), 0.0))).append(' ');
+            }
+            log("jobcensus " + name + " made " + (mmorpg.fabric.vfx.PBridge.made - c0[0]) + " dust " + (mmorpg.fabric.vfx.PBridge.dusts - c0[1]) + " dropped "
+                    + (mmorpg.fabric.vfx.PBridge.dropped - c0[2]) + " noGlyph " + (mmorpg.fabric.vfx.PBridge.noGlyph - c0[3]) + " cards "
+                    + (mmorpg.fabric.vfx.PBridge.cards - c0[4]) + " solo " + (mmorpg.fabric.vfx.PBridge.soloReused - c0[5]) + " peak " + peak[0] + " | "
+                    + sb.toString().trim() + " || sheets " + ub.toString().trim());
         });
     }
 
