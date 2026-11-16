@@ -28,8 +28,11 @@ import org.joml.Quaternionf;
 final class WyrdFx {
     private WyrdFx() {}
 
-    /** 시범 켬 (끄면 칠한 그림 — 예전 연출) */
-    static boolean VORTEX = true;
+    /**
+     * 시범 켬 (끄면 칠한 그림 — 예전 연출). 2026-11-16 끔: 도트 그림 시범 (사용자 "2번으로 해보자") 은 칠한 연출 그대로에 그림판만 도트 (tools/jobvfx/pixel.py) —
+     * 고해상도 · 도트 · 위르드 셋을 같은 장면으로 견줌 (위르드 영상은 f41546e8)
+     */
+    static boolean VORTEX = false;
 
     /** 남보라 (한 색) · 발광 외곽선 색 */
     static final double[] VIOLET = {0.47, 0.38, 1.0};

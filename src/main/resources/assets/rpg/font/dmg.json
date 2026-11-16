@@ -1,0 +1,17 @@
+{
+ "providers": [
+  {
+   "type": "bitmap",
+   "file": "rpg:font/dmg.png",
+   "height": 12,
+   "ascent": 10,
+   "chars": [
+    "0123456789+-.!,%"
+   ]
+  },
+  {
+   "type": "reference",
+   "id": "minecraft:default"
+  }
+ ]
+}

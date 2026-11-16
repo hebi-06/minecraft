@@ -304,15 +304,26 @@ def crop_cells(cells):
     return out, h2, a2, (round(dxu / H, 6), round(-dyu / H, 6)), (cw, ch)
 
 
+# 2026-11-16 도트 그림 시범 (사용자 "2번으로 해보자" — 피드백 "스킬을 고퀄 이미지로 하니깐 몹이랑 데미지 피해 표시는 도트여서 괴리감이 든다"): 이 묶음
+# (접두 → tools/jobvfx/element.py STYLES 이름) 의 그림판은 같은 그림을 세계 밀도의 도트 그림으로 (tools/jobvfx/pixel.py — 램프 색 · 꽉 찬 텍셀 · 네모 픽셀).
+# 비우면 칠한 그림 그대로
+PIXEL_LIBS = {"el_arcane": "arcane"}
+
+
 def build():
     """→ {파일 경로: 바이트} · 글꼴 · 목록"""
+    from jobvfx import pixel as _pixel
     files = {}
     providers = []
     index = {}
     code = FIRST
     saved = [0, 0]  # 예전 · 자른 픽셀 수
+    makes = {n: mk for n, mk, _ in SPRITES}
+    pix_cache = {}
     for name, make, colored in SPRITES:
-        cells = make()
+        cells = _pixel.sheet_cells(name, makes, pix_cache, PIXEL_LIBS) if PIXEL_LIBS else None
+        if cells is None:
+            cells = make()
         cw, ch = cells[0].size
         assert cw <= 256 and ch <= 256, (name, cw, ch)
         assert all(c.size == (cw, ch) for c in cells), name

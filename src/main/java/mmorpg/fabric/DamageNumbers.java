@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import com.mojang.math.Transformation;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -32,6 +33,9 @@ import org.joml.Vector3f;
  * 자바는 글자 표시 엔티티 (text_display) — 늘 카메라를 보고 (billboard), 밤에도 밝게, 그림자 있는 글자.
  * 18틱 동안 처음 5틱은 빠르게 (0.09칸/틱), 그 뒤 천천히 (0.025) 오름. 한 번에 30개까지 (애드온과 같음).
  * 처음엔 크게 나와 3틱 동안 원래 크기로 줄어듦 (클라이언트 보간). 서버가 꺼질 때 남아 저장된 숫자는 다시 불러오지 않음 (태그 mmorpg_dmg).
+ * 2026-11-16 도트 숫자 (사용자 "2번으로 해보자" — 피드백 "스킬을 고퀄 이미지로 하니깐 몹이랑 데미지 피해 표시는 도트여서 괴리감이 든다"): 숫자는 글꼴 rpg:dmg
+ * (tools/dmg_font.py — 2 픽셀 굵은 획 · 검은 외곽선 · 위에서 아래로 짙어지는 칠, 글자 색으로 물듦 → 색 규칙 그대로). 굵게 (§l · BOLD) 는 쓰지 않음 (글꼴이 굵음 —
+ * 굵게 옮겨 그리면 외곽선이 번짐), 크기는 {@link #NUM_SCALE}.
  */
 public final class DamageNumbers {
     private DamageNumbers() {}
@@ -141,6 +145,25 @@ public final class DamageNumbers {
     /** 처음 크기 배율 (톡 튀어나옴) */
     private static final float POP = 1.45F;
 
+    /** 2026-11-16 도트 숫자 글꼴 (끄면 바닥 글꼴 굵게 — 예전) */
+    public static boolean PIXEL_NUM = true;
+    /** 숫자 글꼴 rpg:dmg (tools/dmg_font.py — 칸 높이 12 픽셀 = 12 단위, 바닥 글꼴 숫자 7 단위) */
+    static final FontDescription NUM_FONT = new FontDescription.Resource(Mmorpg.rpg("dmg"));
+    /** 도트 숫자의 크기 몫 (바닥 글꼴 숫자보다 약 1.3 배 — 외곽선 포함 12 단위 × 0.8 ≈ 9.6 단위 대 바닥 7 + 그림자 1) */
+    static final float NUM_SCALE = 0.8F;
+
+    /** 숫자 글자 (도트 숫자면 rpg:dmg — 숫자 · + − . ! , % 밖의 글자는 바닥 글꼴로) */
+    static net.minecraft.network.chat.MutableComponent num(String text, int rgb, boolean bold) {
+        if (PIXEL_NUM) return Component.literal(text).withStyle(net.minecraft.network.chat.Style.EMPTY.withFont(NUM_FONT).withColor(rgb));
+        net.minecraft.network.chat.MutableComponent t = Component.literal(text).withColor(rgb);
+        return bold ? t.withStyle(net.minecraft.ChatFormatting.BOLD) : t;
+    }
+
+    /** 숫자 크기 (도트 숫자면 NUM_SCALE 몫) */
+    static float numScale(float scale) {
+        return PIXEL_NUM ? scale * NUM_SCALE : scale;
+    }
+
     // ------------------------------------------------------------ 2026-11-11 숫자 색 규칙
 
     /** 무속성 · 치명타 (노랑) */
@@ -181,9 +204,7 @@ public final class DamageNumbers {
     public static Component colored(String mark, String text, int rgb, boolean bold) {
         net.minecraft.network.chat.MutableComponent out = Component.empty();
         if (mark != null && !mark.isEmpty()) out.append(Component.literal(BedrockText.toJava(mark)));
-        net.minecraft.network.chat.MutableComponent t = Component.literal(text).withColor(rgb);
-        if (bold) t = t.withStyle(net.minecraft.ChatFormatting.BOLD);
-        return out.append(t);
+        return out.append(num(text, rgb, bold));
     }
 
     /** 규칙 색 숫자 하나 (모양의 크기 · 앞뒤 글자 · 굵기 — 스킬 모양은 굵게) */
@@ -195,7 +216,7 @@ public final class DamageNumbers {
         Vec3 head = at != null ? at : victim.getEyePosition();
         RandomSource r = victim.getRandom();
         Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
-        spawnText(level, pos, colored(mark, style.before + number(amount) + style.after, rgb, style.codes.contains("§l")), style.scale, POP);
+        spawnText(level, pos, colored(mark, style.before + number(amount) + style.after, rgb, style.codes.contains("§l")), numScale(style.scale), POP);
     }
 
     /**
@@ -393,7 +414,7 @@ public final class DamageNumbers {
         Vec3 head = at != null ? at : victim.getEyePosition();
         RandomSource r = victim.getRandom();
         Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
-        spawnText(level, pos, gradient(mark, style.before + number(amount) + style.after, grad[0], grad[1]), style.scale, POP);
+        spawnText(level, pos, gradient(mark, style.before + number(amount) + style.after, grad[0], grad[1], true), numScale(style.scale), POP);
     }
 
     /**
@@ -406,11 +427,16 @@ public final class DamageNumbers {
         Vec3 at = anchor.apply(victim);
         Vec3 head = at != null ? at : victim.getEyePosition();
         Vec3 pos = new Vec3(head.x, head.y + 0.55 + lift, head.z);
-        spawnText(level, pos, gradient("", text, grad[0], grad[1]), scale, POP);
+        spawnText(level, pos, gradient("", text, grad[0], grad[1], false), scale, POP);
     }
 
     /** 글자마다 a → b 로 바뀌는 색 (굵게 — 빈칸은 세지 않음), 앞 표시 mark 는 베드락 서식 그대로 */
     public static Component gradient(String mark, String text, int a, int b) {
+        return gradient(mark, text, a, b, false);
+    }
+
+    /** 같은 것 — numFont 면 숫자 글꼴 (도트 숫자 — 피해 숫자), 아니면 바닥 글꼴 굵게 (반응 이름 등 글자) */
+    static Component gradient(String mark, String text, int a, int b, boolean numFont) {
         net.minecraft.network.chat.MutableComponent out = Component.empty();
         if (mark != null && !mark.isEmpty()) out.append(Component.literal(BedrockText.toJava(mark)));
         int n = 0;
@@ -421,7 +447,8 @@ public final class DamageNumbers {
             double t = n <= 1 ? 0 : (double) k / (n - 1);
             if (!Character.isWhitespace(ch)) k++;
             int rgb = lerpRgb(a, b, t);
-            out.append(Component.literal(String.valueOf(ch)).withColor(rgb).withStyle(net.minecraft.ChatFormatting.BOLD));
+            if (numFont) out.append(num(String.valueOf(ch), rgb, true));
+            else out.append(Component.literal(String.valueOf(ch)).withColor(rgb).withStyle(net.minecraft.ChatFormatting.BOLD));
         }
         return out;
     }
@@ -458,6 +485,13 @@ public final class DamageNumbers {
         }
         RandomSource r = victim.getRandom();
         Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
+        if (PIXEL_NUM) {
+            // 도트 숫자: 서식 글자 (§ 색) 는 그대로, 굵게 (§l) 만 뺌 — 글꼴이 굵음
+            Component text = Component.literal(BedrockText.toJava(mark + style.format(number(amount)).replace("§l", "")))
+                    .withStyle(net.minecraft.network.chat.Style.EMPTY.withFont(NUM_FONT));
+            spawnText(level, pos, text, numScale(style.scale), POP);
+            return;
+        }
         spawn(level, pos, BedrockText.toJava(mark + style.format(number(amount))), style.scale);
     }
 

@@ -2735,8 +2735,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.0625
+    0.151442,
+    -0.0
    ]
   },
   "el_arcane_xslash_01": {
@@ -2745,8 +2745,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    -0.09375
+    -0.09375,
+    -0.0
    ]
   },
   "el_arcane_xslash_10": {
@@ -2755,8 +2755,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.066406,
-    0.109375
+    0.075721,
+    -0.0
    ]
   },
   "el_arcane_xslash_11": {
@@ -2765,8 +2765,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.070312,
-    0.0625
+    -0.171875,
+    -0.0
    ]
   },
   "el_arcane_boom_00": {
@@ -2775,8 +2775,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.110964,
+    -0.0
    ]
   },
   "el_arcane_boom_01": {
@@ -2785,8 +2785,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.03125,
-    -0.03125
+    -0.085938,
+    -0.0
    ]
   },
   "el_arcane_boom_10": {
@@ -2795,8 +2795,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.035156,
-    0.046875
+    0.110964,
+    -0.0
    ]
   },
   "el_arcane_boom_11": {
@@ -2805,8 +2805,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    0.03125
+    -0.109375,
+    -0.0
    ]
   },
   "el_arcane_boom_s": {
@@ -2815,7 +2815,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.003906,
+    -0.009014,
     -0.0
    ]
   },
@@ -2825,8 +2825,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.003906
+    0.036178,
+    -0.0
    ]
   },
   "el_arcane_ember": {
@@ -2839,7 +2839,11 @@
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
   },
   "el_arcane_spin_00": {
    "chars": "",
@@ -2847,8 +2851,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.042969,
-    -0.03125
+    0.057813,
+    -0.046875
    ]
   },
   "el_arcane_spin_01": {
@@ -2857,8 +2861,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.0625,
-    -0.03125
+    -0.070312,
+    -0.046875
    ]
   },
   "el_arcane_spin_10": {
@@ -2867,7 +2871,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.054688,
+    0.073438,
     0.0625
    ]
   },
@@ -2877,7 +2881,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
+    -0.0625,
     0.0625
    ]
   },
@@ -2887,8 +2891,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    -0.03125
+    0.075886,
+    -0.0
    ]
   },
   "el_arcane_spinm_01": {
@@ -2897,8 +2901,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.039062,
-    -0.03125
+    -0.0625,
+    -0.0
    ]
   },
   "el_arcane_spinm_10": {
@@ -2907,8 +2911,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.050781,
-    0.0625
+    0.050576,
+    -0.0
    ]
   },
   "el_arcane_spinm_11": {
@@ -2917,8 +2921,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.054688,
-    0.0625
+    -0.070312,
+    -0.0
    ]
   },
   "el_arcane_star": {
@@ -2927,19 +2931,15 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.019531,
-    0.042969
+    0.024554,
+    -0.0
    ]
   },
   "el_arcane_bolt": {
    "chars": "",
    "frames": 4,
    "aspect": 3.0,
-   "colored": true,
-   "crop": [
-    -0.053125,
-    -0.0
-   ]
+   "colored": true
   },
   "el_arcane_beam": {
    "chars": "",
@@ -2959,7 +2959,7 @@
    "aspect": 2.6667,
    "colored": true,
    "crop": [
-    -0.046875,
+    -0.03125,
     -0.0
    ]
   },
@@ -2967,11 +2967,7 @@
    "chars": "",
    "frames": 4,
    "aspect": 4.0,
-   "colored": true,
-   "crop": [
-    0.007812,
-    -0.0
-   ]
+   "colored": true
   },
   "el_arcane_sparkorb": {
    "chars": "",
@@ -2980,7 +2976,7 @@
    "colored": true,
    "crop": [
     -0.023438,
-    -0.046875
+    -0.0
    ]
   },
   "el_arcane_frost": {
@@ -2989,7 +2985,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
+    0.003233,
     -0.0
    ]
   },
@@ -2999,18 +2995,18 @@
    "aspect": 4.0,
    "colored": true,
    "crop": [
-    0.03125,
+    0.268229,
     -0.0
    ]
   },
   "el_arcane_aura": {
    "chars": "",
    "frames": 8,
-   "aspect": 0.5,
+   "aspect": 0.4923,
    "colored": true,
    "crop": [
-    0.0,
-    -0.03125
+    0.007572,
+    -0.0
    ]
   },
   "el_arcane_starnode": {
@@ -3019,8 +3015,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.003906,
-    0.007812
+    -0.003029,
+    -0.0
    ]
   },
   "el_arcane_fallstar": {
@@ -3029,18 +3025,18 @@
    "aspect": 2.6667,
    "colored": true,
    "crop": [
-    0.005208,
-    -0.0
+    0.036458,
+    -0.020833
    ]
   },
   "el_arcane_aegis": {
    "chars": "",
    "frames": 6,
-   "aspect": 0.7969,
+   "aspect": 0.8,
    "colored": true,
    "crop": [
-    0.003906,
-    -0.011719
+    0.001563,
+    -0.0
    ]
   },
   "el_arcane_galaxy_00": {
@@ -3049,8 +3045,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    -0.046875
+    0.057813,
+    -0.03125
    ]
   },
   "el_arcane_galaxy_01": {
@@ -3060,7 +3056,7 @@
    "colored": true,
    "crop": [
     -0.054688,
-    -0.046875
+    -0.03125
    ]
   },
   "el_arcane_galaxy_10": {
@@ -3069,8 +3065,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.0625,
-    0.0625
+    0.057813,
+    0.03125
    ]
   },
   "el_arcane_galaxy_11": {
@@ -3080,7 +3076,7 @@
    "colored": true,
    "crop": [
     -0.054688,
-    0.0625
+    0.03125
    ]
   },
   "el_arcane_halo_00": {
@@ -3089,7 +3085,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
+    0.029726,
     -0.0
    ]
   },
@@ -3099,7 +3095,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
+    -0.03125,
     -0.0
    ]
   },
@@ -3109,8 +3105,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
-    0.015625
+    0.029726,
+    -0.0
    ]
   },
   "el_arcane_halo_11": {
@@ -3119,8 +3115,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.007812,
-    0.015625
+    -0.03125,
+    -0.0
    ]
   },
   "el_soul_xslash_00": {
