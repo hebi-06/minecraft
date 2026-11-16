@@ -470,8 +470,33 @@ final class JobFx {
         Opt o = only1p(sp).with("size", 1.35, "loop", 1.0, "alpha", alpha, "fade", 0.4, "spin", Kit.rand() * 360, "vel", vel);
         Opt base = o.with("life", life, "frames", (double) SPEED, "fps", 24.0);
         Vec3 at = V.add(sp.getEyePosition(), look, 1.4);
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L != null && PhantomFx.has(L, "speed")) { // 2026-11-16 위르드식: 묶음의 칠한 빠른 줄 (같은 자리 · 크기 · 되풀이 — 장 수만 그림판의 것)
+            PhantomFx.rfx(sp.level(), L.n("speed"), 1, 0, at, base.with("frames", (double) mmorpg.fabric.vfx.Vfx.sheet(L.n("speed")).frames(), "fps", 16.0),
+                    PhantomFx.BILL, 1);
+            return;
+        }
         RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", outer(j), "cell", 0.0));
         RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", inner(j), "cell", (double) SPEED, "alpha", alpha * 0.9));
+    }
+
+    /**
+     * 2026-11-16 분신 (예전 RuneKit.shadeClone — rfx_shade 와 같은 값): 빛 core (없으면 glow) 를 칠하는 묶음에 분신 그림 (tools/jobvfx/clone.py — 같은 틀 · 자세 · 좌우)
+     * 이 있으면 그 그림 (트릭스터 거울 유리 · 전사 · 마검사 잔상), 없으면 예전 길. 발 feet = 그림 아래 끝 · 높이 = 반 크기 size × 2 · 세로축만 카메라를 봄
+     */
+    static void shade(ServerPlayer sp, ServerLevel level, Vec3 feet, Vec3 face, int pose, double[] glow, double[] core, Opt o) {
+        PhantomFx.Lib L = PhantomFx.painter(core);
+        if (L == null || !PhantomFx.has(L, "shade")) L = PhantomFx.painter(glow);
+        if (L == null || !PhantomFx.has(L, "shade")) {
+            RuneKit.shadeClone(sp, level, feet, face, pose, glow, core, o);
+            return;
+        }
+        boolean left = !sp.isRemoved() && V.dot(V.flat(face), V.rightOf(V.flat(sp.getViewVector(1F)))) < 0;
+        double size = o.num("size", 0.95);
+        Opt b = Opt.of("size", size, "life", o.num("life", 0.4), "fade", o.num("fade", 0.5), "grow", o.num("grow", 0), "alpha", o.num("alpha", 0.92), "frames", 1.0,
+                "vel", o.vec("vel", V.ZERO));
+        if (o.has("view")) b = b.with("view", o.num("view", 0), "owner", o.num("owner", 0));
+        PhantomFx.rfx(level, L.n("shade"), 1, Math.max(0, Math.min(3, pose)) + (left ? 4 : 0), V.up(feet, size), b, PhantomFx.VERT, 1);
     }
 
     /** 0.29.0 1인칭 화면 네 귀퉁이의 옅은 연기 (시전자의 1인칭에만 — 암영 은신 · 망령 걸음): 눈앞 1.3칸, vel (칸/초) 로 같이 움직임 */
@@ -533,6 +558,11 @@ final class JobFx {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.2) return;
+        PhantomFx.Lib L = PhantomFx.painter(glow);
+        if (L != null && PhantomFx.has(L, "cut")) { // 2026-11-16 칠한 직업 빛 (트릭스터 거울 속 나의 일섬 등): 그 묶음의 일섬
+            PhantomFx.cut(level, L, from, to, Math.max(1, (int) Math.round(life * 20) - 6), true, PhantomFx.who(o));
+            return;
+        }
         two(level, "jline2", LINE, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), glow, core);
     }
 
@@ -618,6 +648,19 @@ final class JobFx {
             return;
         }
         PhantomFx.embers(level, L, at, Math.max(1, (int) Math.round(n * 0.75)), Math.max(0.4, speed * 0.3), 0.32, 14);
+    }
+
+    /**
+     * 2026-11-16 위르드식 퍼지는 땅 고리 (예전 SkillFx.shock — rpg:shock_ring 칠한 예전 그림 대신 묶음의 속이 빈 충격파 + 바닐라 겹 — 묶음이 없으면 예전 길): 반지름
+     * radius 칸까지 · life 초 (예전 값 — 묶음 충격파는 그림의 장 수로)
+     */
+    static void shockRing(ServerLevel level, Vec3 at, Jobs.Job j, double radius, double life) {
+        PhantomFx.Lib L = PhantomFx.elem(j);
+        if (L == null) {
+            mmorpg.fabric.skill.SkillFx.shock(level, at, outer(j), radius, life);
+            return;
+        }
+        PhantomFx.shock(level, L, V.up(at, -0.06), radius * 2.0, life >= 0.5 ? 2 : 1);
     }
 
     /** 2026-11-16 위르드식 흙먼지 (예전 누런 회색 먼지 불티 SkillFx.sparks(DUST) 대신 묶음의 칠한 흙먼지 한 장 + 바닐라 땅 겹 — 묶음이 없으면 예전 길) */
@@ -1269,8 +1312,9 @@ final class JobFx {
         two(level, "jquake", QUAKE, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
-            // 2026-11-16 위르드식 (분노 · 곰 묶음): 예전 충격 고리 · 색 먼지 불티 (rpg:arrow_spark — 먼지) 대신 바닐라 겹 충격파 · 불씨 (칠한 땅의 금은 위 jquake)
-            WyrdKit.shock(level, L, at, radius * 1.8, PhantomFx.who(o));
+            // 2026-11-16 위르드식 (분노 · 곰 묶음): 예전 충격 고리 · 색 먼지 불티 (rpg:arrow_spark — 먼지) 대신 칠한 충격파 (예전 고리처럼 radius × 0.9 까지 퍼짐 —
+            // 1판 영상에서 큰 고리가 빠져 내려찍기가 작아 보였음) · 바닐라 겹 충격파 · 불씨 (칠한 땅의 금은 위 jquake)
+            PhantomFx.shock(level, L, V.up(at, -0.06), radius * 1.8, 1, PhantomFx.who(o)); // 바닐라 겹 (WyrdKit.shock) 은 안에서
             PhantomFx.embers(level, L, V.up(at, 0.3), (int) Math.min(14, 5 + radius * 1.5), radius * 0.6, 0.35, 16);
             return;
         }

@@ -57,8 +57,8 @@ public final class JobTraits7 {
         Vec3 at = Kit.bodyPoint(victim);
         if (RuneKit.fxQuota("jobSpread", 6)) {
             JobFx.runeRing(level, V.up(victim.position(), 0.12), r * 0.9, j, 8, Kit.rand() * 45, 0.35, Opt.of("alpha", 0.85));
-            SkillFx.shock(level, V.up(victim.position(), 0.1), JobFx.outer(j), r, 0.35);
-            SkillFx.sparks(level, at, JobFx.inner(j), 8, 4.0);
+            JobFx.shockRing(level, V.up(victim.position(), 0.1), j, r, 0.35);
+            JobFx.sparks(level, at, j, 8, 4.0);
             SkillFx.play(level, "block.amethyst_block.resonate", at, 1.7, 0.6);
         }
         String life = RuneKit.lifeToken(sp);
@@ -69,7 +69,7 @@ public final class JobTraits7 {
             JobKit.hitLater(sp, e, life, Tasks.now(), () -> {
                 if (JobKit.hit(sp, e, j, P, mult, true, false) > 0 && cnt[0]++ < 6 && e.level() instanceof ServerLevel lv) {
                     JobFx.cross(lv, Kit.bodyPoint(e), 0.6 + Kit.bodyPad(e) * 0.4, j, 0.25, Opt.empty());
-                    SkillFx.sparks(lv, Kit.bodyPoint(e), JobFx.inner(j), 5, 3.0);
+                    JobFx.sparks(lv, Kit.bodyPoint(e), j, 5, 3.0);
                 }
             });
         }
@@ -97,9 +97,9 @@ public final class JobTraits7 {
             JobFx.bigWave(lv, null, at, view, 0, s * 1.4, -45, 0.38, j, Opt.empty());
             JobFx.burst(lv, at, s, j, 0.35, Opt.empty());
             JobFx.runeRing(lv, V.up(victim.position(), 0.1), 2.4, j, 9, Kit.rand() * 40, 0.6, Opt.of("alpha", 0.9));
-            SkillFx.shock(lv, V.up(victim.position(), 0.1), JobFx.outer(j), 2.6, 0.45);
-            RuneKit.rockBurst(lv, V.up(victim.position(), 0.3), 6, 5.0, 0.15);
-            SkillFx.sparks(lv, at, JobFx.inner(j), 18, 7.0);
+            JobFx.shockRing(lv, V.up(victim.position(), 0.1), j, 2.6, 0.45);
+            PhantomFx.rocks(lv, V.up(victim.position(), 0.3), 6, 5.0, 0.15);
+            JobFx.sparks(lv, at, j, 18, 7.0);
             if (!victim.isRemoved()) JobImpact.hit(sp, victim, j, 1.8);
             SkillFx.play(lv, "random.explode", at, 1.2, 0.6);
             SkillFx.play(lv, "block.amethyst_block.resonate", at, 0.7, 1.0);

@@ -57,8 +57,20 @@ public final class SkillFx {
         return v;
     }
 
+    /**
+     * 2026-11-16 위르드식 다리 (남은 직업 위르드식 — 사용자 "저거 고치고 ... 자동으로 다음 작업으로"): 칠한 직업의 빛으로 부른 예전 파티클 (색 먼지 불티
+     * rpg:arrow_spark · 퍼지는 땅 고리 rpg:shock_ring · 터짐 rpg:bash_burst — 모드 없는 클라이언트에서 먼지 · 예전 그림) 을 그 묶음의 칠한 그림 · 스스로 빛나는 바닐라
+     * 파티클로 그림. 직업 패키지가 등록 (JobSystem.init → PhantomFx.oldFx). true = 그렸음 (예전 파티클은 보내지 않음)
+     */
+    public interface Painted {
+        boolean draw(ServerLevel level, String id, Vec3 at, Opt o);
+    }
+
+    public static Painted painted;
+
     /** 애드온 파티클 하나 (모두에게) */
     public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
+        if (painted != null && painted.draw(level, id, at, o)) return;
         AddonFx.spawn(level, id, at, vars(o));
     }
 
@@ -182,6 +194,8 @@ public final class SkillFx {
     }
 
     public static void sparks(ServerLevel level, Vec3 at, double[] color, int n, double speed) {
+        // 2026-11-16 위르드식 다리: 칠한 직업 빛이면 불티 한 무리를 한 번에 (불티 하나씩 다리를 거치지 않게)
+        if (painted != null && painted.draw(level, "sparks", at, Opt.of("color", color, "n", (double) n, "speed", speed))) return;
         ThreadLocalRandom r = ThreadLocalRandom.current();
         for (int i = 0; i < n; i++) {
             double a = ((double) i / n) * Math.PI * 2;

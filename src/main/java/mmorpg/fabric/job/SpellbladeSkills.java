@@ -164,7 +164,7 @@ final class SpellbladeSkills {
         Set<UUID> marked = new HashSet<>();
         Kit.noFall(sp, 40);
         // 떠난 자리: 잔상 · 터짐 · 발밑 둥근 베기
-        RuneKit.shadeClone(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.5, "fade", 0.6, "alpha", 0.85));
+        JobFx.shade(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.5, "fade", 0.6, "alpha", 0.85));
         JobFx.burst(level, V.up(start, 1.0), 0.9, j, 0.3, Opt.empty());
         JobFx.ring(level, V.up(start, 0.06), 1.1, j, false, 0.35, Opt.of("alpha", 0.85));
         // 길: 마력 번개 (허리 높이 · 닿은 자리 1.8칸 앞까지 — 1인칭 카메라 · 3인칭 카메라 가까이를 지나지 않게) + 돌진 줄기 (1인칭에서는 숨김) + 1인칭 빠른 줄
@@ -197,7 +197,7 @@ final class SpellbladeSkills {
             Vec3 ahead = V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), -0.3);
             JobFx.burst(d, ahead, 1.5, j, 0.42, JobFx.only1p(sp));
             JobFx.ringFacing(d, ahead, 1.1, j, V.scale(look, -1), 0.4, JobFx.only1p(sp));
-            SkillFx.sparks(d, ahead, core, 8, 5);
+            JobFx.sparks(d, ahead, j, 8, 5);
             SkillFx.play(d, "random.explode", dest, 1.5, 0.6);
             SkillFx.play(d, "chime.amethyst_block", dest, 0.9, 1.0);
             for (LivingEntity e : Kit.around(sp, dest, radius, 2.5)) {
@@ -308,9 +308,9 @@ final class SpellbladeSkills {
             // 꽂음: 룬 원 · 퍼지는 고리 · 충격파 · 돌 · 1인칭 세로 베기 — 둘레 적 circle · 묶음
             JobFx.runeRing(lv, V.up(g, 0.09), r, j, 9, Kit.rand() * 40, (eruptAt - plantAt) / 20.0 + 0.25, Opt.of("alpha", 1.0));
             JobFx.ring(lv, V.up(g, 0.07), r, j, false, 0.45, Opt.of("alpha", 0.95));
-            SkillFx.shock(lv, V.up(g, 0.1), JobFx.outer(j), r * 0.9, 0.4);
+            JobFx.shockRing(lv, V.up(g, 0.1), j, r * 0.9, 0.4);
             JobFx.burst(lv, V.up(g, 0.5), 1.4, j, 0.3, Opt.empty());
-            RuneKit.rockBurst(lv, V.up(g, 0.2), 6, 4.0, 0.15);
+            PhantomFx.rocks(lv, V.up(g, 0.2), 6, 4.0, 0.15);
             JobFx.slash(sp, j, 1.9, 0.4, 2.1, 92.0, 0.22);
             SkillFx.play(lv, "block.anvil.land", g, 1.6, 0.5);
             SkillFx.play(lv, "block.amethyst_block.resonate", g, 0.8, 1.0);
@@ -334,7 +334,7 @@ final class SpellbladeSkills {
                 Vec3 p = V.add(g, new Vec3(Math.cos(ang), 0, Math.sin(ang)), r * (0.4 + Kit.rand() * 0.5));
                 JobFx.glyph(lv, V.up(p, 0.6 + q), 0.5, (int) (Kit.rand() * 3), 0, 4, 0.35, false, Opt.of("vel", new Vec3(0, 2.0, 0)), j);
                 JobFx.line(lv, V.up(p, 0.2), V.up(g, 0.3 + q * 0.8), j, 0.15, Opt.of("alpha", 0.7));
-                SkillFx.sparks(lv, V.up(g, 0.3), JobFx.inner(j), 3 + (int) (q * 5), 2.0 + q * 2);
+                JobFx.sparks(lv, V.up(g, 0.3), j, 3 + (int) (q * 5), 2.0 + q * 2);
                 SkillFx.play(lv, "block.respawn_anchor.charge", g, 0.8 + q * 0.6, 0.35);
             });
         }
@@ -353,9 +353,9 @@ final class SpellbladeSkills {
             }
             JobFx.burst(lv, V.up(g, 1.2), 3.0, j, 0.45, Opt.empty());
             JobFx.ring(lv, V.up(g, 0.08), r, j, true, 0.45, Opt.of("alpha", 1.0));
-            SkillFx.shock(lv, V.up(g, 0.1), JobFx.outer(j), r * 1.2, 0.5);
-            RuneKit.rockBurst(lv, V.up(g, 0.3), 10, 6.5, 0.18);
-            SkillFx.sparks(lv, V.up(g, 1.5), JobFx.inner(j), 24, 8.0);
+            JobFx.shockRing(lv, V.up(g, 0.1), j, r * 1.2, 0.5);
+            PhantomFx.rocks(lv, V.up(g, 0.3), 10, 6.5, 0.18);
+            JobFx.sparks(lv, V.up(g, 1.5), j, 24, 8.0);
             Ult.flash(lv, g, glow, Opt.of("radius", 6.0, "time", new double[] {0.03, 0.05, 0.3}), sp);
             SkillFx.play(lv, "random.explode", g, 0.9, 0.8);
             SkillFx.play(lv, "beacon.activate", g, 1.6, 0.8);
@@ -422,8 +422,7 @@ final class SpellbladeSkills {
                 Vec3 mid = V.lerp(behindAt(sp, 0, range, c0.y), tipStart(sp, 0, c0.y), 0.5); // 등 뒤 거검의 가운데
                 for (int sd : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.up(mid, 1.5 - q), V.rightOf(f), sd * (3.0 - q * 2.0));
-                    SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.scale(V.rightOf(f), -sd), "speed", 3.0, "size", 0.18, "grow", 0.5, "life", 0.25,
-                            "color", core, "alpha", 1.0));
+                    JobFx.sparks(level, a, j, 2, 3.0); // 2026-11-16 위르드식 (묶음 불씨 — 예전 색 먼지 대신)
                 }
                 if (tt % 6 == 0) {
                     JobFx.runeRing(level, mid, 1.2 + q * 1.4, j, 6, tt * 30, 0.32, JobFx.hide1p(sp).with("alpha", 0.75));
@@ -598,7 +597,7 @@ final class SpellbladeSkills {
         WarlordSkills.rift(level, new Vec3(e.x, RuneKit.groundAt(level, e, groundY), e.z), V.scale(f, -1), Math.min(range * 0.5, 5.0), JobFx.outer(j), 0.9, 50);
         SkillFx.fx(level, "rpg:light_cut", V.lerp(V.up(low, 0.4), e, 0.5), Opt.of("dir", d, "size", range * 0.55, "thick", 0.3, "life", 0.35, "color", glow, "alpha",
                 1.0));
-        SkillFx.sparks(level, e, core, 12, 6.0);
+        JobFx.sparks(level, e, j, 12, 6.0);
         JobFx.burst(level, e, 1.6, j, 0.32, Opt.empty());
         SkillFx.play(level, "item.trident.riptide_3", sp.getEyePosition(), 0.9 + i * 0.1, 0.8);
         SkillFx.play(level, "item.trident.thunder", e, 1.3 + i * 0.15, 0.5);
@@ -633,11 +632,11 @@ final class SpellbladeSkills {
         JobFx.ring(level, V.up(ground, 0.06), radius, j, false, 0.45, Opt.empty());
         RuneKit.later(2, () -> JobFx.ring(level, V.up(ground, 0.1), radius * 0.6, j, true, 0.4, Opt.empty()));
         RuneKit.later(4, () -> JobFx.ring(level, V.up(ground, 0.08), radius * 1.6, j, false, 0.5, Opt.of("alpha", 0.75)));
-        SkillFx.shock(level, V.up(ground, 0.1), glow, radius * 1.4, 0.55);
+        JobFx.shockRing(level, V.up(ground, 0.1), j, radius * 1.4, 0.55);
         JobFx.radialWaves(sp, j, ground, 8, 0.8, radius * 1.5, 1.0, 1.9, 0.35, Kit.rand() * 45);
         JobFx.pillar(level, ground, 9.0, 0, 7, 0.6, false, Opt.of("alpha", 1.0), glow, core);
-        RuneKit.rockBurst(level, V.up(ground, 0.3), 14, 8.0, 0.2);
-        SkillFx.sparks(level, point, core, 24, 9);
+        PhantomFx.rocks(level, V.up(ground, 0.3), 14, 8.0, 0.2);
+        JobFx.sparks(level, point, j, 24, 9);
         RuneKit.later(3, () -> RuneKit.godRays(sp, level, ground, radius * 0.8, 6, glow, core, Opt.of("h", 14.0, "life", 0.8, "alpha", 0.8, "skipNear", true)));
         Ult.flash(level, point, glow, Opt.empty(), sp);
         SkillFx.play(level, "random.explode", point, 1.0, 1.0);

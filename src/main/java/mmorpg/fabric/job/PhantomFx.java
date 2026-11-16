@@ -81,6 +81,12 @@ final class PhantomFx {
     /** 2026-11-16 서리 (프로스트 레이더 — 옅은 얼음빛 · 빙하 남빛: 서리 고리 · 얼음 결정 · 서리 띠. 도끼 · 결정 · 얼음 가시는 3D 그대로) */
     static final int GLOW_FROST = 0x7ED0F8;
     static final Lib FROST = new Lib("el_frost", GLOW_FROST, 0xE2F7FF, "ember");
+    /** 2026-11-16 룬 (마검사 · 아케인 블레이드 — 보랏빛 · 청록: tools/jobvfx/rune.py · storm.py — 룬 띠 · 새긴 글자 · 아홉 글자 · 빛기둥 · 찢어짐 · 번개 · 빛의 창) */
+    static final int GLOW_RUNE = 0xB484FF;
+    static final Lib RUNE = new Lib("el_rune", GLOW_RUNE, 0x57F5F2, "ember");
+    /** 2026-11-16 원소의 칼 (엘리멘탈 블레이드 — 금빛 주황 · 얼음 하늘빛: 번개 · 번개 고리 · 빛의 창 · 불꽃 혀 · 회오리 · 서리 띠). 물 · 얼음 빛은 서리 · 바위는 곰 묶음 */
+    static final int GLOW_ELEMENT = 0xFFB84C;
+    static final Lib ELEMENT = new Lib("el_element", GLOW_ELEMENT, 0x8CE6FF, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -99,6 +105,8 @@ final class PhantomFx {
             case "warrior" -> RAGE; // 2026-11-16 전사 라인 (tools/jobvfx/beast.py)
             case "warlord" -> BEAR;
             case "frostraider" -> FROST;
+            case "spellblade", "arcaneblade" -> RUNE; // 2026-11-16 마검사 라인 (tools/jobvfx/rune.py)
+            case "elementalblade" -> elementLib(j.color()[0]); // 2026-11-16 원소마다 물들인 직업 (ElementalbladeSkills.tint) 은 그 원소의 묶음
             default -> null;
         };
     }
@@ -106,6 +114,32 @@ final class PhantomFx {
     /** 원소 공용 묶음으로 그리는 직업 (JobFx 공통 함수 · JobImpact 가 이 묶음으로 갈라짐 — 팬텀 아처 줄기는 PhantomArcher 길이라 뺌) */
     static Lib elem(Jobs.Job j) {
         return j == null || PhantomArcher.family(j) ? null : lib(j);
+    }
+
+    /**
+     * 2026-11-16 원소 빛 → 묶음 (엘리멘탈 블레이드가 원소마다 물들인 직업 · 원소 빛으로 그린 예전 rfx): 물 · 얼음 = 서리 (푸른 얼음빛), 바위 = 곰 (흙 · 호박빛), 불 · 전기 ·
+     * 직업 빛 = 원소의 칼 (금빛 주황). 원소 빛 배열은 규칙을 다시 읽으면 바뀌므로 그때그때 비교
+     */
+    static Lib elementLib(double[] glow) {
+        for (String id : mmorpg.core.Elements.order()) {
+            mmorpg.core.Elements.Element e = mmorpg.core.Elements.get(id);
+            if (e == null || (e.glow() != glow && e.core() != glow)) continue;
+            return switch (id) {
+                case "water", "ice" -> FROST;
+                case "rock" -> BEAR;
+                default -> ELEMENT;
+            };
+        }
+        return ELEMENT;
+    }
+
+    /** 원소 빛이면 그 원소의 묶음 (아니면 null) */
+    private static Lib elementOf(double[] glow) {
+        for (String id : mmorpg.core.Elements.order()) {
+            mmorpg.core.Elements.Element e = mmorpg.core.Elements.get(id);
+            if (e != null && (e.glow() == glow || e.core() == glow)) return elementLib(glow);
+        }
+        return null;
     }
 
     /** 이 묶음에 그림판이 있는지 (조각 그림은 이름_00) */
@@ -313,6 +347,18 @@ final class PhantomFx {
 
     static void shards(ServerLevel level, Lib L, Vec3 c, int n, double dist, double size, int life) {
         fly(level, c, n, dist, size, life, L.n("shard"), 0.55);
+    }
+
+    /**
+     * 2026-11-16 위르드식 튀는 돌 (예전 RuneKit.rockBurst — 칠한 예전 돌덩이 rpg:boulder 대신 곰 묶음의 도트 조각 (흙 · 호박빛 면이 구르는 여덟 칸)): 예전 수의 8할 ·
+     * 거리 ≈ 예전 속도 × 0.4 칸 · 크기 = 예전 반 크기 × 2.2 (불씨 · 바닐라 겹 없이 — 돌은 타지 않음)
+     */
+    static void rocks(ServerLevel level, Vec3 at, int n, double speed, double size) {
+        if (!has(BEAR, "shard")) {
+            RuneKit.rockBurst(level, at, n, speed, size);
+            return;
+        }
+        shards(level, BEAR, at, Math.max(1, (int) Math.round(n * 0.8)), Math.max(0.6, speed * 0.4), Math.max(0.22, size * 2.2), 16);
     }
 
     /** 날아가는 작은 그림 (불씨 · 조각): 솟음 → 둥글게 넘어감 → 떨어짐 (세 토막 보간) · 칸은 되풀이 (불씨는 깜박임 · 조각은 구름) */
@@ -1349,16 +1395,65 @@ final class PhantomFx {
             java.util.Map.entry("jpaw", new Paint("paw", 1, BILL, 1, 1)),
             java.util.Map.entry("jspike", new Paint("spike", 1, VERT, 1, 1)),
             // 2026-11-16 타격 섬광 (JobImpact 예전 길 · 워로드가 직접 부름 — 흰 심지 · 빛 가시 · 고리) · 반짝임 (jglint — 네 뿔 별) 은 묶음의 섬광으로
+            // 2026-11-16 마검사 라인 (tools/jobvfx/rune.py · storm.py — 예전 rfx 와 같은 칸 수 · 가로세로 비 · 땅 · 머리 자리)
+            java.util.Map.entry("jrunes", new Paint("runes", 1, LOOK_DIR, 0.125, 1)),
+            java.util.Map.entry("jglyph", new Paint("glyph", 1, BILL, 1, 1)),
+            java.util.Map.entry("jninerunes", new Paint("ninerunes", 1, BILL, 0.5, 1)),
+            java.util.Map.entry("jpillar", new Paint("rpillar", 1, VERT, 4, 1)),
+            java.util.Map.entry("jtear", new Paint("tear", 1, BILL, 0.5, 1)),
+            java.util.Map.entry("jthunder2", new Paint("thunder", 1, VERT, 4, 1)),
+            java.util.Map.entry("jvolt2", new Paint("volt", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jspear2", new Paint("spear", 1, LOOK_DIR, 1 / 6.0, 1)),
             java.util.Map.entry("jimpact", new Paint("flash", 1, BILL, 1, 1)),
+            // 2026-11-16 빛을 정해 부르는 엇갈린 베기 · 찌르기 · 도는 비수 (트릭스터 거울 속 나의 X 자국 · 피에로 상자의 비수 — JobFx.cross(glow) 등 · 예전 그림과 같은 틀 —
+            // tools/jobvfx/shadow.py 를 묶음 빛으로)
+            java.util.Map.entry("jcross2", new Paint("cross", 1, BILL, 1, 1)),
+            java.util.Map.entry("jstab2", new Paint("stab", 1, BILL, 1, 1)),
+            java.util.Map.entry("jdagger2", new Paint("dagger", 1, BILL, 1, 1)),
             java.util.Map.entry("jglint", new Paint("flash", 1, BILL, 1, 0.7)));
 
     /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
-    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot", "warrior", "warlord", "frostraider"};
+    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot", "warrior", "warlord", "frostraider", "spellblade",
+            "arcaneblade", "elementalblade"};
     /** 스킬이 직업 빛 대신 쓰는 빛 묶음 (같은 배열) → 묶음: 아크메이지 밤빛 · 금서의 세 주문 빛 · 프리즘 레이 다섯 빛 (무지개 대신 비전 광선) · 망자의 연기 */
     private static java.util.Map<double[], Lib> palette;
 
     /** 빛 glow 로 그린 예전 rfx 를 칠할 묶음 (없으면 null — 예전 길) */
     static Lib painter(double[] glow) {
+        return painter(glow, true);
+    }
+
+    /**
+     * 2026-11-16 위르드식 다리 (SkillFx.painted — JobSystem.init 이 등록): 칠한 직업 빛 (원소 빛은 빼고 — 룬 · 보스 · 원소 반응은 아직 예전 그림) 으로 부른 예전
+     * 파티클을 그 묶음의 그림 · 바닐라 겹으로. 색 먼지 불티 (SkillFx.sparks 한 무리 · rpg:arrow_spark 하나 — 모드 없는 클라이언트에서 둘레 빛을 받는 먼지) = 묶음의
+     * 스스로 빛나는 불티 (그림판 없이 — 스킬 하나에 수백 개라 표시 엔티티 대신 파티클), 퍼지는 땅 고리 (rpg:shock_ring) = 칠한 충격파 (지름 = 예전 크기 × 2), 터짐
+     * (rpg:bash_burst) = 칠한 섬광. 묶음에 그 그림이 없으면 false (예전 길)
+     */
+    static boolean oldFx(ServerLevel level, String id, Vec3 at, Opt o) {
+        boolean group = id.equals("sparks");
+        if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")) return false;
+        if (!(o.get("color") instanceof double[] glow)) return false;
+        Lib L = painter(glow, false);
+        if (L == null || WyrdKit.pal(L) == null) return false;
+        Predicate<ServerPlayer> who = who(o);
+        switch (id) {
+            case "sparks" -> WyrdKit.sparks(level, L, at, (int) o.num("n", 4), o.num("speed", 3), who);
+            case "rpg:arrow_spark" -> WyrdKit.spark(level, L, at, o.vec("dir", V.UP), o.num("speed", 1.5), who);
+            case "rpg:arrow_trail" -> WyrdKit.trail(level, L, at, o.vec("dir", V.UP), o.num("size", 0.3), who);
+            case "rpg:shock_ring" -> {
+                if (!has(L, "shock")) return false;
+                shock(level, L, V.up(at, -0.12), Math.max(0.6, o.num("size", 1) * 2.0), o.num("life", 0.4) >= 0.5 ? 2 : 1, who);
+            }
+            default -> {
+                if (!has(L, "flash")) return false;
+                flash(level, L, at, Math.max(0.4, o.num("size", 1) * 2.0), who);
+            }
+        }
+        return true;
+    }
+
+    /** 같은 것 — elements 면 원소 빛도 (엘리멘탈 블레이드가 원소마다 물들인 rfx) */
+    static Lib painter(double[] glow, boolean elements) {
         if (glow == null) return null;
         if (palette == null) {
             java.util.Map<double[], Lib> m = new java.util.IdentityHashMap<>();
@@ -1378,10 +1473,15 @@ final class PhantomFx {
             // 2026-11-16 프로스트 레이더의 얼음 · 서리 흰빛 (서리 고리 JobFx15.halo · 얼음 결정)
             m.put(JobTraits16.ICE, FROST);
             m.put(JobTraits16.FROST_WHITE, FROST);
+            // 2026-11-16 엘리멘탈 블레이드 바위 (돌가시 · 갈라진 땅의 흙빛 · 틈빛) → 곰 묶음
+            m.put(ElementalbladeSkills.ROCK_BODY, BEAR);
+            m.put(ElementalbladeSkills.ROCK_SEAM, BEAR);
             palette = m;
         }
         Lib L = palette.get(glow);
         if (L != null) return L;
+        Lib E = elements ? elementOf(glow) : null; // 2026-11-16 원소 빛 (엘리멘탈 블레이드)
+        if (E != null) return E;
         for (String id : PAINTED_JOBS) {
             Jobs.Job j = Jobs.job(id);
             if (j != null && (j.color()[0] == glow || j.color()[1] == glow)) return lib(j);

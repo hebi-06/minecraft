@@ -89,7 +89,7 @@ final class TricksterSkills {
 
     /** 환영 하나 (그림자 분신 — 청록 테두리): pose 0 섬 · 1 돌진 · 2 베기 · 3 찌르기 (던지기) */
     static void illusion(ServerPlayer sp, ServerLevel level, Vec3 feet, Vec3 face, int pose, Jobs.Job j, double life, double alpha) {
-        RuneKit.shadeClone(sp, level, feet, face, pose, illusionBody(j), ILLUSION, Opt.of("life", life, "fade", 0.35, "alpha", alpha));
+        JobFx.shade(sp, level, feet, face, pose, illusionBody(j), ILLUSION, Opt.of("life", life, "fade", 0.35, "alpha", alpha));
     }
 
     /** 환영이 깨짐: 거울 조각 (rfx_jmirror) · 검보라 연기 · 청록 반짝임 · 유리 소리 */

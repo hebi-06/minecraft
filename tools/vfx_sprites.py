@@ -313,7 +313,9 @@ def crop_cells(cells):
 PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el_shadow": "auto", "el_soul": "auto", "pa": "auto", "ak": "auto", "br": "auto",
               # 2026-11-16 남은 직업 묶음은 원소 램프 그대로 (auto 는 거울의 청록 유리가 자홍으로 묻혔음 — CI 43872303193 트릭스터 거울):
               # 트릭스터 환영 · 피에로 서커스 · 전사 분노 · 워로드 곰 · 프로스트 레이더 서리
-              "el_illusion": "illusion", "el_circus": "circus", "el_rage": "rage", "el_bear": "bear", "el_frost": "frost"}
+              "el_illusion": "illusion", "el_circus": "circus", "el_rage": "rage", "el_bear": "bear", "el_frost": "frost",
+              "el_rune": "rune",  # 2026-11-16 마검사 · 아케인 블레이드 룬
+              "el_element": "element"}  # 2026-11-16 엘리멘탈 블레이드
 
 
 def _old_outputs():

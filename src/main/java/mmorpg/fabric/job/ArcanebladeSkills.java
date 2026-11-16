@@ -132,13 +132,13 @@ final class ArcanebladeSkills {
         // 눈앞 큰 베기 (1인칭 화면 가운데 · 3인칭은 몸 앞 참격 판): 가로 — 오른쪽에서 왼쪽, 세로 — 위에서 아래
         JobFx.slash(sp, j, 2.2, 0.3, vertical ? 2.3 : 2.1, vertical ? 96.0 : 172.0, 0.26);
         RuneKit.Hand h = RuneKit.handOf(sp);
-        SkillFx.sparks(level, V.up(h.hand(), 0.3), JobFx.inner(j), 10, 5.0);
+        JobFx.sparks(level, V.up(h.hand(), 0.3), j, 10, 5.0);
         if (vertical) {
             // 세로로 내려 그은 검기가 땅을 스치며 갈라 놓음 (갈라짐이 검기를 따라 달림) · 칼이 땅에 닿은 자리의 터짐
             WarlordSkills.rift(level, ground(level, V.add(c, f, start)), f, L - start, JobFx.outer(j), 1.0, speed * 20);
             Vec3 g = ground(level, V.add(c, f, 1.4));
             JobFx.burst(level, V.up(g, 0.3), 0.9, j, 0.28, JobFx.hide1p(sp));
-            RuneKit.rockBurst(level, V.up(g, 0.2), 5, 4.5, 0.14);
+            PhantomFx.rocks(level, V.up(g, 0.2), 5, 4.5, 0.14);
             SkillFx.play(level, "item.mace.smash_ground", g, 1.2, 0.6);
         }
         SkillFx.play(level, "entity.player.attack.sweep", c, vertical ? 0.6 : 0.8, 1.0);
@@ -200,11 +200,11 @@ final class ArcanebladeSkills {
         int crossAt = Math.max(hitAt + 10, (int) k.num("crossAt", 12));
         Kit.noFall(sp, 40);
         // 떠난 자리 · 지나간 길: 칼을 뻗고 지나가는 잔상 셋 (점점 옅게) · 마력 번개 · 돌진 줄기 (1인칭은 빠른 줄)
-        RuneKit.shadeClone(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.6, "fade", 0.6, "alpha", 0.85));
+        JobFx.shade(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.6, "fade", 0.6, "alpha", 0.85));
         if (len > 1.5) {
             for (int i = 1; i <= 2; i++) {
                 Vec3 p = V.add(start, f, len * i / 3.0);
-                RuneKit.shadeClone(sp, level, new Vec3(p.x, RuneKit.groundAt(level, p, start.y), p.z), f, 1, SHADE, glow, Opt.of("life", 0.5 - 0.08 * i, "fade",
+                JobFx.shade(sp, level, new Vec3(p.x, RuneKit.groundAt(level, p, start.y), p.z), f, 1, SHADE, glow, Opt.of("life", 0.5 - 0.08 * i, "fade",
                         0.6, "alpha", 0.75 - 0.15 * i));
             }
             Vec3 zapEnd = V.add(dest, f, -Math.min(1.8, len * 0.4));
@@ -247,7 +247,7 @@ final class ArcanebladeSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             for (LivingEntity e : targets) {
                 if (e.isRemoved() || !e.isAlive() || !(e.level() instanceof ServerLevel lv)) continue;
-                SkillFx.sparks(lv, Kit.bodyPoint(e), core, 4, 1.5);
+                JobFx.sparks(lv, Kit.bodyPoint(e), j, 4, 1.5);
             }
             SkillFx.play(sp.level(), "block.respawn_anchor.charge", c, 1.7, 0.55);
         });
@@ -272,7 +272,7 @@ final class ArcanebladeSkills {
                     JobFx.slashCard(lv, V.up(b, 0.3), f, 135.0, 4.4 + Kit.bodyPad(e), 0.36, V.ZERO, j, Opt.empty());
                     JobFx.burst(lv, b, 1.0 + Kit.bodyPad(e) * 0.4, j, 0.32, Opt.empty());
                     JobFx.runeRing(lv, V.up(e.position(), 0.1), 1.6 + Kit.bodyPad(e), j, 6, Kit.rand() * 60, 0.4, Opt.of("alpha", 0.8));
-                    SkillFx.sparks(lv, b, core, 12, 6.0);
+                    JobFx.sparks(lv, b, j, 12, 6.0);
                 }
                 JobKit.strike(sp, e, j, P, k.num("cross", 2.55), true, false, life, 0, x -> {
                     markOnce(sp, e, j, marked);
@@ -337,12 +337,8 @@ final class ArcanebladeSkills {
                     Vec3 p = new Vec3(c.x + Math.cos(a) * r, c.y + 0.4 + q * 1.2, c.z + Math.sin(a) * r);
                     JobFx.bigWave(lv, null, p, V.UP, 5.0, 0.9 + 0.3 * q, 60 + i * 60 + tt * 20, 0.3, j, Opt.of("alpha", 0.8));
                 }
-                for (int i = 0; i < 3; i++) {
-                    double a = Kit.rand() * Math.PI * 2;
-                    Vec3 from = new Vec3(c.x + Math.cos(a) * R, c.y + 0.3 + Kit.rand() * 1.5, c.z + Math.sin(a) * R);
-                    SkillFx.fx(lv, "rpg:arrow_spark", from, Opt.of("dir", V.unit(V.sub(V.up(c, 1.5), from)), "speed", R * 3.5, "size", 0.13, "grow", 0.3, "life", 0.28,
-                            "color", i % 2 == 0 ? JobFx.inner(j) : JobFx.outer(j), "alpha", 1.0));
-                }
+                // 2026-11-16 위르드식: 둘레에서 가운데로 빨려 드는 불티 (예전 색 먼지 대신 묶음의 빨려 듦 겹 — 마법 글자)
+                WyrdKit.pull(lv, PhantomFx.lib(j), V.up(c, 1.0), R, 3, null);
                 if (tt % 4 == 0) SkillFx.play(lv, "item.elytra.flying", c, 1.4 + q * 0.4, 0.25);
             });
         }
@@ -363,7 +359,7 @@ final class ArcanebladeSkills {
         JobFx.radialWaves(sp, j, c, 8, 1.1, R, 1.0, 1.35, 0.22, 22.5);
         JobFx.whirl(level, V.up(c, 0.95), R * 0.7, j, 0.35, Opt.of("alpha", 0.9));
         JobFx.ring(level, V.up(c, 0.08), R, j, false, 0.4, Opt.empty());
-        SkillFx.shock(level, V.up(c, 0.1), JobFx.outer(j), R, 0.4);
+        JobFx.shockRing(level, V.up(c, 0.1), j, R, 0.4);
         JobFx.slash(sp, j, 2.2, 0.35, 2.4, 180.0, 0.24);
         SkillFx.play(level, "entity.player.attack.sweep", c, 0.55, 1.0);
         SkillFx.play(level, "item.trident.riptide_3", c, 1.0, 0.8);
@@ -393,9 +389,9 @@ final class ArcanebladeSkills {
         }
         JobFx.runeRing(level, V.up(c, 0.1), R, j, 12, Kit.rand() * 30, 0.5, Opt.empty());
         JobFx.ring(level, V.up(c, 0.08), R * 0.9, j, true, 0.45, Opt.empty());
-        SkillFx.shock(level, V.up(c, 0.1), JobFx.inner(j), R * 1.1, 0.5);
-        RuneKit.rockBurst(level, V.up(c, 0.3), 9, 6.5, 0.17);
-        SkillFx.sparks(level, mid, JobFx.inner(j), 22, 8.0);
+        JobFx.shockRing(level, V.up(c, 0.1), j, R * 1.1, 0.5);
+        PhantomFx.rocks(level, V.up(c, 0.3), 9, 6.5, 0.17);
+        JobFx.sparks(level, mid, j, 22, 8.0);
         // 1인칭: 눈앞 터짐과 고리 (보는 쪽 2.8칸 — 화면 가운데 조금 아래)
         Vec3 look = sp.getViewVector(1F);
         Vec3 ahead = V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), -0.3);
@@ -467,8 +463,8 @@ final class ArcanebladeSkills {
             tear(lv, tearAt, f, half * 1.15, 0, 2, 0.1, false, j);
             RuneKit.later(2, () -> tear(lv, tearAt, f, half * 1.15, 2, 4, open / 20.0, true, j));
             RuneKit.later(open + 2, () -> tear(lv, tearAt, f, half * 1.15, 6, 2, 0.12, false, j));
-            SkillFx.shock(lv, V.up(V.add(c0, f, ahead), 0.1), JobFx.outer(j), half * 0.8, 0.4);
-            SkillFx.sparks(lv, tearAt, JobFx.inner(j), 18, 6.0);
+            JobFx.shockRing(lv, V.up(V.add(c0, f, ahead), 0.1), j, half * 0.8, 0.4);
+            JobFx.sparks(lv, tearAt, j, 18, 6.0);
             SkillFx.play(lv, "entity.player.attack.sweep", c0, 0.6, 1.0);
             SkillFx.play(lv, "block.end_portal.spawn", tearAt, 1.6, 0.35);
             SkillFx.play(lv, "item.trident.riptide_2", c0, 1.4, 0.6);
@@ -530,7 +526,7 @@ final class ArcanebladeSkills {
                         JobFx.line(lv, Kit.bodyPoint(e), V.lerp(Kit.bodyPoint(e), to, 0.85), j, 0.14, Opt.of("alpha", 0.7));
                     }
                 }
-                SkillFx.sparks(lv, V.add(tearAt, right, (Kit.rand() - 0.5) * half * 1.6), JobFx.inner(j), 3, 2.0);
+                JobFx.sparks(lv, V.add(tearAt, right, (Kit.rand() - 0.5) * half * 1.6), j, 3, 2.0);
                 if ((tt - pullFrom) % 6 == 0) SkillFx.play(lv, "block.portal.ambient", tearAt, 1.5, 0.35);
             });
         }
@@ -546,8 +542,8 @@ final class ArcanebladeSkills {
             for (int s2 = -1; s2 <= 1; s2 += 2) JobFx.bigWave(lv, null, tearAt, f, 0, half * 0.7, 45 * s2, 0.32, j, Opt.empty());
             JobFx.burst(lv, tearAt, 3.0, j, 0.45, Opt.empty());
             JobFx.ring(lv, V.up(V.add(c0, f, ahead), 0.08), half * 0.9, j, false, 0.45, Opt.of("alpha", 0.95));
-            SkillFx.shock(lv, V.up(V.add(c0, f, ahead), 0.1), JobFx.outer(j), half * 1.1, 0.5);
-            SkillFx.sparks(lv, tearAt, JobFx.inner(j), 26, 8.0);
+            JobFx.shockRing(lv, V.up(V.add(c0, f, ahead), 0.1), j, half * 1.1, 0.5);
+            JobFx.sparks(lv, tearAt, j, 26, 8.0);
             Ult.flash(lv, tearAt, JobFx.inner(j), Opt.of("radius", 6.0, "time", new double[] {0.03, 0.04, 0.25}), sp);
             SkillFx.play(lv, "random.explode", tearAt, 1.0, 0.8);
             SkillFx.play(lv, "block.amethyst_block.shatter", tearAt, 0.7, 1.0);
@@ -621,7 +617,7 @@ final class ArcanebladeSkills {
                 ServerLevel lv = sp.level();
                 double q = (tt - 4) / (double) (slamAt - 6);
                 Vec3 tipAt = V.up(sp.position(), 2.6 + 6.0 * q);
-                SkillFx.sparks(lv, tipAt, JobFx.inner(j), 5, 3.0);
+                JobFx.sparks(lv, tipAt, j, 5, 3.0);
                 JobFx.runeRing(lv, V.up(sp.position(), 2.4 + 5.0 * q), 1.2 + 0.6 * q, j, 6, tt * 25, 0.25, JobFx.hide1p(sp).with("alpha", 0.6));
                 SkillFx.play(lv, "block.amethyst_block.resonate", tipAt, 0.6 + 0.8 * q, 0.5);
             });
@@ -698,9 +694,9 @@ final class ArcanebladeSkills {
         JobFx.smash(level, V.up(hit, 0.05), 3.0, j, 0.5, Opt.empty());
         JobFx.bigWave(level, sp, V.up(V.add(c0, f, start), 1.8), f, 45.0, 3.4, 90, (len - start) / 45.0 + 0.15, j, Opt.empty());
         WarlordSkills.rift(level, ground(level, V.add(c0, f, start)), f, len - start, JobFx.outer(j), 1.8, 60);
-        SkillFx.shock(level, V.up(hit, 0.1), JobFx.outer(j), 4.5, 0.5);
-        RuneKit.rockBurst(level, V.up(hit, 0.3), 12, 7.5, 0.2);
-        SkillFx.sparks(level, V.up(hit, 0.8), JobFx.inner(j), 24, 8.0);
+        JobFx.shockRing(level, V.up(hit, 0.1), j, 4.5, 0.5);
+        PhantomFx.rocks(level, V.up(hit, 0.3), 12, 7.5, 0.2);
+        JobFx.sparks(level, V.up(hit, 0.8), j, 24, 8.0);
         JobFx.slash(sp, j, 2.4, 0.2, 3.2, 96.0, 0.3);
         RuneKit.godRays(sp, level, hit, 4.0, 8, JobFx.outer(j), JobFx.inner(j), Opt.of("h", 8.0, "life", 0.7, "alpha", 0.7, "skipNear", true));
         Ult.flash(level, c0, JobFx.inner(j), Opt.empty(), sp);
@@ -743,8 +739,8 @@ final class ArcanebladeSkills {
                     RuneKit.later(8, () -> tear(lv, ta, f, 1.05 * q, 6, 2, 0.12, false, j));
                 }
                 JobFx.glyph(lv, V.up(g, 1.4), 0.7, (int) (Kit.rand() * 3), 4, 2, 0.3, false, Opt.empty(), j);
-                RuneKit.rockBurst(lv, V.up(g, 0.2), 3, 5.0, 0.15);
-                SkillFx.sparks(lv, V.up(g, 1.0), JobFx.inner(j), 8, 6.0);
+                PhantomFx.rocks(lv, V.up(g, 0.2), 3, 5.0, 0.15);
+                JobFx.sparks(lv, V.up(g, 1.0), j, 8, 6.0);
                 if (((int) Math.round(ss / 1.5)) % 2 == 0) SkillFx.play(lv, "random.explode", g, 1.1, 0.55);
             });
         }

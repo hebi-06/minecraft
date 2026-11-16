@@ -3663,12 +3663,84 @@
   },
   {
    "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_halo_00.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_halo_01.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_halo_10.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_halo_11.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_cross.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_speed.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_illusion_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "rpg:font/vfx/el_circus_slash_00.png",
    "height": 40,
    "ascent": 18,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3677,8 +3749,8 @@
    "height": 42,
    "ascent": 19,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3687,8 +3759,8 @@
    "height": 38,
    "ascent": 17,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3697,8 +3769,8 @@
    "height": 42,
    "ascent": 19,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3707,8 +3779,8 @@
    "height": 42,
    "ascent": 19,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3717,8 +3789,8 @@
    "height": 40,
    "ascent": 18,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3727,8 +3799,8 @@
    "height": 42,
    "ascent": 19,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3737,8 +3809,8 @@
    "height": 38,
    "ascent": 17,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3747,7 +3819,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3756,7 +3828,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3765,7 +3837,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3774,7 +3846,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3783,8 +3855,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3793,8 +3865,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3803,8 +3875,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3813,8 +3885,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3823,7 +3895,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3832,7 +3904,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3841,7 +3913,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3850,7 +3922,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3859,7 +3931,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3868,7 +3940,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3877,7 +3949,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3886,7 +3958,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3895,8 +3967,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3905,8 +3977,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3915,7 +3987,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3924,7 +3996,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3933,8 +4005,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3943,7 +4015,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3952,7 +4024,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3961,8 +4033,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -3971,7 +4043,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3980,7 +4052,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3989,7 +4061,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -3998,7 +4070,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4007,7 +4079,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4016,7 +4088,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4025,7 +4097,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4034,7 +4106,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4043,7 +4115,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4052,7 +4124,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4061,7 +4133,7 @@
    "height": 58,
    "ascent": 27,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4070,7 +4142,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4079,7 +4151,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4088,7 +4160,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4097,7 +4169,70 @@
    "height": 40,
    "ascent": 18,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_halo_00.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_halo_01.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_halo_10.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_halo_11.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_cross.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_dagger.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_circus_smoke.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -4106,8 +4241,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4116,8 +4251,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4126,8 +4261,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4136,8 +4271,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4146,8 +4281,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4156,8 +4291,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4166,8 +4301,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4176,8 +4311,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4186,7 +4321,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4195,7 +4330,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4204,7 +4339,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4213,7 +4348,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4222,8 +4357,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4232,8 +4367,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4242,8 +4377,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4252,8 +4387,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4262,7 +4397,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4271,7 +4406,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4280,7 +4415,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4289,7 +4424,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4298,7 +4433,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4307,7 +4442,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4316,7 +4451,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4325,7 +4460,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4334,8 +4469,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4344,8 +4479,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4354,7 +4489,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4363,7 +4498,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4372,8 +4507,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4382,7 +4517,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4391,7 +4526,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4400,8 +4535,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4410,7 +4545,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4419,7 +4554,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4428,7 +4563,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4437,7 +4572,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4446,7 +4581,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4455,7 +4590,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4464,7 +4599,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4473,7 +4608,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4482,7 +4617,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4491,7 +4626,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4500,7 +4635,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4509,7 +4644,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4518,7 +4653,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4527,7 +4662,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4536,8 +4671,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4546,7 +4681,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4555,7 +4690,25 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_speed.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rage_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -4564,8 +4717,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4574,8 +4727,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4584,8 +4737,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4594,8 +4747,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4604,8 +4757,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4614,8 +4767,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4624,8 +4777,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4634,8 +4787,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4644,7 +4797,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4653,7 +4806,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4662,7 +4815,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4671,7 +4824,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4680,8 +4833,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4690,8 +4843,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4700,8 +4853,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4710,8 +4863,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4720,7 +4873,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4729,7 +4882,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4738,7 +4891,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4747,7 +4900,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4756,7 +4909,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4765,7 +4918,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4774,7 +4927,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4783,7 +4936,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4792,8 +4945,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4802,8 +4955,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4812,7 +4965,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4821,7 +4974,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4830,8 +4983,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4840,7 +4993,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4849,7 +5002,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4858,8 +5011,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4868,7 +5021,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4877,7 +5030,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4886,7 +5039,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4895,7 +5048,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4904,7 +5057,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4913,7 +5066,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4922,7 +5075,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4931,7 +5084,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4940,7 +5093,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4949,7 +5102,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4958,7 +5111,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4967,8 +5120,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -4977,7 +5130,7 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -4986,7 +5139,25 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_spike.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_bear_rift.png",
+   "height": 17,
+   "ascent": 6,
+   "chars": [
+    ""
    ]
   },
   {
@@ -4995,8 +5166,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5005,8 +5176,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5015,8 +5186,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5025,8 +5196,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5035,8 +5206,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5045,8 +5216,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5055,8 +5226,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5065,8 +5236,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5075,7 +5246,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5084,7 +5255,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5093,7 +5264,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5102,7 +5273,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5111,8 +5282,8 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5121,8 +5292,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5131,8 +5302,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5141,8 +5312,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5151,7 +5322,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5160,7 +5331,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5169,7 +5340,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5178,7 +5349,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5187,7 +5358,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5196,7 +5367,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5205,7 +5376,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5214,7 +5385,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5223,8 +5394,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5233,8 +5404,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5243,7 +5414,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5252,7 +5423,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5261,8 +5432,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5271,7 +5442,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5280,7 +5451,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5289,8 +5460,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -5299,7 +5470,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5308,7 +5479,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5317,7 +5488,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5326,7 +5497,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5335,7 +5506,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5344,7 +5515,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5353,7 +5524,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5362,7 +5533,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5371,7 +5542,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5380,7 +5551,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5389,7 +5560,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5398,7 +5569,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5407,7 +5578,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5416,7 +5587,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5425,7 +5596,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -5434,7 +5605,1051 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_xslash_00.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_xslash_11.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_boom_00.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_boom_01.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_boom_10.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_boom_11.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_ring_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_ring_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_ring_10.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_ring_11.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_dust.png",
+   "height": 32,
+   "ascent": 14,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_rift.png",
+   "height": 18,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_speed.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_cut.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_runes.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_glyph.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_ninerunes.png",
+   "height": 39,
+   "ascent": 17,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_rpillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_tear.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_thunder.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_volt.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_spear.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_beam.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_whirl.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_rune_twister.png",
+   "height": 63,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_xslash_00.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_xslash_11.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_boom_00.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_boom_01.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_boom_10.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_boom_11.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_ring_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_ring_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_ring_10.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_ring_11.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_dust.png",
+   "height": 32,
+   "ascent": 14,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_cut.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_thunder.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_volt.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_spear.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_halo_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_halo_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_halo_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_halo_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_flame.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_whirl.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_element_twister.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   }
  ]

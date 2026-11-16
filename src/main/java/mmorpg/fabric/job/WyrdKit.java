@@ -106,6 +106,10 @@ final class WyrdKit {
     static final Pal BEAR = new Pal(0xA85C24, 0xFFC266, SMALL_FLAME, WAX, null, WAX, SMALL_FLAME, WAX);
     /** 2026-11-16 서리 (프로스트 레이더): 흰 불꽃놀이 · end_rod 반짝임 · 눈송이 (떠도는 눈) · 흰 빛 점 */
     static final Pal FROST = new Pal(0x4CAEE6, 0xB4E8FF, SPARKLE, END_ROD, null, SNOW, END_ROD, WHITE_DOT);
+    /** 2026-11-16 룬 (마검사 · 아케인 블레이드): 흰 불꽃놀이 · end_rod · 마법 글자 (enchant — 떠오르고 빨려 듦) · 청록 빛 점 (발광) */
+    static final Pal RUNE = new Pal(0x9058F0, 0x57F5F2, SPARKLE, END_ROD, null, ENCHANT, ENCHANT, GLOW);
+    /** 2026-11-16 원소의 칼 (엘리멘탈 블레이드): 흰 불꽃놀이 · 금빛 밀랍 반짝임 · end_rod · 금빛 점 */
+    static final Pal ELEMENT = new Pal(0xF8A030, 0x8CE6FF, SPARKLE, WAX, null, END_ROD, END_ROD, WAX);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -124,6 +128,8 @@ final class WyrdKit {
             case "el_rage" -> RAGE;
             case "el_bear" -> BEAR;
             case "el_frost" -> FROST;
+            case "el_rune" -> RUNE;
+            case "el_element" -> ELEMENT;
             default -> null;
         };
     }
@@ -273,6 +279,45 @@ final class WyrdKit {
         if (P == null || n <= 0 || !go("embers", 6)) return;
         spray(l, null, P.spark(), c, Math.max(2, n / 2), 0.15, dist);
         spray(l, null, P.glint(), c, Math.max(1, n / 3), 0.2, dist * 0.8);
+    }
+
+    /**
+     * 2026-11-16 예전 색 먼지 불티 한 무리 (SkillFx.sparks — 다리 PhantomFx.oldFx): 묶음의 스스로 빛나는 불티 · 반짝임 (그림판 없이 — 불티는 스킬 하나에 수백 개라 표시
+     * 엔티티 대신 파티클). n 개 (예전 수의 절반쯤) · speed 칸/초 (예전 값 — 날아가는 거리 ≈ speed × 0.3)
+     */
+    static void sparks(ServerLevel l, PhantomFx.Lib L, Vec3 at, int n, double speed, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || n <= 0 || !go("sparks", 10)) return;
+        double dist = Math.max(0.3, speed * 0.3);
+        spray(l, who, P.spark(), at, Math.max(1, (n + 1) / 2), 0.08, dist);
+        if (n >= 4) spray(l, who, P.glint(), at, Math.max(1, n / 5), 0.12, dist * 0.8);
+    }
+
+    /**
+     * 2026-11-16 예전 빛줄기 조각 하나 (rpg:arrow_trail — SkillFx.beam · bolt 의 선 조각, 모드 없는 클라이언트에서 먼지 줄): 조각 (가운데 mid · 방향 dir · 반 길이 half)
+     * 을 따라 묶음의 스스로 빛나는 점 (0.3칸마다 · 하나 걸러 밝은 빛)
+     */
+    static void trail(ServerLevel l, PhantomFx.Lib L, Vec3 mid, Vec3 dir, double half, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || !go("trail", 24)) return;
+        double dl = V.len(dir);
+        Vec3 d = dl > 1e-6 ? V.scale(dir, 1 / dl) : V.UP;
+        int n = Math.max(1, Math.min(6, (int) Math.round(half * 2 / 0.3)));
+        for (int i = 0; i < n; i++) {
+            double t = n == 1 ? 0 : (i / (double) (n - 1) - 0.5) * 2 * half;
+            dot(l, who, P, V.add(mid, d, t), i % 2 == 0, 1.0);
+        }
+    }
+
+    /** 2026-11-16 예전 색 먼지 불티 하나 (rpg:arrow_spark — 손 · 칼끝의 불티): dir 쪽으로 speed 칸/초 (예전 값) */
+    static void spark(ServerLevel l, PhantomFx.Lib L, Vec3 at, Vec3 dir, double speed, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || P.spark() == null || !go("spark1", 14)) return;
+        double dl = V.len(dir);
+        Vec3 d = dl > 1e-6 ? V.scale(dir, 1 / dl) : V.UP;
+        Part S = P.spark();
+        if (S.reach() <= 0 && !S.in()) p(l, who, S.o(), at, 1, 0.04, 0.04, 0.04, 0.01);
+        else pv(l, who, S.o(), at, V.scale(d, S.v(Math.max(0.2, speed * 0.3))));
     }
 
     // ------------------------------------------------------------ 땅
@@ -526,6 +571,22 @@ final class WyrdKit {
     static void snow(ServerLevel l, Vec3 at, int n, double spread, Predicate<ServerPlayer> who) {
         if (!ON || !go("snow", 6)) return;
         p(l, who, ParticleTypes.SNOWFLAKE, at, n, spread, spread * 0.6, spread, 0.02);
+    }
+
+    /**
+     * 2026-11-16 원소 알갱이 (엘리멘탈 블레이드 칼날 빛 — 예전 색 먼지 rpg:arrow_spark 대신 원소마다 스스로 빛나는 바닐라): 불 = 불꽃 · 물 = 발광 물빛 · 전기 = 번쩍 불똥 ·
+     * 얼음 = 눈송이 · 바위 = 밀랍 금빛 점. n 개 · 퍼짐 spread 칸
+     */
+    static void elementMote(ServerLevel l, String el, Vec3 at, int n, double spread, Predicate<ServerPlayer> who) {
+        if (!ON || !go("emote", 6)) return;
+        ParticleOptions o = switch (el == null ? "" : el) {
+            case "fire" -> ParticleTypes.SMALL_FLAME;
+            case "water" -> ParticleTypes.GLOW;
+            case "thunder" -> ParticleTypes.ELECTRIC_SPARK;
+            case "ice" -> ParticleTypes.SNOWFLAKE;
+            default -> ParticleTypes.WAX_ON;
+        };
+        p(l, who, o, at, n, spread, spread, spread, "fire".equals(el) ? 0.02 : 0.01);
     }
 
     /** 힘 모으기 끝 (번쩍): 작은 터짐 · 반짝임 */

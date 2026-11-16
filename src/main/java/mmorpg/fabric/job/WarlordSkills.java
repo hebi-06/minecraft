@@ -70,7 +70,7 @@ final class WarlordSkills {
             });
         }
         PhantomFx.dust(b.level(), PhantomFx.BEAR, V.up(b.pos(), 0.3), Math.min(2.6, 0.9 + (14) * 0.12));
-        RuneKit.rockBurst(b.level(), V.up(b.pos(), 0.3), 6, 4.0, 0.18);
+        PhantomFx.rocks(b.level(), V.up(b.pos(), 0.3), 6, 4.0, 0.18);
     }
 
     /** 곰이 at 틱 뒤 동작 name 을 틂 (살아 있으면 — hold = 끝 자세를 다음 동작까지 지킴, 아니면 끝나면 늘 트는 동작으로) */
@@ -131,6 +131,13 @@ final class WarlordSkills {
 
     /** 앞으로 뻗는 균열 한 갈래 (조각마다 그 자리에 닿는 때 — 어두운 틈 · 직업 빛 · 흰 금, 땅에 눕힘) · 튀는 돌 · 흙먼지. 닿는 데 걸리는 틱은 speed 칸/초 */
     static void rift(ServerLevel level, Vec3 g, Vec3 f, double len, double[] glow, double width, double speed) {
+        // 2026-11-16 위르드식: 이 빛을 칠하는 묶음 (워로드 곰 · 마검사 · 아케인 블레이드 룬 · 엘리멘탈 블레이드 바위) 에 땅 가르기 그림이 있으면 칠한 균열 (예전 fissure 세 겹 ·
+        // 색 먼지 불티 대신)
+        PhantomFx.Lib L = PhantomFx.painter(glow);
+        if (L != null && PhantomFx.has(L, "rift")) {
+            riftPainted(level, L, g, f, len, width, speed);
+            return;
+        }
         double piece = 1.8;
         double spin = Math.toDegrees(Math.atan2(f.z, -f.x));
         for (double s = 0.3; s < len; s += piece) {
@@ -145,8 +152,28 @@ final class WarlordSkills {
                 RuneKit.rfx(level, "fissure", V.up(m, 0.035), base.with("cell", 0.0, "color", RIFT, "alpha", 0.92));
                 RuneKit.rfx(level, "fissure", V.up(m, 0.055), base.with("cell", 1.0, "color", glow, "alpha", 0.95));
                 RuneKit.rfx(level, "fissure", V.up(m, 0.075), base.with("cell", 2.0, "color", WHITE, "alpha", 1.0));
-                RuneKit.rockBurst(level, V.up(m, 0.15), 2, 3.2, 0.15);
+                PhantomFx.rocks(level, V.up(m, 0.15), 2, 3.2, 0.15);
                 SkillFx.sparks(level, V.up(m, 0.15), DUST, 4, 2.6);
+            });
+        }
+    }
+
+    /**
+     * 칠한 땅 가르기 (PhantomFx.rift — 조각마다 흰 금이 번쩍 → 벌어진 틈 → 식음): 조각 길이 = 예전 너비 몫 × 1.6 칸 (블러드 나이트가 예전 1.6 → 칠한 2.6 으로 바꾼 것과
+     * 같은 몫) · 조각 둘에 하나씩 튀는 도트 조각 · 묶음 불티 (바닐라)
+     */
+    private static void riftPainted(ServerLevel level, PhantomFx.Lib L, Vec3 g, Vec3 f, double len, double width, double speed) {
+        double piece = Math.max(1.0, Math.min(3.0, 1.6 * width));
+        PhantomFx.rift(level, L, g, f, len, speed, piece);
+        Vec3 h = V.flat(f);
+        if (V.len(h) < 1e-6) return;
+        Vec3 u = V.unit(h);
+        for (double s = 0.3; s < len; s += piece * 1.6) {
+            double ss = s;
+            RuneKit.later((int) Math.round(s / Math.max(1, speed) * 20), () -> {
+                Vec3 m = ground(level, V.add(g, u, ss + piece * 0.4));
+                PhantomFx.rocks(level, V.up(m, 0.15), 2, 3.2, 0.15);
+                WyrdKit.sparks(level, L, V.up(m, 0.2), 4, 2.6, null);
             });
         }
     }
@@ -157,7 +184,7 @@ final class WarlordSkills {
         JobFx.smash(level, V.up(g, 0.05), radius, j, 0.5 + 0.1 * scale, Opt.empty());
         JobFx.burst(level, V.up(g, 0.5), 1.0 * scale, j, 0.32, Opt.empty());
         JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(g, 0.6), 0.3, Opt.of("size", 1.2 * scale, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), WHITE);
-        RuneKit.rockBurst(level, V.up(g, 0.2), (int) Math.round(7 * scale), 5.0, 0.17 * scale);
+        PhantomFx.rocks(level, V.up(g, 0.2), (int) Math.round(7 * scale), 5.0, 0.17 * scale);
         JobFx.sparks(level, V.up(g, 0.3), j, (int) Math.round(10 * scale), 5.5);
         JobFx.dirt(level, V.up(g, 0.2), j, (int) Math.round(9 * scale), 3.4, DUST);
         SkillFx.play(level, "mace.heavy_smash_ground", g, 0.8, 0.95);
@@ -297,7 +324,7 @@ final class WarlordSkills {
                 JobKit.strike(sp, e, j, P, k.total() * frac, false, false, life, delay, d -> {
                     JobImpact.hit(sp, e, j, full ? 1.7 : 1.2 + 0.3 * c);
                     if (full && JobKit.pushable(e)) Kit.launch(e, 0, k.num("lift", 0.9), 0);
-                    if (cnt[0]++ < 6 && e.level() instanceof ServerLevel lv) RuneKit.rockBurst(lv, V.up(e.position(), 0.2), 3, 3.5, 0.15);
+                    if (cnt[0]++ < 6 && e.level() instanceof ServerLevel lv) PhantomFx.rocks(lv, V.up(e.position(), 0.2), 3, 3.5, 0.15);
                 });
             }
         });
@@ -458,7 +485,7 @@ final class WarlordSkills {
             bearAnim(b, slamAt - BEAR_SLAM_AT, "hugslam", false);
             bearLeave(b, slamAt + 10);
             JobFx.dirt(level, V.up(b.pos(), 0.3), j, 14, 3.4, DUST);
-            RuneKit.rockBurst(level, V.up(b.pos(), 0.3), 6, 4.0, 0.18);
+            PhantomFx.rocks(level, V.up(b.pos(), 0.3), 6, 4.0, 0.18);
         }
         // 앞발 둘 (곰이 없을 때만 — 3인칭 · 다른 사람): 양옆 4칸 위에서 가운데로 휩쓸어 모임 · 1인칭: 눈앞 양옆에서
         double life0 = (pullAt + pullTicks) / 20.0;
@@ -703,7 +730,7 @@ final class WarlordSkills {
             RuneKit.later(d, () -> spike3d(level, p, 0.95 + Kit.rand() * 0.25, 0.1, 0.5, JobKit.glow(j))); // 2026-11-13 3D 돌창
         }
         boulders(level, g, Kit.facingOf(sp), 9, r * 0.55, r * 0.9, 0.5, 0.9, 3.6, JobKit.glow(j));
-        RuneKit.rockBurst(level, V.up(g, 0.3), 12, 6.0, 0.2);
+        PhantomFx.rocks(level, V.up(g, 0.3), 12, 6.0, 0.2);
         JobFx.dirt(level, V.up(g, 0.3), j, 16, 4.0, DUST);
         SkillFx.play(level, "mace.heavy_smash_ground", g, 0.6, 0.9);
         SkillFx.play(level, "random.explode", g, 0.7, 0.6);
@@ -828,7 +855,7 @@ final class WarlordSkills {
                 spike3d(level, p, 1.15 + Kit.rand() * 0.3, 0.12, 0.7, JobKit.glow(j)); // 2026-11-13 3D 돌창
                 if (ii % 2 == 0) JobFx.two(level, "jquake", JobFx.QUAKE, V.up(p, 0.05), 0.6, Opt.of("dir", V.UP, "size", 1.4 / 0.92, "spin", Kit.rand() * 360),
                         JobFx.outer(j), JobFx.inner(j));
-                RuneKit.rockBurst(level, V.up(p, 0.3), 3, 4.5, 0.18);
+                PhantomFx.rocks(level, V.up(p, 0.3), 3, 4.5, 0.18);
             });
         }
         for (int i = 0; i < 8; i++) {

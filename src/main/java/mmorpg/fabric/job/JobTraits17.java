@@ -177,7 +177,7 @@ public final class JobTraits17 {
                 SkillFx.play(lv, "block.glass.break", b, 1.5, 0.35);
             } else {
                 SkillFx.fx(lv, "rpg:splash", V.up(victim.position(), 0.2), Opt.of("size", 1.1 + Kit.bodyPad(victim), "life", 0.45, "color", JobFx.inner(tj), "alpha", 0.95));
-                SkillFx.sparks(lv, b, JobFx.inner(tj), 6, 3.5);
+                JobFx.sparks(lv, b, tj, 6, 3.5); // 2026-11-16 위르드식
                 SkillFx.play(lv, "entity.generic.splash", b, 1.4, 0.35);
             }
         });
@@ -200,7 +200,7 @@ public final class JobTraits17 {
         double[] g = ElementFx.glow(el);
         double[] c = ElementFx.core(el);
         JobFx.glint(level, tip, 0.42, g, c, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
-        SkillFx.sparks(level, tip, c, 6, 2.6);
+        WyrdKit.elementMote(level, el, tip, 5, 0.15, null); // 2026-11-16 위르드식 (예전 색 먼지 불티 대신)
         SkillFx.play(level, switch (el) {
             case "fire" -> "item.firecharge.use";
             case "water" -> "entity.generic.splash";
@@ -233,16 +233,9 @@ public final class JobTraits17 {
         double[] g = ElementFx.glow(el);
         double[] c = ElementFx.core(el);
         Vec3 vel = RuneKit.bodyVel(sp);
-        switch (el) {
-            case "fire" -> SkillFx.fx(level, "rpg:arrow_spark", mid, Opt.of("dir", V.UP, "speed", 1.6, "size", 0.14 * strength, "grow", 0.8, "life", 0.4, "color", g,
-                    "alpha", 1.0));
-            case "water" -> SkillFx.fx(level, "rpg:arrow_spark", mid, Opt.of("dir", V.scale(V.UP, -1), "speed", 1.2, "size", 0.12 * strength, "grow", 0.4, "life", 0.4,
-                    "color", c, "alpha", 0.95));
-            case "thunder" -> RuneKit.zap(level, mid, V.add(mid, new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.4, Kit.rand() - 0.5), 0.45), g, c, 0.06 * strength, 0.14);
-            case "ice" -> SkillFx.fx(level, "rpg:snowfall", mid, Opt.of("size", 0.28 * strength, "life", 0.5, "color", c, "alpha", 0.85));
-            default -> SkillFx.fx(level, "rpg:arrow_spark", mid, Opt.of("dir", V.scale(V.UP, -1), "speed", 0.8, "size", 0.12 * strength, "grow", 0.3, "life", 0.45,
-                    "color", c, "alpha", 0.95));
-        }
+        // 2026-11-16 위르드식: 원소마다 스스로 빛나는 바닐라 알갱이 (예전 색 먼지 · 눈 먼지 대신), 전기는 작은 번개 그대로
+        if ("thunder".equals(el)) RuneKit.zap(level, mid, V.add(mid, new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.4, Kit.rand() - 0.5), 0.45), g, c, 0.06 * strength, 0.14);
+        else WyrdKit.elementMote(level, el, mid, Math.max(1, (int) Math.round(2 * strength)), 0.08, null);
         JobFx.glint(level, tip, 0.16 * strength, g, c, 0.2, Opt.of("vel", vel, "alpha", 0.8));
     }
 

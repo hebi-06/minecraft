@@ -1067,6 +1067,40 @@ def rift_frame(S, f, n=256):
     return rgb, a * (1 - sstep(0.8, 0.98, np.abs(x))) * (1 - sstep(0.85, 0.98, np.abs(y)))
 
 
+# ------------------------------------------------------------------ 1인칭 빠른 줄 (256 — 되풀이 4칸)
+
+SPEED_FRAMES = 4
+
+
+def speed_frame(S, f, n=256, frames=SPEED_FRAMES):
+    """2026-11-16 1인칭 빠른 줄 (예전 rfx_jspeed2 와 같은 틀 — 반 크기 1.35 · 눈앞 1.4칸 · 되풀이): 가운데는 비고 반지름 0.5 ~ 1 에 바깥으로 흐르는 가는 빛줄기
+    (칸마다 자리 · 길이가 바뀌어 깜빡이며 흐름 — 안쪽 끝이 가늘고 바깥이 굵음) — 짙은 빛 몸 · 밝은 빛 · 흰 심"""
+    rng = np.random.default_rng(907 + S.seed * 13 + f * 31)
+    x, y = grid(n)
+    aa = 1.6 / n
+    r = np.hypot(x, y)
+    th = np.arctan2(y, x)
+    body = np.zeros_like(x)
+    core = np.zeros_like(x)
+    for i in range(30):
+        a = rng.uniform(0, 2 * math.pi)
+        r0 = rng.uniform(0.5, 0.8)
+        L = rng.uniform(0.12, 0.3)
+        w = rng.uniform(0.012, 0.024)
+        dth = np.angle(np.exp(1j * (th - a)))
+        perp = np.abs(dth) * r
+        along = (r - r0) / L
+        inside = ((along > 0) & (along < 1)).astype(float)
+        wid = w * (0.25 + 0.75 * np.clip(along, 0, 1))
+        s = (1 - sstep(wid - aa, wid + aa, perp)) * inside * np.sin(np.pi * np.clip(along, 0, 1)) ** 0.5
+        body = np.maximum(body, s)
+        core = np.maximum(core, s * (perp < wid * 0.45))
+    layers = [(S.main(0.55), body * 0.9), (S.accent(0.85), core), (WHITE, core * 0.6)]
+    rgb, a = compose(layers, n)
+    rgb, a = bloom(rgb, a, n, thresh=0.7, sigma=0.01, gain=0.35)
+    return rgb, a * (1 - sstep(0.95, 0.995, r))
+
+
 # ------------------------------------------------------------------ 직업 대표: 일섬 (256 — 가로 줄)
 
 CUT_FRAMES = 8
@@ -1397,6 +1431,22 @@ STYLES = {
                    accent=ramp([(0.0, "#06102A"), (0.5, "#3A64B0"), (0.8, "#A8D2FF"), (1.0, "#F4FBFF")]),
                    smoke=ramp([(0.0, "#0C1420"), (0.45, "#2A3C52"), (0.8, "#5E7896"), (1.0, "#9AB2CC")]),
                    ring="ticks", smoke_alpha=0.4, seed=21),
+    # 2026-11-16 룬 (마검사 · 아케인 블레이드 — 보랏빛 · 청록: jobs.json spellblade [0.62, 0.34, 1] · [0.34, 0.96, 0.95]): 룬 띠 · 새긴 글자 · 아홉 글자 ·
+    # 빛기둥 · 허공의 찢어짐 (tools/jobvfx/rune.py)
+    "rune": Style("el_rune", "rune",
+                  main=ramp([(0.0, "#0A0418"), (0.12, "#1C0A3C"), (0.26, "#34146C"), (0.4, "#5022A0"), (0.52, "#6E36D0"), (0.64, "#9058F0"),
+                             (0.76, "#B484FF"), (0.86, "#D2B0FF"), (0.94, "#EEE0FF"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#04161A"), (0.5, "#1C9EA8"), (0.8, "#57F5F2"), (1.0, "#E8FFFF")]),
+                  smoke=ramp([(0.0, "#06030E"), (0.45, "#160C2C"), (0.8, "#2C1C4E"), (1.0, "#4A3A72")]),
+                  ring="ticks", smoke_alpha=0.45, seed=23),
+    # 2026-11-16 원소의 칼 (엘리멘탈 블레이드 — 금빛 주황 · 얼음 하늘빛: jobs.json elementalblade [1.0, 0.72, 0.3] · [0.55, 0.9, 1.0]): 번개 · 번개 고리 · 빛의 창
+    # (storm.py) · 불꽃 (forge) · 회오리 · 도는 날 (beast) · 서리 띠 · 고리 (arcane). 물 · 얼음 빛은 서리 묶음, 바위는 곰 묶음 (PhantomFx.lib)
+    "element": Style("el_element", "element",
+                     main=ramp([(0.0, "#140A02"), (0.12, "#3A1C06"), (0.26, "#6E360C"), (0.4, "#A85A12"), (0.52, "#D8801C"), (0.64, "#F8A030"),
+                                (0.76, "#FFB84C"), (0.86, "#FFD890"), (0.94, "#FFF2D8"), (1.0, "#FFFFFF")]),
+                     accent=ramp([(0.0, "#061A2A"), (0.5, "#2E86B8"), (0.8, "#8CE6FF"), (1.0, "#F0FCFF")]),
+                     smoke=ramp([(0.0, "#0E0A06"), (0.45, "#2C2016"), (0.8, "#4E3C2A"), (1.0, "#6E5A44")]),
+                     ring="ticks", smoke_alpha=0.45, seed=25),
 }
 
 
@@ -1439,6 +1489,8 @@ def frames_of(S, name):
         return [to_img(*spin_frame(S, f)) for f in range(SPIN_FRAMES)]
     if name == "rift":
         return [to_img(*rift_frame(S, f)) for f in range(RIFT_FRAMES)]
+    if name == "speed":
+        return [to_img(*speed_frame(S, f)) for f in range(SPEED_FRAMES)]
     if name == "cut":
         return [to_img(*cut_frame(S, f)) for f in range(CUT_FRAMES)]
     if name == "moon":
@@ -1517,12 +1569,28 @@ def sets_for(S):
         # 거울 · 손거울 · 띠 고리)
         from . import mirror
         out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + mirror.sprites()
+        # 2026-11-16 CI 43878674673 에 남은 예전 그림 (빛을 정한 거울 속 X 자국 jcross2 · 왈츠의 띠 jaura2 · 고리 jhalo · 1인칭 빠른 줄 jspeed2): 같은 틀을 환영 빛으로
+        from . import arcane, shadow
+        out += (tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + [(p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "cross", lambda: shadow.frames_of("cross", S), True), (p + "speed", fr("speed"), True)])
+        # 2026-11-16 분신 (예전 rfx_shade — 같은 틀 · 거울 유리 몸): tools/jobvfx/clone.py
+        from . import clone
+        out += [(p + "shade", lambda: clone.frames(S), True)]
     if S.kind == "circus":
         # 2026-11-16 피에로 (서커스): 공용 그림을 서커스 빛으로 + 한 바퀴 베기 · 일섬 + 대표 그림 (tools/jobvfx/circus.py — 색종이 · 풍선 동물 · 불꽃놀이 · 조명)
         from . import circus, beast
         out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + circus.sprites()
         # 2026-11-16 불꽃놀이 꼬리 (피에로 궁극기의 jcomet2 160 — 예전 그림이 남았었음): 불꽃 꼬리를 서커스 빛으로
         out += [(p + "comet", lambda: beast.frames_of("comet", S), True)]
+        # 2026-11-16 CI 43878674673 에 남은 예전 그림 (상자의 X 자국 jcross2 · 도는 비수 jdagger2 · 연기 jsmoke2 · 스프링 고리 jhalo): 같은 틀을 서커스 빛으로.
+        # 연기는 피에로가 흰 · 금빛으로 부르는 펑 (소환물이 나타나고 사라짐) — 그림자 연기 (짙은 몸) 대신 크림 흰 몸 · 금빛 테
+        from . import arcane, shadow
+        poof = Style(S.lib, S.kind, main=S.accent, accent=S.accent, smoke=ramp([(0.0, "#8C7A66"), (0.3, "#C9B9A0"), (0.6, "#EFE6D4"), (1.0, "#FFFFFF")]),
+                     seed=S.seed)
+        out += (tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + [(p + "cross", lambda: shadow.frames_of("cross", S), True), (p + "dagger", lambda: shadow.frames_of("dagger", S), True),
+                   (p + "smoke", lambda: shadow.frames_of("smoke", poof), True)])
     if S.kind == "frost":
         # 2026-11-16 프로스트 레이더: 공용 그림 + 한 바퀴 베기 + 서리 고리 (jhalo — 2 × 2) · 얼음 결정 (jfrost — 맞은 자리) · 서리 띠 (jaura2) · 돌진 줄기 (jdash2)
         from . import arcane
@@ -1531,17 +1599,46 @@ def sets_for(S):
                 + [(p + "frost", lambda: [to_img(*arcane.frost_frame(f)) for f in range(arcane.FROST_FRAMES)], True),
                    (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
                    (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)])
+    if S.kind == "rune":
+        # 2026-11-16 마검사 · 아케인 블레이드 (룬): 공용 그림 + 한 바퀴 베기 + 룬 그림 (tools/jobvfx/rune.py — 룬 띠 · 새긴 글자 · 아홉 글자 · 빛기둥 · 찢어짐) +
+        # 번개 (tools/jobvfx/storm.py) + 광선 · 서리 띠 (arcane) · 회오리 · 도는 날 (beast)
+        from . import arcane, beast, rune, storm
+        # + 땅 가르기 (WarlordSkills.rift — 예전 fissure 대신) · 1인칭 빠른 줄 (jspeed2)
+        out += [(p + "rift", fr("rift"), True), (p + "speed", fr("speed"), True)]
+        # + 순간 이동 잔상 분신 (예전 rfx_shade — tools/jobvfx/clone.py)
+        from . import clone
+        out += [(p + "shade", lambda: clone.frames(S), True)]
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + rune.sprites(S) + storm.sprites(S)
+                + [(p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True),
+                   (p + "whirl", lambda: beast.frames_of("whirl", S), True), (p + "twister", lambda: beast.frames_of("twister", S), True)])
+    if S.kind == "element":
+        # 2026-11-16 엘리멘탈 블레이드: 공용 그림 + 한 바퀴 베기 + 번개 · 빛의 창 + 불꽃 혀 (forge — 예전 rpg:fire_wall 자리) + 회오리 · 도는 날 + 서리 띠 · 고리
+        from . import arcane, beast, forge, storm
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + storm.sprites(S)
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + [(p + "flame", lambda: [to_img(*forge.flame_frame(f)) for f in range(forge.FLAME_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True),
+                   (p + "whirl", lambda: beast.frames_of("whirl", S), True), (p + "twister", lambda: beast.frames_of("twister", S), True)])
     if S.kind in ("rage", "bear"):
         # 2026-11-16 전사 라인 (남은 직업 위르드식): 공용 그림 + 한 바퀴 베기 (칠한 직업의 JobFx.ring · ringFacing · eyeRing 은 jring2 → spin) + 대표 그림
         # (tools/jobvfx/beast.py — 늑대 · 회오리 · 도는 도끼날 · 불꽃 꼬리 · 방패 깨짐 · 갈라지는 땅 · 곰의 혼 · 앞발 · 몸의 불꽃 · 돌진 줄기)
         from . import beast
         out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + beast.sprites(S)
+        # 2026-11-16 CI 43878674673 에 남은 예전 그림: 전사 1인칭 빠른 줄 (jspeed2) · 워로드 땅 가르기 (WarlordSkills.rift — 예전 fissure)
+        out += [(p + "speed", fr("speed"), True)] if S.kind == "rage" else [(p + "rift", fr("rift"), True)]
+        if S.kind == "rage":
+            # 2026-11-16 돌진 잔상 분신 (예전 rfx_shade — tools/jobvfx/clone.py)
+            from . import clone
+            out += [(p + "shade", lambda: clone.frames(S), True)]
     return out
 
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element"):
         out += sets_for(STYLES[key])
     return out
 

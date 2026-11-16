@@ -38,8 +38,8 @@ final class ElementalbladeSkills {
     /** 칼라미티 차례 (jobs.json order 가 없으면) */
     private static final List<String> ORDER = List.of("fire", "water", "thunder", "ice", "rock");
     /** 바위 가시 (돌 몸 — 짙은 갈색 · 틈의 금빛) */
-    private static final double[] ROCK_BODY = {0.42, 0.29, 0.16};
-    private static final double[] ROCK_SEAM = {1.0, 0.78, 0.32};
+    static final double[] ROCK_BODY = {0.42, 0.29, 0.16};
+    static final double[] ROCK_SEAM = {1.0, 0.78, 0.32};
     /** 칼라미티의 합쳐진 대검 (백금빛 — 다섯 원소 빛이 모임) */
     private static final double[] PRISM = {1.0, 0.86, 0.5};
     private static final double[] PRISM_CORE = {1.0, 0.98, 0.92};
@@ -100,8 +100,9 @@ final class ElementalbladeSkills {
         switch (el) {
             case "fire" -> {
                 JobFx.burst(level, b, (1.2 + pad * 0.5) * size, g, c, 0.32, Opt.empty());
-                SkillFx.fx(level, "rpg:fire_wall", feet, Opt.of("size", (1.6 + pad) * size, "life", 0.55, "color", g, "alpha", 0.95, "spin", Kit.rand() * 360));
-                SkillFx.fx(level, "rpg:ember", V.up(feet, 0.3), Opt.of("size", 1.2 * size, "life", 0.7, "speed", 1.6, "color", c, "alpha", 0.9));
+                // 2026-11-16 위르드식: 예전 불벽 · 불씨 (rpg:fire_wall · ember) 대신 칠한 불꽃 혀 · 불씨 (원소의 칼 묶음)
+                PhantomFx.flame(level, PhantomFx.ELEMENT, feet, (1.6 + pad) * size * 1.3, 1);
+                PhantomFx.embers(level, PhantomFx.ELEMENT, V.up(feet, 0.3), 8, 1.2 * size, 0.35, 16);
                 SkillFx.play(level, "entity.blaze.shoot", b, 0.9, 0.7);
                 SkillFx.play(level, "item.firecharge.use", b, 0.8, 0.6);
             }
@@ -131,7 +132,7 @@ final class ElementalbladeSkills {
             case "ice" -> {
                 JobTraits16.shardsFx(level, b, (0.9 + pad * 0.4) * size);
                 JobFx15.halo(level, V.up(feet, 0.08), (1.5 + pad) * size, 0.45, Opt.of("alpha", 0.9), g, c);
-                SkillFx.fx(level, "rpg:snowfall", V.up(b, 0.5), Opt.of("size", 0.9 * size, "life", 0.8, "color", c, "alpha", 0.85));
+                WyrdKit.snow(level, V.up(b, 0.5), 8, 0.6 * size, null); // 2026-11-16 위르드식 눈송이 (예전 rpg:snowfall 대신)
                 SkillFx.play(level, "block.glass.break", b, 0.9, 0.8);
                 SkillFx.play(level, "block.powder_snow.break", b, 0.8, 0.9);
             }
@@ -141,7 +142,7 @@ final class ElementalbladeSkills {
                     Vec3 p = V.add(feet, new Vec3(Math.cos(a), 0, Math.sin(a)), (0.7 + pad) * size);
                     JobFx.spikeLife(level, ground(level, p), (0.55 + Kit.rand() * 0.25) * size, 0.1, 0.35, Opt.of("spin", Kit.rand() * 20 - 10), ROCK_BODY, ROCK_SEAM);
                 }
-                RuneKit.rockBurst(level, V.up(feet, 0.4), 8, 4.5, 0.3);
+                PhantomFx.rocks(level, V.up(feet, 0.4), 8, 4.5, 0.3);
                 JobFx.burst(level, b, (1.0 + pad * 0.5) * size, g, c, 0.28, Opt.empty());
                 SkillFx.play(level, "block.stone.break", b, 0.7, 1.0);
                 SkillFx.play(level, "item.mace.smash_ground", b, 0.9, 0.6);
@@ -205,18 +206,16 @@ final class ElementalbladeSkills {
             Vec3 d = V.turnY(f, Math.toDegrees(a));
             Vec3 p = ground(level, V.add(c, d, reach * 0.75));
             int ii = i;
-            RuneKit.later(Math.abs(i - 2), () -> SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 1.3, "life", 0.5, "color", JobKit.glow(fj), "alpha", 0.9, "spin",
-                    ii * 70.0)));
+            RuneKit.later(Math.abs(i - 2), () -> PhantomFx.flame(level, PhantomFx.ELEMENT, p, 1.7, 1)); // 2026-11-16 위르드식 불꽃 혀 (예전 rpg:fire_wall)
         }
-        SkillFx.sparks(level, bladeTip(sp), JobFx.inner(fj), 10, 5.0);
+        JobFx.sparks(level, bladeTip(sp), fj, 10, 5.0);
         SkillFx.play(level, "entity.player.attack.sweep", c, 0.8, 1.0);
         SkillFx.play(level, "entity.blaze.shoot", c, 1.1, 0.8);
         SkillFx.play(level, "item.firecharge.use", c, 1.3, 0.6);
         for (LivingEntity e : RuneKit.coneAround(sp, c, f, reach, arc)) {
             JobKit.strike(sp, e, fj, P, k.num("slash", 3.4), true, false, life, 0, x -> {
                 JobImpact.hit(sp, e, fj, 1.2);
-                if (e.level() instanceof ServerLevel lv) SkillFx.fx(lv, "rpg:ember", V.up(e.position(), 0.3), Opt.of("size", 1.0, "life", 0.6, "speed", 1.4, "color",
-                        JobKit.core(fj), "alpha", 0.9));
+                if (e.level() instanceof ServerLevel lv) PhantomFx.embers(lv, PhantomFx.ELEMENT, V.up(e.position(), 0.3), 6, 1.0, 0.32, 14);
             });
         }
     }
@@ -233,8 +232,7 @@ final class ElementalbladeSkills {
         for (int i = 0; i < 8; i++) {
             double a = i * Math.PI / 4;
             Vec3 p = ground(level, V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), r * 0.85));
-            RuneKit.later(i % 2, () -> SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 1.2, "life", 0.5, "color", JobKit.glow(fj), "alpha", 0.9, "spin",
-                    Kit.rand() * 360)));
+            RuneKit.later(i % 2, () -> PhantomFx.flame(level, PhantomFx.ELEMENT, p, 1.6, 1)); // 2026-11-16 위르드식 불꽃 혀 (예전 rpg:fire_wall)
         }
         SkillFx.play(level, "entity.blaze.shoot", c, 0.7, 1.0);
         SkillFx.play(level, "item.trident.riptide_2", c, 1.2, 0.7);
@@ -272,7 +270,7 @@ final class ElementalbladeSkills {
         if (can > 0.4) JobMove.run(sp, JobMove.to(0, dash, JobMove.at(V.add(c0, f, can)), JobMove.OUT));
         // 바위 갑옷: 몸을 감싸는 돌 조각 · 발밑 돌가루 — 내달리는 동안 2틱마다 몸 둘레 돌 조각 · 발밑 돌 튐 · 갈라짐이 몸을 따라 달림
         // (영상 42346989114: 몸에서 솟는 빛 JobFx.aura 는 쓴 자리에 남아 금빛 불꽃처럼 보였음 — 뺌)
-        RuneKit.rockBurst(level0, V.up(c0, 0.8), 6, 2.0, 0.22);
+        PhantomFx.rocks(level0, V.up(c0, 0.8), 6, 2.0, 0.22);
         Vec3 g0 = ground(level0, c0);
         WarlordSkills.rift(level0, g0, f, len, ROCK_SEAM, 0.9, len * 20 / dash);
         for (int t = 1; t <= dash; t += 2) {
@@ -280,9 +278,9 @@ final class ElementalbladeSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
-                RuneKit.rockBurst(lv, V.up(p, 0.2), 3, 2.5, 0.16);
-                RuneKit.rockBurst(lv, V.up(p, 1.1), 3, 1.2, 0.2);
-                SkillFx.fx(lv, "rpg:dust", V.up(p, 0.1), Opt.of("size", 0.9, "life", 0.5, "color", ROCK_BODY, "alpha", 0.7));
+                PhantomFx.rocks(lv, V.up(p, 0.2), 3, 2.5, 0.16);
+                PhantomFx.rocks(lv, V.up(p, 1.1), 3, 1.2, 0.2);
+                PhantomFx.dust(lv, PhantomFx.BEAR, p, 1.4); // 2026-11-16 위르드식 흙먼지 (곰 묶음 — 예전 rpg:dust)
                 SkillFx.play(lv, "block.gravel.break", p, 0.8, 0.5);
             });
         }
@@ -304,7 +302,7 @@ final class ElementalbladeSkills {
                 WarlordSkills.spike3d(lv, q, size * 0.6, 0.12, 0.5, ROCK_SEAM);
                 RuneKit.glowCrack(lv, p, 1.1, ROCK_BODY, ROCK_SEAM, Opt.of("life", 1.0, "v", (double) ((int) (s * 3) % 2)));
             }
-            RuneKit.rockBurst(lv, V.up(V.add(c0, f, len * 0.5), 0.5), 10, 5.0, 0.3);
+            PhantomFx.rocks(lv, V.up(V.add(c0, f, len * 0.5), 0.5), 10, 5.0, 0.3);
             // 2026-11-13 갈라진 길에서 3D 바위가 솟아 양옆으로 튐
             for (double u : new double[] {0.35, 0.75}) mmorpg.fabric.rune.RuneSwing.erupt(lv, ground(lv, V.add(c0, f, len * u)), f, 4, 360, 0.6, 1.4, 0.4, 0.75, 2.4,
                     ROCK_SEAM);
@@ -317,7 +315,7 @@ final class ElementalbladeSkills {
                 JobKit.strike(sp, e, rj, P, k.num("spike", 5.1), true, false, life, 0, x -> {
                     JobImpact.hit(sp, e, rj, 1.4);
                     if (JobKit.pushable(e)) RuneKit.knock(e, f, 0.05, lift);
-                    RuneKit.rockBurst(lv, Kit.bodyPoint(e), 5, 3.5, 0.24);
+                    PhantomFx.rocks(lv, Kit.bodyPoint(e), 5, 3.5, 0.24);
                 });
             }
         });
@@ -597,7 +595,7 @@ final class ElementalbladeSkills {
                 RuneKit.later(i, () -> RuneKit.novaRing(lv, g, 1.0 + ii * 0.5, 3.4, ElementFx.glow(el), ElementFx.core(el), Opt.of("life", 0.55)));
             }
             JobFx.burst(lv, b, 3.0, PRISM, PRISM_CORE, 0.45, Opt.empty());
-            RuneKit.rockBurst(lv, V.up(g, 0.3), 12, 6.0, 0.3);
+            PhantomFx.rocks(lv, V.up(g, 0.3), 12, 6.0, 0.3);
             RuneKit.godRays(sp, lv, g, 3.5, 8, PRISM, PRISM_CORE, Opt.of("h", 7.0, "life", 0.7, "alpha", 0.8, "skipNear", true));
             Vec3 ff = t != null ? V.flat(V.sub(t.position(), sp.position())) : Kit.facingOf(sp);
             ff = V.len(ff) < 1e-3 ? Kit.facingOf(sp) : V.unit(ff);
@@ -632,7 +630,7 @@ final class ElementalbladeSkills {
         double[] eg = ElementFx.glow(el);
         double[] ec = ElementFx.core(el);
         SkillFx.sparks(lv, V.up(land, 0.4), ec, 6, 4.5);
-        RuneKit.rockBurst(lv, V.up(land, 0.2), 3, 3.0, 0.15);
+        PhantomFx.rocks(lv, V.up(land, 0.2), 3, 3.0, 0.15);
         if (m >= 2) {
             JobFx.glint(lv, V.up(land, 0.5), 0.55, eg, ec, 0.2, Opt.empty());
             if (m % 2 == 0) SkillFx.play(lv, "item.trident.hit_ground", land, 0.5, 1.0 + Kit.rand() * 0.3);

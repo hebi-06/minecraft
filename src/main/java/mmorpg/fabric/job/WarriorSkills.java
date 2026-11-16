@@ -57,7 +57,7 @@ final class WarriorSkills {
         ServerLevel level = sp.level();
         JobFx.smash(level, V.up(ground, 0.05), radius, j, 0.5 + 0.1 * scale, Opt.empty());
         JobFx.burst(level, V.up(ground, 0.45), 0.9 * scale, j, 0.32, Opt.empty());
-        RuneKit.rockBurst(level, V.up(ground, 0.2), (int) Math.round(6 * scale), 4.5, 0.16 * scale);
+        PhantomFx.rocks(level, V.up(ground, 0.2), (int) Math.round(6 * scale), 4.5, 0.16 * scale);
         JobFx.sparks(level, V.up(ground, 0.3), j, (int) Math.round(8 * scale), 5); // 2026-11-16 위르드식 (분노 묶음 불씨 · 흙먼지 — 예전 색 먼지 불티 대신)
         JobFx.dirt(level, ground, j, (int) Math.round(6 * scale), 3, DUST);
         JobKit.shake(sp, 10, 0.15 + 0.1 * scale, 0.25);
@@ -171,7 +171,7 @@ final class WarriorSkills {
         RpgCombat.setSteadfast(sp, steps + slamDelay + 10);
         Kit.noFall(sp, steps + 30);
         // 출발: 발밑 흙먼지 · 어깨 앞 충돌 고리 · 소리
-        RuneKit.shadeClone(sp, level, start, f, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.45, "fade", 0.6, "alpha", 0.8));
+        JobFx.shade(sp, level, start, f, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.45, "fade", 0.6, "alpha", 0.8));
         JobFx.dirt(level, start, j, 8, 3, DUST);
         SkillFx.play(level, "mob.ravager.roar", start, 1.3, 0.6);
         SkillFx.play(level, "item.trident.riptide_1", start, 0.8, 0.8);
@@ -578,7 +578,7 @@ final class WarriorSkills {
         Vec3 look = sp.getViewVector(1F);
         JobFx.burst(level, V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), -0.4), 1.6, j, 0.45, JobFx.only1p(sp));
         RuneKit.godRays(sp, level, at, r * 0.7, 6, glow, core, Opt.of("h", 12.0, "life", 0.9, "alpha", 0.8, "skipNear", true));
-        RuneKit.rockBurst(level, V.up(at, 0.3), 14, 6.0, 0.22);
+        PhantomFx.rocks(level, V.up(at, 0.3), 14, 6.0, 0.22);
         JobFx.sparks(level, V.up(at, 0.5), j, 20, 7);
         Ult.flash(level, at, glow, Opt.empty(), sp);
         RuneKit.shakeAround(level, at, 16, 0.45, 0.4);

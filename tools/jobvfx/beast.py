@@ -669,7 +669,7 @@ FRAMES = {
 # 직업 묶음마다 쓰는 그림 (글꼴 무게 — 쓰지 않는 그림은 넣지 않음)
 USE = {
     "rage": ("wolf", "twister", "whirl", "comet", "shieldbreak", "quake", "aura", "dash"),
-    "bear": ("bear", "paw", "quake", "aura", "dash"),  # 돌창은 3D (RuneProps.rockSpike — 2026-11-13 사용자 "곰과 땅 연출을 3d로") · spike 는 다른 묶음이 쓸 때
+    "bear": ("bear", "paw", "quake", "aura", "dash", "spike"),  # 워로드 돌창은 3D (RuneProps.rockSpike — 사용자 "곰과 땅 연출을 3d로") · spike 는 엘리멘탈 블레이드의 바위 (곰 묶음을 빌림)
 }
 
 
