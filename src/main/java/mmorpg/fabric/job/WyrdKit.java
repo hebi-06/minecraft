@@ -105,10 +105,6 @@ final class WyrdKit {
         };
     }
 
-    static Pal pal(Jobs.Job j) {
-        return pal(PhantomFx.lib(j));
-    }
-
     // ------------------------------------------------------------ 보내기
 
     private static boolean go(String key, int max) {
