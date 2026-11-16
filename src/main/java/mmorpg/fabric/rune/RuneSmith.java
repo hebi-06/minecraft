@@ -36,7 +36,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -460,7 +459,7 @@ public final class RuneSmith {
 
     /** 돌파 창으로 가는 칸 */
     private static Slot breakTab() {
-        return Slot.of(Icon.item(new ItemStack(Items.NETHER_STAR)), "§b돌파로").lore("§7같은 룬 둘 → 하나로 · 계수 +" + Js.str(Math.round(RuneBreak.perLevel() * 100)) + "%",
+        return Slot.of(Icon.item(mmorpg.fabric.ui.UiIcons.of("breakstar")), "§b돌파로").lore("§7같은 룬 둘 → 하나로 · 계수 +" + Js.str(Math.round(RuneBreak.perLevel() * 100)) + "%",
                 "§7초월 룬은 " + tiersText() + "돌에 강화");
     }
 
@@ -497,7 +496,7 @@ public final class RuneSmith {
         ChestForm form = new ChestForm("룬술사 §8· §7돌파");
         form.set(TAB, Slot.of("textures/items/rpg/runes/rune_int_common", "§d룬 갈기로").lore("§7겹치거나 쓰지 않는 룬 → 룬 조각"));
         form.set(TAB2, Slot.of(RUNE.str("ticketIcon"), "§d뽑기권 사기로").lore("§7" + RUNE.str("ticketName") + " · " + RUNE.str("advTicketName")));
-        form.set(BREAK_INFO_SLOT, Slot.of(Icon.item(new ItemStack(Items.NETHER_STAR)), "§b룬 돌파").lore(
+        form.set(BREAK_INFO_SLOT, Slot.of(Icon.item(mmorpg.fabric.ui.UiIcons.of("breakstar")), "§b룬 돌파").lore(
                 "§7같은 룬 둘 → 하나로: 남는 룬 + 재료 + 1돌",
                 "§7" + RuneBreak.max() + "돌까지 · 1돌마다 계수 +" + Js.str(Math.round(RuneBreak.perLevel() * 100)) + "% (피해 · 회복 · 보호막)",
                 "§6초월 룬: " + tiersText() + "돌에 강화 + 화면 색 연출",
@@ -546,7 +545,7 @@ public final class RuneSmith {
     private static void confirmBreakAll(ServerPlayer sp, List<Breakthrough.Merge> all, Consumer<String> done) {
         ChestForm form = new ChestForm("모두 돌파");
         form.set(11, Slot.of(Icon.sprite("icon_check"), "§a모두 돌파 §7(" + all.size() + "번)").count(all.size()));
-        form.set(13, Slot.of(Icon.item(new ItemStack(Items.NETHER_STAR)), "§b돌파 " + all.size() + "번").deco());
+        form.set(13, Slot.of(Icon.item(mmorpg.fabric.ui.UiIcons.of("breakstar")), "§b돌파 " + all.size() + "번").deco());
         form.set(15, Slot.of(Icon.sprite("icon_cross"), "§c취소"));
         form.fillEmpty();
         Map<String, int[]> ft = new LinkedHashMap<>(); // 룬 이름 → {처음, 끝}

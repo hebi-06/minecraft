@@ -19,7 +19,6 @@ import mmorpg.fabric.ui.Slot;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * 갑옷 상점 (armor.js 상점): 상점 레벨 이하에서 가장 높은 갑옷 레벨의 일반 세트 — 종류 10개 (모양 같고 스탯이 다름): 가운데 줄 애드온의 5개
@@ -83,9 +82,9 @@ public final class ArmorShop {
     private static ChestForm buildShop(ServerPlayer sp, int lv, String message) {
         Obj tier = TIERS.obj("common_" + lv);
         ChestForm form = new ChestForm("갑옷 상점 §8· §7" + lv + "렙 " + tier.str("name"));
-        form.set(WEAPON_TAB, Slot.of(Items.IRON_SWORD, "§b무기 상점으로"));
+        form.set(WEAPON_TAB, Slot.of(mmorpg.fabric.ui.UiIcons.of("sword_emblem"), "§b무기 상점으로"));
         form.set(BALANCE_SLOT, Shop.balanceSlot(sp));
-        form.set(INFO_SLOT, Slot.of(Items.IRON_CHESTPLATE, "§f" + tier.str("name") + " 세트 §7(" + lv + "렙)")
+        form.set(INFO_SLOT, Slot.of(mmorpg.fabric.ui.UiIcons.of("armor_emblem"), "§f" + tier.str("name") + " 세트 §7(" + lv + "렙)")
                 .lore("§7같은 모양, 종류마다 스탯이 다름", "§7요구 조건이 모자라면 벗겨짐", "§7초월 갑옷은 왕실 퀘스트 보상").deco());
         form.set(Shop.SELL_TAB, Shop.sellTabSlot(sp));
         List<String> order = R.strings("ARMOR_TYPE_ORDER");

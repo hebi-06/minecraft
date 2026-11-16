@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "rpg:armor_vit"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "rpg:armor_vit"
+      }
+    ]
+  }
+}

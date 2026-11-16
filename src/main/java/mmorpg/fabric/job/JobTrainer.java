@@ -23,7 +23,6 @@ import mmorpg.fabric.ui.Slot;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -291,7 +290,7 @@ public final class JobTrainer {
                 }
             }
         }
-        return new ItemStack(Items.IRON_SWORD);
+        return mmorpg.fabric.ui.UiIcons.of("sword_emblem");
     }
 
     // ------------------------------------------------------------ 확인 · 값 · 전직

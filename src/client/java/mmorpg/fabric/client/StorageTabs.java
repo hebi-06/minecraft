@@ -20,7 +20,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * 0.22.0 엔더 창고 상자 탭 (큰 상자 창 왼쪽 — 위에서부터 1 ~ 5번 상자): 열린 상자 = 엔더 상자 그림 · 든 칸 막대 (초록 → 노랑 → 빨강),
@@ -182,7 +181,7 @@ public final class StorageTabs extends AbstractWidget {
             int ix = left - 22;
             int iy = y + 4;
             if (open) {
-                g.item(new ItemStack(Items.ENDER_CHEST), ix, iy);
+                g.item(mmorpg.fabric.ui.UiIcons.of("strongbox"), ix, iy);
                 // 든 칸 막대
                 int n = current ? liveStacks() : i < s.stacks().size() ? s.stacks().get(i) : 0;
                 int bx = left - 31;

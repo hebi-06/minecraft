@@ -24,7 +24,6 @@ import mmorpg.fabric.ui.Slot;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -115,7 +114,7 @@ public final class Shop {
         List<String> names = new ArrayList<>();
         for (String t : types) names.add(R.obj("TYPES").obj(t).str("name"));
         Weapon sample = types.isEmpty() ? null : Weapons.weaponFrom(types.get(0), level, "common");
-        ItemStack icon = sample != null ? weaponItem(sample) : new ItemStack(Items.IRON_SWORD);
+        ItemStack icon = sample != null ? weaponItem(sample) : mmorpg.fabric.ui.UiIcons.of("sword_emblem");
         String title = other == 1 ? "§e새 무기 보기 §7→" : "§e← 기본 무기 보기";
         return Slot.of(icon, title).lore("§7" + String.join(" · ", names), "§8일반 · 희귀 " + level + "렙");
     }
@@ -144,7 +143,7 @@ public final class Shop {
                 bySlot.put(firstSlot(r, page) + i, w);
             }
         }
-        form.set(ARMOR_TAB, Slot.of(Items.IRON_CHESTPLATE, "§b갑옷 상점으로").lore("§7힘·민첩·체력·힘+체력·마력 갑옷"));
+        form.set(ARMOR_TAB, Slot.of(mmorpg.fabric.ui.UiIcons.of("armor_emblem"), "§b갑옷 상점으로").lore("§7힘·민첩·체력·힘+체력·마력 갑옷"));
         form.set(SELL_TAB, sellTabSlot(sp));
         if (pages() > 1) form.set(PAGE_TAB, pageTabSlot(level, page));
         form.fillEmpty();
@@ -291,7 +290,7 @@ public final class Shop {
     /** 무기 · 갑옷 상점 윗줄의 "전리품 팔기" 칸 */
     public static Slot sellTabSlot(ServerPlayer sp) {
         int total = sellTotal(sp);
-        return Slot.of(Items.BUNDLE, "§e전리품 팔기").lore("§7몬스터 전리품을 " + Inv.CURRENCY_NAME + "로",
+        return Slot.of(mmorpg.fabric.ui.UiIcons.of("loot_sack"), "§e전리품 팔기").lore("§7몬스터 전리품을 " + Inv.CURRENCY_NAME + "로",
                 total > 0 ? "§a지금 모두 팔면 " + total + " " + Inv.CURRENCY_NAME : "§8가진 전리품 없음");
     }
 
@@ -303,7 +302,7 @@ public final class Shop {
         for (Loot e : list) total += e.n() * e.price();
         // 0.32.0 전리품 수에 맞춰 줄 수 (윗줄 + 7칸씩 — 19종이면 4줄)
         ChestForm form = new ChestForm("전리품 팔기 §8· §7상점", 1 + Math.max(2, (list.size() + SELL_COLS - 1) / SELL_COLS));
-        form.set(SELL_BACK, Slot.of(Items.IRON_SWORD, "§b무기 상점으로"));
+        form.set(SELL_BACK, Slot.of(mmorpg.fabric.ui.UiIcons.of("sword_emblem"), "§b무기 상점으로"));
         form.set(BALANCE_SLOT, balanceSlot(sp));
         form.set(SELL_ALL, total > 0
                 ? Slot.of(Icon.sprite("icon_check"), "§a모두 팔기 §7(+" + total + " " + Inv.CURRENCY_NAME + ")").price(total).lore("§7가진 전리품을 한 번에 팝니다", "§7(확인 창이 열림)")
@@ -316,7 +315,7 @@ public final class Shop {
                     .lore(e.n() > 0 ? "§r§a보유 " + e.n() + "개 → " + e.n() * e.price() + " " + Inv.CURRENCY_NAME : "§r§8가진 것이 없음",
                             "§r§7" + m.str("name") + " (Lv." + Js.str(m.num("level")) + ") 전리품"));
         }
-        form.set(SELL_INFO, Slot.of(Items.BUNDLE, "§f전리품").lore("§7몬스터를 잡으면 떨어짐 (50%)", "§7잉그리드의 반복 의뢰에 쓰면", "§7" + Inv.CURRENCY_NAME + "·경험치를 더 받음").deco());
+        form.set(SELL_INFO, Slot.of(mmorpg.fabric.ui.UiIcons.of("loot_sack"), "§f전리품").lore("§7몬스터를 잡으면 떨어짐 (50%)", "§7잉그리드의 반복 의뢰에 쓰면", "§7" + Inv.CURRENCY_NAME + "·경험치를 더 받음").deco());
         form.fillEmpty();
         List<String> lines = new ArrayList<>(List.of("§8가운데 두 줄: 전리품 · 칸을 누르면 팔 개수를 고릅니다.§r", "§8반복 의뢰 재료로 쓰면 더 많이 받습니다 (여관 주인 잉그리드).§r"));
         if (message != null && !message.isEmpty()) lines.add(message);

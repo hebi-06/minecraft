@@ -19,7 +19,6 @@ import mmorpg.fabric.ui.Slot;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * 0.21.0 유저 장터 창 (서버 상자 창 — 큰 상자 9 × 6, 사용자 요청 "마크 큰 상자 열 때 그 크기"): 둘러보기 (위 다섯 줄 45칸씩 · 정렬 · 종류 · 쪽),
@@ -167,8 +166,8 @@ public final class MarketWindow {
     /** 확인 창 정보 줄: 가격 · 판매자 · 남은 시간 (장식) */
     static void infoRow(ChestForm form, Market.Listing<MarketStore.Ware> l, String priceNote) {
         form.set(INFO_PRICE, Slot.of(Icon.item(EconomyItems.GOLD_COIN), "§6가격 §f" + Economy.fmt(l.price()) + " 골드").lore(priceNote).deco());
-        form.set(INFO_SELLER, Slot.of(Items.PLAYER_HEAD, "§7판매자 §f" + l.sellerName()).deco());
-        form.set(INFO_TIME, Slot.of(Items.CLOCK, "§7남은 시간 §f" + Economy.timeLeft(l.expiresAt() - MarketStore.now())).lore("§8물건 번호 #" + l.id()).deco());
+        form.set(INFO_SELLER, Slot.of(mmorpg.fabric.ui.UiIcons.of("person"), "§7판매자 §f" + l.sellerName()).deco());
+        form.set(INFO_TIME, Slot.of(mmorpg.fabric.ui.UiIcons.of("hourglass"), "§7남은 시간 §f" + Economy.timeLeft(l.expiresAt() - MarketStore.now())).lore("§8물건 번호 #" + l.id()).deco());
     }
 
     /** 확인 창 맨 아랫줄: 왼쪽 세 칸 = 하기 (가운데 체크 · 양옆 초록 판 pane_yes), 오른쪽 세 칸 = 그만두기 (가운데 X · 양옆 빨간 판 pane_no) */
@@ -202,16 +201,16 @@ public final class MarketWindow {
         int mine = MarketStore.mine(sp).size();
         int boxed = MarketStore.box(sp).size();
         form.set(PREV, page > 0 ? Slot.of(Icon.sprite("icon_prev"), "§e◀ 이전 쪽").lore("§7" + page + " / " + pages + "쪽으로") : Slot.PANE);
-        form.set(SORT, Slot.of(Items.HOPPER, "§f정렬: §e" + sortLabel(cur.sort())).lore("§7누르면 " + sortLabel(nextSort(cur.sort())) + "으로"));
-        form.set(KIND, Slot.of(Items.COMPASS, "§f종류: §e" + cur.kind().label).lore("§7누르면 " + cur.kind().next().label + "만"));
-        form.set(HELP, Slot.of(Items.BOOK, "§e장터 안내").lore("§7골드로만 사고팝니다", "§7등록은 무료 · 팔리면 수수료 " + Math.round(Economy.feeRate() * 100) + "%",
+        form.set(SORT, Slot.of(mmorpg.fabric.ui.UiIcons.of("sort"), "§f정렬: §e" + sortLabel(cur.sort())).lore("§7누르면 " + sortLabel(nextSort(cur.sort())) + "으로"));
+        form.set(KIND, Slot.of(mmorpg.fabric.ui.UiIcons.of("compass_rose"), "§f종류: §e" + cur.kind().label).lore("§7누르면 " + cur.kind().next().label + "만"));
+        form.set(HELP, Slot.of(mmorpg.fabric.ui.UiIcons.of("guide_book"), "§e장터 안내").lore("§7골드로만 사고팝니다", "§7등록은 무료 · 팔리면 수수료 " + Math.round(Economy.feeRate() * 100) + "%",
                 "§7" + Economy.timeLeft(Economy.marketMillis()) + " 동안 올라감 (지나면 보관함)", "§7한 사람 " + Economy.marketMax() + "개까지",
                 "§7가격 " + Economy.fmt(Economy.minPrice()) + " ~ " + Economy.fmt(Economy.maxPrice()) + " 골드", "§8손에 들고 /장터 등록 <가격> 도 됨").deco());
-        form.set(SELL, Slot.of(Items.NAME_TAG, "§a판매 등록").lore("§7가방에서 아이템을 골라", "§7골드 가격을 정해 올립니다", "§8(내 물건 " + mine + " / "
+        form.set(SELL, Slot.of(mmorpg.fabric.ui.UiIcons.of("price_tag"), "§a판매 등록").lore("§7가방에서 아이템을 골라", "§7골드 가격을 정해 올립니다", "§8(내 물건 " + mine + " / "
                 + Economy.marketMax() + ")"));
-        Slot mineSlot = Slot.of(Items.CHEST, "§f내 물건 §7" + mine + " / " + Economy.marketMax()).lore("§7올린 물건 보기 · 내리기");
+        Slot mineSlot = Slot.of(mmorpg.fabric.ui.UiIcons.of("crate"), "§f내 물건 §7" + mine + " / " + Economy.marketMax()).lore("§7올린 물건 보기 · 내리기");
         form.set(MINE, mine > 0 ? mineSlot.count(mine) : mineSlot);
-        Slot boxSlot = Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개")
+        Slot boxSlot = Slot.of(mmorpg.fabric.ui.UiIcons.of("strongbox"), (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개")
                 .lore("§7기간이 끝났거나 내렸는데", "§7가방이 가득 찬 물건", boxed > 0 ? "§e누르면 꺼내기" : "§8비었음");
         form.set(BOX, boxed > 0 ? boxSlot.count(boxed) : boxSlot);
         form.set(PURSE, goldSlot(sp));
@@ -263,7 +262,7 @@ public final class MarketWindow {
             String why = "§c골드가 모자랍니다 §7(" + Economy.fmt(have) + " / " + Economy.fmt(l.price()) + ")";
             decisionRow(form, why, "§c취소");
             form.set(OK_CELLS[0], Slot.of(Icon.sprite("pane_off"), why).deco());
-            form.set(OK, Slot.of(Items.BARRIER, why).lore("§7골드: 보스 · 퀘스트 보상, 장터에서 팔기").deco());
+            form.set(OK, Slot.of(mmorpg.fabric.ui.UiIcons.of("deny"), why).lore("§7골드: 보스 · 퀘스트 보상, 장터에서 팔기").deco());
             form.set(OK_CELLS[2], Slot.of(Icon.sprite("pane_off"), why).deco());
         }
         form.set(CONFIRM_PURSE, goldSlot(sp));
@@ -407,8 +406,8 @@ public final class MarketWindow {
         }
         int boxed = MarketStore.box(sp).size();
         form.set(PREV, Slot.of(Icon.sprite("icon_prev"), "§e◀ 장터로"));
-        form.set(SELL, Slot.of(Items.NAME_TAG, "§a판매 등록"));
-        Slot boxSlot = Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개");
+        form.set(SELL, Slot.of(mmorpg.fabric.ui.UiIcons.of("price_tag"), "§a판매 등록"));
+        Slot boxSlot = Slot.of(mmorpg.fabric.ui.UiIcons.of("strongbox"), (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개");
         form.set(BOX, boxed > 0 ? boxSlot.count(boxed) : boxSlot);
         form.set(PURSE, goldSlot(sp));
         form.fillRange(PER_PAGE, SIZE, Slot.PANE);

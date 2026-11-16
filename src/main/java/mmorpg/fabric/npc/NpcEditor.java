@@ -51,7 +51,6 @@ import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.portal.TeleportTransition;
@@ -334,7 +333,7 @@ public final class NpcEditor {
                 .button("퀘스트 목록·수정 §8(" + list.size() + "개)", Icon.of("textures/items/book_normal"))
                 .button("대화 미리보기", Icon.of("textures/items/paper"))
                 .button("내 자리로 옮기기", Icon.of("textures/items/ender_pearl"))
-                .button("스킨 바꾸기 §8(플레이어 이름)", Icon.item(Items.PLAYER_HEAD))
+                .button("스킨 바꾸기 §8(플레이어 이름)", Icon.item(mmorpg.fabric.ui.UiIcons.of("person")))
                 .button("§cNPC 삭제", Icon.of(DELETE_ICON))
                 .button("닫기", DialogForm.BYE)
                 .show(sp, sel -> {

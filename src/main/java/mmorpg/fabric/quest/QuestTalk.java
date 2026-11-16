@@ -164,7 +164,7 @@ public final class QuestTalk {
             all.add(bye, new Option("job", null, mmorpg.fabric.job.JobTrainer.optionText(sp), mmorpg.fabric.ui.Icon.of("textures/items/book_enchanted")));
             // 0.31.0 직업 스킬 강화 (직업이 있을 때 — 직업 바꾸기 다음)
             String up = mmorpg.fabric.job.JobTrainer.upOptionText(sp);
-            if (up != null) all.add(bye + 1, new Option("jobup", null, up, mmorpg.fabric.ui.Icon.item(net.minecraft.world.item.Items.NETHER_STAR)));
+            if (up != null) all.add(bye + 1, new Option("jobup", null, up, mmorpg.fabric.ui.Icon.item(mmorpg.fabric.ui.UiIcons.of("breakstar"))));
         }
         List<Option> questOpts = new ArrayList<>();
         for (Option o : all) if (!SERVICE.contains(o.kind())) questOpts.add(o);

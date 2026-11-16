@@ -51,7 +51,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -566,7 +565,7 @@ public final class JobUpgrades {
             if (lv > 0) s.count(lv);
             form.set(SKILL_SLOTS[i], s);
         }
-        form.set(GUIDE_SLOT, Slot.of(Icon.item(Items.NETHER_STAR), "§e직업 스킬 강화 안내").lore(guideLore()).deco());
+        form.set(GUIDE_SLOT, Slot.of(Icon.item(mmorpg.fabric.ui.UiIcons.of("breakstar")), "§e직업 스킬 강화 안내").lore(guideLore()).deco());
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
         lines.add("§8스킬을 누르면 필요한 레벨 · 골드 · 재료와 확인 창이 열립니다. 강화는 스킬마다 남습니다 (직업을 바꿔도).§r");
@@ -647,7 +646,7 @@ public final class JobUpgrades {
         int at = NEED_FIRST;
         if (n.step() != null) {
             // 필요한 것 칸: 숫자 = 필요한 수 (장식 칸은 숫자가 보이지 않아 보통 칸 — 누르면 창 그대로)
-            form.set(at++, Slot.of(Icon.item(Items.EXPERIENCE_BOTTLE), mark(n.levelOk()) + " §f필요 레벨 " + n.step().level())
+            form.set(at++, Slot.of(Icon.item(mmorpg.fabric.ui.UiIcons.of("level_badge")), mark(n.levelOk()) + " §f필요 레벨 " + n.step().level())
                     .lore("§7지금 " + n.myLevel() + "렙").count(n.step().level()));
             form.set(at++, Slot.of(Icon.item(EconomyItems.GOLD_COIN), mark(n.goldOk()) + " §6골드 " + n.step().gold())
                     .lore("§7보유 " + Economy.fmt(n.gold()) + " §8(지갑 먼저, 모자라면 가방의 금화)").count(n.step().gold()));

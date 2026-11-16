@@ -29,7 +29,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * 스탯 창 (statui.js 의 자바 판): 남은 포인트, 힘 · 민첩 · 마력 · 체력 (줄을 누르면 +1, Shift 는 +5), 스탯마다 효과,
@@ -60,7 +59,7 @@ public final class StatScreen extends Screen {
     static final int HEAD_X = 44;
     static final int HEAD_GAP = 4;
     private static final ItemStack GOLD_COIN = new ItemStack(mmorpg.fabric.economy.EconomyItems.GOLD_COIN);
-    private static final ItemStack TRASH = new ItemStack(Items.LAVA_BUCKET);
+    private static final ItemStack TRASH = mmorpg.fabric.ui.UiIcons.of("trash");
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
     private static final Identifier BTN_HOVER = Mmorpg.id("stats/dialog_btn_hover");
@@ -134,7 +133,7 @@ public final class StatScreen extends Screen {
         return new int[] {treeX() + TREE_W / 2, treeY(i) + TREE_H / 2};
     }
 
-    private static final ItemStack SAPLING = new ItemStack(Items.OAK_SAPLING);
+    private static final ItemStack SAPLING = mmorpg.fabric.ui.UiIcons.of("sprout");
 
     /** 나무 칸 그리기: 묘목 + "나무 3/10" (고를 갈래가 있으면 "갈래 고르기!" 깜빡임) */
     private void drawTree(GuiGraphicsExtractor g, String key, int i, boolean over, long now) {
@@ -241,7 +240,7 @@ public final class StatScreen extends Screen {
     private Bottom bottom(String name) {
         switch (name) {
             case "quest":
-                return new Bottom(new ItemStack(Items.WRITABLE_BOOK), null, "§e§l퀘스트", "§7목록 보기", List.of("§e퀘스트 목록", "§7진행 중인 퀘스트 보기"));
+                return new Bottom(mmorpg.fabric.ui.UiIcons.of("quill_scroll"), null, "§e§l퀘스트", "§7목록 보기", List.of("§e퀘스트 목록", "§7진행 중인 퀘스트 보기"));
             case "ender":
                 return new Bottom(ItemStack.EMPTY, ENDER, "§d§l창고", "§7엔더 창고",
                         List.of("§d§l엔더 창고", "§7누르면 내 창고가 열립니다 (큰 상자 54칸)", "§7상자 " + mmorpg.core.Storage.chests() + "개 — 1번은 기본, 2번 실버 · 3번부터 골드",

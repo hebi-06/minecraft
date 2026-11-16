@@ -227,7 +227,7 @@ final class VanillaProbe {
                 f.set(10, mmorpg.fabric.ui.Slot.of(p.getInventory().getItem(0).copy(), "§f무기 칸").lore("§7설명 한 줄"));
                 f.set(12, mmorpg.fabric.ui.Slot.of(mmorpg.fabric.ui.Icon.sprite("icon_check"), "§a확인"));
                 f.set(14, mmorpg.fabric.ui.Slot.of(mmorpg.fabric.ui.Icon.sprite("icon_cross"), "§c취소"));
-                f.set(16, mmorpg.fabric.ui.Slot.of(new ItemStack(net.minecraft.world.item.Items.EMERALD), "§a가격 칸").price(1500));
+                f.set(16, mmorpg.fabric.ui.Slot.of(mmorpg.fabric.ui.UiIcons.of("gem"), "§a가격 칸").price(1500));
                 f.body("§7상자 창 본문 첫 줄\n§7둘째 줄");
                 f.show(p, sel -> formResult = sel);
                 next(p, 17, 20);

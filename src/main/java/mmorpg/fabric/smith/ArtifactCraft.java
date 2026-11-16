@@ -170,7 +170,7 @@ public final class ArtifactCraft {
             int slots = Artifacts.slotsFor(t.key()).size();
             head.add("§r§7장신구 창 칸 §f" + slots + "개");
             // 줄 첫 칸 = 종류 풀이 (책 — 바로 옆 일반 칸과 같은 그림이면 헷갈림)
-            form.set(row + TYPE_COL, Slot.of(Icon.item(net.minecraft.world.item.Items.BOOK), "§d§l" + t.name() + " §7풀이").lore(head).deco());
+            form.set(row + TYPE_COL, Slot.of(Icon.item(mmorpg.fabric.ui.UiIcons.of("guide_book")), "§d§l" + t.name() + " §7풀이").lore(head).deco());
             for (Grade g : R.grades()) {
                 Artifacts.Art a = Artifacts.art(t.key(), g.id());
                 Artifacts.Cost c = Artifacts.cost(g.id());

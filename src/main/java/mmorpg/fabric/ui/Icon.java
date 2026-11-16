@@ -43,12 +43,17 @@ public record Icon(ItemStack item, String sprite) {
         return new Icon(ItemStack.EMPTY, name == null ? "" : name);
     }
 
+    /** 진짜 아이템 (가방 · 장터 · 보관함의 물건 — 그대로 보임) */
     public static Icon item(ItemStack stack) {
         return stack == null || stack.isEmpty() ? NONE : new Icon(stack.copy(), "");
     }
 
+    /**
+     * 그림으로 쓰는 아이템 종류 (창 칸 · 선택지의 아이콘). 2026-11-16 바닐라 아이템이면 직접 그린 아이콘으로 (UiIcons — 사용자 "바닐라 아이템은 다 빼버려 다 빼고
+     * 너가 직접 그려서 다른 걸로 넣어") — item(String) · of(그림 경로) 도 이리로
+     */
     public static Icon item(ItemLike item) {
-        return item == null ? NONE : item(new ItemStack(item));
+        return item == null ? NONE : new Icon(UiIcons.devanilla(new ItemStack(item)), "");
     }
 
     /** 아이템 ID ("rpg:star_ore" · "minecraft:emerald" · "emerald") 의 그림 (없으면 모르는 아이템 그림) */

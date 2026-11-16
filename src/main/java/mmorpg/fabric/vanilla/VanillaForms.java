@@ -190,7 +190,7 @@ public final class VanillaForms {
             st = new ItemStack(Items.PAPER);
             st.set(DataComponents.ITEM_MODEL, Mmorpg.rpg("vui/" + VanillaInput.iconId(s.icon().sprite())));
         } else {
-            st = new ItemStack(Items.PAPER);
+            st = mmorpg.fabric.ui.UiIcons.blank(); // 2026-11-16 그림 없는 칸: 맨 종이 그림 대신 빈 모델
         }
         List<Component> lore = new ArrayList<>();
         if (s.kind() == Slot.PRICE) lore.add(plain("§a가격 §f" + s.num()));

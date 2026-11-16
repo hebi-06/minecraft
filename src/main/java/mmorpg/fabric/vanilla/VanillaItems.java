@@ -11,7 +11,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
@@ -19,6 +18,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.UseCooldown;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.equipment.EquipmentAsset;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.equipment.Equippable;
 
 import java.util.List;
@@ -73,9 +75,7 @@ final class VanillaItems {
                     Optional.of(real != null ? real.cooldownGroup().orElse(BuiltInRegistries.ITEM.getKey(item)) : BuiltInRegistries.ITEM.getKey(item))));
             if (item instanceof RpgArmorItem armor) {
                 Equippable eq = out.get(DataComponents.EQUIPPABLE);
-                Item look = eq == null ? null : armorLook(armor.piece().type(), eq.slot());
-                Equippable vanilla = look == null ? null : look.components().get(DataComponents.EQUIPPABLE);
-                if (vanilla != null) out.set(DataComponents.EQUIPPABLE, vanilla);
+                if (eq != null) out.set(DataComponents.EQUIPPABLE, armorLook(armor.piece().type(), eq));
             }
             // 2026-11-08 꾸미기: 무기 스킨 (손) · 갑옷 숨기기 · 스킨 · 머리 장식 (받는 사람의 모습 — 다른 사람의 장비는 그 사람의 모습)
             VanillaCosmetics.convert(out, stack, ctx, lookup);
@@ -92,21 +92,16 @@ final class VanillaItems {
         }
     };
 
-    /** 계열 (str · dex · vit · strvit · int) · 부위 → 그 모습의 바닐라 갑옷 (입은 그림만 씀) */
-    static Item armorLook(String type, EquipmentSlot slot) {
-        Item[] set = switch (type) {
-            case "dex" -> new Item[]{Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE, Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS};
-            case "vit" -> new Item[]{Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE, Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS};
-            case "strvit" -> new Item[]{Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS};
-            case "int" -> new Item[]{Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS};
-            default -> new Item[]{Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS};
+    /**
+     * 계열 (str · dex · vit · strvit · int) → 입은 갑옷 그림: 직접 그린 장비 그림 rpg:armor_&lt;계열&gt; (tools/armor_layers.py — assets/rpg/equipment).
+     * 2026-11-16 바닐라 갑옷 (철 · 사슬 · 다이아 · 금 · 네더라이트) 그림을 뺌 — 사용자 "바닐라 아이템은 다 빼버려 다 빼고 너가 직접 그려서 다른 걸로 넣어"
+     */
+    static Equippable armorLook(String type, Equippable eq) {
+        String t = switch (type) {
+            case "dex", "vit", "strvit", "int" -> type;
+            default -> "str";
         };
-        return switch (slot) {
-            case HEAD -> set[0];
-            case CHEST -> set[1];
-            case LEGS -> set[2];
-            case FEET -> set[3];
-            default -> null;
-        };
+        ResourceKey<EquipmentAsset> key = ResourceKey.create(EquipmentAssets.ROOT_ID, Mmorpg.rpg("armor_" + t));
+        return Equippable.builder(eq.slot()).setEquipSound(eq.equipSound()).setAsset(key).build();
     }
 }

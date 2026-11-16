@@ -26,7 +26,6 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.EnchantingTableBlock;
 import net.minecraft.world.phys.Vec3;
 
@@ -260,7 +259,7 @@ public final class RuneSmithUi {
             lines.add("§7룬마다 가장 높은 것 하나를 " + RuneBreak.max() + "돌을 넘지 않게");
             for (int i = 0; i < parts.size() && lines.size() < 6; i += 2) lines.add(String.join(" §8· ", parts.subList(i, Math.min(parts.size(), i + 2))));
             if (parts.size() > 10) lines.add("§8외 " + (parts.size() - 10) + "종");
-            out.add(new SmithNet.Entry("ball", new ItemStack(Items.NETHER_STAR), "§a모두 돌파", ft.size() + "종", 0, "한 번에", ft.size() + "종 §8· §7합치기 " + all.size() + "번", "",
+            out.add(new SmithNet.Entry("ball", mmorpg.fabric.ui.UiIcons.of("breakstar"), "§a모두 돌파", ft.size() + "종", 0, "한 번에", ft.size() + "종 §8· §7합치기 " + all.size() + "번", "",
                     "", List.copyOf(lines), -1, List.of(), "§7재료 룬은 사라집니다", -1, "모두 돌파", true, "", List.of())
                     .withConfirm("§e합치기 " + all.size() + "번 — 재료 룬 " + all.size() + "개가 사라집니다. 한 번 더 누르세요"));
         }

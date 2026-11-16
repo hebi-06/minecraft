@@ -149,7 +149,7 @@ public final class Npcs {
                 kinds.add("shop");
             }
             if (smith) {
-                d.choice("§6무기 강화 · 레벨 올리기", mmorpg.fabric.ui.Icon.item(net.minecraft.world.item.Items.ANVIL));
+                d.choice("§6무기 강화 · 레벨 올리기", mmorpg.fabric.ui.Icon.item(mmorpg.fabric.ui.UiIcons.of("smith_hammer")));
                 kinds.add("smith");
             }
             if (runesmith) {

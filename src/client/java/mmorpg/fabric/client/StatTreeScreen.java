@@ -160,9 +160,9 @@ public final class StatTreeScreen extends Screen {
         return ICONS.computeIfAbsent(id, k -> {
             try {
                 Item it = BuiltInRegistries.ITEM.getValue(Identifier.parse(k));
-                return it == null || it == Items.AIR ? new ItemStack(Items.BARRIER) : new ItemStack(it);
+                return it == null || it == Items.AIR ? mmorpg.fabric.ui.UiIcons.of("deny") : mmorpg.fabric.ui.UiIcons.devanilla(new ItemStack(it));
             } catch (RuntimeException e) {
-                return new ItemStack(Items.BARRIER);
+                return mmorpg.fabric.ui.UiIcons.of("deny");
             }
         });
     }
@@ -173,7 +173,7 @@ public final class StatTreeScreen extends Screen {
             StatTree.Kind kind = StatTree.kind(k);
             if (kind != null) return icon(kind.icon());
         }
-        return new ItemStack(Items.OAK_SAPLING);
+        return mmorpg.fabric.ui.UiIcons.of("sprout");
     }
 
     private static int rgb(double[] c, int alpha) {

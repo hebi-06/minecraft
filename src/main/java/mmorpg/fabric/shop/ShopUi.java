@@ -30,7 +30,6 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -165,7 +164,7 @@ public final class ShopUi {
         public List<SmithNet.Res> res(ServerPlayer sp, Workshop.Session s) {
             List<SmithNet.Res> out = new ArrayList<>();
             out.add(new SmithNet.Res(stack(Inv.CURRENCY), Inv.CURRENCY_NAME, Inv.money(sp)));
-            if (s.tab.equals(SELL)) out.add(new SmithNet.Res(new ItemStack(Items.BUNDLE), "모두 팔면 " + Inv.CURRENCY_NAME, Shop.sellTotal(sp)));
+            if (s.tab.equals(SELL)) out.add(new SmithNet.Res(mmorpg.fabric.ui.UiIcons.of("loot_sack"), "모두 팔면 " + Inv.CURRENCY_NAME, Shop.sellTotal(sp)));
             else out.add(new SmithNet.Res(stack(EconomyItems.GOLD_COIN), "골드", Wallet.total(sp, Economy.Kind.GOLD)));
             return out;
         }
@@ -306,7 +305,7 @@ public final class ShopUi {
             List<String> lines = new ArrayList<>();
             for (int i = 0; i < parts.size() && lines.size() < 5; i += 2) lines.add(String.join(" §8· ", parts.subList(i, Math.min(parts.size(), i + 2))));
             if (parts.size() > 10) lines.add("§8외 " + (parts.size() - 10) + "종");
-            out.add(new SmithNet.Entry("all", new ItemStack(Items.BUNDLE), "§a모두 팔기", "+" + Economy.fmt(total), 0, "한 번에", parts.size() + "종 · 가진 전리품 전부",
+            out.add(new SmithNet.Entry("all", mmorpg.fabric.ui.UiIcons.of("loot_sack"), "§a모두 팔기", "+" + Economy.fmt(total), 0, "한 번에", parts.size() + "종 · 가진 전리품 전부",
                     "+" + Economy.fmt(total) + " " + Inv.CURRENCY_NAME, "", List.copyOf(lines), -1, List.of(), "", -1, "모두 팔기", true, "", List.of())
                     .withConfirm("§e가진 전리품 " + parts.size() + "종을 모두 팝니다 — 한 번 더 누르세요"));
         }
