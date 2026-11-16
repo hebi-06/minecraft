@@ -62,8 +62,11 @@ public final class Vfx {
     /** 한 번에 떠 있는 효과 수 (넘으면 가장 오래된 것부터 지움 — 여럿이 한꺼번에 써도 버티게) */
     static final int MAX_FX = 400;
 
-    /** 그림판 하나 (vfx_sprites.json) */
-    public record Sheet(String name, String chars, int frames, double aspect, boolean colored) {
+    /**
+     * 그림판 하나 (vfx_sprites.json) — aspect = 예전 칸의 가로세로 비 · cx · cy = 2026-11-16 빈 가장자리를 자른 칸 (tools/vfx_sprites.py crop_cells — 사용자 "8gb 지원")
+     * 을 옮길 자리 (예전 칸 높이 몫 — 오른쪽 · 위): 그림은 예전 칸의 픽셀 자리 그대로
+     */
+    public record Sheet(String name, String chars, int frames, double aspect, boolean colored, double cx, double cy) {
         public char glyph(int frame) {
             return chars.charAt(Math.floorMod(frame, frames));
         }
@@ -76,6 +79,10 @@ public final class Vfx {
     public static int fxMade;
     public static int propsMade;
     public static int spritesMade;
+    /** 2026-11-16 그림판마다 띄운 그림 수 (영상 셈 jobcensus — 쓰지 않는 그림판을 찾아 글꼴 무게를 줄임, 사용자 "8gb 지원") */
+    public static final Map<String, Integer> USED = new java.util.TreeMap<>();
+    /** 2026-11-16 그림판마다 가장 큰 그림 크기 (칸 — 조각 그림은 조각 하나): 화면에서 얼마나 크게 보이는지 → 그림판 해상도 예산 */
+    public static final Map<String, Double> SIZE_MAX = new java.util.TreeMap<>();
 
     public static void init() {
         load();
@@ -94,8 +101,13 @@ public final class Vfx {
             Map<String, Object> sprites = (Map<String, Object>) root.get("sprites");
             for (Map.Entry<String, Object> e : sprites.entrySet()) {
                 Map<String, Object> m = (Map<String, Object>) e.getValue();
+                double cx = 0, cy = 0;
+                if (m.get("crop") instanceof List<?> c && c.size() == 2) {
+                    cx = ((Number) c.get(0)).doubleValue();
+                    cy = ((Number) c.get(1)).doubleValue();
+                }
                 SHEETS.put(e.getKey(), new Sheet(e.getKey(), (String) m.get("chars"), ((Number) m.get("frames")).intValue(),
-                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored"))));
+                        ((Number) m.get("aspect")).doubleValue(), Boolean.TRUE.equals(m.get("colored")), cx, cy));
             }
             Mmorpg.LOG.info("[vfx] sprites {}", SHEETS.size());
         } catch (IOException | RuntimeException e) {
@@ -307,6 +319,7 @@ public final class Vfx {
             Sprite s = new Sprite(this, sheet(sheet), at);
             sprites.add(s);
             spritesMade++;
+            USED.merge(sheet, 1, Integer::sum);
             return s;
         }
 
@@ -799,7 +812,10 @@ public final class Vfx {
                 e.setTeleportDuration(Math.max(0, ticks));
                 e.setOffset(at.subtract(fx.origin));
             }
-            if (sizeBlocks > 0) size = sizeBlocks;
+            if (sizeBlocks > 0) {
+                size = sizeBlocks;
+                SIZE_MAX.merge(sheet.name(), sizeBlocks, Math::max);
+            }
             e.setInterpolationDuration(Math.max(0, ticks));
             transform();
             e.startInterpolationIfDirty();
@@ -808,6 +824,7 @@ public final class Vfx {
 
         public Sprite size(double blocks) {
             size = blocks;
+            SIZE_MAX.merge(sheet.name(), blocks, Math::max);
             transform();
             return this;
         }
@@ -921,7 +938,9 @@ public final class Vfx {
             float s = hidden ? 0F : (float) (size / (glyphHeight * TEXT_UNIT));
             Quaternionf q = facing != null ? new Quaternionf(facing) : new Quaternionf();
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
-            e.setTranslation(hidden ? new Vector3f() : q.transform(new Vector3f(offset)));
+            // 자른 칸 자리 (그림판 cx · cy — 크기 몫): 거울이면 글자가 엔티티 자리를 축으로 뒤집히므로 가로를 반대로
+            Vector3f at = new Vector3f(offset).add((float) ((mirrored ? -sheet.cx() : sheet.cx()) * size), (float) (sheet.cy() * size), 0F);
+            e.setTranslation(hidden ? new Vector3f() : q.transform(at));
             e.setLeftRotation(q);
             e.setScale(new Vector3f(mirrored ? -s : s, s, s));
             e.setRightRotation(new Quaternionf());

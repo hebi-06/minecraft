@@ -149,6 +149,10 @@ public final class Probe implements ClientModInitializer {
                 fontMeasured = true;
                 fontMemory(mc);
             }
+            // 2026-11-16 자바 힙 (사용자 "8gb 지원" — 런처 기본 -Xmx2G 에서 버티는지: 글꼴 그림은 힙 밖 · 힙은 엔티티 · 청크 · 모델)
+            Runtime rt = Runtime.getRuntime();
+            log("heap used MB " + (rt.totalMemory() - rt.freeMemory()) / 1_000_000 + " committed MB " + rt.totalMemory() / 1_000_000 + " max MB "
+                    + rt.maxMemory() / 1_000_000);
             log("film start " + filmName + " " + filmLeft);
         } else if (cmd.startsWith("inv ") && mc.player != null) {
             mc.gui.setScreen(new InventoryScreen(mc.player));

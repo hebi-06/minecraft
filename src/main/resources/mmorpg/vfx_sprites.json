@@ -1,5 +1,5 @@
 {
- "_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠한 그림인지. 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
+ "_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 (예전 칸) · 미리 칠한 그림인지 · crop (빈 가장자리를 자른 칸을 옮길 자리 — 예전 칸 높이 몫, 오른쪽 x · 위 y). 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
  "font": "rpg:vfx",
  "h": 64,
  "sprites": {
@@ -7,19 +7,31 @@
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    -0.013021,
+    -0.0
+   ]
   },
   "burst2": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    -0.002604,
+    -0.0
+   ]
   },
   "bladering": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "blood": {
    "chars": "",
@@ -31,25 +43,41 @@
    "chars": "",
    "frames": 16,
    "aspect": 0.5,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.003906,
+    -0.046875
+   ]
   },
   "crack": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    -0.019531,
+    0.019531
+   ]
   },
   "fissure": {
    "chars": "",
    "frames": 3,
    "aspect": 4.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.0,
+    -0.03125
+   ]
   },
   "aura": {
    "chars": "",
    "frames": 8,
    "aspect": 0.5,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.0,
+    0.011719
+   ]
   },
   "flare": {
    "chars": "",
@@ -61,25 +89,41 @@
    "chars": "",
    "frames": 2,
    "aspect": 2.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.0,
+    0.023438
+   ]
   },
   "fireball": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.0
+   ]
   },
   "boom": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.0
+   ]
   },
   "slash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.0,
+    -0.019531
+   ]
   },
   "spin": {
    "chars": "",
@@ -103,157 +147,261 @@
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    -0.0625,
+    -0.132812
+   ]
   },
   "xcut": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "shock": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": false
+   "colored": false,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "pa_boom_00": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    -0.015625
+   ]
   },
   "pa_boom_01": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.015625
+   ]
   },
   "pa_boom_10": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    0.0625
+   ]
   },
   "pa_boom_11": {
    "chars": "",
    "frames": 20,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.046875,
+    0.046875
+   ]
   },
   "pa_shock_00": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
   },
   "pa_shock_01": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
   },
   "pa_shock_10": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
   },
   "pa_shock_11": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
   },
   "pa_crack_00": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.113281,
+    -0.15625
+   ]
   },
   "pa_crack_01": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.140625,
+    -0.125
+   ]
   },
   "pa_crack_10": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.097656,
+    0.15625
+   ]
   },
   "pa_crack_11": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.15625,
+    0.109375
+   ]
   },
   "pa_ring_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.027344,
+    -0.015625
+   ]
   },
   "pa_ring_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.015625
+   ]
   },
   "pa_ring_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.027344,
+    0.03125
+   ]
   },
   "pa_ring_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    0.03125
+   ]
   },
   "pa_xslash_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.148438,
+    -0.140625
+   ]
   },
   "pa_xslash_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.148438,
+    -0.171875
+   ]
   },
   "pa_xslash_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.140625,
+    0.109375
+   ]
   },
   "pa_xslash_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.125,
+    0.15625
+   ]
   },
   "pa_boom_s": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.011719,
+    0.011719
+   ]
   },
   "pa_shock_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.003906
+   ]
   },
   "pa_crack_s": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.015625
+   ]
   },
   "pa_flash": {
    "chars": "",
@@ -265,7 +413,11 @@
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.027344
+   ]
   },
   "pa_ember": {
    "chars": "",
@@ -283,115 +435,191 @@
    "chars": "",
    "frames": 10,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.046875
+   ]
   },
   "pa_dust": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.125
+   ]
   },
   "ak_boom_00": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.039062,
+    -0.03125
+   ]
   },
   "ak_boom_01": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "ak_boom_10": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.039062,
+    0.046875
+   ]
   },
   "ak_boom_11": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.046875
+   ]
   },
   "ak_shock_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.023438,
+    -0.015625
+   ]
   },
   "ak_shock_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
   },
   "ak_shock_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    0.015625
+   ]
   },
   "ak_shock_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
   },
   "ak_crack_00": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.136719,
+    -0.109375
+   ]
   },
   "ak_crack_01": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.132812,
+    -0.109375
+   ]
   },
   "ak_crack_10": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.128906,
+    0.125
+   ]
   },
   "ak_crack_11": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.132812,
+    0.125
+   ]
   },
   "ak_ring_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.027344,
+    -0.015625
+   ]
   },
   "ak_ring_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.015625
+   ]
   },
   "ak_ring_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.027344,
+    0.03125
+   ]
   },
   "ak_ring_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    0.03125
+   ]
   },
   "ak_gate": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "ak_flash": {
    "chars": "",
@@ -403,31 +631,51 @@
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.011719,
+    0.007812
+   ]
   },
   "ak_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    0.007812
+   ]
   },
   "ak_crack_s": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.019531,
+    0.003906
+   ]
   },
   "ak_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.007812
+   ]
   },
   "ak_sparkle": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "ak_shard": {
    "chars": "",
@@ -439,211 +687,351 @@
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    -0.125
+   ]
   },
   "br_slash_00": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.066406,
+    -0.203125
+   ]
   },
   "br_slash_01": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.203125
+   ]
   },
   "br_slash_10": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.21875
+   ]
   },
   "br_slash_11": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.082031,
+    0.1875
+   ]
   },
   "br_slashm_00": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    -0.203125
+   ]
   },
   "br_slashm_01": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.203125
+   ]
   },
   "br_slashm_10": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.078125,
+    0.1875
+   ]
   },
   "br_slashm_11": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.21875
+   ]
   },
   "br_xslash_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.160156,
+    -0.125
+   ]
   },
   "br_xslash_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.132812,
+    -0.171875
+   ]
   },
   "br_xslash_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.132812,
+    0.171875
+   ]
   },
   "br_xslash_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.101562,
+    0.03125
+   ]
   },
   "br_boom_00": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.070312,
+    -0.046875
+   ]
   },
   "br_boom_01": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.046875
+   ]
   },
   "br_boom_10": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
   },
   "br_boom_11": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
   },
   "br_shock_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    -0.015625
+   ]
   },
   "br_shock_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
   },
   "br_shock_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    0.015625
+   ]
   },
   "br_shock_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
   },
   "br_crack_00": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.183594,
+    -0.171875
+   ]
   },
   "br_crack_01": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.15625
+   ]
   },
   "br_crack_10": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.117188,
+    0.125
+   ]
   },
   "br_crack_11": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.125,
+    0.140625
+   ]
   },
   "br_ring_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    -0.03125
+   ]
   },
   "br_ring_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.03125
+   ]
   },
   "br_ring_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    0.03125
+   ]
   },
   "br_ring_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    0.03125
+   ]
   },
   "br_boom_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.011719
+   ]
   },
   "br_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "br_crack_s": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    0.015625
+   ]
   },
   "br_flash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.019531
+   ]
   },
   "br_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.003906
+   ]
   },
   "br_spark": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "br_shard": {
    "chars": "",
@@ -655,187 +1043,311 @@
    "chars": "",
    "frames": 10,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "br_dust": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.132812
+   ]
   },
   "el_steel_slash_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.15625
+   ]
   },
   "el_steel_slash_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.15625
+   ]
   },
   "el_steel_slash_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.011719,
+    0.21875
+   ]
   },
   "el_steel_slash_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.1875
+   ]
   },
   "el_steel_slashm_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.011719,
+    -0.15625
+   ]
   },
   "el_steel_slashm_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.15625
+   ]
   },
   "el_steel_slashm_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.1875
+   ]
   },
   "el_steel_slashm_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    0.21875
+   ]
   },
   "el_steel_xslash_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.167969,
+    -0.15625
+   ]
   },
   "el_steel_xslash_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.171875,
+    -0.171875
+   ]
   },
   "el_steel_xslash_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.167969,
+    0.171875
+   ]
   },
   "el_steel_xslash_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.132812,
+    0.171875
+   ]
   },
   "el_steel_boom_00": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_steel_boom_01": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.03125
+   ]
   },
   "el_steel_boom_10": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    0.046875
+   ]
   },
   "el_steel_boom_11": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.03125
+   ]
   },
   "el_steel_shock_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.023438,
+    -0.0
+   ]
   },
   "el_steel_shock_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.015625
+   ]
   },
   "el_steel_shock_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.023438,
+    0.015625
+   ]
   },
   "el_steel_shock_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.015625
+   ]
   },
   "el_steel_ring_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    -0.03125
+   ]
   },
   "el_steel_ring_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "el_steel_ring_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    0.03125
+   ]
   },
   "el_steel_ring_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.03125
+   ]
   },
   "el_steel_boom_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.007812
+   ]
   },
   "el_steel_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "el_steel_crack_s": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.035156
+   ]
   },
   "el_steel_flash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.003906
+   ]
   },
   "el_steel_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.003906
+   ]
   },
   "el_steel_ember": {
    "chars": "",
@@ -853,265 +1365,441 @@
    "chars": "",
    "frames": 10,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.011719
+   ]
   },
   "el_steel_dust": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.128906
+   ]
   },
   "el_steel_spin_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_steel_spin_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
   },
   "el_steel_spin_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.0625
+   ]
   },
   "el_steel_spin_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
   },
   "el_steel_spinm_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.03125
+   ]
   },
   "el_steel_spinm_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "el_steel_spinm_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
   },
   "el_steel_spinm_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
   },
   "el_steel_rift": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.035156
+   ]
   },
   "el_steel_cut": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.003906
+   ]
   },
   "el_steel_wings_00": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.0625
+   ]
   },
   "el_steel_wings_01": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0625
+   ]
   },
   "el_steel_wings_10": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    0.3125
+   ]
   },
   "el_steel_wings_11": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.09375
+   ]
   },
   "el_blood_slash_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.011719,
+    -0.140625
+   ]
   },
   "el_blood_slash_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.171875
+   ]
   },
   "el_blood_slash_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.21875
+   ]
   },
   "el_blood_slash_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    0.1875
+   ]
   },
   "el_blood_slashm_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    -0.171875
+   ]
   },
   "el_blood_slashm_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.140625
+   ]
   },
   "el_blood_slashm_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.046875,
+    0.1875
+   ]
   },
   "el_blood_slashm_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    0.21875
+   ]
   },
   "el_blood_xslash_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.171875,
+    -0.15625
+   ]
   },
   "el_blood_xslash_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.171875,
+    -0.171875
+   ]
   },
   "el_blood_xslash_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.128906,
+    0.078125
+   ]
   },
   "el_blood_xslash_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.125,
+    0.078125
+   ]
   },
   "el_blood_boom_00": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.109375,
+    -0.125
+   ]
   },
   "el_blood_boom_01": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
   },
   "el_blood_boom_10": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.113281,
+    0.015625
+   ]
   },
   "el_blood_boom_11": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.148438,
+    0.03125
+   ]
   },
   "el_blood_shock_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    -0.015625
+   ]
   },
   "el_blood_shock_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
   },
   "el_blood_shock_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    0.03125
+   ]
   },
   "el_blood_shock_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.03125
+   ]
   },
   "el_blood_ring_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.03125
+   ]
   },
   "el_blood_ring_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.03125
+   ]
   },
   "el_blood_ring_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    0.03125
+   ]
   },
   "el_blood_ring_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    0.03125
+   ]
   },
   "el_blood_boom_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.070312
+   ]
   },
   "el_blood_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    0.003906
+   ]
   },
   "el_blood_crack_s": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.027344
+   ]
   },
   "el_blood_flash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.066406
+   ]
   },
   "el_blood_charge": {
    "chars": "",
@@ -1123,7 +1811,11 @@
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.046875
+   ]
   },
   "el_blood_shard": {
    "chars": "",
@@ -1135,187 +1827,311 @@
    "chars": "",
    "frames": 10,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
   },
   "el_blood_dust": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.140625
+   ]
   },
   "el_blood_moon_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.015625
+   ]
   },
   "el_blood_moon_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
   },
   "el_blood_moon_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    0.03125
+   ]
   },
   "el_blood_moon_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.03125
+   ]
   },
   "el_blood_rift": {
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.023438
+   ]
   },
   "el_blood_spin_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.03125
+   ]
   },
   "el_blood_spin_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
   },
   "el_blood_spin_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.058594,
+    0.0625
+   ]
   },
   "el_blood_spin_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.046875
+   ]
   },
   "el_blood_spinm_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.070312,
+    -0.03125
+   ]
   },
   "el_blood_spinm_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "el_blood_spinm_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.058594,
+    0.046875
+   ]
   },
   "el_blood_spinm_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
   },
   "ak_slash_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.140625
+   ]
   },
   "ak_slash_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.1875
+   ]
   },
   "ak_slash_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.011719,
+    0.21875
+   ]
   },
   "ak_slash_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.171875
+   ]
   },
   "ak_slashm_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.011719,
+    -0.1875
+   ]
   },
   "ak_slashm_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.140625
+   ]
   },
   "ak_slashm_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.171875
+   ]
   },
   "ak_slashm_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.011719,
+    0.21875
+   ]
   },
   "ak_xslash_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.167969,
+    -0.15625
+   ]
   },
   "ak_xslash_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.171875,
+    -0.109375
+   ]
   },
   "ak_xslash_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.171875,
+    0.15625
+   ]
   },
   "ak_xslash_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.148438,
+    0.140625
+   ]
   },
   "ak_cut": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.003906
+   ]
   },
   "ak_excal_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "ak_excal_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    -0.0
+   ]
   },
   "ak_excal_20": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    -0.0
+   ]
   },
   "ak_excal_30": {
    "chars": "",
@@ -1327,223 +2143,371 @@
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "ak_spin_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
   },
   "ak_spin_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.0625
+   ]
   },
   "ak_spin_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
   },
   "ak_spinm_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.03125
+   ]
   },
   "ak_spinm_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "ak_spinm_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
   },
   "ak_spinm_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
   },
   "el_shadow_slash_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.15625
+   ]
   },
   "el_shadow_slash_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.1875
+   ]
   },
   "el_shadow_slash_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.011719,
+    0.21875
+   ]
   },
   "el_shadow_slash_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.1875
+   ]
   },
   "el_shadow_slashm_00": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.1875
+   ]
   },
   "el_shadow_slashm_01": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.15625
+   ]
   },
   "el_shadow_slashm_10": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.050781,
+    0.1875
+   ]
   },
   "el_shadow_slashm_11": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    0.21875
+   ]
   },
   "el_shadow_xslash_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.152344,
+    -0.125
+   ]
   },
   "el_shadow_xslash_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.171875,
+    -0.125
+   ]
   },
   "el_shadow_xslash_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.167969,
+    0.1875
+   ]
   },
   "el_shadow_xslash_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.171875,
+    0.140625
+   ]
   },
   "el_shadow_boom_00": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_shadow_boom_01": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.03125
+   ]
   },
   "el_shadow_boom_10": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.027344,
+    0.046875
+   ]
   },
   "el_shadow_boom_11": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.03125
+   ]
   },
   "el_shadow_shock_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.0
+   ]
   },
   "el_shadow_shock_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
   },
   "el_shadow_shock_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.023438,
+    0.015625
+   ]
   },
   "el_shadow_shock_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
   },
   "el_shadow_ring_00": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    -0.03125
+   ]
   },
   "el_shadow_ring_01": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "el_shadow_ring_10": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    0.03125
+   ]
   },
   "el_shadow_ring_11": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.03125
+   ]
   },
   "el_shadow_boom_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.003906
+   ]
   },
   "el_shadow_shock_s": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.003906
+   ]
   },
   "el_shadow_crack_s": {
    "chars": "",
    "frames": 5,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    0.003906
+   ]
   },
   "el_shadow_flash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.003906
+   ]
   },
   "el_shadow_charge": {
    "chars": "",
    "frames": 10,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.007812
+   ]
   },
   "el_shadow_ember": {
    "chars": "",
@@ -1561,73 +2525,121 @@
    "chars": "",
    "frames": 10,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.011719
+   ]
   },
   "el_shadow_dust": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.125
+   ]
   },
   "el_shadow_spin_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_shadow_spin_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
   },
   "el_shadow_spin_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.054688,
+    0.046875
+   ]
   },
   "el_shadow_spin_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
   },
   "el_shadow_spinm_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.070312,
+    -0.03125
+   ]
   },
   "el_shadow_spinm_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "el_shadow_spinm_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.070312,
+    0.0625
+   ]
   },
   "el_shadow_spinm_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.046875
+   ]
   },
   "el_shadow_cut": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.003906
+   ]
   },
   "el_shadow_smoke": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.011719,
+    0.054688
+   ]
   },
   "el_shadow_cross": {
    "chars": "",
@@ -1645,19 +2657,31 @@
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.03125
+   ]
   },
   "el_shadow_petal": {
    "chars": "",
    "frames": 4,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "el_shadow_dagger": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "el_shadow_stab": {
    "chars": "",
@@ -1669,85 +2693,141 @@
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.023438,
+    -0.03125
+   ]
   },
   "el_shadow_eclipse_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
   },
   "el_shadow_eclipse_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.03125
+   ]
   },
   "el_shadow_eclipse_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.03125
+   ]
   },
   "el_arcane_xslash_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.0625
+   ]
   },
   "el_arcane_xslash_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.09375
+   ]
   },
   "el_arcane_xslash_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.066406,
+    0.109375
+   ]
   },
   "el_arcane_xslash_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
   },
   "el_arcane_boom_00": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_arcane_boom_01": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.03125
+   ]
   },
   "el_arcane_boom_10": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.035156,
+    0.046875
+   ]
   },
   "el_arcane_boom_11": {
    "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.03125
+   ]
   },
   "el_arcane_boom_s": {
    "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    -0.0
+   ]
   },
   "el_arcane_flash": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.003906
+   ]
   },
   "el_arcane_ember": {
    "chars": "",
@@ -1765,337 +2845,505 @@
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_arcane_spin_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
   },
   "el_arcane_spin_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.054688,
+    0.0625
+   ]
   },
   "el_arcane_spin_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
   },
   "el_arcane_spinm_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.03125
+   ]
   },
   "el_arcane_spinm_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.03125
+   ]
   },
   "el_arcane_spinm_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.050781,
+    0.0625
+   ]
   },
   "el_arcane_spinm_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
-  },
-  "el_arcane_ring_00": {
-   "chars": "",
-   "frames": 4,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "el_arcane_ring_01": {
-   "chars": "",
-   "frames": 4,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "el_arcane_ring_10": {
-   "chars": "",
-   "frames": 4,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "el_arcane_ring_11": {
-   "chars": "",
-   "frames": 4,
-   "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
   },
   "el_arcane_star": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.019531,
+    0.042969
+   ]
   },
   "el_arcane_bolt": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 3.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.053125,
+    -0.0
+   ]
   },
   "el_arcane_beam": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 4.0,
    "colored": true
   },
   "el_arcane_shatter": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
    "colored": true
   },
   "el_arcane_fireball": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 2.6667,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.0
+   ]
   },
   "el_arcane_icelance": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 4.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.0
+   ]
   },
   "el_arcane_sparkorb": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 2.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.046875
+   ]
   },
   "el_arcane_frost": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "el_arcane_dash": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 4.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.0
+   ]
   },
   "el_arcane_aura": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.03125
+   ]
   },
   "el_arcane_starnode": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    0.007812
+   ]
   },
   "el_arcane_fallstar": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 2.6667,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.005208,
+    -0.0
+   ]
   },
   "el_arcane_aegis": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 0.7969,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.011719
+   ]
   },
   "el_arcane_galaxy_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.046875
+   ]
+  },
+  "el_arcane_galaxy_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    -0.046875
+   ]
+  },
+  "el_arcane_galaxy_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
   },
-  "el_arcane_galaxy_01": {
+  "el_arcane_galaxy_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
   },
-  "el_arcane_galaxy_10": {
+  "el_arcane_halo_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.0
+   ]
   },
-  "el_arcane_galaxy_11": {
+  "el_arcane_halo_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
   },
-  "el_arcane_halo_00": {
+  "el_arcane_halo_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
   },
-  "el_arcane_halo_01": {
+  "el_arcane_halo_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.015625
+   ]
   },
-  "el_arcane_halo_10": {
+  "el_soul_xslash_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.101562,
+    -0.03125
+   ]
   },
-  "el_arcane_halo_11": {
+  "el_soul_xslash_01": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.0625
+   ]
   },
-  "el_soul_xslash_00": {
+  "el_soul_xslash_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.101562,
+    0.09375
+   ]
   },
-  "el_soul_xslash_01": {
+  "el_soul_xslash_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
-  },
-  "el_soul_xslash_10": {
-   "chars": "",
-   "frames": 8,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "el_soul_xslash_11": {
-   "chars": "",
-   "frames": 8,
-   "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
   },
   "el_soul_boom_00": {
-   "chars": "",
+   "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.042969,
+    -0.03125
+   ]
   },
   "el_soul_boom_01": {
-   "chars": "",
+   "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.03125
+   ]
   },
   "el_soul_boom_10": {
-   "chars": "",
+   "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.039062,
+    0.046875
+   ]
   },
   "el_soul_boom_11": {
-   "chars": "",
+   "chars": "",
    "frames": 14,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.03125
+   ]
   },
   "el_soul_boom_s": {
-   "chars": "",
+   "chars": "",
    "frames": 12,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "el_soul_flash": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.007812,
+    -0.003906
+   ]
   },
   "el_soul_ember": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 1.0,
    "colored": true
   },
   "el_soul_shard": {
-   "chars": "",
+   "chars": "",
    "frames": 8,
    "aspect": 1.0,
    "colored": true
   },
   "el_soul_soul": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   },
   "el_soul_skull": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.007812
+   ]
   },
   "el_soul_rift": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 0.3984,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.003906,
+    -0.0
+   ]
   },
   "el_soul_bonespear": {
-   "chars": "",
+   "chars": "",
    "frames": 4,
    "aspect": 4.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
   },
   "el_soul_hand": {
-   "chars": "",
+   "chars": "",
    "frames": 6,
    "aspect": 0.5,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
   },
   "el_soul_smoke": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.011719,
+    0.027344
+   ]
+  },
+  "el_soul_aura": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 0.5,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.03125
+   ]
+  },
+  "el_soul_halo_00": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.0
+   ]
   },
-  "el_soul_aura": {
+  "el_soul_halo_01": {
    "chars": "",
    "frames": 8,
-   "aspect": 0.5,
-   "colored": true
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
   },
-  "el_soul_halo_00": {
+  "el_soul_halo_10": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
   },
-  "el_soul_halo_01": {
+  "el_soul_halo_11": {
    "chars": "",
    "frames": 8,
    "aspect": 1.0,
-   "colored": true
-  },
-  "el_soul_halo_10": {
-   "chars": "",
-   "frames": 8,
-   "aspect": 1.0,
-   "colored": true
-  },
-  "el_soul_halo_11": {
-   "chars": "",
-   "frames": 8,
-   "aspect": 1.0,
-   "colored": true
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.015625
+   ]
   }
  }
 }

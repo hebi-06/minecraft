@@ -14,6 +14,9 @@
 
 글자 그림은 흰색 (밝기) — 글자 색으로 물들임 (불덩이 · 폭발처럼 미리 칠한 것은 colored: 흰 글자로 씀).
 칸마다 오른쪽 위 구석에 알파 1 점 (보이지 않음 — 셰이더가 0.1 아래를 버림): 마인크래프트가 비트맵 글자의 너비를 오른쪽 빈 열만큼 줄이지 않게 (가운데가 맞게).
+2026-11-16 빈 가장자리 자르기 (crop_cells — 사용자 "8gb 지원할거고 … 용량 확보하자"): 판의 모든 칸에서 알파 26 아래인 가장자리 (화면에 나오지 않는 자리) 를 잘라
+칸을 줄이고 글꼴 높이 · ascent 를 그만큼 고침 (픽셀당 글꼴 단위는 같게). 서버 (Vfx.Sprite) 가 목록의 crop (예전 칸 가운데 → 자른 칸 가운데, 칸 높이 몫) 만큼 옮김
+→ 화면의 그림은 예전과 같은 픽셀 · 같은 자리 · 같은 크기. 목록의 aspect 는 예전 칸 그대로.
 """
 import json
 import math
@@ -245,17 +248,78 @@ SPRITES += _jobvfx_forge.sprites()
 SPRITES += _jobvfx_element.sprites()
 
 
+# 2026-11-16 빈 가장자리 자르기 (사용자 "8gb 지원할거고 옛그림이 있으면 그냥 참고만 하게 따로 치우고 용량 확보하자"): 글꼴 그림판은 접속할 때 통째로 풀려 메모리에
+# 올라감 (픽셀당 4 바이트 — 그림이 없는 가장자리도). 글자 셰이더는 알파 0.1 아래 (26 아래) 를 버림 → 판의 모든 칸에서 26 아래인 가장자리는 화면에 나오지 않는 자리
+VISIBLE = 26
+CROP_PAD = 2  # 보이는 상자 바깥 여유 (픽셀)
+CROP_MIN_UNITS = 8  # 자른 칸 높이 하한 (글꼴 단위)
+
+
+def mc_advance(width_px, height_units, cell_h):
+    """마인크래프트 비트맵 글자의 너비 (BitmapProvider: (int) (0.5F + 실제 너비 × (높이 / 칸 높이)) + 1 — float 셈) — 글자 표시 엔티티는 줄 너비의 반만큼 왼쪽에서 시작"""
+    scale = np.float32(height_units) / np.float32(cell_h)
+    return int(np.float32(0.5) + np.float32(width_px) * scale) + 1
+
+
+def crop_cells(cells):
+    """칸들을 모든 칸의 보이는 상자 (+ CROP_PAD) 로 자름 → (칸들, 글꼴 높이, ascent, (dx, dy), 예전 칸 크기)
+
+    높이는 글꼴 단위가 정수인 픽셀 배수 (칸 높이 / gcd(칸 높이, H)) 로 늘림 — 한 픽셀의 글꼴 단위 (H / 칸 높이) 가 예전과 같음 = 그림 크기가 같음.
+    (dx, dy) = 자른 칸을 옮길 자리 (예전 칸 높이 몫 — 오른쪽 x · 위 y): 글자 표시 엔티티는 글자를 줄 너비 (advance) 의 반만큼 왼쪽 · ascent 만큼 위에서 그림
+    (글자 위 = 줄 위 + 10 − ascent) → 가로 (advance 차이) / 2 + 자른 왼쪽 · 세로 ascent 차이 + 자른 위 만큼 옮기면 예전 칸의 픽셀 자리와 같음.
+    """
+    cw, ch = cells[0].size
+    A0 = H // 2 - 2
+    a = np.stack([np.asarray(c.convert("RGBA"))[..., 3] for c in cells])
+    ys, xs = np.nonzero((a >= VISIBLE).any(axis=0))
+    if len(xs) == 0:
+        return cells, H, A0, (0.0, 0.0), (cw, ch)
+    x0, x1 = max(0, int(xs.min()) - CROP_PAD), min(cw, int(xs.max()) + 1 + CROP_PAD)
+    y0, y1 = max(0, int(ys.min()) - CROP_PAD), min(ch, int(ys.max()) + 1 + CROP_PAD)
+    p = ch // math.gcd(ch, H)
+    min_px = math.ceil(CROP_MIN_UNITS * ch / H / p) * p
+    need = max(math.ceil((y1 - y0) / p) * p, min_px)
+    if need >= ch:
+        y0, y1 = 0, ch
+    else:
+        extra = need - (y1 - y0)
+        y0 -= extra // 2
+        y1 += extra - extra // 2
+        if y0 < 0:
+            y1 -= y0
+            y0 = 0
+        if y1 > ch:
+            y0 -= y1 - ch
+            y1 = ch
+    if (x0, y0, x1, y1) == (0, 0, cw, ch):
+        return cells, H, A0, (0.0, 0.0), (cw, ch)
+    cw2, ch2 = x1 - x0, y1 - y0
+    assert (ch2 * H) % ch == 0 and 0 <= y0 and y1 <= ch, (cw, ch, y0, y1)
+    h2 = ch2 * H // ch
+    a2 = h2 // 2 - 2
+    u = H / ch
+    dxu = (mc_advance(cw2, h2, ch2) - mc_advance(cw, H, ch)) / 2 + x0 * u
+    dyu = a2 - A0 + y0 * u
+    out = [c.crop((x0, y0, x1, y1)) for c in cells]
+    return out, h2, a2, (round(dxu / H, 6), round(-dyu / H, 6)), (cw, ch)
+
+
 def build():
     """→ {파일 경로: 바이트} · 글꼴 · 목록"""
     files = {}
     providers = []
     index = {}
     code = FIRST
+    saved = [0, 0]  # 예전 · 자른 픽셀 수
     for name, make, colored in SPRITES:
         cells = make()
         cw, ch = cells[0].size
         assert cw <= 256 and ch <= 256, (name, cw, ch)
         assert all(c.size == (cw, ch) for c in cells), name
+        cells, gh, ga, crop, (cw0, ch0) = crop_cells(cells)
+        cw, ch = cells[0].size
+        saved[0] += cw0 * ch0 * len(cells)
+        saved[1] += cw * ch * len(cells)
         # 2026-11-15 빈 칸 줄임: 글꼴 그림판은 접속할 때 통째로 풀려 메모리에 올라감 (빈 칸도 자리를 차지) — 줄 수를 먼저 정하고 한 줄 칸 수를 고르게 (10칸 = 5 × 2 · 예전 8 × 2)
         rows = (len(cells) + COLS - 1) // COLS
         cols = (len(cells) + rows - 1) // rows
@@ -283,11 +347,14 @@ def build():
         buf = BytesIO()
         sheet.save(buf, "PNG", optimize=True)
         files[os.path.join(OUT_TEX, name + ".png")] = buf.getvalue()
-        providers.append({"type": "bitmap", "file": "rpg:font/vfx/%s.png" % name, "height": H, "ascent": H // 2 - 2, "chars": lines})
-        index[name] = {"chars": "".join(chars), "frames": len(chars), "aspect": round(cw / ch, 4), "colored": colored}
+        providers.append({"type": "bitmap", "file": "rpg:font/vfx/%s.png" % name, "height": gh, "ascent": ga, "chars": lines})
+        index[name] = {"chars": "".join(chars), "frames": len(chars), "aspect": round(cw0 / ch0, 4), "colored": colored}
+        if crop != (0.0, 0.0):
+            index[name]["crop"] = list(crop)
     font = {"providers": providers}
-    idx = {"_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 · 미리 칠한 그림인지. "
-                   "글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
+    print("crop: %.1f MB → %.1f MB (decoded RGBA)" % (saved[0] * 4 / 1e6, saved[1] * 4 / 1e6))
+    idx = {"_doc": "tools/vfx_sprites.py 가 만듦 (손으로 고치지 않음) — 글꼴 rpg:vfx 의 그림: 이름 → 글자 (칸 차례) · 칸 수 · 가로세로 비 (예전 칸) · 미리 칠한 그림인지 · "
+                   "crop (빈 가장자리를 자른 칸을 옮길 자리 — 예전 칸 높이 몫, 오른쪽 x · 위 y). 글자 높이 h 글꼴 단위 (글자 표시 엔티티 1 단위 = 0.025칸)",
            "font": "rpg:vfx", "h": H, "sprites": index}
     files[OUT_FONT] = (json.dumps(font, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
     files[OUT_INDEX] = (json.dumps(idx, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
@@ -306,6 +373,15 @@ def main():
             else:
                 os.makedirs(os.path.dirname(path), exist_ok=True)
                 open(path, "wb").write(data)
+    # 2026-11-16 지난 판 (목록에서 빠진 그림 — 리소스 팩 zip 에 그대로 들어갔음) 지우기
+    if os.path.isdir(OUT_TEX):
+        for f in sorted(os.listdir(OUT_TEX)):
+            p = os.path.join(OUT_TEX, f)
+            if p not in files:
+                if check:
+                    bad.append(os.path.relpath(p, ROOT))
+                else:
+                    os.remove(p)
     if check:
         if bad:
             print("vfx sprites differ: " + ", ".join(bad) + " — python3 tools/vfx_sprites.py")

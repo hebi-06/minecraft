@@ -1468,8 +1468,9 @@ def sets_for(S):
         out = (tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
                + [(p + "boom_s", fr("boom_s"), True), (p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "shard", lambda: shard(S), True)])
         if S.kind == "arcane":
+            # 2026-11-16 땅 고리 (ring) 는 뺌 — 칠한 직업의 JobFx.ring 은 예전 길 (jring2 → 칠한 spin) 이라 부르는 곳이 없음 (4.2 MB, 사용자 "용량 확보하자")
             from . import arcane
-            return out + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + tiled(p + "ring", fr("ring")) + arcane.sprites()
+            return out + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + arcane.sprites()
         from . import soul
         return out + soul.sprites()
     out = (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))

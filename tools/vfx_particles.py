@@ -52,6 +52,16 @@ RUNE_J = {"rpg:rfx_jbreak", "rpg:rfx_jelem", "rpg:rfx_jburst2", "rpg:rfx_jhits",
 # 쓰는 곳이 없는 직업 그림 (2026-11-14 — 정령 궁수의 늑대 · 사슴 · 부엉이 · 정령 꽃은 궁수 계열을 다시 만들며 빠짐 · 얼음 감옥 · 단두대 · 금서는 3D 로 바뀜)
 DEAD_J = {"rpg:rfx_jswolf", "rpg:rfx_jswolf1p", "rpg:rfx_jstag", "rpg:rfx_jstagf", "rpg:rfx_jowl", "rpg:rfx_jowlside", "rpg:rfx_jsbloom", "rpg:rfx_jicecage",
           "rpg:rfx_jgallows", "rpg:rfx_jtome"}
+# 2026-11-16 예전 그림 치움 (사용자 "8gb 지원할거고 옛그림이 있으면 그냥 참고만 하게 따로 치우고 용량 확보하자"): 코드 · 데이터 어디에도 이름이 없는 파티클 55 —
+# 칠한 그림 · 2판 (jslash2 · jaura2 …) 으로 바뀐 직업 그림 · 3D 로 바뀐 아이기스 · 티르빙 그림 (약 17.8 MB). 원본은 assets/mmorpg/textures/particle/addon 에
+# 그대로 (모드만 읽음 — 바닐라 리소스 팩에 들어가지 않음) · 다시 쓰려면 여기서 빼면 됨
+SHELVED = {"rpg:aegis_hex", "rpg:aegis_shield", "rpg:aegis_stone", "rpg:rfx_bomb", "rpg:rfx_jaegis", "rpg:rfx_jarrow", "rpg:rfx_jaura", "rpg:rfx_jbeam",
+           "rpg:rfx_jbell", "rpg:rfx_jbolt", "rpg:rfx_jbook", "rpg:rfx_jbow", "rpg:rfx_jbuckler", "rpg:rfx_jchain", "rpg:rfx_jcomet", "rpg:rfx_jcross",
+           "rpg:rfx_jdagger", "rpg:rfx_jdash", "rpg:rfx_jgate", "rpg:rfx_jhand", "rpg:rfx_jheal", "rpg:rfx_jjudge", "rpg:rfx_jline", "rpg:rfx_jmaul",
+           "rpg:rfx_jnote", "rpg:rfx_jpage", "rpg:rfx_jpblast", "rpg:rfx_jpcross", "rpg:rfx_jpdusk", "rpg:rfx_jpetal", "rpg:rfx_jpflame", "rpg:rfx_jpimpact",
+           "rpg:rfx_jpstreak", "rpg:rfx_jptrace", "rpg:rfx_jreaper", "rpg:rfx_jring", "rpg:rfx_jshatter", "rpg:rfx_jslash", "rpg:rfx_jsmash", "rpg:rfx_jsmoke",
+           "rpg:rfx_jsoul", "rpg:rfx_jspear", "rpg:rfx_jspeed", "rpg:rfx_jspin", "rpg:rfx_jstab", "rpg:rfx_jstigma", "rpg:rfx_jstun", "rpg:rfx_jtarget",
+           "rpg:rfx_jthunder", "rpg:rfx_jtwister", "rpg:rfx_jvolt", "rpg:rfx_jwhirl", "rpg:rfx_jwind", "rpg:rfx_jwing", "rpg:tyr_warrior"}
 # 참격 · 검기 무리 (화면에 크게 · 자주 — 룬 그림과 같은 128)
 HI_J = {"rpg:rfx_jslash", "rpg:rfx_jslash2", "rpg:rfx_jslash_rp", "rpg:rfx_jslash_sb", "rpg:rfx_jslash_sw", "rpg:rfx_jslash_wa", "rpg:rfx_jwave", "rpg:rfx_jspin",
         "rpg:rfx_jspin2", "rpg:rfx_jxmark", "rpg:rfx_jcross", "rpg:rfx_jcross2", "rpg:rfx_jstab", "rpg:rfx_jstab2", "rpg:rfx_jsmash", "rpg:rfx_jsmash2", "rpg:rfx_jcuts",
@@ -75,7 +85,7 @@ CARD_CAP = {"slash_basic": 256, "slash_basic_l": 256, "slash_basic_w": 256, "sla
 
 
 def wanted(pid):
-    return pid not in DEAD_J
+    return pid not in DEAD_J and pid not in SHELVED
 
 
 def cap_for(pid, native):
