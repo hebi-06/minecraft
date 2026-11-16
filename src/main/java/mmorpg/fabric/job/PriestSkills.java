@@ -31,8 +31,8 @@ final class PriestSkills {
     private PriestSkills() {}
 
     /** 종 · 새벽빛 (금빛 · 흰빛) */
-    private static final double[] GOLD = {1, 0.84, 0.42};
-    private static final double[] DAWN = {1, 0.97, 0.86};
+    static final double[] GOLD = {1, 0.84, 0.42}; // 2026-11-16 package — PhantomFx.painter (성광 묶음)
+    static final double[] DAWN = {1, 0.97, 0.86};
 
     static void register() {
         JobSystem.register("priest_heal", PriestSkills::heal);

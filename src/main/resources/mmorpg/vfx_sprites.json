@@ -6782,6 +6782,1892 @@
    "frames": 8,
    "aspect": 0.4928,
    "colored": true
+  },
+  "el_holy_xslash_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.157366,
+    -0.0
+   ]
+  },
+  "el_holy_xslash_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.085938,
+    -0.125
+   ]
+  },
+  "el_holy_xslash_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.092634,
+    0.125
+   ]
+  },
+  "el_holy_xslash_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.179688,
+    -0.0
+   ]
+  },
+  "el_holy_boom_00": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.078125,
+    -0.0625
+   ]
+  },
+  "el_holy_boom_01": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.078125,
+    -0.078125
+   ]
+  },
+  "el_holy_boom_10": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.078125,
+    0.078125
+   ]
+  },
+  "el_holy_boom_11": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.078125,
+    0.078125
+   ]
+  },
+  "el_holy_shock_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_holy_shock_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_holy_shock_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_holy_shock_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_holy_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_holy_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_holy_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020833,
+    0.020833
+   ]
+  },
+  "el_holy_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_holy_cut": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_holy_speed": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_holy_spin_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_holy_spin_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_holy_spin_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_holy_spin_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_holy_spinm_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_holy_spinm_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_holy_spinm_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_holy_spinm_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_holy_halo_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    -0.015625
+   ]
+  },
+  "el_holy_halo_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
+  },
+  "el_holy_halo_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    0.015625
+   ]
+  },
+  "el_holy_halo_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.015625
+   ]
+  },
+  "el_holy_aegis": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 0.8033,
+   "colored": true,
+   "crop": [
+    0.001537,
+    -0.0
+   ]
+  },
+  "el_holy_aura": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_holy_beam": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_holy_heal": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.014606,
+    -0.0
+   ]
+  },
+  "el_holy_note": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.001202,
+    -0.0
+   ]
+  },
+  "el_holy_stigma": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.008492,
+    -0.0
+   ]
+  },
+  "el_holy_bell": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.003125,
+    0.0375
+   ]
+  },
+  "el_holy_lotus": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_holy_bloom": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_holy_fly": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_petal_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.030191,
+    -0.0
+   ]
+  },
+  "el_petal_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_petal_cut": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_petal_blossom": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.03125
+   ]
+  },
+  "el_petal_petal": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_petal_lotus": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001563,
+    -0.0
+   ]
+  },
+  "el_petal_bloom": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.013021,
+    -0.005208
+   ]
+  },
+  "el_petal_fly": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_hex_slash_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.060067,
+    -0.0
+   ]
+  },
+  "el_hex_slash_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_hex_slash_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.264857,
+    -0.0
+   ]
+  },
+  "el_hex_slash_11": {
+   "chars": "豈更車賈",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.206711,
+    -0.0
+   ]
+  },
+  "el_hex_slashm_00": {
+   "chars": "滑串句龜龜契金喇奈懶",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.038715,
+    -0.0
+   ]
+  },
+  "el_hex_slashm_01": {
+   "chars": "癩羅蘿螺裸邏樂洛烙珞",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.0
+   ]
+  },
+  "el_hex_slashm_10": {
+   "chars": "落酪駱亂卵欄爛蘭鸞嵐",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.207639,
+    -0.0
+   ]
+  },
+  "el_hex_slashm_11": {
+   "chars": "濫藍襤拉臘蠟廊朗浪狼",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.258681,
+    -0.0
+   ]
+  },
+  "el_hex_xslash_00": {
+   "chars": "郎來冷勞擄櫓爐盧",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.154593,
+    -0.0
+   ]
+  },
+  "el_hex_xslash_01": {
+   "chars": "老蘆虜路露魯鷺碌",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.0
+   ]
+  },
+  "el_hex_xslash_10": {
+   "chars": "祿綠菉錄鹿論壟弄",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.154593,
+    -0.0
+   ]
+  },
+  "el_hex_xslash_11": {
+   "chars": "籠聾牢磊賂雷壘屢",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.148438,
+    -0.0
+   ]
+  },
+  "el_hex_boom_00": {
+   "chars": "樓淚漏累縷陋勒肋凜凌稜綾菱陵",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.109375
+   ]
+  },
+  "el_hex_boom_01": {
+   "chars": "讀拏樂諾丹寧怒率異北磻便復不",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.109375,
+    -0.125
+   ]
+  },
+  "el_hex_boom_10": {
+   "chars": "泌數索參塞省葉說殺辰沈拾若掠",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.0
+   ]
+  },
+  "el_hex_boom_11": {
+   "chars": "略亮兩凉梁糧良諒量勵呂女廬旅",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.109375,
+    0.015625
+   ]
+  },
+  "el_hex_shock_00": {
+   "chars": "濾礪閭驪麗黎力曆",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.018273,
+    -0.0
+   ]
+  },
+  "el_hex_shock_01": {
+   "chars": "歷轢年憐戀撚漣煉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_hex_shock_10": {
+   "chars": "璉秊練聯輦蓮連鍊",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.02741,
+    -0.0
+   ]
+  },
+  "el_hex_shock_11": {
+   "chars": "列劣咽烈裂說廉念",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_hex_ring_00": {
+   "chars": "捻殮簾獵",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.033266,
+    -0.0
+   ]
+  },
+  "el_hex_ring_01": {
+   "chars": "令囹寧嶺",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_hex_ring_10": {
+   "chars": "怜玲瑩羚",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.033266,
+    -0.0
+   ]
+  },
+  "el_hex_ring_11": {
+   "chars": "聆鈴零靈",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_hex_boom_s": {
+   "chars": "領例禮醴隸惡了僚寮尿料樂",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.028125,
+    -0.0
+   ]
+  },
+  "el_hex_shock_s": {
+   "chars": "燎療蓼遼龍暈阮劉杻柳",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_hex_crack_s": {
+   "chars": "流溜琉留硫",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.020495,
+    -0.0
+   ]
+  },
+  "el_hex_flash": {
+   "chars": "紐類六戮陸倫崙淪",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.032285,
+    -0.0
+   ]
+  },
+  "el_hex_charge": {
+   "chars": "輪律慄栗率隆利吏履易",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_hex_ember": {
+   "chars": "李梨泥理",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.003646,
+    -0.0
+   ]
+  },
+  "el_hex_shard": {
+   "chars": "痢罹裏裡里離匿溺",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_hex_pillar": {
+   "chars": "吝燐璘藺隣鱗麟林淋臨",
+   "frames": 10,
+   "aspect": 0.4923,
+   "colored": true
+  },
+  "el_hex_dust": {
+   "chars": "立笠粒狀炙識什茶",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002644,
+    -0.0
+   ]
+  },
+  "el_hex_spin_00": {
+   "chars": "刺切度拓糖宅洞暴",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_hex_spin_01": {
+   "chars": "輻行降見廓兀嗀﨎",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_hex_spin_10": {
+   "chars": "﨏塚﨑晴﨓﨔凞猪",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_hex_spin_11": {
+   "chars": "益礼神祥福靖精羽",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_hex_spinm_00": {
+   "chars": "﨟蘒﨡諸﨣﨤逸都",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_hex_spinm_01": {
+   "chars": "﨧﨨﨩飯飼館鶴郞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_hex_spinm_10": {
+   "chars": "隷侮僧免勉勤卑喝",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_hex_spinm_11": {
+   "chars": "嘆器塀墨層屮悔慨",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_hex_cut": {
+   "chars": "憎懲敏既暑梅海渚",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_hex_rift": {
+   "chars": "漢煮爫琢碑社",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
+  },
+  "el_hex_smoke": {
+   "chars": "祉祈祐祖祝禍禎穀",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_hex_aura": {
+   "chars": "突節練縉繁署者臭",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_hex_beam": {
+   "chars": "艹艹著褐視謁",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_hex_lance": {
+   "chars": "謹賓贈辶",
+   "frames": 4,
+   "aspect": 3.3421,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_hex_pool": {
+   "chars": "逸難響頻恵𤋮舘﩮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.002604,
+    0.010417
+   ]
+  },
+  "el_hex_geyser": {
+   "chars": "﩯並况全侀充冀勇",
+   "frames": 8,
+   "aspect": 0.5,
+   "colored": true
+  },
+  "el_hex_heart": {
+   "chars": "勺喝啕喙嗢塚墳奄",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.046875
+   ]
+  },
+  "el_hex_pyre": {
+   "chars": "奔婢嬨廒廙彩徭惘",
+   "frames": 8,
+   "aspect": 0.4306,
+   "colored": true
+  },
+  "el_ward_slash_00": {
+   "chars": "慎愈憎慠懲戴揄搜摒敖",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.044034,
+    -0.0
+   ]
+  },
+  "el_ward_slash_01": {
+   "chars": "晴朗望杖歹殺流滛滋漢",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_ward_slash_10": {
+   "chars": "瀞煮瞧爵犯猪瑱甆画瘝",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_ward_slash_11": {
+   "chars": "瘟益盛直睊着磌窱節类",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_ward_slashm_00": {
+   "chars": "絛練缾者荒華蝹襁覆視",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042905,
+    -0.0
+   ]
+  },
+  "el_ward_slashm_01": {
+   "chars": "調諸請謁諾諭謹變贈輸",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.0
+   ]
+  },
+  "el_ward_slashm_10": {
+   "chars": "遲醙鉶陼難靖韛響頋頻",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.202357,
+    -0.0
+   ]
+  },
+  "el_ward_slashm_11": {
+   "chars": "鬒龜𢡊𢡄𣏕㮝䀘䀹𥉉𥳐",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.259734,
+    -0.0
+   ]
+  },
+  "el_ward_xslash_00": {
+   "chars": "𧻓齃龎﫚﫛﫜﫝﫞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_ward_xslash_01": {
+   "chars": "﫟﫠﫡﫢﫣﫤﫥﫦",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
+  },
+  "el_ward_xslash_10": {
+   "chars": "﫧﫨﫩﫪﫫﫬﫭﫮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_ward_xslash_11": {
+   "chars": "﫯﫰﫱﫲﫳﫴﫵﫶",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    0.125
+   ]
+  },
+  "el_ward_boom_00": {
+   "chars": "﫷﫸﫹﫺﫻﫼﫽﫾﫿ﬀﬁﬂﬃﬄ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.09375
+   ]
+  },
+  "el_ward_boom_01": {
+   "chars": "ﬅﬆ﬇﬈﬉﬊﬋﬌﬍﬎﬏﬐﬑﬒",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_ward_boom_10": {
+   "chars": "ﬓﬔﬕﬖﬗ﬘﬙﬚﬛﬜יִﬞײַﬠ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_ward_boom_11": {
+   "chars": "ﬡﬢﬣﬤﬥﬦﬧﬨ﬩שׁשׂשּׁשּׂאַ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_ward_shock_00": {
+   "chars": "אָאּבּגּדּהּוּזּ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_ward_shock_01": {
+   "chars": "﬷טּיּךּכּלּ﬽מּ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_ward_shock_10": {
+   "chars": "﬿נּסּ﭂ףּפּ﭅צּ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_ward_shock_11": {
+   "chars": "קּרּשּתּוֹבֿכֿפֿ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_ward_ring_00": {
+   "chars": "ﭏﭐﭑﭒ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_ward_ring_01": {
+   "chars": "ﭓﭔﭕﭖ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_ward_ring_10": {
+   "chars": "ﭗﭘﭙﭚ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_ward_ring_11": {
+   "chars": "ﭛﭜﭝﭞ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_ward_boom_s": {
+   "chars": "ﭟﭠﭡﭢﭣﭤﭥﭦﭧﭨﭩﭪ",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_ward_shock_s": {
+   "chars": "ﭫﭬﭭﭮﭯﭰﭱﭲﭳﭴ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_ward_crack_s": {
+   "chars": "ﭵﭶﭷﭸﭹ",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.057445,
+    -0.0
+   ]
+  },
+  "el_ward_flash": {
+   "chars": "ﭺﭻﭼﭽﭾﭿﮀﮁ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_ward_charge": {
+   "chars": "ﮂﮃﮄﮅﮆﮇﮈﮉﮊﮋ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020195,
+    -0.0
+   ]
+  },
+  "el_ward_ember": {
+   "chars": "ﮌﮍﮎﮏ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.020833
+   ]
+  },
+  "el_ward_shard": {
+   "chars": "ﮐﮑﮒﮓﮔﮕﮖﮗ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_ward_pillar": {
+   "chars": "ﮘﮙﮚﮛﮜﮝﮞﮟﮠﮡ",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_ward_dust": {
+   "chars": "ﮢﮣﮤﮥﮦﮧﮨﮩ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.00434,
+    -0.138889
+   ]
+  },
+  "el_ward_spin_00": {
+   "chars": "ﮪﮫﮬﮭﮮﮯﮰﮱ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_ward_spin_01": {
+   "chars": "﮲﮳﮴﮵﮶﮷﮸﮹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
+  },
+  "el_ward_spin_10": {
+   "chars": "﮺﮻﮼﮽﮾﮿﯀﯁",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_ward_spin_11": {
+   "chars": "﯂﯃﯄﯅﯆﯇﯈﯉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_ward_spinm_00": {
+   "chars": "﯊﯋﯌﯍﯎﯏﯐﯑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.03125
+   ]
+  },
+  "el_ward_spinm_01": {
+   "chars": "﯒ﯓﯔﯕﯖﯗﯘﯙ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_ward_spinm_10": {
+   "chars": "ﯚﯛﯜﯝﯞﯟﯠﯡ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_ward_spinm_11": {
+   "chars": "ﯢﯣﯤﯥﯦﯧﯨﯩ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_ward_cut": {
+   "chars": "ﯪﯫﯬﯭﯮﯯﯰﯱ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_ward_speed": {
+   "chars": "ﯲﯳﯴﯵ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_ward_aegis": {
+   "chars": "ﯶﯷﯸﯹﯺﯻ",
+   "frames": 6,
+   "aspect": 0.8,
+   "colored": true,
+   "crop": [
+    -0.000481,
+    -0.0
+   ]
+  },
+  "el_ward_shatter": {
+   "chars": "ﯼﯽﯾﯿﰀﰁﰂﰃ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_ward_aura": {
+   "chars": "ﰄﰅﰆﰇﰈﰉﰊﰋ",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_ward_dash": {
+   "chars": "ﰌﰍﰎﰏﰐﰑ",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_ward_buckler": {
+   "chars": "ﰒﰓﰔﰕ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.002717,
+    -0.0
+   ]
+  },
+  "el_ward_bifrost": {
+   "chars": "ﰖﰗﰘﰙﰚﰛ",
+   "frames": 6,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_ward_chain": {
+   "chars": "ﰜﰝﰞﰟ",
+   "frames": 4,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_ward_heal": {
+   "chars": "ﰠﰡﰢﰣﰤﰥ",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.014606,
+    -0.0
+   ]
+  },
+  "el_maw_slash_00": {
+   "chars": "ﰦﰧﰨﰩﰪﰫﰬﰭﰮﰯ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.171875
+   ]
+  },
+  "el_maw_slash_01": {
+   "chars": "ﰰﰱﰲﰳﰴﰵﰶﰷﰸﰹ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.171875
+   ]
+  },
+  "el_maw_slash_10": {
+   "chars": "ﰺﰻﰼﰽﰾﰿﱀﱁﱂﱃ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.265625,
+    0.203125
+   ]
+  },
+  "el_maw_slash_11": {
+   "chars": "ﱄﱅﱆﱇﱈﱉﱊﱋﱌﱍ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.1875,
+    0.171875
+   ]
+  },
+  "el_maw_slashm_00": {
+   "chars": "ﱎﱏﱐﱑﱒﱓﱔﱕﱖﱗ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.063021,
+    -0.0
+   ]
+  },
+  "el_maw_slashm_01": {
+   "chars": "ﱘﱙﱚﱛﱜﱝﱞﱟﱠﱡ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_maw_slashm_10": {
+   "chars": "ﱢﱣﱤﱥﱦﱧﱨﱩﱪﱫ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.207639,
+    -0.0
+   ]
+  },
+  "el_maw_slashm_11": {
+   "chars": "ﱬﱭﱮﱯﱰﱱﱲﱳﱴﱵ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.243056,
+    -0.0
+   ]
+  },
+  "el_maw_xslash_00": {
+   "chars": "ﱶﱷﱸﱹﱺﱻﱼﱽ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.154593,
+    -0.0
+   ]
+  },
+  "el_maw_xslash_01": {
+   "chars": "ﱾﱿﲀﲁﲂﲃﲄﲅ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.0
+   ]
+  },
+  "el_maw_xslash_10": {
+   "chars": "ﲆﲇﲈﲉﲊﲋﲌﲍ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.154593,
+    -0.0
+   ]
+  },
+  "el_maw_xslash_11": {
+   "chars": "ﲎﲏﲐﲑﲒﲓﲔﲕ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.0
+   ]
+  },
+  "el_maw_boom_00": {
+   "chars": "ﲖﲗﲘﲙﲚﲛﲜﲝﲞﲟﲠﲡﲢﲣ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.09375
+   ]
+  },
+  "el_maw_boom_01": {
+   "chars": "ﲤﲥﲦﲧﲨﲩﲪﲫﲬﲭﲮﲯﲰﲱ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_maw_boom_10": {
+   "chars": "ﲲﲳﲴﲵﲶﲷﲸﲹﲺﲻﲼﲽﲾﲿ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.078125,
+    0.09375
+   ]
+  },
+  "el_maw_boom_11": {
+   "chars": "ﳀﳁﳂﳃﳄﳅﳆﳇﳈﳉﳊﳋﳌﳍ",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_maw_shock_00": {
+   "chars": "ﳎﳏﳐﳑﳒﳓﳔﳕ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.018273,
+    -0.0
+   ]
+  },
+  "el_maw_shock_01": {
+   "chars": "ﳖﳗﳘﳙﳚﳛﳜﳝ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_maw_shock_10": {
+   "chars": "ﳞﳟﳠﳡﳢﳣﳤﳥ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.018273,
+    -0.0
+   ]
+  },
+  "el_maw_shock_11": {
+   "chars": "ﳦﳧﳨﳩﳪﳫﳬﳭ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_maw_ring_00": {
+   "chars": "ﳮﳯﳰﳱ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.033266,
+    -0.0
+   ]
+  },
+  "el_maw_ring_01": {
+   "chars": "ﳲﳳﳴﳵ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_maw_ring_10": {
+   "chars": "ﳶﳷﳸﳹ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.033266,
+    -0.0
+   ]
+  },
+  "el_maw_ring_11": {
+   "chars": "ﳺﳻﳼﳽ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_maw_boom_s": {
+   "chars": "ﳾﳿﴀﴁﴂﴃﴄﴅﴆﴇﴈﴉ",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.005208,
+    -0.0
+   ]
+  },
+  "el_maw_shock_s": {
+   "chars": "ﴊﴋﴌﴍﴎﴏﴐﴑﴒﴓ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_maw_crack_s": {
+   "chars": "ﴔﴕﴖﴗﴘ",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.072342,
+    -0.0
+   ]
+  },
+  "el_maw_flash": {
+   "chars": "ﴙﴚﴛﴜﴝﴞﴟﴠ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.032285,
+    -0.0
+   ]
+  },
+  "el_maw_charge": {
+   "chars": "ﴡﴢﴣﴤﴥﴦﴧﴨﴩﴪ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.0
+   ]
+  },
+  "el_maw_ember": {
+   "chars": "ﴫﴬﴭﴮ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_maw_shard": {
+   "chars": "ﴯﴰﴱﴲﴳﴴﴵﴶ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_maw_pillar": {
+   "chars": "ﴷﴸﴹﴺﴻﴼﴽ﴾﴿﵀",
+   "frames": 10,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    -0.000721,
+    -0.0
+   ]
+  },
+  "el_maw_dust": {
+   "chars": "﵁﵂﵃﵄﵅﵆﵇﵈",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.008534,
+    -0.0
+   ]
+  },
+  "el_maw_spin_00": {
+   "chars": "﵉﵊﵋﵌﵍﵎﵏ﵐ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_maw_spin_01": {
+   "chars": "ﵑﵒﵓﵔﵕﵖﵗﵘ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    -0.03125
+   ]
+  },
+  "el_maw_spin_10": {
+   "chars": "ﵙﵚﵛﵜﵝﵞﵟﵠ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_maw_spin_11": {
+   "chars": "ﵡﵢﵣﵤﵥﵦﵧﵨ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_maw_spinm_00": {
+   "chars": "ﵩﵪﵫﵬﵭﵮﵯﵰ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.057813,
+    -0.03125
+   ]
+  },
+  "el_maw_spinm_01": {
+   "chars": "ﵱﵲﵳﵴﵵﵶﵷﵸ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_maw_spinm_10": {
+   "chars": "ﵹﵺﵻﵼﵽﵾﵿﶀ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_maw_spinm_11": {
+   "chars": "ﶁﶂﶃﶄﶅﶆﶇﶈ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_maw_cut": {
+   "chars": "ﶉﶊﶋﶌﶍﶎﶏ﶐",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.015625
+   ]
+  },
+  "el_maw_speed": {
+   "chars": "﶑ﶒﶓﶔ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_maw_rift": {
+   "chars": "ﶕﶖﶗﶘﶙﶚ",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.046875
+   ]
+  },
+  "el_maw_smoke": {
+   "chars": "ﶛﶜﶝﶞﶟﶠﶡﶢ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_maw_dmaw": {
+   "chars": "ﶣﶤﶥﶦﶧﶨﶩﶪ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.000721,
+    -0.0
+   ]
+  },
+  "el_maw_tendril": {
+   "chars": "ﶫﶬﶭﶮ",
+   "frames": 4,
+   "aspect": 5.3125,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.03125
+   ]
+  },
+  "el_maw_abyss": {
+   "chars": "ﶯﶰﶱﶲﶳﶴﶵﶶ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.140625
+   ]
+  },
+  "el_maw_cinder": {
+   "chars": "ﶷﶸﶹﶺﶻﶼﶽﶾ",
+   "frames": 8,
+   "aspect": 0.5,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
   }
  }
 }

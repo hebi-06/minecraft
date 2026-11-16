@@ -87,6 +87,21 @@ final class PhantomFx {
     /** 2026-11-16 원소의 칼 (엘리멘탈 블레이드 — 금빛 주황 · 얼음 하늘빛: 번개 · 번개 고리 · 빛의 창 · 불꽃 혀 · 회오리 · 서리 띠). 물 · 얼음 빛은 서리 · 바위는 곰 묶음 */
     static final int GLOW_ELEMENT = 0xFFB84C;
     static final Lib ELEMENT = new Lib("el_element", GLOW_ELEMENT, 0x8CE6FF, "ember");
+    /** 2026-11-16 성광 (사제 · 세인트 — 크림 금빛 · 회복의 연둣빛: 회복 십자 · 음표 · 성흔 · 종 · 연꽃 · 큰 꽃 · 나비 — tools/jobvfx/holy.py) */
+    static final int GLOW_HOLY = 0xF2D27A;
+    static final Lib HOLY = new Lib("el_holy", GLOW_HOLY, 0x8FF0A6, "ember");
+    /** 2026-11-16 꽃잎 (세인트가 PETAL 빛으로 부르는 꽃 · 연꽃 · 나비 · 꽃잎 · 일섬 — 분홍 꽃잎 · 크림 금빛 속) */
+    static final int GLOW_PETAL = 0xFFA6C8;
+    static final Lib PETALS = new Lib("el_petal", GLOW_PETAL, 0xFFE6A0, "ember");
+    /** 2026-11-16 혈주 (워록 — 진홍 피 · 금빛: 핏빛 창 · 웅덩이 · 핏물 기둥 · 피의 심장 · 핏빛 불기둥 — tools/jobvfx/hex.py) */
+    static final int GLOW_HEX = 0xE0304C;
+    static final Lib HEX = new Lib("el_hex", GLOW_HEX, 0xFFD070, "ember");
+    /** 2026-11-16 수호 (수호기사 — 강철 푸른빛 · 흰 빛: 도는 방패 · 빛의 다리 · 빛의 사슬 · 빛의 방패 — tools/jobvfx/ward.py) */
+    static final int GLOW_WARD = 0x8EAAE2;
+    static final Lib WARD = new Lib("el_ward", GLOW_WARD, 0xF0F6FF, "ember");
+    /** 2026-11-16 아가리 (다크 나이트 — 진홍 · 검은 공허: 방패의 아가리 · 검은 혀 · 땅의 아가리 · 불씨 기둥 — tools/jobvfx/maw.py) */
+    static final int GLOW_MAW = 0xD8303C;
+    static final Lib MAW = new Lib("el_maw", GLOW_MAW, 0xE8DED0, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -107,6 +122,10 @@ final class PhantomFx {
             case "frostraider" -> FROST;
             case "spellblade", "arcaneblade" -> RUNE; // 2026-11-16 마검사 라인 (tools/jobvfx/rune.py)
             case "elementalblade" -> elementLib(j.color()[0]); // 2026-11-16 원소마다 물들인 직업 (ElementalbladeSkills.tint) 은 그 원소의 묶음
+            case "priest", "saint" -> HOLY; // 2026-11-16 사제 라인 (tools/jobvfx/holy.py)
+            case "warlock" -> HEX; // 2026-11-16 (tools/jobvfx/hex.py)
+            case "guardian" -> WARD; // 2026-11-16 수호기사 (tools/jobvfx/ward.py)
+            case "darkknight" -> MAW; // 2026-11-16 다크 나이트 (tools/jobvfx/maw.py)
             default -> null;
         };
     }
@@ -1410,11 +1429,37 @@ final class PhantomFx {
             java.util.Map.entry("jcross2", new Paint("cross", 1, BILL, 1, 1)),
             java.util.Map.entry("jstab2", new Paint("stab", 1, BILL, 1, 1)),
             java.util.Map.entry("jdagger2", new Paint("dagger", 1, BILL, 1, 1)),
+            // 2026-11-16 사제 라인 (tools/jobvfx/holy.py — 예전 rfx 와 같은 칸 수 · 가로세로 비 · 가운데): 회복 십자 · 음표 · 성흔 · 종 (세움) · 연꽃 (땅에 누움) · 큰 꽃 ·
+            // 나비 · 표식 꽃 (jpetal2 0 ~ 3) · 꽃잎 (4 ~ 7)
+            java.util.Map.entry("jheal2", new Paint("heal", 1, BILL, 1, 1)),
+            java.util.Map.entry("jnote2", new Paint("note", 1, BILL, 1, 1)),
+            java.util.Map.entry("jstigma2", new Paint("stigma", 1, BILL, 1, 1)),
+            java.util.Map.entry("jbell2", new Paint("bell", 1, VERT, 1, 1)),
+            java.util.Map.entry("jlotus", new Paint("lotus", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jbloom", new Paint("bloom", 1, BILL, 1, 1)),
+            java.util.Map.entry("jfly", new Paint("fly", 1, BILL, 1, 1)),
+            java.util.Map.entry("jpetal2", new Paint("blossom", 1, BILL, 1, 1, "petal", 4)),
+            // 2026-11-16 워록 (tools/jobvfx/hex.py — 같은 틀): 핏빛 창 (가는 쪽으로 누움 · 96 / 320) · 웅덩이 (땅에 누움) · 핏물 기둥 (세움 · 384 / 192) · 심장 · 핏빛 불기둥
+            // (세움 · 448 / 192)
+            java.util.Map.entry("jlance", new Paint("lance", 1, LOOK_DIR, 96 / 320.0, 1)),
+            java.util.Map.entry("jpool", new Paint("pool", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jgeyser", new Paint("geyser", 1, VERT, 2, 1)),
+            java.util.Map.entry("jheart", new Paint("heart", 1, BILL, 1, 1)),
+            java.util.Map.entry("jpyre", new Paint("pyre", 1, VERT, 448 / 192.0, 1)),
+            // 2026-11-16 수호기사 (tools/jobvfx/ward.py — 같은 틀): 도는 방패 · 빛의 다리 (가는 쪽으로 누움 · 64 / 512) · 빛의 사슬 (32 / 256)
+            java.util.Map.entry("jbuckler2", new Paint("buckler", 1, BILL, 1, 1)),
+            java.util.Map.entry("jbifrost", new Paint("bifrost", 1, LOOK_DIR, 0.125, 1)),
+            java.util.Map.entry("jchain2", new Paint("chain", 1, LOOK_DIR, 0.125, 1)),
+            // 2026-11-16 다크 나이트 (tools/jobvfx/maw.py — 같은 틀): 방패의 아가리 · 검은 혀 (가는 쪽으로 누움 · 96 / 512) · 땅의 아가리 (세움) · 불씨 기둥 (세움 · 384 / 192)
+            java.util.Map.entry("jdmaw", new Paint("dmaw", 1, BILL, 1, 1)),
+            java.util.Map.entry("jtendril", new Paint("tendril", 1, LOOK_DIR, 96 / 512.0, 1)),
+            java.util.Map.entry("jabyss", new Paint("abyss", 1, VERT, 1, 1)),
+            java.util.Map.entry("jcinder", new Paint("cinder", 1, VERT, 2, 1)),
             java.util.Map.entry("jglint", new Paint("flash", 1, BILL, 1, 0.7)));
 
     /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
     private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot", "warrior", "warlord", "frostraider", "spellblade",
-            "arcaneblade", "elementalblade"};
+            "arcaneblade", "elementalblade", "priest", "saint", "warlock", "guardian", "darkknight"};
     /** 스킬이 직업 빛 대신 쓰는 빛 묶음 (같은 배열) → 묶음: 아크메이지 밤빛 · 금서의 세 주문 빛 · 프리즘 레이 다섯 빛 (무지개 대신 비전 광선) · 망자의 연기 */
     private static java.util.Map<double[], Lib> palette;
 
@@ -1476,6 +1521,27 @@ final class PhantomFx {
             // 2026-11-16 엘리멘탈 블레이드 바위 (돌가시 · 갈라진 땅의 흙빛 · 틈빛) → 곰 묶음
             m.put(ElementalbladeSkills.ROCK_BODY, BEAR);
             m.put(ElementalbladeSkills.ROCK_SEAM, BEAR);
+            // 2026-11-16 사제 · 세인트: 금빛 · 새벽빛 · 잎빛 → 성광, 꽃잎 빛 → 꽃잎 묶음
+            m.put(PriestSkills.GOLD, HOLY);
+            m.put(PriestSkills.DAWN, HOLY);
+            m.put(JobTraits14.GOLD, HOLY);
+            m.put(JobTraits14.GOLD_CORE, HOLY);
+            m.put(JobTraits14.LEAF, HOLY);
+            m.put(JobTraits14.LEAF_CORE, HOLY);
+            m.put(JobTraits14.PETAL, PETALS);
+            m.put(JobTraits14.PETAL_CORE, PETALS);
+            // 2026-11-16 워록: 피 · 금빛 · 불씨 빛 → 혈주
+            m.put(JobTraits14.BLOOD, HEX);
+            m.put(JobTraits14.BLOOD_CORE, HEX);
+            m.put(JobTraits14.WGOLD, HEX);
+            m.put(JobTraits14.WGOLD_CORE, HEX);
+            m.put(JobTraits14.EMBER, HEX);
+            m.put(JobTraits14.EMBER_CORE, HEX);
+            // 2026-11-16 다크 나이트: 공허 · 피 · 진홍 → 아가리
+            m.put(JobTraits15.VOID, MAW);
+            m.put(JobTraits15.BLOOD, MAW);
+            m.put(JobTraits15.CRIMSON, MAW);
+            m.put(JobTraits15.CRIMSON_CORE, MAW);
             palette = m;
         }
         Lib L = palette.get(glow);

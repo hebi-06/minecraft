@@ -110,6 +110,16 @@ final class WyrdKit {
     static final Pal RUNE = new Pal(0x9058F0, 0x57F5F2, SPARKLE, END_ROD, null, ENCHANT, ENCHANT, GLOW);
     /** 2026-11-16 원소의 칼 (엘리멘탈 블레이드): 흰 불꽃놀이 · 금빛 밀랍 반짝임 · end_rod · 금빛 점 */
     static final Pal ELEMENT = new Pal(0xF8A030, 0x8CE6FF, SPARKLE, WAX, null, END_ROD, END_ROD, WAX);
+    /** 2026-11-16 성광 (사제 · 세인트): 흰 불꽃놀이 · 금빛 밀랍 반짝임 · 물빛 초록 빛 점 (회복 — 발광) · end_rod 가 빨려 듦 · 금빛 점 */
+    static final Pal HOLY = new Pal(0xDDB54A, 0xFBE6A8, SPARKLE, WAX, null, GLOW, END_ROD, WAX);
+    /** 2026-11-16 꽃잎 (세인트 PETAL 빛): 흰 불꽃놀이 · 금빛 밀랍 반짝임 · end_rod · 흰 빛 점 */
+    static final Pal PETAL = new Pal(0xEE80AC, 0xFFC8DE, SPARKLE, WAX, null, END_ROD, END_ROD, WHITE_DOT);
+    /** 2026-11-16 혈주 (워록): 작은 불꽃 불티 · 금빛 밀랍 반짝임 · 작은 불꽃 · 불꽃이 빨려 듦 · 금빛 점 (피 묶음의 crit 은 해질녘에 검게 보였음) */
+    static final Pal HEX = new Pal(0xB8163A, 0xFF5A66, SMALL_FLAME, WAX, null, SMALL_FLAME, FLAME, WAX);
+    /** 2026-11-16 수호 (수호기사): 흰 불꽃놀이 · end_rod 반짝임 · 흰 빛 점 · end_rod 가 빨려 듦 · 흰 빛 점 */
+    static final Pal WARD = new Pal(0x6688CC, 0xE2ECFF, SPARKLE, END_ROD, null, WHITE_DOT, END_ROD, WHITE_DOT);
+    /** 2026-11-16 아가리 (다크 나이트): 작은 불꽃 불티 · 밀랍 반짝임 · 솟는 보랏빛 (공허) · 작은 불꽃이 빨려 듦 · 불빛 점 */
+    static final Pal MAW = new Pal(0xB01A2A, 0xFF8E8A, SMALL_FLAME, WAX, null, UNDER, SMALL_FLAME, WAX);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -130,6 +140,11 @@ final class WyrdKit {
             case "el_frost" -> FROST;
             case "el_rune" -> RUNE;
             case "el_element" -> ELEMENT;
+            case "el_holy" -> HOLY;
+            case "el_petal" -> PETAL;
+            case "el_hex" -> HEX;
+            case "el_ward" -> WARD;
+            case "el_maw" -> MAW;
             default -> null;
         };
     }

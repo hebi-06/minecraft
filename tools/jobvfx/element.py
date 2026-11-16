@@ -38,7 +38,7 @@ class Style:
 
     @property
     def drops(self):
-        return self.kind == "blood"
+        return self.kind in ("blood", "hex")
 
 
 def edge_fade(x, y, lo=0.93, hi=0.99):
@@ -506,7 +506,7 @@ def boom_splash(S, f, n=512, frames=BOOM_FRAMES, seed_add=0):
 
 
 def boom_frame(S, f, n=512, frames=BOOM_FRAMES, seed_add=0):
-    return (boom_splash if S.kind == "blood" else boom_light)(S, f, n, frames, seed_add)
+    return (boom_splash if S.kind in ("blood", "hex") else boom_light)(S, f, n, frames, seed_add)
 
 
 # ------------------------------------------------------------------ 땅 충격파 (2 × 2 · 256)
@@ -713,7 +713,7 @@ def flash_splash(S, f, n=256):
 
 
 def flash_frame(S, f, n=256):
-    return (flash_splash if S.kind == "blood" else flash_light)(S, f, n)
+    return (flash_splash if S.kind in ("blood", "hex") else flash_light)(S, f, n)
 
 
 CHARGE_FRAMES = 10
@@ -907,7 +907,7 @@ def pillar_geyser(S, f, w=128, h=256):
 
 
 def pillar_frame(S, f):
-    return (pillar_geyser if S.kind == "blood" else pillar_beam)(S, f)
+    return (pillar_geyser if S.kind in ("blood", "hex") else pillar_beam)(S, f)
 
 
 # ------------------------------------------------------------------ 꽂힌 · 내려친 자리 (256)
@@ -1447,6 +1447,45 @@ STYLES = {
                      accent=ramp([(0.0, "#061A2A"), (0.5, "#2E86B8"), (0.8, "#8CE6FF"), (1.0, "#F0FCFF")]),
                      smoke=ramp([(0.0, "#0E0A06"), (0.45, "#2C2016"), (0.8, "#4E3C2A"), (1.0, "#6E5A44")]),
                      ring="ticks", smoke_alpha=0.45, seed=25),
+    # 2026-11-16 성광 (사제 · 세인트 — 크림 금빛 · 회복의 연둣빛: jobs.json priest [1, 0.93, 0.62] · [0.5, 0.95, 0.56]): 회복 십자 · 음표 · 성흔 · 종 · 연꽃 · 큰 꽃 ·
+    # 나비 (tools/jobvfx/holy.py) + 맞은 자리 별빛 (arcane.starhit) · 빛의 방패 · 고리 · 띠
+    "holy": Style("el_holy", "holy",
+                  main=ramp([(0.0, "#140E04"), (0.12, "#33240A"), (0.26, "#5E4512"), (0.4, "#8E6C1E"), (0.52, "#BE942E"), (0.64, "#DDB54A"),
+                             (0.76, "#F2D27A"), (0.86, "#FBE6A8"), (0.94, "#FFF6DC"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#04200C"), (0.5, "#2E9E4E"), (0.8, "#8FF0A6"), (1.0, "#EEFFF2")]),
+                  smoke=ramp([(0.0, "#0E0C06"), (0.45, "#2A2414"), (0.8, "#4A4226"), (1.0, "#6E6440")]),
+                  ring="ticks", smoke_alpha=0.45, seed=27),
+    # 2026-11-16 꽃잎 (세인트가 PETAL 빛으로 부르는 꽃 · 연꽃 · 꽃잎 · 일섬 — 분홍 꽃잎 · 크림 금빛 속): tools/jobvfx/holy.py 의 꽃 그림을 꽃잎 빛으로
+    "petal": Style("el_petal", "petal",
+                   main=ramp([(0.0, "#1A0610"), (0.12, "#3C0E24"), (0.26, "#6E1E46"), (0.4, "#A6386C"), (0.52, "#D25A8E"), (0.64, "#EE80AC"),
+                              (0.76, "#FFA6C8"), (0.86, "#FFC8DE"), (0.94, "#FFEAF2"), (1.0, "#FFFFFF")]),
+                   accent=ramp([(0.0, "#2A1A06"), (0.5, "#D8B04A"), (0.8, "#FFE6A0"), (1.0, "#FFFBEA")]),
+                   smoke=ramp([(0.0, "#120810"), (0.45, "#2E1626"), (0.8, "#4E2C42"), (1.0, "#6E4A62")]),
+                   ring="ticks", smoke_alpha=0.45, seed=29),
+    # 2026-11-16 혈주 (워록 — 진홍 피 · 금빛: jobs.json warlock [0.88, 0.07, 0.24] · [1, 0.76, 0.3]): 핏빛 창 · 웅덩이 · 핏물 기둥 · 피의 심장 · 핏빛 불기둥
+    # (tools/jobvfx/hex.py) + 피처럼 튀는 터짐 · 섬광 (블러드 나이트와 같은 길)
+    "hex": Style("el_hex", "hex",
+                 main=ramp([(0.0, "#120206"), (0.12, "#2E040E"), (0.26, "#58081C"), (0.4, "#8A0E2A"), (0.52, "#B8163A"), (0.64, "#E0304C"),
+                            (0.76, "#FF5A66"), (0.86, "#FF9A96"), (0.94, "#FFD8D0"), (1.0, "#FFFFFF")]),
+                 accent=ramp([(0.0, "#2A1604"), (0.5, "#D08A20"), (0.8, "#FFD070"), (1.0, "#FFF6DA")]),
+                 smoke=ramp([(0.0, "#0C0406"), (0.45, "#26101A"), (0.8, "#42202C"), (1.0, "#5E3440")]),
+                 ring="ticks", smoke_alpha=0.45, seed=31),
+    # 2026-11-16 수호 (수호기사 — 강철 푸른빛 · 흰 빛: jobs.json guardian [0.46, 0.62, 0.84] · [0.95, 0.97, 1]): 도는 방패 · 빛의 다리 · 빛의 사슬
+    # (tools/jobvfx/ward.py) + 빛의 방패 (arcane.aegis) · 공용 그림
+    "ward": Style("el_ward", "ward",
+                  main=ramp([(0.0, "#060A14"), (0.12, "#101C34"), (0.26, "#1E3460"), (0.4, "#304E88"), (0.52, "#4668AE"), (0.64, "#6688CC"),
+                             (0.76, "#8EAAE2"), (0.86, "#B8CCF2"), (0.94, "#E2ECFF"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#1A1A1A"), (0.5, "#B8C8E0"), (0.8, "#F0F6FF"), (1.0, "#FFFFFF")]),
+                  smoke=ramp([(0.0, "#08080C"), (0.45, "#1A1E28"), (0.8, "#2E3444"), (1.0, "#4A5266")]),
+                  ring="ticks", smoke_alpha=0.45, seed=33),
+    # 2026-11-16 아가리 (다크 나이트 — 진홍 · 검은 공허: jobs.json darkknight [0.9, 0.12, 0.2] · [0.2, 0.1, 0.14]): 방패의 아가리 · 검은 혀 · 땅의 아가리 ·
+    # 불씨 기둥 (tools/jobvfx/maw.py) + 공용 그림 · 연기 (shadow.py 를 아가리 빛으로). 몸은 짙은 공허 (smoke 램프) · 빛은 진홍 · 이빨은 뼈빛 (accent)
+    "maw": Style("el_maw", "maw",
+                 main=ramp([(0.0, "#100204"), (0.12, "#2A0408"), (0.26, "#520A14"), (0.4, "#84101E"), (0.52, "#B01A2A"), (0.64, "#D8303C"),
+                            (0.76, "#F25A5E"), (0.86, "#FF8E8A"), (0.94, "#FFD0C8"), (1.0, "#FFFFFF")]),
+                 accent=ramp([(0.0, "#1A1414"), (0.5, "#8C8078"), (0.8, "#E8DED0"), (1.0, "#FFFFFF")]),
+                 smoke=ramp([(0.0, "#050203"), (0.45, "#1A080C"), (0.8, "#2E1218"), (1.0, "#4A2428")]),
+                 ring="ticks", smoke_alpha=0.45, seed=35),
 }
 
 
@@ -1456,7 +1495,7 @@ def frames_of(S, name):
         return [to_img(*slash_frame(S, f)) for f in range(SLASH_FRAMES)]
     if name == "xslash":
         # 2026-11-16 비전 · 혼 묶음의 맞은 자리는 X 베기 대신 별빛 (arcane.starhit) · 혼 터짐 (soul.soulhit) — 같은 자리 (PhantomFx.hit · 2 × 2)
-        if S.kind == "arcane":
+        if S.kind in ("arcane", "holy", "petal"):  # 2026-11-16 성광 · 꽃잎 묶음도 별빛
             from . import arcane
             return arcane.frames_of("starhit", S)
         if S.kind == "soul":
@@ -1549,6 +1588,24 @@ def sets_for(S):
             return out + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + arcane.sprites()
         from . import soul
         return out + soul.sprites()
+    if S.kind in ("holy", "petal"):
+        # 2026-11-16 사제 · 세인트 (성광 — 남은 직업 위르드식): 베기는 쓰지 않음 — 맞은 자리 별빛 · 터짐 · 땅 충격파 · 섬광 · 작은 그림 · 일섬 + (성광) 한 바퀴 고리 ·
+        # 빛 고리 (jhalo) · 빛의 방패 (jaegis2) · 띠 (jaura2) · 광선 (jbeam2) · 1인칭 빠른 줄 + 대표 그림 (tools/jobvfx/holy.py — 회복 십자 · 음표 · 성흔 · 종 · 연꽃 ·
+        # 큰 꽃 · 나비). 꽃잎 묶음은 세인트가 PETAL 빛으로 부르는 것만 (섬광 · 불씨 · 일섬 · 꽃 · 연꽃 · 나비 · 표식 꽃 · 꽃잎)
+        from . import arcane, holy, shadow
+        if S.kind == "petal":
+            return ([(p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "cut", fr("cut"), True),
+                     (p + "blossom", lambda: shadow.frames_of("blossom", S), True), (p + "petal", lambda: shadow.frames_of("petal", S), True)]
+                    + holy.sprites(S, ("lotus", "bloom", "fly")))
+        return (tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom")) + tiled(p + "shock", fr("shock"))
+                + [(p + "boom_s", fr("boom_s"), True), (p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "shard", lambda: shard(S), True),
+                   (p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
+                + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin"))
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + [(p + "aegis", lambda: [to_img(*arcane.aegis_frame(S, f)) for f in range(arcane.AEGIS_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True)]
+                + holy.sprites(S))
     out = (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
            + tiled(p + "shock", fr("shock")) + tiled(p + "ring", fr("ring"))
            + [(p + "boom_s", fr("boom_s"), True), (p + "shock_s", fr("shock_s"), True), (p + "crack_s", fr("crack"), True), (p + "flash", fr("flash"), True),
@@ -1557,6 +1614,32 @@ def sets_for(S):
     if S.kind == "steel":
         out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "rift", fr("rift"), True), (p + "cut", fr("cut"), True)]
                 + tiled(p + "wings", fr("wings")))
+    if S.kind == "ward":
+        # 2026-11-16 수호기사 (수호 — 남은 직업 위르드식): 공용 그림 (베기 — 칠한 묶음의 반달 · 날아가는 검기가 씀, 없으면 그림판 없음 오류) + 한 바퀴 고리 · 일섬 · 빛의 방패 (arcane.aegis) · 깨지는 방패 (arcane.shatter) ·
+        # 띠 · 돌진 줄기 · 빠른 줄 + 대표 그림 (tools/jobvfx/ward.py — 도는 방패 · 빛의 다리 · 빛의 사슬)
+        from . import arcane, holy, ward
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
+                + [(p + "aegis", lambda: [to_img(*arcane.aegis_frame(S, f)) for f in range(arcane.AEGIS_FRAMES)], True),
+                   (p + "shatter", lambda: [to_img(*arcane.shatter_frame(S, f)) for f in range(arcane.SHATTER_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)]
+                + ward.sprites(S) + holy.sprites(S, ("heal",)))  # 회복 십자 (수호기사 특성 — JobTraits4)
+    if S.kind == "maw":
+        # 2026-11-16 다크 나이트 (아가리 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 연기 (shadow.py 를 아가리 빛으로) · 빠른 줄 · 땅 가르기 +
+        # 대표 그림 (tools/jobvfx/maw.py — 방패의 아가리 · 검은 혀 · 땅의 아가리 · 불씨 기둥)
+        from . import maw, shadow
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True),
+                                                                                         (p + "rift", fr("rift"), True)]
+                + [(p + "smoke", lambda: shadow.frames_of("smoke", S), True)] + maw.sprites(S))
+    if S.kind == "hex":
+        # 2026-11-16 워록 (혈주 — 남은 직업 위르드식): 공용 그림 (피처럼 튀는 터짐 · 섬광 · 핏물 기둥) + 한 바퀴 고리 · 일섬 · 연기 (shadow.py 를 혈주 빛으로) ·
+        # 띠 · 광선 + 대표 그림 (tools/jobvfx/hex.py — 핏빛 창 · 웅덩이 · 핏물 기둥 · 심장 · 핏빛 불기둥)
+        from . import arcane, hex as hexart, shadow
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "rift", fr("rift"), True)]
+                + [(p + "smoke", lambda: shadow.frames_of("smoke", S), True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True)]
+                + hexart.sprites(S))
     if S.kind == "blood":
         # 2026-11-15 한 바퀴 베기 (spin · spinm — JobFx.ring): 예전 칼날 고리처럼 도는 핏빛 초승달 (크림슨 다이브 · 블러드 클레이브)
         out += tiled(p + "moon", fr("moon")) + [(p + "rift", fr("rift"), True)] + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin"))
@@ -1638,7 +1721,7 @@ def sets_for(S):
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element", "holy", "petal", "hex", "ward", "maw"):
         out += sets_for(STYLES[key])
     return out
 

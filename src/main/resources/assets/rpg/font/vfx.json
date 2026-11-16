@@ -6651,6 +6651,1850 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_xslash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_xslash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_boom_00.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_boom_01.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_boom_10.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_boom_11.png",
+   "height": 54,
+   "ascent": 25,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_cut.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_speed.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_halo_00.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_halo_01.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_halo_10.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_halo_11.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_aegis.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_beam.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_heal.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_note.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_stigma.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_bell.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_lotus.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_bloom.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_fly.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_flash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_ember.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_cut.png",
+   "height": 18,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_blossom.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_petal.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_lotus.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_bloom.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_petal_fly.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "",
+    "豈更車賈"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "滑串句龜龜",
+    "契金喇奈懶"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "癩羅蘿螺裸",
+    "邏樂洛烙珞"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "落酪駱亂卵",
+    "欄爛蘭鸞嵐"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "濫藍襤拉臘",
+    "蠟廊朗浪狼"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_xslash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "郎來冷勞擄櫓爐盧"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_xslash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "老蘆虜路露魯鷺碌"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_xslash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "祿綠菉錄鹿論壟弄"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_xslash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "籠聾牢磊賂雷壘屢"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_boom_00.png",
+   "height": 50,
+   "ascent": 23,
+   "chars": [
+    "樓淚漏累縷陋勒",
+    "肋凜凌稜綾菱陵"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_boom_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    "讀拏樂諾丹寧怒",
+    "率異北磻便復不"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_boom_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "泌數索參塞省葉",
+    "說殺辰沈拾若掠"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_boom_11.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    "略亮兩凉梁糧良",
+    "諒量勵呂女廬旅"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "濾礪閭驪麗黎力曆"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "歷轢年憐戀撚漣煉"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "璉秊練聯輦蓮連鍊"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "列劣咽烈裂說廉念"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_ring_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "捻殮簾獵"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_ring_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "令囹寧嶺"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_ring_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "怜玲瑩羚"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_ring_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "聆鈴零靈"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "領例禮醴隸惡",
+    "了僚寮尿料樂"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "燎療蓼遼龍",
+    "暈阮劉杻柳"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "流溜琉留硫"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_flash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "紐類六戮陸倫崙淪"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "輪律慄栗率",
+    "隆利吏履易"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_ember.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "李梨泥理"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "痢罹裏裡里離匿溺"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "吝燐璘藺隣",
+    "鱗麟林淋臨"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_dust.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "立笠粒狀炙識什茶"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "刺切度拓糖宅洞暴"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "輻行降見廓兀嗀﨎"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "﨏塚﨑晴﨓﨔凞猪"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "益礼神祥福靖精羽"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "﨟蘒﨡諸﨣﨤逸都"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "﨧﨨﨩飯飼館鶴郞"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "隷侮僧免勉勤卑喝"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "嘆器塀墨層屮悔慨"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_cut.png",
+   "height": 18,
+   "ascent": 7,
+   "chars": [
+    "憎懲敏既暑梅海渚"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_rift.png",
+   "height": 21,
+   "ascent": 8,
+   "chars": [
+    "漢煮爫琢碑社"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_smoke.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "祉祈祐祖祝禍禎穀"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "突節練縉繁署者臭"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_beam.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "艹艹著褐視謁"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_lance.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "謹賓贈辶"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_pool.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "逸難響頻恵𤋮舘﩮"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_geyser.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "﩯並况全侀充冀勇"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_heart.png",
+   "height": 59,
+   "ascent": 27,
+   "chars": [
+    "勺喝啕喙嗢塚墳奄"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_pyre.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "奔婢嬨廒廙彩徭惘"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "慎愈憎慠懲",
+    "戴揄搜摒敖"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "晴朗望杖歹",
+    "殺流滛滋漢"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "瀞煮瞧爵犯",
+    "猪瑱甆画瘝"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "瘟益盛直睊",
+    "着磌窱節类"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "絛練缾者荒",
+    "華蝹襁覆視"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "調諸請謁諾",
+    "諭謹變贈輸"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "遲醙鉶陼難",
+    "靖韛響頋頻"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "鬒龜𢡊𢡄𣏕",
+    "㮝䀘䀹𥉉𥳐"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_xslash_00.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    "𧻓齃龎﫚﫛﫜﫝﫞"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_xslash_01.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    "﫟﫠﫡﫢﫣﫤﫥﫦"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_xslash_10.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    "﫧﫨﫩﫪﫫﫬﫭﫮"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_xslash_11.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    "﫯﫰﫱﫲﫳﫴﫵﫶"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_boom_00.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "﫷﫸﫹﫺﫻﫼﫽",
+    "﫾﫿ﬀﬁﬂﬃﬄ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_boom_01.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﬅﬆ﬇﬈﬉﬊﬋",
+    "﬌﬍﬎﬏﬐﬑﬒"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_boom_10.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﬓﬔﬕﬖﬗ﬘﬙",
+    "﬚﬛﬜יִﬞײַﬠ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_boom_11.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﬡﬢﬣﬤﬥﬦﬧ",
+    "ﬨ﬩שׁשׂשּׁשּׂאַ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "אָאּבּגּדּהּוּזּ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "﬷טּיּךּכּלּ﬽מּ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "﬿נּסּ﭂ףּפּ﭅צּ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "קּרּשּתּוֹבֿכֿפֿ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_ring_00.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    "ﭏﭐﭑﭒ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_ring_01.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    "ﭓﭔﭕﭖ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_ring_10.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    "ﭗﭘﭙﭚ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_ring_11.png",
+   "height": 62,
+   "ascent": 29,
+   "chars": [
+    "ﭛﭜﭝﭞ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﭟﭠﭡﭢﭣﭤ",
+    "ﭥﭦﭧﭨﭩﭪ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﭫﭬﭭﭮﭯ",
+    "ﭰﭱﭲﭳﭴ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﭵﭶﭷﭸﭹ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_flash.png",
+   "height": 48,
+   "ascent": 22,
+   "chars": [
+    "ﭺﭻﭼﭽﭾﭿﮀﮁ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﮂﮃﮄﮅﮆ",
+    "ﮇﮈﮉﮊﮋ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_ember.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﮌﮍﮎﮏ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﮐﮑﮒﮓﮔﮕﮖﮗ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﮘﮙﮚﮛﮜ",
+    "ﮝﮞﮟﮠﮡ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_dust.png",
+   "height": 32,
+   "ascent": 14,
+   "chars": [
+    "ﮢﮣﮤﮥﮦﮧﮨﮩ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "ﮪﮫﮬﮭﮮﮯﮰﮱ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "﮲﮳﮴﮵﮶﮷﮸﮹"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "﮺﮻﮼﮽﮾﮿﯀﯁"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "﯂﯃﯄﯅﯆﯇﯈﯉"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "﯊﯋﯌﯍﯎﯏﯐﯑"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "﯒ﯓﯔﯕﯖﯗﯘﯙ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﯚﯛﯜﯝﯞﯟﯠﯡ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﯢﯣﯤﯥﯦﯧﯨﯩ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_cut.png",
+   "height": 17,
+   "ascent": 6,
+   "chars": [
+    "ﯪﯫﯬﯭﯮﯯﯰﯱ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_speed.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﯲﯳﯴﯵ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_aegis.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﯶﯷﯸﯹﯺﯻ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_shatter.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﯼﯽﯾﯿﰀﰁﰂﰃ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﰄﰅﰆﰇﰈﰉﰊﰋ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﰌﰍﰎﰏﰐﰑ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_buckler.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﰒﰓﰔﰕ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_bifrost.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﰖﰗﰘﰙﰚﰛ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_chain.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﰜﰝﰞﰟ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_ward_heal.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﰠﰡﰢﰣﰤﰥ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slash_00.png",
+   "height": 42,
+   "ascent": 19,
+   "chars": [
+    "ﰦﰧﰨﰩﰪ",
+    "ﰫﰬﰭﰮﰯ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slash_01.png",
+   "height": 42,
+   "ascent": 19,
+   "chars": [
+    "ﰰﰱﰲﰳﰴ",
+    "ﰵﰶﰷﰸﰹ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slash_10.png",
+   "height": 38,
+   "ascent": 17,
+   "chars": [
+    "ﰺﰻﰼﰽﰾ",
+    "ﰿﱀﱁﱂﱃ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slash_11.png",
+   "height": 42,
+   "ascent": 19,
+   "chars": [
+    "ﱄﱅﱆﱇﱈ",
+    "ﱉﱊﱋﱌﱍ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slashm_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﱎﱏﱐﱑﱒ",
+    "ﱓﱔﱕﱖﱗ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slashm_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﱘﱙﱚﱛﱜ",
+    "ﱝﱞﱟﱠﱡ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slashm_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﱢﱣﱤﱥﱦ",
+    "ﱧﱨﱩﱪﱫ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_slashm_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﱬﱭﱮﱯﱰ",
+    "ﱱﱲﱳﱴﱵ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_xslash_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﱶﱷﱸﱹﱺﱻﱼﱽ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_xslash_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﱾﱿﲀﲁﲂﲃﲄﲅ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_xslash_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﲆﲇﲈﲉﲊﲋﲌﲍ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_xslash_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﲎﲏﲐﲑﲒﲓﲔﲕ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_boom_00.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﲖﲗﲘﲙﲚﲛﲜ",
+    "ﲝﲞﲟﲠﲡﲢﲣ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_boom_01.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﲤﲥﲦﲧﲨﲩﲪ",
+    "ﲫﲬﲭﲮﲯﲰﲱ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_boom_10.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﲲﲳﲴﲵﲶﲷﲸ",
+    "ﲹﲺﲻﲼﲽﲾﲿ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_boom_11.png",
+   "height": 52,
+   "ascent": 24,
+   "chars": [
+    "ﳀﳁﳂﳃﳄﳅﳆ",
+    "ﳇﳈﳉﳊﳋﳌﳍ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_shock_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳎﳏﳐﳑﳒﳓﳔﳕ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_shock_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳖﳗﳘﳙﳚﳛﳜﳝ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_shock_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳞﳟﳠﳡﳢﳣﳤﳥ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_shock_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳦﳧﳨﳩﳪﳫﳬﳭ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_ring_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳮﳯﳰﳱ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_ring_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳲﳳﳴﳵ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_ring_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳶﳷﳸﳹ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_ring_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳺﳻﳼﳽ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_boom_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﳾﳿﴀﴁﴂﴃ",
+    "ﴄﴅﴆﴇﴈﴉ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_shock_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴊﴋﴌﴍﴎ",
+    "ﴏﴐﴑﴒﴓ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_crack_s.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴔﴕﴖﴗﴘ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_flash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴙﴚﴛﴜﴝﴞﴟﴠ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_charge.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴡﴢﴣﴤﴥ",
+    "ﴦﴧﴨﴩﴪ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_ember.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴫﴬﴭﴮ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_shard.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴯﴰﴱﴲﴳﴴﴵﴶ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_pillar.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﴷﴸﴹﴺﴻ",
+    "ﴼﴽ﴾﴿﵀"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_dust.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "﵁﵂﵃﵄﵅﵆﵇﵈"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spin_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "﵉﵊﵋﵌﵍﵎﵏ﵐ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spin_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "ﵑﵒﵓﵔﵕﵖﵗﵘ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spin_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﵙﵚﵛﵜﵝﵞﵟﵠ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spin_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﵡﵢﵣﵤﵥﵦﵧﵨ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spinm_00.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "ﵩﵪﵫﵬﵭﵮﵯﵰ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spinm_01.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "ﵱﵲﵳﵴﵵﵶﵷﵸ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spinm_10.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﵹﵺﵻﵼﵽﵾﵿﶀ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_spinm_11.png",
+   "height": 56,
+   "ascent": 26,
+   "chars": [
+    "ﶁﶂﶃﶄﶅﶆﶇﶈ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_cut.png",
+   "height": 17,
+   "ascent": 6,
+   "chars": [
+    "ﶉﶊﶋﶌﶍﶎﶏ﶐"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_speed.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "﶑ﶒﶓﶔ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_rift.png",
+   "height": 20,
+   "ascent": 8,
+   "chars": [
+    "ﶕﶖﶗﶘﶙﶚ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_smoke.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﶛﶜﶝﶞﶟﶠﶡﶢ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_dmaw.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﶣﶤﶥﶦﶧﶨﶩﶪ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_tendril.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "ﶫﶬﶭﶮ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_abyss.png",
+   "height": 46,
+   "ascent": 21,
+   "chars": [
+    "ﶯﶰﶱﶲﶳﶴﶵﶶ"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_cinder.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "ﶷﶸﶹﶺﶻﶼﶽﶾ"
+   ]
   }
  ]
 }
