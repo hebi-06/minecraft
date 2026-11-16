@@ -4,7 +4,6 @@ import java.util.function.Predicate;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.V;
-import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -22,6 +21,9 @@ import net.minecraft.world.phys.Vec3;
  * 콘스텔레이션) · 큰 연기 · 용암 방울 (검은 부스러기가 하늘로 — 포지 브레이커 · 그레이브야드) · 먹물 · 폭발 연기 (칠한 폭발 가운데를 회색 원판이 덮음 — 팬텀 버스트) 를
  * 뺌. 남긴 것: 모양이 있는 먼지 (펼쳐지는 고리 · 날을 따라 도는 호 · 줄어드는 고리 — 가운데 · 밝은 빛, 크기 1.6 아래) · 튀는 불티 · 흰 반짝임 · 밝은 묶음의 흰 연기
  * 뭉치 (큰 터짐만) · 빨려 드는 알갱이.
+ * <p>
+ * 3판 (CI 43830855673): 해질녘 영상 (팬텀 아처) 에서 crit · poof · 먼지가 둘레 빛을 받아 검은 남색 X · 보랏빛 덩이로 보였음 → 불티 · 반짝임은 스스로 빛나는
+ * 것 (end_rod · 불꽃놀이 · 토템 · 불꽃 · 밀랍 · 차원문) 으로, 연기 뭉치는 땅을 따라서만, 핏빛 · 녹색 소용돌이 (하늘로 솟아 나선 무늬) 는 뺌. 먼지는 모양 (고리 · 호) 에만.
  * <p>
  * 블록 · 아이템 그림 부스러기 파티클 (block · item) 은 쓰지 않음 (바닐라 그림 금지). 화면 흔들림 없음. 한 틱에 겹이 많으면 (여러 마리 맞음) fxQuota 로 거름.
  */
@@ -49,40 +51,40 @@ final class WyrdKit {
      */
     record Pal(int main, int light, Part spark, Part glint, Part puff, Part mote, Part pull) {}
 
-    private static ColorParticleOption swirl(int rgb) {
-        return ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, 0xFF000000 | rgb);
-    }
-
-    // 파티클 (reach — 마찰 · 수명으로 어림: crit 0.7 마찰 · 0.4 배, 불꽃 0.96 · 짧은 수명, end_rod 0.91, poof 0.9)
+    // 파티클 (reach — 마찰 · 수명으로 어림: crit 0.7 마찰 · 0.4 배, 불꽃 0.96 · 짧은 수명, end_rod · 불꽃놀이 0.91, 토템 0.6, 보랏빛 솟음 마찰 없이 수명 60틱).
+    // 3판: 밤 · 해질녘에도 빛나는 것 (end_rod · 불꽃놀이 · 토템 · 불꽃 · 밀랍 · 차원문 — 스스로 빛남) 위주. crit · poof · 먼지는 둘레 빛을 받아 해질녘 영상 (팬텀 아처) 에서
+    // 검은 남색 X · 보랏빛 덩이로 보였음
     static final Part CRIT = new Part(ParticleTypes.CRIT, 1.4);
-    static final Part MAGIC_CRIT = new Part(ParticleTypes.ENCHANTED_HIT, 1.4);
     static final Part END_ROD = new Part(ParticleTypes.END_ROD, 11);
+    static final Part SPARKLE = new Part(ParticleTypes.FIREWORK, 11);
+    /** 번쩍이는 짧은 불똥 (2 ~ 3틱 · 스스로 빛남) — 맞음마다 (end_rod 는 3초 머물러 1인칭 돌진에서 눈앞 흰 네모가 됐음) */
+    static final Part ZAP = new Part(ParticleTypes.ELECTRIC_SPARK, 1.8);
+    static final Part TOTEM = new Part(ParticleTypes.TOTEM_OF_UNDYING, 2.5);
     static final Part FLAME = new Part(ParticleTypes.FLAME, 10);
     static final Part SMALL_FLAME = new Part(ParticleTypes.SMALL_FLAME, 10);
     static final Part POOF = new Part(ParticleTypes.POOF, 9);
     static final Part SOUL = new Part(ParticleTypes.SOUL, 10);
-    static final Part WITCH = new Part(ParticleTypes.WITCH, 0);
-    static final Part GREEN = new Part(ParticleTypes.HAPPY_VILLAGER, 0);
     static final Part WAX = new Part(ParticleTypes.WAX_ON, 0);
+    static final Part UNDER = new Part(ParticleTypes.REVERSE_PORTAL, 30);
     static final Part PORTAL = new Part(ParticleTypes.PORTAL, 1, true);
     static final Part ENCHANT = new Part(ParticleTypes.ENCHANT, 1, true);
 
-    /** 검사 — 강철 · 푸른 달빛 (푸른 마법 crit — 주황 crit 은 푸른 흰 빛에 어긋났음 · 흰 빛 · 흰 연기) */
-    static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, MAGIC_CRIT, END_ROD, POOF, new Part(swirl(0xBFD4FF), 0), END_ROD);
-    /** 블러드 나이트 — 피 (crit · 핏빛 소용돌이 · 연기 없음) */
-    static final Pal BLOOD = new Pal(0xC8182F, 0xFF6A68, CRIT, new Part(swirl(0xFF4A50), 0), null, new Part(swirl(0xB0182A), 0), CRIT);
-    /** 아스널 킹 · 소드 마스터 — 금빛 (crit · 흰 금빛 반짝임 · 밀랍 금빛 알갱이) */
-    static final Pal GOLD = new Pal(0xF0B028, 0xFFE28A, CRIT, END_ROD, POOF, WAX, END_ROD);
-    /** 블레이드 레인저 — 단조 불 (불꽃 · 흰 빛 · 흰 연기) */
-    static final Pal FORGE = new Pal(0xF77A18, 0xFFD27A, FLAME, END_ROD, POOF, SMALL_FLAME, FLAME);
-    /** 팬텀 아처 — 진홍 불 · 푸른 흰 투영 (crit · 흰 빛 · 흰 연기) */
-    static final Pal PHANTOM = new Pal(0xF2412F, 0xFF9E6E, CRIT, END_ROD, POOF, SMALL_FLAME, FLAME);
-    /** 암살자 — 그림자 (마녀 보라 반짝임이 퍼짐 · 흰 빛 · 빨려 드는 보랏빛 · 연기 없음) */
-    static final Pal SHADOW = new Pal(0xA42A85, 0xCF55AC, WITCH, END_ROD, null, PORTAL, PORTAL);
-    /** 매지션 · 아크메이지 — 비전 (마법 crit · 흰 빛 · 마법 글자가 빨려 듦 · 연기 없음 — 파란 빛 위 회색 연기는 탁했음) */
-    static final Pal ARCANE = new Pal(0x5D7CF2, 0xB5C8FF, MAGIC_CRIT, END_ROD, null, ENCHANT, ENCHANT);
-    /** 네크로맨서 — 혼 (녹색 혼불 맴돎 · 초록 반짝임 · 솟는 혼 · 연기 없음) */
-    static final Pal SOUL_P = new Pal(0x35BC5E, 0xA0F2B4, new Part(swirl(0x35BC5E), 0), GREEN, null, SOUL, SOUL);
+    /** 검사 — 강철 · 푸른 달빛 (흰 불꽃놀이 불티 · 흰 빛 · 땅 흰 연기) */
+    static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, POOF, null, END_ROD);
+    /** 블러드 나이트 — 피 (crit · 연기 · 반짝임 없음 — 핏빛 소용돌이는 하늘로 솟아 나선 무늬로 흩어졌음) */
+    static final Pal BLOOD = new Pal(0xC8182F, 0xFF6A68, CRIT, null, null, null, CRIT);
+    /** 아스널 킹 · 소드 마스터 — 금빛 (흰 불꽃놀이 불티 · 밀랍 금빛 반짝임 · 흰 빛 알갱이 · 땅 흰 연기) */
+    static final Pal GOLD = new Pal(0xF0B028, 0xFFE28A, SPARKLE, WAX, POOF, END_ROD, END_ROD);
+    /** 블레이드 레인저 — 단조 불 (불꽃 · 밀랍 불빛 반짝임 · 작은 불꽃 · 땅 흰 연기) */
+    static final Pal FORGE = new Pal(0xF77A18, 0xFFD27A, FLAME, WAX, POOF, SMALL_FLAME, FLAME);
+    /** 팬텀 아처 — 진홍 불 · 푸른 흰 투영 (불꽃 · 흰 빛 · 작은 불꽃 · 땅 흰 연기) */
+    static final Pal PHANTOM = new Pal(0xF2412F, 0xFF9E6E, FLAME, END_ROD, POOF, SMALL_FLAME, FLAME);
+    /** 암살자 — 그림자 (빨려 드는 보랏빛 — 맞은 자리로 그림자가 모임 · 흰 빛 · 솟는 보랏빛) */
+    static final Pal SHADOW = new Pal(0xA42A85, 0xCF55AC, PORTAL, END_ROD, null, UNDER, PORTAL);
+    /** 매지션 · 아크메이지 — 비전 (흰 불꽃놀이 별빛 · 흰 빛 · 마법 글자가 빨려 듦) */
+    static final Pal ARCANE = new Pal(0x5D7CF2, 0xB5C8FF, SPARKLE, END_ROD, null, ENCHANT, ENCHANT);
+    /** 네크로맨서 — 혼 (토템 초록 불티 · 솟는 혼 · 연기 없음) */
+    static final Pal SOUL_P = new Pal(0x35BC5E, 0xA0F2B4, TOTEM, null, null, SOUL, TOTEM);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -131,9 +133,10 @@ final class WyrdKit {
 
     /**
      * 1인칭 눈 바로 앞에는 보내지 않음 (칸): 먼지 · 연기 하나가 눈에서 1칸 남짓이면 화면에서 수백 픽셀 덩이 (PBridge.DUST_NEAR_EYE 와 같은 까닭 — 1인칭 눈앞 섬광 · 모으는
-     * 빛에 겹이 붙을 때). 상자로 흩뿌리면 상자 크기만큼 더 멀리. 3인칭은 카메라가 몸 뒤라 그대로
+     * 빛에 겹이 붙을 때). 2.2칸 — 1인칭 영상 (CI 43830855673 트리니티 엣지) 에서 1.4칸은 칼 닿는 거리의 맞음 반짝임이 눈앞 흰 네모로 보였음. 상자로 흩뿌리면 상자 크기만큼
+     * 더 멀리. 3인칭은 카메라가 몸 뒤라 그대로
      */
-    static final double NEAR_EYE = 1.4;
+    static final double NEAR_EYE = 2.2;
 
     /** count 개를 상자 (dx, dy, dz) 안에 · 속도 speed (count 0 = 한 알을 속도 (dx, dy, dz) × speed 로) — who 가 있으면 그 사람들에게만 */
     static void p(ServerLevel l, Predicate<ServerPlayer> who, ParticleOptions o, Vec3 at, int n, double dx, double dy, double dz, double speed) {
@@ -176,20 +179,9 @@ final class WyrdKit {
         }
     }
 
-    /** 연기 뭉치 n 개가 둘레로 (조금 위로) dist 칸 밀려남 */
-    private static void puffs(ServerLevel l, Predicate<ServerPlayer> who, Part P, Vec3 c, int n, double dist) {
-        if (P == null || n <= 0) return;
-        double off = Kit.rand() * Math.PI * 2;
-        for (int i = 0; i < n; i++) {
-            double a = off + i * Math.PI * 2 / n + (Kit.rand() - 0.5) * 0.4;
-            Vec3 d = V.unit(new Vec3(Math.cos(a), (Kit.rand() - 0.25) * 0.5, Math.sin(a)));
-            pv(l, who, P.o(), c, V.scale(d, P.v(dist * (0.7 + Kit.rand() * 0.5))));
-        }
-    }
-
     // ------------------------------------------------------------ 맞음 · 터짐
 
-    /** 맞음 (PhantomFx.hit · JobFx.hit 팬텀 아처 줄기): 몸 가운데 — 불티가 튐 · 반짝임 · 밝은 먼지 둘. power 1 = 보통 */
+    /** 맞음 (PhantomFx.hit · JobFx.hit 팬텀 아처 줄기): 몸 가운데 — 불티가 튐 · 번쩍이는 짧은 불똥 · 밝은 먼지 둘. power 1 = 보통 */
     static void hit(ServerLevel l, PhantomFx.Lib L, LivingEntity e, double power) {
         Pal P = pal(L);
         if (P == null || e == null || !go("hit", 4)) return;
@@ -197,8 +189,8 @@ final class WyrdKit {
         double pw = Math.max(0.5, Math.min(2.0, power));
         double s = (0.75 + Kit.bodyPad(e) * 0.6) * pw;
         int k = (int) Math.round(pw * 3);
-        spray(l, null, P.spark(), b, 4 + k, 0.1, 0.9 * s);
-        spray(l, null, P.glint(), b, 1 + k / 3, 0.1 * s, 0.5 * s);
+        spray(l, null, P.spark(), b, 3 + k, 0.1, 0.9 * s);
+        spray(l, null, ZAP, b, 2 + k / 2, 0.15 * s, 0.7 * s);
         p(l, null, dust(P.light(), 0.9), b, 2, 0.12 * s, 0.12 * s, 0.12 * s, 0);
     }
 
@@ -235,7 +227,6 @@ final class WyrdKit {
         spray(l, who, P.spark(), at, big ? 12 : 7, r * 0.2, r * 1.2);
         spray(l, who, P.glint(), at, big ? 10 : 5, r * 0.35, r * 1.1);
         spray(l, who, P.mote(), at, big ? 6 : 3, r * 0.4, r * 0.5);
-        if (big) puffs(l, who, P.puff(), at, 8, r * 1.1);
     }
 
     /** 불씨 (스킬이 직접 부른 PhantomFx.embers): 그림 n 개 → 불티 · 반짝임 (대략 dist 칸) */
