@@ -1674,6 +1674,13 @@ final class PhantomFx {
      * = 칠한 땅 자국, 영역 문양 (sigil) = 칠한 땅 고리. 땅에 눕힌 것만 (dir 이 위). 묶음에 그림이 없으면 false (예전 길)
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
+        Paint rp = RUNE_PAINT.get(name);
+        if (rp != null) { // 2026-11-16 계열 대표 그림 (예전 rfx 와 같은 자리 · 움직임 — 묶음에 그 그림이 있을 때만)
+            Lib L = jobLib(glow);
+            if (L == null || !Vfx.hasSheet(L.n(rp.art()))) return false;
+            int cell = (int) Math.round(o.num("cell", 0)) - RuneKit.RFX.getOrDefault(name, new int[] {0, 1})[0];
+            return paintedWith(level, rp, L, Math.max(0, cell), at, o);
+        }
         switch (name) {
             case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade", "hitmark" -> {
             }
@@ -1879,6 +1886,20 @@ final class PhantomFx {
         Lib L = painter(glow);
         if (L == null && mmorpg.fabric.Tasks.tag() != null) L = runeColorLib(mmorpg.fabric.Tasks.tag(), glow); // 2026-11-16 룬을 쓰는 동안 (계열 묶음)
         if (L == null) return false;
+        return paintedWith(level, p, L, first, at, b);
+    }
+
+    /**
+     * 2026-11-16 룬 계열 대표 그림 (예전 RuneKit rfx 이름 → 묶음 그림 — PAINT 와 같은 틀): 몸의 기운 (rfx_aura — 세로축) · 문장 (rfx_emblem) · 잎 (rfx_leaf) ·
+     * 육각 판 (rfx_hex — 면이 dir)
+     */
+    static final java.util.Map<String, Paint> RUNE_PAINT = java.util.Map.of(
+            "aura", new Paint("aura", 1, VERT, 2, 1),
+            "emblem", new Paint("aegis", 1, BILL, 1.25, 1),
+            "leaf", new Paint("petal", 1, BILL, 1, 1),
+            "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1));
+
+    static boolean paintedWith(ServerLevel level, Paint p, Lib L, int first, Vec3 at, Opt b) {
         String art = p.art();
         int fst = first;
         if (p.mirrorArt() != null && first >= p.mirrorFrom()) { // 예전 그림판의 좌우를 뒤집은 장면 (jring2 거꾸로 도는 고리) → 미리 뒤집은 그림

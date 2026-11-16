@@ -1661,11 +1661,14 @@ def sets_for(S):
         # 빛 고리 (jhalo) · 빛의 방패 (jaegis2) · 띠 (jaura2) · 광선 (jbeam2) · 1인칭 빠른 줄 + 대표 그림 (tools/jobvfx/holy.py — 회복 십자 · 음표 · 성흔 · 종 · 연꽃 ·
         # 큰 꽃 · 나비). 꽃잎 묶음은 세인트가 PETAL 빛으로 부르는 것만 (섬광 · 불씨 · 일섬 · 꽃 · 연꽃 · 나비 · 표식 꽃 · 꽃잎)
         from . import arcane, holy, lance, shadow
+        # 2026-11-16 룬 위르드식: 체력 계열 룬 = 꽃잎 묶음 · 세계수 = 성광 묶음 → 공용 그림을 모두 (충격파 · 땅 고리 · X 베기 · 기운 · 방패 …) + 꽃잎 (세계수의 잎)
+        extra = (tiled(p + "ring", fr("ring")) + [(p + "shock_s", fr("shock_s"), True), (p + "crack_s", fr("crack"), True), (p + "dust", fr("dust"), True)])
         if S.kind == "petal":
-            return ([(p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "cut", fr("cut"), True),
-                     (p + "blossom", lambda: shadow.frames_of("blossom", S), True), (p + "petal", lambda: shadow.frames_of("petal", S), True)]
-                    + holy.sprites(S, ("lotus", "bloom", "fly")))
-        return (tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom")) + tiled(p + "shock", fr("shock"))
+            extra += [(p + "blossom", lambda: shadow.frames_of("blossom", S), True)] + holy.sprites(S, ("lotus", "bloom", "fly"))
+        else:
+            extra += holy.sprites(S)
+        return (extra + [(p + "petal", lambda: shadow.frames_of("petal", S), True)]
+                + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom")) + tiled(p + "shock", fr("shock"))
                 + [(p + "boom_s", fr("boom_s"), True), (p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "shard", lambda: shard(S), True),
                    (p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
                 + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin"))
@@ -1675,7 +1678,7 @@ def sets_for(S):
                    (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True),
                    # 2026-11-16 CI 43903024474 에 남은 예전 그림: 돌진 줄기 (jdash2 — 홀리 스텝) · 깃털 (jfeather — 스티그마)
                    (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)]
-                + holy.sprites(S) + lance.sprites(S, ("feather",)))
+                + lance.sprites(S, ("feather",)))
     out = (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
            + tiled(p + "shock", fr("shock")) + tiled(p + "ring", fr("ring"))
            + [(p + "boom_s", fr("boom_s"), True), (p + "shock_s", fr("shock_s"), True), (p + "crack_s", fr("crack"), True), (p + "flash", fr("flash"), True),
