@@ -953,18 +953,31 @@ final class VanillaProbe {
                     FILM_FRAMES.add(motionFrames(k.substring(9)));
                     continue;
                 }
-                if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(k + "_" + g);
-                else keys.add(k);
+                // 2026-11-16 룬 위르드식 견주기 (runeab:<계열 또는 계열_등급>): 룬마다 예전 그림 (old: — PhantomFx.RUNE_WYRD 끔 · films/vanilla_<계열>_<등급>_old) 과 새 그림을 차례로
+                boolean ab = k.startsWith("runeab:");
+                if (ab) k = k.substring(7);
+                String pre = ab ? "old:" : "";
+                if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) {
+                    for (String g : mmorpg.core.Runes.GRADE_ORDER) {
+                        if (ab) keys.add(pre + k + "_" + g);
+                        keys.add(k + "_" + g);
+                    }
+                } else {
+                    if (ab) keys.add(pre + k);
+                    keys.add(k);
+                }
             }
         }
-        for (String k : keys) {
+        for (String k0 : keys) {
+            boolean old = k0.startsWith("old:");
+            String k = old ? k0.substring(4) : k0;
             int cut = k.lastIndexOf('_');
             if (cut < 0) continue;
             String fam = k.substring(0, cut);
             String g = k.substring(cut + 1);
             String id = mmorpg.core.Runes.runeId(fam, g);
             if (mmorpg.core.Runes.parseRune(id) == null) continue;
-            FILM_RUNES.add(id);
+            FILM_RUNES.add(old ? "old:" + id : id);
             FILM_FRAMES.add(switch (g) {
                 case "transcend" -> 150;
                 case "hero" -> 96;
@@ -1032,7 +1045,7 @@ final class VanillaProbe {
                     log("film warm sprites " + pre + " " + t + " ticks");
                 }
             });
-            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0));
+            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0).replace("old:", ""));
             if (warm != null) {
                 Tasks.later(10, () -> {
                     if (p.isRemoved()) return;
@@ -1048,6 +1061,7 @@ final class VanillaProbe {
         for (net.minecraft.world.entity.Entity e : SPAWNED) if (e != null && !e.isRemoved()) e.discard();
         SPAWNED.clear();
         if (i >= FILM_RUNES.size()) {
+            mmorpg.fabric.job.JobSystem.RUNE_WYRD = true;
             run(server, "tick rate 20");
             mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
             mmorpg.fabric.vfx.PBridge.filmCamOff(p);
@@ -1059,6 +1073,7 @@ final class VanillaProbe {
             log("done");
             return;
         }
+        mmorpg.fabric.job.JobSystem.RUNE_WYRD = true; // 2026-11-16 앞 영상이 예전 그림 견주기 (old:) 였어도 되돌림
         if (FILM_RUNES.get(i).startsWith("job:")) {
             jobFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
@@ -1067,7 +1082,9 @@ final class VanillaProbe {
             motionFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
-        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(FILM_RUNES.get(i));
+        boolean oldLook = FILM_RUNES.get(i).startsWith("old:"); // 2026-11-16 룬 위르드식 견주기 (예전 그림)
+        mmorpg.fabric.job.JobSystem.RUNE_WYRD = !oldLook;
+        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(oldLook ? FILM_RUNES.get(i).substring(4) : FILM_RUNES.get(i));
         if (r == null) {
             check("film rune " + FILM_RUNES.get(i), false);
             Tasks.later(2, () -> film(p, step + 1));
@@ -1090,7 +1107,7 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        String name = "vanilla_" + r.family() + "_" + r.grade();
+        String name = "vanilla_" + r.family() + "_" + r.grade() + (oldLook ? "_old" : "");
         int frames = FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1));
         // 모드 없는 클라이언트는 1 · 3인칭을 서버가 모름 — 영상 카메라는 3인칭 (몸 둘레 그림 · 판을 봄, 1인칭 눈앞 그림은 숨김)
         mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);

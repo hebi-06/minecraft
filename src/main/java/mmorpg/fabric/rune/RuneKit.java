@@ -958,6 +958,8 @@ public final class RuneKit {
 
     /** 튀는 돌 n 개 (c 에서 둘레로) */
     public static void rockBurst(ServerLevel level, Vec3 c, int n, double speed, double size) {
+        // 2026-11-16 위르드식 다리: 칠한 직업 · 룬을 쓰는 동안이면 곰 묶음의 도트 조각 (PhantomFx.rocks — 예전 돌덩이 rpg:boulder 대신)
+        if (painted != null && painted.draw(level, "rockburst", c, Opt.of("n", (double) n, "speed", speed, "size", size), ROCK)) return;
         for (int i = 0; i < n; i++) {
             double a = (double) i / n * Math.PI * 2 + Kit.rand() * 0.5;
             SkillFx.fx(level, "rpg:boulder", c, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.1 + Kit.rand() * 0.4, Math.sin(a))), "speed",

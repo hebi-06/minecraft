@@ -1559,11 +1559,57 @@ final class PhantomFx {
      * 묶음, 다른 빛 (속빛 · 겉빛 · 테 빛) 은 그 직업 묶음. 없으면 null (예전 길)
      */
     static Lib jobLib(double[] glow) {
+        String tag = mmorpg.fabric.Tasks.tag();
+        if (tag != null) return runeColorLib(tag, glow); // 2026-11-16 룬을 쓰는 동안 (룬 계열 묶음)
         Lib L = painter(glow, false);
         if (L != null) return L;
-        if (mmorpg.fabric.Tasks.tag() != null || !(mmorpg.fabric.Tasks.paint() instanceof Lib K)) return null;
+        if (!(mmorpg.fabric.Tasks.paint() instanceof Lib K)) return null;
         Lib E = elementOf(glow);
         return E != null ? E : K;
+    }
+
+    /**
+     * 2026-11-16 룬 계열 → 빛이 가까운 칠한 묶음 (룬 위르드식 1판 — 공용 그림: 불티 · 충격 고리 · 터짐 · 섬광 · 반짝임 · 빛살 · 금 · 문양 · 날아가는 꼬리): 힘 = 분노
+     * (주황 · 진홍), 민첩 · 정령 · 활 = 질풍 (박하빛), 마력 = 비전 (푸른빛), 도끼 = 피, 암살 = 그림자 (자홍), 검 = 사신 (청록), 체력 = 꽃잎 (분홍), 무간참역 = 아가리 (진홍 ·
+     * 공허), 대지 가르기 = 곰 (호박빛), 세계수 = 성광 (금빛 · 연둣빛), 심연 = 폭군 (보랏빛 · 핏빛), 만년빙하 = 서리. 숨긴 계열은 예전 그림 (null)
+     */
+    static Lib runeLib(String fam) {
+        if (!JobSystem.RUNE_WYRD || fam == null) return null;
+        return switch (fam) {
+            case "str" -> RAGE;
+            case "dex", "spirit", "bow" -> GALE;
+            case "int" -> ARCANE;
+            case "axe" -> BLOOD;
+            case "assassin" -> SHADOW;
+            case "blade" -> REAP;
+            case "vit" -> PETALS;
+            case "endless" -> MAW;
+            case "terra" -> BEAR;
+            case "yggdrasil" -> HOLY;
+            case "abyss" -> TYRANT;
+            case "glacier" -> FROST;
+            default -> null;
+        };
+    }
+
+    /**
+     * 룬 (꼬리표 tag = "계열:등급") 이 빛 glow 로 부른 것을 칠할 묶음: 계열 빛 · 속빛 · 흰빛에 가까우면 계열 묶음, 원소 빛이면 그 원소의 묶음, 다른 빛 (바위 · 불 · 얼음처럼
+     * 뜻이 있는 빛) 은 null (예전 그림 — 계열 빛으로 바꾸면 뜻이 사라짐)
+     */
+    static Lib runeColorLib(String tag, double[] glow) {
+        int c = tag.indexOf(':');
+        String fam = c < 0 ? tag : tag.substring(0, c);
+        Lib L = runeLib(fam);
+        if (L == null || glow == null || glow.length < 3) return null;
+        double[][] col = RuneKit.colorOf(fam);
+        if (near(glow, col[0]) || near(glow, col[1]) || glow[0] + glow[1] + glow[2] > 2.7) return L;
+        Lib E = elementOf(glow);
+        return E != null && JobSystem.RUNE_WYRD ? E : null;
+    }
+
+    private static boolean near(double[] a, double[] b) {
+        double dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+        return dr * dr + dg * dg + db * db < 0.09;
     }
 
     /**
@@ -1573,11 +1619,19 @@ final class PhantomFx {
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
         switch (name) {
-            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil" -> {
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst" -> {
             }
             default -> {
                 return false;
             }
+        }
+        if (name.equals("rockburst")) { // 튀는 돌 (RuneKit.rockBurst — 돌 빛): 칠한 직업 · 룬 맥락이면 곰 묶음 도트 조각
+            String tag = mmorpg.fabric.Tasks.tag();
+            int c = tag == null ? -1 : tag.indexOf(':');
+            boolean on = tag != null ? runeLib(c < 0 ? tag : tag.substring(0, c)) != null : mmorpg.fabric.Tasks.paint() != null;
+            if (!on || !has(BEAR, "shard")) return false;
+            rocks(level, at, (int) o.num("n", 6), o.num("speed", 4), o.num("size", 0.2));
+            return true;
         }
         Lib L = jobLib(glow);
         if (L == null) return false;

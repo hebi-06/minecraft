@@ -58,6 +58,9 @@ public final class JobSystem {
         NOTES.put(sp.getUUID(), text);
     }
 
+    /** 2026-11-16 룬 위르드식 (PhantomFx.runeLib — 룬 계열 → 칠한 묶음). 영상 견주기 (VanillaProbe runeab: 의 old: 영상) 만 끔 */
+    public static boolean RUNE_WYRD = true;
+
     public static void init() {
         JobSkills.provider = JobSystem::slot;
         JobSkills.header = JobSystem::header;
