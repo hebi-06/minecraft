@@ -361,6 +361,13 @@ final class WyrdKit {
      * 호를 따라 먼지 (가운데 · 밝은 빛) · 앞서가는 날 끝 불티 · 끝에 반짝임 — 몸과 같이 움직임. 주인 1인칭에는 눈앞 먼지 대신 작은 불티만
      */
     static void slash(ServerPlayer sp, PhantomFx.Lib L, Vec3 at, Vec3 look, double tilt, double size) {
+        slash(sp, L, at, look, tilt, size, null);
+    }
+
+    /**
+     * 같은 것 — 3인칭 · 다른 사람의 호는 반달 moon 을 따라 (2026-11-16 앞을 보는 반달 — null 이면 예전처럼 눈앞 화면의 호). 주인 1인칭의 불똥은 늘 눈앞 화면의 호 (눈앞 베기)
+     */
+    static void slash(ServerPlayer sp, PhantomFx.Lib L, Vec3 at, Vec3 look, double tilt, double size, PhantomFx.Moon moon) {
         Pal P = pal(L);
         if (P == null || sp == null || !go("slash", 3)) return;
         ServerLevel l = sp.level();
@@ -377,23 +384,31 @@ final class WyrdKit {
             int tt = t;
             RuneKit.later(t, () -> {
                 Vec3 base = V.add(at, vel, tt / 20.0);
+                Vec3 drift = V.scale(vel, tt / 20.0);
                 for (int i = 0; i < per; i++) {
-                    double ph = -Math.PI / 2 + Math.PI * (tt * per + i + 0.5) / (3.0 * per);
-                    Vec3 q = V.add(V.add(base, e1, hw * Math.sin(ph)), e2, hh * (Math.cos(ph) - 0.35));
+                    double s = (tt * per + i + 0.5) / (3.0 * per);
+                    double ph = -Math.PI / 2 + Math.PI * s;
+                    Vec3 qEye = V.add(V.add(base, e1, hw * Math.sin(ph)), e2, hh * (Math.cos(ph) - 0.35));
+                    // 반달: 바깥 날 (칼빛의 흰 줄) 을 따라 — 그림의 휘두르는 차례와 같은 쪽
+                    Vec3 q = moon != null ? V.add(moon.at(s, -0.04), drift) : qEye;
                     // 4판: 먼지는 작게 (크면 1 ~ 2초 머물러 칠한 베기가 사라진 뒤 하늘에 부스러기 초승달로 남았음 — 블러드 클레이브) · 날을 따라 짧은 번쩍 불똥
                     // 5판: 빛나는 점은 10 ~ 40틱 머물러 호가 남으므로 피 (먼지) 만 · 나머지는 번쩍 불똥만
                     if (i % 2 == 0 && P.dot() == null) p(l, others, dust(P.main(), 0.8), q, 1, 0.02, 0.02, 0.02, 0);
                     else p(l, others, ZAP.o(), q, 1, 0.03, 0.03, 0.03, 0.02);
                     if (i == per - 1 && P.spark() != null) {
-                        Vec3 tan = V.unit(V.add(V.scale(e1, Math.cos(ph)), V.scale(e2, -Math.sin(ph) * hh / hw)));
+                        Vec3 tanEye = V.unit(V.add(V.scale(e1, Math.cos(ph)), V.scale(e2, -Math.sin(ph) * hh / hw)));
+                        Vec3 tan = moon != null ? moon.tangent(s) : tanEye;
                         for (int k = 0; k < 2; k++) {
-                            Vec3 v = V.scale(V.unit(V.add(tan, new Vec3((Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.3) * 0.6, (Kit.rand() - 0.5) * 0.6))), P.spark().v(0.8));
-                            pv(l, others, P.spark().o(), q, v);
-                            pv(l, own, P.spark().o(), q, V.scale(v, 0.6));
+                            Vec3 jit = new Vec3((Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.3) * 0.6, (Kit.rand() - 0.5) * 0.6);
+                            pv(l, others, P.spark().o(), q, V.scale(V.unit(V.add(tan, jit)), P.spark().v(0.8)));
+                            pv(l, own, P.spark().o(), qEye, V.scale(V.unit(V.add(tanEye, jit)), P.spark().v(0.8) * 0.6));
                         }
                     }
                 }
-                if (tt == 2) spray(l, others, P.glint(), V.add(V.add(base, e1, hw), e2, -hh * 0.35), 3, 0.1, 0.5);
+                if (tt == 2) {
+                    Vec3 tip = moon != null ? V.add(moon.at(1, 0), drift) : V.add(V.add(base, e1, hw), e2, -hh * 0.35);
+                    spray(l, others, P.glint(), tip, 3, 0.1, 0.5);
+                }
             });
         }
     }

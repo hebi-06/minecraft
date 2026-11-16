@@ -710,6 +710,168 @@ final class PhantomFx {
         tiled(level, L.n("slashm"), 2, at, width / SLASH_FILL, q, 180, 0, 1, true, L.n("slashm"), who, 1.0);
     }
 
+    // ------------------------------------------------------------ 2026-11-16 앞을 보는 반달 (사용자 "검사 왜 자꾸 앞을 안보고 위나 아래를 보고 있냐니깐? 반달 모양으로")
+
+    /**
+     * 앞을 보는 반달 — 휘두른 면에 놓인 칼빛 반달 (불룩한 날 = 앞): 호의 가운데 C · 반지름 R (칼빛 바깥 날) · 그림 오른쪽 X · 불룩한 쪽 Y (둘 다 단위 · 서로 수직) ·
+     * mirror = 그림판 slashm (그림에서 오른쪽 → 왼쪽으로 휘두름 — 아니면 slash: 왼쪽 → 오른쪽). 앞면 = X × Y 쪽. 예전 앞을 보고 선 판 (card — 면이 보는 쪽) 은 3인칭 ·
+     * 영상 카메라에서 위로 불룩 ∩ · 아래로 불룩 ∪ 만 보였음 (위 · 아래를 봄 — 사용자 화면 0.49초 블레이드 아포칼립스 첫 베기의 그물 침대 모양)
+     */
+    record Moon(Vec3 C, Vec3 X, Vec3 Y, double R, boolean mirror) {
+        /** 그림 한 변의 반 (호 반지름 = 반 변 × 0.9 — tools/jobvfx/element.py SLASH_R) */
+        double half() {
+            return R / SLASH_R;
+        }
+
+        /** 그림 가운데 (호의 가운데가 그림 가운데보다 반 변 × 0.4 아래 — SLASH_CY) */
+        Vec3 center() {
+            return V.add(C, Y, SLASH_CY * half());
+        }
+
+        /** 휘두르는 차례 s (0 = 처음 끝 · 1 = 마지막 끝) 의 날 자리 — 반지름 몫 dr 만큼 바깥 (− 면 안쪽) */
+        Vec3 at(double s, double dr) {
+            double a = Math.toRadians(mirror ? -4 + 188 * s : 184 - 188 * s);
+            double r = R * (1 + dr);
+            return V.add(V.add(C, X, r * Math.cos(a)), Y, r * Math.sin(a));
+        }
+
+        /** 휘두르는 쪽 (s 자리의 날이 나아가는 방향 — 단위) */
+        Vec3 tangent(double s) {
+            double a = Math.toRadians(mirror ? -4 + 188 * s : 184 - 188 * s);
+            double k = mirror ? 1 : -1;
+            return V.unit(V.add(V.scale(X, -Math.sin(a) * k), Y, Math.cos(a) * k));
+        }
+
+        /** 앞면 (X × Y) */
+        Vec3 normal() {
+            return V.unit(V.cross(X, Y));
+        }
+
+        /** 같은 모양을 옮김 */
+        Moon shift(Vec3 d) {
+            return new Moon(V.add(C, d), X, Y, R, mirror);
+        }
+
+        /** 그림 가운데가 P 가 되게 옮김 (예전 판의 가운데 자리를 그대로 쓰는 부름) */
+        Moon centered(Vec3 P) {
+            return shift(V.sub(P, center()));
+        }
+
+        /** 가장 낮은 날 (빛 번짐 몫 1.08) 이 땅 groundY + 0.15 아래면 반달째 올림 */
+        Moon above(double groundY) {
+            double lo = Double.MAX_VALUE;
+            for (int i = 0; i <= 16; i++) lo = Math.min(lo, at(i / 16.0, 0.08).y);
+            double need = groundY + 0.15 - lo;
+            return need > 0 ? shift(new Vec3(0, need, 0)) : this;
+        }
+    }
+
+    /** 칼빛 초승달 그림의 호 (tools/jobvfx/element.py SLASH_R · SLASH_CY — 그림 반 변의 몫) */
+    static final double SLASH_R = 0.9;
+    static final double SLASH_CY = 0.4;
+    /** 가로 반달이 보는 눈 쪽으로 앞 축 둘레를 더 도는 끝 (도) · 세로 반달 · 앞 날을 드는 각 */
+    static final double MOON_ROLL = 45;
+    static final double MOON_ROLL_V = 30;
+    static final double MOON_LIFT = 18;
+
+    /**
+     * 반달의 방향: 호의 가운데 C · 앞 fwd (수평으로 씀) · 기울기 tilt (JobFx.slash 의 뜻 — 1인칭 화면에서 기운 각) · 반지름 R. cos tilt 의 크기 0.5 이상 = 가로 휘두름
+     * (누운 반달 — 끝 둘이 몸 양옆 · 0 근처 = 왼쪽 → 오른쪽 · 180 근처 = 오른쪽 → 왼쪽, 0 · 180 에서 벗어난 만큼 앞 축 둘레로 기욺 — 반시계 = 오른쪽이 올라감), 아니면 세로
+     * 휘두름 (선 반달 — 90 근처 = 위 → 아래 내리침 · 270 근처 = 아래 → 위 올려 베기). 보는 눈 eye (null = 없음 — {@link #viewEye}) 쪽으로 앞 축 둘레를 더 돌림
+     * (가로 ±45° · 세로 ±30°: 옆에서 보면 판이 눈 쪽으로 서서 앞으로 불룩한 "(" · 뒤 · 앞에서 보면 누운 반달), 가로 반달은 앞 날을 lift 도 들어 올림 (뒤에서 얇은 줄로
+     * 보이지 않게). extraRoll = 앞 축 둘레로 더 기울임 (잔상 겹)
+     */
+    static Moon moon(Vec3 C, Vec3 fwd, double tilt, double R, Vec3 eye, double lift, double extraRoll) {
+        Vec3 h = V.flat(fwd);
+        Vec3 r = V.cross(h, V.UP); // 오른쪽
+        double c = Math.cos(Math.toRadians(tilt));
+        Vec3 e = eye == null ? null : V.sub(eye, C);
+        if (Math.abs(c) >= 0.5) {
+            double dev = wrap180(c >= 0 ? tilt : tilt - 180);
+            double beta = 0;
+            if (e != null) beta = clamp(wrap90(Math.toDegrees(Math.atan2(-V.dot(e, r), V.dot(e, V.UP)))), MOON_ROLL);
+            double g = Math.toRadians(clamp(dev + beta + extraRoll, MOON_ROLL + 15));
+            Vec3 r1 = V.add(V.scale(r, Math.cos(g)), V.UP, Math.sin(g));
+            Vec3 n1 = V.add(V.scale(V.UP, Math.cos(g)), r, -Math.sin(g));
+            double la = Math.toRadians(lift);
+            Vec3 Y = V.unit(V.add(V.scale(h, Math.cos(la)), n1, Math.sin(la)));
+            Vec3 N = V.unit(V.add(V.scale(n1, Math.cos(la)), h, -Math.sin(la)));
+            Vec3 X = V.unit(V.cross(Y, N));
+            // 0 근처 (왼쪽 → 오른쪽) = slash 그대로 (그림 오른쪽 = 몸 오른쪽) · 180 근처 = 미리 뒤집은 slashm
+            return new Moon(C, X, Y, R, c < 0);
+        }
+        boolean down = Math.sin(Math.toRadians(tilt)) > 0; // 90 근처 = 내리침
+        double dev = wrap180(tilt - (down ? 90 : 270));
+        double d = 0;
+        if (e != null) d = clamp(wrap90(Math.toDegrees(Math.atan2(V.dot(e, V.UP), -V.dot(e, r)))), MOON_ROLL_V);
+        double a = Math.toRadians(d + dev * 0.5 + extraRoll);
+        // 앞 축 둘레로 a: 그림 오른쪽 X = 위 (a = 0) · 앞면 = 왼쪽 (영상 카메라 쪽)
+        Vec3 X = V.unit(V.add(V.scale(V.UP, Math.cos(a)), r, Math.sin(a)));
+        // 내리침은 몸 오른쪽 · 올려 베기는 왼쪽으로 조금 (1인칭 그림의 불룩한 쪽). 선 반달은 0.85배 (땅 위로 올리면 키가 반지름의 두 배 — 누운 반달보다 커 보였음)
+        return new Moon(V.add(C, r, down ? 0.3 : -0.3), X, h, R * 0.85, down);
+    }
+
+    private static double wrap180(double deg) {
+        double d = ((deg + 180) % 360 + 360) % 360 - 180;
+        return d;
+    }
+
+    /** −90 ~ 90 으로 (두 면 판이라 반 바퀴 돌린 것은 같은 판) */
+    private static double wrap90(double deg) {
+        double d = wrap180(deg);
+        if (d > 90) d -= 180;
+        if (d < -90) d += 180;
+        return d;
+    }
+
+    private static double clamp(double v, double lim) {
+        return Math.max(-lim, Math.min(lim, v));
+    }
+
+    /**
+     * 반달 판을 돌릴 눈: 시험 영상 3인칭이면 영상 카메라 (PBridge.eyeOf), 아니면 가까운 다른 사람 (24칸 안 — 주인은 1인칭 눈앞 베기를 봄), 없으면 null (돌리지 않음)
+     */
+    static Vec3 viewEye(ServerPlayer owner, ServerLevel level, Vec3 at) {
+        if (owner != null && PBridge.thirdPersonOf(owner)) return PBridge.eyeOf(owner);
+        ServerPlayer best = null;
+        double bd = 24 * 24;
+        for (ServerPlayer p : level.players()) {
+            if (owner != null && p.getId() == owner.getId()) continue;
+            if (p.isSpectator() && !PBridge.thirdPersonOf(p)) continue;
+            double d = p.distanceToSqr(at);
+            if (d < bd) {
+                bd = d;
+                best = p;
+            }
+        }
+        if (best == null) return null;
+        return PBridge.thirdPersonOf(best) ? PBridge.eyeOf(best) : best.getEyePosition();
+    }
+
+    /**
+     * 반달 판 (앞뒤 두 면 — 뒷면은 같은 그림판의 거울이라 뒤에서도 그림이 바로 읽힘): 수명 life 초에 칸을 맞춤 · vel (칸/초) 로 같이 움직임 (몸과 같이) · 불투명 alpha
+     */
+    static Vfx.Fx moonCard(ServerLevel level, Lib L, Moon m, Predicate<ServerPlayer> who, double alpha, double life, Vec3 vel) {
+        String sheet = L.n(m.mirror() ? "slashm" : "slash");
+        int frames = Vfx.sheet(sheet + "_00").frames();
+        int every = Math.max(1, (int) Math.round(Math.max(1, life * 20) / frames));
+        Quaternionf q = Vfx.basis(m.X(), m.Y(), m.normal());
+        Vfx.Fx fx = tiled(level, sheet, 2, m.center(), m.half() * 2, q, 0, 0, every, true, sheet, who, alpha);
+        follow(fx, vel, frames * every + 1);
+        return fx;
+    }
+
+    /** 날아가는 반달 (JobFx.wave · bigWave 의 3인칭 · 다른 사람): 반달 m 이 dir 쪽으로 speed 칸/초 · life 초 (칸을 수명에 맞춤) */
+    static void moonFly(ServerLevel level, Lib L, Moon m, Vec3 dir, double speed, double life, Predicate<ServerPlayer> who, double alpha) {
+        String sheet = L.n(m.mirror() ? "slashm" : "slash");
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        int frames = Vfx.sheet(sheet + "_00").frames();
+        int every = Math.max(1, (int) Math.round(ticks / (double) frames));
+        Quaternionf q = Vfx.basis(m.X(), m.Y(), m.normal());
+        Vfx.Fx fx = tiled(level, sheet, 2, m.center(), m.half() * 2, q, 0, 0, every, true, sheet, who, alpha);
+        if (speed > 0) fx.shift(V.scale(V.unit(dir), speed * ticks / 20.0), ticks);
+    }
+
     /**
      * 날아가는 검기 (JobFx.bigWave · slashWave · groundWave · wave — 카메라를 보는 초승달): at 에서 dir 쪽으로 speed 칸/초 · life 초 · 반폭 half 칸 · 기울기 waveTilt
      * (bigWave 의 뜻 — 0 = 위로 불룩 · 90 = 세로 · 180 = 아래로 불룩: slashm 을 −waveTilt 돌림) — 날아가는 동안 베기 칸이 차례로 (그어짐 → 거둬짐)

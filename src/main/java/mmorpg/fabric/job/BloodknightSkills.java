@@ -522,8 +522,8 @@ final class BloodknightSkills {
         splash(level, V.up(hit, 0.8), 1.6, j, 10, mine);
         // 2026-11-14 사용자 도감 메모 "참격이 위를 보게": 세로 초승달 (90°) → 위로 불룩한 가로 초승달 (0°) 이 땅을 스치며 달림 — 아래 끝이 땅에 묻히지 않게 조금 낮춤
         Vec3 low = V.up(V.add(c0, f, lead), 1.5);
-        JobFx.bigWave(level, sp, low, f, speed, 3.8, 0, len / speed + 0.15, j, Opt.empty());
-        RuneKit.later(2, () -> JobFx.bigWave(level, null, low, f, speed, 3.0, 6, len / speed + 0.1, j, MOON_GLOW, MOON_CORE, Opt.of("alpha", 0.6)));
+        JobFx.bigWave(level, sp, low, f, speed, 3.8, 0, len / speed + 0.15, j, Opt.of("camFace", 1.0)); // 2026-11-16 앞을 보는 반달 대신 예전 그대로 (위로 불룩)
+        RuneKit.later(2, () -> JobFx.bigWave(level, null, low, f, speed, 3.0, 6, len / speed + 0.1, j, MOON_GLOW, MOON_CORE, Opt.of("alpha", 0.6, "camFace", 1.0)));
         if (Lc != null) PhantomFx.rift(level, Lc, ground(level, V.add(c0, f, lead)), f, len, speed, 2.6);
         else WarlordSkills.rift(level, ground(level, V.add(c0, f, lead)), f, len, JobFx.outer(j), 1.6, speed);
         SkillFx.shock(level, V.up(hit, 0.1), JobFx.outer(j), 4.0, 0.5);

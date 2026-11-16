@@ -164,6 +164,12 @@ final class JobFx {
         return Opt.of("view", 2.0, "owner", (double) sp.getId());
     }
 
+    /** 보는 사람 값의 주인 (owner id — 없으면 null) */
+    static ServerPlayer ownerOf(ServerLevel level, Opt view) {
+        int id = view == null ? 0 : (int) view.num("owner", 0);
+        return id != 0 && level.getEntity(id) instanceof ServerPlayer p ? p : null;
+    }
+
     // ------------------------------------------------------------ 그리기
 
     /** 그림 한 벌 (빛 칸 0 · 심지 칸 frames): life 초 동안 frames 장. o: dir · size · spin · spinRate · speed · grow · fade · alpha · coreAlpha · vel · view · owner */
@@ -195,19 +201,19 @@ final class JobFx {
     static void slash(ServerPlayer sp, Jobs.Job j, double ahead, double down, double size, double tilt, double life) {
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
-        WyrdKit.slash(sp, PhantomFx.lib(j), at, look, tilt, size); // 2026-11-16 위르드식 바닐라 파티클 겹
         PhantomFx.Lib L = PhantomFx.elem(j);
+        PhantomFx.Moon moon = L != null ? slashMoon(sp, down, size, tilt, 0, 0) : null;
+        WyrdKit.slash(sp, PhantomFx.lib(j), at, look, tilt, size, moon); // 2026-11-16 위르드식 바닐라 파티클 겹 (3인칭 · 다른 사람은 반달을 따라)
         if (L != null) {
-            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 (주인) = 카메라를 보는 눈앞 칼빛 초승달, 3인칭 · 다른 사람 = 같은 자리에 앞을 보고 선 판
-            // (+ 조금 크고 7° 기운 옅은 잔상 판 — 예전과 같음). 사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?" — 모두가 카메라를 보는 한 벌은 높은 3인칭 · 영상 카메라
-            // 쪽으로 뒤로 누워 위를 보는 것처럼 보였음
+            // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 (주인) = 카메라를 보는 눈앞 칼빛 초승달 (+ 조금 크고 7° 기운 옅은 잔상 — 예전과 같음).
             // 예전처럼 몸과 같이 움직임 (vel = 몸의 빠르기 — 돌진 중 베기가 뒤에 남지 않게)
             Vec3 vel = RuneKit.bodyVel(sp);
             PhantomFx.follow(PhantomFx.eyeSlash(sp, L, at, size * 1.8, tilt), vel, 11);
             PhantomFx.follow(PhantomFx.eyeSlash(sp, L, V.add(at, look, 0.15), size * 1.8 * 1.14, tilt + 7, 0.42), vel, 11); // 예전 1인칭 잔상 겹 (조금 크고 7° 기움)
-            PhantomFx.card(sp.level(), L, at, look, tilt, size * CARD * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp), 0.95, life, vel);
-            PhantomFx.card(sp.level(), L, V.add(at, look, 0.15), look, tilt + 7, size * CARD * 1.14 * 2 * PhantomFx.SLASH_FILL, PhantomFx.hide1p(sp), 0.45, life * 0.9,
-                    vel);
+            // 2026-11-16 3인칭 · 다른 사람 = 앞을 보는 반달 (사용자 "검사 왜 자꾸 앞을 안보고 위나 아래를 보고 있냐니깐? 반달 모양으로" — 보는 쪽에 선 판은 영상 카메라에서
+            // 아래로 불룩 ∪ (그물 침대) · 위로 불룩 ∩ 으로만 보였음): 몸 앞을 감싸는 휘두른 면의 반달 (불룩한 날 = 앞) + 조금 크고 기운 옅은 잔상
+            PhantomFx.moonCard(sp.level(), L, moon, PhantomFx.hide1p(sp), 0.95, life, vel);
+            PhantomFx.moonCard(sp.level(), L, slashMoon(sp, down, size * 1.14, tilt, 6, 7), PhantomFx.hide1p(sp), 0.45, life * 0.9, vel);
             return;
         }
         Opt own = only1p(sp);
@@ -225,12 +231,28 @@ final class JobFx {
     }
 
     /**
+     * 2026-11-16 눈앞 큰 베기의 3인칭 반달 (원소 공용 묶음): 호의 가운데 = 가슴 높이 (눈 − 0.37 − 화면 아래 down × 0.25) · 몸 앞 0.3칸 → 끝 둘이 몸 양옆 · 불룩한 날이
+     * 몸 앞 0.3 + 반지름 칸 (예전 판의 가운데 — 눈앞 ahead 칸 — 와 거의 같은 곳). 반지름 = size × 0.85 (예전 판의 칼빛 너비 size × 1.58 의 반보다 조금 크게 — 몸 앞을
+     * 넉넉히 감쌈). lift · roll = 더 드는 각 · 앞 축 둘레로 더 기울임 (잔상 겹)
+     */
+    static PhantomFx.Moon slashMoon(ServerPlayer sp, double down, double size, double tilt, double lift, double roll) {
+        Vec3 h = Kit.facingOf(sp);
+        Vec3 C = V.add(V.up(sp.position(), sp.getEyeHeight() - 0.37 - 0.25 * down), h, 0.3);
+        Vec3 eye = PhantomFx.viewEye(sp, sp.level(), C);
+        return PhantomFx.moon(C, h, tilt, size * 0.85, eye, PhantomFx.MOON_LIFT + lift, roll).above(sp.getY());
+    }
+
+    /**
      * 참격 판의 방향 (2026-11-14 사용자 도감 메모 "참격이 앞을 안보고 있음" — 휘두른 면에 선 판은 옆 · 뒤에서 옆을 보는 초승달 "(" 로 보였음): FRONT = 앞을 봄
      * (판의 면이 dir — 1인칭 눈앞 베기 rfx_jslash 와 같은 모습 · 기울기가 세상에 섬, 뒤 · 3인칭에서 넓은 면), UP = 위를 봄 (땅과 나란히 누움 — 불룩한 날이 dir 의
      * 수평 쪽), SWING = 휘두른 면 (예전 — 불룩한 날이 dir 쪽 · 가로 휘두름은 보는 사람마다 dir 둘레로 돎: 날아가는 검기)
      */
     enum CardFace {
-        FRONT, UP, SWING
+        FRONT, UP, SWING,
+        /**
+         * 2026-11-16 앞을 보는 반달 (기본 — 원소 공용 묶음: PhantomFx.moon · 그림 가운데 = at, 불룩한 날 = dir 의 수평). 묶음이 없는 직업 (예전 판 모델) 은 FRONT 와 같음
+         */
+        MOON
     }
 
     /** 참격 판 빛: 겉빛 */
@@ -250,7 +272,7 @@ final class JobFx {
      * 넓은 면을 보임 — RuneKit.faceCamIfFlat), 세로 휘두름은 선 판. vel = 같이 움직임 (칸/초). view = 보는 사람 걸러내기 (hide1p · only1p)
      */
     static void slashCard(ServerLevel level, Vec3 at, Vec3 dir, double tilt, double size, double life, Vec3 vel, Jobs.Job j, Opt view) {
-        slashCard(level, at, dir, tilt, size, life, vel, j, view, CardFace.FRONT);
+        slashCard(level, at, dir, tilt, size, life, vel, j, view, CardFace.MOON);
     }
 
     /**
@@ -266,7 +288,16 @@ final class JobFx {
             double w = size * 2 * PhantomFx.SLASH_FILL;
             if (face == CardFace.UP) PhantomFx.cardUp(level, L, at, dir, tilt, w, PhantomFx.who(view));
             else if (face == CardFace.SWING) PhantomFx.cardSwing(level, L, null, at, dir, V.len(vel), w, tilt, life, PhantomFx.who(view), view.num("alpha", 1.0));
-            else PhantomFx.card(level, L, at, dir, tilt, w, PhantomFx.who(view), view.num("alpha", 0.95), life, vel);
+            else if (face == CardFace.FRONT || Math.hypot(dir.x, dir.z) < 0.2) PhantomFx.card(level, L, at, dir, tilt, w, PhantomFx.who(view), view.num("alpha", 0.95), life,
+                    vel);
+            else {
+                // 2026-11-16 앞을 보는 반달 (사용자 "앞을 안보고 위나 아래를 보고" — 보는 쪽에 선 판은 ∪ · ∩ 로만 보였음): 그림 가운데 = at (예전 판 자리) · 칼빛 너비 w →
+                // 반지름 w / 2 · 가장 낮은 날이 땅 위
+                Vec3 eye = PhantomFx.viewEye(ownerOf(level, view), level, at);
+                PhantomFx.Moon m = PhantomFx.moon(at, dir, tilt, w / 2, eye, PhantomFx.MOON_LIFT, 0).centered(at);
+                m = m.above(RuneKit.groundAt(level, at, -1e9));
+                PhantomFx.moonCard(level, L, m, PhantomFx.who(view), view.num("alpha", 0.95), life, vel);
+            }
             return;
         }
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
@@ -276,7 +307,7 @@ final class JobFx {
                 "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", cardColor(j), "glow", inner(j), "alpha", view.num("alpha", 0.95), "shine", 0.15, "view",
                 view.num("view", 0), "owner", view.num("owner", 0));
         switch (face) {
-            case FRONT -> {
+            case FRONT, MOON -> {
                 Vec3 up = screenUp(d);
                 Vec3 right = V.cross(d, up);
                 right = V.len(right) > 1e-6 ? V.unit(right) : V.rightOf(V.flat(d).lengthSqr() > 1e-6 ? V.unit(V.flat(d)) : new Vec3(0, 0, 1));
@@ -305,9 +336,13 @@ final class JobFx {
             // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 — 1인칭 (주인) 은 카메라를 봄 (눈앞 베기와 같은 기울기 뜻: 검기 기울기 = 베기 + 180), 3인칭 · 다른 사람은
             // 앞을 보고 선 판이 날아감 (사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?")
             PhantomFx.wave(level, L, at, d, speed, o.num("size", 1) * 0.9, o.num("spin", 0) + 180, life, PhantomFx.only1p(sp), o.num("alpha", 1));
-            // 3인칭 · 다른 사람: 예전과 같은 날아가는 휘두른 판 (불룩한 날 = 날아가는 쪽 · 누운 판이면 보는 사람 쪽) — 예전 크기 size × CARD × 1.1 (판 모델 가로 2칸)
-            PhantomFx.cardSwing(level, L, sp, at, d, speed, o.num("size", 1) * CARD * 1.1 * 2 * PhantomFx.SLASH_FILL, o.num("spin", 0), life, PhantomFx.hide1p(sp), o.num(
-                    "alpha", 1));
+            // 3인칭 · 다른 사람: 날아가는 반달 (2026-11-16 — 불룩한 날 = 날아가는 쪽 · 눈앞 베기 반달과 같은 방향 뜻) — 예전 크기 size × CARD × 1.1 (판 모델 가로 2칸)
+            double w = o.num("size", 1) * CARD * 1.1 * 2 * PhantomFx.SLASH_FILL;
+            if (Math.abs(d.y) > 0.7) PhantomFx.cardSwing(level, L, sp, at, d, speed, w, o.num("spin", 0), life, PhantomFx.hide1p(sp), o.num("alpha", 1));
+            else {
+                PhantomFx.Moon m = PhantomFx.moon(at, d, o.num("spin", 0), w / 2, PhantomFx.viewEye(sp, level, at), PhantomFx.MOON_LIFT, 0).centered(at);
+                PhantomFx.moonFly(level, L, m.above(sp.getY()), d, speed, life, PhantomFx.hide1p(sp), o.num("alpha", 1));
+            }
             return;
         }
         two(level, slashName(j), slashFrames(j), at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
@@ -1303,11 +1338,17 @@ final class JobFx {
         double a = o.num("alpha", 1.0);
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
-            // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 (카메라를 봄) — 쓴 사람의 1인칭에서는 0.6배 · 0.8칸 앞에서 (눈앞을 덮지 않게)
+            // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 (카메라를 봄) — 쓴 사람의 1인칭에서는 0.6배 · 0.8칸 앞에서 (눈앞을 덮지 않게).
+            // 2026-11-16 3인칭 · 다른 사람은 날아가는 반달 (불룩한 날 = 날아가는 쪽 — 사용자 "앞을 안보고 위나 아래를 보고": 카메라를 보는 검기는 ∩ · ∪ 로만 보였음).
+            // 검기 기울기 = 베기 기울기 + 180 (slashWave) → 반달은 베기 뜻 (tilt + 180) · 반지름 = 반폭 × 0.9. 거의 위 · 아래로 날면 예전 그대로 · camFace (사용자가
+            // 따로 정한 모양 — 블러드 나이트 궁극기의 위로 불룩한 땅 검기 "참격이 위를 보게") 도 예전 그대로
+            boolean steep = Math.abs(d.y) > 0.7 || o.truthy("camFace");
             if (sp != null) {
-                PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.hide1p(sp), a);
+                if (steep) PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.hide1p(sp), a);
+                else waveMoon(level, L, sp, at, d, speed, size, tilt, life, PhantomFx.hide1p(sp), a);
                 PhantomFx.wave(level, L, V.add(at, d, 0.8), d, speed, size * 0.6, tilt, life, PhantomFx.only1p(sp), a);
-            } else PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.who(o), a);
+            } else if (steep) PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.who(o), a);
+            else waveMoon(level, L, ownerOf(level, o), at, d, speed, size, tilt, life, PhantomFx.who(o), a);
             return;
         }
         Opt b = o.with("dir", d, "speed", speed, "spin", tilt, "fade", o.num("fade", 0.18));
@@ -1323,6 +1364,14 @@ final class JobFx {
 
     static void bigWave(ServerLevel level, ServerPlayer sp, Vec3 at, Vec3 dir, double speed, double size, double tilt, double life, Jobs.Job j, Opt o) {
         bigWave(level, sp, at, dir, speed, size, tilt, life, j, null, null, o);
+    }
+
+    /** 2026-11-16 날아가는 반달 검기 (bigWave 의 3인칭 · 다른 사람): 그림 가운데 at · 반폭 size · 검기 기울기 waveTilt (bigWave 의 뜻 — 베기 뜻 = + 180) */
+    private static void waveMoon(ServerLevel level, PhantomFx.Lib L, ServerPlayer owner, Vec3 at, Vec3 d, double speed, double size, double waveTilt, double life,
+            java.util.function.Predicate<ServerPlayer> who, double alpha) {
+        Vec3 eye = PhantomFx.viewEye(owner, level, at);
+        PhantomFx.Moon m = PhantomFx.moon(at, d, waveTilt + 180, size * PhantomFx.SLASH_R, eye, PhantomFx.MOON_LIFT, 0).centered(at);
+        PhantomFx.moonFly(level, L, m.above(RuneKit.groundAt(level, at, -1e9)), d, speed, life, who, alpha);
     }
 
     /**

@@ -179,7 +179,8 @@ final class SwordmasterSkills {
         Vec3 f = Kit.facingOf(sp);
         // 막는 자세: 앞에 세운 칼날의 금빛 · 초승달 막 (몸 앞 — 3인칭)
         Vec3 guard = V.up(V.add(sp.position(), f, 0.75), 1.3);
-        JobFx.slashCard(level, guard, f, 92.0, 2.6, window / 20.0, RuneKit.bodyVel(sp), j, JobFx.hide1p(sp));
+        // 2026-11-16 막는 판은 예전처럼 앞을 보고 섬 (방패처럼 — 다른 베기는 앞을 보는 반달 CardFace.MOON)
+        JobFx.slashCard(level, guard, f, 92.0, 2.6, window / 20.0, RuneKit.bodyVel(sp), j, JobFx.hide1p(sp), JobFx.CardFace.FRONT);
         JobFx.glint(level, guard, 0.6, j, window / 20.0, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
         JobFx.eyeRing(sp, j, 2.0, 0.8, window / 20.0);
         SkillFx.play(level, "item.armor.equip_iron", sp.position(), 1.2, 0.9);
