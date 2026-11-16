@@ -18,7 +18,7 @@ import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.quest.Loot;
-import mmorpg.fabric.skill.Aegis;
+import mmorpg.fabric.skill.Taunts;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
@@ -1670,7 +1670,7 @@ public final class Monsters {
             HURT.clear();
         });
         // v2.20.0 아이기스의 방패 도발
-        Aegis.addTauntHook((sp, e, ticks) -> tauntMonster(e, sp, ticks));
+        Taunts.addTauntHook((sp, e, ticks) -> tauntMonster(e, sp, ticks));
         // 피해 숫자: 몸통에서 떠올라 이름표 아래에서 끝남
         Function<LivingEntity, Vec3> prev = DamageNumbers.anchor;
         DamageNumbers.anchor = e -> {

@@ -9,7 +9,7 @@ import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.mob.PierrotSummon;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.Ult;
-import mmorpg.fabric.skill.Aegis;
+import mmorpg.fabric.skill.Taunts;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
@@ -209,7 +209,7 @@ final class PierrotSkills {
 
     /**
      * 핸드스프링: 앞으로 dist 칸 재주를 넘음 (land 틱 — lift 칸 솟는 포물선 · 몸을 뒤집는 동작) → 내려서며 둘레 radius 칸을 내리침 (total) · 맞은 적을 taunt 틱 도발
-     * (보스도 나를 — Aegis.tauntFor) · guardFor 틱 받는 피해 − guard. 묶였거나 타고 있으면 제자리에서 (피해 · 도발은 그대로)
+     * (보스도 나를 — Taunts.tauntFor) · guardFor 틱 받는 피해 − guard. 묶였거나 타고 있으면 제자리에서 (피해 · 도발은 그대로)
      */
     static boolean spring(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
@@ -257,7 +257,7 @@ final class PierrotSkills {
                     JobFx.hit(e, j, 1.0);
                     tauntCue(elv, e);
                 });
-                Aegis.tauntFor(sp, e, taunt, true);
+                Taunts.tauntFor(sp, e, taunt, true);
             }
             // 받는 피해 감소: 몸 둘레 금빛 고리 (3인칭)
             JobFx.halo(lv, V.up(c, 0.9), 0.9, j, 0.5, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
@@ -360,7 +360,7 @@ final class PierrotSkills {
                 tauntCue(lv, e);
             });
             RuneKit.later(popAt, () -> {
-                if (RuneKit.sameLife(sp, life) && e.isAlive() && !e.isRemoved()) Aegis.tauntFor(sp, e, (int) k.num("taunt", 40), true);
+                if (RuneKit.sameLife(sp, life) && e.isAlive() && !e.isRemoved()) Taunts.tauntFor(sp, e, (int) k.num("taunt", 40), true);
             });
         }
         if (!foes.isEmpty()) RuneKit.later(popAt, () -> {
@@ -542,7 +542,7 @@ final class PierrotSkills {
             SkillFx.play(lv, "entity.firework_rocket.large_blast", c, 1.0, 1.0);
             giggle(lv, c, 1.2);
             // 보스는 나를 (몬스터 · 바닐라 몹은 상자가 끌어들임 — 쇼타임)
-            for (LivingEntity e : Kit.around(sp, c, R, 4)) if (JobKit.isBoss(e)) Aegis.tauntFor(sp, e, (int) k.num("taunt", 80), true);
+            for (LivingEntity e : Kit.around(sp, c, R, 4)) if (JobKit.isBoss(e)) Taunts.tauntFor(sp, e, (int) k.num("taunt", 80), true);
         });
         // 불꽃놀이: 상자마다 쏘아 올림 → 둘레 적에게 쏟아짐 (적마다 한 번)
         for (int v = 0; v < volleys; v++) {

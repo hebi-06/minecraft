@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiPredicate;
@@ -60,7 +61,6 @@ public final class Kit {
     private Kit() {}
 
     public static final Obj SKILLS = Rules.get().obj("SKILLS");
-    static final double CRIT_CAP = Rules.get().num("CRIT_CAP");
     static final Obj BOW = Rules.get().obj("BOW");
     /** 몹 무적 시간 (틱 — 자바도 맞은 뒤 10틱) */
     public static final int IFRAMES = 10;
@@ -129,7 +129,7 @@ public final class Kit {
     public static boolean splashFoe(ServerPlayer sp, Entity e) {
         if (!canHit(sp, e)) return false;
         if (e instanceof Player p) return duelPartner.test(sp, p);
-        return Solas.hasFamily(e, Solas.RUSH_FAMILIES) && !Solas.RUSH_NEUTRAL.contains(typeId(e));
+        return hasAnyFamily(e, FOE_FAMILIES) && !FOE_NEUTRAL.contains(typeId(e));
     }
 
     /** 가운데에서 radius 안 (몸 가운데 기준, 몸 폭만큼 여유), 위아래 vertical 칸 안의 맞을 수 있는 대상 (skills.js around) */
@@ -204,6 +204,24 @@ public final class Kit {
     /** 애드온의 엔티티 이름 (베드락) 을 자바 이름으로 */
     public static String javaType(String bedrockId) {
         return BEDROCK_TYPES.getOrDefault(bedrockId, bedrockId);
+    }
+
+    // 정적 초기화 차례: BEDROCK_TYPES 다음 (FOE_NEUTRAL 이 javaType 을 씀)
+    /** 적대 무리 (몬스터 · RPG 몬스터 · 보스 · 보스 소품 · 허수아비 — 예전 섬광 난무 (솔라스) 의 RUSH_FAMILIES, 2026-11-16 무기 스킬을 지우며 옮김) */
+    static final List<String> FOE_FAMILIES = List.of("monster", "rpg_monster", "rpg_boss", "rpg_boss_prop", "rpg_dummy");
+    /** 이어서 고르지 않는 중립 몹 (때리면 무리가 화를 냄 — 조준하면 됨). 자바 이름으로 (typeId 와 비교) */
+    static final Set<String> FOE_NEUTRAL = javaTypes("minecraft:zombie_pigman", "minecraft:piglin", "minecraft:enderman", "minecraft:wolf", "minecraft:bee",
+            "minecraft:polar_bear", "minecraft:llama", "minecraft:trader_llama", "minecraft:panda", "minecraft:dolphin", "minecraft:goat");
+
+    static boolean hasAnyFamily(Entity e, List<String> list) {
+        for (String f : list) if (hasFamily(e, f)) return true;
+        return false;
+    }
+
+    private static Set<String> javaTypes(String... bedrockIds) {
+        Set<String> out = new java.util.HashSet<>();
+        for (String id : bedrockIds) out.add(javaType(id));
+        return Set.copyOf(out);
     }
 
     /** 이 엔티티가 애드온 이름 (베드락) 의 종류인지 */
@@ -559,7 +577,7 @@ public final class Kit {
         return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, 1, 0, null);
     }
 
-    /** 0.43.0 무기 스킬 · 직업 스킬 피해 배율 (아티팩트 야른그레이프르 「쇠장갑」 — RelicPassives, 1 = 그대로): skillHit · applyJobDamage 에 곱함 (룬 · 평타는 아님) */
+    /** 0.43.0 직업 스킬 피해 배율 (아티팩트 야른그레이프르 「쇠장갑」 — RelicPassives, 1 = 그대로): applyJobDamage 에 곱함 (룬 · 평타는 아님 — 2026-11-16 무기 스킬은 지움) */
     public static java.util.function.ToDoubleFunction<ServerPlayer> skillMult = p -> 1;
 
     static double skillMultOf(ServerPlayer sp) {
@@ -620,35 +638,6 @@ public final class Kit {
     public static long lastHurtTick(Entity target, Entity attacker) {
         long h = HURT_TICKS.getOrDefault(target.getUUID(), -1000L);
         return attacker != null ? Math.max(h, skillLandedAt(target, attacker)) : h;
-    }
-
-    /**
-     * 스킬 피해 한 번 (skills.js skillHit): 무기 공격력 × mult × 스탯 배율 × 치명타. 실제로 깎인 체력 (0 = 안 들어감).
-     * o: critBonus · sure (늘 치명타) · cause (Cause — 없으면 완드 · 성스러운 홀은 마법, 나머지는 공격) · spell (마검의 마력: 파란 숫자) · style (숫자 모양)
-     */
-    public static double skillHit(ServerPlayer sp, LivingEntity target, Weapon w, double mult, Opt o) {
-        if (!canHit(sp, target)) return 0;
-        // 스탯 트리 (7단계): 치명타 확률 · 치명타 피해도 (공격력은 powerOf 안에)
-        boolean crit = o.truthy("sure")
-                || (RpgCombat.forceCrit != null ? RpgCombat.forceCrit
-                        : ThreadLocalRandom.current().nextDouble() < Math.min(CRIT_CAP, w.critChance() + o.num("critBonus", 0) + mmorpg.fabric.stattree.StatTrees.critAdd(sp)));
-        double dmg = w.damage() * mult * RpgCombat.powerOf(sp, w) * (crit ? RpgCombat.critMultOf(sp, w) : 1) * skillMultOf(sp); // 0.43.0 쇠장갑
-        Cause cause = o.get("cause") instanceof Cause c ? c : mmorpg.core.Weapons.isMagicType(w.type()) ? Cause.MAGIC : Cause.ATTACK; // 완드 · 성스러운 홀 (12단계)
-        DamageNumbers.Style style = o.get("style") instanceof DamageNumbers.Style s ? s
-                : o.truthy("spell") ? (crit ? DamageNumbers.Style.SPELLCRIT : DamageNumbers.Style.SPELL) : null;
-        float before = target.getHealth();
-        if (!applySkillDamage(sp, target, dmg, crit, cause, style)) return 0;
-        float after = target.isRemoved() ? 0 : target.getHealth();
-        return before > after ? before - after : dmg;
-    }
-
-    public static double skillHit(ServerPlayer sp, LivingEntity target, Weapon w, double mult) {
-        return skillHit(sp, target, w, mult, Opt.empty());
-    }
-
-    /** 스킬 한 번의 예상 피해 (치명타 없이 — 설명용) */
-    public static double skillDamage(ServerPlayer sp, Weapon w, double mult) {
-        return w.damage() * mult * RpgCombat.powerOf(sp, w);
     }
 
     // ------------------------------------------------------------ 몹 무적 시간 피하기 (skills.js reserveHit · hitAt)
@@ -763,14 +752,6 @@ public final class Kit {
     }
 
     // ------------------------------------------------------------ 색 · 체력
-
-    /** 무기 종류의 스킬 색 {빛, 심지} (config.js SKILLS.color) */
-    public static double[][] colors(Weapon w) {
-        Obj c = SKILLS.obj("color");
-        List<Object> pair = c.listOrNull(w.type());
-        if (pair == null) return new double[][] {{1, 1, 1}, {1, 1, 1}};
-        return new double[][] {rgb(pair.get(0)), rgb(pair.get(1))};
-    }
 
     /** JSON 의 [r, g, b] → double[] */
     public static double[] rgb(Object o) {

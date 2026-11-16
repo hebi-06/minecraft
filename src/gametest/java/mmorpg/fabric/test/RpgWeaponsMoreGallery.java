@@ -18,7 +18,6 @@ import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.RuneSystem;
 import mmorpg.fabric.rune.SkillBar;
 import mmorpg.fabric.skill.Guards;
-import mmorpg.fabric.skill.Transcend;
 import mmorpg.fabric.smith.Smith;
 import mmorpg.fabric.ui.Forms;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -50,11 +49,10 @@ import org.slf4j.LoggerFactory;
  *   <li>임시 디자인 20개 (일반 · 희귀 · 고귀 · 영웅 · 초월) 를 손에 든 모습 (1인칭 · 3인칭 앞) — wm_hold_&lt;종류&gt;_&lt;등급&gt;[_3p]</li>
  *   <li>가방 아이콘 · 설명 (궁니르 · 에이르의 홀) — wm_inventory · wm_tooltip_&lt;종류&gt;</li>
  *   <li>기본 공격 (고귀 20렙 — 창 찌르기 · 낫 넓게 베기 · 망치 내려찍기 · 홀 성스러운 일격, 옆 과녁에 번진 숫자) — wm_basic_&lt;종류&gt;[_3p]_t3 · t6</li>
- *   <li>스킬 12개를 실제 입력 (우클릭 = 스킬1 · 웅크리고 우클릭 = 스킬2) 으로 — wm_&lt;스킬&gt;_&lt;틱&gt;[_3p]</li>
  *   <li>정령왕 강림 (스킬 칸 1번의 키) — wm_king_&lt;틱&gt;[_3p]</li>
  *   <li>대장장이 제작 창 (고귀 · 영웅 · 초월 쪽) — wm_craft_&lt;등급&gt;, 무기 상점 (기본 쪽 → 새 무기 쪽) — wm_shop_page1 · 2</li>
  * </ol>
- * 스킬마다 써졌는지 (재사용 대기) · 들어간 피해를 로그 (weapons12-gallery) 로, 써지지 않았거나 피해가 0 이면 마지막에 실패.
+ * 정령왕 강림이 써졌는지 · 들어간 피해를 로그 (weapons12-gallery) 로, 써지지 않았거나 피해가 0 이면 마지막에 실패. (무기 스킬 사진은 2026-11-16 무기 스킬과 함께 지움)
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
@@ -69,32 +67,13 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
     };
     private static final String[] TYPES = {"lance", "scythe", "hammer", "scepter"};
 
-    /** 스킬 하나: 무기 · 몇 번째 스킬 · 사진 틱 · 끝까지 기다릴 틱 · 가까운 과녁인지 */
-    private record Case(String weapon, int index, int[] shots, int total, boolean near) {}
-
-    private static final Case[] CASES = {
-        new Case("lance_l40_hero", 0, new int[] {3, 8, 14}, 36, false),
-        new Case("lance_l40_transcend", 0, new int[] {4, 12, 22}, 40, false),
-        new Case("lance_l40_transcend", 1, new int[] {12, 26, 32, 46}, 70, false),
-        new Case("scythe_l40_hero", 0, new int[] {3, 12, 26}, 40, true),
-        new Case("scythe_l40_transcend", 0, new int[] {3, 7, 20, 35}, 50, true),
-        new Case("scythe_l40_transcend", 1, new int[] {8, 30, 62, 74}, 92, true),
-        new Case("hammer_l40_hero", 0, new int[] {4, 8, 18, 26}, 40, true),
-        new Case("hammer_l40_transcend", 0, new int[] {4, 10, 15, 22}, 56, false),
-        new Case("hammer_l40_transcend", 1, new int[] {8, 30, 70, 118, 122}, 140, true),
-        new Case("scepter_l40_hero", 0, new int[] {4, 10, 24, 44}, 66, false),
-        new Case("scepter_l40_transcend", 0, new int[] {4, 14, 34, 58}, 80, false),
-        new Case("scepter_l40_transcend", 1, new int[] {6, 40, 100, 104}, 120, true),
-    };
-
     private final List<String> failures = new ArrayList<>();
     private int lives;
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
-        boolean film = RpgFilm.on() && RpgFilm.listed("filmw12"); // 0.48.2 스킬 영상 (only=film,filmw12) — 사진 대신 틱마다
-        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("weapons12"))) return; // 고른 시험만 (MMORPG_ONLY)
+        if (RpgFilm.on() || !RpgProdSmoke.only("weapons12")) return; // 고른 시험만 (MMORPG_ONLY) — 2026-11-16 무기 스킬 영상 (filmw12) 은 무기 스킬과 함께 지움
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -111,20 +90,9 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
             });
             ctx.waitTicks(10);
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
-            if (film) {
-                RpgFilm f = new RpgFilm(ctx).view(7.6, 2.9, 1.9);
-                for (Case c : CASES) film(ctx, server, c, f);
-                LOG.info("[weapons12-gallery] film done, {} failed", failures.size());
-                if (!failures.isEmpty()) throw new AssertionError("weapons12 film: " + String.join(" / ", failures));
-                return;
-            }
             holds(ctx, server);
             inventory(ctx, server);
             basics(ctx, server);
-            for (Case c : CASES) {
-                run(ctx, server, c, false);
-                run(ctx, server, c, true);
-            }
             king(ctx, server, false);
             king(ctx, server, true);
             craft(ctx, server);
@@ -246,86 +214,6 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
             }
         }
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
-    }
-
-    // ------------------------------------------------------------ 스킬
-
-    private void run(ClientGameTestContext ctx, TestServerContext server, Case c, boolean third) {
-        Weapon w = Weapons.parseWeapon("rpg:" + c.weapon());
-        Obj k = w.skills().get(c.index());
-        String id = k.str("id");
-        server.runCommand("time set 6000");
-        server.runCommand("tp @a 0.5 -60 0.5 0 10");
-        server.runCommand("item replace entity @a hotbar.0 with rpg:" + c.weapon());
-        server.runOnServer(s -> {
-            ServerPlayer sp = player(s);
-            clearHusks(sp);
-            Transcend.resetCooldowns(sp);
-            Guards.clear(sp.getUUID());
-            RpgHealth.healFull(sp);
-            if (id.equals("dagda_smash") || id.equals("caduceus_serpents") || id.equals("apollo_sanctuary")) sp.setHealth(sp.getMaxHealth() * 0.5F);
-            spawnHusks(sp.level(), c.near() ? NEAR : FAR);
-        });
-        ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
-        ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
-        ctx.waitTicks(12);
-        float hp0 = server.computeOnServer(s -> player(s).getHealth());
-        if (c.index() == 1) {
-            ctx.getInput().holdShift();
-            ctx.waitTicks(3);
-        }
-        long t0 = serverNow(server) + 1; // 우클릭 패킷을 서버가 받는 틱 (사진은 서버 틱에 맞춤 — 사진을 찍는 동안에도 서버는 돎)
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
-        if (c.index() == 1) ctx.getInput().releaseShift();
-        for (int shot : c.shots()) {
-            waitServer(ctx, server, t0 + shot);
-            ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "wm_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
-        }
-        waitServer(ctx, server, t0 + c.total());
-        boolean cast = server.computeOnServer(s -> Transcend.cooldownLeft(player(s), k) > 0);
-        double dealt = dealtAll(server);
-        float hp1 = server.computeOnServer(s -> player(s).getHealth());
-        LOG.info("[weapons12-gallery] {} {} cast={} dealt={} healed={}", id, third ? "3p" : "1p", cast, fmt(dealt), fmt(hp1 - hp0));
-        String tag = id + (third ? " (3p)" : "");
-        if (!cast) failures.add(tag + " not cast");
-        else if (!(dealt > 0)) failures.add(tag + " dealt no damage");
-        if (cast && (id.equals("dagda_smash") || id.equals("caduceus_serpents") || id.equals("apollo_sanctuary")) && !(hp1 > hp0)) failures.add(tag + " did not heal");
-    }
-
-    /** 0.48.2 스킬 영상: 같은 입력 · 과녁으로 쓰고 틱마다 한 장 (RpgFilm) */
-    private void film(ClientGameTestContext ctx, TestServerContext server, Case c, RpgFilm f) {
-        Weapon w = Weapons.parseWeapon("rpg:" + c.weapon());
-        Obj k = w.skills().get(c.index());
-        String id = k.str("id");
-        server.runCommand("time set 6000");
-        server.runCommand("tp @a 0.5 -60 0.5 0 10");
-        server.runCommand("item replace entity @a hotbar.0 with rpg:" + c.weapon());
-        server.runOnServer(s -> {
-            ServerPlayer sp = player(s);
-            clearHusks(sp);
-            Transcend.resetCooldowns(sp);
-            Guards.clear(sp.getUUID());
-            RpgHealth.healFull(sp);
-            if (id.equals("dagda_smash") || id.equals("caduceus_serpents") || id.equals("apollo_sanctuary")) sp.setHealth(sp.getMaxHealth() * 0.5F);
-            spawnHusks(sp.level(), c.near() ? NEAR : FAR);
-        });
-        ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
-        ctx.waitTicks(12);
-        boolean hero = c.weapon().endsWith("_hero");
-        String how = c.index() == 1 ? "웅크리고 우클릭" : "우클릭";
-        f.begin(server, id, k.str("name"), w.name() + " · " + (hero ? "영웅 스킬" : "초월 스킬 " + (c.index() + 1)) + " (" + how + ")", c.near() ? 2.0 : 4.0);
-        f.frames(4);
-        if (c.index() == 1) {
-            ctx.getInput().holdShift();
-            f.frames(3);
-        }
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
-        f.cast();
-        if (c.index() == 1) ctx.getInput().releaseShift();
-        f.until(c.total());
-        double dealt = dealtAll(server);
-        f.end(dealt);
-        if (!(dealt > 0)) failures.add(id + " (film) dealt no damage");
     }
 
     // ------------------------------------------------------------ 정령왕 강림

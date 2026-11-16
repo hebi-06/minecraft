@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Player;
 
 /**
  * 탈것에 탄 동안 막기 (riding.js — 사용자 요청: "타면서 몬스터를 잡을 수 없고 스킬도 못 사용하게"). 다른 모듈이 부르는 작은 판정만 (부르기 · 사라짐은 Mounts):
- * 공격 (평타 · 활 · 완드 · 스킬 · 룬의 피해 — Mounts 의 피해 막기), 무기 스킬 (Transcend.castSkill), 룬 (RuneCast.castRune), 활 · 완드 평타 (RpgCombat),
+ * 공격 (평타 · 활 · 완드 · 스킬 · 룬의 피해 — Mounts 의 피해 막기), 룬 (RuneCast.castRune), 활 · 완드 평타 (RpgCombat),
  * 근접 참격 연출 (Slash), 지속 피해로 잡기 (Loot.mounted). 우리 탈것 (RpgMount) 만 — 배 · 말 · 다른 모드의 탈것은 그대로.
  */
 public final class Riding {

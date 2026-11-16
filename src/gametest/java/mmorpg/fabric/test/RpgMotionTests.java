@@ -19,7 +19,6 @@ import mmorpg.fabric.motion.MotionSystem;
 import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneStrike;
-import mmorpg.fabric.skill.Transcend;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -648,14 +647,10 @@ public final class RpgMotionTests {
     public void skillMotionsSent(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
-        Weapon w = Weapons.weaponFrom("sword", 40, "hero"); // 용살 검기 — skill_slash
+        Weapon w = Weapons.weaponFrom("sword", 40, "hero");
         hold(sp, w);
         dummy(h, 1.5, 2, 6.5);
-        h.runAfterDelay(2, () -> {
-            String id = w.skills().get(0).str("id");
-            h.assertTrue(Transcend.castSkill(sp, w, 0), "cast " + id);
-            h.assertTrue(Motions.skillMotion(id).equals(MotionSystem.lastSent(sp)), "weapon skill motion " + MotionSystem.lastSent(sp) + " (" + id + ")");
-        });
+        // 2026-11-16 무기 스킬은 지움 — 룬 동작만
         h.runAfterDelay(6, () -> {
             Runes.Rune r = Runes.parseRune("rpg:rune_str_common"); // 대지 강타 — slam
             h.assertTrue(r != null, "rune");
@@ -728,34 +723,6 @@ public final class RpgMotionTests {
             h.assertTrue(mmorpg.fabric.job.JobKit.PHASES.contains("warrior_charge:slam"), "charge slam phase " + mmorpg.fabric.job.JobKit.PHASES);
             h.assertTrue("jb_warrior_charge_slam".equals(MotionSystem.lastSent(sp)), "charge slam motion " + MotionSystem.lastSent(sp));
             mmorpg.fabric.job.JobSystem.setJob(sp, null);
-            done(h, sp);
-        });
-    }
-
-    /**
-     * 0.48.0 무기 스킬마다 그 스킬만의 동작 (wp_ — 사용자 "무기 · 직업 스킬"): 묠니르 투척을 쓰면 wp_mjolnir_throw · 입체 망치 (내 무기 디자인 — item: 모델)
-     * 가 날아감 → 끝에서 번개 → 돌아와 손에 닿는 틱에 서버가 단계 동작 (mjolnir_throw:catch → wp_mjolnir_throw_catch) 을 다시 보냄
-     */
-    @GameTest(environment = ENV, maxTicks = 100)
-    public void weaponMotionsPerSkill(GameTestHelper h) {
-        floor(h);
-        ServerPlayer sp = player(h);
-        Weapon w = Weapons.weaponFrom("hammer", 40, "transcend");
-        hold(sp, w);
-        h.runAfterDelay(2, () -> {
-            String id = w.skills().get(0).str("id");
-            h.assertTrue("mjolnir_throw".equals(id), "skill " + id);
-            h.assertTrue("wp_mjolnir_throw".equals(Motions.skillMotion(id)), "table " + Motions.skillMotion(id));
-            mmorpg.fabric.skill.Kit.PHASES.clear();
-            int sent0 = mmorpg.fabric.Fx3d.sent;
-            h.assertTrue(Transcend.castSkill(sp, w, 0), "throw cast");
-            h.assertTrue("wp_mjolnir_throw".equals(MotionSystem.lastSent(sp)), "throw motion " + MotionSystem.lastSent(sp));
-            h.assertTrue(mmorpg.fabric.Fx3d.sent >= sent0 + 1 && ("item:" + w.id()).equals(mmorpg.fabric.Fx3d.lastModel), "3d hammer " + (mmorpg.fabric.Fx3d.sent
-                    - sent0) + " " + mmorpg.fabric.Fx3d.lastModel);
-        });
-        h.runAfterDelay(70, () -> {
-            h.assertTrue(mmorpg.fabric.skill.Kit.PHASES.contains("mjolnir_throw:catch"), "catch phase " + mmorpg.fabric.skill.Kit.PHASES);
-            h.assertTrue("wp_mjolnir_throw_catch".equals(MotionSystem.lastSent(sp)), "catch motion " + MotionSystem.lastSent(sp));
             done(h, sp);
         });
     }

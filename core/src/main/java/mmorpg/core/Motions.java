@@ -22,8 +22,8 @@ public final class Motions {
 
     /**
      * 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인): BASE + 0.46.0 룬 동작 (rules_more MOTION.runeMotions — tools/rune_motions.py 가 poses.json 과 함께
-     * 씀, 이름은 rn_ 로 시작) + 0.47.0 직업 스킬 동작 (MOTION.jobMotions — tools/job_motions.py, jb_) + 0.48.0 무기 스킬 동작 (MOTION.weaponMotions —
-     * tools/weapon_motions.py, wp_)
+     * 씀, 이름은 rn_ 로 시작) + 0.47.0 직업 스킬 동작 (MOTION.jobMotions — tools/job_motions.py, jb_). 0.48.0 무기 스킬 동작 (MOTION.weaponMotions — wp_) 은
+     * 2026-11-16 무기 스킬과 함께 지움 (있으면 읽음)
      */
     public static final Set<String> KNOWN = known();
 

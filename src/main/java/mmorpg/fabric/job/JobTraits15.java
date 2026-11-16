@@ -11,7 +11,7 @@ import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
-import mmorpg.fabric.skill.Aegis;
+import mmorpg.fabric.skill.Taunts;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
@@ -132,10 +132,10 @@ public final class JobTraits15 {
         return V.up(p.position(), p.getBbHeight() * 0.62);
     }
 
-    /** 도발 (스킬이 부름): ticks 동안 그 적이 나를 노림 (Aegis.tauntFor — 머리 위 "도발") */
+    /** 도발 (스킬이 부름): ticks 동안 그 적이 나를 노림 (Taunts.tauntFor — 머리 위 "도발") */
     static void taunt(ServerPlayer sp, LivingEntity e, int ticks) {
         if (e == null || e.isRemoved() || !e.isAlive() || ticks <= 0) return;
-        Aegis.tauntFor(sp, e, ticks, true);
+        Taunts.tauntFor(sp, e, ticks, true);
     }
 
     // ------------------------------------------------------------ 피닉스 가드 — 불사조의 재 · 이그니션

@@ -67,10 +67,7 @@ public final class WeaponsMoreTest {
                 new String[] {"철 전투망치", "푸른 강철 망치"}, "scepter", new String[] {"견습 사제의 홀", "청수정 성홀"});
         Map<String, String[]> stats = Map.of("lance", new String[] {"str", "dex"}, "scythe", new String[] {"dex", "int"}, "hammer", new String[] {"vit", "str"},
                 "scepter", new String[] {"int", "vit"});
-        Map<String, String[]> skillIds = Map.of("lance", new String[] {"gungnir_return", "gungnir_fall"}, "scythe", new String[] {"kronos_rend", "kronos_clock"},
-                "hammer", new String[] {"mjolnir_throw", "mjolnir_storm"}, "scepter", new String[] {"apollo_sun", "apollo_sanctuary"});
         Weapon gram = Weapons.weaponFrom("sword", 40, "transcend");
-        double gramSkill = avgHit(gram) * Skills.skillTotalMult(gram.skills().get(0));
         for (String type : MORE) {
             // 조합
             for (Grade g : Rules.get().grades()) {
@@ -121,27 +118,12 @@ public final class WeaponsMoreTest {
             check(Combat.isMeleeWeapon(t40) && Combat.isMeleeWeapon(n10), type + " melee");
             check(!Weapons.isRangedType(type), type + " not ranged");
             check(Weapons.isMagicType(type) == type.equals("scepter"), type + " magic skills only for the scepter");
-            // 스킬
-            check(n10.skills() == null && Weapons.weaponFrom(type, 20, "noble").skills() == null, type + " noble no skill");
-            check(h30.skills() != null && h30.skills().size() == 1, type + " hero one skill");
-            check(t40.skills() != null && t40.skills().size() == 2, type + " transcend two skills");
-            if (t40.skills() == null || t40.skills().size() < 2) continue;
-            Obj s1 = t40.skills().get(0);
-            Obj s2 = t40.skills().get(1);
-            check(s1.str("id").equals(skillIds.get(type)[0]) && s2.str("id").equals(skillIds.get(type)[1]), type + " skill ids " + s1.str("id") + " " + s2.str("id"));
-            check(s1.num("cd") == 12 && s2.num("cd") == 30, type + " cooldowns 12 / 30");
-            double eff = avgHit(t40) * Skills.skillTotalMult(s1);
-            check(Math.abs(eff / gramSkill - 1) <= 0.08, type + " skill 1 power vs Gram " + eff / gramSkill);
-            double r2 = Skills.skillTotalMult(s2) / Skills.skillTotalMult(s1);
-            check(r2 >= 1.55 && r2 <= 1.65, type + " skill 2 / skill 1 = " + r2);
-            for (Obj k : t40.skills()) {
-                check(!k.str("name").isEmpty() && !k.str("desc").isEmpty() && !k.str("desc2").isEmpty(), type + " " + k.str("id") + " texts");
-                List<Object> color = k.listOrNull("color");
-                check(color != null && color.size() == 2, type + " " + k.str("id") + " color [glow, core]");
-            }
+            // 2026-11-16 무기 스킬 지움 (사용자 "무기 스킬도 빼고 대신 무기 디자인을 늘리건데"): 자바 판은 어느 등급도 스킬이 없음
+            check(n10.skills() == null && Weapons.weaponFrom(type, 20, "noble").skills() == null && h30.skills() == null && t40.skills() == null,
+                    type + " no weapon skills");
             // 설명 줄
             List<String> lore = Weapons.weaponInfo(t40);
-            check(lore.stream().anyMatch(l -> l.endsWith("버튼: 스킬1, 웅크리면: 스킬2")), type + " melee controls " + lore);
+            check(lore.stream().noneMatch(l -> l.contains("버튼: 스킬") || l.contains("웅크리면: 스킬") || l.contains("스킬:")), type + " no skill lines " + lore);
             String trait = switch (type) {
                 case "lance" -> "찌르기: 사거리";
                 case "scythe" -> "넓게 베기";
@@ -149,7 +131,7 @@ public final class WeaponsMoreTest {
                 default -> "성스러운 일격";
             };
             check(lore.stream().anyMatch(l -> l.contains(trait)), type + " trait line " + trait);
-            check(lore.stream().anyMatch(l -> l.contains("마법 피해")) == type.equals("scepter"), type + " magic line");
+            check(lore.stream().noneMatch(l -> l.contains("마법 피해")), type + " no weapon-skill magic line");
         }
         // 0.44.1 강화 줄 (자바 전용): 피해 % 대신 더해진 공격력 — "공격력 26.4 (기본 20.6)" · "강화 +7 · 공격력 +5.8"
         if (Rules.hasMore()) {
@@ -226,8 +208,7 @@ public final class WeaponsMoreTest {
             check(r != null && r.def().str("fn").equals("summonSpirits"), "spirit " + g + " unchanged");
         }
 
-        // 도끼 초월: 궁니르 (창 모양) → 반고의 도끼 (0.12.2) → 세계수의 도끼 (0.12.4 — 사용자가 고른 새 컨셉, 동작을 새로). 종류 글자 · 평타는 도끼 (잎빛),
-        // 배율 합 · 재사용 대기 · 회복은 예전과 같음 (9.9 · 15.9 · 12 · 30초 · 15%)
+        // 도끼 초월: 궁니르 (창 모양) → 반고의 도끼 (0.12.2) → 세계수의 도끼 (0.12.4 — 사용자가 고른 새 컨셉). 종류 글자 · 평타는 도끼 (잎빛) — 무기 스킬은 2026-11-16 지움
         Weapon axeT = Weapons.parseWeapon("rpg:axe_l40_transcend");
         check(axeT != null && axeT.title().equals("세계수의 도끼"), "axe transcend name " + (axeT == null ? null : axeT.title()));
         if (axeT != null) {
@@ -236,27 +217,14 @@ public final class WeaponsMoreTest {
             check(yggSlash != null && "heavy".equals(yggSlash.strOrNull("shape")) && yggSlash.has("aura") && yggSlash.num("size") == Weapons.slashStyle("axe").num("size"),
                     "axe transcend slash = axe heavy (base) · jade glow · sprout aura");
             check(Weapons.weaponInfo(axeT).get(0).contains("도끼 · 레벨 40"), "axe transcend info " + Weapons.weaponInfo(axeT).get(0));
-            List<Obj> sk = axeT.skills();
-            check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("ygg_seed") && sk.get(1).str("id").equals("ygg_tree"), "axe transcend skills");
-            if (sk != null && sk.size() == 2) {
-                near(Skills.skillTotalMult(sk.get(0)), 4.4 + 5.5, 1e-9, "ygg_seed total = old axe skill 1");
-                near(Skills.skillTotalMult(sk.get(1)), 9.5 + 3.2 * 2, 1e-9, "ygg_tree total = old axe skill 2");
-                check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30, "axe transcend cooldowns");
-                check(sk.get(1).num("heal") == 0.15 && sk.get(1).num("healCap") == 0.35, "axe transcend heal (딜탱)");
-            }
+            check(axeT.skills() == null, "axe transcend: no weapon skills (2026-11-16)");
         }
-        // 방패 초월: 아이기스의 방패 → 스발린 (0.12.4 — 동작 · 수치는 그대로, 이름 · 연출만)
+        // 방패 초월: 아이기스의 방패 → 스발린 (0.12.4 — 이름). 무기 스킬은 2026-11-16 지움
         Weapon shieldT = Weapons.parseWeapon("rpg:shield_l40_transcend");
         check(shieldT != null && shieldT.title().equals("스발린"), "shield transcend name " + (shieldT == null ? null : shieldT.title()));
         if (shieldT != null) {
             check(shieldT.typeLabel().equals("방패"), "shield transcend label " + shieldT.typeLabel());
-            List<Obj> sk = shieldT.skills();
-            check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("svalinn_charge") && sk.get(1).str("id").equals("svalinn_dome"), "shield transcend skills");
-            if (sk != null && sk.size() == 2) {
-                near(Skills.skillTotalMult(sk.get(0)), 9.5 + 20, 1e-9, "svalinn_charge total = aegis_charge");
-                near(Skills.skillTotalMult(sk.get(1)), 7 + 10 + 30, 1e-9, "svalinn_dome total = aegis_dome");
-                check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30 && sk.get(1).num("reduce") == 0.6, "shield transcend cooldowns · reduce");
-            }
+            check(shieldT.skills() == null, "shield transcend: no weapon skills (2026-11-16)");
         }
         for (String g : List.of("common", "rare", "noble", "hero")) {
             Weapon sh = Weapons.weaponFrom("shield", g.equals("hero") ? 30 : 10, g);
@@ -265,8 +233,8 @@ public final class WeaponsMoreTest {
         check(Weapons.weaponFrom("shield", 30, "hero").title().equals("비요른의 방패"), "shield hero name (0.50.0 북유럽)");
         check(Weapons.weaponFrom("axe", 40, "hero").title().equals("대지의 심판"), "axe hero name unchanged");
 
-        // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 찌르기 (SLASH.spear) 를 바탕으로 디자인 색 (0.12.8 — SLASH.gungnir 청록빛),
-        // 스킬 = 신창 귀환 · 신창 강림 (재사용 대기 그대로, 배율 합은 창 세기 8.5 · 13.6 — 예전 궁니르 9.9 · 15.9 와 같은 비율), 도끼 규칙의 회복은 없음
+        // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 찌르기 (SLASH.spear) 를 바탕으로 디자인 색 (0.12.8 — SLASH.gungnir 청록빛).
+        // 무기 스킬 (신창 귀환 · 신창 강림) 은 2026-11-16 지움
         Weapon lanceT = Weapons.parseWeapon("rpg:lance_l40_transcend");
         check(lanceT != null && lanceT.title().equals("궁니르"), "lance transcend name " + (lanceT == null ? null : lanceT.title()));
         if (lanceT != null) {
@@ -274,15 +242,7 @@ public final class WeaponsMoreTest {
             Obj gn = Weapons.slashStyle("gungnir");
             check(gn != null && gn.truthy("thrust") && gn.num("length") == Weapons.slashStyle("spear").num("length"), "gungnir look = add-on spear thrust (base) · cyan");
             check(Weapons.weaponInfo(lanceT).get(0).contains("창 · 레벨 40"), "lance transcend info " + Weapons.weaponInfo(lanceT).get(0));
-            List<Obj> sk = lanceT.skills();
-            if (sk != null && sk.size() == 2) {
-                near(Skills.skillTotalMult(sk.get(0)), 8.5, 1e-9, "gungnir_return total = lance skill 1");
-                near(Skills.skillTotalMult(sk.get(1)), 13.6, 1e-9, "gungnir_fall total = lance skill 2");
-                near(sk.get(0).num("mult") / Skills.skillTotalMult(sk.get(0)), 4.4 / 9.9, 0.01, "gungnir_return out : back like the add-on");
-                near(sk.get(1).num("mult") / Skills.skillTotalMult(sk.get(1)), 9.5 / 15.9, 0.01, "gungnir_fall strike : bolts like the add-on");
-                check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30, "lance transcend cooldowns");
-                check(!sk.get(1).has("heal") && !(sk.get(1).str("desc") + sk.get(1).str("desc2")).contains("회복"), "lance gungnir: no axe heal");
-            }
+            check(lanceT.skills() == null, "lance transcend: no weapon skills (2026-11-16)");
         }
         check(Weapons.weaponFrom("lance", 40, "hero").title().equals("브륀힐드의 창"), "lance hero name (0.50.0 북유럽)");
         check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("세계수의 도끼")), "boss material lore uses the new name");
@@ -326,7 +286,7 @@ public final class WeaponsMoreTest {
                 for (Weapons.Req r : w.reqs()) sum += r.value();
                 for (Weapons.Req r : w40.reqs()) sum40 += r.value();
                 check(lvs[i] == 40 ? sum == sum40 : sum > sum40, type + " " + lvs[i] + " reqs grow " + w.reqs());
-                check(w.skills() != null && w.skills().size() == w40.skills().size() && w.title().equals(w40.title()), type + " " + lvs[i] + " skills · name = 40렙");
+                check(w.skills() == null && w.title().equals(w40.title()), type + " " + lvs[i] + " no skills · name = 40렙");
                 Weapons.SmithStep n = Weapons.nextLevelOf(w);
                 if (lvs[i] == 60) {
                     check(n == null, type + " 60 is the last level");

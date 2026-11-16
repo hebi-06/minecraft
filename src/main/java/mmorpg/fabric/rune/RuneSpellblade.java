@@ -745,9 +745,7 @@ final class RuneSpellblade {
         }
     }
 
-    // 상태 줄을 초월 무기 스킬 줄이 쓰는지 (heldSkillWeapon) 는 RuneCast.hudTick 이 봄 (그 줄 뒤에는 Transcend 가 덧붙임을 붙임)
-
-    /** 화면 하단 상태 줄의 마검 부여 (룬 · 초월 무기 스킬 줄 뒤에 붙음) */
+    /** 화면 하단 상태 줄의 마검 부여 (룬 줄 뒤에 붙음) */
     static String imbueHud(ServerPlayer sp) {
         Imbue st = imbueOf(sp);
         return st != null ? imbueGems(st.left) + " §9마검 §7" + Js.toFixed(Math.max(0, (st.until - Tasks.now()) / 20), 1) + "초" : "";

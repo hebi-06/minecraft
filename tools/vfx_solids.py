@@ -50,12 +50,18 @@ def cards():
         return set()
 
 
+# 2026-11-16 무기 스킬을 지우며 치운 모델 (사용자 "무기 스킬도 빼고 대신 무기 디자인을 늘리건데" · "옛그림이 있으면 그냥 참고만 하게 따로 치우고"): 무기 스킬만 썼음 —
+# 원본 면 모델은 assets/mmorpg/fxmodel 에 그대로 (모드만 읽음), 바닐라 리소스 팩 (assets/rpg · fx3d) 에서만 뺌
+SHELVED = {"card_moon", "card_serpent", "crescent_wave", "fire_wings", "flower", "hex_dome", "ice_shell", "odin_eye", "raven", "rock_spike", "seed",
+           "storm_cloud", "thorns", "world_tree"}
+
+
 def targets():
-    """옮길 모델: 면 모델 가운데 글꼴 카드가 없는 것 (참격 판 · 2D 물체 판 · 구운 판은 이미 카드)"""
+    """옮길 모델: 면 모델 가운데 글꼴 카드가 없는 것 (참격 판 · 2D 물체 판 · 구운 판은 이미 카드) · 치운 것 (SHELVED) 빼고"""
     have = cards()
     out = []
     for f in sorted(os.listdir(MODEL_DIR)):
-        if f.endswith(".json") and f[:-5] not in have:
+        if f.endswith(".json") and f[:-5] not in have and f[:-5] not in SHELVED:
             out.append(f[:-5])
     return out
 

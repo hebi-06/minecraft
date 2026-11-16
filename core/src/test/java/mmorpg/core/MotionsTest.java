@@ -294,22 +294,10 @@ public final class MotionsTest {
                 "second-job looks: magic sword");
         check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
-        // 스킬 표
+        // 스킬 표 (룬 · 직업 스킬 — 2026-11-16 무기 스킬 동작 wp_ 는 무기 스킬과 함께 지움)
         Set<String> want = new HashSet<>();
         Obj root = r.root();
-        for (String src : List.of("SKILLS")) {
-            Obj s = root.obj(src);
-            for (String k : s.keys()) {
-                if (s.get(k) instanceof List<?> l) {
-                    for (Object o : l) if (o instanceof Map<?, ?> m && m.get("id") instanceof String id) want.add(id);
-                }
-            }
-        }
-        Obj hero = root.objOrNull("HERO_SKILLS");
-        if (hero != null) {
-            for (String k : hero.keys()) if (hero.get(k) instanceof Map<?, ?> m && m.get("id") instanceof String id) want.add(id);
-        }
-        int weapon = want.size();
+        check(Motions.KNOWN.stream().noneMatch(Motions::weaponMotion) && !root.has("HERO_SKILLS"), "no weapon skill motions · hero skills");
         Obj runes = root.obj("RUNES");
         Set<String> fns = new HashSet<>();
         for (String fam : runes.keys()) {
@@ -329,7 +317,6 @@ public final class MotionsTest {
                 jobs++;
             }
         }
-        check(weapon >= 32, "weapon skills " + weapon);
         check(fns.size() >= 117, "rune fns " + fns.size() + " (2026-11-11 한정 3 뺌)");
         check(jobs >= 55, "job skills " + jobs);
         for (String k : want) check(Motions.skillMotion(k) != null, "skill motion " + k);
@@ -344,21 +331,11 @@ public final class MotionsTest {
         // 0.47.0 직업 스킬 단계 열쇠 (스킬 id:단계 — 서버가 그 순간에 다시 보냄 JobKit.motion): 그 직업 스킬이 있어야 함 · 직업 스킬 동작 (jb_)
         Set<String> jobIds = new HashSet<>();
         for (Jobs.Job j : allJobs) for (Jobs.Skill k : j.skills()) jobIds.add(k.id());
-        // 0.48.0 무기 스킬 단계 열쇠 (스킬 id:단계 — 서버가 그 순간에 다시 보냄 Kit.motion): 그 무기 스킬이 있어야 함 · 무기 스킬 동작 (wp_)
-        Set<String> weaponIds = new HashSet<>(want);
-        weaponIds.removeAll(jobIds);
-        weaponIds.removeIf(x -> x.startsWith("rune:"));
         int phases = 0;
-        int weaponPhases = 0;
         int runePhases = 0;
         for (String k : Motions.skillKeys()) {
             if (k.contains(":") && !k.startsWith("rune:")) {
                 String base = k.substring(0, k.indexOf(':'));
-                if (weaponIds.contains(base)) {
-                    weaponPhases++;
-                    check(Motions.weaponMotion(Motions.skillMotion(k)), "weapon phase key " + k + " → " + Motions.skillMotion(k));
-                    continue;
-                }
                 phases++;
                 check(jobIds.contains(base) && Motions.jobMotion(Motions.skillMotion(k)), "job phase key " + k + " → " + Motions.skillMotion(k));
                 continue;
@@ -374,15 +351,6 @@ public final class MotionsTest {
         }
         check(runePhases >= 2, "rune phase keys " + runePhases);
         check(phases >= 18, "job phase keys " + phases);
-        check(weaponPhases >= 18, "weapon phase keys " + weaponPhases);
-        // 0.48.0 무기 스킬마다 그 스킬만의 동작 (wp_)
-        Set<String> weaponMotionNames = new HashSet<>();
-        for (String id : weaponIds) {
-            String mo = Motions.skillMotion(id);
-            check(Motions.weaponMotion(mo), "weapon motion " + id + " → " + mo);
-            if (mo != null) weaponMotionNames.add(mo);
-        }
-        check(weaponIds.size() >= 32 && weaponMotionNames.size() == weaponIds.size(), "weapon motions " + weaponMotionNames.size() + " / " + weaponIds.size());
         // 0.47.0 직업 스킬마다 그 스킬만의 동작 (jb_)
         Set<String> jobMotionNames = new HashSet<>();
         for (String id : jobIds) {
@@ -411,9 +379,9 @@ public final class MotionsTest {
                 && "rn_spirit_fire".equals(Motions.runeSkillMotion("summonSpirits", "nope"))
                 && "rn_spellblade_release".equals(Motions.runeSkillMotion("spellbladeRelease", "transcend")), "rune motion picks (grade key · fallback)");
         check(Motions.runeSkillMotion("nothing", "common") == null && Motions.runeSkillMotion(null, "common") == null, "unknown rune → null");
-        check(Motions.skillMotion("mjolnir_throw").equals("wp_mjolnir_throw") && Motions.skillMotion("gaebolg_pierce").equals("wp_gaebolg_pierce")
-                && Motions.skillMotion("mjolnir_throw:catch").equals("wp_mjolnir_throw_catch"), "spear · hammer throws (0.48.0 무기 스킬마다 — 돌아온 망치를 받음은 단계 열쇠)");
-        check(Motions.skillMotion("gram_charge").equals("wp_gram_charge") && Motions.skillMotion("warrior_charge").equals("jb_warrior_charge")
+        check(Motions.skillMotion("mjolnir_throw") == null && Motions.skillMotion("gaebolg_pierce") == null && Motions.skillMotion("gram_charge") == null,
+                "weapon skills have no motion (2026-11-16 무기 스킬 지움)");
+        check(Motions.skillMotion("warrior_charge").equals("jb_warrior_charge")
                 && Motions.skillMotion("warrior_charge:slam").equals("jb_warrior_charge_slam") && Motions.skillMotion("guardian_throw:catch").equals("jb_guardian_throw_catch"),
                 "dashes (0.47.0 직업 스킬은 jb_ — 돌격 끝의 내려찍기 · 방패를 받음은 단계 열쇠)");
         check(Motions.skillMotion("swordmaster_ult").equals("jb_swordmaster_ult") && Motions.skillMotion("swordmaster_parry:riposte").equals("jb_swordmaster_parry_riposte")

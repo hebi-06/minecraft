@@ -31,7 +31,6 @@ public final class Weapons {
     private static final Obj SMITH = R.obj("SMITH");
     private static final Obj WAND = R.obj("WAND");
     private static final Obj BOW = R.obj("BOW");
-    private static final Obj SKILLS = R.obj("SKILLS");
     private static final double CRIT_CAP = R.num("CRIT_CAP");
     /**
      * 0.36.0 초월 무기 레벨 올리기 (Java-only — rules_more.json WEAPON_LEVEL_UP, null with pure rules): 40 → 45 → … → 60렙, 값은 골드 + 재료.
@@ -285,8 +284,9 @@ public final class Weapons {
         String designName = names == null ? null : names.strOrNull(g.id());
         String title = designName != null ? designName : g.name() + " " + t.str("name");
         boolean legacy = !isValidWeapon(level, g.id(), type);
-        // 초월 = SKILLS 의 두 스킬, 영웅 = HERO_SKILLS 의 한 스킬 (자바 전용 덧붙임 — 대조 시험의 규칙에는 없음). 구버전 조합은 없음
-        List<Obj> skills = legacy ? null : g.id().equals("transcend") ? Skills.weaponSkills(type) : g.id().equals("hero") ? Skills.heroSkills(type) : null;
+        // 초월 = SKILLS 의 두 스킬 (애드온 규칙 — 대조 시험). 2026-11-16 자바 판은 무기 스킬을 지움 (사용자 "무기 스킬도 빼고 대신 무기 디자인을 늘리건데")
+        // → 자바 덧붙임 규칙 (rules_more) 이 있으면 스킬 없음. 구버전 조합은 없음
+        List<Obj> skills = legacy || Rules.hasMore() ? null : g.id().equals("transcend") ? Skills.weaponSkills(type) : null;
         if (skills != null) skills = List.copyOf(skills);
         double damage = round1(LEVEL_DAMAGE.num(Js.str(level)) * t.num("damage") * g.mult());
         // 치명타는 무기 종류 · 레벨 · 등급으로만 (스탯은 치명타를 올리지 않음)
@@ -430,11 +430,6 @@ public final class Weapons {
         }
         if (AttackSpeed.enabled()) lines.add("§r" + L + Stats.info(AttackSpeed.stat()).str("name") + " 1당 공속 " + V + "+" + pct(AttackSpeed.perPoint()) + L + " (" + Js.str(
                 AttackSpeed.cap()) + "까지 ×" + Js.str(AttackSpeed.maxSpeed()) + ")");
-        if (w.type().equals("greatsword")) {
-            Obj tyrfing = SKILLS.objOrNull("tyrfing");
-            lines.add("§r" + L + "스킬: 검(공격) + " + (dark ? "§1" : "§9") + "마력(마법)");
-            lines.add("§r" + L + "스킬 피해 × 최대 체력 ÷ " + V + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
-        }
         lines.addAll(traitLines(w.typeDef(), L, V));
         if (w.type().equals("shield")) {
             lines.add("§r" + L + "피해 감소 " + V + pct(w.passive()));
@@ -454,7 +449,7 @@ public final class Weapons {
     /**
      * Basic-attack traits of the stage 12 types (TYPES[type] — Java overlay only, so the add-on's types get no line):
      * reach (창 — 사거리 +칸), sweep (낫 — 앞 cone° · range 칸의 다른 적 ratio), quake (전투 망치 — 맞힌 적 둘레 radius 칸의 다른 적 ratio),
-     * lifesteal (성스러운 홀 — 준 피해의 rate 회복, 한 번에 최대 체력의 cap 까지), magic (스킬이 마법 피해).
+     * lifesteal (성스러운 홀 — 준 피해의 rate 회복, 한 번에 최대 체력의 cap 까지). (magic — 무기 스킬이 마법 피해 — 은 2026-11-16 무기 스킬과 함께 줄을 뺌)
      */
     public static List<String> traitLines(Obj t, String L, String V) {
         List<String> out = new ArrayList<>();
@@ -476,7 +471,6 @@ public final class Weapons {
             out.add("§r" + L + "성스러운 일격: 준 피해의 " + V + Js.str(Js.round(steal.num("rate") * 100)) + "%" + L + " 회복");
             out.add("§r" + L + " (한 번에 최대 체력의 " + Js.str(round1(steal.num("cap") * 100)) + "%까지)");
         }
-        if (t.truthy("magic")) out.add("§r" + L + "스킬: " + V + "마법 피해" + L + " (방어 무시)");
         return out;
     }
 

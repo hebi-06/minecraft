@@ -18,7 +18,7 @@
     "hp": {"name": "최대 체력", "unit": "", "icon": "minecraft:golden_apple", "desc": "RPG 최대 체력"},
     "def": {"name": "받는 피해", "unit": "%", "neg": true, "icon": "minecraft:shield", "desc": "방패 · 버프 감소 뒤에 한 번 더 줄임"},
     "speed": {"name": "이동 속도", "unit": "%", "icon": "minecraft:feather", "desc": "걷기 · 달리기"},
-    "cdr": {"name": "재사용 대기", "unit": "%", "neg": true, "icon": "minecraft:clock", "desc": "초월 무기 스킬 · 룬"}
+    "cdr": {"name": "재사용 대기", "unit": "%", "neg": true, "icon": "minecraft:clock", "desc": "직업 스킬 · 룬"}
   },
   "tickets": {
     "str": {"item": "rpg:str_rune_ticket", "name": "힘 룬 뽑기권", "family": "str"},

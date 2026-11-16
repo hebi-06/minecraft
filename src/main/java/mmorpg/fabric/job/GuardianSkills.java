@@ -12,7 +12,7 @@ import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.Ult;
-import mmorpg.fabric.skill.Aegis;
+import mmorpg.fabric.skill.Taunts;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
@@ -29,7 +29,7 @@ import org.joml.Quaternionf;
 
 /**
  * 0.30.0 수호기사 직업 스킬 (jobs.json guardian — 강철 파랑 · 흰빛, 특성 「반격」): 방패 치기 · 수호 돌입 · 방패 투척 · 철옹성 · 성채.
- * 피해 = 위력 P × 배율 (JobKit.strike — 첫 타에 반격 게이지를 더함, JobTraits4). 도발 = Aegis.tauntFor (그동안 그 적은 나를 노림 · 머리 위 "도발").
+ * 피해 = 위력 P × 배율 (JobKit.strike — 첫 타에 반격 게이지를 더함, JobTraits4). 도발 = Taunts.tauntFor (그동안 그 적은 나를 노림 · 머리 위 "도발").
  * 연출 = 메이플식 2D 그림 (JobFx — 빛의 방패 · 둥근 방패 · 빛의 사슬 · 기절 별) + 성채의 돌 성벽 (블록 표시 엔티티 — 솟았다 무너짐), 룬 문양 · 마법진은 쓰지 않음.
  */
 final class GuardianSkills {
@@ -74,7 +74,7 @@ final class GuardianSkills {
         int taunt = (int) k.num("taunt", 80);
         int[] cnt = {0};
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("reach", 3.5), 100, 3)) {
-            Aegis.tauntFor(sp, e, taunt, true);
+            Taunts.tauntFor(sp, e, taunt, true);
             JobKit.strike(sp, e, j, P, k.num("mult", 4), false, false, life, 0, d -> {
                 JobTraits4.stun(e, j, stun);
                 if (JobKit.pushable(e)) RuneKit.knock(e, f, 0.35, 0.12);
@@ -287,7 +287,7 @@ final class GuardianSkills {
             ServerLevel lv = sp.level();
             Vec3 at = e.isRemoved() ? to : Kit.bodyPoint(e);
             if (!e.isRemoved() && e.isAlive()) {
-                Aegis.tauntFor(sp, e, (int) k.num("taunt", 60), true);
+                Taunts.tauntFor(sp, e, (int) k.num("taunt", 60), true);
                 JobKit.strike(sp, e, j, P, k.num("hit", 7.2), false, false, life, 0, d -> {
                     if (JobKit.pushable(e)) RuneKit.knock(e, V.sub(e.position(), from), 0.25, 0.1);
                 });

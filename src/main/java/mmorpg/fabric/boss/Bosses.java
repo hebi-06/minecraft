@@ -57,11 +57,9 @@ import mmorpg.fabric.npc.NpcData;
 import mmorpg.fabric.quest.QuestSystem;
 import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.rune.Ult;
-import mmorpg.fabric.skill.Aegis;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
-import mmorpg.fabric.skill.Solas;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.ui.Inv;
 import mmorpg.fabric.ui.MenuForm;
@@ -1847,14 +1845,9 @@ public final class Bosses {
         // v2.27.0 보스 안개 아래에서는 초월 룬 하늘빛을 씌우지 않음
         Predicate<ServerPlayer> skyPrev = Ult.skyBlocked;
         Ult.skyBlocked = p -> hasBossFog(p) || skyPrev.test(p);
-        // v2.19.0 섬광 난무: 필드 밖 (울타리 너머) 에 선 사람은 그 보스 · 소품 옆으로 순간이동하지 않음
-        Solas.bossFieldOk = (sp, e, at) -> {
-            Enc enc = e == null ? null : byEntity.get(e.getUUID());
-            if (enc == null) return true;
-            return Arena.inArena(enc.a, NpcData.dimId(sp.level()), at, BOSS.num("combatMargin"));
-        };
-        // v2.20.0 아이기스의 방패 도발: ticks 동안 그 보스 (마리) 의 평타가 도발한 사람을 먼저 노림 (닿는 거리 안이면 — 패턴은 그대로). 소품은 아님
-        Aegis.addTauntHook((sp, e, ticks) -> {
+        // v2.20.0 도발 (직업 스킬 — mmorpg.fabric.skill.Taunts): ticks 동안 그 보스 (마리) 의 평타가 도발한 사람을 먼저 노림 (닿는 거리 안이면 — 패턴은 그대로). 소품은 아님
+        // (2026-11-16 무기 스킬을 지우며 섬광 난무 (솔라스) 의 보스 필드 확인은 뺌)
+        mmorpg.fabric.skill.Taunts.addTauntHook((sp, e, ticks) -> {
             Unit u = e == null ? null : unitById.get(e.getUUID());
             if (u == null || !u.alive) return false;
             u.taunt = new Taunt(sp.getUUID(), Tasks.now() + ticks);

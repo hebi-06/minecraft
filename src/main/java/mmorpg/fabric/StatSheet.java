@@ -11,7 +11,6 @@ import mmorpg.core.Jobs;
 import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
-import mmorpg.core.Skills;
 import mmorpg.core.Stats;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
@@ -30,7 +29,6 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
     private static final Obj CONFIG = Rules.get().obj("CONFIG");
     private static final Obj TYPES = Rules.get().obj("TYPES");
     private static final Obj SHIELD = Rules.get().obj("SHIELD");
-    private static final Obj SKILLS = Rules.get().obj("SKILLS");
 
     /** 찍은 스탯 · 최고 레벨 · 지금 경험치 레벨로 (장비 보너스 · 룬 버프 없음 → 실제 = 찍은 스탯) */
     public static StatSheet of(int str, int dex, int intel, int vit, int point, int lvmax, int level) {
@@ -194,8 +192,6 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             lore.add("§71포인트: 최대 체력 +" + CONFIG.text("HP_PER_VIT") + (extra.isEmpty() ? "" : " · " + extra));
             lore.add("§7레벨 보너스 +" + Js.str(Hp.levelHpOf(lvmax())) + " (레벨당 +" + CONFIG.text("HP_PER_LEVEL") + ")");
             if (tree("hp") > 0) lore.add("§7스탯 트리 · 장신구 · 아티팩트 최대 체력 +" + Js.str(tree("hp")));
-            Obj tyrfing = SKILLS.objOrNull("tyrfing");
-            lore.add("§7티르빙 스킬 피해 × 최대 체력 ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
         } else {
             lore.add("§71포인트: " + info.str("effect") + " +" + bonusPct(key, 1) + "%");
         }
@@ -320,16 +316,6 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             double vit = Stats.get(eff, "vit");
             double per = shieldCut(w, vit + 1) - shieldCut(w, vit);
             lines.add(L + "피해 감소 " + V + num(shieldCut(w, vit) * 100) + "%" + L + " · 체력 1당 " + V + "+" + num(per * 100) + "%p");
-        }
-        if (w.skills() != null) {
-            double hpf = w.type().equals("greatsword") ? Skills.tyrfingHpFactor(maxHp()) : 1;
-            StringJoiner parts = new StringJoiner(L + " / " + V);
-            for (Obj k : w.skills()) parts.add(num(now * Skills.skillTotalMult(k) * hpf));
-            lines.add(L + "스킬 피해 " + V + parts + L + " (스탯 반영)");
-            if (w.type().equals("greatsword")) {
-                Obj tyrfing = SKILLS.objOrNull("tyrfing");
-                lines.add(L + "스킬 × 최대 체력 " + V + num(maxHp()) + L + " ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)) + " = " + V + "×" + num(hpf));
-            }
         }
         if (!lack.isEmpty()) {
             String zero = "지금은 " + (w.type().equals("shield") ? "피해·방어" : "피해") + " 0";

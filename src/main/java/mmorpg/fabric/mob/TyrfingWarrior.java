@@ -13,7 +13,8 @@ import net.minecraft.world.phys.Vec3;
  * 모습은 북쪽 몬스터 드라우그 (뿔 투구 · 해골 얼굴 · 사슬 갑옷 · 방패 · 도끼 · 망토 — 모델 · 동작 그대로) 를 보랏빛 망령으로 다시 칠한 것
  * (tools/tyrfing_warrior_tex.py — 엔티티 정의 rpg:tyrfing_warrior: mmorpg/entities.json · bedrock/entities.json).
  * <ul>
- * <li>스스로 생각하지 않음 (목표 없음): 무덤에서 솟기 · 적에게 달려가기 · 도끼 내려치기 (공격 동작) · 흩어짐은 Tyrfing.waking 이 틱마다 정함.
+ * <li>스스로 생각하지 않음 (목표 없음): 무덤에서 솟기 · 적에게 달려가기 · 도끼 내려치기 (공격 동작) · 흩어짐은 부른 스킬이 틱마다 정함
+ *     (2026-11-16 티르빙 무기 스킬은 지움 — 지금은 네크로맨서 망자 선원 · 룬).
  *     피해는 주인의 스킬 피해 (Kit — 피해 숫자 · 처치는 주인의 것), 몹 자체는 치지 않음 (BedrockMob.doHurtTarget)</li>
  * <li>맞지 않음 (damage_sensor all — 조준 · 화살에도 잡히지 않음: 뒤의 적을 그대로 칠 수 있게), 아무도 노리지 않음 (canBeSeenAsEnemy — 몹 · 철 골렘),
  *     스킬 대상이 아님 (rpg_ally 태그 — Kit.canHit), 밀지도 밀리지도 않음 (적 · 플레이어 자리를 바꾸지 않게)</li>

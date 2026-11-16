@@ -304,12 +304,6 @@ public final class RuneCast {
 
     // ------------------------------------------------------------ 재사용 대기 표시
 
-    /** 들고 있는 것이 초월 무기인지 (그때는 스킬 줄이 상태 줄을 씀) */
-    private static boolean heldSkillWeapon(ServerPlayer sp) {
-        Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
-        return w != null && w.skills() != null;
-    }
-
     /**
      * 상태 줄 (RUNE.hudEvery 틱마다): 룬을 들면 룬 줄 (준비 · 스킬 칸 — 룬은 스킬 칸에서만 씀), 아니면 덧붙임 (마검 부여 · 정령 · 신체 강화 · 암살자 콤보 …) 만.
      * 스킬 칸 룬의 준비 표시 · 소리는 클라이언트 (스킬 칸 반짝임)
@@ -320,7 +314,7 @@ public final class RuneCast {
             Runes.Rune r = RuneItems.runeOf(sp.getMainHandItem());
             if (r == null) {
                 String suffix = Notify.hudSuffix(sp);
-                if (suffix.isEmpty() || heldSkillWeapon(sp)) continue;
+                if (suffix.isEmpty()) continue;
                 Notify.bar(sp, suffix.substring(" §8| ".length()));
                 continue;
             }

@@ -16,7 +16,6 @@ import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
-import mmorpg.fabric.skill.Transcend;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -35,8 +34,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 스킬 공통 도구 · 초월 무기 입력 게임 시험 (서버): 재사용 대기 · 화면 하단 표시, 그람 화룡 돌진 피해 (mult + afterMult — 무적 시간을 피해 둘 다),
- * 스킬 피해 숫자 모양, 받는 피해 감소 · 반사, 속박 · 침묵, 활 길게 누르기 입력 (짧게 = 평타 · 웅크리고 = 스킬 1), 소리 대응표가 모두 자바 소리로 풀리는지.
+ * 스킬 공통 도구 게임 시험 (서버): 무기 스킬 없음 (2026-11-16 지움 — 영웅 · 초월 무기도 스킬 줄 없음), 활은 누르면 바로 평타, 스킬 피해 숫자 모양,
+ * 받는 피해 감소 · 반사, 속박 · 침묵, 소리 대응표가 모두 자바 소리로 풀리는지.
  */
 public final class RpgSkillTests {
     private static ServerPlayer player(GameTestHelper h) {
@@ -101,106 +100,41 @@ public final class RpgSkillTests {
         return w.damage() * Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0);
     }
 
-    // ------------------------------------------------------------ 재사용 대기 · 표시
+    // ------------------------------------------------------------ 2026-11-16 무기 스킬 없음 (사용자 "무기 스킬도 빼고 대신 무기 디자인을 늘리건데")
 
-    @GameTest(maxTicks = 40)
-    public void cooldownAndHud(GameTestHelper h) {
-        floor(h);
-        ServerPlayer sp = player(h);
-        Weapon w = transcend("sword");
-        hold(sp, w);
-        Obj k = w.skills().get(0);
-        h.assertTrue(Transcend.has("gram_charge") && Transcend.has("tyrfing_waking"), "skills registered");
-        h.assertTrue(Transcend.hudText(sp, w).contains("§a준비"), "ready: " + Transcend.hudText(sp, w));
-        h.assertTrue(Transcend.castSkill(sp, w, 0), "first cast");
-        h.assertTrue(Transcend.cooldownLeft(sp, k) == Math.round(k.num("cd") * 20), "cooldown " + Transcend.cooldownLeft(sp, k));
-        h.assertFalse(Transcend.castSkill(sp, w, 0), "second cast blocked by cooldown");
-        h.assertTrue(Transcend.hudText(sp, w).contains("12.0초"), "hud shows cooldown: " + Transcend.hudText(sp, w));
-        Transcend.resetCooldowns(sp);
-        h.assertTrue(Transcend.cooldownLeft(sp, k) == 0, "reset");
-        h.runAfterDelay(20, () -> done(h, sp));
+    @GameTest(maxTicks = 20)
+    public void weaponsHaveNoSkills(GameTestHelper h) {
+        for (String type : Weapons.allTypes()) {
+            for (String g : List.of("hero", "transcend")) {
+                for (double lv : List.of(30.0, 40.0, 60.0)) {
+                    Weapon w = Weapons.weaponFrom(type, lv, g);
+                    if (w == null) continue;
+                    h.assertTrue(w.skills() == null, type + " " + g + " " + lv + " has no weapon skill");
+                    h.assertTrue(Weapons.weaponInfo(w).stream().noneMatch(l -> l.contains("스킬1") || l.contains(": 스킬")), type + " " + g + " no skill lines");
+                }
+            }
+        }
+        h.succeed();
     }
 
-    // ------------------------------------------------------------ 스킬 피해 (그람 화룡 돌진)
+    // ------------------------------------------------------------ 활 입력 (누르면 바로 평타 — 길게 누르기 없음)
 
     @GameTest(maxTicks = 60)
-    public void gramChargeHitsTwice(GameTestHelper h) {
+    public void bowPressShoots(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
-        Weapon w = transcend("sword");
+        Weapon w = transcend("bow");
         hold(sp, w);
-        Obj k = w.skills().get(0);
-        Husk z = dummy(h, 1.5, 2, 4.5);
-        double z0 = sp.getZ();
-        h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
-        h.assertTrue(sp.getZ() > z0 + 0.9, "dashed forward: " + z0 + " → " + sp.getZ());
-        double b = base(sp, w);
-        double c = w.critMult();
-        h.runAfterDelay(2, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
-                "first hit " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
-        h.runAfterDelay((int) k.num("delay") + 4, () -> {
-            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("afterMult")),
-                    "both hits " + TestDummies.dealt(z) + " vs " + (k.num("mult") + k.num("afterMult")) * b);
-            done(h, sp);
-        });
-    }
-
-    // ------------------------------------------------------------ 세계수의 도끼 (도끼 초월 — 0.12.4, 반고의 도끼 자리 · 배율 합은 같음)
-
-    @GameTest(maxTicks = 80)
-    public void yggSeedThornsThenBloom(GameTestHelper h) {
-        floor(h);
-        ServerPlayer sp = player(h);
-        Weapon w = transcend("axe");
-        hold(sp, w);
-        h.assertTrue(w.title().equals("세계수의 도끼") && w.typeLabel().equals("도끼"), "axe transcend " + w.title() + " " + w.typeLabel());
-        h.assertTrue(Transcend.has("ygg_seed") && Transcend.has("ygg_tree") && !Transcend.has("pangu_return"), "ygg skills registered");
-        Obj k = w.skills().get(0);
-        Husk z = dummy(h, 1.5, 2, 5.5);
-        h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
-        double b = base(sp, w);
-        double c = w.critMult();
-        int fly = (int) k.num("fly");
-        h.runAfterDelay(fly + 3, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
-                "thorns " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
-        h.runAfterDelay(fly + (int) k.num("bind") + 6, () -> {
-            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("afterMult")),
-                    "thorns + bloom " + TestDummies.dealt(z) + " vs " + (k.num("mult") + k.num("afterMult")) * b);
-            done(h, sp);
-        });
-    }
-
-    @GameTest(maxTicks = 120)
-    public void yggTreeRootsThenLeaves(GameTestHelper h) {
-        floor(h);
-        ServerPlayer sp = player(h);
-        Weapon w = transcend("axe");
-        hold(sp, w);
-        Obj k = w.skills().get(1);
         Husk z = dummy(h, 1.5, 2, 6.5);
-        h.assertTrue(Transcend.castSkill(sp, w, 1), "cast");
-        double b = base(sp, w);
-        double c = w.critMult();
-        int delay = (int) k.num("delay");
-        h.runAfterDelay(delay + 3, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
-                "tree " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
-        h.runAfterDelay(delay + (int) (k.num("pulseGap") * k.num("pulses")) + 6, () -> {
-            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("pulseMult"), k.num("pulseMult")),
-                    "tree + leaves " + TestDummies.dealt(z) + " vs " + (k.num("mult") + 2 * k.num("pulseMult")) * b);
+        sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
+        ItemStack bow = sp.getMainHandItem();
+        bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
+        h.assertFalse(sp.isUsingItem(), "no hold (no weapon skill)");
+        double shot = base(sp, w);
+        h.runAfterDelay(20, () -> {
+            h.assertTrue(hitsMatch(TestDummies.dealt(z), shot, w.critMult(), 1), "basic shot " + TestDummies.dealt(z) + " vs " + shot);
             done(h, sp);
         });
-    }
-
-    // ------------------------------------------------------------ 스발린 (방패 초월 — 0.12.4, 아이기스의 방패 자리 · 동작 · 수치는 같음)
-
-    @GameTest(maxTicks = 40)
-    public void svalinnNamesAndSkills(GameTestHelper h) {
-        ServerPlayer sp = player(h);
-        Weapon w = transcend("shield");
-        h.assertTrue(w.title().equals("스발린") && w.typeLabel().equals("방패"), "shield transcend " + w.title() + " " + w.typeLabel());
-        h.assertTrue(Transcend.has("svalinn_charge") && Transcend.has("svalinn_dome") && !Transcend.has("aegis_charge"), "svalinn skills registered");
-        h.assertTrue(w.skills().get(0).str("name").equals("서리 돌진") && w.skills().get(1).str("name").equals("일식"), "svalinn skill names");
-        done(h, sp);
     }
 
     @GameTest(maxTicks = 40)
@@ -278,40 +212,11 @@ public final class RpgSkillTests {
         Status.root(sp, 10, "속박");
         h.assertTrue(Status.isRooted(sp) && sp.getAttributeValue(Attributes.MOVEMENT_SPEED) == 0, "rooted: speed " + sp.getAttributeValue(Attributes.MOVEMENT_SPEED));
         Status.silence(sp, 10);
-        h.assertFalse(Transcend.castSkill(sp, w, 0), "silenced: no skill");
+        h.assertTrue(Status.isSilenced(sp), "silenced");
         h.runAfterDelay(14, () -> {
             h.assertFalse(Status.isRooted(sp), "root ended");
             h.assertTrue(Math.abs(sp.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed) < 1e-9, "speed back");
             h.assertFalse(Status.isSilenced(sp), "silence ended");
-            done(h, sp);
-        });
-    }
-
-    // ------------------------------------------------------------ 활 입력 (짧게 = 평타 · 웅크리고 = 스킬 1)
-
-    @GameTest(maxTicks = 80)
-    public void bowShortPressShootsAndSneakCasts(GameTestHelper h) {
-        floor(h);
-        ServerPlayer sp = player(h);
-        Weapon w = transcend("bow");
-        hold(sp, w);
-        Husk z = dummy(h, 1.5, 2, 6.5);
-        sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
-        ItemStack bow = sp.getMainHandItem();
-        bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
-        h.assertTrue(sp.isUsingItem(), "holding the bow");
-        h.runAfterDelay(3, () -> {
-            sp.releaseUsingItem(); // 짧게 → 평타
-            h.assertFalse(sp.isUsingItem(), "released");
-        });
-        double shot = base(sp, w);
-        h.runAfterDelay(20, () -> {
-            h.assertTrue(hitsMatch(TestDummies.dealt(z), shot, w.critMult(), 1), "basic shot " + TestDummies.dealt(z) + " vs " + shot);
-            // 웅크리고 누르면 스킬 1 (은월 관통) — 재사용 대기 시작
-            sp.setShiftKeyDown(true);
-            bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
-            sp.setShiftKeyDown(false);
-            h.assertTrue(Transcend.cooldownLeft(sp, w.skills().get(0)) > 0, "sneak cast skill 1");
             done(h, sp);
         });
     }

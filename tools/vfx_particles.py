@@ -62,6 +62,11 @@ SHELVED = {"rpg:aegis_hex", "rpg:aegis_shield", "rpg:aegis_stone", "rpg:rfx_bomb
            "rpg:rfx_jpstreak", "rpg:rfx_jptrace", "rpg:rfx_jreaper", "rpg:rfx_jring", "rpg:rfx_jshatter", "rpg:rfx_jslash", "rpg:rfx_jsmash", "rpg:rfx_jsmoke",
            "rpg:rfx_jsoul", "rpg:rfx_jspear", "rpg:rfx_jspeed", "rpg:rfx_jspin", "rpg:rfx_jstab", "rpg:rfx_jstigma", "rpg:rfx_jstun", "rpg:rfx_jtarget",
            "rpg:rfx_jthunder", "rpg:rfx_jtwister", "rpg:rfx_jvolt", "rpg:rfx_jwhirl", "rpg:rfx_jwind", "rpg:rfx_jwing", "rpg:tyr_warrior"}
+# 2026-11-16 무기 스킬을 지우며 치움 (사용자 "무기 스킬도 빼고 대신 무기 디자인을 늘리건데"): 무기 스킬 (궁니르 · 스발린 · 아르테미스 · 솔라스 · 오딘 · 크로노스 ·
+# 묠니르 · 그람) 만 쓰던 파티클 — 원본은 assets/mmorpg/textures/particle/addon 에 그대로
+SHELVED |= {"rpg:gungnir_spear_part", "rpg:gungnir_spear", "rpg:gungnir_spin", "rpg:svalinn_shield", "rpg:svalinn_hex", "rpg:svalinn_ice", "rpg:artemis_bow",
+            "rpg:artemis_arrow", "rpg:artemis_crescent", "rpg:artemis_moon", "rpg:rfx_relicspin", "rpg:solas_sword", "rpg:solas_sword_arc", "rpg:odin_mark",
+            "rpg:odin_eye", "rpg:fire_wing"}
 # 참격 · 검기 무리 (화면에 크게 · 자주 — 룬 그림과 같은 128)
 HI_J = {"rpg:rfx_jslash", "rpg:rfx_jslash2", "rpg:rfx_jslash_rp", "rpg:rfx_jslash_sb", "rpg:rfx_jslash_sw", "rpg:rfx_jslash_wa", "rpg:rfx_jwave", "rpg:rfx_jspin",
         "rpg:rfx_jspin2", "rpg:rfx_jxmark", "rpg:rfx_jcross", "rpg:rfx_jcross2", "rpg:rfx_jstab", "rpg:rfx_jstab2", "rpg:rfx_jsmash", "rpg:rfx_jsmash2", "rpg:rfx_jcuts",
