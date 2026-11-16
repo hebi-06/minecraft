@@ -4,7 +4,6 @@ import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.V;
 import mmorpg.fabric.vfx.Vfx;
-import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -16,8 +15,10 @@ import net.minecraft.world.phys.Vec3;
  * 위르드 온라인 화면 (사용자 스크린샷 5장) 의 세 겹을 스타 볼텍스에 겹침 — 판정 · 피해 · 끌어당김 · 처형은 그대로 (ArcmageSkills.vortex).
  * <ul>
  *   <li>도트 2D: 칠한 연출 그대로 (소용돌이 · 고리 · 별빛 · 섬광 — 그림판은 tools/jobvfx/pixel.py 의 도트)</li>
- *   <li>바닐라 파티클: 크게 키운 색 먼지 덩이 (파랑 · 남보라 — 위르드의 파란 + 덩이) · 회색 연기 뭉치 (poof · cloud) · 흰 반짝임 (end_rod · firework) ·
- *       빨려 드는 보랏빛 (portal · enchant) · 맞음 (crit · enchanted_hit) · 무너짐 (sonic_boom · explosion · 마법 맞음 반짝임)</li>
+ *   <li>바닐라 파티클 (2026-11-16 5판 규칙 — claude/wyrd-style.md "바닐라 파티클을 고를 때"): 스스로 빛나는 것만 — 흰 빛 점 (wax_off) · 번쩍 불똥
+ *       (electric_spark) · 흰 반짝임 (end_rod · firework) · 빨려 드는 보랏빛 (portal · enchant · reverse_portal) · 무너짐 (sonic_boom). 1판의 크게 키운 색 먼지
+ *       덩이 (크기 1.6 넘게 — 얼룩진 네모 · 해질녘에 검은 남색) · 회색 연기 뭉치 (poof · cloud) · 폭발 연기 (explosion — 칠한 그림을 회색 원판으로 덮음) ·
+ *       마법 맞음 (enchanted_hit — 둘레 빛을 받음) 은 뺌. 1인칭 눈 바로 앞에는 보내지 않음 (WyrdKit.p — NEAR_EYE)</li>
  *   <li>떠도는 별 · 결정 조각: 도트 2D 그림 (금빛 별 다섯 · 구르는 결정 조각 여섯 — 돌며 안쪽으로 감김, 무너질 때 별은 사라지고 조각은 밖으로 튕김).
  *       2026-11-16 직접 만든 3D 소품 (wy_star · wy_shard · wy_cube) 은 뺌 — 사용자 "저거 3d 별도 빼라 어줍잔게 넣으니깐 진짜 없어보인다 차라리 그림으로 넣어"</li>
  * </ul>
@@ -29,39 +30,27 @@ final class WyrdMix {
     /** 시범 켬 (끄면 도트 2D 만) */
     static boolean VORTEX = true;
 
-    static final int BLUE = 0x3F57D8, VIOLET = 0x6A4CFF, LIGHT = 0x9DB4FF, PALE = 0xD6E0FF;
     /** 도트 2D 그림판 (비전 묶음): 별 (칸 2 ~ 5 = 금빛 별 반짝임) · 구르는 결정 조각 (여덟 칸) */
     static final String STAR = "el_arcane_starnode";
     static final String SHARD = "el_arcane_shard";
 
+    /** 2026-11-16 WyrdKit.p 를 지나감 (1인칭 눈 바로 앞에는 보내지 않음) */
     static void p(ServerLevel l, ParticleOptions o, Vec3 at, int count, double dx, double dy, double dz, double speed) {
-        l.sendParticles(o, true, true, at.x, at.y, at.z, count, dx, dy, dz, speed);
+        WyrdKit.p(l, null, o, at, count, dx, dy, dz, speed);
     }
 
     /** 한 알을 속도 vel 로 (count 0 — portal · enchant 는 at + vel 에서 at 으로 날아 듦) */
     static void pv(ServerLevel l, ParticleOptions o, Vec3 at, Vec3 vel) {
-        l.sendParticles(o, true, true, at.x, at.y, at.z, 0, vel.x, vel.y, vel.z, 1.0);
-    }
-
-    static DustParticleOptions dust(int rgb, double scale) {
-        return new DustParticleOptions(rgb, (float) Math.max(0.1, Math.min(4.0, scale)));
+        WyrdKit.pv(l, null, o, at, vel);
     }
 
     static Vec3 ring(Vec3 c, double r, double ang, double h) {
         return new Vec3(c.x + Math.cos(ang) * r, c.y + h, c.z + Math.sin(ang) * r);
     }
 
-    static int pick(int i) {
-        return switch (Math.floorMod(i, 3)) {
-            case 0 -> BLUE;
-            case 1 -> VIOLET;
-            default -> LIGHT;
-        };
-    }
-
     // ------------------------------------------------------------ 쓸 때
 
-    /** 완드 끝 → 가운데: 흰 반짝임 줄 + 파란 먼지 · 가운데 불꽃놀이 반짝임 */
+    /** 완드 끝 → 가운데: 흰 반짝임 줄 + 흰 빛 점 · 번쩍 불똥 (2026-11-16 파란 먼지 대신) · 가운데 불꽃놀이 반짝임 */
     static void cast(ServerLevel l, Vec3 tip, Vec3 c) {
         Vec3 to = V.up(c, 0.5);
         Vec3 d = V.sub(to, tip);
@@ -69,7 +58,7 @@ final class WyrdMix {
         for (int i = 0; i <= n; i++) {
             Vec3 q = V.add(tip, d, (double) i / n);
             p(l, ParticleTypes.END_ROD, q, 1, 0.03, 0.03, 0.03, 0.01);
-            if (i % 2 == 0) p(l, dust(i % 4 == 0 ? LIGHT : BLUE, 1.4), q, 1, 0.05, 0.05, 0.05, 0);
+            if (i % 2 == 0) p(l, i % 4 == 0 ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.WAX_OFF, q, 1, 0.05, 0.05, 0.05, 0.01);
         }
         p(l, ParticleTypes.FIREWORK, to, 14, 0.2, 0.2, 0.2, 0.18);
         p(l, ParticleTypes.END_ROD, to, 8, 0.3, 0.3, 0.3, 0.08);
@@ -84,11 +73,13 @@ final class WyrdMix {
      */
     static void body(ServerLevel l, Vec3 c, double R, int life, int squeeze, double spin0, double rate) {
         double s0 = Math.toRadians(spin0);
+        // 판정 둘레: 흰 빛 점 고리 (비전 묶음 — WyrdKit 의 모양 점) · 고리에서 솟는 글자 (enchant). 1판의 크기 3 먼지 덩이 · 연기 뭉치 대신
+        WyrdKit.ring(l, PhantomFx.ARCANE, V.up(c, 0.1), R, false, life, null);
         for (int i = 0; i < 16; i++) {
             double a = s0 + i * Math.PI * 2 / 16;
             Vec3 q = ring(c, R, a, 0.2);
-            p(l, dust(i % 2 == 0 ? BLUE : VIOLET, 3.0), q, 1, 0.05, 0.02, 0.05, 0);
-            if (i % 2 == 0) pv(l, ParticleTypes.POOF, q, new Vec3(Math.cos(a) * 0.08, 0.02, Math.sin(a) * 0.08));
+            p(l, i % 2 == 0 ? ParticleTypes.WAX_OFF : ParticleTypes.ELECTRIC_SPARK, q, 1, 0.05, 0.02, 0.05, 0.01);
+            if (i % 4 == 0) pv(l, ParticleTypes.ENCHANT, V.up(q, 0.1), new Vec3(Math.cos(a) * 0.4, 1.2, Math.sin(a) * 0.4));
         }
         Vfx.Fx fx = RuneProps.fx(l, c, life + 16);
         int ns = 5;
@@ -116,7 +107,8 @@ final class WyrdMix {
             for (int arm = 0; arm < 2; arm++) {
                 double f = (age / 2) % 2 == 0 ? 0.85 : 0.55;
                 double a = spin + arm * Math.PI + (1 - f) * Math.toRadians(140) + (Kit.rand() - 0.5) * 0.3;
-                p(l, dust(pick(age / 2 + arm), 1.6 + Kit.rand() * 0.9), ring(c, R * f, a, 0.25), 1, 0.08, 0.03, 0.08, 0);
+                // 2026-11-16 큰 먼지 덩이 대신 흰 빛 점 · 번쩍 불똥 (스스로 빛남 — 해질녘에도 같은 빛)
+                p(l, (age / 2 + arm) % 3 == 0 ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.WAX_OFF, ring(c, R * f, a, 0.25), 1, 0.08, 0.03, 0.08, 0.01);
             }
             // 빨려 드는 보랏빛 (portal — 바깥 → 가운데) · 글자 (enchant — 가슴 높이에서 가운데로)
             for (int i = 0; i < 3; i++) {
@@ -174,12 +166,13 @@ final class WyrdMix {
 
     // ------------------------------------------------------------ 별빛 (맥박 · 맞음)
 
-    /** 맥박: 가운데에서 땅을 따라 밖으로 달려 나가는 연기 뭉치 (poof · cloud 번갈아) */
+    /** 맥박: 가운데에서 땅을 따라 밖으로 달려 나가는 흰 반짝임 (불꽃놀이 — 2026-11-16 회색 연기 뭉치 poof · cloud 대신) · 번쩍 불똥 */
     static void beat(ServerLevel l, Vec3 c, double R) {
         for (int i = 0; i < 12; i++) {
             double a = i * Math.PI * 2 / 12 + Kit.rand() * 0.2;
             Vec3 q = ring(c, R * 0.3, a, 0.15);
-            pv(l, i % 2 == 0 ? ParticleTypes.POOF : ParticleTypes.CLOUD, q, new Vec3(Math.cos(a) * 0.32, 0.02, Math.sin(a) * 0.32));
+            pv(l, ParticleTypes.FIREWORK, q, new Vec3(Math.cos(a) * 0.22, 0.02, Math.sin(a) * 0.22));
+            if (i % 3 == 0) p(l, ParticleTypes.ELECTRIC_SPARK, q, 2, 0.1, 0.05, 0.1, 0.05);
         }
     }
 
@@ -188,24 +181,23 @@ final class WyrdMix {
     // ------------------------------------------------------------ 무너짐 · 처형
 
     /**
-     * 무너짐: 소닉 붐 고리 · 폭발 연기 · 불꽃놀이 반짝임 · 땅을 따라 퍼지는 연기 뭉치 · 큰 먼지 덩이 · 마법 맞음 반짝임 (2026-11-16 자수정 블록 부스러기는 뺌 — 블록 그림
-     * 파티클 = 바닐라 그림, 사용자 "바닐라 아이템은 다 빼버려")
+     * 무너짐: 소닉 붐 고리 · 불꽃놀이 반짝임 · 땅을 따라 퍼지는 흰 반짝임 고리 · 흰 빛 점 · 번쩍 불똥 (2026-11-16 5판 규칙: 폭발 연기 · 회색 연기 뭉치 · 큰 먼지 덩이 ·
+     * 마법 맞음 반짝임 뺌 — 스스로 빛나는 것만. 자수정 블록 부스러기는 그 전에 뺌 — 블록 그림 파티클 = 바닐라 그림, 사용자 "바닐라 아이템은 다 빼버려")
      */
     static void collapse(ServerLevel l, Vec3 c, double R) {
         Vec3 m = V.up(c, 1.0);
         p(l, ParticleTypes.SONIC_BOOM, m, 1, 0, 0, 0, 0);
-        p(l, ParticleTypes.EXPLOSION, m, 4, R * 0.22, 0.35, R * 0.22, 0);
         p(l, ParticleTypes.FIREWORK, m, 40, 0.3, 0.3, 0.3, 0.45);
         p(l, ParticleTypes.END_ROD, m, 24, 0.4, 0.4, 0.4, 0.3);
         for (int i = 0; i < 20; i++) {
             double a = i * Math.PI * 2 / 20;
-            pv(l, i % 2 == 0 ? ParticleTypes.POOF : ParticleTypes.CLOUD, ring(c, 0.6, a, 0.2), new Vec3(Math.cos(a) * 0.5, 0.04, Math.sin(a) * 0.5));
+            pv(l, ParticleTypes.FIREWORK, ring(c, 0.6, a, 0.2), new Vec3(Math.cos(a) * 0.36, 0.04, Math.sin(a) * 0.36));
         }
         for (int i = 0; i < 14; i++) {
             double a = Kit.rand() * Math.PI * 2;
-            p(l, dust(i % 3 == 0 ? PALE : pick(i), 2.5 + Kit.rand()), ring(c, R * (0.3 + 0.5 * Kit.rand()), a, 0.3 + Kit.rand() * 1.2), 1, 0, 0, 0, 0);
+            p(l, i % 3 == 0 ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.WAX_OFF, ring(c, R * (0.3 + 0.5 * Kit.rand()), a, 0.3 + Kit.rand() * 1.2), 1, 0, 0, 0, 0.01);
         }
-        p(l, ParticleTypes.ENCHANTED_HIT, m, 40, 0.6, 0.4, 0.6, 0.9);
+        p(l, ParticleTypes.ELECTRIC_SPARK, m, 30, 0.6, 0.4, 0.6, 0.4);
     }
 
     /** 처형 (빨려 들어감): 적 → 가운데 보랏빛 줄기 (portal) · 적 둘레 솟는 reverse_portal */

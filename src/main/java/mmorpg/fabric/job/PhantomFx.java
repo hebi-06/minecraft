@@ -230,7 +230,27 @@ final class PhantomFx {
 
     /** 모으는 빛 (되풀이 — 스킬이 to · remove 로 다룸): fx 안 · 가운데 at · 크기 size */
     static Vfx.Sprite charge(Vfx.Fx fx, Lib L, Vec3 at, double size) {
-        return single(fx, L.n("charge"), at, size, 0, 1, true);
+        return charge(fx, L, at, size, true);
+    }
+
+    /**
+     * 같은 것 — wyrd 면 2026-11-16 위르드식 바닐라 겹 (WyrdKit.chargeTick: 2틱마다 둘레에서 빨려 드는 묶음 알갱이 · 줄어드는 빛 점 고리) 이 그림을 따라감 (스킬이 그림을
+     * 옮기고 키움 · 지우면 그침 — 효과 수명까지). 팬텀 아처 줄기는 이 그림을 직접 부름, JobFx.chargeLib 은 제 겹이 있어 false
+     */
+    static Vfx.Sprite charge(Vfx.Fx fx, Lib L, Vec3 at, double size, boolean wyrd) {
+        Vfx.Sprite sp = single(fx, L.n("charge"), at, size, 0, 1, true);
+        if (wyrd && WyrdKit.ON) {
+            int a0 = fx.age();
+            int end = fx.life() - 1;
+            if (end > a0 + 1) {
+                fx.each(a0 + 1, end, 2, age -> {
+                    if (sp.gone()) return;
+                    double q = Math.min(1, (age - a0) / (double) Math.max(1, end - a0));
+                    WyrdKit.chargeTick(fx.level(), L, sp.pos(), q, Math.max(0.4, sp.sizeNow() * 0.5), null);
+                });
+            }
+        }
+        return sp;
     }
 
     // ------------------------------------------------------------ 날아가는 작은 그림

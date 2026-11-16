@@ -251,6 +251,11 @@ public final class Vfx {
             return age;
         }
 
+        /** 2026-11-16 수명 (틱 — 이 나이에 끝남) */
+        public int life() {
+            return life;
+        }
+
         /** 더 오래 (지금 남은 것보다 길면) */
         public Fx keep(int ticks) {
             life = Math.max(life, age + ticks);
@@ -802,6 +807,19 @@ public final class Vfx {
             e.setBillboardMode(Display.BillboardConstraints.VERTICAL);
             transform();
             return this;
+        }
+
+        /** 2026-11-16 지금 자리 · 크기 (칸) · 지웠는지 — 바닐라 파티클 겹이 그림을 따라감 (PhantomFx.charge) */
+        public Vec3 pos() {
+            return pos;
+        }
+
+        public double sizeNow() {
+            return size;
+        }
+
+        public boolean gone() {
+            return removed;
         }
 
         /** 다음 모습 (ticks 틱 보간): 자리 · 크기 (칸 — 0 이하면 그대로) */

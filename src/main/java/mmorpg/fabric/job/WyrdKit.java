@@ -311,8 +311,10 @@ final class WyrdKit {
     // ------------------------------------------------------------ 고리 · 베기
 
     /**
-     * 한 바퀴 베기 · 범위 고리 (JobFx.ring): 가운데 c · 반지름 r · reverse = 반시계 · hold 틱. 짧으면 (12틱 이하) 네 틱에 걸쳐 날을 따라 도는 먼지 (가운데 · 밝은 빛) · 날 끝에서
-     * 밖으로 (도는 쪽으로) 튀는 불티 · 반짝임, 오래 머물면 6틱마다 땅 고리 먼지 (가운데 · 밝은 빛 번갈아 — 반 칸씩 엇갈려 도는 듯) · 고유 알갱이
+     * 한 바퀴 베기 · 범위 고리 (JobFx.ring): 가운데 c · 반지름 r · reverse = 반시계 · hold 틱. 짧으면 (12틱 이하) 네 틱에 걸쳐 날을 따라 도는 빛 점 · 번쩍 불똥 (반반) ·
+     * 날 끝에서 밖으로 (도는 쪽으로) 튀는 불티 · 끝에 반짝임 한 번, 오래 머물면 8틱마다 땅 고리 점 (빛 점 · 번쩍 불똥 번갈아 — 반 칸씩 엇갈려 도는 듯) · 고유 알갱이.
+     * 2026-11-16 밀도 반 (영상 CI 43865007580 — 문라이트 서클 · 미러 블레이드: 고리마다 빛 점 56 · 불꽃놀이 18 · end_rod 8 이 1 ~ 3초 머물러 땅에 흰 반짝임이 깔렸음):
+     * 빛 점의 반은 2 ~ 3틱에 꺼지는 번쩍 불똥 (electric_spark), 불티는 넷에 하나, 반짝임은 끝에 한 번
      */
     static void ring(ServerLevel l, PhantomFx.Lib L, Vec3 c, double r, boolean reverse, int hold, Predicate<ServerPlayer> who) {
         Pal P = pal(L);
@@ -320,38 +322,44 @@ final class WyrdKit {
         double a0 = Kit.rand() * Math.PI * 2;
         double dir = reverse ? -1 : 1;
         if (hold <= 12) {
-            int per = Math.max(5, Math.min(14, (int) Math.round(r * 3.0)));
+            int per = Math.max(4, Math.min(9, (int) Math.round(r * 1.8)));
             for (int t = 0; t < 4; t++) {
                 int tt = t;
                 RuneKit.later(t, () -> {
                     for (int i = 0; i < per; i++) {
                         double a = a0 + dir * (tt + (i + 0.5) / per) * Math.PI / 2;
                         Vec3 q = new Vec3(c.x + Math.cos(a) * r, c.y + 0.12, c.z + Math.sin(a) * r);
-                        boolean hi = i % 3 == 0;
-                        dot(l, who, P, q, hi, hi ? 0.8 : 1.0);
+                        if (i % 2 == 0) {
+                            boolean hi = i % 4 == 0;
+                            dot(l, who, P, q, hi, hi ? 0.8 : 1.0);
+                        } else p(l, who, ZAP.o(), q, 1, 0.04, 0.03, 0.04, 0.02);
                         if (i == per - 1) p(l, who, ZAP.o(), q, 2, 0.08, 0.05, 0.08, 0.05);
-                        if (i % 3 == 1 && P.spark() != null) {
+                        if (i % 4 == 1 && P.spark() != null) {
                             Vec3 out = new Vec3(Math.cos(a), 0.2, Math.sin(a));
                             Vec3 tan = new Vec3(-Math.sin(a) * dir, 0, Math.cos(a) * dir);
                             pv(l, who, P.spark().o(), q, V.scale(V.unit(V.add(out, tan)), P.spark().v(0.9)));
                         }
                     }
-                    double e = a0 + dir * (tt + 1) * Math.PI / 2;
-                    spray(l, who, P.glint(), new Vec3(c.x + Math.cos(e) * r, c.y + 0.2, c.z + Math.sin(e) * r), 2, 0.1, 0.4);
+                    if (tt == 3) {
+                        double e = a0 + dir * 4 * Math.PI / 2;
+                        spray(l, who, P.glint(), new Vec3(c.x + Math.cos(e) * r, c.y + 0.2, c.z + Math.sin(e) * r), 2, 0.1, 0.4);
+                    }
                 });
             }
             return;
         }
-        int passes = Math.max(1, Math.min(10, hold / 6 + 1));
-        int per = Math.max(8, Math.min(30, (int) Math.round(r * 4.0)));
+        int passes = Math.max(1, Math.min(7, hold / 8 + 1));
+        int per = Math.max(6, Math.min(20, (int) Math.round(r * 2.6)));
         for (int k = 0; k < passes; k++) {
             int kk = k;
-            RuneKit.later(k * 6, () -> {
+            RuneKit.later(k * 8, () -> {
                 for (int i = 0; i < per; i++) {
                     double a = a0 + dir * ((i + (kk % 2) * 0.5) * Math.PI * 2 / per + kk * 0.08);
-                    dot(l, who, P, new Vec3(c.x + Math.cos(a) * r, c.y + 0.1, c.z + Math.sin(a) * r), i % 2 == 1, 1.1);
+                    Vec3 q = new Vec3(c.x + Math.cos(a) * r, c.y + 0.1, c.z + Math.sin(a) * r);
+                    if ((i + kk) % 2 == 0) dot(l, who, P, q, i % 4 == 1, 1.1);
+                    else p(l, who, ZAP.o(), q, 1, 0.04, 0.03, 0.04, 0.02);
                 }
-                spray(l, who, P.mote(), V.up(c, 0.25), 2, r * 0.5, 0.15, r * 0.5, 0.6);
+                if (kk % 2 == 0) spray(l, who, P.mote(), V.up(c, 0.25), 1, r * 0.5, 0.15, r * 0.5, 0.6);
             });
         }
     }
@@ -411,6 +419,52 @@ final class WyrdKit {
                 }
             });
         }
+    }
+
+    // ------------------------------------------------------------ 2026-11-16 날아가는 것의 꼬리 · 광선 (사용자 위르드식 — 스킬마다 다듬기)
+
+    /**
+     * 날아가는 것의 꼬리 (JobFx bolt · arrow · wave · bigWave): from → to 를 ticks 틱 동안 머리를 따라 2틱마다 빛 점 (남는 꼬리 — 피 묶음은 작은 먼지) · 번쩍 불똥 ·
+     * 4틱마다 뒤로 튀는 불티. 40틱 넘게는 줄임 (점이 너무 많아지지 않게)
+     */
+    static void trail(ServerLevel l, PhantomFx.Lib L, Vec3 from, Vec3 to, int ticks, double size, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || !go("trail", 6)) return;
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.6) return;
+        Vec3 u = V.scale(d, 1 / len);
+        int T = Math.max(2, Math.min(40, ticks));
+        double sc = Math.max(0.7, Math.min(1.2, 0.7 + size * 0.25));
+        for (int t = 0; t <= T; t += 2) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                Vec3 h = V.add(from, d, Math.min(1, tt / (double) T));
+                dot(l, who, P, h, tt % 4 == 0, sc);
+                p(l, who, ZAP.o(), h, 1, 0.05, 0.05, 0.05, 0.02);
+                if (tt % 4 == 2 && P.spark() != null) {
+                    Vec3 j = new Vec3((Kit.rand() - 0.5) * 0.7, (Kit.rand() - 0.3) * 0.7, (Kit.rand() - 0.5) * 0.7);
+                    pv(l, who, P.spark().o(), h, V.scale(V.unit(V.add(V.scale(u, -1), j)), P.spark().v(0.6)));
+                }
+            });
+        }
+    }
+
+    /** 광선 (JobFx.beam): from → to 를 따라 0.7칸마다 빛 점 · 1.4칸마다 번쩍 불똥 · 끝에 반짝임 (한 번에) */
+    static void beam(ServerLevel l, PhantomFx.Lib L, Vec3 from, Vec3 to, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || !go("beam", 4)) return;
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.6) return;
+        int n = Math.max(2, Math.min(40, (int) Math.round(len / 0.7)));
+        for (int i = 0; i <= n; i++) {
+            Vec3 q = V.add(from, d, i / (double) n);
+            dot(l, who, P, q, i % 3 == 0, 0.9);
+            if (i % 2 == 1) p(l, who, ZAP.o(), q, 1, 0.06, 0.06, 0.06, 0.03);
+        }
+        spray(l, who, P.glint(), to, 3, 0.15, 0.6);
+        spray(l, who, P.spark(), to, 4, 0.1, 0.9);
     }
 
     // ------------------------------------------------------------ 모으기 · 반짝임 · 문

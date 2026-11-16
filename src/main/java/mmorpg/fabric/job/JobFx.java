@@ -336,6 +336,7 @@ final class JobFx {
             // 2026-11-15 원소 공용 묶음: 날아가는 칼빛 초승달 — 1인칭 (주인) 은 카메라를 봄 (눈앞 베기와 같은 기울기 뜻: 검기 기울기 = 베기 + 180), 3인칭 · 다른 사람은
             // 앞을 보고 선 판이 날아감 (사용자 "참격이 앞을 바라봐야 하는데 위를 보는데?")
             PhantomFx.wave(level, L, at, d, speed, o.num("size", 1) * 0.9, o.num("spin", 0) + 180, life, PhantomFx.only1p(sp), o.num("alpha", 1));
+            WyrdKit.trail(level, L, at, V.add(at, d, speed * life), (int) Math.round(life * 20), o.num("size", 1), PhantomFx.hide1p(sp)); // 2026-11-16 바닐라 꼬리
             // 3인칭 · 다른 사람: 날아가는 반달 (2026-11-16 — 불룩한 날 = 날아가는 쪽 · 눈앞 베기 반달과 같은 방향 뜻) — 예전 크기 size × CARD × 1.1 (판 모델 가로 2칸)
             double w = o.num("size", 1) * CARD * 1.1 * 2 * PhantomFx.SLASH_FILL;
             if (Math.abs(d.y) > 0.7) PhantomFx.cardSwing(level, L, sp, at, d, speed, w, o.num("spin", 0), life, PhantomFx.hide1p(sp), o.num("alpha", 1));
@@ -682,7 +683,9 @@ final class JobFx {
 
     /** 마탄 (rfx_jbolt) 이 from → to: 닿는 틱 */
     static int bolt(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
-        return bolt(level, from, to, outer(j), inner(j), speed, size, o);
+        int t = bolt(level, from, to, outer(j), inner(j), speed, size, o);
+        WyrdKit.trail(level, PhantomFx.lib(j), from, to, t, size, PhantomFx.who(o)); // 2026-11-16 위르드식 바닐라 꼬리
+        return t;
     }
 
     /**
@@ -695,7 +698,9 @@ final class JobFx {
 
     /** 빛의 화살 (0.50.0 v2 바람 화살 rfx_jarrow2 — 잎 촉 · 살대 · 깃 셋 · 살대를 감아 도는 바람 띠 둘) 이 from → to: 닿는 틱 */
     static int arrow(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
-        return fly(level, "jarrow2", ARROW2, from, to, speed, size, 0.97, o, outer(j), inner(j));
+        int t = fly(level, "jarrow2", ARROW2, from, to, speed, size, 0.97, o, outer(j), inner(j));
+        WyrdKit.trail(level, PhantomFx.lib(j), from, to, t, size, PhantomFx.who(o)); // 2026-11-16 위르드식 바닐라 꼬리
+        return t;
     }
 
     /** 같은 것 — 색을 정함 (2026-11-14 궁수 계열 — 3D 화살에 두르는 2D 빛) */
@@ -727,6 +732,7 @@ final class JobFx {
      */
     static void beam(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double seg, double life, Opt o) {
         beam(level, from, to, outer(j), inner(j), seg, life, o);
+        WyrdKit.beam(level, PhantomFx.lib(j), from, to, PhantomFx.who(o)); // 2026-11-16 위르드식 바닐라 겹
     }
 
     /** 같은 것 — 색을 정함 (0.51.0 프리즘 레이의 다섯 갈래) */
@@ -1343,6 +1349,7 @@ final class JobFx {
             // 검기 기울기 = 베기 기울기 + 180 (slashWave) → 반달은 베기 뜻 (tilt + 180) · 반지름 = 반폭 × 0.9. 거의 위 · 아래로 날면 예전 그대로 · camFace (사용자가
             // 따로 정한 모양 — 블러드 나이트 궁극기의 위로 불룩한 땅 검기 "참격이 위를 보게") 도 예전 그대로
             boolean steep = Math.abs(d.y) > 0.7 || o.truthy("camFace");
+            if (speed > 0) WyrdKit.trail(level, L, at, V.add(at, d, speed * life), (int) Math.round(life * 20), size, sp != null ? PhantomFx.hide1p(sp) : PhantomFx.who(o));
             if (sp != null) {
                 if (steep) PhantomFx.wave(level, L, at, d, speed, size, tilt, life, PhantomFx.hide1p(sp), a);
                 else waveMoon(level, L, sp, at, d, speed, size, tilt, life, PhantomFx.hide1p(sp), a);
@@ -1486,10 +1493,10 @@ final class JobFx {
         boolean nearEye = p0.distanceTo(sp.getEyePosition()) < size * 2.6 * 0.4;
         java.util.function.Predicate<ServerPlayer> who3 = nearEye ? PhantomFx.hide1p(sp) : null;
         mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(sp.level(), p0, ticks + 6, who3);
-        mmorpg.fabric.vfx.Vfx.Sprite s = PhantomFx.charge(fx, L, p0, size * 0.6);
+        mmorpg.fabric.vfx.Vfx.Sprite s = PhantomFx.charge(fx, L, p0, size * 0.6, false); // 바닐라 겹은 아래 chargeTick
         mmorpg.fabric.vfx.Vfx.Fx fx1 = nearEye ? mmorpg.fabric.vfx.Vfx.at(sp.level(), eyeCharge(sp, rel), ticks + 6, PhantomFx.only1p(sp)) : null;
         if (fx1 != null) {
-            mmorpg.fabric.vfx.Vfx.Sprite s1 = PhantomFx.charge(fx1, L, eyeCharge(sp, rel), size * 0.3);
+            mmorpg.fabric.vfx.Vfx.Sprite s1 = PhantomFx.charge(fx1, L, eyeCharge(sp, rel), size * 0.3, false);
             // 몸을 따라 틱마다 (뛰어오르는 동안 2틱 간격이면 눈앞 빛이 화면 아래로 처졌음)
             fx1.each(1, ticks, 1, age -> {
                 if (!RuneKit.sameLife(sp, life)) {
