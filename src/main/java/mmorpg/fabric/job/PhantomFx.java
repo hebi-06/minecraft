@@ -1194,6 +1194,46 @@ final class PhantomFx {
     }
 
     /**
+     * 2026-11-17 세운 고리 (예전 rfx_sigil 의 면이 위가 아닌 문양 — 심연 룬의 눈 · 손바닥 문양, 보스 문양): 가운데 c · 반지름 r · 면 normal 쪽 (앞뒤 두 면 — 뒷면은 거울 ·
+     * 조각 자리도 거울이라 뒤에서도 같은 그림). 커지기 grow 틱 · 머묾 hold 틱
+     */
+    static Vfx.Fx ringFacing(ServerLevel level, Lib L, Vec3 c, double r, Vec3 normal, int grow, int hold, Predicate<ServerPlayer> who, double alpha) {
+        int G = Math.max(1, grow), Hh = Math.max(1, hold);
+        Vfx.Fx fx = Vfx.at(level, c, G + Hh + 8, who);
+        double size = r * 2.0 / 0.9;
+        double t = size / 2;
+        Vec3 ez = V.unit(normal);
+        Vec3 ex = V.cross(V.UP, ez);
+        if (V.len(ex) < 1e-4) ex = new Vec3(1, 0, 0);
+        ex = V.unit(ex);
+        Vec3 ey = V.unit(V.cross(ez, ex));
+        Quaternionf q = Vfx.basis(ex, ey, ez).rotateZ((float) Math.toRadians(Kit.rand() * 360));
+        String base = L.n("ring");
+        int frames = Vfx.sheet(base + "_00").frames();
+        for (int s = 0; s < 2; s++) {
+            for (int rr = 0; rr < 2; rr++) {
+                for (int cc = 0; cc < 2; cc++) {
+                    Vfx.Sprite sp = fx.sprite(base + "_" + rr + cc, c);
+                    sp.fixed(q);
+                    if (s == 1) sp.mirror();
+                    double ox = (cc - 0.5) * t * (s == 1 ? -1 : 1);
+                    double oy = (0.5 - rr) * t;
+                    sp.size(t * 0.15);
+                    sp.offset(ox * 0.15, oy * 0.15);
+                    if (alpha < 0.999) sp.alpha(alpha);
+                    sp.play(0, 0, frames, 3, true);
+                    fx.on(1, () -> {
+                        sp.offset(ox, oy);
+                        sp.to(null, t, G);
+                    });
+                    sp.fade(G + Hh, 4);
+                }
+            }
+        }
+        return fx;
+    }
+
+    /**
      * 일섬 · 걸린 칼자국 (JobFx.line · 블레이드 에코 — cut: 0 ~ 1 그어짐 → 2 ~ 4 머묾 (되풀이) → 5 ~ 7 터져 벌어짐): from → to 를 품은 한 판이 줄을 축으로 보는 사람의
      * 눈 (가장 가까운 사람 — 영상이면 영상 카메라, PBridge.eyeOf) 쪽을 봄 (앞뒤 두 면) — 예전 rfx_jline2 · rfx_jecho (가는 쪽으로 누워 눈 쪽을 봄) 와 같음. 2026-11-15 사용자
      * "위를 보고 있고 … 옆을 보고 있고" — 전에는 줄을 축으로 눕힌 판 · 세운 판 둘이라 영상에서 위 · 옆을 보는 판으로 보였음. hold 틱 머문 뒤 터짐 (burst false 면 옅어짐)
@@ -1544,6 +1584,17 @@ final class PhantomFx {
      */
     static boolean oldFx(ServerLevel level, String id, Vec3 at, Opt o) {
         boolean group = id.equals("sparks");
+        if (id.equals("arc")) {
+            // 2026-11-17 SkillFx.arc (룬이 바로 부른 휘두른 자국 판 — 예전 slash_thin · heavy · arc 카드): runeFx 의 반달과 같음. 주인 1인칭 카드 (view 2) 는 3인칭 판의
+            // 다리가 1인칭 초승달도 그리므로 그리지 않고 됨으로 셈
+            if (!(o.get("color") instanceof double[] ag)) return false;
+            if (o.num("view", 0) == 2) {
+                Lib A = jobLib(ag);
+                return A != null && Vfx.hasSheet(A.n("slash_00")) && Vfx.hasSheet(A.n("slashm_00")) && V.len(o.vec("dir", V.UP)) > 1e-6
+                        && Math.abs(V.unit(o.vec("dir", V.UP)).y) <= 0.9;
+            }
+            return runeFx(level, "arc", at, o, ag);
+        }
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust")) return false;
@@ -1795,8 +1846,17 @@ final class PhantomFx {
                 if (h > 0.6) WyrdKit.beam(level, L, V.up(at, h), at, who);
             }
             case "nova" -> {
-                if (!flat || !Vfx.hasSheet(L.n("shock_00"))) return false;
-                shock(level, L, ground(level, at), Math.max(0.6, 2 * size * (1 + grow)), life >= 0.5 ? 2 : 1, who);
+                if (flat) {
+                    if (!Vfx.hasSheet(L.n("shock_00"))) return false;
+                    shock(level, L, ground(level, at), Math.max(0.6, 2 * size * (1 + grow)), life >= 0.5 ? 2 : 1, who);
+                } else {
+                    // 2026-11-17 세운 충격 고리 (면이 dir — 정한 쪽으로 퍼짐): 칠한 작은 충격파 (shock_s — bash_ring 다리와 같은 틀, 앞뒤 두 면)
+                    if (!Vfx.hasSheet(L.n("shock_s"))) return false;
+                    int frames = Vfx.sheet(L.n("shock_s")).frames();
+                    Opt b = Opt.of("dir", V.unit(dir), "speed", 0.0, "size", Math.max(0.6, 2 * size * (1 + grow)), "life", life, "frames", (double) frames,
+                            "fps", frames / life, "fade", 0.3, "alpha", Math.min(1, o.num("alpha", 0.9)), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                    rfx(level, L.n("shock_s"), 1, 0, at, b, FACE_DIR, 1);
+                }
             }
             case "crack" -> {
                 if (!flat || !Vfx.hasSheet(L.n("crack_s"))) return false;
@@ -1852,8 +1912,11 @@ final class PhantomFx {
                 wave(level, L, at, dir, o.num("speed", 0), size, o.num("spin", 0), life, who, Math.min(1, o.num("alpha", 1)));
             }
             default -> { // sigil
-                if (!flat || !Vfx.hasSheet(L.n("ring_00"))) return false;
-                ring(level, L, ground(level, at), size * 0.9, 6, Math.max(4, (int) Math.round(life * 20) - 10));
+                if (!Vfx.hasSheet(L.n("ring_00"))) return false;
+                int hold = Math.max(4, (int) Math.round(life * 20) - 10);
+                // 2026-11-17 세운 문양 (면이 위가 아님 — 심연 룬의 눈 문양 182 · 보스): 그 쪽을 보는 고리 (앞뒤 두 면)
+                if (!flat) ringFacing(level, L, at, size * 0.9, dir, 6, hold, who, Math.min(1, o.num("alpha", 0.9)));
+                else ring(level, L, ground(level, at), size * 0.9, 6, hold);
             }
         }
         return true;

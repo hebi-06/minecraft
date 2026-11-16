@@ -172,6 +172,9 @@ public final class SkillFx {
      * 초승달 참격 한 개 (빛 + 흰 심지 + 초월 기운). o: shape (arc · thin · heavy) · flip · speed · spin · size · life · alpha · aura (색) · color · core (false 면 심지 없이)
      */
     public static void arc(ServerLevel level, Vec3 at, Vec3 dir, Opt o) {
+        // 2026-11-17 위르드식 다리: 칠한 직업 · 룬 · 보스 빛이면 그 묶음의 반달 (RuneKit.arc 다리와 같은 틀 — 룬이 바로 부른 휘두른 자국 판)
+        // 평타의 휘두름 (Slash — basic) 은 빼고 (평타 참격 판은 도트가 아님)
+        if (painted != null && !o.truthy("basic") && o.get("color") instanceof double[] && painted.draw(level, "arc", at, o.with("dir", dir))) return;
         String id = "rpg:slash_" + o.str("shape", "arc") + "_" + (o.truthy("flip") ? "l" : "r");
         Opt base = Opt.of("dir", dir, "speed", o.num("speed", 0), "spin", o.num("spin", 0), "size", o.num("size", 0), "life", o.num("life", 0.3));
         // 0.48.2 보는 사람 걸러내기 (룬의 휘두른 자국 판 — 주인의 1인칭에만 이 파티클)

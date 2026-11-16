@@ -242,7 +242,7 @@ public final class Slash {
             Runnable draw = () -> {
                 if (sp.isRemoved()) return;
                 mmorpg.fabric.skill.SkillFx.arc(sp.level(), at, tangent, mmorpg.fabric.skill.Opt.of("shape", shape, "flip", false, "size", size, "life", 0.24,
-                        "speed", 1.6, "spin", 90.0, "color", glow, "aura", aura));
+                        "speed", 1.6, "spin", 90.0, "color", glow, "aura", aura, "basic", true)); // 2026-11-17 평타는 도트 다리 밖 (사용자 "도트로 하지말고")
             };
             Tasks.later(1 + j, draw); // 몸이 도는 빠르기에 맞춰 한 틱에 하나씩 (poses.json spin — 0.16 ~ 0.8 동안 한 바퀴)
         }
