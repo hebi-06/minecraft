@@ -36,7 +36,7 @@ final class ArcmageSkills {
     private static final double[] NIGHT = JobTraits8.NIGHT;
     private static final double[] GOLD = JobTraits8.GOLD;
     /** 별빛 번개 · 고리의 겉빛 (보랏빛 별빛 — 영상 1: 옅은 파랑은 낮 하늘에 묻혔음) · 흰 금빛 심지 */
-    private static final double[] STAR_BLUE = {0.5, 0.38, 1.0};
+    static final double[] STAR_BLUE = {0.5, 0.38, 1.0};
     private static final double[] STAR_CORE = {1.0, 0.95, 0.78};
 
     static void register() {

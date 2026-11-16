@@ -377,7 +377,9 @@ final class JobFx {
      */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
         PhantomFx.Lib L = PhantomFx.elem(j);
-        if (L != null) { // 2026-11-15 원소 공용 묶음: 한 바퀴 베기 (강철 spin — 짧은 것) · 오래 머무는 범위 고리는 땅 고리
+        // 2026-11-16 칠한 직업 (매지션 라인) 은 아래 예전 길 — jring2 를 같은 수명 (도는 장면이 수명에 맞춤) · 같은 잔상 고리로 칠한 고리 (PhantomFx.painted). 원소 공용
+        // 길 (spin 8틱 · 오래 머무는 고리는 가는 땅 고리) 은 예전 고리보다 일찍 사라지거나 가늘었음 (CI 43777285755 프로스트 블링크 · 포비든 그리모어)
+        if (L != null && PhantomFx.painter(outer(j)) == null) { // 2026-11-15 원소 공용 묶음: 한 바퀴 베기 (강철 spin — 짧은 것) · 오래 머무는 범위 고리는 땅 고리
             PhantomFx.spin(level, L, center, radius, reverse, o.num("alpha", 1), (int) Math.round(life * 20), PhantomFx.who(o));
             return;
         }

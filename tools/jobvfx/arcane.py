@@ -184,7 +184,7 @@ def beam_frame(S, f, w=256, h=64):
     rng = np.random.default_rng(1222 + f)
     prof = [0.2, 0.75, 1.0, 0.95, 0.62, 0.22][f]
     t = f / BEAM_FRAMES
-    taper = np.clip((1 - np.abs(x)) / 0.16, 0, 1) ** 0.75
+    taper = np.clip((1 - np.abs(x)) / 0.06, 0, 1) ** 0.75  # 끝만 조금 (조각끼리 겹치는 곳이 마디로 보이지 않게)
     hw = (0.19 * prof + 0.014) * taper + 1e-4
     wob = 0.01 * prof * np.sin(x * 9 + t * 2 * math.pi * 2)
     d = np.abs(y - wob)
@@ -670,7 +670,7 @@ def galaxy_frame(S, f, n=512):
                 continue
             stars = np.maximum(stars, np.exp(-((x - rr * math.cos(ai)) ** 2 + (y - rr * math.sin(ai)) ** 2) / (s * s)))
         bulge = np.exp(-(r / (0.16 + 0.06 * ext + 0.08 * float(f == 6))) ** 2)
-        layers += [(S.main(0.3), np.exp(-(r / max(0.2, Rm * 0.9)) ** 2) * 0.55), (S.main(0.46), clouds * 0.55), (S.main(0.5 + 0.3 * np.clip(1 - r, 0, 1)), arms * 0.85),
+        layers += [(S.main(0.42), np.exp(-(r / max(0.2, Rm * 0.9)) ** 2) * 0.3), (S.main(0.5), clouds * 0.5), (S.main(0.5 + 0.3 * np.clip(1 - r, 0, 1)), arms * 0.85),
                    (S.main(0.78), arms ** 2 * 0.8), (S.main(0.16), lanes * 0.5), (S.accent(0.78), arms ** 3 * 0.35 * (r < 0.5)),
                    (WHITE, stars * (0.5 + 0.5 * tw)), (S.accent(0.85), bulge * 0.9), (WHITE, np.clip(bulge * 1.3 - 0.2, 0, 1))]
         for i in range(6):
@@ -716,8 +716,10 @@ def halo_frame(S, f, n=512, rays=True):
         rr = R * rng.uniform(0.95, 1.03)
         tw = 0.5 + 0.5 * math.cos(f * 1.9 + i * 2.2)
         spk = np.maximum(spk, star4(x, y, rr * math.cos(a), rr * math.sin(a), 0.045 * tw, 0.006, 0.3, aa) * tw)
-    layers += [(S.main(0.62), np.exp(-((r - R) / 0.03) ** 2) * k), (S.accent(0.82), ticks * 0.75 * k), (S.accent(0.85), np.exp(-((r - R * 0.885) / 0.004) ** 2) * 0.7 * k),
-               (S.main(0.9), np.exp(-((r - R) / 0.011) ** 2) * k), (WHITE, np.exp(-((r - R) / 0.0045) ** 2) * k), (WHITE, spk * k)]
+    # 2026-11-16 영상 (CI 43777285755): 예전 고리보다 가늘어 멀리서 약했음 → 띠 · 빛 번짐을 굵게
+    layers += [(S.main(0.5), np.exp(-((r - R) / 0.09) ** 2) * 0.5 * k), (S.main(0.64), np.exp(-((r - R) / 0.045) ** 2) * k),
+               (S.accent(0.82), ticks * 0.75 * k), (S.accent(0.85), np.exp(-((r - R * 0.885) / 0.005) ** 2) * 0.75 * k),
+               (S.main(0.9), np.exp(-((r - R) / 0.018) ** 2) * k), (WHITE, np.exp(-((r - R) / 0.007) ** 2) * k), (WHITE, spk * k)]
     rgb, a = compose(layers, n)
     rgb, a = bloom(rgb, a, n, thresh=0.6, sigma=0.012, gain=0.55)
     return rgb, a * (1 - sstep(0.95, 0.995, r))

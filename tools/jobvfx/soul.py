@@ -41,10 +41,10 @@ def S0():
 
 
 def smoke_style(S):
-    """망자의 연기 빛: 혼 빛을 누그러뜨림 (짙은 회녹 연기 · 옅은 녹색 테 — 녹색 솜뭉치가 되지 않게)"""
+    """망자의 연기 빛: 녹색 안개 (2026-11-16 영상 — 짙은 회색이면 1인칭에서 검은 얼룩처럼 보였음, 예전은 밝은 녹색 안개) · 녹색 솜뭉치가 되지 않게 테는 옅게"""
     from .element import Style
-    return Style(S.lib, S.kind, main=ramp([(0.0, "#050A07"), (0.3, "#18301F"), (0.55, "#3A6A48"), (0.8, "#7EB88E"), (1.0, "#D8F5DE")]), accent=S.accent,
-                 smoke=ramp([(0.0, "#040605"), (0.45, "#101812"), (0.8, "#202C24"), (1.0, "#3C4C40")]), seed=S.seed)
+    return Style(S.lib, S.kind, main=ramp([(0.0, "#0A1C10"), (0.3, "#245A34"), (0.55, "#4E9A62"), (0.8, "#9AD8A8"), (1.0, "#E2FBE6")]), accent=S.accent,
+                 smoke=ramp([(0.0, "#0C1E12"), (0.45, "#24503A"), (0.8, "#3E7C58"), (1.0, "#6EAA84")]), seed=S.seed)
 
 
 def bone(S, t):
@@ -370,6 +370,12 @@ def soulhit_frame(S, f, n=512, frames=SOULHIT_FRAMES):
     return rgb, a * (1 - sstep(0.95, 0.995, r))
 
 
+def mist(S, f):
+    """망자의 연기 = 뭉게 연기를 조금 비치게 (안개)"""
+    rgb, a = smoke_frame(S, f, seed=5)
+    return rgb, a * 0.66
+
+
 # ------------------------------------------------------------------ 묶음
 
 FRAMES = {
@@ -378,7 +384,7 @@ FRAMES = {
     "rift": (RIFT_FRAMES, lambda S, f: rift_frame(S, f)),
     "bonespear": (BONESPEAR_FRAMES, lambda S, f: bonespear_frame(S, f)),
     "hand": (HAND_FRAMES, lambda S, f: hand_frame(S, f)),
-    "smoke": (SMOKE_FRAMES, lambda S, f: smoke_frame(smoke_style(S), f, seed=5)),
+    "smoke": (SMOKE_FRAMES, lambda S, f: mist(smoke_style(S), f)),
     "halo": (HALO_FRAMES, lambda S, f: halo_frame(S, f, rays=False)),
     "aura": (AURA_FRAMES, lambda S, f: aura_frame(S, f)),
     "soulhit": (SOULHIT_FRAMES, lambda S, f: soulhit_frame(S, f)),

@@ -1003,7 +1003,11 @@ final class PhantomFx {
     static final int LOOK_DIR = 3;
 
     /** 2026-11-16 예전 rfx 이름 → 묶음의 칠한 그림 (조각 k · 방향 · 세로 몫 sy · 크기 몫 — 예전 그림과 같은 틀) */
-    record Paint(String art, int k, int facing, double sy, double scale) {}
+    record Paint(String art, int k, int facing, double sy, double scale, String mirrorArt, int mirrorFrom) {
+        Paint(String art, int k, int facing, double sy, double scale) {
+            this(art, k, facing, sy, scale, null, 0);
+        }
+    }
 
     /**
      * 2026-11-16 매지션 라인 (사용자 "다음 직업으로 마법사 작업"): 칠한 그림이 있는 예전 rfx — 예전 그림판의 칸 크기 (세로 몫) · 머리 자리 · 고리 반지름에 맞춰 그림.
@@ -1033,7 +1037,7 @@ final class PhantomFx {
             java.util.Map.entry("jhand2", new Paint("hand", 1, VERT, 2, 1)),
             java.util.Map.entry("jsmoke2", new Paint("smoke", 1, BILL, 1, 1)),
             java.util.Map.entry("jburst2", new Paint("flash", 1, BILL, 1, 1.3)),
-            java.util.Map.entry("jring2", new Paint("spin", 2, FACE_DIR, 1, 0.88 / 0.8)));
+            java.util.Map.entry("jring2", new Paint("spin", 2, FACE_DIR, 1, 0.88 / 0.8, "spinm", 2 * 8)));
 
     /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
     private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer"};
@@ -1049,6 +1053,8 @@ final class PhantomFx {
             for (double[][] c : MageSkills.SPELLS) m.put(c[0], ARCANE);
             for (double[][] c : MageSkills.PRISM) m.put(c[0], ARCANE);
             m.put(NecroCrew.DEEP, SOUL); // 네크로맨서 망자의 연기 (짙은 녹색 · 혼불)
+            m.put(JobTraits8.GRAVE_SMOKE, SOUL); // 망자의 군대 무덤이 솟을 때 흙먼지
+            m.put(ArcmageSkills.STAR_BLUE, ARCANE); // 헤일로 배리어의 별빛 고리
             palette = m;
         }
         Lib L = palette.get(glow);
@@ -1069,11 +1075,17 @@ final class PhantomFx {
         if (p == null) return false;
         Lib L = painter(glow);
         if (L == null) return false;
-        String sheet = L.n(p.art());
+        String art = p.art();
+        int fst = first;
+        if (p.mirrorArt() != null && first >= p.mirrorFrom()) { // 예전 그림판의 좌우를 뒤집은 장면 (jring2 거꾸로 도는 고리) → 미리 뒤집은 그림
+            art = p.mirrorArt();
+            fst = first - p.mirrorFrom();
+        }
+        String sheet = L.n(art);
         String probe = p.k() > 1 ? sheet + "_00" : sheet;
         if (!Vfx.hasSheet(probe)) return false;
         int n = Vfx.sheet(probe).frames();
-        int f0 = Math.floorMod(first, n);
+        int f0 = Math.floorMod(fst, n);
         int count = Math.max(1, Math.min((int) b.num("frames", 1), n - f0));
         Opt bb = b.with("frames", (double) count);
         if (p.scale() != 1) bb = bb.with("size", b.num("size", 0) * p.scale());

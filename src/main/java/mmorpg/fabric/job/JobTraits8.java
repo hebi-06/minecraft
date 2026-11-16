@@ -47,6 +47,8 @@ public final class JobTraits8 {
     static final String MIST = "necromancer_mist";
     /** 밤하늘 자주 (별자리 선의 바깥 빛 · 별 무리) */
     static final double[] NIGHT = {0.42, 0.26, 0.86};
+    /** 2026-11-16 무덤이 솟을 때 흙먼지 빛 (같은 배열 — 네크로맨서 묶음이 칠한 연기로: PhantomFx.painter) */
+    static final double[] GRAVE_SMOKE = {0.42, 0.42, 0.46};
     /** 금빛 별 (선 · 별 심지) */
     static final double[] GOLD = {1.0, 0.86, 0.42};
 
@@ -104,7 +106,7 @@ public final class JobTraits8 {
         org.joml.Quaternionf tip = new org.joml.Quaternionf().rotateAxis((float) Math.toRadians(25), 1F, 0F, 0F).mul(p.rot());
         p.to(V.up(ground, -h * 0.7), tip, s * 0.75, 6);
         RuneKit.rockBurst(level, V.up(ground, h * 0.4), 10, 4.0, 0.22);
-        JobFx.smoke(level, V.up(ground, 0.5), s * 0.6, new double[] {0.42, 0.42, 0.46}, NecroCrew.FIRE, 0.6, Opt.of("alpha", 0.5));
+        JobFx.smoke(level, V.up(ground, 0.5), s * 0.6, GRAVE_SMOKE, NecroCrew.FIRE, 0.6, Opt.of("alpha", 0.5));
         RuneKit.later(7, p::remove);
     }
 
