@@ -9,7 +9,7 @@
    "aspect": 1.0,
    "colored": false,
    "crop": [
-    -0.013021,
+    -0.007812,
     -0.0
    ]
   },
@@ -17,21 +17,13 @@
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false,
-   "crop": [
-    -0.002604,
-    -0.0
-   ]
+   "colored": false
   },
   "bladering": {
    "chars": "",
    "frames": 16,
    "aspect": 1.0,
-   "colored": false,
-   "crop": [
-    0.0,
-    0.007812
-   ]
+   "colored": false
   },
   "blood": {
    "chars": "",
@@ -42,11 +34,11 @@
   "cinder": {
    "chars": "",
    "frames": 16,
-   "aspect": 0.5,
+   "aspect": 0.4906,
    "colored": false,
    "crop": [
-    0.003906,
-    -0.046875
+    0.003243,
+    -0.0
    ]
   },
   "crack": {
@@ -55,8 +47,8 @@
    "aspect": 1.0,
    "colored": false,
    "crop": [
-    -0.019531,
-    0.019531
+    -0.023438,
+    0.015625
    ]
   },
   "fissure": {
@@ -75,8 +67,8 @@
    "aspect": 0.5,
    "colored": false,
    "crop": [
-    0.0,
-    0.011719
+    0.007812,
+    -0.0
    ]
   },
   "flare": {
@@ -92,7 +84,7 @@
    "colored": false,
    "crop": [
     0.0,
-    0.023438
+    0.015625
    ]
   },
   "fireball": {
@@ -101,8 +93,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.007812,
-    -0.0
+    -0.012784,
+    -0.011364
    ]
   },
   "boom": {
@@ -111,8 +103,8 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    0.015625,
-    -0.0
+    0.03125,
+    -0.015625
    ]
   },
   "slash": {
@@ -121,8 +113,8 @@
    "aspect": 1.0,
    "colored": false,
    "crop": [
-    0.0,
-    -0.019531
+    -0.007812,
+    -0.03125
    ]
   },
   "spin": {
@@ -149,8 +141,8 @@
    "aspect": 1.0,
    "colored": false,
    "crop": [
-    -0.0625,
-    -0.132812
+    -0.052919,
+    -0.0
    ]
   },
   "xcut": {
@@ -159,7 +151,7 @@
    "aspect": 1.0,
    "colored": false,
    "crop": [
-    0.003906,
+    0.00059,
     -0.0
    ]
   },
@@ -167,11 +159,7 @@
    "chars": "",
    "frames": 6,
    "aspect": 1.0,
-   "colored": false,
-   "crop": [
-    0.0,
-    0.007812
-   ]
+   "colored": false
   },
   "pa_boom_00": {
    "chars": "",

@@ -1529,7 +1529,8 @@ final class PhantomFx {
     static boolean oldFx(ServerLevel level, String id, Vec3 at, Opt o) {
         boolean group = id.equals("sparks");
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
-                && !id.equals("rpg:bash_ring")) return false;
+                && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
+                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1538,6 +1539,36 @@ final class PhantomFx {
             case "sparks" -> WyrdKit.sparks(level, L, at, (int) o.num("n", 4), o.num("speed", 3), who);
             case "rpg:arrow_spark" -> WyrdKit.spark(level, L, at, o.vec("dir", V.UP), o.num("speed", 1.5), who);
             case "rpg:arrow_trail" -> WyrdKit.trail(level, L, at, o.vec("dir", V.UP), o.num("size", 0.3), who);
+            case "rpg:light_cut" -> {
+                // 2026-11-16 빛의 일섬 (예전 rpg:light_cut — 방향으로 누운 가는 줄, 반 길이 size): 그 묶음의 일섬 (PhantomFx.cut — 앞뒤 두 면)
+                if (!Vfx.hasSheet(L.n("cut"))) return false;
+                Vec3 d = o.vec("dir", V.UP);
+                if (V.len(d) < 1e-6) return false;
+                double half = Math.max(0.15, o.num("size", 0.5));
+                int hold = Math.max(1, (int) Math.round(o.num("life", 0.4) * 20) - 9);
+                cut(level, L, V.add(at, V.unit(d), -half), V.add(at, V.unit(d), half), hold, false, who);
+            }
+            case "rpg:slash_x" -> {
+                // X 베기 (예전 rpg:slash_x — 카메라를 봄, 반 크기 size): 그 묶음의 X 베기 (2 × 2)
+                if (!Vfx.hasSheet(L.n("xslash_00"))) return false;
+                xslash(level, L, at, Math.max(0.4, o.num("size", 0.5) * 2.2), o.num("spin", Kit.rand() * 360));
+            }
+            case "rpg:skill_rune" -> {
+                // 땅의 룬 원 (예전 rpg:skill_rune — 땅에 눕힘, 반 크기 size): 그 묶음의 땅 고리 (예고 · 테두리)
+                if (!Vfx.hasSheet(L.n("ring_00"))) return false;
+                double r = Math.max(0.4, o.num("size", 1) * (1 + o.num("grow", 0)) * 0.9);
+                ring(level, L, ground(level, at), r, 4, Math.max(2, (int) Math.round(o.num("life", 0.6) * 20) - 8), who, Math.min(1, o.num("alpha", 0.9)));
+            }
+            case "rpg:ground_crack" -> {
+                // 땅 금 (예전 rpg:ground_crack — 땅에 눕힘): 그 묶음의 땅 자국
+                if (!Vfx.hasSheet(L.n("crack_s"))) return false;
+                crackS(level, L, ground(level, at), Math.max(0.6, o.num("size", 1) * 2), who);
+            }
+            case "rpg:dust" -> {
+                // 흙먼지 (예전 rpg:dust): 그 묶음의 흙먼지 (꽂힌 자리 먼지)
+                if (!Vfx.hasSheet(L.n("dust"))) return false;
+                dust(level, L, ground(level, at), Math.max(0.5, o.num("size", 1) * 1.6));
+            }
             case "rpg:bash_ring" -> {
                 // 2026-11-16 정한 쪽을 보는 고리 (SkillFx.ring — 자기 강화 표시 · 눈앞에서 앞으로 퍼짐): 칠한 작은 충격파 (shock_s — 면이 dir, 앞뒤 두 면 · 같은 움직임)
                 if (!Vfx.hasSheet(L.n("shock_s"))) return false;
@@ -1620,9 +1651,21 @@ final class PhantomFx {
         return E != null && JobSystem.RUNE_WYRD ? E : null;
     }
 
+    /** 가까운 빛: RGB 거리 0.3 안, 또는 같은 색조 (22° 안 · 둘 다 채도 0.25 넘게 — 계열 빛을 어둡게 · 밝게 섞은 빛) */
     private static boolean near(double[] a, double[] b) {
         double dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
-        return dr * dr + dg * dg + db * db < 0.09;
+        if (dr * dr + dg * dg + db * db < 0.09) return true;
+        double[] ha = hsv(a), hb = hsv(b);
+        if (ha[1] < 0.25 || hb[1] < 0.25 || ha[2] < 0.2) return false;
+        double dh = Math.abs(ha[0] - hb[0]);
+        return Math.min(dh, 360 - dh) < 22;
+    }
+
+    private static double[] hsv(double[] c) {
+        double r = c[0], g = c[1], b = c[2];
+        double mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b)), d = mx - mn;
+        double h = d < 1e-9 ? 0 : mx == r ? 60 * (((g - b) / d) % 6) : mx == g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+        return new double[] {h < 0 ? h + 360 : h, mx < 1e-9 ? 0 : d / mx, mx};
     }
 
     /**
@@ -1632,7 +1675,7 @@ final class PhantomFx {
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
         switch (name) {
-            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade" -> {
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade", "hitmark" -> {
             }
             default -> {
                 return false;
@@ -1705,6 +1748,20 @@ final class PhantomFx {
                 double alpha = Math.min(1, o.num("alpha", 1));
                 moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
                 if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+            }
+            case "hitmark" -> {
+                // 룬 맞은 자국 (RuneBoost.mark — 예전 rfx_jhits 계열 줄 + rfx_jburst2 + 색 불티): 그 묶음의 X 베기 + 섬광 + 불씨 + 바닐라 맞음 겹 (PhantomFx.hit 과 같은 틀)
+                if (!Vfx.hasSheet(L.n("xslash_00")) || !Vfx.hasSheet(L.n("flash"))) return false;
+                double power = o.num("power", 1);
+                WyrdKit.enter();
+                try {
+                    xslash(level, L, at, size * 1.25, o.num("spin", 0) + 45);
+                    flash(level, L, at, size * 1.4);
+                    embers(level, L, at, 2 + (int) Math.round(power * 2), size * 0.9, 0.3, 12);
+                } finally {
+                    WyrdKit.leave();
+                }
+                WyrdKit.sparks(level, L, at, 3 + (int) Math.round(power * 2), 3.5 + power, who);
             }
             case "shade" -> {
                 // 분신 (RuneKit.shadeClone — 발 고정 · 세로축 빌보드 · 칸 = 자세 + 왼쪽이면 4): 그 묶음의 분신 (JobFx.shade 와 같은 틀 · 가운데 = 발 + 크기)
@@ -1820,6 +1877,7 @@ final class PhantomFx {
         Paint p = PAINT.get(rfx);
         if (p == null) return false;
         Lib L = painter(glow);
+        if (L == null && mmorpg.fabric.Tasks.tag() != null) L = runeColorLib(mmorpg.fabric.Tasks.tag(), glow); // 2026-11-16 룬을 쓰는 동안 (계열 묶음)
         if (L == null) return false;
         String art = p.art();
         int fst = first;

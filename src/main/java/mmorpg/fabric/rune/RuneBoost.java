@@ -191,6 +191,8 @@ final class RuneBoost {
             if (V.len(to) > 1e-3) b = V.add(b, V.unit(to), e.getBbWidth() / 2 + 0.15);
         }
         double tilt = row == 7 ? 0 : Kit.rand() * 40 - 20; // 혼은 위로 솟으므로 돌리지 않음
+        // 2026-11-16 위르드식 다리: 계열 묶음이 있으면 그 묶음의 맞은 자국 (X 베기 + 섬광 + 불티 — 직업의 칠한 맞음과 같은 틀)
+        if (RuneKit.painted != null && RuneKit.painted.draw(level, "hitmark", b, Opt.of("size", size, "spin", tilt, "power", k), col[0])) return;
         two(level, "jhits", MARK_FRAMES, row * 12, b, 0.32, Opt.of("size", size, "spin", tilt, "fade", 0.25), col[0], col[1]);
         double a = Math.min(1, 0.55 + k * 0.3);
         two(level, "jburst2", BURST_FRAMES, 0, b, 0.2, Opt.of("size", size * 0.55, "spin", Kit.rand() * 360, "alpha", 0.75 * a, "coreAlpha", 0.9 * a, "fade", 0.3),

@@ -337,7 +337,11 @@ PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el
               "el_thunder": "thunder", "el_tyrant": "tyrant",  # 2026-11-16 성기사 · 썬더로드 (뇌광) · 타이런트 (폭군)
               "el_reap": "reap", "el_soulreap": "soulreap", "el_exec": "exec",  # 2026-11-16 사신 라인
               "el_lance": "lance", "el_gale": "gale", "el_dragon": "dragon",  # 2026-11-16 창술사 라인
-              "el_phoenix": "phoenix"}  # 2026-11-16 피닉스 가드
+              "el_phoenix": "phoenix",  # 2026-11-16 피닉스 가드
+              # 2026-11-16 룬 위르드식: VfxKit 의 물들이는 공용 그림 (도끼 · 정령 계열 룬 — 서버가 계열 빛으로 물들임) 은 회색 단계 도트 (pixel.sheet_cells "tint")
+              **{k: "tint" for k in ("burst", "burst2", "bladering", "blood", "cinder", "crack", "fissure", "aura", "flare", "wave", "slash", "spin", "streak",
+                                    "glow", "dust", "xcut", "shock")},
+              "fireball": "auto", "boom": "auto"}
 
 
 def _old_outputs():

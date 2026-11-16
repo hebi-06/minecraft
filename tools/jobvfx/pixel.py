@@ -328,10 +328,23 @@ _PAL = {}
 def sheet_cells(name, makes, cache, libs):
     """그림판 name 이 도트 묶음 (libs: 접두 → element.STYLES 이름 · "auto" = 그림 자체의 색으로 램프) 이면 도트 칸들, 아니면 None.
     조각 그림 (이름_rc) 은 조각들을 한 그림으로 붙여 도트로 옮긴 뒤 다시 나눔 (조각 경계에서 텍셀이 어긋나지 않게). makes = {이름: 만들기}, cache = 조각 묶음 셈"""
-    lib = max((l for l in libs if name.startswith(l + "_")), key=len, default=None)
+    lib = max((l for l in libs if name == l or name.startswith(l + "_")), key=len, default=None)  # 2026-11-16 이름 그대로 (VfxKit 물들이는 그림)
     if lib is None:
         return None
     style = libs[lib]
+    if style == "tint":
+        # 물들이는 그림: 밝기 × 알파 로 부드러운 가장자리를 어둡게 → 회색 램프 (물들이면 계열 빛의 어두운 테 → 밝은 심). 흰 그림 그대로면 납작한 흰 판이 되었음
+        cells = makes[name]()
+        w0, h0 = cells[0].size
+        prep = []
+        for c in cells:
+            A = np.asarray(c.convert("RGBA"), float) / 255.0
+            lum = A[..., :3] @ np.array([0.3, 0.59, 0.11])
+            v = np.clip(lum * (0.22 + 0.78 * A[..., 3] ** 0.75), 0, 1)
+            out = np.dstack([v, v, v, A[..., 3]])
+            prep.append(Image.fromarray((out * 255).astype(np.uint8), "RGBA"))
+        from .element import STYLES
+        return pixelize(prep, texels(size_of(name), w0 / h0), STYLES["tint"], pal=_PAL.setdefault("tint", Palette(STYLES["tint"])))
     S = None
     if style != "auto":
         from .element import STYLES

@@ -1350,6 +1350,12 @@ def wings_frame(S, f, n=512):
 
 STYLES = {
     # 은빛 · 푸른 달빛 (검사 — 뒤에 수호기사)
+    # 2026-11-16 물들이는 그림 (VfxKit — 서버가 계열 빛으로 물들임): 회색 단계 (어두운 테 → 흰 심). pixel.sheet_cells 가 부드러운 가장자리를 어둡게 바꾼 뒤 이 램프로
+    "tint": Style("tint", "tint",
+                  main=ramp([(0.0, "#2A2A2A"), (0.3, "#555555"), (0.55, "#8A8A8A"), (0.75, "#BDBDBD"), (0.9, "#E6E6E6"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#9A9A9A"), (0.6, "#E0E0E0"), (1.0, "#FFFFFF")]),
+                  smoke=ramp([(0.0, "#303030"), (0.6, "#6A6A6A"), (1.0, "#A0A0A0")]),
+                  ring="ticks", smoke_alpha=0.3, seed=0),
     "steel": Style("el_steel", "steel",
                    main=ramp([(0.0, "#060A16"), (0.12, "#0E1A34"), (0.26, "#1C3762"), (0.4, "#2C5D9A"), (0.52, "#4589CC"), (0.64, "#6FB0EA"),
                               (0.76, "#A2D2FA"), (0.86, "#CFE8FF"), (0.94, "#EEF7FF"), (1.0, "#FFFFFF")]),

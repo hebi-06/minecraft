@@ -138,10 +138,14 @@ final class RuneSpirit {
         Notify.addHudSuffix(RuneSpirit::spiritHud);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 2 != 0) return;
+            // 2026-11-16 정령의 움직임 · 공격도 정령 계열 룬의 그림 (꼬리표 — 위르드식 계열 묶음 · 맞은 자국. 꼬리표는 그림에만 쓰임)
+            String prevTag = Tasks.tag("spirit:summon");
             try {
                 spiritTick(server);
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] spirit tick", e); // 애드온의 runInterval 처럼 다음 번에 다시
+            } finally {
+                Tasks.tag(prevTag);
             }
         });
         // 싸운 중립 몹 적기 (피해 전 — 보스 소품처럼 피해가 취소되는 것도. 보기만 함). 몹이 피해를 받은 틱은 Kit 가 적음 (무적 시간 피하기)
