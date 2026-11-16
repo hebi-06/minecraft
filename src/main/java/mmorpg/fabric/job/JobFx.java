@@ -1525,7 +1525,7 @@ final class JobFx {
     static void charge(ServerPlayer sp, Jobs.Job j, Vec3 rel, int ticks, double size) {
         if (sp == null || ticks <= 0) return;
         PhantomFx.Lib L = PhantomFx.elem(j);
-        if (L != null) {
+        if (L != null && PhantomFx.has(L, "charge")) { // 2026-11-16 모으는 빛 그림이 없는 묶음 (성광 · 꽃잎) 은 예전 길 (CI 43903024474 하트 어코드 — el_holy_ring_00 없음)
             chargeLib(sp, j, L, rel, ticks, size);
             return;
         }
@@ -1571,7 +1571,8 @@ final class JobFx {
     private static void chargeLib(ServerPlayer sp, Jobs.Job j, PhantomFx.Lib L, Vec3 rel, int ticks, double size) {
         String life = RuneKit.lifeToken(sp);
         // 발밑 고리는 주인 1인칭에서 숨김 (눈 바로 아래 · 비스듬한 그림은 픽셀이 크게 늘어나 화면 가장자리에 덩어리로 보였음 — CI 43693784623)
-        PhantomFx.ring(sp.level(), L, PhantomFx.ground(sp.level(), sp.position()), 1.4, 3, Math.max(2, ticks - 2), PhantomFx.hide1p(sp), 0.8);
+        if (PhantomFx.has(L, "ring_00")) PhantomFx.ring(sp.level(), L, PhantomFx.ground(sp.level(), sp.position()), 1.4, 3, Math.max(2, ticks - 2), PhantomFx.hide1p(sp),
+                0.8);
         SkillFx.play(sp.level(), "block.respawn_anchor.charge", sp.position(), 1.3, 0.45);
         Vec3 p0 = relPoint(sp, rel);
         // 2026-11-15 1인칭 영상 2 (블러드 문 얼굴 앞 · 뛰어오른 머리 위 · 엑스칼리버 머리 위): 모으는 자리가 눈 바로 앞 · 위면 (끝 섬광이 눈에서 그 크기의 0.4 배 안)

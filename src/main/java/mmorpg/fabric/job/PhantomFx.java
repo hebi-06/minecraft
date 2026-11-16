@@ -1629,7 +1629,7 @@ final class PhantomFx {
             String tag = mmorpg.fabric.Tasks.tag();
             int c = tag == null ? -1 : tag.indexOf(':');
             boolean on = tag != null ? runeLib(c < 0 ? tag : tag.substring(0, c)) != null : mmorpg.fabric.Tasks.paint() != null;
-            if (!on || !has(BEAR, "shard")) return false;
+            if (!on || !Vfx.hasSheet(BEAR.n("shard"))) return false;
             rocks(level, at, (int) o.num("n", 6), o.num("speed", 4), o.num("size", 0.2));
             return true;
         }
@@ -1644,21 +1644,21 @@ final class PhantomFx {
         Vec3 vel = o.has("vel") ? o.vec("vel", V.ZERO) : null;
         switch (name) {
             case "prop" -> {
-                if ((int) Math.round(o.num("cell", -1)) != RuneKit.RFX.get("glint")[0] || !has(L, "flash")) return false;
+                if ((int) Math.round(o.num("cell", -1)) != RuneKit.RFX.get("glint")[0] || !Vfx.hasSheet(L.n("flash"))) return false;
                 glint(level, L, at, size, life, vel, who);
             }
             case "sword" -> {
-                if (!has(L, "flash")) return false;
+                if (!Vfx.hasSheet(L.n("flash"))) return false;
                 glint(level, L, at, size * 0.6, life, vel, who);
             }
             case "flare" -> {
-                if (!has(L, "flash")) return false;
+                if (!Vfx.hasSheet(L.n("flash"))) return false;
                 flash(level, L, at, Math.max(0.4, size * 2 * (1 + grow * 0.5)), who);
             }
             case "rays" -> {
                 // 예전 빛살 (세로 빌보드 · 밑동 at · 높이 2 × size, 너비 = 높이의 1/8) → 묶음의 빛줄기 (beam — 길이 : 굵기 4 : 1) 를 세움 (길이 6칸까지 — 더 길면 굵기가
                 // 1.5칸을 넘어 둘레의 빛살 여럿이 벽처럼 보임) + 온 높이를 따라 스스로 빛나는 바닐라 점 (WyrdKit.beam — 위에서 땅으로)
-                if (!has(L, "beam")) return false;
+                if (!Vfx.hasSheet(L.n("beam"))) return false;
                 double h = size * 2 * (1 + grow * 0.5);
                 double hb = Math.min(h, 6);
                 int frames = Vfx.sheet(L.n("beam")).frames();
@@ -1667,15 +1667,15 @@ final class PhantomFx {
                 if (h > 1.2) WyrdKit.beam(level, L, V.up(at, h), at, who);
             }
             case "nova" -> {
-                if (!flat || !has(L, "shock_00")) return false;
+                if (!flat || !Vfx.hasSheet(L.n("shock_00"))) return false;
                 shock(level, L, ground(level, at), Math.max(0.6, 2 * size * (1 + grow)), life >= 0.5 ? 2 : 1, who);
             }
             case "crack" -> {
-                if (!flat || !has(L, "crack_s")) return false;
+                if (!flat || !Vfx.hasSheet(L.n("crack_s"))) return false;
                 crackS(level, L, ground(level, at), size * 2, who);
             }
             default -> { // sigil
-                if (!flat || !has(L, "ring_00")) return false;
+                if (!flat || !Vfx.hasSheet(L.n("ring_00"))) return false;
                 ring(level, L, ground(level, at), size * 0.9, 6, Math.max(4, (int) Math.round(life * 20) - 10));
             }
         }
