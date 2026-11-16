@@ -25,6 +25,9 @@ import net.minecraft.world.phys.Vec3;
  * 3판 (CI 43830855673): 해질녘 영상 (팬텀 아처) 에서 crit · poof · 먼지가 둘레 빛을 받아 검은 남색 X · 보랏빛 덩이로 보였음 → 불티 · 반짝임은 스스로 빛나는
  * 것 (end_rod · 불꽃놀이 · 토템 · 불꽃 · 밀랍 · 차원문) 으로, 연기 뭉치는 땅을 따라서만, 핏빛 · 녹색 소용돌이 (하늘로 솟아 나선 무늬) 는 뺌. 먼지는 모양 (고리 · 호) 에만.
  * <p>
+ * 4판 (CI 43833722984): 땅 연기 (poof) 도 흰 솜 덩이 · 해질녘 보랏빛 덩이로 보여 모두 뺌 (puff 자리는 남김 — 지금 모두 null), 베기 호 · 한 바퀴 베기의 먼지는 작게
+ * (크면 1 ~ 2초 머물러 칠한 베기가 사라진 뒤 부스러기 초승달) + 짧은 번쩍 불똥, 맞음은 번쩍 불똥 위주 (1인칭 돌진에서 불꽃놀이 불티가 화면을 덮음).
+ * <p>
  * 블록 · 아이템 그림 부스러기 파티클 (block · item) 은 쓰지 않음 (바닐라 그림 금지). 화면 흔들림 없음. 한 틱에 겹이 많으면 (여러 마리 맞음) fxQuota 로 거름.
  */
 final class WyrdKit {
@@ -62,23 +65,22 @@ final class WyrdKit {
     static final Part TOTEM = new Part(ParticleTypes.TOTEM_OF_UNDYING, 2.5);
     static final Part FLAME = new Part(ParticleTypes.FLAME, 10);
     static final Part SMALL_FLAME = new Part(ParticleTypes.SMALL_FLAME, 10);
-    static final Part POOF = new Part(ParticleTypes.POOF, 9);
     static final Part SOUL = new Part(ParticleTypes.SOUL, 10);
     static final Part WAX = new Part(ParticleTypes.WAX_ON, 0);
     static final Part UNDER = new Part(ParticleTypes.REVERSE_PORTAL, 30);
     static final Part PORTAL = new Part(ParticleTypes.PORTAL, 1, true);
     static final Part ENCHANT = new Part(ParticleTypes.ENCHANT, 1, true);
 
-    /** 검사 — 강철 · 푸른 달빛 (흰 불꽃놀이 불티 · 흰 빛 · 땅 흰 연기) */
-    static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, POOF, null, END_ROD);
+    /** 검사 — 강철 · 푸른 달빛 (흰 불꽃놀이 불티 · 흰 빛) */
+    static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, null, null, END_ROD);
     /** 블러드 나이트 — 피 (crit · 연기 · 반짝임 없음 — 핏빛 소용돌이는 하늘로 솟아 나선 무늬로 흩어졌음) */
     static final Pal BLOOD = new Pal(0xC8182F, 0xFF6A68, CRIT, null, null, null, CRIT);
-    /** 아스널 킹 · 소드 마스터 — 금빛 (흰 불꽃놀이 불티 · 밀랍 금빛 반짝임 · 흰 빛 알갱이 · 땅 흰 연기) */
-    static final Pal GOLD = new Pal(0xF0B028, 0xFFE28A, SPARKLE, WAX, POOF, END_ROD, END_ROD);
-    /** 블레이드 레인저 — 단조 불 (불꽃 · 밀랍 불빛 반짝임 · 작은 불꽃 · 땅 흰 연기) */
-    static final Pal FORGE = new Pal(0xF77A18, 0xFFD27A, FLAME, WAX, POOF, SMALL_FLAME, FLAME);
-    /** 팬텀 아처 — 진홍 불 · 푸른 흰 투영 (불꽃 · 흰 빛 · 작은 불꽃 · 땅 흰 연기) */
-    static final Pal PHANTOM = new Pal(0xF2412F, 0xFF9E6E, FLAME, END_ROD, POOF, SMALL_FLAME, FLAME);
+    /** 아스널 킹 · 소드 마스터 — 금빛 (흰 불꽃놀이 불티 · 밀랍 금빛 반짝임 · 흰 빛 알갱이) */
+    static final Pal GOLD = new Pal(0xF0B028, 0xFFE28A, SPARKLE, WAX, null, END_ROD, END_ROD);
+    /** 블레이드 레인저 — 단조 불 (불꽃 · 밀랍 불빛 반짝임 · 작은 불꽃) */
+    static final Pal FORGE = new Pal(0xF77A18, 0xFFD27A, FLAME, WAX, null, SMALL_FLAME, FLAME);
+    /** 팬텀 아처 — 진홍 불 · 푸른 흰 투영 (불꽃 · 흰 빛 · 작은 불꽃) */
+    static final Pal PHANTOM = new Pal(0xF2412F, 0xFF9E6E, FLAME, END_ROD, null, SMALL_FLAME, FLAME);
     /** 암살자 — 그림자 (빨려 드는 보랏빛 — 맞은 자리로 그림자가 모임 · 흰 빛 · 솟는 보랏빛) */
     static final Pal SHADOW = new Pal(0xA42A85, 0xCF55AC, PORTAL, END_ROD, null, UNDER, PORTAL);
     /** 매지션 · 아크메이지 — 비전 (흰 불꽃놀이 별빛 · 흰 빛 · 마법 글자가 빨려 듦) */
@@ -189,9 +191,9 @@ final class WyrdKit {
         double pw = Math.max(0.5, Math.min(2.0, power));
         double s = (0.75 + Kit.bodyPad(e) * 0.6) * pw;
         int k = (int) Math.round(pw * 3);
-        spray(l, null, P.spark(), b, 3 + k, 0.1, 0.9 * s);
-        spray(l, null, ZAP, b, 2 + k / 2, 0.15 * s, 0.7 * s);
-        p(l, null, dust(P.light(), 0.9), b, 2, 0.12 * s, 0.12 * s, 0.12 * s, 0);
+        spray(l, null, ZAP, b, 3 + k, 0.15 * s, 0.7 * s);
+        spray(l, null, P.spark(), b, 1 + k / 2, 0.1, 0.8 * s);
+        p(l, null, dust(P.light(), 0.9), b, 1, 0.1 * s, 0.1 * s, 0.1 * s, 0);
     }
 
     /**
@@ -307,7 +309,8 @@ final class WyrdKit {
                         double a = a0 + dir * (tt + (i + 0.5) / per) * Math.PI / 2;
                         Vec3 q = new Vec3(c.x + Math.cos(a) * r, c.y + 0.12, c.z + Math.sin(a) * r);
                         boolean hi = i % 3 == 0;
-                        p(l, who, dust(hi ? P.light() : P.main(), hi ? 1.0 : 1.4), q, 1, 0.03, 0.03, 0.03, 0);
+                        p(l, who, dust(hi ? P.light() : P.main(), hi ? 0.8 : 1.0), q, 1, 0.03, 0.03, 0.03, 0);
+                        if (i == per - 1) p(l, who, ZAP.o(), q, 2, 0.08, 0.05, 0.08, 0.05);
                         if (i % 3 == 1 && P.spark() != null) {
                             Vec3 out = new Vec3(Math.cos(a), 0.2, Math.sin(a));
                             Vec3 tan = new Vec3(-Math.sin(a) * dir, 0, Math.cos(a) * dir);
@@ -358,7 +361,9 @@ final class WyrdKit {
                 for (int i = 0; i < per; i++) {
                     double ph = -Math.PI / 2 + Math.PI * (tt * per + i + 0.5) / (3.0 * per);
                     Vec3 q = V.add(V.add(base, e1, hw * Math.sin(ph)), e2, hh * (Math.cos(ph) - 0.35));
-                    p(l, others, dust(i % 2 == 0 ? P.main() : P.light(), i % 2 == 0 ? 1.3 : 0.9), q, 1, 0.02, 0.02, 0.02, 0);
+                    // 4판: 먼지는 작게 (크면 1 ~ 2초 머물러 칠한 베기가 사라진 뒤 하늘에 부스러기 초승달로 남았음 — 블러드 클레이브) · 날을 따라 짧은 번쩍 불똥
+                    if (i % 2 == 0) p(l, others, dust(P.main(), 0.8), q, 1, 0.02, 0.02, 0.02, 0);
+                    else p(l, others, ZAP.o(), q, 1, 0.03, 0.03, 0.03, 0.02);
                     if (i == per - 1 && P.spark() != null) {
                         Vec3 tan = V.unit(V.add(V.scale(e1, Math.cos(ph)), V.scale(e2, -Math.sin(ph) * hh / hw)));
                         for (int k = 0; k < 2; k++) {
