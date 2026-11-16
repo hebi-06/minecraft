@@ -961,7 +961,7 @@ public final class JobsTest {
                 && near(ak.skill(3).num("hit", 0) + ak.skill(3).num("blast", 0), 16.8) && Jobs.stanceBudget(ak.skill(3))
                 && near(ak.skill(4).num("wave", 0) * ak.skill(4).num("waves", 0) + ak.skill(4).num("final", 0), 56), "arsenalking parts = totals");
         check(near(sum(br.skill(0), "cuts"), 7) && near(br.skill(1).num("cross", 0) + br.skill(1).num("spin", 0), 4.2)
-                && near(br.skill(2).num("hit", 0) * br.skill(2).num("hits", 0), 12.6)
+                && near(br.skill(2).num("rise", 0) + sum(br.skill(2), "air") + br.skill(2).num("slam", 0), 12.6)
                 && near(br.skill(3).num("hit", 0) + br.skill(3).num("wave", 0), 16.8) && Jobs.stanceBudget(br.skill(3))
                 && near(br.skill(4).num("wave", 0) * br.skill(4).num("waves", 0) + br.skill(4).num("final", 0), 56), "bladeranger parts = totals");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 · t · w
@@ -981,16 +981,19 @@ public final class JobsTest {
         Jobs.Skill bu = br.skill(4);
         check(near(br.skill(0).num("hitAt", 0), br.skill(0).num("t", 0)), "트윈 슬래시 t (한 번에)");
         check(bb.num("spinAt", 0) - bb.num("crossAt", 0) >= 10 && near(bb.num("crossAt", 0), bb.num("w", 0)) && near(bb.num("spinAt", 0), bb.num("t", 0)), "블레이드 부메랑 간격 · t · w");
-        check(bs.num("gap", 0) >= 10 && near(bs.num("first", 0) + (bs.num("hits", 0) - 1) * bs.num("gap", 0), bs.num("t", 0)) && near(bs.num("first", 0), bs.num("w", 0)), "블레이드 스톰 간격 · t · w");
+        // 2026-11-16 라이징 엣지 (옛 블레이드 스톰 대신): 솟음 → 공중 연타 → 내리꽂음 — 같은 적을 10틱 넘게 · 띄움 유틸
+        check(bs.num("airAt", 0) - bs.num("riseAt", 0) > 10 && bs.num("slamAt", 0) - bs.num("airAt", 0) > 10 && near(bs.num("riseAt", 0), bs.num("w", 0))
+                && near(bs.num("slamAt", 0), bs.num("t", 0)) && Jobs.utils(bs).equals(List.of("lift")) && bs.name().equals("라이징 엣지"), "라이징 엣지 간격 · t · w · 띄움");
         check(bf.num("waveAt", 0) - bf.num("hitAt", 0) >= 10 && near(bf.num("hitAt", 0), bf.num("w", 0)) && near(bf.num("waveAt", 0), bf.num("t", 0)), "포지 브레이커 간격 · t · w");
         check(bu.num("every", 0) >= 10 && bu.num("finalAt", 0) - bu.num("first", 0) - (bu.num("waves", 0) - 1) * bu.num("every", 0) >= 10 && near(bu.num("finalAt", 0), bu.num("t", 0))
-                && near(bu.num("first", 0), bu.num("w", 0)), "아이언 템페스트 간격 · t · w");
+                && near(bu.num("first", 0), bu.num("w", 0)) && Jobs.utils(bu).equals(List.of("pull")) && bu.name().equals("블레이드 이클립스"),
+                "블레이드 이클립스 간격 · t · w · 끌당");
         // 특성
         check(ak.trait().name().equals("황금 문") && ak.trait().max() == 8 && near(ak.trait().def().numOr("perShot", 0), 2) && near(ak.trait().def().numOr("burst", 0), 1.2)
                 && near(ak.trait().def().numOr("radius", 0), 2.5), "황금 문 최대 8 · 한 발에 둘 · 터짐 120%");
         check(br.trait().name().equals("쌍검") && near(br.trait().def().numOr("twin", 0), 4) && near(br.trait().def().numOr("cleave", 0), 0.5)
                 && near(br.trait().def().numOr("nearBonus", 0), 0.2) && near(br.trait().def().numOr("farCut", 0), 0.3), "쌍검 4칸 · 베기 50% · +20% / −30%");
-        check(Jobs.skillLine(ak.skill(0)).startsWith("골든 볼리 · 6초 · 배율 ") && Jobs.skillLine(br.skill(4)).startsWith("아이언 템페스트 · 60초 · 배율 "), "archer advanced skill line");
+        check(Jobs.skillLine(ak.skill(0)).startsWith("골든 볼리 · 6초 · 배율 ") && Jobs.skillLine(br.skill(4)).startsWith("블레이드 이클립스 · 60초 · 배율 "), "archer advanced skill line");
         check(ak.color()[0][0] > 0.9 && ak.color()[0][1] > 0.6 && ak.color()[0][2] < 0.4 && br.color()[0][0] > 0.9 && br.color()[0][1] < 0.6, "colors: gold / forge orange");
     }
 

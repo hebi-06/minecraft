@@ -1453,8 +1453,9 @@ public final class RpgJobAdvanceTests {
     // ------------------------------------------------------------ 2026-11-15 블레이드 레인저 (궁수 2차 반전 — 옛 배틀 아처 대신)
 
     /**
-     * 블레이드 레인저: 4칸 안 평타 = 평타 × 1.2 (쌍검 — 앞 부채꼴 다른 적도 × 0.5 × 1.2) · 10칸 밖 × 0.7 → 트윈 슬래시 (7) · 블레이드 부메랑 (2.8 + 1.4) · 블레이드
-     * 스톰 (12.6) · 포지 브레이커 (5.6 + 11.2) · 아이언 템페스트 (56 넘게) — 가까운 과녁이라 직업 스킬도 × 1.2
+     * 블레이드 레인저: 4칸 안 평타 = 평타 × 1.2 (쌍검 — 앞 부채꼴 다른 적도 × 0.5 × 1.2) · 10칸 밖 × 0.7 → 트윈 슬래시 (7) · 블레이드 부메랑 (2.8 + 1.4) · 라이징
+     * 엣지 (2.1 + 2.1 × 4 + 2.1 — 2026-11-16 옛 블레이드 스톰 대신) · 포지 브레이커 (5.6 + 11.2) · 블레이드 이클립스 (7 × 6 + 14 — 옛 아이언 템페스트 대신, 56 넘게) —
+     * 가까운 과녁이라 직업 스킬도 × 1.2
      */
     @GameTest(environment = ENV_BA, maxTicks = 560)
     public void bladerangerSkills(GameTestHelper h) {
@@ -1500,11 +1501,11 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             RpgJobTests.home(h, sp);
             z.set(0, RpgJobTests.dummy(h, 2.5));
-            h.assertTrue(JobSkills.press(sp, 2), "블레이드 스톰 cast");
+            h.assertTrue(JobSkills.press(sp, 2), "라이징 엣지 cast");
         }));
         steps.add(new RpgJobTests.Step(64, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 12.6) * near;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블레이드 스톰 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "라이징 엣지 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             z.get(0).discard();
             RpgJobTests.home(h, sp);
             z.set(0, RpgJobTests.dummy(h, 4));
@@ -1516,11 +1517,11 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             RpgJobTests.home(h, sp);
             z.set(0, RpgJobTests.dummy(h, 4));
-            h.assertTrue(JobSkills.press(sp, 4), "아이언 템페스트 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "블레이드 이클립스 cast");
         }));
         steps.add(new RpgJobTests.Step(100, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 56) * near;
-            h.assertTrue(TestDummies.dealt(z.get(0)) >= want * 0.999, "아이언 템페스트 " + TestDummies.dealt(z.get(0)) + " ≥ " + want);
+            h.assertTrue(TestDummies.dealt(z.get(0)) >= want * 0.999, "블레이드 이클립스 " + TestDummies.dealt(z.get(0)) + " ≥ " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;

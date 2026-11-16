@@ -274,9 +274,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
     private static final Case[] CASES_BR = { // 2026-11-15 블레이드 레인저 (궁수 2차 반전 — 옛 배틀 아처 대신)
         new Case(0, new int[] {1, 3, 4, 6, 9}, new int[] {4, 8}, 20, false), // 트윈 슬래시: 파고들어 4 · 6 · 8 · 10 엇갈려 벰
         new Case(1, new int[] {2, 5, 8, 12, 18}, new int[] {5, 8, 18}, 30, false), // 블레이드 부메랑: 쌍검 → 8 교차 → 끌려감 → 18 돌며 벰
-        new Case(2, new int[] {4, 7, 17, 37, 57}, new int[] {7, 27, 57}, 64, false), // 블레이드 스톰: 칼 여섯이 돎 · 10틱마다 벰
+        new Case(2, new int[] {3, 7, 12, 19, 27, 31}, new int[] {7, 19, 31}, 40, false), // 라이징 엣지 (2026-11-16): 쌍검을 꽂음 → 6 칼이 솟아 띄움 → 뛰어올라 공중 연타 18 → 30 내리꽂음
         new Case(3, new int[] {4, 10, 16, 21, 27}, new int[] {10, 16, 26}, 40, false), // 포지 브레이커: 거대한 칼 → 16 내려침 → 26 불빛 칼이 솟음
-        new Case(4, new int[] {4, 12, 16, 36, 56, 70, 76, 81}, new int[] {16, 46, 70, 80}, 98, false), // 아이언 템페스트: 칼 들판 → 날아들어 X 베기 → 80 거대한 칼
+        new Case(4, new int[] {4, 9, 14, 19, 27, 40, 62, 74, 80, 85, 89}, new int[] {15, 27, 63, 75, 89}, 104, false), // 블레이드 이클립스 (2026-11-16): 머리 위 칼 고리 → 퍼짐 14 · 되돌아옴 26 × 3 → 76 손으로 모임 · 날개 쌍검 → 88 거대한 X
     };
 
     /**

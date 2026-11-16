@@ -769,8 +769,11 @@ final class PhantomFx {
     /** 칼빛 초승달 그림의 호 (tools/jobvfx/element.py SLASH_R · SLASH_CY — 그림 반 변의 몫) */
     static final double SLASH_R = 0.9;
     static final double SLASH_CY = 0.4;
-    /** 가로 반달이 보는 눈 쪽으로 앞 축 둘레를 더 도는 끝 (도) · 세로 반달 · 앞 날을 드는 각 */
-    static final double MOON_ROLL = 45;
+    /**
+     * 가로 반달이 보는 눈 쪽으로 앞 축 둘레를 더 도는 끝 (도 — 2026-11-16 첫 영상 CI 43865007580: 45 는 영상 카메라에서 불룩한 날이 왼쪽 위 (위를 섞어 봄) → 65 로
+     * 더 세워 앞으로 불룩한 "(" 에 가깝게) · 세로 반달 · 앞 날을 드는 각
+     */
+    static final double MOON_ROLL = 65;
     static final double MOON_ROLL_V = 30;
     static final double MOON_LIFT = 18;
 

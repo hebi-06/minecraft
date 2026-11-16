@@ -25,7 +25,8 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 2026-11-15 블레이드 레인저 (궁수 2차 반전 — 사용자 "에미아 같은 근접으로", claude/archer-remake.md): 1차를 뒤집음 — 멀리서 쏘는 대신 투영한 쌍검 (단조 불빛 날 ·
- * 주황 홈) 을 들고 파고들어 벰. 트윈 슬래시 · 블레이드 부메랑 · 블레이드 스톰 · 포지 브레이커 · 아이언 템페스트. 원작의 이름 · 주문 · 쌍검 디자인은 쓰지 않음. 같은 적을 여러 번
+ * 주황 홈) 을 들고 파고들어 벰. 트윈 슬래시 · 블레이드 부메랑 · 라이징 엣지 · 포지 브레이커 · 블레이드 이클립스 (2026-11-16 — 셋째 · 다섯째 새 컨셉).
+ * 원작의 이름 · 주문 · 쌍검 디자인은 쓰지 않음. 같은 적을 여러 번
  * 치는 것은 10틱 넘게 띄우고, 빠른 연타는 피해 한 번 · 숫자 여러 줄. 화면 흔들림 없음.
  * <p>
  * 2026-11-15 직업 전용 2D 그림 (사용자 "직업마다 전용으로 그릴래" — tools/jobvfx/forge.py · 그림판 br_*): 베기 = 달아오른 초승달 (휘두른 면에 고정 · 앞뒤 두 장 —
@@ -251,7 +252,8 @@ final class BladeRangerSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 c = spot[0];
             Vec3 from = sp.position();
-            Vec3 dv = V.flat(V.sub(c, from));
+            // 2026-11-16 V.flat 은 단위 벡터라 (길이 늘 1) 몸이 끌려가지 않았음 → 수평 벡터 그대로
+            Vec3 dv = new Vec3(c.x - from.x, 0, c.z - from.z);
             double dl = V.len(dv);
             Vec3 land = dl > 1.4 ? V.add(from, V.unit(dv), dl - 1.3) : from;
             JobMove.run(sp, JobMove.to(0, 5, JobMove.at(ground(sp.level(), land)), 1));
@@ -298,74 +300,210 @@ final class BladeRangerSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 블레이드 스톰
+    // ------------------------------------------------------------ 라이징 엣지 (2026-11-16 — 옛 블레이드 스톰 대신)
 
     /**
-     * 블레이드 스톰 (bladeranger_storm): 투영한 칼 swords 자루가 몸 둘레 (orbit 칸) 를 돌며 따라다님 → first 틱부터 gap 틱마다 (hits 번) 둘레 radius 칸의 적을 벰 (적마다
-     * hit — 숫자 두 줄) · 둥근 베기 호 · 불티
+     * 라이징 엣지 (bladeranger_storm — id 는 옛 블레이드 스톰 그대로, 2026-11-16 사용자 "아처 반전 3차 5차는 새로 컨셉 잡자 그리고 바꾸자" · claude/archer-remake.md):
+     * 쌍검을 발 앞 땅에 꽂음 → 둘레 radius 칸에 달아오른 톱니 고리가 퍼지고 적 발밑에 칼 윤곽 (투영 선) · 달아오른 땅 → riseAt 틱에 땅을 뚫고 불빛 칼이 솟아 적을 띄움
+     * (rise · 밀 수 있는 적만 뜸 — 보스 · 허수아비는 둔화) → 쓴 사람이 뜬 적들 쪽 위 height 칸으로 뛰어올라 공중에서 쌍검으로 엇갈려 네 번 벰 (airAt 에 air 네 줄 —
+     * 뜬 적은 떠 있게 받쳐 줌) → 적을 끌고 내리꽂아 slamAt 에 땅을 부숨 (slam · 내린 자리 둘레 radius 칸 · 솟은 칼이 부서짐). 적이 없으면 앞 2.4칸 둘레에서.
+     * 같은 적은 12틱 띄움 (6 → 18 → 30). 롤: 땅에서 솟는 칼로 띄우고 따라 올라가 공중 연타 → 내리꽂기
      */
     static boolean storm(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        if (Kit.ridingAny(sp)) {
+            Notify.notify(sp, "§c" + k.name() + " §7— 지금은 쓸 수 없습니다", 30);
+            return false;
+        }
         ServerLevel level0 = sp.level();
-        int n = Math.max(3, (int) k.num("swords", 6));
-        int hits = Math.max(1, (int) k.num("hits", 6));
-        int gap = Math.max(10, (int) k.num("gap", 10));
-        int first = Math.max(6, (int) k.num("first", 6));
-        int end = first + (hits - 1) * gap + 4;
-        double orbit = k.num("orbit", 2.0);
-        double r = k.num("radius", 3.2);
-        double len = k.num("len", 1.6);
+        Vec3 c0 = sp.position();
+        Vec3 f0 = Kit.facingOf(sp);
+        Vec3 right0 = V.rightOf(f0);
+        double R = k.num("radius", 3.5);
+        int riseAt = Math.max(4, (int) k.num("riseAt", 6));
+        int airAt = Math.max(riseAt + 11, (int) k.num("airAt", 18));
+        int slamAt = Math.max(airAt + 11, (int) k.num("slamAt", 30));
+        double H = k.num("height", 2.6);
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         PhantomFx.Lib L = PhantomFx.FORGE;
-        SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 1.2, 0.9);
-        SkillFx.play(level0, "item.trident.riptide_2", sp.position(), 1.4, 0.6);
-        PhantomFx.shock(level0, L, PhantomFx.ground(level0, sp.position()), orbit * 3.0, 1); // 2026-11-15 직업 전용: 열 충격파
-        RuneSwords.Blade[] bl = new RuneSwords.Blade[n];
-        for (int i = 0; i < n; i++) {
-            double a = Math.PI * 2 * i / n;
-            Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
-            Vec3 h = V.add(V.up(sp.position(), 0.9), radial, orbit * 0.5);
-            Vec3 tan = new Vec3(-Math.sin(a), 0.15, Math.cos(a));
-            bl[i] = blade(level0, h, tan, len, 1 + i / 2, end + 10);
+        // 솟을 자리: 둘레 적 (가까운 순 · 여섯까지) 의 발밑 — 없으면 앞 2.4칸 둘레 셋
+        List<LivingEntity> near0 = new ArrayList<>(Kit.around(sp, c0, R, 2.5));
+        near0.sort(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(sp)));
+        List<Vec3> spots = new ArrayList<>();
+        for (int i = 0; i < Math.min(6, near0.size()); i++) spots.add(ground(level0, near0.get(i).position()));
+        if (spots.isEmpty()) {
+            for (int s = -1; s <= 1; s++) spots.add(ground(level0, V.add(V.add(c0, f0, 2.4 - Math.abs(s) * 0.5), right0, s * 1.4)));
         }
-        // 돎 (2틱마다 자리 · 2틱 보간)
-        for (int t = 2; t <= end; t += 2) {
-            int tt = t;
+        // 뛰어오를 자리: 솟는 칼 자리 가운데의 쓴 사람 쪽 (가운데 · 1.1칸 앞) — 그 위 height 칸 (머리 위가 막히면 닿는 데까지)
+        Vec3 mid = V.ZERO;
+        for (Vec3 g : spots) mid = V.add(mid, g);
+        mid = V.scale(mid, 1.0 / spots.size());
+        Vec3 dm = new Vec3(mid.x - c0.x, 0, mid.z - c0.z);
+        double dl = V.len(dm);
+        Vec3 hub = ground(level0, dl > 1.2 ? V.add(c0, V.scale(dm, 1 / dl), dl - 1.1) : c0);
+        Vec3 air = JobMove.upAt(sp, hub, H);
+        Vec3 face0 = dl > 1.2 ? V.scale(dm, 1 / dl) : f0; // 공중에서 보는 쪽 (뜬 적들 쪽)
+        // 0: 꽂음 — 쌍검이 손에서 발 앞 땅으로 · 발밑 섬광 · 달아오른 톱니 고리가 둘레로 퍼짐 (예고 — 내리꽂을 때까지) · 작은 열 충격파
+        Vec3 g0 = PhantomFx.ground(level0, c0);
+        PhantomFx.ring(level0, L, g0, R, riseAt, slamAt - riseAt);
+        PhantomFx.shock(level0, L, g0, R * 1.5, 1);
+        PhantomFx.flash(level0, L, V.add(V.up(c0, 0.35), f0, 0.6), 1.8);
+        SkillFx.play(level0, "block.anvil.place", c0, 0.8, 0.9);
+        SkillFx.play(level0, "block.amethyst_block.resonate", c0, 1.4, 0.7);
+        for (int s = 0; s < 2; s++) {
+            double side = s == 0 ? -1 : 1;
+            Vec3 h = V.add(V.add(V.up(c0, 1.15), right0, side * 0.45), f0, 0.3);
+            Vec3 d = V.unit(V.add(V.add(V.DOWN, f0, 0.45), right0, side * 0.12));
+            RuneSwords.Blade b = blade(level0, h, d, 1.5, 1, riseAt + 4);
+            RuneKit.later(2, () -> b.pose(V.add(V.add(V.up(c0, 0.55), right0, side * 0.35), f0, 0.75), d, PhantomArcher.faceOf(d), 2));
+            RuneKit.later(riseAt + 2, () -> PhantomArcher.shatter(sp.level(), b, 0.6, L));
+        }
+        // 솟을 칼: 자리마다 투영 선 (땅에서 위로 — 칼 윤곽) · 달아오른 땅 · 땅 밑의 칼
+        List<RuneSwords.Blade> risers = new ArrayList<>();
+        List<Vec3> rdir = new ArrayList<>();
+        for (Vec3 g : spots) {
+            Vec3 d = V.unit(new Vec3((Kit.rand() - 0.5) * 0.4, 1, (Kit.rand() - 0.5) * 0.4));
+            rdir.add(d);
+            PhantomArcher.traceLines(level0, V.up(g, 0.05), d, PhantomArcher.faceOf(d), 2.4, riseAt / 20.0 + 0.1, L.trace());
+            PhantomFx.crackS(level0, L, g, 1.7);
+            risers.add(blade(level0, V.add(g, d, -2.7), d, 2.4, 1, slamAt + 14));
+        }
+        // riseAt: 솟음 — 칼이 땅을 뚫고 솟음 · 불기둥 · 작은 쇳물 폭발 · 그을음 → 적을 띄움
+        Set<UUID> lifted = new HashSet<>();
+        List<LivingEntity> airborne = new ArrayList<>();
+        RuneKit.later(riseAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel level = sp.level();
+            for (int i = 0; i < risers.size(); i++) {
+                Vec3 g = spots.get(i);
+                Vec3 d = rdir.get(i);
+                risers.get(i).pose(V.add(g, d, -0.35), d, PhantomArcher.faceOf(d), 2);
+                PhantomFx.flame(level, L, g, 2.8, 1);
+                if (RuneKit.fxQuota("riseBoom", 4)) PhantomFx.boomSmall(level, L, V.up(g, 0.6), 1.7);
+                PhantomFx.dust(level, L, g, 1.7);
+            }
+            SkillFx.play(level, "item.trident.riptide_2", c0, 1.1, 0.9);
+            SkillFx.play(level, "block.anvil.land", c0, 1.4, 0.5);
+            SkillFx.play(level, "entity.generic.explode", c0, 1.6, 0.4);
+            for (LivingEntity e : Kit.around(sp, c0, R, 2.5)) {
+                if (!lifted.add(e.getUUID())) continue;
+                airborne.add(e);
+                if (JobKit.pushable(e)) Kit.launch(e, 0, k.num("lift", 0.55), 0);
+                else RuneKit.effect(e, "slowness", slamAt - riseAt + 6, JobKit.isBoss(e) ? 1 : 10);
+                JobKit.strike(sp, e, j, P, k.num("rise", 2.1), false, false, life, 0, d -> JobFx.hit(e, j, 0.9));
+            }
+        });
+        // 뛰어오름 → 공중에 머묾 → 내리꽂음 (몸) · 뜬 적을 받쳐 줌 (2틱마다 — 중력 몫만큼 올림) → 함께 내리꽂음
+        JobMove.run(sp, JobMove.to(riseAt + 1, riseAt + 6, JobMove.at(air), JobMove.OUT), JobMove.hold(riseAt + 6, slamAt - 4),
+                JobMove.to(slamAt - 4, slamAt, JobMove.down(sp, c0.y), JobMove.IN));
+        JobKit.motionLater(sp, "bladeranger_storm:air", riseAt + 1, life);
+        JobKit.motionLater(sp, "bladeranger_storm:slam", slamAt - 5, life);
+        RuneKit.later(riseAt + 1, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            PhantomArcher.trail2d(sp.level(), V.up(c0, 0.8), V.up(air, 0.8), 0.25, 0.9, glow, core); // 2026-11-16 솟구친 길 잔상
+            SkillFx.play(sp.level(), "entity.player.attack.sweep", c0, 0.8, 0.9);
+        });
+        for (int t = riseAt + 7; t < slamAt - 4; t += 2) {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 c = V.up(sp.position(), 0.9 + 0.15 * Math.sin(tt * 0.3));
-                for (int i = 0; i < n; i++) {
-                    double a = Math.PI * 2 * i / n + tt * 0.32;
-                    Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
-                    Vec3 tan = V.unit(new Vec3(-Math.sin(a), 0.2, Math.cos(a)));
-                    bl[i].pose(V.add(V.add(c, radial, orbit), tan, -len * 0.4), tan, radial, 2);
-                }
+                for (LivingEntity e : airborne) if (e.isAlive() && !e.isRemoved() && JobKit.pushable(e)) Kit.launch(e, 0, 0.16, 0);
             });
         }
-        for (int h = 0; h < hits; h++) {
-            int hh = h;
-            RuneKit.later(first + h * gap, () -> {
+        // 공중 연타: 쌍검 둘 (손 — 뛰어오르며 투영) 이 엇갈려 네 번 (2틱마다) · 몸 둘레 달아오른 초승달 · 뜬 적마다 X 베기 → airAt 에 피해 (네 줄 — 적마다 한 번)
+        RuneSwords.Blade[] tw = new RuneSwords.Blade[2];
+        RuneKit.later(riseAt + 4, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 c = V.up(sp.position(), 1.1);
+            Vec3 rt = V.rightOf(face0);
+            for (int s = 0; s < 2; s++) {
+                Vec3 h = V.add(c, rt, (s == 0 ? -1 : 1) * 0.5);
+                PhantomArcher.traceLines(sp.level(), h, V.add(face0, V.UP, 0.4), V.UP, 1.5, 0.2, L.trace());
+                tw[s] = blade(sp.level(), h, V.add(face0, V.UP, 0.4), 1.5, 1, slamAt - riseAt + 4);
+            }
+        });
+        int cut0 = riseAt + 7;
+        for (int q = 0; q < 4; q++) {
+            int qq = q;
+            RuneKit.later(cut0 + q * 2, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                Vec3 c = V.up(sp.position(), 0.9);
-                Vec3 ff = Kit.facingOf(sp);
-                Vec3 u = V.add(V.scale(ff, Math.cos(hh * 1.1)), V.rightOf(ff), Math.sin(hh * 1.1));
-                Vec3 v = V.rightOf(V.unit(u));
-                // 2026-11-15 직업 전용: 칼 여섯이 도는 자리를 달아오른 초승달이 휩씀 (번갈아 거꾸로) · 마지막은 열 충격파
-                sweepArc(level, c, V.unit(u), hh % 2 == 0 ? 1 : -1, r * 0.9, 0.18);
-                if (hh == hits - 1) PhantomFx.shock(level, L, PhantomFx.ground(level, sp.position()), r * 2.6, 1);
-                SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + hh * 0.06, 0.9);
-                for (LivingEntity e : Kit.around(sp, sp.position(), r, 2.2)) {
-                    JobKit.strikeSplit(sp, e, j, P, k.num("hit", 2.1), 2, 2, false, false, life, 0, d -> {
-                        if (RuneKit.fxQuota("bladeStormHit", 8)) JobFx.hit(e, j, 0.8);
-                        if (RuneKit.fxQuota("bladeStormSpark", 8)) PhantomFx.embers(level, L, Kit.bodyPoint(e), 4, 1.0, 0.3, 12);
-                    });
+                Vec3 c = V.up(sp.position(), 1.1);
+                double tilt = qq % 2 == 0 ? 0.65 : -0.65;
+                int dir = qq % 2 == 0 ? 1 : -1;
+                slashArc(level, V.add(c, face0, 0.2), face0, tilt, dir, 2.3, glow, 2, 6);
+                if (tw[qq % 2] != null) swing(tw[qq % 2], c, face0, tilt, dir > 0 ? -1.3 : 1.3, dir > 0 ? 1.3 : -1.3, 0.35, 2);
+                SkillFx.play(level, "entity.player.attack.sweep", c, 1.1 + qq * 0.12, 0.85);
+                int shown = 0;
+                for (LivingEntity e : airborne) {
+                    if (!e.isAlive() || e.isRemoved() || shown >= 4) continue;
+                    if (!RuneKit.fxQuota("riseCross", 6)) break;
+                    Vec3 b = Kit.bodyPoint(e);
+                    Vec3 toEye = V.unit(V.sub(sp.getEyePosition(), b));
+                    PhantomFx.xslash(level, L, V.add(b, toEye, 0.55), 2.4 + qq * 0.25, (qq % 2 == 0 ? 20 : -20) + Kit.rand() * 16 - 8);
+                    shown++;
                 }
             });
         }
-        RuneKit.later(end + 2, () -> {
-            for (RuneSwords.Blade b : bl) PhantomArcher.shatter(sp.level(), b, 0.9, L);
+        RuneKit.later(airAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel level = sp.level();
+            List<Double> air4 = SwordmasterSkills.numbers(k, "air", List.of(2.1, 2.1, 2.1, 2.1));
+            double[] wts = new double[air4.size()];
+            double sum = 0;
+            for (int i = 0; i < wts.length; i++) {
+                wts[i] = air4.get(i);
+                sum += wts[i];
+            }
+            double mult = sum;
+            for (LivingEntity e : airborne) {
+                if (!e.isAlive() || e.isRemoved()) continue;
+                JobKit.strikeSplit(sp, e, j, P, mult, wts.length, 2, wts, false, false, life, 0, d -> {
+                    if (RuneKit.fxQuota("riseHit", 6)) JobFx.hit(e, j, 0.9);
+                    if (RuneKit.fxQuota("riseSpark", 6)) PhantomFx.embers(level, L, Kit.bodyPoint(e), 5, 1.1, 0.3, 12);
+                });
+            }
+            PhantomFx.flash(level, L, V.add(V.up(sp.position(), 1.1), face0, 1.6), 2.0);
+        });
+        // 내리꽂음: 적도 땅으로 · 내려오는 길 잔상 · 쌍검을 머리 위로
+        RuneKit.later(slamAt - 4, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            for (LivingEntity e : airborne) if (e.isAlive() && !e.isRemoved() && JobKit.pushable(e)) Kit.launch(e, 0, -1.1, 0);
+            Vec3 c = V.up(sp.position(), 1.6);
+            for (int s = 0; s < 2; s++) {
+                if (tw[s] == null) continue;
+                Vec3 d = V.unit(V.add(V.add(V.DOWN, face0, 0.5), V.rightOf(face0), (s == 0 ? -1 : 1) * 0.25));
+                tw[s].pose(V.add(V.add(c, V.rightOf(face0), (s == 0 ? -1 : 1) * 0.35), face0, 0.3), d, PhantomArcher.faceOf(d), 3);
+            }
+            PhantomArcher.streak2d(sp.level(), V.up(air, 1.0), V.up(hub, 0.6), 0.25, glow, core);
+        });
+        // slamAt: 땅을 부숨 — 쇳물 폭발 · 넓은 열 충격파 · 그을린 땅 · 솟은 칼이 부서짐 → 내린 자리 둘레 radius 칸 피해
+        RuneKit.later(slamAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel level = sp.level();
+            Vec3 g = PhantomFx.ground(level, sp.position());
+            PhantomFx.boom(level, L, V.up(g, 0.3), 1.7);
+            PhantomFx.shock(level, L, g, R * 2.7, 1);
+            PhantomFx.flash(level, L, V.up(g, 0.5), 3.0);
+            SkillFx.play(level, "entity.generic.explode", g, 0.9, 1.0);
+            SkillFx.play(level, "block.anvil.land", g, 0.6, 1.0);
+            SkillFx.play(level, "item.mace.smash_ground_heavy", g, 0.8, 0.9);
+            for (RuneSwords.Blade b : risers) PhantomArcher.shatter(level, b, 1.1, L);
+            risers.clear();
+            for (RuneSwords.Blade b : tw) if (b != null) PhantomArcher.shatter(level, b, 0.8, L);
+            Set<UUID> hit = new HashSet<>();
+            for (LivingEntity e : Kit.around(sp, sp.position(), R, 3)) {
+                hit.add(e.getUUID());
+                JobKit.strike(sp, e, j, P, k.num("slam", 2.1), false, false, life, 0, d -> JobFx.hit(e, j, 1.1));
+            }
+            // 뜬 채 멀리 밀려난 적도 (내린 자리에서 R 밖 — 띄운 적은 같이 떨어짐)
+            for (LivingEntity e : airborne) {
+                if (!e.isAlive() || e.isRemoved() || hit.contains(e.getUUID()) || e.distanceToSqr(sp) > (R + 2.5) * (R + 2.5)) continue;
+                JobKit.strike(sp, e, j, P, k.num("slam", 2.1), false, false, life, 0, d -> JobFx.hit(e, j, 1.1));
+            }
+        });
+        RuneKit.later(slamAt + 6, () -> {
+            for (RuneSwords.Blade b : risers) b.remove();
         });
         return true;
     }
@@ -494,164 +632,293 @@ final class BladeRangerSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 아이언 템페스트
+    // ------------------------------------------------------------ 블레이드 이클립스 (2026-11-16 — 옛 아이언 템페스트 대신)
+
+    /** 블레이드 이클립스 고리의 한 자세: 칼 i 의 자루 · 칼끝 방향 */
+    private record RingPose(Vec3 hilt, Vec3 dir) {}
 
     /**
-     * 아이언 템페스트 (bladeranger_ult): 붉은 노을 · 둘레 (field 칸) 땅에 칼 swords 자루가 투영되어 꽂힘 → first 틱부터 every 틱마다 (waves 번) 둘레 radius 칸에서 적을
-     * 골라 (차례로 · 없으면 앞) 그 앞으로 몸이 날아들며 땅의 칼을 뽑아 X 로 벰 (그 둘레 cut 칸의 적마다 wave — 숫자 두 줄) → finalAt − 12 에 뛰어올라 머리 위에 거대한 칼을
-     * 투영 → finalAt 에 내려침 (둘레 finalRadius 칸 final · 큰 숫자)
+     * 고리의 칼 i (n 자루 중) 자세: 가운데 c (발) · 돌림 phase (도) · 반지름 r · 높이 h · 바깥을 보는지 (out — 아니면 칼끝이 안쪽) · 위로 드는 몫 up
+     */
+    private static RingPose ringPose(Vec3 c, int i, int n, double phase, double r, double h, boolean out, double up, double len) {
+        double a = Math.toRadians(phase) + Math.PI * 2 * i / n;
+        Vec3 radial = new Vec3(Math.cos(a), 0, Math.sin(a));
+        Vec3 d = out ? V.unit(V.add(radial, V.UP, up)) : V.unit(V.add(V.scale(radial, -1), V.UP, -up));
+        // 자루 = 반지름 자리에서 칼 길이의 반만큼 안쪽 (밖을 볼 때) · 바깥쪽 (안을 볼 때) — 고리의 칼날 가운데가 반지름 r
+        Vec3 mid = V.up(V.add(c, radial, r), h);
+        return new RingPose(V.add(mid, d, -len * 0.45), d);
+    }
+
+    /**
+     * 블레이드 이클립스 (bladeranger_ult — id 는 옛 아이언 템페스트 그대로, 2026-11-16 사용자 "아처 반전 3차 5차는 새로 컨셉 잡자"): 머리 위에 칼 swords 자루가 바깥을
+     * 향한 빛무리 고리 (일식의 테 — 단조 톱니 고리 · 발밑 단조 마법진) 로 투영됨 → 세 번: 고리가 radius 칸까지 퍼지며 휩쓸고 (wave — 둘레 radius + 0.5칸의 적
+     * 모두) 끝에서 칼끝을 안으로 돌려 머리 위로 되돌아오며 다시 벰 (wave · 밀 수 있는 적을 쓴 사람 쪽으로 끌어옴 — 쌍검이 서로 끌리듯). 고리마다 다름: 첫째 가슴 높이 ·
+     * 둘째 위아래 두 겹이 거꾸로 돎 · 셋째 빠른 소용돌이. 피해 틱 = first + i × every (i 0 · 2 · 4 퍼짐, 1 · 3 · 5 되돌아옴) → 칼이 손으로 모여 쌍검이
+     * 날개처럼 거대해짐 (giantLen 칸) → 겨눈 적 (range 칸 — 없으면 앞 3.5칸) 앞으로 파고들어 finalAt 에 거대한 X 로 벰 (final · 둘레 finalRadius 칸 · 큰 숫자).
+     * 롤: 탈론 R (칼날 고리가 퍼졌다 돌아옴) × 3 → 마무리 일격
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
-        double R = k.num("radius", 10);
-        int waves = (int) k.num("waves", 6);
-        int every = Math.max(10, (int) k.num("every", 10));
-        int first = Math.max(8, (int) k.num("first", 16));
-        int finalAt = Math.max(first + (waves - 1) * every + 12, (int) k.num("finalAt", 80));
-        double cut = k.num("cut", 2.6);
+        double R = k.num("radius", 9);
+        int waves = Math.max(2, (int) k.num("waves", 6));
+        int every = Math.max(11, (int) k.num("every", 12));
+        int first = Math.max(8, (int) k.num("first", 14));
+        int lastWave = first + (waves - 1) * every;
+        int finalAt = Math.max(lastWave + 12, (int) k.num("finalAt", 88));
+        int n = Math.max(8, (int) k.num("swords", 24));
+        double len = k.num("len", 1.9);
+        double haloR = 1.25;
+        double haloH = 2.75;
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         PhantomFx.Lib L = PhantomFx.FORGE;
-        Ult.sky(level0, c0, "rpg:ult_sunset", finalAt + 30);
+        Ult.sky(level0, c0, "rpg:ult_night", finalAt + 24);
         Ult.flash(level0, c0, glow, Opt.of("radius", 10.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        SkillFx.play(level0, "block.anvil.use", c0, 0.6, 1.2);
+        SkillFx.play(level0, "block.respawn_anchor.charge", c0, 0.8, 1.0);
         SkillFx.play(level0, "block.amethyst_block.resonate", c0, 0.6, 1.4);
-        // 2026-11-15 직업 전용: 퍼지는 열 충격파 · 들판 테두리 톱니 고리 (br_ring) · 단조 마법진 — 고리 · 마법진은 마지막 내려치기 전에 닫힘 (큰 폭발 그림과 겹치면
-        // 그리는 차례에 따라 마법진이 네모난 자리만큼 가려졌음 — 팬텀 아처 CI 43675143452)
-        Vec3 gc0 = PhantomFx.ground(level0, c0);
-        PhantomFx.shock(level0, L, gc0, k.num("field", 7) * 2.3, 1);
-        PhantomFx.ring(level0, L, gc0, k.num("field", 7) * 1.05, 6, finalAt - 16);
-        // 2026-11-15 HD: 세운 주황 띠 고리 (장난감처럼 보였음) 대신 땅에 단조 마법진 (톱니 · 엇갈린 칼 · 푸른 강철 고리)
-        BlockFx.sigil(level0, V.up(c0, 0.04), k.num("field", 7) * 1.12, PhantomArcher.SIGIL_FORGE, 8, finalAt - 22, 60);
-        // 둘레 땅에 칼이 꽂힘 (뽑히면 그 자리 칼이 사라짐)
-        int m = Math.max(8, (int) k.num("swords", 20));
-        List<RuneSwords.Blade> field = new ArrayList<>();
-        for (int i = 0; i < m; i++) {
-            double a = Math.PI * 2 * i / m + Kit.rand() * 0.2;
-            double rr = k.num("field", 7) * (0.8 + Kit.rand() * 0.25);
-            Vec3 g = ground(level0, V.add(c0, new Vec3(Math.cos(a), 0, Math.sin(a)), rr));
-            Vec3 d = V.unit(new Vec3((Kit.rand() - 0.5) * 0.5, -1, (Kit.rand() - 0.5) * 0.5));
-            double len = 2.0 + Kit.rand() * 0.8;
-            int at = 2 + i * 10 / m;
-            RuneKit.later(at, () -> {
+        // 발밑 단조 마법진 (톱니 · 엇갈린 칼 · 푸른 강철 고리 — 마지막 X 전에 닫힘: 큰 폭발 그림과 겹치면 그리는 차례에 마법진이 네모나게 가려졌음) · 퍼지는 열 충격파
+        Vec3 g0 = PhantomFx.ground(level0, c0);
+        BlockFx.sigil(level0, V.up(c0, 0.04), 2.6, PhantomArcher.SIGIL_FORGE, 8, finalAt - 16, 60);
+        PhantomFx.shock(level0, L, g0, 6.0, 1);
+        // 머리 위 빛무리: 칼 n 자루가 차례로 투영됨 (투영 선 — 둘에 하나) · 테 고리
+        List<RuneSwords.Blade> ring = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            RingPose p = ringPose(c0, i, n, 0, haloR, haloH, true, 0.35, len);
+            if (i % 2 == 0) PhantomArcher.traceLines(level0, p.hilt(), p.dir(), PhantomArcher.faceOf(p.dir()), len, 0.35, L.trace());
+            ring.add(blade(level0, p.hilt(), p.dir(), len, 1 + i * 6 / n, finalAt + 10));
+        }
+        PhantomFx.ring(level0, L, V.up(c0, haloH - 0.1), haloR + 0.6, 6, first + 2);
+        // 고리 한 번: 퍼짐 (s → s + 6 · 2틱마다 한 걸음) → 끝에서 칼끝을 안으로 (s + 8) → 되돌아옴 (s + 10 → s + 16) → 칼끝을 다시 밖으로 (s + 18)
+        double[] phase = {0};
+        Vec3[][] lastTip = new Vec3[1][n];
+        for (int cyc = 0; cyc < (waves + 1) / 2; cyc++) {
+            int cc = cyc;
+            int s = first - 4 + cyc * every * 2;
+            double spin = cc == 2 ? 30 : cc == 1 ? 20 : 15;
+            for (int st = 1; st <= 3; st++) {
+                int stt = st;
+                // 퍼짐
+                RuneKit.later(s + st * 2, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    double u = stt / 3.0;
+                    double e = 1 - (1 - u) * (1 - u);
+                    moveRing(sp, ring, lastTip, phase, cc, spin, haloR + (R - 0.6 - haloR) * e, haloH, 1.2, true, len, stt == 3 ? 0.05 : 0.35 * (1 - e) + 0.05,
+                            glow, core);
+                });
+                // 되돌아옴 (칼끝이 안쪽)
+                RuneKit.later(s + 10 + st * 2, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    double u = stt / 3.0;
+                    double e = u * u;
+                    moveRing(sp, ring, lastTip, phase, cc, -spin, R - 0.6 + (haloR + 0.9 - (R - 0.6)) * e, 1.2, haloH, false, len, 0.15, glow, core);
+                });
+            }
+            // 끝에서 칼끝을 안으로 돌림 · 테두리 톱니 고리 · 칼마다 불티 (몇)
+            RuneKit.later(s + 8, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                RuneSwords.Blade b = blade(sp.level(), V.add(V.up(g, 2.5), d, -len * 0.62), d, len, 1, finalAt + 20 - at);
-                RuneKit.later(2, () -> b.pose(V.add(g, d, -len * 0.62), d, PhantomArcher.faceOf(d), 3));
-                field.add(b);
-                if (RuneKit.fxQuota("tempestPlant", 8)) {
-                    // 2026-11-15 직업 전용: 꽂힌 자리 그을음 · 불티 · 불티 별
-                    PhantomFx.dust(sp.level(), L, PhantomFx.ground(sp.level(), g), 1.5);
-                    PhantomFx.flash(sp.level(), L, V.up(g, 0.4), 0.8);
+                ServerLevel level = sp.level();
+                Vec3 c = sp.position();
+                for (int i = 0; i < ring.size(); i++) {
+                    double h = cc == 1 ? (i % 2 == 0 ? 0.7 : 1.9) : 1.2;
+                    double ph = cc == 1 && i % 2 == 1 ? -phase[0] : phase[0];
+                    RingPose p = ringPose(c, i, ring.size(), ph, R - 0.6, h, false, 0.15, len);
+                    ring.get(i).pose(p.hilt(), p.dir(), PhantomArcher.faceOf(p.dir()), 2);
                 }
+                PhantomFx.ring(level, L, PhantomFx.ground(level, c), R, 2, 6);
+                SkillFx.play(level, "item.trident.return", c, 1.0 + cc * 0.1, 0.9);
+            });
+            // 머리 위로 돌아와 칼끝을 다시 밖으로 (마지막 고리 뒤는 손으로 모임)
+            if (cyc < (waves + 1) / 2 - 1) {
+                RuneKit.later(s + 18, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    Vec3 c = sp.position();
+                    for (int i = 0; i < ring.size(); i++) {
+                        double ph = cc == 1 && i % 2 == 1 ? -phase[0] : phase[0];
+                        RingPose p = ringPose(c, i, ring.size(), ph, haloR, haloH, true, 0.35, len);
+                        ring.get(i).pose(p.hilt(), p.dir(), PhantomArcher.faceOf(p.dir()), 2);
+                    }
+                    PhantomFx.ring(sp.level(), L, V.up(c, haloH - 0.1), haloR + 0.6, 2, 4);
+                });
+            }
+            // 퍼지는 열 고리 (가슴 높이 — 칼날 고리를 따라 퍼짐) · 소리
+            RuneKit.later(s + 1, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel level = sp.level();
+                Vec3 c = sp.position();
+                PhantomFx.shock(level, L, V.up(PhantomFx.ground(level, c), 1.15), R * 2.1, 1);
+                PhantomFx.flash(level, L, V.up(c, haloH), 2.2);
+                SkillFx.play(level, "item.trident.riptide_3", c, 0.9 + cc * 0.12, 0.8);
+                SkillFx.play(level, "entity.player.attack.sweep", c, 0.7 + cc * 0.1, 1.0);
             });
         }
-        // 물결: 적 앞으로 날아들어 X 베기
-        LivingEntity[] last = {null};
+        // 피해: first + i × every — 짝수 = 퍼지는 칼날 · 홀수 = 되돌아오는 칼날 (밀 수 있는 적을 끌어옴)
         for (int w = 0; w < waves; w++) {
             int ww = w;
-            int hitAt = first + w * every;
-            RuneKit.later(hitAt - 5, () -> {
+            RuneKit.later(first + w * every, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                List<LivingEntity> in = new ArrayList<>(Kit.around(sp, c0, R, 5));
-                in.sort(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(sp))); // 2026-11-15 가까운 적부터 차례로 (세상 순서는 들쭉날쭉)
-                LivingEntity e = in.isEmpty() ? null : in.get(ww % Math.min(3, in.size()));
-                last[0] = e;
-                Vec3 from = sp.position();
-                Vec3 to;
-                if (e != null) {
-                    Vec3 dv = V.flat(V.sub(e.position(), from));
-                    double dl = V.len(dv);
-                    to = dl > 1.6 ? V.add(from, V.unit(dv), dl - Kit.bodyPad(e) - 1.2) : from;
-                } else to = V.add(from, V.rightOf(Kit.facingOf(sp)), (ww % 2 == 0 ? 1 : -1) * 2.0);
-                Vec3 land = ground(level, to);
-                JobMove.run(sp, JobMove.to(0, 4, JobMove.at(land), 1));
-                PhantomArcher.trail2d(level, V.up(from, 1.0), V.up(land, 1.0), 0.2, 1.0, glow, BlockFx.hot(glow)); // 2026-11-15 2D 잔상 (날아든 길)
-                // 땅의 칼 하나가 손으로 날아듦
-                if (!field.isEmpty()) {
-                    RuneSwords.Blade b = field.remove(0);
-                    Vec3 hand = V.up(land, 1.2);
-                    Vec3 d = V.unit(V.sub(hand, b.hilt()));
-                    b.pose(V.add(hand, d, -0.3), d, PhantomArcher.faceOf(d), 4);
-                    RuneKit.later(5, () -> PhantomArcher.shatter(sp.level(), b, 0.8, L));
-                }
-                SkillFx.play(level, "entity.enderman.teleport", from, 1.6, 0.4);
-            });
-            RuneKit.later(hitAt, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel level = sp.level();
-                LivingEntity e = last[0];
-                Vec3 c = e != null && !e.isRemoved() ? Kit.bodyPoint(e) : V.up(V.add(sp.position(), Kit.facingOf(sp), 1.5), 1.0);
-                // 2026-11-15 직업 전용: 쌍검 X 베기 (br_xslash — 쓴 사람 쪽 0.6칸 앞) · 불티 별
-                Vec3 toEye = V.unit(V.sub(sp.getEyePosition(), c));
-                PhantomFx.xslash(level, L, V.add(c, toEye, 0.6), 3.6, Kit.rand() * 16 - 8);
-                PhantomFx.flash(level, L, c, 1.5);
-                JobTraits9.twinBlades(level, sp, c, j, 1.5, 6);
-                SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + ww * 0.06, 1.0);
-                // 2026-11-15 칼 들판 둘레 (radius 칸) 의 적 모두 — 날아든 적 둘레만 치면 둘레 다른 몹 (시험의 이웃 구조물 몹 포함) 을 고른 물결이 빗나갔음
-                // (CI 43654499840 아이언 템페스트 1462 ≥ 2340 — 여섯 물결 가운데 셋). 날아든 적이 아닌 적에게는 작은 2D X 베기
-                Set<UUID> struck = new HashSet<>();
-                for (LivingEntity x : Kit.around(sp, c, cut, 2.5)) struck.add(x.getUUID());
-                for (LivingEntity x : Kit.around(sp, c0, R, 5)) struck.add(x.getUUID());
-                for (LivingEntity x : Kit.around(sp, c0, Math.max(R, V.hdist(c0, c) + cut), 5)) {
-                    if (!struck.contains(x.getUUID())) continue;
-                    if (x != e && RuneKit.fxQuota("tempestCross", 6)) {
-                        Vec3 bx = Kit.bodyPoint(x);
-                        PhantomFx.xslash(level, L, V.add(bx, V.unit(V.sub(sp.getEyePosition(), bx)), 0.5), 2.4, Kit.rand() * 16 - 8);
-                    }
-                    JobKit.strikeSplit(sp, x, j, P, k.num("wave", 7), 2, 2, false, false, life, 0, d -> {
-                        if (RuneKit.fxQuota("tempestHit", 8)) JobFx.hit(x, j, 1.0);
+                Vec3 c = sp.position();
+                for (LivingEntity e : Kit.around(sp, c, R + 0.5, 4)) {
+                    JobKit.strike(sp, e, j, P, k.num("wave", 7), false, false, life, 0, d -> {
+                        if (RuneKit.fxQuota("eclipseHit", 8)) JobFx.hit(e, j, 1.0);
+                        if (RuneKit.fxQuota("eclipseSpark", 6)) PhantomFx.embers(level, L, Kit.bodyPoint(e), 5, 1.2, 0.3, 12);
                     });
+                    if (ww % 2 == 1) {
+                        double dist = V.hdist(c, e.position());
+                        if (dist > 2.6) JobKit.reel(sp, e, sp::position, Math.min(k.num("reel", 2.5), dist - 2.4), 6, 2.2, life);
+                    }
                 }
             });
         }
-        // 마지막: 뛰어올라 거대한 칼을 내려침
+        // 모임: 칼이 손으로 날아들어 사라짐 → 쌍검이 날개처럼 거대해짐
+        int gather = lastWave + 2;
+        JobKit.motionLater(sp, "bladeranger_ult:catch", gather, life);
+        RuneKit.later(gather, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 f = Kit.facingOf(sp);
+            Vec3 rt = V.rightOf(f);
+            for (int i = 0; i < ring.size(); i++) {
+                RuneSwords.Blade b = ring.get(i);
+                Vec3 hand = V.add(V.up(sp.position(), 1.2), rt, (i % 2 == 0 ? -1 : 1) * 0.5);
+                Vec3 d = V.unit(V.sub(hand, b.hilt()));
+                b.pose(V.add(hand, d, -0.3), d, PhantomArcher.faceOf(d), 3 + i % 3);
+                b.grow(0.3, 4);
+            }
+            SkillFx.play(sp.level(), "block.anvil.use", sp.position(), 0.7, 1.2);
+        });
+        RuneKit.later(gather + 6, () -> {
+            for (int i = 0; i < ring.size(); i++) {
+                if (i % 4 == 0) PhantomFx.flash(sp.level(), L, ring.get(i).hilt(), 0.8);
+                ring.get(i).remove();
+            }
+            ring.clear();
+        });
+        double giant = k.num("giantLen", 4.8);
+        RuneSwords.Blade[] wings = new RuneSwords.Blade[2];
+        RuneKit.later(gather + 3, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 f = Kit.facingOf(sp);
+            Vec3 rt = V.rightOf(f);
+            Vec3 c = V.up(sp.position(), 1.2);
+            for (int s = 0; s < 2; s++) {
+                double side = s == 0 ? -1 : 1;
+                Vec3 h = V.add(c, rt, side * 0.5);
+                Vec3 d = V.unit(V.add(V.add(V.UP, rt, side * 0.85), f, -0.35));
+                PhantomArcher.traceLines(sp.level(), h, d, PhantomArcher.faceOf(d), giant, 0.4, L.trace());
+                // 날개처럼 천천히 자람 (blade 의 저절로 자람은 40틱 뒤 — 그 전에 부서짐): 0.05 → 0.4 (2틱) → 1 (6틱)
+                RuneSwords.Blade b = blade(sp.level(), h, d, giant, 40, finalAt - gather + 14);
+                RuneKit.later(1, () -> b.grow(0.4, 2));
+                RuneKit.later(3, () -> b.grow(1, 6));
+                wings[s] = b;
+            }
+            PhantomFx.flash(sp.level(), L, V.up(sp.position(), 2.4), 2.6);
+            SkillFx.play(sp.level(), "item.trident.thunder", sp.position(), 1.6, 0.35);
+        });
+        // 마지막: 겨눈 적 앞으로 파고들어 거대한 X
         Vec3[] spot = {null};
-        RuneSwords.Blade[] giant = {null};
-        JobKit.motionLater(sp, "bladeranger_ult:final", finalAt - 12, life);
-        RuneKit.later(finalAt - 12, () -> {
+        JobKit.motionLater(sp, "bladeranger_ult:final", finalAt - 6, life);
+        RuneKit.later(finalAt - 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
-            LivingEntity e = last[0] != null && !last[0].isRemoved() && last[0].isAlive() ? last[0] : Kit.pickTarget(sp, 12, 30);
-            spot[0] = e != null ? ground(level, e.position()) : ground(level, V.add(sp.position(), Kit.facingOf(sp), 3));
-            JobMove.run(sp, JobMove.hop(0, 12, JobMove.at(ground(level, V.add(spot[0], V.flat(V.sub(sp.position(), spot[0])).length() > 0.1
-                    ? V.unit(V.flat(V.sub(sp.position(), spot[0]))) : Kit.facingOf(sp), 1.6))), 2.6));
-            Vec3 top = V.up(spot[0], 6.5);
-            PhantomArcher.traceLines(level, top, V.DOWN, V.rightOf(Kit.facingOf(sp)), k.num("giantLen", 6.0), 0.5, L.trace());
-            giant[0] = blade(level, V.up(top, 2.0), V.DOWN, k.num("giantLen", 6.0), 3, 40);
-            RuneKit.later(4, () -> {
-                if (giant[0] != null) giant[0].pose(top, V.DOWN, PhantomArcher.faceOf(V.DOWN), 6);
-            });
-            // 2026-11-15 세운 띠 고리 대신 땅 마법진 — 내려치기 전에 닫힘 (큰 폭발 그림과 겹치지 않게)
-            BlockFx.sigil(level, V.up(spot[0], 0.05), k.num("finalRadius", 4) * 1.05, PhantomArcher.SIGIL_FORGE, 5, 2, 120);
-            SkillFx.play(level, "block.anvil.use", spot[0], 0.5, 1.4);
+            LivingEntity e = Kit.pickTarget(sp, k.num("range", 10), 30);
+            if (e == null) {
+                List<LivingEntity> in = new ArrayList<>(Kit.around(sp, sp.position(), R, 4));
+                in.sort(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(sp)));
+                e = in.isEmpty() ? null : in.get(0);
+            }
+            spot[0] = e != null ? ground(level, e.position()) : ground(level, V.add(sp.position(), Kit.facingOf(sp), 3.5));
+            Vec3 from = sp.position();
+            Vec3 dv = new Vec3(spot[0].x - from.x, 0, spot[0].z - from.z);
+            double dl = V.len(dv);
+            if (dl > 2.4) {
+                Vec3 land = ground(level, V.add(from, V.scale(dv, 1 / dl), dl - 1.7));
+                JobMove.run(sp, JobMove.to(0, 4, JobMove.at(land), JobMove.OUT));
+                PhantomArcher.trail2d(level, V.up(from, 1.0), V.up(land, 1.0), 0.2, 1.0, glow, core);
+            }
+            // 날개 쌍검을 머리 위 뒤로 크게 젖힘
+            Vec3 f = dl > 1e-3 ? V.scale(dv, 1 / dl) : Kit.facingOf(sp);
+            Vec3 rt = V.rightOf(f);
+            Vec3 c = V.up(sp.position(), 1.4);
+            for (int s = 0; s < 2; s++) {
+                if (wings[s] == null) continue;
+                double side = s == 0 ? -1 : 1;
+                Vec3 d = V.unit(V.add(V.add(V.UP, rt, side * 0.55), f, -0.75));
+                wings[s].pose(V.add(c, rt, side * 0.45), d, PhantomArcher.faceOf(d), 3);
+            }
+            SkillFx.play(level, "entity.enderman.teleport", from, 1.4, 0.4);
         });
-        RuneKit.later(finalAt - 2, () -> {
-            if (spot[0] == null || giant[0] == null) return;
-            RuneSwords.Blade b = giant[0];
-            b.pose(V.up(spot[0], b.reach() * 0.25), V.DOWN, PhantomArcher.faceOf(V.DOWN), 2);
-            PhantomArcher.streak2d(sp.level(), V.up(spot[0], 7.0), spot[0], 0.3, glow, core);
+        RuneKit.later(finalAt - 1, () -> {
+            if (!RuneKit.sameLife(sp, life) || spot[0] == null) return;
+            Vec3 f0 = V.flat(V.sub(spot[0], sp.position()));
+            Vec3 rt = V.rightOf(f0);
+            Vec3 c = V.up(sp.position(), 1.3);
+            for (int s = 0; s < 2; s++) {
+                if (wings[s] == null) continue;
+                double side = s == 0 ? -1 : 1;
+                Vec3 d = V.unit(V.add(V.add(f0, rt, -side * 0.7), V.UP, -0.55));
+                wings[s].pose(V.add(c, rt, side * 0.4), d, PhantomArcher.faceOf(d), 2);
+            }
         });
         RuneKit.later(finalAt, () -> {
             if (spot[0] == null) return;
             ServerLevel level = sp.level();
-            double fr = k.num("finalRadius", 4);
-            // 2026-11-15 직업 전용: 쇳물 대폭발 (예전 상자 폭발 · 상자 고리 대신)
-            // 1인칭 영상 (CI 43681025801): 1.4 는 내려친 사람 바로 옆이라 화면을 1초 가까이 주황으로 덮었음 → 1.2
-            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 1.2);
+            Vec3 f0 = V.flat(V.sub(spot[0], sp.position()));
+            Vec3 c = V.up(sp.position(), 1.2);
+            double fr = k.num("finalRadius", 4.5);
+            // 거대한 X: 엇갈린 달아오른 초승달 둘 (몸 앞을 크게) · 겨눈 자리의 X 베기 · 쇳물 대폭발 · 열 충격파
+            PhantomFx.slash(level, L, c, V.add(f0, V.UP, 0.1), V.add(V.rightOf(f0), V.UP, 0.85), fr * 1.05);
+            RuneKit.later(1, () -> PhantomFx.slash(sp.level(), L, c, V.add(f0, V.UP, 0.1), V.add(V.rightOf(f0), V.UP, -0.85), fr * 1.05));
+            Vec3 b = V.up(spot[0], 1.2);
+            PhantomFx.xslash(level, L, V.add(b, V.unit(V.sub(sp.getEyePosition(), b)), 0.9), 7.0, Kit.rand() * 10 - 5);
+            PhantomFx.boom(level, L, V.up(spot[0], 0.1), fr * 0.62);
             Ult.flash(level, spot[0], glow, Opt.of("radius", 8.0, "time", new double[] {0.02, 0.05, 0.3}), sp);
             SkillFx.play(level, "entity.generic.explode", spot[0], 0.7, 1.4);
             SkillFx.play(level, "block.anvil.land", spot[0], 0.5, 1.2);
-            if (giant[0] != null) RuneKit.later(10, () -> PhantomArcher.shatter(sp.level(), giant[0], 2.5, L));
+            SkillFx.play(level, "entity.player.attack.sweep", c, 0.6, 1.0);
+            for (RuneSwords.Blade w : wings) if (w != null) RuneKit.later(8, () -> PhantomArcher.shatter(sp.level(), w, 2.2, L));
             if (!RuneKit.sameLife(sp, life)) return;
-            for (LivingEntity e : Kit.around(sp, spot[0], fr, 4)) JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
+            Set<UUID> hit = new HashSet<>();
+            for (LivingEntity e : Kit.around(sp, spot[0], fr, 4)) {
+                hit.add(e.getUUID());
+                JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
+            }
+            // 날개가 휩쓴 몸 앞 반원 (쓴 사람 둘레 — 겨눈 자리 밖에 선 적)
+            for (LivingEntity e : front(sp, sp.position(), f0, fr)) {
+                if (hit.add(e.getUUID())) JobKit.strike(sp, e, j, P, k.num("final", 14), false, true, life, 0, d -> JobFx.hit(e, j, 1.4));
+            }
         });
-        RuneKit.later(finalAt + 16, () -> {
-            for (RuneSwords.Blade b : field) b.remove();
-            field.clear();
+        RuneKit.later(finalAt + 14, () -> {
+            for (RuneSwords.Blade b : ring) b.remove();
+            ring.clear();
         });
         return true;
+    }
+
+    /**
+     * 블레이드 이클립스 고리 한 걸음: 칼 모두를 반지름 r · 높이 h0 → h1 (퍼짐이면 머리 위 → 가슴 · 되돌아옴이면 가슴 → 머리 위 — 걸음의 몫은 r 이 정함) 자리로 2틱 보간 ·
+     * 돌림 phase 에 spin 도 더함 · 둘째 고리는 위아래 두 겹이 거꾸로 돎. 셋에 하나 칼끝 자리에서 이어지는 잔상 줄기
+     */
+    private static void moveRing(ServerPlayer sp, List<RuneSwords.Blade> ring, Vec3[][] lastTip, double[] phase, int cyc, double spin, double r, double h0, double h1,
+            boolean out, double len, double up, double[] glow, double[] core) {
+        if (ring.isEmpty()) return;
+        Vec3 c = sp.position();
+        phase[0] += spin;
+        int n = ring.size();
+        double R = Math.max(r, 0.01);
+        for (int i = 0; i < n; i++) {
+            double ph = cyc == 1 && i % 2 == 1 ? -phase[0] : phase[0];
+            double h = cyc == 1 ? (i % 2 == 0 ? 0.7 : 1.9) : 1.2;
+            // 높이: 퍼짐은 반지름이 클수록 가슴 높이로 · 되돌아옴은 작을수록 머리 위로
+            double k = out ? Math.min(1, R / 6.0) : 1 - Math.min(1, (R - 1.5) / 6.0);
+            double hh = out ? h0 + (h - h0) * k : h + (h1 - h) * Math.max(0, k);
+            RingPose p = ringPose(c, i, n, ph, R, hh, out, up, len);
+            RuneSwords.Blade b = ring.get(i);
+            b.pose(p.hilt(), p.dir(), PhantomArcher.faceOf(p.dir()), 2);
+            Vec3 tip = V.add(p.hilt(), p.dir(), len * 0.9);
+            if (i % 3 == 0 && lastTip[0][i] != null && RuneKit.fxQuota("eclipseTrail", 10)) PhantomArcher.streak2d(sp.level(), lastTip[0][i], tip, 0.2, glow, core);
+            lastTip[0][i] = tip;
+        }
     }
 }

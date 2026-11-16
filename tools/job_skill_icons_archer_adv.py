@@ -156,20 +156,23 @@ def bladeranger_boomerang(A, B):
 
 
 def bladeranger_storm(A, B):
-    # 블레이드 스톰: 몸 둘레를 도는 칼 여섯 · 둥근 베기
-    rim = mask()
-    ring(rim, 16.0, 16.5, 12.0, 1.0)
+    # 라이징 엣지 (2026-11-16 — 옛 블레이드 스톰 대신): 땅을 뚫고 솟는 불빛 칼 셋 · 달아오른 땅 · 위의 공중 X 베기
+    boom = mask()
+    disc(boom, 16.0, 31.0, 6.5)
+    gnd = mask()
+    line(gnd, [(1.5, 29.5), (30.5, 29.5)], 1.0)
     layers, blades = [], []
-    for k in range(6):
-        a = k * 60 + 15
-        x = 16.0 + 7.5 * math.cos(math.radians(a))
-        y = 16.5 - 7.5 * math.sin(math.radians(a))
-        ls, bl, _ = sword_layers(A, B, x, y, a + 100, 10.0, 0.65)
+    for (x, a, L, w) in ((8.0, 104, 13.0, 0.75), (24.0, 76, 13.0, 0.75), (16.0, 90, 17.0, 0.95)):
+        ls, bl, _ = sword_layers(A, B, x, 31.0, a, L, w)
         layers += ls
         blades.append(bl)
-    core = mask()
-    disc(core, 16.0, 16.5, 2.2)
-    return finish(stack(layer(rim, mix(A, WHITE, 0.3), A), *layers, layer(core, WHITE, B)), [glow(rim, A, 1.8, 1.0), glow(lighter(*blades), A, 1.2, 0.6)], back(A, B))
+    x1 = mask()
+    line(x1, [(19.0, 3.0), (29.5, 13.0)], 1.1)
+    line(x1, [(29.5, 3.0), (19.0, 13.0)], 1.1)
+    sp = mask()
+    star(sp, 24.2, 8.0, 3.2, 0.22, 0)
+    return finish(stack(layer(boom, mix(A, (255, 200, 90), 0.45), A), layer(gnd, mix(A, WHITE, 0.3), A), *layers, layer(x1, WHITE, mix(A, WHITE, 0.4)),
+                        layer(sp, WHITE, B)), [glow(lighter(*blades), A, 1.3, 0.7), glow(lighter(boom, x1), A, 1.8, 1.0)], back(A, B))
 
 
 def bladeranger_forge(A, B):
@@ -186,22 +189,23 @@ def bladeranger_forge(A, B):
 
 
 def bladeranger_ult(A, B):
-    # 아이언 템페스트: 노을 · 둥글게 꽂힌 칼 · 가운데 X 베기
-    sky = mask()
-    disc(sky, 16.0, 30.0, 15.0)
+    # 블레이드 이클립스 (2026-11-16 — 옛 아이언 템페스트 대신): 검은 해 (일식) 의 빛무리 테 · 바깥을 향해 퍼지는 칼 열둘 · 테의 반짝임
+    sun = mask()
+    disc(sun, 16.0, 16.0, 5.6)
+    rim = mask()
+    ring(rim, 16.0, 16.0, 6.3, 1.0)
     layers, blades = [], []
-    for k in range(7):
-        a = 200 + k * 23
-        x = 16.0 + 13.0 * math.cos(math.radians(a))
-        y = 26.0 - 6.0 * math.sin(math.radians(a))
-        ls, bl, _ = sword_layers(A, B, x, y - 9.0, -90, 10.0, 0.6)
+    for k in range(12):
+        a = k * 30 + 15
+        x = 16.0 + 7.6 * math.cos(math.radians(a))
+        y = 16.0 - 7.6 * math.sin(math.radians(a))
+        ls, bl, _ = sword_layers(A, B, x, y, a, 7.6, 0.55)
         layers += ls
         blades.append(bl)
-    x1 = mask()
-    line(x1, [(9.0, 7.0), (23.0, 21.0)], 1.3)
-    line(x1, [(23.0, 7.0), (9.0, 21.0)], 1.3)
-    return finish(stack(layer(sky, mix(A, (255, 150, 60), 0.35), mix(A, DARK, 0.4)), *layers, layer(x1, WHITE, mix(A, WHITE, 0.4))),
-                  [glow(x1, A, 1.8, 1.0), glow(lighter(*blades), A, 1.2, 0.6)], back(A, B))
+    sp = mask()
+    star(sp, 20.5, 11.5, 3.0, 0.22, 0)
+    return finish(stack(layer(sun, mix(A, DARK, 0.75), DARK), *layers, layer(rim, WHITE, mix(A, WHITE, 0.35)), layer(sp, WHITE, B)),
+                  [glow(rim, A, 2.0, 1.1), glow(lighter(*blades), A, 1.2, 0.6)], back(A, B))
 
 
 ICONS = {

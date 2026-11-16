@@ -1203,7 +1203,7 @@ final class VanillaProbe {
             java.util.Map.entry("arcmage", "28 32 82 80 80"),
             java.util.Map.entry("necromancer", "36 80 56 124 90"),
             java.util.Map.entry("arsenalking", "22 30 66 40 104"), // 2026-11-15 궁수 2차 (옛 스나이퍼 · 배틀 아처 대신)
-            java.util.Map.entry("bladeranger", "20 30 64 40 98"),
+            java.util.Map.entry("bladeranger", "20 30 40 40 104"), // 2026-11-16 라이징 엣지 (30 내리꽂음) · 블레이드 이클립스 (88 거대한 X)
             java.util.Map.entry("trickster", "28 26 46 24a8 76"),
             java.util.Map.entry("pierrot", "58 22 34 70 100"),
             java.util.Map.entry("stormlancer", "36 28 48 34 86"),
@@ -1292,13 +1292,13 @@ final class VanillaProbe {
             case "arsenalking_rain" -> new double[] {10.5, 3.0, 5.0, 0.5};
             case "arsenalking_judge" -> new double[] {9.0, 2.6, 4.8, 0.5};
             case "arsenalking_ult" -> new double[] {13.0, 4.4, 3.6, 0.3};
-            // 블레이드 레인저: 가까이 (쌍검 베기) · 블레이드 스톰 · 아이언 템페스트는 둘레가 보이게
+            // 블레이드 레인저: 가까이 (쌍검 베기) · 라이징 엣지 · 블레이드 이클립스는 둘레가 보이게
             case "bladeranger_twin" -> new double[] {4.6, 1.9, 1.6, 0.7};
             // 2026-11-15 직업 전용 그림 영상: 블레이드 부메랑 · 포지 브레이커가 작게 보였음 → 가까이
             case "bladeranger_boomerang" -> new double[] {5.0, 2.2, 1.5, 0.5};
-            case "bladeranger_storm" -> new double[] {5.5, 2.6, 1.4, 0.6};
+            case "bladeranger_storm" -> new double[] {7.0, 2.6, 2.1, 0.6}; // 2026-11-16 라이징 엣지: 2.6칸 뛰어올라 공중 연타 — 조금 멀리 · 위를
             case "bladeranger_forge" -> new double[] {5.2, 2.6, 2.0, 0.6};
-            case "bladeranger_ult" -> new double[] {11.0, 4.2, 1.8, 0.35};
+            case "bladeranger_ult" -> new double[] {12.5, 4.6, 1.6, 0.35}; // 2026-11-16 블레이드 이클립스: 9칸까지 퍼지는 칼 고리
             case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35};
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6};
             case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35};
