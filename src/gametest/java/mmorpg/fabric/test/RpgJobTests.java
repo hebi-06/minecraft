@@ -120,7 +120,7 @@ public final class RpgJobTests {
 
     /** 과녁 둘레의 피해 숫자 중 직업 색 그라데이션 (첫 글자 색이 직업 첫째 빛 · 굵게) 이 있는지 */
     /**
-     * 직업 스킬 피해 숫자가 맞은 대상 둘레에 떴는지 (굵게). 2026-11-11 사용자 지침 피해 숫자 색: 직업 색 그라데이션 대신 흰색 · 노랑 (치명타) ·
+     * 직업 스킬 피해 숫자가 맞은 대상 둘레에 떴는지 (굵게 — 도트 숫자면 글꼴이 굵음). 2026-11-11 사용자 지침 피해 숫자 색: 직업 색 그라데이션 대신 흰색 · 노랑 (치명타) ·
      * 속성 피해는 그 원소 색 (치명타는 진한 쪽) — DamageNumbers.ruleColor. j 는 예전 호출 모양 그대로 (쓰지 않음)
      */
     static boolean ruleNumber(GameTestHelper h, Husk z, Jobs.Job j) {
@@ -131,7 +131,8 @@ public final class RpgJobTests {
             for (Component part : c.getSiblings()) {
                 TextColor col = part.getStyle().getColor();
                 if (col == null) continue;
-                if (ok.contains(col.getValue()) && part.getStyle().isBold()) return true;
+                // 2026-11-16 도트 숫자 (DamageNumbers.PIXEL_NUM — 글꼴 rpg:dmg 가 굵음) 는 굵게를 쓰지 않음
+                if (ok.contains(col.getValue()) && (part.getStyle().isBold() || DamageNumbers.PIXEL_NUM)) return true;
                 break;
             }
         }

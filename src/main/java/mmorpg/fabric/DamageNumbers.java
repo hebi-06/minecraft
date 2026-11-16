@@ -149,8 +149,11 @@ public final class DamageNumbers {
     public static boolean PIXEL_NUM = true;
     /** 숫자 글꼴 rpg:dmg (tools/dmg_font.py — 칸 높이 12 픽셀 = 12 단위, 바닥 글꼴 숫자 7 단위) */
     static final FontDescription NUM_FONT = new FontDescription.Resource(Mmorpg.rpg("dmg"));
-    /** 도트 숫자의 크기 몫 (바닥 글꼴 숫자보다 약 1.3 배 — 외곽선 포함 12 단위 × 0.8 ≈ 9.6 단위 대 바닥 7 + 그림자 1) */
-    static final float NUM_SCALE = 0.8F;
+    /**
+     * 도트 숫자의 크기 몫: 외곽선 포함 12 단위 × 0.7 ≈ 8.4 단위 — 바닥 글꼴 숫자 (7 + 그림자 1) 와 비슷한 높이 (획 · 외곽선이 굵어 더 잘 읽힘).
+     * 0.8 은 1인칭에서 눈앞 숫자가 너무 컸음 (CI 43806604941)
+     */
+    static final float NUM_SCALE = 0.7F;
 
     /** 숫자 글자 (도트 숫자면 rpg:dmg — 숫자 · + − . ! , % 밖의 글자는 바닥 글꼴로) */
     static net.minecraft.network.chat.MutableComponent num(String text, int rgb, boolean bold) {
