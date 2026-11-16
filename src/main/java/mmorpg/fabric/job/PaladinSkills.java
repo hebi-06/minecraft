@@ -30,8 +30,8 @@ final class PaladinSkills {
     /** 흙먼지 (누런 회색) */
     private static final double[] DUST = {0.62, 0.52, 0.4};
     /** 먹구름 (짙은 보라 회색 · 그보다 옅은 쪽) */
-    private static final double[] CLOUD = {0.16, 0.14, 0.24};
-    private static final double[] CLOUD_CORE = {0.34, 0.31, 0.46};
+    static final double[] CLOUD = {0.16, 0.14, 0.24}; // 2026-11-16 package — PhantomFx.painter (뇌광 묶음)
+    static final double[] CLOUD_CORE = {0.34, 0.31, 0.46};
 
     static void register() {
         JobSystem.register("paladin_smite", PaladinSkills::smite);

@@ -69,6 +69,8 @@ final class WyrdKit {
     static final Part FLAME = new Part(ParticleTypes.FLAME, 10);
     static final Part SMALL_FLAME = new Part(ParticleTypes.SMALL_FLAME, 10);
     static final Part SOUL = new Part(ParticleTypes.SOUL, 10);
+    /** 2026-11-16 푸른 불꽃 (혼불 불꽃 — 스스로 빛남) */
+    static final Part SOUL_FLAME = new Part(ParticleTypes.SOUL_FIRE_FLAME, 10);
     static final Part WAX = new Part(ParticleTypes.WAX_ON, 0);
     /** 흰 빛 점 (밀랍 벗김 — 10 ~ 40틱 · 스스로 빛남 · 제자리) */
     static final Part WHITE_DOT = new Part(ParticleTypes.WAX_OFF, 0);
@@ -120,6 +122,20 @@ final class WyrdKit {
     static final Pal WARD = new Pal(0x6688CC, 0xE2ECFF, SPARKLE, END_ROD, null, WHITE_DOT, END_ROD, WHITE_DOT);
     /** 2026-11-16 아가리 (다크 나이트): 작은 불꽃 불티 · 밀랍 반짝임 · 솟는 보랏빛 (공허) · 작은 불꽃이 빨려 듦 · 불빛 점 */
     static final Pal MAW = new Pal(0xB01A2A, 0xFF8E8A, SMALL_FLAME, WAX, null, UNDER, SMALL_FLAME, WAX);
+    /** 2026-11-16 뇌광 (성기사 · 썬더로드): 번쩍 불똥 (electric_spark) · 금빛 밀랍 반짝임 · end_rod · 금빛 점 */
+    static final Pal THUNDER = new Pal(0xF4BC36, 0x9CDCFF, ZAP, WAX, null, END_ROD, END_ROD, WAX);
+    /** 2026-11-16 폭군 (타이런트): 번쩍 불똥 · end_rod · 차원문 (보랏빛이 빨려 듦) · 흰 빛 점 */
+    static final Pal TYRANT = new Pal(0xA050F0, 0xFF8080, ZAP, END_ROD, null, PORTAL, PORTAL, WHITE_DOT);
+    /** 2026-11-16 사신 라인: 혼불 (soul) · end_rod · 발광 물빛 점 (사신 · 소울 리퍼) / 엑시큐셔너는 금빛 밀랍 · 차원문 (자줏빛) */
+    static final Pal REAP = new Pal(0x2ECCB8, 0x9AF6F0, SOUL, END_ROD, null, SOUL, SOUL, GLOW);
+    static final Pal SOULREAP = new Pal(0x3492E0, 0xA8E2FF, SOUL, END_ROD, null, SOUL, SOUL, WHITE_DOT);
+    static final Pal EXEC = new Pal(0xE2B03A, 0xE07ADC, SPARKLE, WAX, null, PORTAL, PORTAL, WAX);
+    /** 2026-11-16 창술사 라인: 창술사 (불꽃놀이 · 금빛 밀랍 · end_rod) · 스톰 랜서 (불꽃놀이 · end_rod · 흰 빛 점) · 드라군 (불꽃 · 밀랍 · 작은 불꽃) */
+    static final Pal LANCE = new Pal(0xE4B23E, 0xFFFAEC, SPARKLE, WAX, null, END_ROD, END_ROD, WAX);
+    static final Pal GALE = new Pal(0x40D8AA, 0xF2FFFA, SPARKLE, END_ROD, null, WHITE_DOT, END_ROD, WHITE_DOT);
+    static final Pal DRAGON = new Pal(0xF24E16, 0xFFD060, FLAME, WAX, null, SMALL_FLAME, FLAME, WAX);
+    /** 2026-11-16 푸른 불사조 (피닉스 가드): 푸른 불꽃 불티 · end_rod · 푸른 불꽃 · 흰 빛 점 */
+    static final Pal PHOENIX = new Pal(0x3C8CF0, 0xC8ECFF, SOUL_FLAME, END_ROD, null, SOUL_FLAME, SOUL_FLAME, WHITE_DOT);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -145,6 +161,15 @@ final class WyrdKit {
             case "el_hex" -> HEX;
             case "el_ward" -> WARD;
             case "el_maw" -> MAW;
+            case "el_thunder" -> THUNDER;
+            case "el_tyrant" -> TYRANT;
+            case "el_reap" -> REAP;
+            case "el_soulreap" -> SOULREAP;
+            case "el_exec" -> EXEC;
+            case "el_lance" -> LANCE;
+            case "el_gale" -> GALE;
+            case "el_dragon" -> DRAGON;
+            case "el_phoenix" -> PHOENIX;
             default -> null;
         };
     }

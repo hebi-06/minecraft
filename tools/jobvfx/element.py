@@ -1486,6 +1486,68 @@ STYLES = {
                  accent=ramp([(0.0, "#1A1414"), (0.5, "#8C8078"), (0.8, "#E8DED0"), (1.0, "#FFFFFF")]),
                  smoke=ramp([(0.0, "#050203"), (0.45, "#1A080C"), (0.8, "#2E1218"), (1.0, "#4A2428")]),
                  ring="ticks", smoke_alpha=0.45, seed=35),
+    # 2026-11-16 뇌광 (성기사 · 썬더로드 — 금빛 · 하늘빛: jobs.json paladin [1, 0.8, 0.26] · [0.5, 0.85, 1]): 벼락 · 번개 고리 · 빛의 창 (storm.py) + 번개 줄 ·
+    # 먹구름 · 돌 껍데기 · 번개 문장 · 바퀴 자국 · 번개 망치 · 거인의 손 · 번개 기둥 (tools/jobvfx/thunder.py). 번개 빛은 하늘빛 (accent)
+    "thunder": Style("el_thunder", "thunder",
+                     main=ramp([(0.0, "#140E02"), (0.12, "#3A2806"), (0.26, "#6E4C0C"), (0.4, "#A67414"), (0.52, "#D89A1E"), (0.64, "#F4BC36"),
+                                (0.76, "#FFD460"), (0.86, "#FFE6A0"), (0.94, "#FFF6DC"), (1.0, "#FFFFFF")]),
+                     accent=ramp([(0.0, "#06182A"), (0.5, "#3A9AE0"), (0.8, "#9CDCFF"), (1.0, "#F0FAFF")]),
+                     smoke=ramp([(0.0, "#0A0C12"), (0.45, "#262C3A"), (0.8, "#46506A"), (1.0, "#6A7690")]),
+                     ring="ticks", smoke_alpha=0.45, seed=37),
+    # 2026-11-16 폭군 (타이런트 — 보랏빛 · 핏빛: jobs.json tyrant [0.7, 0.32, 1] · [1, 0.3, 0.34]): 뇌광과 같은 그림을 보랏빛 몸 · 핏빛 번개로
+    "tyrant": Style("el_tyrant", "tyrant",
+                    main=ramp([(0.0, "#0E0418"), (0.12, "#240A3E"), (0.26, "#40146C"), (0.4, "#6020A0"), (0.52, "#8034CC"), (0.64, "#A050F0"),
+                               (0.76, "#BC78FF"), (0.86, "#D6A6FF"), (0.94, "#F0DCFF"), (1.0, "#FFFFFF")]),
+                    accent=ramp([(0.0, "#2A0408"), (0.5, "#D8303C"), (0.8, "#FF8080"), (1.0, "#FFECEC")]),
+                    smoke=ramp([(0.0, "#08040C"), (0.45, "#1E1028"), (0.8, "#382246"), (1.0, "#563A66")]),
+                    ring="ticks", smoke_alpha=0.45, seed=39),
+    # 2026-11-16 사신 라인: 사신 (청록 혼 — jobs.json reaper [0.22, 0.96, 0.86] · [0.1, 0.36, 0.38]) · 소울 리퍼 (하늘빛 · 남빛) · 엑시큐셔너 (금빛 · 자줏빛) —
+    # 망자의 비명 · 사신 그림자 · 처형 표식 (tools/jobvfx/reap.py) + 혼불 · 해골 · 망자의 손 · 연기 (soul.py) 를 묶음 빛으로
+    "reap": Style("el_reap", "reap",
+                  main=ramp([(0.0, "#021210"), (0.12, "#062A26"), (0.26, "#0C4E46"), (0.4, "#127A6C"), (0.52, "#1AA694"), (0.64, "#2ECCB8"),
+                             (0.76, "#62E8D6"), (0.86, "#A0F6EA"), (0.94, "#DEFFFA"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#04161A"), (0.5, "#2A9A9E"), (0.8, "#9AF6F0"), (1.0, "#F0FFFE")]),
+                  smoke=ramp([(0.0, "#020606"), (0.45, "#0C1C1E"), (0.8, "#183234"), (1.0, "#2A4A4C")]),
+                  ring="ticks", smoke_alpha=0.45, seed=41),
+    "soulreap": Style("el_soulreap", "reap",
+                      main=ramp([(0.0, "#020A16"), (0.12, "#06182E"), (0.26, "#0C2E56"), (0.4, "#144A86"), (0.52, "#1E6CB6"), (0.64, "#3492E0"),
+                                 (0.76, "#64B8F6"), (0.86, "#A0D8FF"), (0.94, "#E0F4FF"), (1.0, "#FFFFFF")]),
+                      accent=ramp([(0.0, "#04121E"), (0.5, "#3A8EC8"), (0.8, "#A8E2FF"), (1.0, "#F4FCFF")]),
+                      smoke=ramp([(0.0, "#020408"), (0.45, "#0A1424"), (0.8, "#16263E"), (1.0, "#283C5A")]),
+                      ring="ticks", smoke_alpha=0.45, seed=43),
+    "exec": Style("el_exec", "reap",
+                  main=ramp([(0.0, "#0E0A02"), (0.12, "#2E2006"), (0.26, "#5A3E0C"), (0.4, "#8A6214"), (0.52, "#BA8A1E"), (0.64, "#E2B03A"),
+                             (0.76, "#F8CC68"), (0.86, "#FFE2A0"), (0.94, "#FFF4DC"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#160418"), (0.5, "#8A2A86"), (0.8, "#E07ADC"), (1.0, "#FFE8FE")]),
+                  smoke=ramp([(0.0, "#08040A"), (0.45, "#1E0C22"), (0.8, "#36183C"), (1.0, "#523058")]),
+                  ring="ticks", smoke_alpha=0.45, seed=45),
+    # 2026-11-16 창술사 라인: 창술사 (금빛 · 흰빛 — jobs.json lancer [1, 0.82, 0.3] · [1, 0.98, 0.9]) · 스톰 랜서 (박하빛 · 흰빛) · 드라군 (주홍 · 주황) — 깃털 · 바람 고리 ·
+    # 도는 창 · 바람 소용돌이 · 불꽃 덩이 · 용의 혼 (tools/jobvfx/lance.py)
+    "lance": Style("el_lance", "lance",
+                   main=ramp([(0.0, "#120C02"), (0.12, "#322206"), (0.26, "#5E420C"), (0.4, "#8E6614"), (0.52, "#C08E22"), (0.64, "#E4B23E"),
+                              (0.76, "#F8D06E"), (0.86, "#FFE6A8"), (0.94, "#FFF8E4"), (1.0, "#FFFFFF")]),
+                   accent=ramp([(0.0, "#1A1A16"), (0.5, "#CEC8B4"), (0.8, "#FFFAEC"), (1.0, "#FFFFFF")]),
+                   smoke=ramp([(0.0, "#0C0A06"), (0.45, "#2A2418"), (0.8, "#4A4230"), (1.0, "#6E6450")]),
+                   ring="ticks", smoke_alpha=0.45, seed=47),
+    "gale": Style("el_gale", "lance",
+                  main=ramp([(0.0, "#021410"), (0.12, "#063228"), (0.26, "#0C5C48"), (0.4, "#14886A"), (0.52, "#22B48C"), (0.64, "#40D8AA"),
+                             (0.76, "#72F0C6"), (0.86, "#A8FADC"), (0.94, "#E2FFF4"), (1.0, "#FFFFFF")]),
+                  accent=ramp([(0.0, "#0A1A16"), (0.5, "#9ED8C8"), (0.8, "#F2FFFA"), (1.0, "#FFFFFF")]),
+                  smoke=ramp([(0.0, "#040A08"), (0.45, "#12241E"), (0.8, "#223E34"), (1.0, "#3A5C50")]),
+                  ring="ticks", smoke_alpha=0.45, seed=49),
+    "dragon": Style("el_dragon", "lance",
+                    main=ramp([(0.0, "#140402"), (0.12, "#360A04"), (0.26, "#661406"), (0.4, "#9C200A"), (0.52, "#D0300E"), (0.64, "#F24E16"),
+                               (0.76, "#FF7E2E"), (0.86, "#FFB070"), (0.94, "#FFE4C4"), (1.0, "#FFFFFF")]),
+                    accent=ramp([(0.0, "#2A1404"), (0.5, "#E08A1A"), (0.8, "#FFD060"), (1.0, "#FFF6D8")]),
+                    smoke=ramp([(0.0, "#0C0604"), (0.45, "#261410"), (0.8, "#42261E"), (1.0, "#5E3E34")]),
+                    ring="ticks", smoke_alpha=0.45, seed=51),
+    # 2026-11-16 푸른 불사조 (피닉스 가드 — 하늘빛 불꽃 · 흰빛: jobs.json phoenix [0.26, 0.62, 1] · [0.9, 0.97, 1]): 불꽃 날개 · 불사조 · 분노의 부채꼴 (tools/jobvfx/phoenix.py)
+    "phoenix": Style("el_phoenix", "phoenix",
+                     main=ramp([(0.0, "#020A1A"), (0.12, "#06183A"), (0.26, "#0C2E68"), (0.4, "#1648A0"), (0.52, "#2468D0"), (0.64, "#3C8CF0"),
+                                (0.76, "#6EB0FF"), (0.86, "#A6D2FF"), (0.94, "#E2F0FF"), (1.0, "#FFFFFF")]),
+                     accent=ramp([(0.0, "#061428"), (0.5, "#5AB4F0"), (0.8, "#C8ECFF"), (1.0, "#FFFFFF")]),
+                     smoke=ramp([(0.0, "#04060A"), (0.45, "#141C2A"), (0.8, "#263246"), (1.0, "#3E4C64")]),
+                     ring="ticks", smoke_alpha=0.45, seed=53),
 }
 
 
@@ -1624,6 +1686,45 @@ def sets_for(S):
                    (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
                    (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)]
                 + ward.sprites(S) + holy.sprites(S, ("heal",)))  # 회복 십자 (수호기사 특성 — JobTraits4)
+    if S.kind == "phoenix":
+        # 2026-11-16 피닉스 가드 (푸른 불사조 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 빠른 줄 · 돌진 줄기 · 빛 고리 + 깃털 (lance.py) · 불씨 기둥 (maw.py) +
+        # 불꽃 날개 · 불사조 · 분노의 부채꼴 (phoenix.py)
+        from . import arcane, lance, maw, phoenix
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
+                + [(p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)]
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + lance.sprites(S, ("feather",)) + maw.sprites(S, ("cinder",)) + phoenix.sprites(S))
+    if S.kind == "lance":
+        # 2026-11-16 창술사 · 스톰 랜서 · 드라군 (창술사 라인 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 빠른 줄 · 돌진 줄기 · 띠 + 찌르기 번쩍 (shadow.py) ·
+        # 빛의 창 (storm.py) · 회오리 · 도는 날 · 불꽃 꼬리 (beast.py) · 서 있는 불꽃 (forge.py) + 깃털 · 바람 고리 · 도는 창 · 바람 소용돌이 · 불꽃 덩이 · 용의 혼 (lance.py)
+        from . import arcane, beast, forge, lance, shadow, storm
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
+                + [(p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "stab", lambda: shadow.frames_of("stab", S), True)]
+                + storm.sprites(S, ("spear",)) + [(p + k, (lambda k=k: beast.frames_of(k, S)), True) for k in ("twister", "whirl", "comet")]
+                + lance.sprites(S))
+        if S.lib == "el_dragon":
+            out += [(p + "flame", lambda: [to_img(*forge.flame_frame(f)) for f in range(forge.FLAME_FRAMES)], True)]
+    if S.kind == "reap":
+        # 2026-11-16 사신 · 소울 리퍼 · 엑시큐셔너 (사신 라인 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 빠른 줄 · 빛 고리 · 회오리 날 + 혼불 · 해골 ·
+        # 망자의 손 (soul.py) · 연기 (shadow.py — soul 연기는 녹색 안개로 정해짐) + 망자의 비명 · 사신 그림자 · 처형 표식 (reap.py) + 사슬 (ward.py) · 조명 (circus.py)
+        from . import arcane, beast, circus, reap, shadow, soul, ward
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
+                + [(p + "whirl", lambda: beast.frames_of("whirl", S), True), (p + "smoke", lambda: shadow.frames_of("smoke", S), True)]
+                + [(p + k, (lambda k=k: soul.frames_of(k, S)), True) for k in ("soul", "skull", "hand")]
+                + reap.sprites(S) + ward.sprites(S, ("chain",)) + [(p + "spot", lambda: circus.frames_of("spot", S), True)])
+    if S.kind in ("thunder", "tyrant"):
+        # 2026-11-16 성기사 · 썬더로드 · 타이런트 (뇌광 · 폭군 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 빠른 줄 · 돌진 줄기 · 빛의 방패 · 띠 · 연기 +
+        # 벼락 · 번개 고리 · 빛의 창 (storm.py) + 번개 줄 · 먹구름 · 돌 껍데기 · 번개 문장 · 바퀴 자국 · 번개 망치 · 거인의 손 · 번개 기둥 (thunder.py)
+        from . import arcane, shadow, storm, thunder, ward
+        out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True)]
+                + [(p + "aegis", lambda: [to_img(*arcane.aegis_frame(S, f)) for f in range(arcane.AEGIS_FRAMES)], True),
+                   (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                   (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True),
+                   (p + "smoke", lambda: shadow.frames_of("smoke", S), True)]
+                + storm.sprites(S) + thunder.sprites(S) + ward.sprites(S, ("chain",)))  # 썬더로드 번개 사슬 (JobFx.chain)
     if S.kind == "maw":
         # 2026-11-16 다크 나이트 (아가리 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 연기 (shadow.py 를 아가리 빛으로) · 빠른 줄 · 땅 가르기 +
         # 대표 그림 (tools/jobvfx/maw.py — 방패의 아가리 · 검은 혀 · 땅의 아가리 · 불씨 기둥)
@@ -1721,7 +1822,7 @@ def sets_for(S):
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element", "holy", "petal", "hex", "ward", "maw"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element", "holy", "petal", "hex", "ward", "maw", "thunder", "tyrant", "reap", "soulreap", "exec", "lance", "gale", "dragon", "phoenix"):
         out += sets_for(STYLES[key])
     return out
 

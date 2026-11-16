@@ -102,6 +102,22 @@ final class PhantomFx {
     /** 2026-11-16 아가리 (다크 나이트 — 진홍 · 검은 공허: 방패의 아가리 · 검은 혀 · 땅의 아가리 · 불씨 기둥 — tools/jobvfx/maw.py) */
     static final int GLOW_MAW = 0xD8303C;
     static final Lib MAW = new Lib("el_maw", GLOW_MAW, 0xE8DED0, "ember");
+    /** 2026-11-16 뇌광 (성기사 · 썬더로드 — 금빛 · 하늘빛 번개: 벼락 · 번개 고리 · 번개 줄 · 먹구름 · 돌 껍데기 · 번개 망치 · 번개 기둥 — tools/jobvfx/thunder.py · storm.py) */
+    static final int GLOW_THUNDER = 0xFFD460;
+    static final Lib THUNDER = new Lib("el_thunder", GLOW_THUNDER, 0x9CDCFF, "ember");
+    /** 2026-11-16 폭군 (타이런트 — 보랏빛 · 핏빛 번개: 뇌광과 같은 그림 · 거인의 손) */
+    static final int GLOW_TYRANT = 0xBC78FF;
+    static final Lib TYRANT = new Lib("el_tyrant", GLOW_TYRANT, 0xFF8080, "ember");
+    /** 2026-11-16 사신 라인 (사신 청록 혼 · 소울 리퍼 하늘빛 · 엑시큐셔너 금빛 · 자줏빛: 망자의 비명 · 사신 그림자 · 처형 표식 — tools/jobvfx/reap.py · soul.py) */
+    static final Lib REAP = new Lib("el_reap", 0x62E8D6, 0x9AF6F0, "ember");
+    static final Lib SOULREAP = new Lib("el_soulreap", 0x64B8F6, 0xA8E2FF, "ember");
+    static final Lib EXEC = new Lib("el_exec", 0xF8CC68, 0xE07ADC, "ember");
+    /** 2026-11-16 창술사 라인 (창술사 금빛 · 스톰 랜서 박하빛 · 드라군 주홍: 깃털 · 바람 고리 · 도는 창 · 바람 소용돌이 · 불꽃 덩이 · 용의 혼 — tools/jobvfx/lance.py) */
+    static final Lib LANCE = new Lib("el_lance", 0xF8D06E, 0xFFFAEC, "ember");
+    static final Lib GALE = new Lib("el_gale", 0x72F0C6, 0xF2FFFA, "ember");
+    static final Lib DRAGONL = new Lib("el_dragon", 0xFF7E2E, 0xFFD060, "ember");
+    /** 2026-11-16 푸른 불사조 (피닉스 가드 — 하늘빛 불꽃: 불꽃 날개 · 불사조 · 분노의 부채꼴 — tools/jobvfx/phoenix.py) */
+    static final Lib PHOENIXL = new Lib("el_phoenix", 0x6EB0FF, 0xC8ECFF, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -126,6 +142,15 @@ final class PhantomFx {
             case "warlock" -> HEX; // 2026-11-16 (tools/jobvfx/hex.py)
             case "guardian" -> WARD; // 2026-11-16 수호기사 (tools/jobvfx/ward.py)
             case "darkknight" -> MAW; // 2026-11-16 다크 나이트 (tools/jobvfx/maw.py)
+            case "paladin", "thunderlord" -> THUNDER; // 2026-11-16 성기사 라인 (tools/jobvfx/thunder.py)
+            case "tyrant" -> TYRANT;
+            case "reaper" -> REAP; // 2026-11-16 사신 라인 (tools/jobvfx/reap.py)
+            case "soulreaper" -> SOULREAP;
+            case "executioner" -> EXEC;
+            case "lancer" -> LANCE; // 2026-11-16 창술사 라인 (tools/jobvfx/lance.py)
+            case "stormlancer" -> GALE;
+            case "dragoon" -> DRAGONL;
+            case "phoenix" -> PHOENIXL; // 2026-11-16 (tools/jobvfx/phoenix.py)
             default -> null;
         };
     }
@@ -1455,11 +1480,38 @@ final class PhantomFx {
             java.util.Map.entry("jtendril", new Paint("tendril", 1, LOOK_DIR, 96 / 512.0, 1)),
             java.util.Map.entry("jabyss", new Paint("abyss", 1, VERT, 1, 1)),
             java.util.Map.entry("jcinder", new Paint("cinder", 1, VERT, 2, 1)),
+            // 2026-11-16 성기사 라인 (tools/jobvfx/thunder.py — 같은 틀): 번개 줄 (가는 쪽으로 누움 · 128 / 512) · 먹구름 (192 / 384) · 돌 껍데기 (세움 · 256 / 192) ·
+            // 번개 문장 · 바퀴 자국 (땅에 누움 · 64 / 256) · 번개 망치 · 거인의 손. 번개 기둥 jpillar 는 위 rpillar (묶음마다 그 묶음의 기둥)
+            java.util.Map.entry("jarc", new Paint("arc", 1, LOOK_DIR, 0.25, 1)),
+            java.util.Map.entry("jcloud", new Paint("cloud", 1, BILL, 0.5, 1)),
+            java.util.Map.entry("jstone", new Paint("stone", 1, VERT, 256 / 192.0, 1)),
+            java.util.Map.entry("jjudge2", new Paint("judge", 1, BILL, 1, 1)),
+            java.util.Map.entry("jwheel", new Paint("wheel", 1, FACE_DIR, 0.25, 1)),
+            java.util.Map.entry("jmaulswing", new Paint("maulswing", 1, BILL, 1, 1)),
+            java.util.Map.entry("jgrip", new Paint("grip", 1, BILL, 1, 1)),
+            // 2026-11-16 사신 라인 (tools/jobvfx/reap.py — 같은 틀): 망자의 비명 · 사신 그림자 (세움 · 256 / 192) · 처형 표식 (땅에 누움)
+            java.util.Map.entry("jwail", new Paint("wail", 1, BILL, 1, 1)),
+            java.util.Map.entry("jreaper2", new Paint("reaper", 1, VERT, 256 / 192.0, 1)),
+            java.util.Map.entry("jxmark", new Paint("xmark", 1, FACE_DIR, 1, 1)),
+            // 2026-11-16 창술사 라인 (tools/jobvfx/lance.py — 같은 틀): 깃털 · 바람 고리 (땅에 누움) · 도는 창 (면이 normal — 공용 한 바퀴 고리 spin 과 이름을 나눔) ·
+            // 바람 소용돌이 · 불꽃 덩이 · 용의 혼 · 서 있는 불꽃 (세움 · 256 / 128 — forge.py)
+            java.util.Map.entry("jfeather", new Paint("feather", 1, BILL, 1, 1)),
+            java.util.Map.entry("jwind2", new Paint("wind", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jspin2", new Paint("lspin", 1, FACE_DIR, 1, 1)),
+            java.util.Map.entry("jswirl", new Paint("swirl", 1, BILL, 1, 1)),
+            java.util.Map.entry("jfire", new Paint("fire", 1, BILL, 1, 1)),
+            java.util.Map.entry("jdragon", new Paint("dragon", 1, BILL, 1, 1)),
+            java.util.Map.entry("jflame", new Paint("flame", 1, VERT, 2, 1)),
+            // 2026-11-16 피닉스 가드 (tools/jobvfx/phoenix.py — 같은 틀): 불꽃 날개 (416 / 512) · 불사조 · 분노의 부채꼴 (땅에 누움)
+            java.util.Map.entry("jfwings", new Paint("fwings", 1, BILL, 416 / 512.0, 1)),
+            java.util.Map.entry("jphoenix", new Paint("phoenix", 1, BILL, 1, 1)),
+            java.util.Map.entry("jfury", new Paint("fury", 1, FACE_DIR, 1, 1)),
             java.util.Map.entry("jglint", new Paint("flash", 1, BILL, 1, 0.7)));
 
     /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
     private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot", "warrior", "warlord", "frostraider", "spellblade",
-            "arcaneblade", "elementalblade", "priest", "saint", "warlock", "guardian", "darkknight"};
+            "arcaneblade", "elementalblade", "priest", "saint", "warlock", "guardian", "darkknight", "paladin", "thunderlord", "tyrant", "reaper", "soulreaper",
+            "executioner", "lancer", "stormlancer", "dragoon", "phoenix"};
     /** 스킬이 직업 빛 대신 쓰는 빛 묶음 (같은 배열) → 묶음: 아크메이지 밤빛 · 금서의 세 주문 빛 · 프리즘 레이 다섯 빛 (무지개 대신 비전 광선) · 망자의 연기 */
     private static java.util.Map<double[], Lib> palette;
 
@@ -1542,6 +1594,24 @@ final class PhantomFx {
             m.put(JobTraits15.BLOOD, MAW);
             m.put(JobTraits15.CRIMSON, MAW);
             m.put(JobTraits15.CRIMSON_CORE, MAW);
+            // 2026-11-16 성기사 · 썬더로드 (금빛 · 하늘빛 · 먹구름 · 새벽빛 · 돌) → 뇌광, 타이런트 (보랏빛 · 핏빛) → 폭군
+            for (double[] c : new double[][] {JobTraits13.GOLD, JobTraits13.GOLD_CORE, JobTraits13.SKY, JobTraits13.SKY_CORE, JobTraits13.CLOUD, JobTraits13.CLOUD_CORE,
+                    JobTraits13.DAWN, JobTraits13.DAWN_CORE, JobTraits13.STONE, JobTraits13.STONE_CORE, PaladinSkills.CLOUD, PaladinSkills.CLOUD_CORE})
+                m.put(c, THUNDER);
+            for (double[] c : new double[][] {JobTraits13.VIOLET, JobTraits13.VIOLET_CORE, JobTraits13.CRIMSON, JobTraits13.CRIMSON_CORE})
+                m.put(c, TYRANT);
+            // 2026-11-16 소울 리퍼 (혼 · 그늘) → 소울 리퍼 묶음, 엑시큐셔너 (황혼 · 자줏빛 · 칼날 · 까마귀 · 그림자) → 처형 묶음
+            for (double[] c : new double[][] {JobTraits12.SOUL, JobTraits12.SOUL_CORE, SoulreaperSkills.SHADE, SoulreaperSkills.SHADE_CORE})
+                m.put(c, SOULREAP);
+            for (double[] c : new double[][] {JobTraits12.DUSK, JobTraits12.DUSK_CORE, JobTraits12.VIOLET, ExecutionerSkills.VIOLET_CORE, ExecutionerSkills.DARK,
+                    ExecutionerSkills.BLADE, ExecutionerSkills.RAVEN, ExecutionerSkills.SHADOW, ExecutionerSkills.SHADOW_CORE})
+                m.put(c, EXEC);
+            // 2026-11-16 드라군 (용 · 불) → 용 묶음
+            for (double[] c : new double[][] {DragoonSkills.DRAGON_GLOW, DragoonSkills.DRAGON_CORE, DragoonSkills.FIRE_GLOW, DragoonSkills.FIRE_CORE})
+                m.put(c, DRAGONL);
+            // 2026-11-16 피닉스 가드 (하늘빛 · 깊은 푸른빛) → 불사조 묶음
+            for (double[] c : new double[][] {JobTraits15.AZURE, JobTraits15.AZURE_CORE, JobTraits15.DEEP, JobTraits15.DEEP_CORE})
+                m.put(c, PHOENIXL);
             palette = m;
         }
         Lib L = palette.get(glow);

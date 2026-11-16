@@ -319,7 +319,11 @@ PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el
               "el_holy": "holy", "el_petal": "petal",  # 2026-11-16 사제 · 세인트 (성광 · 꽃잎)
               "el_hex": "hex",  # 2026-11-16 워록 (혈주)
               "el_ward": "ward",  # 2026-11-16 수호기사 (수호)
-              "el_maw": "maw"}  # 2026-11-16 다크 나이트 (아가리)
+              "el_maw": "maw",  # 2026-11-16 다크 나이트 (아가리)
+              "el_thunder": "thunder", "el_tyrant": "tyrant",  # 2026-11-16 성기사 · 썬더로드 (뇌광) · 타이런트 (폭군)
+              "el_reap": "reap", "el_soulreap": "soulreap", "el_exec": "exec",  # 2026-11-16 사신 라인
+              "el_lance": "lance", "el_gale": "gale", "el_dragon": "dragon",  # 2026-11-16 창술사 라인
+              "el_phoenix": "phoenix"}  # 2026-11-16 피닉스 가드
 
 
 def _old_outputs():

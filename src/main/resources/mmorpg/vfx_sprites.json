@@ -8668,6 +8668,4812 @@
     -0.007812,
     -0.0
    ]
+  },
+  "el_thunder_slash_00": {
+   "chars": "ﶿﷀﷁﷂﷃﷄﷅﷆﷇ﷈",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.044034,
+    -0.0
+   ]
+  },
+  "el_thunder_slash_01": {
+   "chars": "﷉﷊﷋﷌﷍﷎﷏﷐﷑﷒",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_thunder_slash_10": {
+   "chars": "﷓﷔﷕﷖﷗﷘﷙﷚﷛﷜",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_thunder_slash_11": {
+   "chars": "﷝﷞﷟﷠﷡﷢﷣﷤﷥﷦",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_thunder_slashm_00": {
+   "chars": "﷧﷨﷩﷪﷫﷬﷭﷮﷯ﷰ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.051486,
+    -0.0
+   ]
+  },
+  "el_thunder_slashm_01": {
+   "chars": "ﷱﷲﷳﷴﷵﷶﷷﷸﷹﷺ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.0
+   ]
+  },
+  "el_thunder_slashm_10": {
+   "chars": "ﷻ﷼﷽﷾﷿︀︁︂︃︄",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_thunder_slashm_11": {
+   "chars": "︅︆︇︈︉︊︋︌︍︎",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.251921,
+    -0.0
+   ]
+  },
+  "el_thunder_xslash_00": {
+   "chars": "️︐︑︒︓︔︕︖",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_thunder_xslash_01": {
+   "chars": "︗︘︙︚︛︜︝︞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    -0.125
+   ]
+  },
+  "el_thunder_xslash_10": {
+   "chars": "︟︠︡︢︣︤︥︦",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_thunder_xslash_11": {
+   "chars": "︧︨︩︪︫︬︭︮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    0.125
+   ]
+  },
+  "el_thunder_boom_00": {
+   "chars": "︯︰︱︲︳︴︵︶︷︸︹︺︻︼",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.078125
+   ]
+  },
+  "el_thunder_boom_01": {
+   "chars": "︽︾︿﹀﹁﹂﹃﹄﹅﹆﹇﹈﹉﹊",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.078125,
+    -0.078125
+   ]
+  },
+  "el_thunder_boom_10": {
+   "chars": "﹋﹌﹍﹎﹏﹐﹑﹒﹓﹔﹕﹖﹗﹘",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.078125
+   ]
+  },
+  "el_thunder_boom_11": {
+   "chars": "﹙﹚﹛﹜﹝﹞﹟﹠﹡﹢﹣﹤﹥﹦",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.078125,
+    0.078125
+   ]
+  },
+  "el_thunder_shock_00": {
+   "chars": "﹧﹨﹩﹪﹫﹬﹭﹮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_thunder_shock_01": {
+   "chars": "﹯ﹰﹱﹲﹳﹴ﹵ﹶ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_thunder_shock_10": {
+   "chars": "ﹷﹸﹹﹺﹻﹼﹽﹾ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_thunder_shock_11": {
+   "chars": "ﹿﺀﺁﺂﺃﺄﺅﺆ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_thunder_ring_00": {
+   "chars": "ﺇﺈﺉﺊ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_thunder_ring_01": {
+   "chars": "ﺋﺌﺍﺎ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_thunder_ring_10": {
+   "chars": "ﺏﺐﺑﺒ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_thunder_ring_11": {
+   "chars": "ﺓﺔﺕﺖ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_thunder_boom_s": {
+   "chars": "ﺗﺘﺙﺚﺛﺜﺝﺞﺟﺠﺡﺢ",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_thunder_shock_s": {
+   "chars": "ﺣﺤﺥﺦﺧﺨﺩﺪﺫﺬ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_thunder_crack_s": {
+   "chars": "ﺭﺮﺯﺰﺱ",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    -0.0
+   ]
+  },
+  "el_thunder_flash": {
+   "chars": "ﺲﺳﺴﺵﺶﺷﺸﺹ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_thunder_charge": {
+   "chars": "ﺺﺻﺼﺽﺾﺿﻀﻁﻂﻃ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.025354,
+    -0.0
+   ]
+  },
+  "el_thunder_ember": {
+   "chars": "ﻄﻅﻆﻇ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020833,
+    0.020833
+   ]
+  },
+  "el_thunder_shard": {
+   "chars": "ﻈﻉﻊﻋﻌﻍﻎﻏ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_thunder_pillar": {
+   "chars": "ﻐﻑﻒﻓﻔﻕﻖﻗﻘﻙ",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_thunder_dust": {
+   "chars": "ﻚﻛﻜﻝﻞﻟﻠﻡ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.013889,
+    -0.159722
+   ]
+  },
+  "el_thunder_spin_00": {
+   "chars": "ﻢﻣﻤﻥﻦﻧﻨﻩ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_thunder_spin_01": {
+   "chars": "ﻪﻫﻬﻭﻮﻯﻰﻱ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
+  },
+  "el_thunder_spin_10": {
+   "chars": "ﻲﻳﻴﻵﻶﻷﻸﻹ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    0.0625
+   ]
+  },
+  "el_thunder_spin_11": {
+   "chars": "ﻺﻻﻼ﻽﻾﻿＀！",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_thunder_spinm_00": {
+   "chars": "＂＃＄％＆＇（）",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.057813,
+    -0.03125
+   ]
+  },
+  "el_thunder_spinm_01": {
+   "chars": "＊＋，－．／０１",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_thunder_spinm_10": {
+   "chars": "２３４５６７８９",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_thunder_spinm_11": {
+   "chars": "：；＜＝＞？＠Ａ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
+  },
+  "el_thunder_cut": {
+   "chars": "ＢＣＤＥＦＧＨＩ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_thunder_speed": {
+   "chars": "ＪＫＬＭ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_thunder_aegis": {
+   "chars": "ＮＯＰＱＲＳ",
+   "frames": 6,
+   "aspect": 0.8,
+   "colored": true,
+   "crop": [
+    -0.000481,
+    -0.0
+   ]
+  },
+  "el_thunder_aura": {
+   "chars": "ＴＵＶＷＸＹＺ［",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_thunder_dash": {
+   "chars": "＼］＾＿｀ａ",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_thunder_smoke": {
+   "chars": "ｂｃｄｅｆｇｈｉ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_thunder_thunder": {
+   "chars": "ｊｋｌｍｎｏ",
+   "frames": 6,
+   "aspect": 0.25,
+   "colored": true
+  },
+  "el_thunder_volt": {
+   "chars": "ｐｑｒｓｔｕｖｗ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    0.005208
+   ]
+  },
+  "el_thunder_spear": {
+   "chars": "ｘｙｚ｛",
+   "frames": 4,
+   "aspect": 6.0,
+   "colored": true
+  },
+  "el_thunder_arc": {
+   "chars": "｜｝～｟｠｡｢｣",
+   "frames": 8,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_thunder_cloud": {
+   "chars": "､･ｦｧｨｩｪｫ",
+   "frames": 8,
+   "aspect": 2.0,
+   "colored": true
+  },
+  "el_thunder_stone": {
+   "chars": "ｬｭｮｯｰｱｲｳ",
+   "frames": 8,
+   "aspect": 0.7458,
+   "colored": true,
+   "crop": [
+    -0.00384,
+    -0.0
+   ]
+  },
+  "el_thunder_judge": {
+   "chars": "ｴｵｶｷ",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_thunder_wheel": {
+   "chars": "ｸｹｺｻｼｽ",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_thunder_maulswing": {
+   "chars": "ｾｿﾀﾁﾂﾃ",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.078125
+   ]
+  },
+  "el_thunder_grip": {
+   "chars": "ﾄﾅﾆﾇﾈﾉﾊﾋ",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.046875,
+    0.0625
+   ]
+  },
+  "el_thunder_rpillar": {
+   "chars": "ﾌﾍﾎﾏﾐﾑﾒﾓ",
+   "frames": 8,
+   "aspect": 0.25,
+   "colored": true
+  },
+  "el_thunder_chain": {
+   "chars": "ﾔﾕﾖﾗ",
+   "frames": 4,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_tyrant_slash_00": {
+   "chars": "ﾘﾙﾚﾛﾜﾝﾞﾟﾠﾡ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.044034,
+    -0.0
+   ]
+  },
+  "el_tyrant_slash_01": {
+   "chars": "ﾢﾣﾤﾥﾦﾧﾨﾩﾪﾫ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_tyrant_slash_10": {
+   "chars": "ﾬﾭﾮﾯﾰﾱﾲﾳﾴﾵ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_tyrant_slash_11": {
+   "chars": "ﾶﾷﾸﾹﾺﾻﾼﾽﾾ﾿",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_tyrant_slashm_00": {
+   "chars": "￀￁ￂￃￄￅￆￇ￈￉",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.051486,
+    -0.0
+   ]
+  },
+  "el_tyrant_slashm_01": {
+   "chars": "ￊￋￌￍￎￏ￐￑ￒￓ",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    -0.0
+   ]
+  },
+  "el_tyrant_slashm_10": {
+   "chars": "ￔￕￖￗ￘￙ￚￛￜ￝",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_tyrant_slashm_11": {
+   "chars": "￞￟￠￡￢￣￤￥￦￧",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.251921,
+    -0.0
+   ]
+  },
+  "el_tyrant_xslash_00": {
+   "chars": "￨￩￪￫￬￭￮￯",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_tyrant_xslash_01": {
+   "chars": "￰￱￲￳￴￵￶￷",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
+  },
+  "el_tyrant_xslash_10": {
+   "chars": "￸￹￺￻￼�￾￿",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_tyrant_xslash_11": {
+   "chars": "𐀀𐀁𐀂𐀃𐀄𐀅𐀆𐀇",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    0.125
+   ]
+  },
+  "el_tyrant_boom_00": {
+   "chars": "𐀈𐀉𐀊𐀋𐀌𐀍𐀎𐀏𐀐𐀑𐀒𐀓𐀔𐀕",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.09375
+   ]
+  },
+  "el_tyrant_boom_01": {
+   "chars": "𐀖𐀗𐀘𐀙𐀚𐀛𐀜𐀝𐀞𐀟𐀠𐀡𐀢𐀣",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_tyrant_boom_10": {
+   "chars": "𐀤𐀥𐀦𐀧𐀨𐀩𐀪𐀫𐀬𐀭𐀮𐀯𐀰𐀱",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_tyrant_boom_11": {
+   "chars": "𐀲𐀳𐀴𐀵𐀶𐀷𐀸𐀹𐀺𐀻𐀼𐀽𐀾𐀿",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_tyrant_shock_00": {
+   "chars": "𐁀𐁁𐁂𐁃𐁄𐁅𐁆𐁇",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.010016,
+    -0.0
+   ]
+  },
+  "el_tyrant_shock_01": {
+   "chars": "𐁈𐁉𐁊𐁋𐁌𐁍𐁎𐁏",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_tyrant_shock_10": {
+   "chars": "𐁐𐁑𐁒𐁓𐁔𐁕𐁖𐁗",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.010016,
+    -0.0
+   ]
+  },
+  "el_tyrant_shock_11": {
+   "chars": "𐁘𐁙𐁚𐁛𐁜𐁝𐁞𐁟",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_tyrant_ring_00": {
+   "chars": "𐁠𐁡𐁢𐁣",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_tyrant_ring_01": {
+   "chars": "𐁤𐁥𐁦𐁧",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_tyrant_ring_10": {
+   "chars": "𐁨𐁩𐁪𐁫",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_tyrant_ring_11": {
+   "chars": "𐁬𐁭𐁮𐁯",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_tyrant_boom_s": {
+   "chars": "𐁰𐁱𐁲𐁳𐁴𐁵𐁶𐁷𐁸𐁹𐁺𐁻",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_tyrant_shock_s": {
+   "chars": "𐁼𐁽𐁾𐁿𐂀𐂁𐂂𐂃𐂄𐂅",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_tyrant_crack_s": {
+   "chars": "𐂆𐂇𐂈𐂉𐂊",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.056373,
+    -0.0
+   ]
+  },
+  "el_tyrant_flash": {
+   "chars": "𐂋𐂌𐂍𐂎𐂏𐂐𐂑𐂒",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_tyrant_charge": {
+   "chars": "𐂓𐂔𐂕𐂖𐂗𐂘𐂙𐂚𐂛𐂜",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_tyrant_ember": {
+   "chars": "𐂝𐂞𐂟𐂠",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.020833
+   ]
+  },
+  "el_tyrant_shard": {
+   "chars": "𐂡𐂢𐂣𐂤𐂥𐂦𐂧𐂨",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_tyrant_pillar": {
+   "chars": "𐂩𐂪𐂫𐂬𐂭𐂮𐂯𐂰𐂱𐂲",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_tyrant_dust": {
+   "chars": "𐂳𐂴𐂵𐂶𐂷𐂸𐂹𐂺",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.013889,
+    -0.125
+   ]
+  },
+  "el_tyrant_spin_00": {
+   "chars": "𐂻𐂼𐂽𐂾𐂿𐃀𐃁𐃂",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.040625,
+    -0.03125
+   ]
+  },
+  "el_tyrant_spin_01": {
+   "chars": "𐃃𐃄𐃅𐃆𐃇𐃈𐃉𐃊",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_tyrant_spin_10": {
+   "chars": "𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_tyrant_spin_11": {
+   "chars": "𐃓𐃔𐃕𐃖𐃗𐃘𐃙𐃚",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    0.0625
+   ]
+  },
+  "el_tyrant_spinm_00": {
+   "chars": "𐃛𐃜𐃝𐃞𐃟𐃠𐃡𐃢",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_tyrant_spinm_01": {
+   "chars": "𐃣𐃤𐃥𐃦𐃧𐃨𐃩𐃪",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_tyrant_spinm_10": {
+   "chars": "𐃫𐃬𐃭𐃮𐃯𐃰𐃱𐃲",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.035938,
+    0.0625
+   ]
+  },
+  "el_tyrant_spinm_11": {
+   "chars": "𐃳𐃴𐃵𐃶𐃷𐃸𐃹𐃺",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_tyrant_cut": {
+   "chars": "𐃻𐃼𐃽𐃾𐃿𐄀𐄁𐄂",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.015625
+   ]
+  },
+  "el_tyrant_speed": {
+   "chars": "𐄃𐄄𐄅𐄆",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_tyrant_aegis": {
+   "chars": "𐄇𐄈𐄉𐄊𐄋𐄌",
+   "frames": 6,
+   "aspect": 0.8,
+   "colored": true,
+   "crop": [
+    -0.000481,
+    -0.0
+   ]
+  },
+  "el_tyrant_aura": {
+   "chars": "𐄍𐄎𐄏𐄐𐄑𐄒𐄓𐄔",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_tyrant_dash": {
+   "chars": "𐄕𐄖𐄗𐄘𐄙𐄚",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_tyrant_smoke": {
+   "chars": "𐄛𐄜𐄝𐄞𐄟𐄠𐄡𐄢",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_tyrant_thunder": {
+   "chars": "𐄣𐄤𐄥𐄦𐄧𐄨",
+   "frames": 6,
+   "aspect": 0.25,
+   "colored": true
+  },
+  "el_tyrant_volt": {
+   "chars": "𐄩𐄪𐄫𐄬𐄭𐄮𐄯𐄰",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    0.005208
+   ]
+  },
+  "el_tyrant_spear": {
+   "chars": "𐄱𐄲𐄳𐄴",
+   "frames": 4,
+   "aspect": 6.0,
+   "colored": true
+  },
+  "el_tyrant_arc": {
+   "chars": "𐄵𐄶𐄷𐄸𐄹𐄺𐄻𐄼",
+   "frames": 8,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_tyrant_cloud": {
+   "chars": "𐄽𐄾𐄿𐅀𐅁𐅂𐅃𐅄",
+   "frames": 8,
+   "aspect": 2.0,
+   "colored": true
+  },
+  "el_tyrant_stone": {
+   "chars": "𐅅𐅆𐅇𐅈𐅉𐅊𐅋𐅌",
+   "frames": 8,
+   "aspect": 0.7458,
+   "colored": true,
+   "crop": [
+    -0.00384,
+    -0.0
+   ]
+  },
+  "el_tyrant_judge": {
+   "chars": "𐅍𐅎𐅏𐅐",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_tyrant_wheel": {
+   "chars": "𐅑𐅒𐅓𐅔𐅕𐅖",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true
+  },
+  "el_tyrant_maulswing": {
+   "chars": "𐅗𐅘𐅙𐅚𐅛𐅜",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.078125
+   ]
+  },
+  "el_tyrant_grip": {
+   "chars": "𐅝𐅞𐅟𐅠𐅡𐅢𐅣𐅤",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.046875,
+    0.0625
+   ]
+  },
+  "el_tyrant_rpillar": {
+   "chars": "𐅥𐅦𐅧𐅨𐅩𐅪𐅫𐅬",
+   "frames": 8,
+   "aspect": 0.25,
+   "colored": true
+  },
+  "el_tyrant_chain": {
+   "chars": "𐅭𐅮𐅯𐅰",
+   "frames": 4,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_reap_slash_00": {
+   "chars": "𐅱𐅲𐅳𐅴𐅵𐅶𐅷𐅸𐅹𐅺",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.029356,
+    -0.0
+   ]
+  },
+  "el_reap_slash_01": {
+   "chars": "𐅻𐅼𐅽𐅾𐅿𐆀𐆁𐆂𐆃𐆄",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_reap_slash_10": {
+   "chars": "𐆅𐆆𐆇𐆈𐆉𐆊𐆋𐆌𐆍𐆎",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_reap_slash_11": {
+   "chars": "𐆏𐆐𐆑𐆒𐆓𐆔𐆕𐆖𐆗𐆘",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_reap_slashm_00": {
+   "chars": "𐆙𐆚𐆛𐆜𐆝𐆞𐆟𐆠𐆡𐆢",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.025743,
+    -0.0
+   ]
+  },
+  "el_reap_slashm_01": {
+   "chars": "𐆣𐆤𐆥𐆦𐆧𐆨𐆩𐆪𐆫𐆬",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    -0.0
+   ]
+  },
+  "el_reap_slashm_10": {
+   "chars": "𐆭𐆮𐆯𐆰𐆱𐆲𐆳𐆴𐆵𐆶",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_reap_slashm_11": {
+   "chars": "𐆷𐆸𐆹𐆺𐆻𐆼𐆽𐆾𐆿𐇀",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.244109,
+    -0.0
+   ]
+  },
+  "el_reap_xslash_00": {
+   "chars": "𐇁𐇂𐇃𐇄𐇅𐇆𐇇𐇈",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_reap_xslash_01": {
+   "chars": "𐇉𐇊𐇋𐇌𐇍𐇎𐇏𐇐",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
+  },
+  "el_reap_xslash_10": {
+   "chars": "𐇑𐇒𐇓𐇔𐇕𐇖𐇗𐇘",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_reap_xslash_11": {
+   "chars": "𐇙𐇚𐇛𐇜𐇝𐇞𐇟𐇠",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    0.125
+   ]
+  },
+  "el_reap_boom_00": {
+   "chars": "𐇡𐇢𐇣𐇤𐇥𐇦𐇧𐇨𐇩𐇪𐇫𐇬𐇭𐇮",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.09375
+   ]
+  },
+  "el_reap_boom_01": {
+   "chars": "𐇯𐇰𐇱𐇲𐇳𐇴𐇵𐇶𐇷𐇸𐇹𐇺𐇻𐇼",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_reap_boom_10": {
+   "chars": "𐇽𐇾𐇿𐈀𐈁𐈂𐈃𐈄𐈅𐈆𐈇𐈈𐈉𐈊",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_reap_boom_11": {
+   "chars": "𐈋𐈌𐈍𐈎𐈏𐈐𐈑𐈒𐈓𐈔𐈕𐈖𐈗𐈘",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_reap_shock_00": {
+   "chars": "𐈙𐈚𐈛𐈜𐈝𐈞𐈟𐈠",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_reap_shock_01": {
+   "chars": "𐈡𐈢𐈣𐈤𐈥𐈦𐈧𐈨",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_reap_shock_10": {
+   "chars": "𐈩𐈪𐈫𐈬𐈭𐈮𐈯𐈰",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_reap_shock_11": {
+   "chars": "𐈱𐈲𐈳𐈴𐈵𐈶𐈷𐈸",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_reap_ring_00": {
+   "chars": "𐈹𐈺𐈻𐈼",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_reap_ring_01": {
+   "chars": "𐈽𐈾𐈿𐉀",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_reap_ring_10": {
+   "chars": "𐉁𐉂𐉃𐉄",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_reap_ring_11": {
+   "chars": "𐉅𐉆𐉇𐉈",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_reap_boom_s": {
+   "chars": "𐉉𐉊𐉋𐉌𐉍𐉎𐉏𐉐𐉑𐉒𐉓𐉔",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_reap_shock_s": {
+   "chars": "𐉕𐉖𐉗𐉘𐉙𐉚𐉛𐉜𐉝𐉞",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_reap_crack_s": {
+   "chars": "𐉟𐉠𐉡𐉢𐉣",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.020067,
+    -0.0
+   ]
+  },
+  "el_reap_flash": {
+   "chars": "𐉤𐉥𐉦𐉧𐉨𐉩𐉪𐉫",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_reap_charge": {
+   "chars": "𐉬𐉭𐉮𐉯𐉰𐉱𐉲𐉳𐉴𐉵",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_reap_ember": {
+   "chars": "𐉶𐉷𐉸𐉹",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.020833
+   ]
+  },
+  "el_reap_shard": {
+   "chars": "𐉺𐉻𐉼𐉽𐉾𐉿𐊀𐊁",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_reap_pillar": {
+   "chars": "𐊂𐊃𐊄𐊅𐊆𐊇𐊈𐊉𐊊𐊋",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_reap_dust": {
+   "chars": "𐊌𐊍𐊎𐊏𐊐𐊑𐊒𐊓",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.014757,
+    -0.173611
+   ]
+  },
+  "el_reap_spin_00": {
+   "chars": "𐊔𐊕𐊖𐊗𐊘𐊙𐊚𐊛",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_reap_spin_01": {
+   "chars": "𐊜𐊝𐊞𐊟𐊠𐊡𐊢𐊣",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    -0.03125
+   ]
+  },
+  "el_reap_spin_10": {
+   "chars": "𐊤𐊥𐊦𐊧𐊨𐊩𐊪𐊫",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_reap_spin_11": {
+   "chars": "𐊬𐊭𐊮𐊯𐊰𐊱𐊲𐊳",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_reap_spinm_00": {
+   "chars": "𐊴𐊵𐊶𐊷𐊸𐊹𐊺𐊻",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_reap_spinm_01": {
+   "chars": "𐊼𐊽𐊾𐊿𐋀𐋁𐋂𐋃",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_reap_spinm_10": {
+   "chars": "𐋄𐋅𐋆𐋇𐋈𐋉𐋊𐋋",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_reap_spinm_11": {
+   "chars": "𐋌𐋍𐋎𐋏𐋐𐋑𐋒𐋓",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_reap_cut": {
+   "chars": "𐋔𐋕𐋖𐋗𐋘𐋙𐋚𐋛",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_reap_speed": {
+   "chars": "𐋜𐋝𐋞𐋟",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_reap_halo_00": {
+   "chars": "𐋠𐋡𐋢𐋣𐋤𐋥𐋦𐋧",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    -0.015625
+   ]
+  },
+  "el_reap_halo_01": {
+   "chars": "𐋨𐋩𐋪𐋫𐋬𐋭𐋮𐋯",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
+  },
+  "el_reap_halo_10": {
+   "chars": "𐋰𐋱𐋲𐋳𐋴𐋵𐋶𐋷",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    0.015625
+   ]
+  },
+  "el_reap_halo_11": {
+   "chars": "𐋸𐋹𐋺𐋻𐋼𐋽𐋾𐋿",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.015625
+   ]
+  },
+  "el_reap_whirl": {
+   "chars": "𐌀𐌁𐌂𐌃𐌄𐌅𐌆𐌇",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    0.005208
+   ]
+  },
+  "el_reap_smoke": {
+   "chars": "𐌈𐌉𐌊𐌋𐌌𐌍𐌎𐌏",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_reap_soul": {
+   "chars": "𐌐𐌑𐌒𐌓𐌔𐌕",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002534,
+    -0.0
+   ]
+  },
+  "el_reap_skull": {
+   "chars": "𐌖𐌗𐌘𐌙𐌚𐌛",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_reap_hand": {
+   "chars": "𐌜𐌝𐌞𐌟𐌠𐌡",
+   "frames": 6,
+   "aspect": 0.4918,
+   "colored": true,
+   "crop": [
+    -0.005507,
+    -0.0
+   ]
+  },
+  "el_reap_wail": {
+   "chars": "𐌢𐌣𐌤𐌥𐌦𐌧𐌨𐌩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.002232,
+    0.017857
+   ]
+  },
+  "el_reap_reaper": {
+   "chars": "𐌪𐌫𐌬𐌭𐌮𐌯𐌰𐌱",
+   "frames": 8,
+   "aspect": 0.75,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_reap_xmark": {
+   "chars": "𐌲𐌳𐌴𐌵𐌶𐌷𐌸𐌹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_reap_chain": {
+   "chars": "𐌺𐌻𐌼𐌽",
+   "frames": 4,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_reap_spot": {
+   "chars": "𐌾𐌿𐍀𐍁",
+   "frames": 4,
+   "aspect": 0.3333,
+   "colored": true,
+   "crop": [
+    0.008681,
+    -0.0
+   ]
+  },
+  "el_soulreap_slash_00": {
+   "chars": "𐍂𐍃𐍄𐍅𐍆𐍇𐍈𐍉𐍊𐍋",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.029356,
+    -0.0
+   ]
+  },
+  "el_soulreap_slash_01": {
+   "chars": "𐍌𐍍𐍎𐍏𐍐𐍑𐍒𐍓𐍔𐍕",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_soulreap_slash_10": {
+   "chars": "𐍖𐍗𐍘𐍙𐍚𐍛𐍜𐍝𐍞𐍟",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_soulreap_slash_11": {
+   "chars": "𐍠𐍡𐍢𐍣𐍤𐍥𐍦𐍧𐍨𐍩",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_soulreap_slashm_00": {
+   "chars": "𐍪𐍫𐍬𐍭𐍮𐍯𐍰𐍱𐍲𐍳",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.051486,
+    -0.0
+   ]
+  },
+  "el_soulreap_slashm_01": {
+   "chars": "𐍴𐍵𐍶𐍷𐍸𐍹𐍺𐍻𐍼𐍽",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_soulreap_slashm_10": {
+   "chars": "𐍾𐍿𐎀𐎁𐎂𐎃𐎄𐎅𐎆𐎇",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_soulreap_slashm_11": {
+   "chars": "𐎈𐎉𐎊𐎋𐎌𐎍𐎎𐎏𐎐𐎑",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.244109,
+    -0.0
+   ]
+  },
+  "el_soulreap_xslash_00": {
+   "chars": "𐎒𐎓𐎔𐎕𐎖𐎗𐎘𐎙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_soulreap_xslash_01": {
+   "chars": "𐎚𐎛𐎜𐎝𐎞𐎟𐎠𐎡",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
+  },
+  "el_soulreap_xslash_10": {
+   "chars": "𐎢𐎣𐎤𐎥𐎦𐎧𐎨𐎩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_soulreap_xslash_11": {
+   "chars": "𐎪𐎫𐎬𐎭𐎮𐎯𐎰𐎱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    0.125
+   ]
+  },
+  "el_soulreap_boom_00": {
+   "chars": "𐎲𐎳𐎴𐎵𐎶𐎷𐎸𐎹𐎺𐎻𐎼𐎽𐎾𐎿",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.09375
+   ]
+  },
+  "el_soulreap_boom_01": {
+   "chars": "𐏀𐏁𐏂𐏃𐏄𐏅𐏆𐏇𐏈𐏉𐏊𐏋𐏌𐏍",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_soulreap_boom_10": {
+   "chars": "𐏎𐏏𐏐𐏑𐏒𐏓𐏔𐏕𐏖𐏗𐏘𐏙𐏚𐏛",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_soulreap_boom_11": {
+   "chars": "𐏜𐏝𐏞𐏟𐏠𐏡𐏢𐏣𐏤𐏥𐏦𐏧𐏨𐏩",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.078125
+   ]
+  },
+  "el_soulreap_shock_00": {
+   "chars": "𐏪𐏫𐏬𐏭𐏮𐏯𐏰𐏱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.027845,
+    -0.0
+   ]
+  },
+  "el_soulreap_shock_01": {
+   "chars": "𐏲𐏳𐏴𐏵𐏶𐏷𐏸𐏹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_soulreap_shock_10": {
+   "chars": "𐏺𐏻𐏼𐏽𐏾𐏿𐐀𐐁",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.027845,
+    -0.0
+   ]
+  },
+  "el_soulreap_shock_11": {
+   "chars": "𐐂𐐃𐐄𐐅𐐆𐐇𐐈𐐉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_soulreap_ring_00": {
+   "chars": "𐐊𐐋𐐌𐐍",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_soulreap_ring_01": {
+   "chars": "𐐎𐐏𐐐𐐑",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_soulreap_ring_10": {
+   "chars": "𐐒𐐓𐐔𐐕",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_soulreap_ring_11": {
+   "chars": "𐐖𐐗𐐘𐐙",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_soulreap_boom_s": {
+   "chars": "𐐚𐐛𐐜𐐝𐐞𐐟𐐠𐐡𐐢𐐣𐐤𐐥",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_soulreap_shock_s": {
+   "chars": "𐐦𐐧𐐨𐐩𐐪𐐫𐐬𐐭𐐮𐐯",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soulreap_crack_s": {
+   "chars": "𐐰𐐱𐐲𐐳𐐴",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.006127,
+    -0.0
+   ]
+  },
+  "el_soulreap_flash": {
+   "chars": "𐐵𐐶𐐷𐐸𐐹𐐺𐐻𐐼",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_soulreap_charge": {
+   "chars": "𐐽𐐾𐐿𐑀𐑁𐑂𐑃𐑄𐑅𐑆",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022111,
+    -0.0
+   ]
+  },
+  "el_soulreap_ember": {
+   "chars": "𐑇𐑈𐑉𐑊",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.020833
+   ]
+  },
+  "el_soulreap_shard": {
+   "chars": "𐑋𐑌𐑍𐑎𐑏𐑐𐑑𐑒",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soulreap_pillar": {
+   "chars": "𐑓𐑔𐑕𐑖𐑗𐑘𐑙𐑚𐑛𐑜",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_soulreap_dust": {
+   "chars": "𐑝𐑞𐑟𐑠𐑡𐑢𐑣𐑤",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.010417,
+    -0.159722
+   ]
+  },
+  "el_soulreap_spin_00": {
+   "chars": "𐑥𐑦𐑧𐑨𐑩𐑪𐑫𐑬",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_soulreap_spin_01": {
+   "chars": "𐑭𐑮𐑯𐑰𐑱𐑲𐑳𐑴",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_soulreap_spin_10": {
+   "chars": "𐑵𐑶𐑷𐑸𐑹𐑺𐑻𐑼",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_soulreap_spin_11": {
+   "chars": "𐑽𐑾𐑿𐒀𐒁𐒂𐒃𐒄",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_soulreap_spinm_00": {
+   "chars": "𐒅𐒆𐒇𐒈𐒉𐒊𐒋𐒌",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_soulreap_spinm_01": {
+   "chars": "𐒍𐒎𐒏𐒐𐒑𐒒𐒓𐒔",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_soulreap_spinm_10": {
+   "chars": "𐒕𐒖𐒗𐒘𐒙𐒚𐒛𐒜",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_soulreap_spinm_11": {
+   "chars": "𐒝𐒞𐒟𐒠𐒡𐒢𐒣𐒤",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_soulreap_cut": {
+   "chars": "𐒥𐒦𐒧𐒨𐒩𐒪𐒫𐒬",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.015625
+   ]
+  },
+  "el_soulreap_speed": {
+   "chars": "𐒭𐒮𐒯𐒰",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soulreap_halo_00": {
+   "chars": "𐒱𐒲𐒳𐒴𐒵𐒶𐒷𐒸",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    -0.015625
+   ]
+  },
+  "el_soulreap_halo_01": {
+   "chars": "𐒹𐒺𐒻𐒼𐒽𐒾𐒿𐓀",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
+  },
+  "el_soulreap_halo_10": {
+   "chars": "𐓁𐓂𐓃𐓄𐓅𐓆𐓇𐓈",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    0.015625
+   ]
+  },
+  "el_soulreap_halo_11": {
+   "chars": "𐓉𐓊𐓋𐓌𐓍𐓎𐓏𐓐",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.015625
+   ]
+  },
+  "el_soulreap_whirl": {
+   "chars": "𐓑𐓒𐓓𐓔𐓕𐓖𐓗𐓘",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    0.005208
+   ]
+  },
+  "el_soulreap_smoke": {
+   "chars": "𐓙𐓚𐓛𐓜𐓝𐓞𐓟𐓠",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_soulreap_soul": {
+   "chars": "𐓡𐓢𐓣𐓤𐓥𐓦",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002534,
+    -0.0
+   ]
+  },
+  "el_soulreap_skull": {
+   "chars": "𐓧𐓨𐓩𐓪𐓫𐓬",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_soulreap_hand": {
+   "chars": "𐓭𐓮𐓯𐓰𐓱𐓲",
+   "frames": 6,
+   "aspect": 0.4918,
+   "colored": true,
+   "crop": [
+    -0.005507,
+    -0.0
+   ]
+  },
+  "el_soulreap_wail": {
+   "chars": "𐓳𐓴𐓵𐓶𐓷𐓸𐓹𐓺",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.002232,
+    0.017857
+   ]
+  },
+  "el_soulreap_reaper": {
+   "chars": "𐓻𐓼𐓽𐓾𐓿𐔀𐔁𐔂",
+   "frames": 8,
+   "aspect": 0.75,
+   "colored": true,
+   "crop": [
+    -0.039062,
+    -0.0
+   ]
+  },
+  "el_soulreap_xmark": {
+   "chars": "𐔃𐔄𐔅𐔆𐔇𐔈𐔉𐔊",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_soulreap_chain": {
+   "chars": "𐔋𐔌𐔍𐔎",
+   "frames": 4,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_soulreap_spot": {
+   "chars": "𐔏𐔐𐔑𐔒",
+   "frames": 4,
+   "aspect": 0.3333,
+   "colored": true,
+   "crop": [
+    0.008681,
+    -0.0
+   ]
+  },
+  "el_exec_slash_00": {
+   "chars": "𐔓𐔔𐔕𐔖𐔗𐔘𐔙𐔚𐔛𐔜",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.029356,
+    -0.0
+   ]
+  },
+  "el_exec_slash_01": {
+   "chars": "𐔝𐔞𐔟𐔠𐔡𐔢𐔣𐔤𐔥𐔦",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_exec_slash_10": {
+   "chars": "𐔧𐔨𐔩𐔪𐔫𐔬𐔭𐔮𐔯𐔰",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_exec_slash_11": {
+   "chars": "𐔱𐔲𐔳𐔴𐔵𐔶𐔷𐔸𐔹𐔺",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_exec_slashm_00": {
+   "chars": "𐔻𐔼𐔽𐔾𐔿𐕀𐕁𐕂𐕃𐕄",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.034324,
+    -0.0
+   ]
+  },
+  "el_exec_slashm_01": {
+   "chars": "𐕅𐕆𐕇𐕈𐕉𐕊𐕋𐕌𐕍𐕎",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.0
+   ]
+  },
+  "el_exec_slashm_10": {
+   "chars": "𐕏𐕐𐕑𐕒𐕓𐕔𐕕𐕖𐕗𐕘",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_exec_slashm_11": {
+   "chars": "𐕙𐕚𐕛𐕜𐕝𐕞𐕟𐕠𐕡𐕢",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.244109,
+    -0.0
+   ]
+  },
+  "el_exec_xslash_00": {
+   "chars": "𐕣𐕤𐕥𐕦𐕧𐕨𐕩𐕪",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_exec_xslash_01": {
+   "chars": "𐕫𐕬𐕭𐕮𐕯𐕰𐕱𐕲",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    -0.125
+   ]
+  },
+  "el_exec_xslash_10": {
+   "chars": "𐕳𐕴𐕵𐕶𐕷𐕸𐕹𐕺",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_exec_xslash_11": {
+   "chars": "𐕻𐕼𐕽𐕾𐕿𐖀𐖁𐖂",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    0.125
+   ]
+  },
+  "el_exec_boom_00": {
+   "chars": "𐖃𐖄𐖅𐖆𐖇𐖈𐖉𐖊𐖋𐖌𐖍𐖎𐖏𐖐",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.078125
+   ]
+  },
+  "el_exec_boom_01": {
+   "chars": "𐖑𐖒𐖓𐖔𐖕𐖖𐖗𐖘𐖙𐖚𐖛𐖜𐖝𐖞",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.078125
+   ]
+  },
+  "el_exec_boom_10": {
+   "chars": "𐖟𐖠𐖡𐖢𐖣𐖤𐖥𐖦𐖧𐖨𐖩𐖪𐖫𐖬",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.078125,
+    0.078125
+   ]
+  },
+  "el_exec_boom_11": {
+   "chars": "𐖭𐖮𐖯𐖰𐖱𐖲𐖳𐖴𐖵𐖶𐖷𐖸𐖹𐖺",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.078125
+   ]
+  },
+  "el_exec_shock_00": {
+   "chars": "𐖻𐖼𐖽𐖾𐖿𐗀𐗁𐗂",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_exec_shock_01": {
+   "chars": "𐗃𐗄𐗅𐗆𐗇𐗈𐗉𐗊",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_exec_shock_10": {
+   "chars": "𐗋𐗌𐗍𐗎𐗏𐗐𐗑𐗒",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_exec_shock_11": {
+   "chars": "𐗓𐗔𐗕𐗖𐗗𐗘𐗙𐗚",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.0
+   ]
+  },
+  "el_exec_ring_00": {
+   "chars": "𐗛𐗜𐗝𐗞",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_exec_ring_01": {
+   "chars": "𐗟𐗠𐗡𐗢",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_exec_ring_10": {
+   "chars": "𐗣𐗤𐗥𐗦",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_exec_ring_11": {
+   "chars": "𐗧𐗨𐗩𐗪",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_exec_boom_s": {
+   "chars": "𐗫𐗬𐗭𐗮𐗯𐗰𐗱𐗲𐗳𐗴𐗵𐗶",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_exec_shock_s": {
+   "chars": "𐗷𐗸𐗹𐗺𐗻𐗼𐗽𐗾𐗿𐘀",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_exec_crack_s": {
+   "chars": "𐘁𐘂𐘃𐘄𐘅",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.012255,
+    -0.0
+   ]
+  },
+  "el_exec_flash": {
+   "chars": "𐘆𐘇𐘈𐘉𐘊𐘋𐘌𐘍",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_exec_charge": {
+   "chars": "𐘎𐘏𐘐𐘑𐘒𐘓𐘔𐘕𐘖𐘗",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.011055,
+    -0.0
+   ]
+  },
+  "el_exec_ember": {
+   "chars": "𐘘𐘙𐘚𐘛",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020833,
+    0.020833
+   ]
+  },
+  "el_exec_shard": {
+   "chars": "𐘜𐘝𐘞𐘟𐘠𐘡𐘢𐘣",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_exec_pillar": {
+   "chars": "𐘤𐘥𐘦𐘧𐘨𐘩𐘪𐘫𐘬𐘭",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_exec_dust": {
+   "chars": "𐘮𐘯𐘰𐘱𐘲𐘳𐘴𐘵",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.013889,
+    -0.125
+   ]
+  },
+  "el_exec_spin_00": {
+   "chars": "𐘶𐘷𐘸𐘹𐘺𐘻𐘼𐘽",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_exec_spin_01": {
+   "chars": "𐘾𐘿𐙀𐙁𐙂𐙃𐙄𐙅",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_exec_spin_10": {
+   "chars": "𐙆𐙇𐙈𐙉𐙊𐙋𐙌𐙍",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.040625,
+    0.0625
+   ]
+  },
+  "el_exec_spin_11": {
+   "chars": "𐙎𐙏𐙐𐙑𐙒𐙓𐙔𐙕",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_exec_spinm_00": {
+   "chars": "𐙖𐙗𐙘𐙙𐙚𐙛𐙜𐙝",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_exec_spinm_01": {
+   "chars": "𐙞𐙟𐙠𐙡𐙢𐙣𐙤𐙥",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_exec_spinm_10": {
+   "chars": "𐙦𐙧𐙨𐙩𐙪𐙫𐙬𐙭",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_exec_spinm_11": {
+   "chars": "𐙮𐙯𐙰𐙱𐙲𐙳𐙴𐙵",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    0.0625
+   ]
+  },
+  "el_exec_cut": {
+   "chars": "𐙶𐙷𐙸𐙹𐙺𐙻𐙼𐙽",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_exec_speed": {
+   "chars": "𐙾𐙿𐚀𐚁",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_exec_halo_00": {
+   "chars": "𐚂𐚃𐚄𐚅𐚆𐚇𐚈𐚉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    -0.015625
+   ]
+  },
+  "el_exec_halo_01": {
+   "chars": "𐚊𐚋𐚌𐚍𐚎𐚏𐚐𐚑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
+  },
+  "el_exec_halo_10": {
+   "chars": "𐚒𐚓𐚔𐚕𐚖𐚗𐚘𐚙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    0.015625
+   ]
+  },
+  "el_exec_halo_11": {
+   "chars": "𐚚𐚛𐚜𐚝𐚞𐚟𐚠𐚡",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.015625
+   ]
+  },
+  "el_exec_whirl": {
+   "chars": "𐚢𐚣𐚤𐚥𐚦𐚧𐚨𐚩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    0.005208
+   ]
+  },
+  "el_exec_smoke": {
+   "chars": "𐚪𐚫𐚬𐚭𐚮𐚯𐚰𐚱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.027083,
+    -0.0
+   ]
+  },
+  "el_exec_soul": {
+   "chars": "𐚲𐚳𐚴𐚵𐚶𐚷",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.013936,
+    -0.0
+   ]
+  },
+  "el_exec_skull": {
+   "chars": "𐚸𐚹𐚺𐚻𐚼𐚽",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_exec_hand": {
+   "chars": "𐚾𐚿𐛀𐛁𐛂𐛃",
+   "frames": 6,
+   "aspect": 0.4918,
+   "colored": true,
+   "crop": [
+    -0.005507,
+    -0.0
+   ]
+  },
+  "el_exec_wail": {
+   "chars": "𐛄𐛅𐛆𐛇𐛈𐛉𐛊𐛋",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    0.017857
+   ]
+  },
+  "el_exec_reaper": {
+   "chars": "𐛌𐛍𐛎𐛏𐛐𐛑𐛒𐛓",
+   "frames": 8,
+   "aspect": 0.75,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_exec_xmark": {
+   "chars": "𐛔𐛕𐛖𐛗𐛘𐛙𐛚𐛛",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_exec_chain": {
+   "chars": "𐛜𐛝𐛞𐛟",
+   "frames": 4,
+   "aspect": 8.0,
+   "colored": true
+  },
+  "el_exec_spot": {
+   "chars": "𐛠𐛡𐛢𐛣",
+   "frames": 4,
+   "aspect": 0.3333,
+   "colored": true,
+   "crop": [
+    0.008681,
+    -0.0
+   ]
+  },
+  "el_lance_slash_00": {
+   "chars": "𐛤𐛥𐛦𐛧𐛨𐛩𐛪𐛫𐛬𐛭",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.044034,
+    -0.0
+   ]
+  },
+  "el_lance_slash_01": {
+   "chars": "𐛮𐛯𐛰𐛱𐛲𐛳𐛴𐛵𐛶𐛷",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_lance_slash_10": {
+   "chars": "𐛸𐛹𐛺𐛻𐛼𐛽𐛾𐛿𐜀𐜁",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_lance_slash_11": {
+   "chars": "𐜂𐜃𐜄𐜅𐜆𐜇𐜈𐜉𐜊𐜋",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_lance_slashm_00": {
+   "chars": "𐜌𐜍𐜎𐜏𐜐𐜑𐜒𐜓𐜔𐜕",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.034324,
+    -0.0
+   ]
+  },
+  "el_lance_slashm_01": {
+   "chars": "𐜖𐜗𐜘𐜙𐜚𐜛𐜜𐜝𐜞𐜟",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    -0.0
+   ]
+  },
+  "el_lance_slashm_10": {
+   "chars": "𐜠𐜡𐜢𐜣𐜤𐜥𐜦𐜧𐜨𐜩",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.203125,
+    -0.0
+   ]
+  },
+  "el_lance_slashm_11": {
+   "chars": "𐜪𐜫𐜬𐜭𐜮𐜯𐜰𐜱𐜲𐜳",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.251921,
+    -0.0
+   ]
+  },
+  "el_lance_xslash_00": {
+   "chars": "𐜴𐜵𐜶𐜷𐜸𐜹𐜺𐜻",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_lance_xslash_01": {
+   "chars": "𐜼𐜽𐜾𐜿𐝀𐝁𐝂𐝃",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    -0.125
+   ]
+  },
+  "el_lance_xslash_10": {
+   "chars": "𐝄𐝅𐝆𐝇𐝈𐝉𐝊𐝋",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_lance_xslash_11": {
+   "chars": "𐝌𐝍𐝎𐝏𐝐𐝑𐝒𐝓",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    0.125
+   ]
+  },
+  "el_lance_boom_00": {
+   "chars": "𐝔𐝕𐝖𐝗𐝘𐝙𐝚𐝛𐝜𐝝𐝞𐝟𐝠𐝡",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.078125
+   ]
+  },
+  "el_lance_boom_01": {
+   "chars": "𐝢𐝣𐝤𐝥𐝦𐝧𐝨𐝩𐝪𐝫𐝬𐝭𐝮𐝯",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.046875
+   ]
+  },
+  "el_lance_boom_10": {
+   "chars": "𐝰𐝱𐝲𐝳𐝴𐝵𐝶𐝷𐝸𐝹𐝺𐝻𐝼𐝽",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.078125,
+    0.078125
+   ]
+  },
+  "el_lance_boom_11": {
+   "chars": "𐝾𐝿𐞀𐞁𐞂𐞃𐞄𐞅𐞆𐞇𐞈𐞉𐞊𐞋",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.078125
+   ]
+  },
+  "el_lance_shock_00": {
+   "chars": "𐞌𐞍𐞎𐞏𐞐𐞑𐞒𐞓",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_lance_shock_01": {
+   "chars": "𐞔𐞕𐞖𐞗𐞘𐞙𐞚𐞛",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_lance_shock_10": {
+   "chars": "𐞜𐞝𐞞𐞟𐞠𐞡𐞢𐞣",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_lance_shock_11": {
+   "chars": "𐞤𐞥𐞦𐞧𐞨𐞩𐞪𐞫",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_lance_ring_00": {
+   "chars": "𐞬𐞭𐞮𐞯",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_lance_ring_01": {
+   "chars": "𐞰𐞱𐞲𐞳",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_lance_ring_10": {
+   "chars": "𐞴𐞵𐞶𐞷",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_lance_ring_11": {
+   "chars": "𐞸𐞹𐞺𐞻",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_lance_boom_s": {
+   "chars": "𐞼𐞽𐞾𐞿𐟀𐟁𐟂𐟃𐟄𐟅𐟆𐟇",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_lance_shock_s": {
+   "chars": "𐟈𐟉𐟊𐟋𐟌𐟍𐟎𐟏𐟐𐟑",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_crack_s": {
+   "chars": "𐟒𐟓𐟔𐟕𐟖",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020833,
+    -0.0
+   ]
+  },
+  "el_lance_flash": {
+   "chars": "𐟗𐟘𐟙𐟚𐟛𐟜𐟝𐟞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_lance_charge": {
+   "chars": "𐟟𐟠𐟡𐟢𐟣𐟤𐟥𐟦𐟧𐟨",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.011055,
+    -0.0
+   ]
+  },
+  "el_lance_ember": {
+   "chars": "𐟩𐟪𐟫𐟬",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020833,
+    0.020833
+   ]
+  },
+  "el_lance_shard": {
+   "chars": "𐟭𐟮𐟯𐟰𐟱𐟲𐟳𐟴",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_pillar": {
+   "chars": "𐟵𐟶𐟷𐟸𐟹𐟺𐟻𐟼𐟽𐟾",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_lance_dust": {
+   "chars": "𐟿𐠀𐠁𐠂𐠃𐠄𐠅𐠆",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.010417,
+    -0.125
+   ]
+  },
+  "el_lance_spin_00": {
+   "chars": "𐠇𐠈𐠉𐠊𐠋𐠌𐠍𐠎",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_lance_spin_01": {
+   "chars": "𐠏𐠐𐠑𐠒𐠓𐠔𐠕𐠖",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_lance_spin_10": {
+   "chars": "𐠗𐠘𐠙𐠚𐠛𐠜𐠝𐠞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_lance_spin_11": {
+   "chars": "𐠟𐠠𐠡𐠢𐠣𐠤𐠥𐠦",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_lance_spinm_00": {
+   "chars": "𐠧𐠨𐠩𐠪𐠫𐠬𐠭𐠮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_lance_spinm_01": {
+   "chars": "𐠯𐠰𐠱𐠲𐠳𐠴𐠵𐠶",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_lance_spinm_10": {
+   "chars": "𐠷𐠸𐠹𐠺𐠻𐠼𐠽𐠾",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_lance_spinm_11": {
+   "chars": "𐠿𐡀𐡁𐡂𐡃𐡄𐡅𐡆",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_lance_cut": {
+   "chars": "𐡇𐡈𐡉𐡊𐡋𐡌𐡍𐡎",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_speed": {
+   "chars": "𐡏𐡐𐡑𐡒",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_dash": {
+   "chars": "𐡓𐡔𐡕𐡖𐡗𐡘",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_lance_aura": {
+   "chars": "𐡙𐡚𐡛𐡜𐡝𐡞𐡟𐡠",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_lance_stab": {
+   "chars": "𐡡𐡢𐡣𐡤𐡥𐡦",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
+  },
+  "el_lance_spear": {
+   "chars": "𐡧𐡨𐡩𐡪",
+   "frames": 4,
+   "aspect": 6.0,
+   "colored": true
+  },
+  "el_lance_twister": {
+   "chars": "𐡫𐡬𐡭𐡮𐡯𐡰𐡱𐡲",
+   "frames": 8,
+   "aspect": 0.4928,
+   "colored": true
+  },
+  "el_lance_whirl": {
+   "chars": "𐡳𐡴𐡵𐡶𐡷𐡸𐡹𐡺",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.002604,
+    -0.0
+   ]
+  },
+  "el_lance_comet": {
+   "chars": "𐡻𐡼𐡽𐡾",
+   "frames": 4,
+   "aspect": 2.6522,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.0
+   ]
+  },
+  "el_lance_feather": {
+   "chars": "𐡿𐢀𐢁𐢂𐢃𐢄𐢅𐢆",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_wind": {
+   "chars": "𐢇𐢈𐢉𐢊𐢋𐢌𐢍𐢎",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_lspin": {
+   "chars": "𐢏𐢐𐢑𐢒𐢓𐢔𐢕𐢖",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_lance_swirl": {
+   "chars": "𐢗𐢘𐢙𐢚𐢛𐢜𐢝𐢞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
+  },
+  "el_lance_fire": {
+   "chars": "𐢟𐢠𐢡𐢢𐢣𐢤𐢥𐢦",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.008402,
+    -0.0
+   ]
+  },
+  "el_lance_dragon": {
+   "chars": "𐢧𐢨𐢩𐢪𐢫𐢬𐢭𐢮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.009375,
+    0.03125
+   ]
+  },
+  "el_gale_slash_00": {
+   "chars": "𐢯𐢰𐢱𐢲𐢳𐢴𐢵𐢶𐢷𐢸",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_slash_01": {
+   "chars": "𐢹𐢺𐢻𐢼𐢽𐢾𐢿𐣀𐣁𐣂",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.0
+   ]
+  },
+  "el_gale_slash_10": {
+   "chars": "𐣃𐣄𐣅𐣆𐣇𐣈𐣉𐣊𐣋𐣌",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_gale_slash_11": {
+   "chars": "𐣍𐣎𐣏𐣐𐣑𐣒𐣓𐣔𐣕𐣖",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_gale_slashm_00": {
+   "chars": "𐣗𐣘𐣙𐣚𐣛𐣜𐣝𐣞𐣟𐣠",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.060067,
+    -0.0
+   ]
+  },
+  "el_gale_slashm_01": {
+   "chars": "𐣡𐣢𐣣𐣤𐣥𐣦𐣧𐣨𐣩𐣪",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_gale_slashm_10": {
+   "chars": "𐣫𐣬𐣭𐣮𐣯𐣰𐣱𐣲𐣳𐣴",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_gale_slashm_11": {
+   "chars": "𐣵𐣶𐣷𐣸𐣹𐣺𐣻𐣼𐣽𐣾",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.259734,
+    -0.0
+   ]
+  },
+  "el_gale_xslash_00": {
+   "chars": "𐣿𐤀𐤁𐤂𐤃𐤄𐤅𐤆",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_gale_xslash_01": {
+   "chars": "𐤇𐤈𐤉𐤊𐤋𐤌𐤍𐤎",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    -0.125
+   ]
+  },
+  "el_gale_xslash_10": {
+   "chars": "𐤏𐤐𐤑𐤒𐤓𐤔𐤕𐤖",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_gale_xslash_11": {
+   "chars": "𐤗𐤘𐤙𐤚𐤛𐤜𐤝𐤞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.140625,
+    0.125
+   ]
+  },
+  "el_gale_boom_00": {
+   "chars": "𐤟𐤠𐤡𐤢𐤣𐤤𐤥𐤦𐤧𐤨𐤩𐤪𐤫𐤬",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.078125
+   ]
+  },
+  "el_gale_boom_01": {
+   "chars": "𐤭𐤮𐤯𐤰𐤱𐤲𐤳𐤴𐤵𐤶𐤷𐤸𐤹𐤺",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.078125,
+    -0.078125
+   ]
+  },
+  "el_gale_boom_10": {
+   "chars": "𐤻𐤼𐤽𐤾𐤿𐥀𐥁𐥂𐥃𐥄𐥅𐥆𐥇𐥈",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_gale_boom_11": {
+   "chars": "𐥉𐥊𐥋𐥌𐥍𐥎𐥏𐥐𐥑𐥒𐥓𐥔𐥕𐥖",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.078125,
+    0.09375
+   ]
+  },
+  "el_gale_shock_00": {
+   "chars": "𐥗𐥘𐥙𐥚𐥛𐥜𐥝𐥞",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.010016,
+    -0.0
+   ]
+  },
+  "el_gale_shock_01": {
+   "chars": "𐥟𐥠𐥡𐥢𐥣𐥤𐥥𐥦",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_gale_shock_10": {
+   "chars": "𐥧𐥨𐥩𐥪𐥫𐥬𐥭𐥮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.010016,
+    -0.0
+   ]
+  },
+  "el_gale_shock_11": {
+   "chars": "𐥯𐥰𐥱𐥲𐥳𐥴𐥵𐥶",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_gale_ring_00": {
+   "chars": "𐥷𐥸𐥹𐥺",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_gale_ring_01": {
+   "chars": "𐥻𐥼𐥽𐥾",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_gale_ring_10": {
+   "chars": "𐥿𐦀𐦁𐦂",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_gale_ring_11": {
+   "chars": "𐦃𐦄𐦅𐦆",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_gale_boom_s": {
+   "chars": "𐦇𐦈𐦉𐦊𐦋𐦌𐦍𐦎𐦏𐦐𐦑𐦒",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_gale_shock_s": {
+   "chars": "𐦓𐦔𐦕𐦖𐦗𐦘𐦙𐦚𐦛𐦜",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_crack_s": {
+   "chars": "𐦝𐦞𐦟𐦠𐦡",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.022825,
+    -0.0
+   ]
+  },
+  "el_gale_flash": {
+   "chars": "𐦢𐦣𐦤𐦥𐦦𐦧𐦨𐦩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.033854,
+    -0.041667
+   ]
+  },
+  "el_gale_charge": {
+   "chars": "𐦪𐦫𐦬𐦭𐦮𐦯𐦰𐦱𐦲𐦳",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022111,
+    -0.0
+   ]
+  },
+  "el_gale_ember": {
+   "chars": "𐦴𐦵𐦶𐦷",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.020833,
+    0.020833
+   ]
+  },
+  "el_gale_shard": {
+   "chars": "𐦸𐦹𐦺𐦻𐦼𐦽𐦾𐦿",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_pillar": {
+   "chars": "𐧀𐧁𐧂𐧃𐧄𐧅𐧆𐧇𐧈𐧉",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_gale_dust": {
+   "chars": "𐧊𐧋𐧌𐧍𐧎𐧏𐧐𐧑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.009549,
+    -0.159722
+   ]
+  },
+  "el_gale_spin_00": {
+   "chars": "𐧒𐧓𐧔𐧕𐧖𐧗𐧘𐧙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_gale_spin_01": {
+   "chars": "𐧚𐧛𐧜𐧝𐧞𐧟𐧠𐧡",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
+  },
+  "el_gale_spin_10": {
+   "chars": "𐧢𐧣𐧤𐧥𐧦𐧧𐧨𐧩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.057813,
+    0.0625
+   ]
+  },
+  "el_gale_spin_11": {
+   "chars": "𐧪𐧫𐧬𐧭𐧮𐧯𐧰𐧱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_gale_spinm_00": {
+   "chars": "𐧲𐧳𐧴𐧵𐧶𐧷𐧸𐧹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.03125
+   ]
+  },
+  "el_gale_spinm_01": {
+   "chars": "𐧺𐧻𐧼𐧽𐧾𐧿𐨀𐨁",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_gale_spinm_10": {
+   "chars": "𐨂𐨃𐨄𐨅𐨆𐨇𐨈𐨉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.057813,
+    0.0625
+   ]
+  },
+  "el_gale_spinm_11": {
+   "chars": "𐨊𐨋𐨌𐨍𐨎𐨏𐨐𐨑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.054688,
+    0.0625
+   ]
+  },
+  "el_gale_cut": {
+   "chars": "𐨒𐨓𐨔𐨕𐨖𐨗𐨘𐨙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_speed": {
+   "chars": "𐨚𐨛𐨜𐨝",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_dash": {
+   "chars": "𐨞𐨟𐨠𐨡𐨢𐨣",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_gale_aura": {
+   "chars": "𐨤𐨥𐨦𐨧𐨨𐨩𐨪𐨫",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_gale_stab": {
+   "chars": "𐨬𐨭𐨮𐨯𐨰𐨱",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
+  },
+  "el_gale_spear": {
+   "chars": "𐨲𐨳𐨴𐨵",
+   "frames": 4,
+   "aspect": 6.0,
+   "colored": true
+  },
+  "el_gale_twister": {
+   "chars": "𐨶𐨷𐨹𐨺𐨸𐨻𐨼𐨽",
+   "frames": 8,
+   "aspect": 0.4928,
+   "colored": true
+  },
+  "el_gale_whirl": {
+   "chars": "𐨾𐨿𐩀𐩁𐩂𐩃𐩄𐩅",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.002604,
+    0.005208
+   ]
+  },
+  "el_gale_comet": {
+   "chars": "𐩆𐩇𐩈𐩉",
+   "frames": 4,
+   "aspect": 2.6522,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.0
+   ]
+  },
+  "el_gale_feather": {
+   "chars": "𐩊𐩋𐩌𐩍𐩎𐩏𐩐𐩑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_wind": {
+   "chars": "𐩒𐩓𐩔𐩕𐩖𐩗𐩘𐩙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_lspin": {
+   "chars": "𐩚𐩛𐩜𐩝𐩞𐩟𐩠𐩡",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_gale_swirl": {
+   "chars": "𐩢𐩣𐩤𐩥𐩦𐩧𐩨𐩩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
+  },
+  "el_gale_fire": {
+   "chars": "𐩪𐩫𐩬𐩭𐩮𐩯𐩰𐩱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
+  },
+  "el_gale_dragon": {
+   "chars": "𐩲𐩳𐩴𐩵𐩶𐩷𐩸𐩹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.009375,
+    0.03125
+   ]
+  },
+  "el_dragon_slash_00": {
+   "chars": "𐩺𐩻𐩼𐩽𐩾𐩿𐪀𐪁𐪂𐪃",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.044034,
+    -0.0
+   ]
+  },
+  "el_dragon_slash_01": {
+   "chars": "𐪄𐪅𐪆𐪇𐪈𐪉𐪊𐪋𐪌𐪍",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_dragon_slash_10": {
+   "chars": "𐪎𐪏𐪐𐪑𐪒𐪓𐪔𐪕𐪖𐪗",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_dragon_slash_11": {
+   "chars": "𐪘𐪙𐪚𐪛𐪜𐪝𐪞𐪟𐪠𐪡",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_dragon_slashm_00": {
+   "chars": "𐪢𐪣𐪤𐪥𐪦𐪧𐪨𐪩𐪪𐪫",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.025743,
+    -0.0
+   ]
+  },
+  "el_dragon_slashm_01": {
+   "chars": "𐪬𐪭𐪮𐪯𐪰𐪱𐪲𐪳𐪴𐪵",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.0
+   ]
+  },
+  "el_dragon_slashm_10": {
+   "chars": "𐪶𐪷𐪸𐪹𐪺𐪻𐪼𐪽𐪾𐪿",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.202357,
+    -0.0
+   ]
+  },
+  "el_dragon_slashm_11": {
+   "chars": "𐫀𐫁𐫂𐫃𐫄𐫅𐫆𐫇𐫈𐫉",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.267546,
+    -0.0
+   ]
+  },
+  "el_dragon_xslash_00": {
+   "chars": "𐫊𐫋𐫌𐫍𐫎𐫏𐫐𐫑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_dragon_xslash_01": {
+   "chars": "𐫒𐫓𐫔𐫕𐫖𐫗𐫘𐫙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
+  },
+  "el_dragon_xslash_10": {
+   "chars": "𐫚𐫛𐫜𐫝𐫞𐫟𐫠𐫡",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_dragon_xslash_11": {
+   "chars": "𐫢𐫣𐫤𐫦𐫥𐫧𐫨𐫩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    0.125
+   ]
+  },
+  "el_dragon_boom_00": {
+   "chars": "𐫪𐫫𐫬𐫭𐫮𐫯𐫰𐫱𐫲𐫳𐫴𐫵𐫶𐫷",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.09375
+   ]
+  },
+  "el_dragon_boom_01": {
+   "chars": "𐫸𐫹𐫺𐫻𐫼𐫽𐫾𐫿𐬀𐬁𐬂𐬃𐬄𐬅",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_dragon_boom_10": {
+   "chars": "𐬆𐬇𐬈𐬉𐬊𐬋𐬌𐬍𐬎𐬏𐬐𐬑𐬒𐬓",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_dragon_boom_11": {
+   "chars": "𐬔𐬕𐬖𐬗𐬘𐬙𐬚𐬛𐬜𐬝𐬞𐬟𐬠𐬡",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_dragon_shock_00": {
+   "chars": "𐬢𐬣𐬤𐬥𐬦𐬧𐬨𐬩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_dragon_shock_01": {
+   "chars": "𐬪𐬫𐬬𐬭𐬮𐬯𐬰𐬱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_dragon_shock_10": {
+   "chars": "𐬲𐬳𐬴𐬵𐬶𐬷𐬸𐬹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022837,
+    -0.0
+   ]
+  },
+  "el_dragon_shock_11": {
+   "chars": "𐬺𐬻𐬼𐬽𐬾𐬿𐭀𐭁",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_dragon_ring_00": {
+   "chars": "𐭂𐭃𐭄𐭅",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_dragon_ring_01": {
+   "chars": "𐭆𐭇𐭈𐭉",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_dragon_ring_10": {
+   "chars": "𐭊𐭋𐭌𐭍",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_dragon_ring_11": {
+   "chars": "𐭎𐭏𐭐𐭑",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_dragon_boom_s": {
+   "chars": "𐭒𐭓𐭔𐭕𐭖𐭗𐭘𐭙𐭚𐭛𐭜𐭝",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_dragon_shock_s": {
+   "chars": "𐭞𐭟𐭠𐭡𐭢𐭣𐭤𐭥𐭦𐭧",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_crack_s": {
+   "chars": "𐭨𐭩𐭪𐭫𐭬",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022212,
+    -0.0
+   ]
+  },
+  "el_dragon_flash": {
+   "chars": "𐭭𐭮𐭯𐭰𐭱𐭲𐭳𐭴",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_dragon_charge": {
+   "chars": "𐭵𐭶𐭷𐭸𐭹𐭺𐭻𐭼𐭽𐭾",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_dragon_ember": {
+   "chars": "𐭿𐮀𐮁𐮂",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.020833
+   ]
+  },
+  "el_dragon_shard": {
+   "chars": "𐮃𐮄𐮅𐮆𐮇𐮈𐮉𐮊",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_pillar": {
+   "chars": "𐮋𐮌𐮍𐮎𐮏𐮐𐮑𐮒𐮓𐮔",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_dragon_dust": {
+   "chars": "𐮕𐮖𐮗𐮘𐮙𐮚𐮛𐮜",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.009549,
+    -0.138889
+   ]
+  },
+  "el_dragon_spin_00": {
+   "chars": "𐮝𐮞𐮟𐮠𐮡𐮢𐮣𐮤",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_dragon_spin_01": {
+   "chars": "𐮥𐮦𐮧𐮨𐮩𐮪𐮫𐮬",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.03125
+   ]
+  },
+  "el_dragon_spin_10": {
+   "chars": "𐮭𐮮𐮯𐮰𐮱𐮲𐮳𐮴",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    0.0625
+   ]
+  },
+  "el_dragon_spin_11": {
+   "chars": "𐮵𐮶𐮷𐮸𐮹𐮺𐮻𐮼",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.03125
+   ]
+  },
+  "el_dragon_spinm_00": {
+   "chars": "𐮽𐮾𐮿𐯀𐯁𐯂𐯃𐯄",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    -0.03125
+   ]
+  },
+  "el_dragon_spinm_01": {
+   "chars": "𐯅𐯆𐯇𐯈𐯉𐯊𐯋𐯌",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_dragon_spinm_10": {
+   "chars": "𐯍𐯎𐯏𐯐𐯑𐯒𐯓𐯔",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.03125
+   ]
+  },
+  "el_dragon_spinm_11": {
+   "chars": "𐯕𐯖𐯗𐯘𐯙𐯚𐯛𐯜",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_dragon_cut": {
+   "chars": "𐯝𐯞𐯟𐯠𐯡𐯢𐯣𐯤",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_speed": {
+   "chars": "𐯥𐯦𐯧𐯨",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_dash": {
+   "chars": "𐯩𐯪𐯫𐯬𐯭𐯮",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_dragon_aura": {
+   "chars": "𐯯𐯰𐯱𐯲𐯳𐯴𐯵𐯶",
+   "frames": 8,
+   "aspect": 0.4923,
+   "colored": true,
+   "crop": [
+    0.007572,
+    -0.0
+   ]
+  },
+  "el_dragon_stab": {
+   "chars": "𐯷𐯸𐯹𐯺𐯻𐯼",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
+  },
+  "el_dragon_spear": {
+   "chars": "𐯽𐯾𐯿𐰀",
+   "frames": 4,
+   "aspect": 6.0,
+   "colored": true
+  },
+  "el_dragon_twister": {
+   "chars": "𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈",
+   "frames": 8,
+   "aspect": 0.4928,
+   "colored": true
+  },
+  "el_dragon_whirl": {
+   "chars": "𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005208,
+    0.005208
+   ]
+  },
+  "el_dragon_comet": {
+   "chars": "𐰑𐰒𐰓𐰔",
+   "frames": 4,
+   "aspect": 2.6522,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    -0.0
+   ]
+  },
+  "el_dragon_feather": {
+   "chars": "𐰕𐰖𐰗𐰘𐰙𐰚𐰛𐰜",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_wind": {
+   "chars": "𐰝𐰞𐰟𐰠𐰡𐰢𐰣𐰤",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_lspin": {
+   "chars": "𐰥𐰦𐰧𐰨𐰩𐰪𐰫𐰬",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_dragon_swirl": {
+   "chars": "𐰭𐰮𐰯𐰰𐰱𐰲𐰳𐰴",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
+  },
+  "el_dragon_fire": {
+   "chars": "𐰵𐰶𐰷𐰸𐰹𐰺𐰻𐰼",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
+  },
+  "el_dragon_dragon": {
+   "chars": "𐰽𐰾𐰿𐱀𐱁𐱂𐱃𐱄",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.009375,
+    0.03125
+   ]
+  },
+  "el_dragon_flame": {
+   "chars": "𐱅𐱆𐱇𐱈𐱉𐱊𐱋𐱌𐱍𐱎",
+   "frames": 10,
+   "aspect": 0.4918,
+   "colored": true,
+   "crop": [
+    0.003074,
+    -0.0
+   ]
+  },
+  "el_phoenix_slash_00": {
+   "chars": "𐱏𐱐𐱑𐱒𐱓𐱔𐱕𐱖𐱗𐱘",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.044034,
+    -0.0
+   ]
+  },
+  "el_phoenix_slash_01": {
+   "chars": "𐱙𐱚𐱛𐱜𐱝𐱞𐱟𐱠𐱡𐱢",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_phoenix_slash_10": {
+   "chars": "𐱣𐱤𐱥𐱦𐱧𐱨𐱩𐱪𐱫𐱬",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.257812,
+    -0.0
+   ]
+  },
+  "el_phoenix_slash_11": {
+   "chars": "𐱭𐱮𐱯𐱰𐱱𐱲𐱳𐱴𐱵𐱶",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.198627,
+    -0.0
+   ]
+  },
+  "el_phoenix_slashm_00": {
+   "chars": "𐱷𐱸𐱹𐱺𐱻𐱼𐱽𐱾𐱿𐲀",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.017162,
+    -0.0
+   ]
+  },
+  "el_phoenix_slashm_01": {
+   "chars": "𐲁𐲂𐲃𐲄𐲅𐲆𐲇𐲈𐲉𐲊",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.0
+   ]
+  },
+  "el_phoenix_slashm_10": {
+   "chars": "𐲋𐲌𐲍𐲎𐲏𐲐𐲑𐲒𐲓𐲔",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.210938,
+    -0.0
+   ]
+  },
+  "el_phoenix_slashm_11": {
+   "chars": "𐲕𐲖𐲗𐲘𐲙𐲚𐲛𐲜𐲝𐲞",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.259734,
+    -0.0
+   ]
+  },
+  "el_phoenix_xslash_00": {
+   "chars": "𐲟𐲠𐲡𐲢𐲣𐲤𐲥𐲦",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    -0.125
+   ]
+  },
+  "el_phoenix_xslash_01": {
+   "chars": "𐲧𐲨𐲩𐲪𐲫𐲬𐲭𐲮",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    -0.125
+   ]
+  },
+  "el_phoenix_xslash_10": {
+   "chars": "𐲯𐲰𐲱𐲲𐲳𐲴𐲵𐲶",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.145089,
+    0.125
+   ]
+  },
+  "el_phoenix_xslash_11": {
+   "chars": "𐲷𐲸𐲹𐲺𐲻𐲼𐲽𐲾",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.164062,
+    0.125
+   ]
+  },
+  "el_phoenix_boom_00": {
+   "chars": "𐲿𐳀𐳁𐳂𐳃𐳄𐳅𐳆𐳇𐳈𐳉𐳊𐳋𐳌",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.09375
+   ]
+  },
+  "el_phoenix_boom_01": {
+   "chars": "𐳍𐳎𐳏𐳐𐳑𐳒𐳓𐳔𐳕𐳖𐳗𐳘𐳙𐳚",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_phoenix_boom_10": {
+   "chars": "𐳛𐳜𐳝𐳞𐳟𐳠𐳡𐳢𐳣𐳤𐳥𐳦𐳧𐳨",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_phoenix_boom_11": {
+   "chars": "𐳩𐳪𐳫𐳬𐳭𐳮𐳯𐳰𐳱𐳲𐳳𐳴𐳵𐳶",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_phoenix_shock_00": {
+   "chars": "𐳷𐳸𐳹𐳺𐳻𐳼𐳽𐳾",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.027845,
+    -0.0
+   ]
+  },
+  "el_phoenix_shock_01": {
+   "chars": "𐳿𐴀𐴁𐴂𐴃𐴄𐴅𐴆",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_phoenix_shock_10": {
+   "chars": "𐴇𐴈𐴉𐴊𐴋𐴌𐴍𐴎",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.027845,
+    -0.0
+   ]
+  },
+  "el_phoenix_shock_11": {
+   "chars": "𐴏𐴐𐴑𐴒𐴓𐴔𐴕𐴖",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.0
+   ]
+  },
+  "el_phoenix_ring_00": {
+   "chars": "𐴗𐴘𐴙𐴚",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_phoenix_ring_01": {
+   "chars": "𐴛𐴜𐴝𐴞",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_phoenix_ring_10": {
+   "chars": "𐴟𐴠𐴡𐴢",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_phoenix_ring_11": {
+   "chars": "𐴣𐴤𐴥𐴦",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_phoenix_boom_s": {
+   "chars": "𐴧𐴨𐴩𐴪𐴫𐴬𐴭𐴮𐴯𐴰𐴱𐴲",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.001875,
+    -0.0
+   ]
+  },
+  "el_phoenix_shock_s": {
+   "chars": "𐴳𐴴𐴵𐴶𐴷𐴸𐴹𐴺𐴻𐴼",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_phoenix_crack_s": {
+   "chars": "𐴽𐴾𐴿𐵀𐵁",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.04182,
+    -0.0
+   ]
+  },
+  "el_phoenix_flash": {
+   "chars": "𐵂𐵃𐵄𐵅𐵆𐵇𐵈𐵉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.042708,
+    -0.041667
+   ]
+  },
+  "el_phoenix_charge": {
+   "chars": "𐵊𐵋𐵌𐵍𐵎𐵏𐵐𐵑𐵒𐵓",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.003243,
+    -0.0
+   ]
+  },
+  "el_phoenix_ember": {
+   "chars": "𐵔𐵕𐵖𐵗",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.002604,
+    -0.020833
+   ]
+  },
+  "el_phoenix_shard": {
+   "chars": "𐵘𐵙𐵚𐵛𐵜𐵝𐵞𐵟",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_phoenix_pillar": {
+   "chars": "𐵠𐵡𐵢𐵣𐵤𐵥𐵦𐵧𐵨𐵩",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_phoenix_dust": {
+   "chars": "𐵪𐵫𐵬𐵭𐵮𐵯𐵰𐵱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.016493,
+    -0.125
+   ]
+  },
+  "el_phoenix_spin_00": {
+   "chars": "𐵲𐵳𐵴𐵵𐵶𐵷𐵸𐵹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.053125,
+    -0.03125
+   ]
+  },
+  "el_phoenix_spin_01": {
+   "chars": "𐵺𐵻𐵼𐵽𐵾𐵿𐶀𐶁",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    -0.03125
+   ]
+  },
+  "el_phoenix_spin_10": {
+   "chars": "𐶂𐶃𐶄𐶅𐶆𐶇𐶈𐶉",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.057813,
+    0.0625
+   ]
+  },
+  "el_phoenix_spin_11": {
+   "chars": "𐶊𐶋𐶌𐶍𐶎𐶏𐶐𐶑",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.070312,
+    0.0625
+   ]
+  },
+  "el_phoenix_spinm_00": {
+   "chars": "𐶒𐶓𐶔𐶕𐶖𐶗𐶘𐶙",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0625,
+    -0.03125
+   ]
+  },
+  "el_phoenix_spinm_01": {
+   "chars": "𐶚𐶛𐶜𐶝𐶞𐶟𐶠𐶡",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.03125
+   ]
+  },
+  "el_phoenix_spinm_10": {
+   "chars": "𐶢𐶣𐶤𐶥𐶦𐶧𐶨𐶩",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.067188,
+    0.0625
+   ]
+  },
+  "el_phoenix_spinm_11": {
+   "chars": "𐶪𐶫𐶬𐶭𐶮𐶯𐶰𐶱",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.0625,
+    0.0625
+   ]
+  },
+  "el_phoenix_cut": {
+   "chars": "𐶲𐶳𐶴𐶵𐶶𐶷𐶸𐶹",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_phoenix_speed": {
+   "chars": "𐶺𐶻𐶼𐶽",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_phoenix_dash": {
+   "chars": "𐶾𐶿𐷀𐷁𐷂𐷃",
+   "frames": 6,
+   "aspect": 4.0,
+   "colored": true,
+   "crop": [
+    0.268229,
+    -0.0
+   ]
+  },
+  "el_phoenix_halo_00": {
+   "chars": "𐷄𐷅𐷆𐷇𐷈𐷉𐷊𐷋",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    -0.015625
+   ]
+  },
+  "el_phoenix_halo_01": {
+   "chars": "𐷌𐷍𐷎𐷏𐷐𐷑𐷒𐷓",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    -0.015625
+   ]
+  },
+  "el_phoenix_halo_10": {
+   "chars": "𐷔𐷕𐷖𐷗𐷘𐷙𐷚𐷛",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.028646,
+    0.015625
+   ]
+  },
+  "el_phoenix_halo_11": {
+   "chars": "𐷜𐷝𐷞𐷟𐷠𐷡𐷢𐷣",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.023438,
+    0.015625
+   ]
+  },
+  "el_phoenix_feather": {
+   "chars": "𐷤𐷥𐷦𐷧𐷨𐷩𐷪𐷫",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_phoenix_cinder": {
+   "chars": "𐷬𐷭𐷮𐷯𐷰𐷱𐷲𐷳",
+   "frames": 8,
+   "aspect": 0.5,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_phoenix_fwings": {
+   "chars": "𐷴𐷵𐷶𐷷𐷸𐷹𐷺𐷻",
+   "frames": 8,
+   "aspect": 1.2344,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.015625
+   ]
+  },
+  "el_phoenix_phoenix": {
+   "chars": "𐷼𐷽𐷾𐷿𐸀𐸁𐸂𐸃",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.03125
+   ]
+  },
+  "el_phoenix_fury": {
+   "chars": "𐸄𐸅𐸆𐸇𐸈𐸉𐸊𐸋",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.101562,
+    -0.0
+   ]
   }
  }
 }
