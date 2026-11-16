@@ -237,7 +237,9 @@ def density(extent):
 
 def texels(size, aspect=1.0, k=1):
     """칸 하나의 가장 큰 높이 size (칸 — jobcensus) · 가로세로 비 · 조각 수 k (2 × 2 조각이면 2) → 칸 높이 (텍셀)"""
-    return max(8, int(round(size * density(size * k * max(1.0, aspect)))))
+    t = max(8, int(round(size * density(size * k * max(1.0, aspect)))))
+    # 2026-11-16 글꼴 그림 한 칸은 256 텍셀까지 (vfx_sprites 의 확인) — 아주 크게 보이는 그림 (세인트 궁의 땅 연꽃 22칸) 은 텍셀을 크게 (더 굵은 도트)
+    return min(t, int(256 / max(1.0, aspect)))
 
 
 # 2026-11-16 그림판이 화면에서 가장 크게 보인 크기 (칸 높이 — 조각 그림은 이름_rc 를 뺀 바탕 이름, CI 영상 jobcensus "|| sheets 이름=수@크기" 의 가장 큰 값):

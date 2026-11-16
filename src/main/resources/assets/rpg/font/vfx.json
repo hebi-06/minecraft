@@ -6664,8 +6664,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6673,8 +6673,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6777,8 +6777,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6894,8 +6894,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_halo_00.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6903,8 +6903,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_halo_01.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6912,8 +6912,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_halo_10.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6921,8 +6921,8 @@
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_halo_11.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
     ""
    ]
@@ -6956,7 +6956,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfx/el_holy_heal.png",
+   "file": "rpg:font/vfx/el_holy_dash.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6965,11 +6965,20 @@
   },
   {
    "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_heal.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_note.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -6978,7 +6987,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -6987,16 +6996,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    ""
+    ""
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_holy_lotus.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 59,
+   "ascent": 27,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7005,7 +7014,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7014,7 +7023,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_holy_feather.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
    ]
   },
   {
@@ -7023,7 +7041,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7032,7 +7050,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7041,7 +7059,7 @@
    "height": 18,
    "ascent": 7,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7050,7 +7068,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7059,7 +7077,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7068,7 +7086,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7077,7 +7095,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7086,7 +7104,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -7095,8 +7113,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -7105,8 +7123,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "",
+    ""
    ]
   },
   {
@@ -7115,8 +7133,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    ""
+    "󰀀󰀁󰀂",
+    "󰀃󰀄󰀅󰀆󰀇"
    ]
   },
   {
@@ -7125,8 +7143,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    "豈更車賈"
+    "󰀈󰀉󰀊󰀋󰀌",
+    "󰀍󰀎󰀏󰀐󰀑"
    ]
   },
   {
@@ -7135,8 +7153,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "滑串句龜龜",
-    "契金喇奈懶"
+    "󰀒󰀓󰀔󰀕󰀖",
+    "󰀗󰀘󰀙󰀚󰀛"
    ]
   },
   {
@@ -7145,8 +7163,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "癩羅蘿螺裸",
-    "邏樂洛烙珞"
+    "󰀜󰀝󰀞󰀟󰀠",
+    "󰀡󰀢󰀣󰀤󰀥"
    ]
   },
   {
@@ -7155,8 +7173,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "落酪駱亂卵",
-    "欄爛蘭鸞嵐"
+    "󰀦󰀧󰀨󰀩󰀪",
+    "󰀫󰀬󰀭󰀮󰀯"
    ]
   },
   {
@@ -7165,8 +7183,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "濫藍襤拉臘",
-    "蠟廊朗浪狼"
+    "󰀰󰀱󰀲󰀳󰀴",
+    "󰀵󰀶󰀷󰀸󰀹"
    ]
   },
   {
@@ -7175,7 +7193,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "郎來冷勞擄櫓爐盧"
+    "󰀺󰀻󰀼󰀽󰀾󰀿󰁀󰁁"
    ]
   },
   {
@@ -7184,7 +7202,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "老蘆虜路露魯鷺碌"
+    "󰁂󰁃󰁄󰁅󰁆󰁇󰁈󰁉"
    ]
   },
   {
@@ -7193,7 +7211,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "祿綠菉錄鹿論壟弄"
+    "󰁊󰁋󰁌󰁍󰁎󰁏󰁐󰁑"
    ]
   },
   {
@@ -7202,7 +7220,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "籠聾牢磊賂雷壘屢"
+    "󰁒󰁓󰁔󰁕󰁖󰁗󰁘󰁙"
    ]
   },
   {
@@ -7211,8 +7229,8 @@
    "height": 50,
    "ascent": 23,
    "chars": [
-    "樓淚漏累縷陋勒",
-    "肋凜凌稜綾菱陵"
+    "󰁚󰁛󰁜󰁝󰁞󰁟󰁠",
+    "󰁡󰁢󰁣󰁤󰁥󰁦󰁧"
    ]
   },
   {
@@ -7221,8 +7239,8 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "讀拏樂諾丹寧怒",
-    "率異北磻便復不"
+    "󰁨󰁩󰁪󰁫󰁬󰁭󰁮",
+    "󰁯󰁰󰁱󰁲󰁳󰁴󰁵"
    ]
   },
   {
@@ -7231,8 +7249,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "泌數索參塞省葉",
-    "說殺辰沈拾若掠"
+    "󰁶󰁷󰁸󰁹󰁺󰁻󰁼",
+    "󰁽󰁾󰁿󰂀󰂁󰂂󰂃"
    ]
   },
   {
@@ -7241,44 +7259,44 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "略亮兩凉梁糧良",
-    "諒量勵呂女廬旅"
+    "󰂄󰂅󰂆󰂇󰂈󰂉󰂊",
+    "󰂋󰂌󰂍󰂎󰂏󰂐󰂑"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_shock_00.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "濾礪閭驪麗黎力曆"
+    "󰂒󰂓󰂔󰂕󰂖󰂗󰂘󰂙"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_shock_01.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "歷轢年憐戀撚漣煉"
+    "󰂚󰂛󰂜󰂝󰂞󰂟󰂠󰂡"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_shock_10.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "璉秊練聯輦蓮連鍊"
+    "󰂢󰂣󰂤󰂥󰂦󰂧󰂨󰂩"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_shock_11.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "列劣咽烈裂說廉念"
+    "󰂪󰂫󰂬󰂭󰂮󰂯󰂰󰂱"
    ]
   },
   {
@@ -7287,7 +7305,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "捻殮簾獵"
+    "󰂲󰂳󰂴󰂵"
    ]
   },
   {
@@ -7296,7 +7314,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "令囹寧嶺"
+    "󰂶󰂷󰂸󰂹"
    ]
   },
   {
@@ -7305,7 +7323,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "怜玲瑩羚"
+    "󰂺󰂻󰂼󰂽"
    ]
   },
   {
@@ -7314,7 +7332,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "聆鈴零靈"
+    "󰂾󰂿󰃀󰃁"
    ]
   },
   {
@@ -7323,8 +7341,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "領例禮醴隸惡",
-    "了僚寮尿料樂"
+    "󰃂󰃃󰃄󰃅󰃆󰃇",
+    "󰃈󰃉󰃊󰃋󰃌󰃍"
    ]
   },
   {
@@ -7333,8 +7351,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "燎療蓼遼龍",
-    "暈阮劉杻柳"
+    "󰃎󰃏󰃐󰃑󰃒",
+    "󰃓󰃔󰃕󰃖󰃗"
    ]
   },
   {
@@ -7343,16 +7361,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "流溜琉留硫"
+    "󰃘󰃙󰃚󰃛󰃜"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_flash.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 50,
+   "ascent": 23,
    "chars": [
-    "紐類六戮陸倫崙淪"
+    "󰃝󰃞󰃟󰃠󰃡󰃢󰃣󰃤"
    ]
   },
   {
@@ -7361,8 +7379,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "輪律慄栗率",
-    "隆利吏履易"
+    "󰃥󰃦󰃧󰃨󰃩",
+    "󰃪󰃫󰃬󰃭󰃮"
    ]
   },
   {
@@ -7371,7 +7389,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "李梨泥理"
+    "󰃯󰃰󰃱󰃲"
    ]
   },
   {
@@ -7380,7 +7398,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "痢罹裏裡里離匿溺"
+    "󰃳󰃴󰃵󰃶󰃷󰃸󰃹󰃺"
    ]
   },
   {
@@ -7389,8 +7407,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "吝燐璘藺隣",
-    "鱗麟林淋臨"
+    "󰃻󰃼󰃽󰃾󰃿",
+    "󰄀󰄁󰄂󰄃󰄄"
    ]
   },
   {
@@ -7399,7 +7417,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "立笠粒狀炙識什茶"
+    "󰄅󰄆󰄇󰄈󰄉󰄊󰄋󰄌"
    ]
   },
   {
@@ -7408,7 +7426,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "刺切度拓糖宅洞暴"
+    "󰄍󰄎󰄏󰄐󰄑󰄒󰄓󰄔"
    ]
   },
   {
@@ -7417,7 +7435,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "輻行降見廓兀嗀﨎"
+    "󰄕󰄖󰄗󰄘󰄙󰄚󰄛󰄜"
    ]
   },
   {
@@ -7426,7 +7444,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "﨏塚﨑晴﨓﨔凞猪"
+    "󰄝󰄞󰄟󰄠󰄡󰄢󰄣󰄤"
    ]
   },
   {
@@ -7435,7 +7453,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "益礼神祥福靖精羽"
+    "󰄥󰄦󰄧󰄨󰄩󰄪󰄫󰄬"
    ]
   },
   {
@@ -7444,7 +7462,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "﨟蘒﨡諸﨣﨤逸都"
+    "󰄭󰄮󰄯󰄰󰄱󰄲󰄳󰄴"
    ]
   },
   {
@@ -7453,7 +7471,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "﨧﨨﨩飯飼館鶴郞"
+    "󰄵󰄶󰄷󰄸󰄹󰄺󰄻󰄼"
    ]
   },
   {
@@ -7462,7 +7480,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "隷侮僧免勉勤卑喝"
+    "󰄽󰄾󰄿󰅀󰅁󰅂󰅃󰅄"
    ]
   },
   {
@@ -7471,16 +7489,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "嘆器塀墨層屮悔慨"
+    "󰅅󰅆󰅇󰅈󰅉󰅊󰅋󰅌"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_cut.png",
-   "height": 18,
-   "ascent": 7,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "憎懲敏既暑梅海渚"
+    "󰅍󰅎󰅏󰅐󰅑󰅒󰅓󰅔"
    ]
   },
   {
@@ -7489,16 +7507,16 @@
    "height": 21,
    "ascent": 8,
    "chars": [
-    "漢煮爫琢碑社"
+    "󰅕󰅖󰅗󰅘󰅙󰅚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_smoke.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 52,
+   "ascent": 24,
    "chars": [
-    "祉祈祐祖祝禍禎穀"
+    "󰅛󰅜󰅝󰅞󰅟󰅠󰅡󰅢"
    ]
   },
   {
@@ -7507,7 +7525,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "突節練縉繁署者臭"
+    "󰅣󰅤󰅥󰅦󰅧󰅨󰅩󰅪"
    ]
   },
   {
@@ -7516,7 +7534,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "艹艹著褐視謁"
+    "󰅫󰅬󰅭󰅮󰅯󰅰"
    ]
   },
   {
@@ -7525,16 +7543,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "謹賓贈辶"
+    "󰅱󰅲󰅳󰅴"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_pool.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 58,
+   "ascent": 27,
    "chars": [
-    "逸難響頻恵𤋮舘﩮"
+    "󰅵󰅶󰅷󰅸󰅹󰅺󰅻󰅼"
    ]
   },
   {
@@ -7543,16 +7561,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﩯並况全侀充冀勇"
+    "󰅽󰅾󰅿󰆀󰆁󰆂󰆃󰆄"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_hex_heart.png",
-   "height": 59,
-   "ascent": 27,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "勺喝啕喙嗢塚墳奄"
+    "󰆅󰆆󰆇󰆈󰆉󰆊󰆋󰆌"
    ]
   },
   {
@@ -7561,7 +7579,52 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "奔婢嬨廒廙彩徭惘"
+    "󰆍󰆎󰆏󰆐󰆑󰆒󰆓󰆔"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_soul.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰆕󰆖󰆗󰆘󰆙󰆚"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_halo_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰆛󰆜󰆝󰆞󰆟󰆠󰆡󰆢"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_halo_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰆣󰆤󰆥󰆦󰆧󰆨󰆩󰆪"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_halo_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰆫󰆬󰆭󰆮󰆯󰆰󰆱󰆲"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_hex_halo_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰆳󰆴󰆵󰆶󰆷󰆸󰆹󰆺"
    ]
   },
   {
@@ -7570,8 +7633,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "慎愈憎慠懲",
-    "戴揄搜摒敖"
+    "󰆻󰆼󰆽󰆾󰆿",
+    "󰇀󰇁󰇂󰇃󰇄"
    ]
   },
   {
@@ -7580,8 +7643,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "晴朗望杖歹",
-    "殺流滛滋漢"
+    "󰇅󰇆󰇇󰇈󰇉",
+    "󰇊󰇋󰇌󰇍󰇎"
    ]
   },
   {
@@ -7590,8 +7653,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "瀞煮瞧爵犯",
-    "猪瑱甆画瘝"
+    "󰇏󰇐󰇑󰇒󰇓",
+    "󰇔󰇕󰇖󰇗󰇘"
    ]
   },
   {
@@ -7600,8 +7663,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "瘟益盛直睊",
-    "着磌窱節类"
+    "󰇙󰇚󰇛󰇜󰇝",
+    "󰇞󰇟󰇠󰇡󰇢"
    ]
   },
   {
@@ -7610,8 +7673,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "絛練缾者荒",
-    "華蝹襁覆視"
+    "󰇣󰇤󰇥󰇦󰇧",
+    "󰇨󰇩󰇪󰇫󰇬"
    ]
   },
   {
@@ -7620,8 +7683,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "調諸請謁諾",
-    "諭謹變贈輸"
+    "󰇭󰇮󰇯󰇰󰇱",
+    "󰇲󰇳󰇴󰇵󰇶"
    ]
   },
   {
@@ -7630,8 +7693,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "遲醙鉶陼難",
-    "靖韛響頋頻"
+    "󰇷󰇸󰇹󰇺󰇻",
+    "󰇼󰇽󰇾󰇿󰈀"
    ]
   },
   {
@@ -7640,8 +7703,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "鬒龜𢡊𢡄𣏕",
-    "㮝䀘䀹𥉉𥳐"
+    "󰈁󰈂󰈃󰈄󰈅",
+    "󰈆󰈇󰈈󰈉󰈊"
    ]
   },
   {
@@ -7650,7 +7713,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𧻓齃龎﫚﫛﫜﫝﫞"
+    "󰈋󰈌󰈍󰈎󰈏󰈐󰈑󰈒"
    ]
   },
   {
@@ -7659,7 +7722,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "﫟﫠﫡﫢﫣﫤﫥﫦"
+    "󰈓󰈔󰈕󰈖󰈗󰈘󰈙󰈚"
    ]
   },
   {
@@ -7668,7 +7731,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "﫧﫨﫩﫪﫫﫬﫭﫮"
+    "󰈛󰈜󰈝󰈞󰈟󰈠󰈡󰈢"
    ]
   },
   {
@@ -7677,7 +7740,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "﫯﫰﫱﫲﫳﫴﫵﫶"
+    "󰈣󰈤󰈥󰈦󰈧󰈨󰈩󰈪"
    ]
   },
   {
@@ -7686,8 +7749,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "﫷﫸﫹﫺﫻﫼﫽",
-    "﫾﫿ﬀﬁﬂﬃﬄ"
+    "󰈫󰈬󰈭󰈮󰈯󰈰󰈱",
+    "󰈲󰈳󰈴󰈵󰈶󰈷󰈸"
    ]
   },
   {
@@ -7696,8 +7759,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﬅﬆ﬇﬈﬉﬊﬋",
-    "﬌﬍﬎﬏﬐﬑﬒"
+    "󰈹󰈺󰈻󰈼󰈽󰈾󰈿",
+    "󰉀󰉁󰉂󰉃󰉄󰉅󰉆"
    ]
   },
   {
@@ -7706,8 +7769,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﬓﬔﬕﬖﬗ﬘﬙",
-    "﬚﬛﬜יִﬞײַﬠ"
+    "󰉇󰉈󰉉󰉊󰉋󰉌󰉍",
+    "󰉎󰉏󰉐󰉑󰉒󰉓󰉔"
    ]
   },
   {
@@ -7716,8 +7779,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﬡﬢﬣﬤﬥﬦﬧ",
-    "ﬨ﬩שׁשׂשּׁשּׂאַ"
+    "󰉕󰉖󰉗󰉘󰉙󰉚󰉛",
+    "󰉜󰉝󰉞󰉟󰉠󰉡󰉢"
    ]
   },
   {
@@ -7726,7 +7789,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "אָאּבּגּדּהּוּזּ"
+    "󰉣󰉤󰉥󰉦󰉧󰉨󰉩󰉪"
    ]
   },
   {
@@ -7735,7 +7798,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﬷טּיּךּכּלּ﬽מּ"
+    "󰉫󰉬󰉭󰉮󰉯󰉰󰉱󰉲"
    ]
   },
   {
@@ -7744,7 +7807,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﬿נּסּ﭂ףּפּ﭅צּ"
+    "󰉳󰉴󰉵󰉶󰉷󰉸󰉹󰉺"
    ]
   },
   {
@@ -7753,7 +7816,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "קּרּשּתּוֹבֿכֿפֿ"
+    "󰉻󰉼󰉽󰉾󰉿󰊀󰊁󰊂"
    ]
   },
   {
@@ -7762,7 +7825,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﭏﭐﭑﭒ"
+    "󰊃󰊄󰊅󰊆"
    ]
   },
   {
@@ -7771,7 +7834,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﭓﭔﭕﭖ"
+    "󰊇󰊈󰊉󰊊"
    ]
   },
   {
@@ -7780,7 +7843,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﭗﭘﭙﭚ"
+    "󰊋󰊌󰊍󰊎"
    ]
   },
   {
@@ -7789,7 +7852,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﭛﭜﭝﭞ"
+    "󰊏󰊐󰊑󰊒"
    ]
   },
   {
@@ -7798,8 +7861,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﭟﭠﭡﭢﭣﭤ",
-    "ﭥﭦﭧﭨﭩﭪ"
+    "󰊓󰊔󰊕󰊖󰊗󰊘",
+    "󰊙󰊚󰊛󰊜󰊝󰊞"
    ]
   },
   {
@@ -7808,8 +7871,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﭫﭬﭭﭮﭯ",
-    "ﭰﭱﭲﭳﭴ"
+    "󰊟󰊠󰊡󰊢󰊣",
+    "󰊤󰊥󰊦󰊧󰊨"
    ]
   },
   {
@@ -7818,7 +7881,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﭵﭶﭷﭸﭹ"
+    "󰊩󰊪󰊫󰊬󰊭"
    ]
   },
   {
@@ -7827,7 +7890,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "ﭺﭻﭼﭽﭾﭿﮀﮁ"
+    "󰊮󰊯󰊰󰊱󰊲󰊳󰊴󰊵"
    ]
   },
   {
@@ -7836,8 +7899,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﮂﮃﮄﮅﮆ",
-    "ﮇﮈﮉﮊﮋ"
+    "󰊶󰊷󰊸󰊹󰊺",
+    "󰊻󰊼󰊽󰊾󰊿"
    ]
   },
   {
@@ -7846,7 +7909,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﮌﮍﮎﮏ"
+    "󰋀󰋁󰋂󰋃"
    ]
   },
   {
@@ -7855,7 +7918,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﮐﮑﮒﮓﮔﮕﮖﮗ"
+    "󰋄󰋅󰋆󰋇󰋈󰋉󰋊󰋋"
    ]
   },
   {
@@ -7864,8 +7927,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﮘﮙﮚﮛﮜ",
-    "ﮝﮞﮟﮠﮡ"
+    "󰋌󰋍󰋎󰋏󰋐",
+    "󰋑󰋒󰋓󰋔󰋕"
    ]
   },
   {
@@ -7874,7 +7937,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    "ﮢﮣﮤﮥﮦﮧﮨﮩ"
+    "󰋖󰋗󰋘󰋙󰋚󰋛󰋜󰋝"
    ]
   },
   {
@@ -7883,7 +7946,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "ﮪﮫﮬﮭﮮﮯﮰﮱ"
+    "󰋞󰋟󰋠󰋡󰋢󰋣󰋤󰋥"
    ]
   },
   {
@@ -7892,7 +7955,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "﮲﮳﮴﮵﮶﮷﮸﮹"
+    "󰋦󰋧󰋨󰋩󰋪󰋫󰋬󰋭"
    ]
   },
   {
@@ -7901,7 +7964,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "﮺﮻﮼﮽﮾﮿﯀﯁"
+    "󰋮󰋯󰋰󰋱󰋲󰋳󰋴󰋵"
    ]
   },
   {
@@ -7910,7 +7973,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "﯂﯃﯄﯅﯆﯇﯈﯉"
+    "󰋶󰋷󰋸󰋹󰋺󰋻󰋼󰋽"
    ]
   },
   {
@@ -7919,7 +7982,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "﯊﯋﯌﯍﯎﯏﯐﯑"
+    "󰋾󰋿󰌀󰌁󰌂󰌃󰌄󰌅"
    ]
   },
   {
@@ -7928,7 +7991,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "﯒ﯓﯔﯕﯖﯗﯘﯙ"
+    "󰌆󰌇󰌈󰌉󰌊󰌋󰌌󰌍"
    ]
   },
   {
@@ -7937,7 +8000,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﯚﯛﯜﯝﯞﯟﯠﯡ"
+    "󰌎󰌏󰌐󰌑󰌒󰌓󰌔󰌕"
    ]
   },
   {
@@ -7946,7 +8009,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﯢﯣﯤﯥﯦﯧﯨﯩ"
+    "󰌖󰌗󰌘󰌙󰌚󰌛󰌜󰌝"
    ]
   },
   {
@@ -7955,7 +8018,7 @@
    "height": 17,
    "ascent": 6,
    "chars": [
-    "ﯪﯫﯬﯭﯮﯯﯰﯱ"
+    "󰌞󰌟󰌠󰌡󰌢󰌣󰌤󰌥"
    ]
   },
   {
@@ -7964,7 +8027,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﯲﯳﯴﯵ"
+    "󰌦󰌧󰌨󰌩"
    ]
   },
   {
@@ -7973,7 +8036,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﯶﯷﯸﯹﯺﯻ"
+    "󰌪󰌫󰌬󰌭󰌮󰌯"
    ]
   },
   {
@@ -7982,7 +8045,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﯼﯽﯾﯿﰀﰁﰂﰃ"
+    "󰌰󰌱󰌲󰌳󰌴󰌵󰌶󰌷"
    ]
   },
   {
@@ -7991,7 +8054,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﰄﰅﰆﰇﰈﰉﰊﰋ"
+    "󰌸󰌹󰌺󰌻󰌼󰌽󰌾󰌿"
    ]
   },
   {
@@ -8000,7 +8063,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﰌﰍﰎﰏﰐﰑ"
+    "󰍀󰍁󰍂󰍃󰍄󰍅"
    ]
   },
   {
@@ -8009,7 +8072,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﰒﰓﰔﰕ"
+    "󰍆󰍇󰍈󰍉"
    ]
   },
   {
@@ -8018,7 +8081,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﰖﰗﰘﰙﰚﰛ"
+    "󰍊󰍋󰍌󰍍󰍎󰍏"
    ]
   },
   {
@@ -8027,7 +8090,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﰜﰝﰞﰟ"
+    "󰍐󰍑󰍒󰍓"
    ]
   },
   {
@@ -8036,47 +8099,47 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﰠﰡﰢﰣﰤﰥ"
+    "󰍔󰍕󰍖󰍗󰍘󰍙"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_maw_slash_00.png",
-   "height": 42,
-   "ascent": 19,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﰦﰧﰨﰩﰪ",
-    "ﰫﰬﰭﰮﰯ"
+    "󰍚󰍛󰍜󰍝󰍞",
+    "󰍟󰍠󰍡󰍢󰍣"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_maw_slash_01.png",
-   "height": 42,
-   "ascent": 19,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﰰﰱﰲﰳﰴ",
-    "ﰵﰶﰷﰸﰹ"
+    "󰍤󰍥󰍦󰍧󰍨",
+    "󰍩󰍪󰍫󰍬󰍭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_maw_slash_10.png",
-   "height": 38,
-   "ascent": 17,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﰺﰻﰼﰽﰾ",
-    "ﰿﱀﱁﱂﱃ"
+    "󰍮󰍯󰍰󰍱󰍲",
+    "󰍳󰍴󰍵󰍶󰍷"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_maw_slash_11.png",
-   "height": 42,
-   "ascent": 19,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﱄﱅﱆﱇﱈ",
-    "ﱉﱊﱋﱌﱍ"
+    "󰍸󰍹󰍺󰍻󰍼",
+    "󰍽󰍾󰍿󰎀󰎁"
    ]
   },
   {
@@ -8085,8 +8148,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﱎﱏﱐﱑﱒ",
-    "ﱓﱔﱕﱖﱗ"
+    "󰎂󰎃󰎄󰎅󰎆",
+    "󰎇󰎈󰎉󰎊󰎋"
    ]
   },
   {
@@ -8095,8 +8158,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﱘﱙﱚﱛﱜ",
-    "ﱝﱞﱟﱠﱡ"
+    "󰎌󰎍󰎎󰎏󰎐",
+    "󰎑󰎒󰎓󰎔󰎕"
    ]
   },
   {
@@ -8105,8 +8168,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﱢﱣﱤﱥﱦ",
-    "ﱧﱨﱩﱪﱫ"
+    "󰎖󰎗󰎘󰎙󰎚",
+    "󰎛󰎜󰎝󰎞󰎟"
    ]
   },
   {
@@ -8115,8 +8178,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﱬﱭﱮﱯﱰ",
-    "ﱱﱲﱳﱴﱵ"
+    "󰎠󰎡󰎢󰎣󰎤",
+    "󰎥󰎦󰎧󰎨󰎩"
    ]
   },
   {
@@ -8125,7 +8188,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﱶﱷﱸﱹﱺﱻﱼﱽ"
+    "󰎪󰎫󰎬󰎭󰎮󰎯󰎰󰎱"
    ]
   },
   {
@@ -8134,7 +8197,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﱾﱿﲀﲁﲂﲃﲄﲅ"
+    "󰎲󰎳󰎴󰎵󰎶󰎷󰎸󰎹"
    ]
   },
   {
@@ -8143,7 +8206,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﲆﲇﲈﲉﲊﲋﲌﲍ"
+    "󰎺󰎻󰎼󰎽󰎾󰎿󰏀󰏁"
    ]
   },
   {
@@ -8152,7 +8215,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﲎﲏﲐﲑﲒﲓﲔﲕ"
+    "󰏂󰏃󰏄󰏅󰏆󰏇󰏈󰏉"
    ]
   },
   {
@@ -8161,8 +8224,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﲖﲗﲘﲙﲚﲛﲜ",
-    "ﲝﲞﲟﲠﲡﲢﲣ"
+    "󰏊󰏋󰏌󰏍󰏎󰏏󰏐",
+    "󰏑󰏒󰏓󰏔󰏕󰏖󰏗"
    ]
   },
   {
@@ -8171,8 +8234,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﲤﲥﲦﲧﲨﲩﲪ",
-    "ﲫﲬﲭﲮﲯﲰﲱ"
+    "󰏘󰏙󰏚󰏛󰏜󰏝󰏞",
+    "󰏟󰏠󰏡󰏢󰏣󰏤󰏥"
    ]
   },
   {
@@ -8181,8 +8244,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﲲﲳﲴﲵﲶﲷﲸ",
-    "ﲹﲺﲻﲼﲽﲾﲿ"
+    "󰏦󰏧󰏨󰏩󰏪󰏫󰏬",
+    "󰏭󰏮󰏯󰏰󰏱󰏲󰏳"
    ]
   },
   {
@@ -8191,8 +8254,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "ﳀﳁﳂﳃﳄﳅﳆ",
-    "ﳇﳈﳉﳊﳋﳌﳍ"
+    "󰏴󰏵󰏶󰏷󰏸󰏹󰏺",
+    "󰏻󰏼󰏽󰏾󰏿󰐀󰐁"
    ]
   },
   {
@@ -8201,7 +8264,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳎﳏﳐﳑﳒﳓﳔﳕ"
+    "󰐂󰐃󰐄󰐅󰐆󰐇󰐈󰐉"
    ]
   },
   {
@@ -8210,7 +8273,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳖﳗﳘﳙﳚﳛﳜﳝ"
+    "󰐊󰐋󰐌󰐍󰐎󰐏󰐐󰐑"
    ]
   },
   {
@@ -8219,7 +8282,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳞﳟﳠﳡﳢﳣﳤﳥ"
+    "󰐒󰐓󰐔󰐕󰐖󰐗󰐘󰐙"
    ]
   },
   {
@@ -8228,7 +8291,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳦﳧﳨﳩﳪﳫﳬﳭ"
+    "󰐚󰐛󰐜󰐝󰐞󰐟󰐠󰐡"
    ]
   },
   {
@@ -8237,7 +8300,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳮﳯﳰﳱ"
+    "󰐢󰐣󰐤󰐥"
    ]
   },
   {
@@ -8246,7 +8309,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳲﳳﳴﳵ"
+    "󰐦󰐧󰐨󰐩"
    ]
   },
   {
@@ -8255,7 +8318,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳶﳷﳸﳹ"
+    "󰐪󰐫󰐬󰐭"
    ]
   },
   {
@@ -8264,7 +8327,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳺﳻﳼﳽ"
+    "󰐮󰐯󰐰󰐱"
    ]
   },
   {
@@ -8273,8 +8336,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﳾﳿﴀﴁﴂﴃ",
-    "ﴄﴅﴆﴇﴈﴉ"
+    "󰐲󰐳󰐴󰐵󰐶󰐷",
+    "󰐸󰐹󰐺󰐻󰐼󰐽"
    ]
   },
   {
@@ -8283,17 +8346,17 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﴊﴋﴌﴍﴎ",
-    "ﴏﴐﴑﴒﴓ"
+    "󰐾󰐿󰑀󰑁󰑂",
+    "󰑃󰑄󰑅󰑆󰑇"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_maw_crack_s.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "ﴔﴕﴖﴗﴘ"
+    "󰑈󰑉󰑊󰑋󰑌"
    ]
   },
   {
@@ -8302,7 +8365,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﴙﴚﴛﴜﴝﴞﴟﴠ"
+    "󰑍󰑎󰑏󰑐󰑑󰑒󰑓󰑔"
    ]
   },
   {
@@ -8311,8 +8374,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﴡﴢﴣﴤﴥ",
-    "ﴦﴧﴨﴩﴪ"
+    "󰑕󰑖󰑗󰑘󰑙",
+    "󰑚󰑛󰑜󰑝󰑞"
    ]
   },
   {
@@ -8321,7 +8384,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﴫﴬﴭﴮ"
+    "󰑟󰑠󰑡󰑢"
    ]
   },
   {
@@ -8330,7 +8393,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﴯﴰﴱﴲﴳﴴﴵﴶ"
+    "󰑣󰑤󰑥󰑦󰑧󰑨󰑩󰑪"
    ]
   },
   {
@@ -8339,8 +8402,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﴷﴸﴹﴺﴻ",
-    "ﴼﴽ﴾﴿﵀"
+    "󰑫󰑬󰑭󰑮󰑯",
+    "󰑰󰑱󰑲󰑳󰑴"
    ]
   },
   {
@@ -8349,7 +8412,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﵁﵂﵃﵄﵅﵆﵇﵈"
+    "󰑵󰑶󰑷󰑸󰑹󰑺󰑻󰑼"
    ]
   },
   {
@@ -8358,7 +8421,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "﵉﵊﵋﵌﵍﵎﵏ﵐ"
+    "󰑽󰑾󰑿󰒀󰒁󰒂󰒃󰒄"
    ]
   },
   {
@@ -8367,7 +8430,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "ﵑﵒﵓﵔﵕﵖﵗﵘ"
+    "󰒅󰒆󰒇󰒈󰒉󰒊󰒋󰒌"
    ]
   },
   {
@@ -8376,7 +8439,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﵙﵚﵛﵜﵝﵞﵟﵠ"
+    "󰒍󰒎󰒏󰒐󰒑󰒒󰒓󰒔"
    ]
   },
   {
@@ -8385,7 +8448,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﵡﵢﵣﵤﵥﵦﵧﵨ"
+    "󰒕󰒖󰒗󰒘󰒙󰒚󰒛󰒜"
    ]
   },
   {
@@ -8394,7 +8457,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "ﵩﵪﵫﵬﵭﵮﵯﵰ"
+    "󰒝󰒞󰒟󰒠󰒡󰒢󰒣󰒤"
    ]
   },
   {
@@ -8403,7 +8466,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "ﵱﵲﵳﵴﵵﵶﵷﵸ"
+    "󰒥󰒦󰒧󰒨󰒩󰒪󰒫󰒬"
    ]
   },
   {
@@ -8412,7 +8475,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﵹﵺﵻﵼﵽﵾﵿﶀ"
+    "󰒭󰒮󰒯󰒰󰒱󰒲󰒳󰒴"
    ]
   },
   {
@@ -8421,7 +8484,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﶁﶂﶃﶄﶅﶆﶇﶈ"
+    "󰒵󰒶󰒷󰒸󰒹󰒺󰒻󰒼"
    ]
   },
   {
@@ -8430,7 +8493,7 @@
    "height": 17,
    "ascent": 6,
    "chars": [
-    "ﶉﶊﶋﶌﶍﶎﶏ﶐"
+    "󰒽󰒾󰒿󰓀󰓁󰓂󰓃󰓄"
    ]
   },
   {
@@ -8439,7 +8502,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﶑ﶒﶓﶔ"
+    "󰓅󰓆󰓇󰓈"
    ]
   },
   {
@@ -8448,7 +8511,7 @@
    "height": 20,
    "ascent": 8,
    "chars": [
-    "ﶕﶖﶗﶘﶙﶚ"
+    "󰓉󰓊󰓋󰓌󰓍󰓎"
    ]
   },
   {
@@ -8457,7 +8520,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﶛﶜﶝﶞﶟﶠﶡﶢ"
+    "󰓏󰓐󰓑󰓒󰓓󰓔󰓕󰓖"
    ]
   },
   {
@@ -8466,7 +8529,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﶣﶤﶥﶦﶧﶨﶩﶪ"
+    "󰓗󰓘󰓙󰓚󰓛󰓜󰓝󰓞"
    ]
   },
   {
@@ -8475,16 +8538,16 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "ﶫﶬﶭﶮ"
+    "󰓟󰓠󰓡󰓢"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_maw_abyss.png",
-   "height": 46,
-   "ascent": 21,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﶯﶰﶱﶲﶳﶴﶵﶶ"
+    "󰓣󰓤󰓥󰓦󰓧󰓨󰓩󰓪"
    ]
   },
   {
@@ -8493,7 +8556,52 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﶷﶸﶹﶺﶻﶼﶽﶾ"
+    "󰓫󰓬󰓭󰓮󰓯󰓰󰓱󰓲"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰓳󰓴󰓵󰓶󰓷󰓸󰓹󰓺"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_halo_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰓻󰓼󰓽󰓾󰓿󰔀󰔁󰔂"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_halo_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰔃󰔄󰔅󰔆󰔇󰔈󰔉󰔊"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_halo_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰔋󰔌󰔍󰔎󰔏󰔐󰔑󰔒"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_maw_halo_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰔓󰔔󰔕󰔖󰔗󰔘󰔙󰔚"
    ]
   },
   {
@@ -8502,8 +8610,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﶿﷀﷁﷂﷃ",
-    "ﷄﷅﷆﷇ﷈"
+    "󰔛󰔜󰔝󰔞󰔟",
+    "󰔠󰔡󰔢󰔣󰔤"
    ]
   },
   {
@@ -8512,8 +8620,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﷉﷊﷋﷌﷍",
-    "﷎﷏﷐﷑﷒"
+    "󰔥󰔦󰔧󰔨󰔩",
+    "󰔪󰔫󰔬󰔭󰔮"
    ]
   },
   {
@@ -8522,8 +8630,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﷓﷔﷕﷖﷗",
-    "﷘﷙﷚﷛﷜"
+    "󰔯󰔰󰔱󰔲󰔳",
+    "󰔴󰔵󰔶󰔷󰔸"
    ]
   },
   {
@@ -8532,8 +8640,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﷝﷞﷟﷠﷡",
-    "﷢﷣﷤﷥﷦"
+    "󰔹󰔺󰔻󰔼󰔽",
+    "󰔾󰔿󰕀󰕁󰕂"
    ]
   },
   {
@@ -8542,8 +8650,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "﷧﷨﷩﷪﷫",
-    "﷬﷭﷮﷯ﷰ"
+    "󰕃󰕄󰕅󰕆󰕇",
+    "󰕈󰕉󰕊󰕋󰕌"
    ]
   },
   {
@@ -8552,8 +8660,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﷱﷲﷳﷴﷵ",
-    "ﷶﷷﷸﷹﷺ"
+    "󰕍󰕎󰕏󰕐󰕑",
+    "󰕒󰕓󰕔󰕕󰕖"
    ]
   },
   {
@@ -8562,8 +8670,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﷻ﷼﷽﷾﷿",
-    "︀︁︂︃︄"
+    "󰕗󰕘󰕙󰕚󰕛",
+    "󰕜󰕝󰕞󰕟󰕠"
    ]
   },
   {
@@ -8572,44 +8680,44 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "︅︆︇︈︉",
-    "︊︋︌︍︎"
+    "󰕡󰕢󰕣󰕤󰕥",
+    "󰕦󰕧󰕨󰕩󰕪"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "️︐︑︒︓︔︕︖"
+    "󰕫󰕬󰕭󰕮󰕯󰕰󰕱󰕲"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "︗︘︙︚︛︜︝︞"
+    "󰕳󰕴󰕵󰕶󰕷󰕸󰕹󰕺"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "︟︠︡︢︣︤︥︦"
+    "󰕻󰕼󰕽󰕾󰕿󰖀󰖁󰖂"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "︧︨︩︪︫︬︭︮"
+    "󰖃󰖄󰖅󰖆󰖇󰖈󰖉󰖊"
    ]
   },
   {
@@ -8618,8 +8726,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "︯︰︱︲︳︴︵",
-    "︶︷︸︹︺︻︼"
+    "󰖋󰖌󰖍󰖎󰖏󰖐󰖑",
+    "󰖒󰖓󰖔󰖕󰖖󰖗󰖘"
    ]
   },
   {
@@ -8628,8 +8736,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "︽︾︿﹀﹁﹂﹃",
-    "﹄﹅﹆﹇﹈﹉﹊"
+    "󰖙󰖚󰖛󰖜󰖝󰖞󰖟",
+    "󰖠󰖡󰖢󰖣󰖤󰖥󰖦"
    ]
   },
   {
@@ -8638,8 +8746,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "﹋﹌﹍﹎﹏﹐﹑",
-    "﹒﹓﹔﹕﹖﹗﹘"
+    "󰖧󰖨󰖩󰖪󰖫󰖬󰖭",
+    "󰖮󰖯󰖰󰖱󰖲󰖳󰖴"
    ]
   },
   {
@@ -8648,44 +8756,44 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "﹙﹚﹛﹜﹝﹞﹟",
-    "﹠﹡﹢﹣﹤﹥﹦"
+    "󰖵󰖶󰖷󰖸󰖹󰖺󰖻",
+    "󰖼󰖽󰖾󰖿󰗀󰗁󰗂"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_shock_00.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "﹧﹨﹩﹪﹫﹬﹭﹮"
+    "󰗃󰗄󰗅󰗆󰗇󰗈󰗉󰗊"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_shock_01.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "﹯ﹰﹱﹲﹳﹴ﹵ﹶ"
+    "󰗋󰗌󰗍󰗎󰗏󰗐󰗑󰗒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_shock_10.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 62,
+   "ascent": 29,
    "chars": [
-    "ﹷﹸﹹﹺﹻﹼﹽﹾ"
+    "󰗓󰗔󰗕󰗖󰗗󰗘󰗙󰗚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_shock_11.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 62,
+   "ascent": 29,
    "chars": [
-    "ﹿﺀﺁﺂﺃﺄﺅﺆ"
+    "󰗛󰗜󰗝󰗞󰗟󰗠󰗡󰗢"
    ]
   },
   {
@@ -8694,7 +8802,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﺇﺈﺉﺊ"
+    "󰗣󰗤󰗥󰗦"
    ]
   },
   {
@@ -8703,7 +8811,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﺋﺌﺍﺎ"
+    "󰗧󰗨󰗩󰗪"
    ]
   },
   {
@@ -8712,7 +8820,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﺏﺐﺑﺒ"
+    "󰗫󰗬󰗭󰗮"
    ]
   },
   {
@@ -8721,7 +8829,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "ﺓﺔﺕﺖ"
+    "󰗯󰗰󰗱󰗲"
    ]
   },
   {
@@ -8730,8 +8838,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﺗﺘﺙﺚﺛﺜ",
-    "ﺝﺞﺟﺠﺡﺢ"
+    "󰗳󰗴󰗵󰗶󰗷󰗸",
+    "󰗹󰗺󰗻󰗼󰗽󰗾"
    ]
   },
   {
@@ -8740,8 +8848,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﺣﺤﺥﺦﺧ",
-    "ﺨﺩﺪﺫﺬ"
+    "󰗿󰘀󰘁󰘂󰘃",
+    "󰘄󰘅󰘆󰘇󰘈"
    ]
   },
   {
@@ -8750,16 +8858,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﺭﺮﺯﺰﺱ"
+    "󰘉󰘊󰘋󰘌󰘍"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﺲﺳﺴﺵﺶﺷﺸﺹ"
+    "󰘎󰘏󰘐󰘑󰘒󰘓󰘔󰘕"
    ]
   },
   {
@@ -8768,8 +8876,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﺺﺻﺼﺽﺾ",
-    "ﺿﻀﻁﻂﻃ"
+    "󰘖󰘗󰘘󰘙󰘚",
+    "󰘛󰘜󰘝󰘞󰘟"
    ]
   },
   {
@@ -8778,7 +8886,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ﻄﻅﻆﻇ"
+    "󰘠󰘡󰘢󰘣"
    ]
   },
   {
@@ -8787,7 +8895,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﻈﻉﻊﻋﻌﻍﻎﻏ"
+    "󰘤󰘥󰘦󰘧󰘨󰘩󰘪󰘫"
    ]
   },
   {
@@ -8796,8 +8904,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﻐﻑﻒﻓﻔ",
-    "ﻕﻖﻗﻘﻙ"
+    "󰘬󰘭󰘮󰘯󰘰",
+    "󰘱󰘲󰘳󰘴󰘵"
    ]
   },
   {
@@ -8806,79 +8914,79 @@
    "height": 24,
    "ascent": 10,
    "chars": [
-    "ﻚﻛﻜﻝﻞﻟﻠﻡ"
+    "󰘶󰘷󰘸󰘹󰘺󰘻󰘼󰘽"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spin_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﻢﻣﻤﻥﻦﻧﻨﻩ"
+    "󰘾󰘿󰙀󰙁󰙂󰙃󰙄󰙅"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spin_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﻪﻫﻬﻭﻮﻯﻰﻱ"
+    "󰙆󰙇󰙈󰙉󰙊󰙋󰙌󰙍"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spin_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﻲﻳﻴﻵﻶﻷﻸﻹ"
+    "󰙎󰙏󰙐󰙑󰙒󰙓󰙔󰙕"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spin_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ﻺﻻﻼ﻽﻾﻿＀！"
+    "󰙖󰙗󰙘󰙙󰙚󰙛󰙜󰙝"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spinm_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "＂＃＄％＆＇（）"
+    "󰙞󰙟󰙠󰙡󰙢󰙣󰙤󰙥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spinm_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "＊＋，－．／０１"
+    "󰙦󰙧󰙨󰙩󰙪󰙫󰙬󰙭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spinm_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "２３４５６７８９"
+    "󰙮󰙯󰙰󰙱󰙲󰙳󰙴󰙵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_spinm_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "：；＜＝＞？＠Ａ"
+    "󰙶󰙷󰙸󰙹󰙺󰙻󰙼󰙽"
    ]
   },
   {
@@ -8887,7 +8995,7 @@
    "height": 18,
    "ascent": 7,
    "chars": [
-    "ＢＣＤＥＦＧＨＩ"
+    "󰙾󰙿󰚀󰚁󰚂󰚃󰚄󰚅"
    ]
   },
   {
@@ -8896,7 +9004,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ＪＫＬＭ"
+    "󰚆󰚇󰚈󰚉"
    ]
   },
   {
@@ -8905,7 +9013,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ＮＯＰＱＲＳ"
+    "󰚊󰚋󰚌󰚍󰚎󰚏"
    ]
   },
   {
@@ -8914,7 +9022,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ＴＵＶＷＸＹＺ［"
+    "󰚐󰚑󰚒󰚓󰚔󰚕󰚖󰚗"
    ]
   },
   {
@@ -8923,16 +9031,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "＼］＾＿｀ａ"
+    "󰚘󰚙󰚚󰚛󰚜󰚝"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_smoke.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "ｂｃｄｅｆｇｈｉ"
+    "󰚞󰚟󰚠󰚡󰚢󰚣󰚤󰚥"
    ]
   },
   {
@@ -8941,16 +9049,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ｊｋｌｍｎｏ"
+    "󰚦󰚧󰚨󰚩󰚪󰚫"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_volt.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "ｐｑｒｓｔｕｖｗ"
+    "󰚬󰚭󰚮󰚯󰚰󰚱󰚲󰚳"
    ]
   },
   {
@@ -8959,7 +9067,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ｘｙｚ｛"
+    "󰚴󰚵󰚶󰚷"
    ]
   },
   {
@@ -8968,16 +9076,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "｜｝～｟｠｡｢｣"
+    "󰚸󰚹󰚺󰚻󰚼󰚽󰚾󰚿"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_cloud.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "､･ｦｧｨｩｪｫ"
+    "󰛀󰛁󰛂󰛃󰛄󰛅󰛆󰛇"
    ]
   },
   {
@@ -8986,7 +9094,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ｬｭｮｯｰｱｲｳ"
+    "󰛈󰛉󰛊󰛋󰛌󰛍󰛎󰛏"
    ]
   },
   {
@@ -8995,7 +9103,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ｴｵｶｷ"
+    "󰛐󰛑󰛒󰛓"
    ]
   },
   {
@@ -9004,16 +9112,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "ｸｹｺｻｼｽ"
+    "󰛔󰛕󰛖󰛗󰛘󰛙"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_thunder_maulswing.png",
-   "height": 54,
-   "ascent": 25,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "ｾｿﾀﾁﾂﾃ"
+    "󰛚󰛛󰛜󰛝󰛞󰛟"
    ]
   },
   {
@@ -9022,7 +9130,7 @@
    "height": 57,
    "ascent": 26,
    "chars": [
-    "ﾄﾅﾆﾇﾈﾉﾊﾋ"
+    "󰛠󰛡󰛢󰛣󰛤󰛥󰛦󰛧"
    ]
   },
   {
@@ -9031,7 +9139,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﾌﾍﾎﾏﾐﾑﾒﾓ"
+    "󰛨󰛩󰛪󰛫󰛬󰛭󰛮󰛯"
    ]
   },
   {
@@ -9040,47 +9148,101 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ﾔﾕﾖﾗ"
+    "󰛰󰛱󰛲󰛳"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_thunder_soul.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰛴󰛵󰛶󰛷󰛸󰛹"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_thunder_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰛺󰛻󰛼󰛽󰛾󰛿󰜀󰜁"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_thunder_halo_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰜂󰜃󰜄󰜅󰜆󰜇󰜈󰜉"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_thunder_halo_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰜊󰜋󰜌󰜍󰜎󰜏󰜐󰜑"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_thunder_halo_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰜒󰜓󰜔󰜕󰜖󰜗󰜘󰜙"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_thunder_halo_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰜚󰜛󰜜󰜝󰜞󰜟󰜠󰜡"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_slash_00.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "ﾘﾙﾚﾛﾜ",
-    "ﾝﾞﾟﾠﾡ"
+    "󰜢󰜣󰜤󰜥󰜦",
+    "󰜧󰜨󰜩󰜪󰜫"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_slash_01.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "ﾢﾣﾤﾥﾦ",
-    "ﾧﾨﾩﾪﾫ"
+    "󰜬󰜭󰜮󰜯󰜰",
+    "󰜱󰜲󰜳󰜴󰜵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_slash_10.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "ﾬﾭﾮﾯﾰ",
-    "ﾱﾲﾳﾴﾵ"
+    "󰜶󰜷󰜸󰜹󰜺",
+    "󰜻󰜼󰜽󰜾󰜿"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_slash_11.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "ﾶﾷﾸﾹﾺ",
-    "ﾻﾼﾽﾾ﾿"
+    "󰝀󰝁󰝂󰝃󰝄",
+    "󰝅󰝆󰝇󰝈󰝉"
    ]
   },
   {
@@ -9089,8 +9251,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "￀￁ￂￃￄ",
-    "ￅￆￇ￈￉"
+    "󰝊󰝋󰝌󰝍󰝎",
+    "󰝏󰝐󰝑󰝒󰝓"
    ]
   },
   {
@@ -9099,8 +9261,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ￊￋￌￍￎ",
-    "ￏ￐￑ￒￓ"
+    "󰝔󰝕󰝖󰝗󰝘",
+    "󰝙󰝚󰝛󰝜󰝝"
    ]
   },
   {
@@ -9109,8 +9271,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "ￔￕￖￗ￘",
-    "￙ￚￛￜ￝"
+    "󰝞󰝟󰝠󰝡󰝢",
+    "󰝣󰝤󰝥󰝦󰝧"
    ]
   },
   {
@@ -9119,44 +9281,44 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "￞￟￠￡￢",
-    "￣￤￥￦￧"
+    "󰝨󰝩󰝪󰝫󰝬",
+    "󰝭󰝮󰝯󰝰󰝱"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "￨￩￪￫￬￭￮￯"
+    "󰝲󰝳󰝴󰝵󰝶󰝷󰝸󰝹"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "￰￱￲￳￴￵￶￷"
+    "󰝺󰝻󰝼󰝽󰝾󰝿󰞀󰞁"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "￸￹￺￻￼�￾￿"
+    "󰞂󰞃󰞄󰞅󰞆󰞇󰞈󰞉"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐀀𐀁𐀂𐀃𐀄𐀅𐀆𐀇"
+    "󰞊󰞋󰞌󰞍󰞎󰞏󰞐󰞑"
    ]
   },
   {
@@ -9165,8 +9327,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐀈𐀉𐀊𐀋𐀌𐀍𐀎",
-    "𐀏𐀐𐀑𐀒𐀓𐀔𐀕"
+    "󰞒󰞓󰞔󰞕󰞖󰞗󰞘",
+    "󰞙󰞚󰞛󰞜󰞝󰞞󰞟"
    ]
   },
   {
@@ -9175,8 +9337,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐀖𐀗𐀘𐀙𐀚𐀛𐀜",
-    "𐀝𐀞𐀟𐀠𐀡𐀢𐀣"
+    "󰞠󰞡󰞢󰞣󰞤󰞥󰞦",
+    "󰞧󰞨󰞩󰞪󰞫󰞬󰞭"
    ]
   },
   {
@@ -9185,8 +9347,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐀤𐀥𐀦𐀧𐀨𐀩𐀪",
-    "𐀫𐀬𐀭𐀮𐀯𐀰𐀱"
+    "󰞮󰞯󰞰󰞱󰞲󰞳󰞴",
+    "󰞵󰞶󰞷󰞸󰞹󰞺󰞻"
    ]
   },
   {
@@ -9195,8 +9357,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐀲𐀳𐀴𐀵𐀶𐀷𐀸",
-    "𐀹𐀺𐀻𐀼𐀽𐀾𐀿"
+    "󰞼󰞽󰞾󰞿󰟀󰟁󰟂",
+    "󰟃󰟄󰟅󰟆󰟇󰟈󰟉"
    ]
   },
   {
@@ -9205,7 +9367,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐁀𐁁𐁂𐁃𐁄𐁅𐁆𐁇"
+    "󰟊󰟋󰟌󰟍󰟎󰟏󰟐󰟑"
    ]
   },
   {
@@ -9214,7 +9376,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐁈𐁉𐁊𐁋𐁌𐁍𐁎𐁏"
+    "󰟒󰟓󰟔󰟕󰟖󰟗󰟘󰟙"
    ]
   },
   {
@@ -9223,7 +9385,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐁐𐁑𐁒𐁓𐁔𐁕𐁖𐁗"
+    "󰟚󰟛󰟜󰟝󰟞󰟟󰟠󰟡"
    ]
   },
   {
@@ -9232,7 +9394,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐁘𐁙𐁚𐁛𐁜𐁝𐁞𐁟"
+    "󰟢󰟣󰟤󰟥󰟦󰟧󰟨󰟩"
    ]
   },
   {
@@ -9241,7 +9403,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐁠𐁡𐁢𐁣"
+    "󰟪󰟫󰟬󰟭"
    ]
   },
   {
@@ -9250,7 +9412,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐁤𐁥𐁦𐁧"
+    "󰟮󰟯󰟰󰟱"
    ]
   },
   {
@@ -9259,7 +9421,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐁨𐁩𐁪𐁫"
+    "󰟲󰟳󰟴󰟵"
    ]
   },
   {
@@ -9268,7 +9430,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐁬𐁭𐁮𐁯"
+    "󰟶󰟷󰟸󰟹"
    ]
   },
   {
@@ -9277,8 +9439,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐁰𐁱𐁲𐁳𐁴𐁵",
-    "𐁶𐁷𐁸𐁹𐁺𐁻"
+    "󰟺󰟻󰟼󰟽󰟾󰟿",
+    "󰠀󰠁󰠂󰠃󰠄󰠅"
    ]
   },
   {
@@ -9287,8 +9449,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐁼𐁽𐁾𐁿𐂀",
-    "𐂁𐂂𐂃𐂄𐂅"
+    "󰠆󰠇󰠈󰠉󰠊",
+    "󰠋󰠌󰠍󰠎󰠏"
    ]
   },
   {
@@ -9297,16 +9459,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐂆𐂇𐂈𐂉𐂊"
+    "󰠐󰠑󰠒󰠓󰠔"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐂋𐂌𐂍𐂎𐂏𐂐𐂑𐂒"
+    "󰠕󰠖󰠗󰠘󰠙󰠚󰠛󰠜"
    ]
   },
   {
@@ -9315,8 +9477,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐂓𐂔𐂕𐂖𐂗",
-    "𐂘𐂙𐂚𐂛𐂜"
+    "󰠝󰠞󰠟󰠠󰠡",
+    "󰠢󰠣󰠤󰠥󰠦"
    ]
   },
   {
@@ -9325,7 +9487,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐂝𐂞𐂟𐂠"
+    "󰠧󰠨󰠩󰠪"
    ]
   },
   {
@@ -9334,7 +9496,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐂡𐂢𐂣𐂤𐂥𐂦𐂧𐂨"
+    "󰠫󰠬󰠭󰠮󰠯󰠰󰠱󰠲"
    ]
   },
   {
@@ -9343,8 +9505,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐂩𐂪𐂫𐂬𐂭",
-    "𐂮𐂯𐂰𐂱𐂲"
+    "󰠳󰠴󰠵󰠶󰠷",
+    "󰠸󰠹󰠺󰠻󰠼"
    ]
   },
   {
@@ -9353,7 +9515,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    "𐂳𐂴𐂵𐂶𐂷𐂸𐂹𐂺"
+    "󰠽󰠾󰠿󰡀󰡁󰡂󰡃󰡄"
    ]
   },
   {
@@ -9362,7 +9524,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐂻𐂼𐂽𐂾𐂿𐃀𐃁𐃂"
+    "󰡅󰡆󰡇󰡈󰡉󰡊󰡋󰡌"
    ]
   },
   {
@@ -9371,7 +9533,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐃃𐃄𐃅𐃆𐃇𐃈𐃉𐃊"
+    "󰡍󰡎󰡏󰡐󰡑󰡒󰡓󰡔"
    ]
   },
   {
@@ -9380,7 +9542,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐃋𐃌𐃍𐃎𐃏𐃐𐃑𐃒"
+    "󰡕󰡖󰡗󰡘󰡙󰡚󰡛󰡜"
    ]
   },
   {
@@ -9389,7 +9551,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐃓𐃔𐃕𐃖𐃗𐃘𐃙𐃚"
+    "󰡝󰡞󰡟󰡠󰡡󰡢󰡣󰡤"
    ]
   },
   {
@@ -9398,7 +9560,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐃛𐃜𐃝𐃞𐃟𐃠𐃡𐃢"
+    "󰡥󰡦󰡧󰡨󰡩󰡪󰡫󰡬"
    ]
   },
   {
@@ -9407,7 +9569,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐃣𐃤𐃥𐃦𐃧𐃨𐃩𐃪"
+    "󰡭󰡮󰡯󰡰󰡱󰡲󰡳󰡴"
    ]
   },
   {
@@ -9416,7 +9578,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐃫𐃬𐃭𐃮𐃯𐃰𐃱𐃲"
+    "󰡵󰡶󰡷󰡸󰡹󰡺󰡻󰡼"
    ]
   },
   {
@@ -9425,7 +9587,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐃳𐃴𐃵𐃶𐃷𐃸𐃹𐃺"
+    "󰡽󰡾󰡿󰢀󰢁󰢂󰢃󰢄"
    ]
   },
   {
@@ -9434,7 +9596,7 @@
    "height": 17,
    "ascent": 6,
    "chars": [
-    "𐃻𐃼𐃽𐃾𐃿𐄀𐄁𐄂"
+    "󰢅󰢆󰢇󰢈󰢉󰢊󰢋󰢌"
    ]
   },
   {
@@ -9443,7 +9605,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄃𐄄𐄅𐄆"
+    "󰢍󰢎󰢏󰢐"
    ]
   },
   {
@@ -9452,7 +9614,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄇𐄈𐄉𐄊𐄋𐄌"
+    "󰢑󰢒󰢓󰢔󰢕󰢖"
    ]
   },
   {
@@ -9461,7 +9623,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄍𐄎𐄏𐄐𐄑𐄒𐄓𐄔"
+    "󰢗󰢘󰢙󰢚󰢛󰢜󰢝󰢞"
    ]
   },
   {
@@ -9470,7 +9632,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄕𐄖𐄗𐄘𐄙𐄚"
+    "󰢟󰢠󰢡󰢢󰢣󰢤"
    ]
   },
   {
@@ -9479,7 +9641,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄛𐄜𐄝𐄞𐄟𐄠𐄡𐄢"
+    "󰢥󰢦󰢧󰢨󰢩󰢪󰢫󰢬"
    ]
   },
   {
@@ -9488,16 +9650,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄣𐄤𐄥𐄦𐄧𐄨"
+    "󰢭󰢮󰢯󰢰󰢱󰢲"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_volt.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐄩𐄪𐄫𐄬𐄭𐄮𐄯𐄰"
+    "󰢳󰢴󰢵󰢶󰢷󰢸󰢹󰢺"
    ]
   },
   {
@@ -9506,7 +9668,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐄱𐄲𐄳𐄴"
+    "󰢻󰢼󰢽󰢾"
    ]
   },
   {
@@ -9515,16 +9677,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐄵𐄶𐄷𐄸𐄹𐄺𐄻𐄼"
+    "󰢿󰣀󰣁󰣂󰣃󰣄󰣅󰣆"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_tyrant_cloud.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐄽𐄾𐄿𐅀𐅁𐅂𐅃𐅄"
+    "󰣇󰣈󰣉󰣊󰣋󰣌󰣍󰣎"
    ]
   },
   {
@@ -9533,7 +9695,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐅅𐅆𐅇𐅈𐅉𐅊𐅋𐅌"
+    "󰣏󰣐󰣑󰣒󰣓󰣔󰣕󰣖"
    ]
   },
   {
@@ -9542,7 +9704,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐅍𐅎𐅏𐅐"
+    "󰣗󰣘󰣙󰣚"
    ]
   },
   {
@@ -9551,7 +9713,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐅑𐅒𐅓𐅔𐅕𐅖"
+    "󰣛󰣜󰣝󰣞󰣟󰣠"
    ]
   },
   {
@@ -9560,7 +9722,7 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐅗𐅘𐅙𐅚𐅛𐅜"
+    "󰣡󰣢󰣣󰣤󰣥󰣦"
    ]
   },
   {
@@ -9569,7 +9731,7 @@
    "height": 57,
    "ascent": 26,
    "chars": [
-    "𐅝𐅞𐅟𐅠𐅡𐅢𐅣𐅤"
+    "󰣧󰣨󰣩󰣪󰣫󰣬󰣭󰣮"
    ]
   },
   {
@@ -9578,7 +9740,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐅥𐅦𐅧𐅨𐅩𐅪𐅫𐅬"
+    "󰣯󰣰󰣱󰣲󰣳󰣴󰣵󰣶"
    ]
   },
   {
@@ -9587,47 +9749,101 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐅭𐅮𐅯𐅰"
+    "󰣷󰣸󰣹󰣺"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_tyrant_soul.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰣻󰣼󰣽󰣾󰣿󰤀"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_tyrant_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰤁󰤂󰤃󰤄󰤅󰤆󰤇󰤈"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_tyrant_halo_00.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰤉󰤊󰤋󰤌󰤍󰤎󰤏󰤐"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_tyrant_halo_01.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰤑󰤒󰤓󰤔󰤕󰤖󰤗󰤘"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_tyrant_halo_10.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰤙󰤚󰤛󰤜󰤝󰤞󰤟󰤠"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_tyrant_halo_11.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰤡󰤢󰤣󰤤󰤥󰤦󰤧󰤨"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_slash_00.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐅱𐅲𐅳𐅴𐅵",
-    "𐅶𐅷𐅸𐅹𐅺"
+    "󰤩󰤪󰤫󰤬󰤭",
+    "󰤮󰤯󰤰󰤱󰤲"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_slash_01.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐅻𐅼𐅽𐅾𐅿",
-    "𐆀𐆁𐆂𐆃𐆄"
+    "󰤳󰤴󰤵󰤶󰤷",
+    "󰤸󰤹󰤺󰤻󰤼"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_slash_10.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 40,
+   "ascent": 18,
    "chars": [
-    "𐆅𐆆𐆇𐆈𐆉",
-    "𐆊𐆋𐆌𐆍𐆎"
+    "󰤽󰤾󰤿󰥀󰥁",
+    "󰥂󰥃󰥄󰥅󰥆"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_slash_11.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 40,
+   "ascent": 18,
    "chars": [
-    "𐆏𐆐𐆑𐆒𐆓",
-    "𐆔𐆕𐆖𐆗𐆘"
+    "󰥇󰥈󰥉󰥊󰥋",
+    "󰥌󰥍󰥎󰥏󰥐"
    ]
   },
   {
@@ -9636,8 +9852,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐆙𐆚𐆛𐆜𐆝",
-    "𐆞𐆟𐆠𐆡𐆢"
+    "󰥑󰥒󰥓󰥔󰥕",
+    "󰥖󰥗󰥘󰥙󰥚"
    ]
   },
   {
@@ -9646,8 +9862,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐆣𐆤𐆥𐆦𐆧",
-    "𐆨𐆩𐆪𐆫𐆬"
+    "󰥛󰥜󰥝󰥞󰥟",
+    "󰥠󰥡󰥢󰥣󰥤"
    ]
   },
   {
@@ -9656,8 +9872,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐆭𐆮𐆯𐆰𐆱",
-    "𐆲𐆳𐆴𐆵𐆶"
+    "󰥥󰥦󰥧󰥨󰥩",
+    "󰥪󰥫󰥬󰥭󰥮"
    ]
   },
   {
@@ -9666,8 +9882,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐆷𐆸𐆹𐆺𐆻",
-    "𐆼𐆽𐆾𐆿𐇀"
+    "󰥯󰥰󰥱󰥲󰥳",
+    "󰥴󰥵󰥶󰥷󰥸"
    ]
   },
   {
@@ -9676,7 +9892,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐇁𐇂𐇃𐇄𐇅𐇆𐇇𐇈"
+    "󰥹󰥺󰥻󰥼󰥽󰥾󰥿󰦀"
    ]
   },
   {
@@ -9685,7 +9901,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐇉𐇊𐇋𐇌𐇍𐇎𐇏𐇐"
+    "󰦁󰦂󰦃󰦄󰦅󰦆󰦇󰦈"
    ]
   },
   {
@@ -9694,7 +9910,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐇑𐇒𐇓𐇔𐇕𐇖𐇗𐇘"
+    "󰦉󰦊󰦋󰦌󰦍󰦎󰦏󰦐"
    ]
   },
   {
@@ -9703,47 +9919,47 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐇙𐇚𐇛𐇜𐇝𐇞𐇟𐇠"
+    "󰦑󰦒󰦓󰦔󰦕󰦖󰦗󰦘"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_boom_00.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐇡𐇢𐇣𐇤𐇥𐇦𐇧",
-    "𐇨𐇩𐇪𐇫𐇬𐇭𐇮"
+    "󰦙󰦚󰦛󰦜󰦝󰦞󰦟",
+    "󰦠󰦡󰦢󰦣󰦤󰦥󰦦"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_boom_01.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐇯𐇰𐇱𐇲𐇳𐇴𐇵",
-    "𐇶𐇷𐇸𐇹𐇺𐇻𐇼"
+    "󰦧󰦨󰦩󰦪󰦫󰦬󰦭",
+    "󰦮󰦯󰦰󰦱󰦲󰦳󰦴"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_boom_10.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐇽𐇾𐇿𐈀𐈁𐈂𐈃",
-    "𐈄𐈅𐈆𐈇𐈈𐈉𐈊"
+    "󰦵󰦶󰦷󰦸󰦹󰦺󰦻",
+    "󰦼󰦽󰦾󰦿󰧀󰧁󰧂"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_boom_11.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐈋𐈌𐈍𐈎𐈏𐈐𐈑",
-    "𐈒𐈓𐈔𐈕𐈖𐈗𐈘"
+    "󰧃󰧄󰧅󰧆󰧇󰧈󰧉",
+    "󰧊󰧋󰧌󰧍󰧎󰧏󰧐"
    ]
   },
   {
@@ -9752,7 +9968,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐈙𐈚𐈛𐈜𐈝𐈞𐈟𐈠"
+    "󰧑󰧒󰧓󰧔󰧕󰧖󰧗󰧘"
    ]
   },
   {
@@ -9761,7 +9977,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐈡𐈢𐈣𐈤𐈥𐈦𐈧𐈨"
+    "󰧙󰧚󰧛󰧜󰧝󰧞󰧟󰧠"
    ]
   },
   {
@@ -9770,7 +9986,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐈩𐈪𐈫𐈬𐈭𐈮𐈯𐈰"
+    "󰧡󰧢󰧣󰧤󰧥󰧦󰧧󰧨"
    ]
   },
   {
@@ -9779,7 +9995,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐈱𐈲𐈳𐈴𐈵𐈶𐈷𐈸"
+    "󰧩󰧪󰧫󰧬󰧭󰧮󰧯󰧰"
    ]
   },
   {
@@ -9788,7 +10004,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐈹𐈺𐈻𐈼"
+    "󰧱󰧲󰧳󰧴"
    ]
   },
   {
@@ -9797,7 +10013,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐈽𐈾𐈿𐉀"
+    "󰧵󰧶󰧷󰧸"
    ]
   },
   {
@@ -9806,7 +10022,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐉁𐉂𐉃𐉄"
+    "󰧹󰧺󰧻󰧼"
    ]
   },
   {
@@ -9815,7 +10031,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐉅𐉆𐉇𐉈"
+    "󰧽󰧾󰧿󰨀"
    ]
   },
   {
@@ -9824,8 +10040,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐉉𐉊𐉋𐉌𐉍𐉎",
-    "𐉏𐉐𐉑𐉒𐉓𐉔"
+    "󰨁󰨂󰨃󰨄󰨅󰨆",
+    "󰨇󰨈󰨉󰨊󰨋󰨌"
    ]
   },
   {
@@ -9834,8 +10050,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐉕𐉖𐉗𐉘𐉙",
-    "𐉚𐉛𐉜𐉝𐉞"
+    "󰨍󰨎󰨏󰨐󰨑",
+    "󰨒󰨓󰨔󰨕󰨖"
    ]
   },
   {
@@ -9844,7 +10060,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐉟𐉠𐉡𐉢𐉣"
+    "󰨗󰨘󰨙󰨚󰨛"
    ]
   },
   {
@@ -9853,7 +10069,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐉤𐉥𐉦𐉧𐉨𐉩𐉪𐉫"
+    "󰨜󰨝󰨞󰨟󰨠󰨡󰨢󰨣"
    ]
   },
   {
@@ -9862,8 +10078,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐉬𐉭𐉮𐉯𐉰",
-    "𐉱𐉲𐉳𐉴𐉵"
+    "󰨤󰨥󰨦󰨧󰨨",
+    "󰨩󰨪󰨫󰨬󰨭"
    ]
   },
   {
@@ -9872,7 +10088,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐉶𐉷𐉸𐉹"
+    "󰨮󰨯󰨰󰨱"
    ]
   },
   {
@@ -9881,7 +10097,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐉺𐉻𐉼𐉽𐉾𐉿𐊀𐊁"
+    "󰨲󰨳󰨴󰨵󰨶󰨷󰨸󰨹"
    ]
   },
   {
@@ -9890,8 +10106,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐊂𐊃𐊄𐊅𐊆",
-    "𐊇𐊈𐊉𐊊𐊋"
+    "󰨺󰨻󰨼󰨽󰨾",
+    "󰨿󰩀󰩁󰩂󰩃"
    ]
   },
   {
@@ -9900,25 +10116,25 @@
    "height": 24,
    "ascent": 10,
    "chars": [
-    "𐊌𐊍𐊎𐊏𐊐𐊑𐊒𐊓"
+    "󰩄󰩅󰩆󰩇󰩈󰩉󰩊󰩋"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_spin_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐊔𐊕𐊖𐊗𐊘𐊙𐊚𐊛"
+    "󰩌󰩍󰩎󰩏󰩐󰩑󰩒󰩓"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_spin_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐊜𐊝𐊞𐊟𐊠𐊡𐊢𐊣"
+    "󰩔󰩕󰩖󰩗󰩘󰩙󰩚󰩛"
    ]
   },
   {
@@ -9927,7 +10143,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐊤𐊥𐊦𐊧𐊨𐊩𐊪𐊫"
+    "󰩜󰩝󰩞󰩟󰩠󰩡󰩢󰩣"
    ]
   },
   {
@@ -9936,25 +10152,25 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐊬𐊭𐊮𐊯𐊰𐊱𐊲𐊳"
+    "󰩤󰩥󰩦󰩧󰩨󰩩󰩪󰩫"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_spinm_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 58,
+   "ascent": 27,
    "chars": [
-    "𐊴𐊵𐊶𐊷𐊸𐊹𐊺𐊻"
+    "󰩬󰩭󰩮󰩯󰩰󰩱󰩲󰩳"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_spinm_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 58,
+   "ascent": 27,
    "chars": [
-    "𐊼𐊽𐊾𐊿𐋀𐋁𐋂𐋃"
+    "󰩴󰩵󰩶󰩷󰩸󰩹󰩺󰩻"
    ]
   },
   {
@@ -9963,16 +10179,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐋄𐋅𐋆𐋇𐋈𐋉𐋊𐋋"
+    "󰩼󰩽󰩾󰩿󰪀󰪁󰪂󰪃"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_spinm_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 55,
+   "ascent": 25,
    "chars": [
-    "𐋌𐋍𐋎𐋏𐋐𐋑𐋒𐋓"
+    "󰪄󰪅󰪆󰪇󰪈󰪉󰪊󰪋"
    ]
   },
   {
@@ -9981,7 +10197,7 @@
    "height": 17,
    "ascent": 6,
    "chars": [
-    "𐋔𐋕𐋖𐋗𐋘𐋙𐋚𐋛"
+    "󰪌󰪍󰪎󰪏󰪐󰪑󰪒󰪓"
    ]
   },
   {
@@ -9990,7 +10206,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐋜𐋝𐋞𐋟"
+    "󰪔󰪕󰪖󰪗"
    ]
   },
   {
@@ -9999,7 +10215,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐋠𐋡𐋢𐋣𐋤𐋥𐋦𐋧"
+    "󰪘󰪙󰪚󰪛󰪜󰪝󰪞󰪟"
    ]
   },
   {
@@ -10008,7 +10224,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐋨𐋩𐋪𐋫𐋬𐋭𐋮𐋯"
+    "󰪠󰪡󰪢󰪣󰪤󰪥󰪦󰪧"
    ]
   },
   {
@@ -10017,7 +10233,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐋰𐋱𐋲𐋳𐋴𐋵𐋶𐋷"
+    "󰪨󰪩󰪪󰪫󰪬󰪭󰪮󰪯"
    ]
   },
   {
@@ -10026,7 +10242,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐋸𐋹𐋺𐋻𐋼𐋽𐋾𐋿"
+    "󰪰󰪱󰪲󰪳󰪴󰪵󰪶󰪷"
    ]
   },
   {
@@ -10035,16 +10251,16 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐌀𐌁𐌂𐌃𐌄𐌅𐌆𐌇"
+    "󰪸󰪹󰪺󰪻󰪼󰪽󰪾󰪿"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_reap_smoke.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 50,
+   "ascent": 23,
    "chars": [
-    "𐌈𐌉𐌊𐌋𐌌𐌍𐌎𐌏"
+    "󰫀󰫁󰫂󰫃󰫄󰫅󰫆󰫇"
    ]
   },
   {
@@ -10053,7 +10269,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌐𐌑𐌒𐌓𐌔𐌕"
+    "󰫈󰫉󰫊󰫋󰫌󰫍"
    ]
   },
   {
@@ -10062,7 +10278,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌖𐌗𐌘𐌙𐌚𐌛"
+    "󰫎󰫏󰫐󰫑󰫒󰫓"
    ]
   },
   {
@@ -10071,7 +10287,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌜𐌝𐌞𐌟𐌠𐌡"
+    "󰫔󰫕󰫖󰫗󰫘󰫙"
    ]
   },
   {
@@ -10080,7 +10296,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐌢𐌣𐌤𐌥𐌦𐌧𐌨𐌩"
+    "󰫚󰫛󰫜󰫝󰫞󰫟󰫠󰫡"
    ]
   },
   {
@@ -10089,7 +10305,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌪𐌫𐌬𐌭𐌮𐌯𐌰𐌱"
+    "󰫢󰫣󰫤󰫥󰫦󰫧󰫨󰫩"
    ]
   },
   {
@@ -10098,7 +10314,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌲𐌳𐌴𐌵𐌶𐌷𐌸𐌹"
+    "󰫪󰫫󰫬󰫭󰫮󰫯󰫰󰫱"
    ]
   },
   {
@@ -10107,7 +10323,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌺𐌻𐌼𐌽"
+    "󰫲󰫳󰫴󰫵"
    ]
   },
   {
@@ -10116,47 +10332,83 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐌾𐌿𐍀𐍁"
+    "󰫶󰫷󰫸󰫹"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_reap_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰫺󰫻󰫼󰫽󰫾󰫿󰬀󰬁"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_reap_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰬂󰬃󰬄󰬅󰬆󰬇"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_reap_beam.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰬈󰬉󰬊󰬋󰬌󰬍"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_reap_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰬎󰬏󰬐󰬑󰬒󰬓󰬔󰬕"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_slash_00.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐍂𐍃𐍄𐍅𐍆",
-    "𐍇𐍈𐍉𐍊𐍋"
+    "󰬖󰬗󰬘󰬙󰬚",
+    "󰬛󰬜󰬝󰬞󰬟"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_slash_01.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐍌𐍍𐍎𐍏𐍐",
-    "𐍑𐍒𐍓𐍔𐍕"
+    "󰬠󰬡󰬢󰬣󰬤",
+    "󰬥󰬦󰬧󰬨󰬩"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_slash_10.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐍖𐍗𐍘𐍙𐍚",
-    "𐍛𐍜𐍝𐍞𐍟"
+    "󰬪󰬫󰬬󰬭󰬮",
+    "󰬯󰬰󰬱󰬲󰬳"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_slash_11.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐍠𐍡𐍢𐍣𐍤",
-    "𐍥𐍦𐍧𐍨𐍩"
+    "󰬴󰬵󰬶󰬷󰬸",
+    "󰬹󰬺󰬻󰬼󰬽"
    ]
   },
   {
@@ -10165,8 +10417,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐍪𐍫𐍬𐍭𐍮",
-    "𐍯𐍰𐍱𐍲𐍳"
+    "󰬾󰬿󰭀󰭁󰭂",
+    "󰭃󰭄󰭅󰭆󰭇"
    ]
   },
   {
@@ -10175,8 +10427,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐍴𐍵𐍶𐍷𐍸",
-    "𐍹𐍺𐍻𐍼𐍽"
+    "󰭈󰭉󰭊󰭋󰭌",
+    "󰭍󰭎󰭏󰭐󰭑"
    ]
   },
   {
@@ -10185,8 +10437,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐍾𐍿𐎀𐎁𐎂",
-    "𐎃𐎄𐎅𐎆𐎇"
+    "󰭒󰭓󰭔󰭕󰭖",
+    "󰭗󰭘󰭙󰭚󰭛"
    ]
   },
   {
@@ -10195,44 +10447,44 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐎈𐎉𐎊𐎋𐎌",
-    "𐎍𐎎𐎏𐎐𐎑"
+    "󰭜󰭝󰭞󰭟󰭠",
+    "󰭡󰭢󰭣󰭤󰭥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐎒𐎓𐎔𐎕𐎖𐎗𐎘𐎙"
+    "󰭦󰭧󰭨󰭩󰭪󰭫󰭬󰭭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐎚𐎛𐎜𐎝𐎞𐎟𐎠𐎡"
+    "󰭮󰭯󰭰󰭱󰭲󰭳󰭴󰭵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐎢𐎣𐎤𐎥𐎦𐎧𐎨𐎩"
+    "󰭶󰭷󰭸󰭹󰭺󰭻󰭼󰭽"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐎪𐎫𐎬𐎭𐎮𐎯𐎰𐎱"
+    "󰭾󰭿󰮀󰮁󰮂󰮃󰮄󰮅"
    ]
   },
   {
@@ -10241,8 +10493,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐎲𐎳𐎴𐎵𐎶𐎷𐎸",
-    "𐎹𐎺𐎻𐎼𐎽𐎾𐎿"
+    "󰮆󰮇󰮈󰮉󰮊󰮋󰮌",
+    "󰮍󰮎󰮏󰮐󰮑󰮒󰮓"
    ]
   },
   {
@@ -10251,8 +10503,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐏀𐏁𐏂𐏃𐏄𐏅𐏆",
-    "𐏇𐏈𐏉𐏊𐏋𐏌𐏍"
+    "󰮔󰮕󰮖󰮗󰮘󰮙󰮚",
+    "󰮛󰮜󰮝󰮞󰮟󰮠󰮡"
    ]
   },
   {
@@ -10261,8 +10513,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐏎𐏏𐏐𐏑𐏒𐏓𐏔",
-    "𐏕𐏖𐏗𐏘𐏙𐏚𐏛"
+    "󰮢󰮣󰮤󰮥󰮦󰮧󰮨",
+    "󰮩󰮪󰮫󰮬󰮭󰮮󰮯"
    ]
   },
   {
@@ -10271,8 +10523,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐏜𐏝𐏞𐏟𐏠𐏡𐏢",
-    "𐏣𐏤𐏥𐏦𐏧𐏨𐏩"
+    "󰮰󰮱󰮲󰮳󰮴󰮵󰮶",
+    "󰮷󰮸󰮹󰮺󰮻󰮼󰮽"
    ]
   },
   {
@@ -10281,7 +10533,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐏪𐏫𐏬𐏭𐏮𐏯𐏰𐏱"
+    "󰮾󰮿󰯀󰯁󰯂󰯃󰯄󰯅"
    ]
   },
   {
@@ -10290,7 +10542,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐏲𐏳𐏴𐏵𐏶𐏷𐏸𐏹"
+    "󰯆󰯇󰯈󰯉󰯊󰯋󰯌󰯍"
    ]
   },
   {
@@ -10299,7 +10551,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐏺𐏻𐏼𐏽𐏾𐏿𐐀𐐁"
+    "󰯎󰯏󰯐󰯑󰯒󰯓󰯔󰯕"
    ]
   },
   {
@@ -10308,7 +10560,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐐂𐐃𐐄𐐅𐐆𐐇𐐈𐐉"
+    "󰯖󰯗󰯘󰯙󰯚󰯛󰯜󰯝"
    ]
   },
   {
@@ -10317,7 +10569,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐐊𐐋𐐌𐐍"
+    "󰯞󰯟󰯠󰯡"
    ]
   },
   {
@@ -10326,7 +10578,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐐎𐐏𐐐𐐑"
+    "󰯢󰯣󰯤󰯥"
    ]
   },
   {
@@ -10335,7 +10587,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐐒𐐓𐐔𐐕"
+    "󰯦󰯧󰯨󰯩"
    ]
   },
   {
@@ -10344,17 +10596,17 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐐖𐐗𐐘𐐙"
+    "󰯪󰯫󰯬󰯭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_boom_s.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 56,
+   "ascent": 26,
    "chars": [
-    "𐐚𐐛𐐜𐐝𐐞𐐟",
-    "𐐠𐐡𐐢𐐣𐐤𐐥"
+    "󰯮󰯯󰯰󰯱󰯲󰯳",
+    "󰯴󰯵󰯶󰯷󰯸󰯹"
    ]
   },
   {
@@ -10363,8 +10615,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐐦𐐧𐐨𐐩𐐪",
-    "𐐫𐐬𐐭𐐮𐐯"
+    "󰯺󰯻󰯼󰯽󰯾",
+    "󰯿󰰀󰰁󰰂󰰃"
    ]
   },
   {
@@ -10373,16 +10625,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐐰𐐱𐐲𐐳𐐴"
+    "󰰄󰰅󰰆󰰇󰰈"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐐵𐐶𐐷𐐸𐐹𐐺𐐻𐐼"
+    "󰰉󰰊󰰋󰰌󰰍󰰎󰰏󰰐"
    ]
   },
   {
@@ -10391,8 +10643,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐐽𐐾𐐿𐑀𐑁",
-    "𐑂𐑃𐑄𐑅𐑆"
+    "󰰑󰰒󰰓󰰔󰰕",
+    "󰰖󰰗󰰘󰰙󰰚"
    ]
   },
   {
@@ -10401,7 +10653,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐑇𐑈𐑉𐑊"
+    "󰰛󰰜󰰝󰰞"
    ]
   },
   {
@@ -10410,7 +10662,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐑋𐑌𐑍𐑎𐑏𐑐𐑑𐑒"
+    "󰰟󰰠󰰡󰰢󰰣󰰤󰰥󰰦"
    ]
   },
   {
@@ -10419,8 +10671,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐑓𐑔𐑕𐑖𐑗",
-    "𐑘𐑙𐑚𐑛𐑜"
+    "󰰧󰰨󰰩󰰪󰰫",
+    "󰰬󰰭󰰮󰰯󰰰"
    ]
   },
   {
@@ -10429,88 +10681,88 @@
    "height": 24,
    "ascent": 10,
    "chars": [
-    "𐑝𐑞𐑟𐑠𐑡𐑢𐑣𐑤"
+    "󰰱󰰲󰰳󰰴󰰵󰰶󰰷󰰸"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spin_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐑥𐑦𐑧𐑨𐑩𐑪𐑫𐑬"
+    "󰰹󰰺󰰻󰰼󰰽󰰾󰰿󰱀"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spin_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐑭𐑮𐑯𐑰𐑱𐑲𐑳𐑴"
+    "󰱁󰱂󰱃󰱄󰱅󰱆󰱇󰱈"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spin_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐑵𐑶𐑷𐑸𐑹𐑺𐑻𐑼"
+    "󰱉󰱊󰱋󰱌󰱍󰱎󰱏󰱐"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spin_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐑽𐑾𐑿𐒀𐒁𐒂𐒃𐒄"
+    "󰱑󰱒󰱓󰱔󰱕󰱖󰱗󰱘"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spinm_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒅𐒆𐒇𐒈𐒉𐒊𐒋𐒌"
+    "󰱙󰱚󰱛󰱜󰱝󰱞󰱟󰱠"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spinm_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒍𐒎𐒏𐒐𐒑𐒒𐒓𐒔"
+    "󰱡󰱢󰱣󰱤󰱥󰱦󰱧󰱨"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spinm_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒕𐒖𐒗𐒘𐒙𐒚𐒛𐒜"
+    "󰱩󰱪󰱫󰱬󰱭󰱮󰱯󰱰"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_spinm_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒝𐒞𐒟𐒠𐒡𐒢𐒣𐒤"
+    "󰱱󰱲󰱳󰱴󰱵󰱶󰱷󰱸"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_cut.png",
-   "height": 17,
-   "ascent": 6,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒥𐒦𐒧𐒨𐒩𐒪𐒫𐒬"
+    "󰱹󰱺󰱻󰱼󰱽󰱾󰱿󰲀"
    ]
   },
   {
@@ -10519,52 +10771,52 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐒭𐒮𐒯𐒰"
+    "󰲁󰲂󰲃󰲄"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_halo_00.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒱𐒲𐒳𐒴𐒵𐒶𐒷𐒸"
+    "󰲅󰲆󰲇󰲈󰲉󰲊󰲋󰲌"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_halo_01.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐒹𐒺𐒻𐒼𐒽𐒾𐒿𐓀"
+    "󰲍󰲎󰲏󰲐󰲑󰲒󰲓󰲔"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_halo_10.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐓁𐓂𐓃𐓄𐓅𐓆𐓇𐓈"
+    "󰲕󰲖󰲗󰲘󰲙󰲚󰲛󰲜"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_halo_11.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐓉𐓊𐓋𐓌𐓍𐓎𐓏𐓐"
+    "󰲝󰲞󰲟󰲠󰲡󰲢󰲣󰲤"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_whirl.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 60,
+   "ascent": 28,
    "chars": [
-    "𐓑𐓒𐓓𐓔𐓕𐓖𐓗𐓘"
+    "󰲥󰲦󰲧󰲨󰲩󰲪󰲫󰲬"
    ]
   },
   {
@@ -10573,7 +10825,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐓙𐓚𐓛𐓜𐓝𐓞𐓟𐓠"
+    "󰲭󰲮󰲯󰲰󰲱󰲲󰲳󰲴"
    ]
   },
   {
@@ -10582,7 +10834,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐓡𐓢𐓣𐓤𐓥𐓦"
+    "󰲵󰲶󰲷󰲸󰲹󰲺"
    ]
   },
   {
@@ -10591,7 +10843,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐓧𐓨𐓩𐓪𐓫𐓬"
+    "󰲻󰲼󰲽󰲾󰲿󰳀"
    ]
   },
   {
@@ -10600,16 +10852,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐓭𐓮𐓯𐓰𐓱𐓲"
+    "󰳁󰳂󰳃󰳄󰳅󰳆"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_soulreap_wail.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐓳𐓴𐓵𐓶𐓷𐓸𐓹𐓺"
+    "󰳇󰳈󰳉󰳊󰳋󰳌󰳍󰳎"
    ]
   },
   {
@@ -10618,7 +10870,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐓻𐓼𐓽𐓾𐓿𐔀𐔁𐔂"
+    "󰳏󰳐󰳑󰳒󰳓󰳔󰳕󰳖"
    ]
   },
   {
@@ -10627,7 +10879,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔃𐔄𐔅𐔆𐔇𐔈𐔉𐔊"
+    "󰳗󰳘󰳙󰳚󰳛󰳜󰳝󰳞"
    ]
   },
   {
@@ -10636,7 +10888,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔋𐔌𐔍𐔎"
+    "󰳟󰳠󰳡󰳢"
    ]
   },
   {
@@ -10645,7 +10897,43 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔏𐔐𐔑𐔒"
+    "󰳣󰳤󰳥󰳦"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_soulreap_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰳧󰳨󰳩󰳪󰳫󰳬󰳭󰳮"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_soulreap_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰳯󰳰󰳱󰳲󰳳󰳴"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_soulreap_beam.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰳵󰳶󰳷󰳸󰳹󰳺"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_soulreap_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰳻󰳼󰳽󰳾󰳿󰴀󰴁󰴂"
    ]
   },
   {
@@ -10654,8 +10942,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔓𐔔𐔕𐔖𐔗",
-    "𐔘𐔙𐔚𐔛𐔜"
+    "󰴃󰴄󰴅󰴆󰴇",
+    "󰴈󰴉󰴊󰴋󰴌"
    ]
   },
   {
@@ -10664,8 +10952,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔝𐔞𐔟𐔠𐔡",
-    "𐔢𐔣𐔤𐔥𐔦"
+    "󰴍󰴎󰴏󰴐󰴑",
+    "󰴒󰴓󰴔󰴕󰴖"
    ]
   },
   {
@@ -10674,8 +10962,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔧𐔨𐔩𐔪𐔫",
-    "𐔬𐔭𐔮𐔯𐔰"
+    "󰴗󰴘󰴙󰴚󰴛",
+    "󰴜󰴝󰴞󰴟󰴠"
    ]
   },
   {
@@ -10684,8 +10972,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔱𐔲𐔳𐔴𐔵",
-    "𐔶𐔷𐔸𐔹𐔺"
+    "󰴡󰴢󰴣󰴤󰴥",
+    "󰴦󰴧󰴨󰴩󰴪"
    ]
   },
   {
@@ -10694,8 +10982,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐔻𐔼𐔽𐔾𐔿",
-    "𐕀𐕁𐕂𐕃𐕄"
+    "󰴫󰴬󰴭󰴮󰴯",
+    "󰴰󰴱󰴲󰴳󰴴"
    ]
   },
   {
@@ -10704,8 +10992,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐕅𐕆𐕇𐕈𐕉",
-    "𐕊𐕋𐕌𐕍𐕎"
+    "󰴵󰴶󰴷󰴸󰴹",
+    "󰴺󰴻󰴼󰴽󰴾"
    ]
   },
   {
@@ -10714,8 +11002,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐕏𐕐𐕑𐕒𐕓",
-    "𐕔𐕕𐕖𐕗𐕘"
+    "󰴿󰵀󰵁󰵂󰵃",
+    "󰵄󰵅󰵆󰵇󰵈"
    ]
   },
   {
@@ -10724,44 +11012,44 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐕙𐕚𐕛𐕜𐕝",
-    "𐕞𐕟𐕠𐕡𐕢"
+    "󰵉󰵊󰵋󰵌󰵍",
+    "󰵎󰵏󰵐󰵑󰵒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐕣𐕤𐕥𐕦𐕧𐕨𐕩𐕪"
+    "󰵓󰵔󰵕󰵖󰵗󰵘󰵙󰵚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐕫𐕬𐕭𐕮𐕯𐕰𐕱𐕲"
+    "󰵛󰵜󰵝󰵞󰵟󰵠󰵡󰵢"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐕳𐕴𐕵𐕶𐕷𐕸𐕹𐕺"
+    "󰵣󰵤󰵥󰵦󰵧󰵨󰵩󰵪"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐕻𐕼𐕽𐕾𐕿𐖀𐖁𐖂"
+    "󰵫󰵬󰵭󰵮󰵯󰵰󰵱󰵲"
    ]
   },
   {
@@ -10770,8 +11058,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐖃𐖄𐖅𐖆𐖇𐖈𐖉",
-    "𐖊𐖋𐖌𐖍𐖎𐖏𐖐"
+    "󰵳󰵴󰵵󰵶󰵷󰵸󰵹",
+    "󰵺󰵻󰵼󰵽󰵾󰵿󰶀"
    ]
   },
   {
@@ -10780,8 +11068,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐖑𐖒𐖓𐖔𐖕𐖖𐖗",
-    "𐖘𐖙𐖚𐖛𐖜𐖝𐖞"
+    "󰶁󰶂󰶃󰶄󰶅󰶆󰶇",
+    "󰶈󰶉󰶊󰶋󰶌󰶍󰶎"
    ]
   },
   {
@@ -10790,8 +11078,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐖟𐖠𐖡𐖢𐖣𐖤𐖥",
-    "𐖦𐖧𐖨𐖩𐖪𐖫𐖬"
+    "󰶏󰶐󰶑󰶒󰶓󰶔󰶕",
+    "󰶖󰶗󰶘󰶙󰶚󰶛󰶜"
    ]
   },
   {
@@ -10800,8 +11088,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐖭𐖮𐖯𐖰𐖱𐖲𐖳",
-    "𐖴𐖵𐖶𐖷𐖸𐖹𐖺"
+    "󰶝󰶞󰶟󰶠󰶡󰶢󰶣",
+    "󰶤󰶥󰶦󰶧󰶨󰶩󰶪"
    ]
   },
   {
@@ -10810,7 +11098,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐖻𐖼𐖽𐖾𐖿𐗀𐗁𐗂"
+    "󰶫󰶬󰶭󰶮󰶯󰶰󰶱󰶲"
    ]
   },
   {
@@ -10819,7 +11107,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐗃𐗄𐗅𐗆𐗇𐗈𐗉𐗊"
+    "󰶳󰶴󰶵󰶶󰶷󰶸󰶹󰶺"
    ]
   },
   {
@@ -10828,7 +11116,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐗋𐗌𐗍𐗎𐗏𐗐𐗑𐗒"
+    "󰶻󰶼󰶽󰶾󰶿󰷀󰷁󰷂"
    ]
   },
   {
@@ -10837,7 +11125,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐗓𐗔𐗕𐗖𐗗𐗘𐗙𐗚"
+    "󰷃󰷄󰷅󰷆󰷇󰷈󰷉󰷊"
    ]
   },
   {
@@ -10846,7 +11134,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐗛𐗜𐗝𐗞"
+    "󰷋󰷌󰷍󰷎"
    ]
   },
   {
@@ -10855,7 +11143,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐗟𐗠𐗡𐗢"
+    "󰷏󰷐󰷑󰷒"
    ]
   },
   {
@@ -10864,7 +11152,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐗣𐗤𐗥𐗦"
+    "󰷓󰷔󰷕󰷖"
    ]
   },
   {
@@ -10873,7 +11161,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐗧𐗨𐗩𐗪"
+    "󰷗󰷘󰷙󰷚"
    ]
   },
   {
@@ -10882,8 +11170,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐗫𐗬𐗭𐗮𐗯𐗰",
-    "𐗱𐗲𐗳𐗴𐗵𐗶"
+    "󰷛󰷜󰷝󰷞󰷟󰷠",
+    "󰷡󰷢󰷣󰷤󰷥󰷦"
    ]
   },
   {
@@ -10892,8 +11180,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐗷𐗸𐗹𐗺𐗻",
-    "𐗼𐗽𐗾𐗿𐘀"
+    "󰷧󰷨󰷩󰷪󰷫",
+    "󰷬󰷭󰷮󰷯󰷰"
    ]
   },
   {
@@ -10902,16 +11190,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐘁𐘂𐘃𐘄𐘅"
+    "󰷱󰷲󰷳󰷴󰷵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐘆𐘇𐘈𐘉𐘊𐘋𐘌𐘍"
+    "󰷶󰷷󰷸󰷹󰷺󰷻󰷼󰷽"
    ]
   },
   {
@@ -10920,8 +11208,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐘎𐘏𐘐𐘑𐘒",
-    "𐘓𐘔𐘕𐘖𐘗"
+    "󰷾󰷿󰸀󰸁󰸂",
+    "󰸃󰸄󰸅󰸆󰸇"
    ]
   },
   {
@@ -10930,7 +11218,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐘘𐘙𐘚𐘛"
+    "󰸈󰸉󰸊󰸋"
    ]
   },
   {
@@ -10939,7 +11227,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐘜𐘝𐘞𐘟𐘠𐘡𐘢𐘣"
+    "󰸌󰸍󰸎󰸏󰸐󰸑󰸒󰸓"
    ]
   },
   {
@@ -10948,8 +11236,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐘤𐘥𐘦𐘧𐘨",
-    "𐘩𐘪𐘫𐘬𐘭"
+    "󰸔󰸕󰸖󰸗󰸘",
+    "󰸙󰸚󰸛󰸜󰸝"
    ]
   },
   {
@@ -10958,7 +11246,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    "𐘮𐘯𐘰𐘱𐘲𐘳𐘴𐘵"
+    "󰸞󰸟󰸠󰸡󰸢󰸣󰸤󰸥"
    ]
   },
   {
@@ -10967,7 +11255,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐘶𐘷𐘸𐘹𐘺𐘻𐘼𐘽"
+    "󰸦󰸧󰸨󰸩󰸪󰸫󰸬󰸭"
    ]
   },
   {
@@ -10976,7 +11264,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐘾𐘿𐙀𐙁𐙂𐙃𐙄𐙅"
+    "󰸮󰸯󰸰󰸱󰸲󰸳󰸴󰸵"
    ]
   },
   {
@@ -10985,7 +11273,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐙆𐙇𐙈𐙉𐙊𐙋𐙌𐙍"
+    "󰸶󰸷󰸸󰸹󰸺󰸻󰸼󰸽"
    ]
   },
   {
@@ -10994,7 +11282,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐙎𐙏𐙐𐙑𐙒𐙓𐙔𐙕"
+    "󰸾󰸿󰹀󰹁󰹂󰹃󰹄󰹅"
    ]
   },
   {
@@ -11003,7 +11291,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐙖𐙗𐙘𐙙𐙚𐙛𐙜𐙝"
+    "󰹆󰹇󰹈󰹉󰹊󰹋󰹌󰹍"
    ]
   },
   {
@@ -11012,7 +11300,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐙞𐙟𐙠𐙡𐙢𐙣𐙤𐙥"
+    "󰹎󰹏󰹐󰹑󰹒󰹓󰹔󰹕"
    ]
   },
   {
@@ -11021,7 +11309,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐙦𐙧𐙨𐙩𐙪𐙫𐙬𐙭"
+    "󰹖󰹗󰹘󰹙󰹚󰹛󰹜󰹝"
    ]
   },
   {
@@ -11030,16 +11318,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐙮𐙯𐙰𐙱𐙲𐙳𐙴𐙵"
+    "󰹞󰹟󰹠󰹡󰹢󰹣󰹤󰹥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_cut.png",
-   "height": 18,
-   "ascent": 7,
+   "height": 32,
+   "ascent": 14,
    "chars": [
-    "𐙶𐙷𐙸𐙹𐙺𐙻𐙼𐙽"
+    "󰹦󰹧󰹨󰹩󰹪󰹫󰹬󰹭"
    ]
   },
   {
@@ -11048,7 +11336,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐙾𐙿𐚀𐚁"
+    "󰹮󰹯󰹰󰹱"
    ]
   },
   {
@@ -11057,7 +11345,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐚂𐚃𐚄𐚅𐚆𐚇𐚈𐚉"
+    "󰹲󰹳󰹴󰹵󰹶󰹷󰹸󰹹"
    ]
   },
   {
@@ -11066,7 +11354,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐚊𐚋𐚌𐚍𐚎𐚏𐚐𐚑"
+    "󰹺󰹻󰹼󰹽󰹾󰹿󰺀󰺁"
    ]
   },
   {
@@ -11075,7 +11363,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐚒𐚓𐚔𐚕𐚖𐚗𐚘𐚙"
+    "󰺂󰺃󰺄󰺅󰺆󰺇󰺈󰺉"
    ]
   },
   {
@@ -11084,7 +11372,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐚚𐚛𐚜𐚝𐚞𐚟𐚠𐚡"
+    "󰺊󰺋󰺌󰺍󰺎󰺏󰺐󰺑"
    ]
   },
   {
@@ -11093,7 +11381,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐚢𐚣𐚤𐚥𐚦𐚧𐚨𐚩"
+    "󰺒󰺓󰺔󰺕󰺖󰺗󰺘󰺙"
    ]
   },
   {
@@ -11102,7 +11390,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐚪𐚫𐚬𐚭𐚮𐚯𐚰𐚱"
+    "󰺚󰺛󰺜󰺝󰺞󰺟󰺠󰺡"
    ]
   },
   {
@@ -11111,7 +11399,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐚲𐚳𐚴𐚵𐚶𐚷"
+    "󰺢󰺣󰺤󰺥󰺦󰺧"
    ]
   },
   {
@@ -11120,7 +11408,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐚸𐚹𐚺𐚻𐚼𐚽"
+    "󰺨󰺩󰺪󰺫󰺬󰺭"
    ]
   },
   {
@@ -11129,7 +11417,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐚾𐚿𐛀𐛁𐛂𐛃"
+    "󰺮󰺯󰺰󰺱󰺲󰺳"
    ]
   },
   {
@@ -11138,7 +11426,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐛄𐛅𐛆𐛇𐛈𐛉𐛊𐛋"
+    "󰺴󰺵󰺶󰺷󰺸󰺹󰺺󰺻"
    ]
   },
   {
@@ -11147,7 +11435,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛌𐛍𐛎𐛏𐛐𐛑𐛒𐛓"
+    "󰺼󰺽󰺾󰺿󰻀󰻁󰻂󰻃"
    ]
   },
   {
@@ -11156,7 +11444,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛔𐛕𐛖𐛗𐛘𐛙𐛚𐛛"
+    "󰻄󰻅󰻆󰻇󰻈󰻉󰻊󰻋"
    ]
   },
   {
@@ -11165,16 +11453,52 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛜𐛝𐛞𐛟"
+    "󰻌󰻍󰻎󰻏"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_exec_spot.png",
+   "height": 60,
+   "ascent": 28,
+   "chars": [
+    "󰻐󰻑󰻒󰻓"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_exec_aura.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛠𐛡𐛢𐛣"
+    "󰻔󰻕󰻖󰻗󰻘󰻙󰻚󰻛"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_exec_dash.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰻜󰻝󰻞󰻟󰻠󰻡"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_exec_beam.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰻢󰻣󰻤󰻥󰻦󰻧"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_exec_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󰻨󰻩󰻪󰻫󰻬󰻭󰻮󰻯"
    ]
   },
   {
@@ -11183,8 +11507,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛤𐛥𐛦𐛧𐛨",
-    "𐛩𐛪𐛫𐛬𐛭"
+    "󰻰󰻱󰻲󰻳󰻴",
+    "󰻵󰻶󰻷󰻸󰻹"
    ]
   },
   {
@@ -11193,8 +11517,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛮𐛯𐛰𐛱𐛲",
-    "𐛳𐛴𐛵𐛶𐛷"
+    "󰻺󰻻󰻼󰻽󰻾",
+    "󰻿󰼀󰼁󰼂󰼃"
    ]
   },
   {
@@ -11203,8 +11527,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐛸𐛹𐛺𐛻𐛼",
-    "𐛽𐛾𐛿𐜀𐜁"
+    "󰼄󰼅󰼆󰼇󰼈",
+    "󰼉󰼊󰼋󰼌󰼍"
    ]
   },
   {
@@ -11213,8 +11537,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐜂𐜃𐜄𐜅𐜆",
-    "𐜇𐜈𐜉𐜊𐜋"
+    "󰼎󰼏󰼐󰼑󰼒",
+    "󰼓󰼔󰼕󰼖󰼗"
    ]
   },
   {
@@ -11223,8 +11547,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐜌𐜍𐜎𐜏𐜐",
-    "𐜑𐜒𐜓𐜔𐜕"
+    "󰼘󰼙󰼚󰼛󰼜",
+    "󰼝󰼞󰼟󰼠󰼡"
    ]
   },
   {
@@ -11233,8 +11557,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐜖𐜗𐜘𐜙𐜚",
-    "𐜛𐜜𐜝𐜞𐜟"
+    "󰼢󰼣󰼤󰼥󰼦",
+    "󰼧󰼨󰼩󰼪󰼫"
    ]
   },
   {
@@ -11243,8 +11567,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐜠𐜡𐜢𐜣𐜤",
-    "𐜥𐜦𐜧𐜨𐜩"
+    "󰼬󰼭󰼮󰼯󰼰",
+    "󰼱󰼲󰼳󰼴󰼵"
    ]
   },
   {
@@ -11253,8 +11577,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐜪𐜫𐜬𐜭𐜮",
-    "𐜯𐜰𐜱𐜲𐜳"
+    "󰼶󰼷󰼸󰼹󰼺",
+    "󰼻󰼼󰼽󰼾󰼿"
    ]
   },
   {
@@ -11263,7 +11587,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐜴𐜵𐜶𐜷𐜸𐜹𐜺𐜻"
+    "󰽀󰽁󰽂󰽃󰽄󰽅󰽆󰽇"
    ]
   },
   {
@@ -11272,7 +11596,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐜼𐜽𐜾𐜿𐝀𐝁𐝂𐝃"
+    "󰽈󰽉󰽊󰽋󰽌󰽍󰽎󰽏"
    ]
   },
   {
@@ -11281,7 +11605,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐝄𐝅𐝆𐝇𐝈𐝉𐝊𐝋"
+    "󰽐󰽑󰽒󰽓󰽔󰽕󰽖󰽗"
    ]
   },
   {
@@ -11290,7 +11614,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐝌𐝍𐝎𐝏𐝐𐝑𐝒𐝓"
+    "󰽘󰽙󰽚󰽛󰽜󰽝󰽞󰽟"
    ]
   },
   {
@@ -11299,8 +11623,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐝔𐝕𐝖𐝗𐝘𐝙𐝚",
-    "𐝛𐝜𐝝𐝞𐝟𐝠𐝡"
+    "󰽠󰽡󰽢󰽣󰽤󰽥󰽦",
+    "󰽧󰽨󰽩󰽪󰽫󰽬󰽭"
    ]
   },
   {
@@ -11309,8 +11633,8 @@
    "height": 58,
    "ascent": 27,
    "chars": [
-    "𐝢𐝣𐝤𐝥𐝦𐝧𐝨",
-    "𐝩𐝪𐝫𐝬𐝭𐝮𐝯"
+    "󰽮󰽯󰽰󰽱󰽲󰽳󰽴",
+    "󰽵󰽶󰽷󰽸󰽹󰽺󰽻"
    ]
   },
   {
@@ -11319,8 +11643,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐝰𐝱𐝲𐝳𐝴𐝵𐝶",
-    "𐝷𐝸𐝹𐝺𐝻𐝼𐝽"
+    "󰽼󰽽󰽾󰽿󰾀󰾁󰾂",
+    "󰾃󰾄󰾅󰾆󰾇󰾈󰾉"
    ]
   },
   {
@@ -11329,8 +11653,8 @@
    "height": 54,
    "ascent": 25,
    "chars": [
-    "𐝾𐝿𐞀𐞁𐞂𐞃𐞄",
-    "𐞅𐞆𐞇𐞈𐞉𐞊𐞋"
+    "󰾊󰾋󰾌󰾍󰾎󰾏󰾐",
+    "󰾑󰾒󰾓󰾔󰾕󰾖󰾗"
    ]
   },
   {
@@ -11339,7 +11663,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐞌𐞍𐞎𐞏𐞐𐞑𐞒𐞓"
+    "󰾘󰾙󰾚󰾛󰾜󰾝󰾞󰾟"
    ]
   },
   {
@@ -11348,7 +11672,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐞔𐞕𐞖𐞗𐞘𐞙𐞚𐞛"
+    "󰾠󰾡󰾢󰾣󰾤󰾥󰾦󰾧"
    ]
   },
   {
@@ -11357,7 +11681,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐞜𐞝𐞞𐞟𐞠𐞡𐞢𐞣"
+    "󰾨󰾩󰾪󰾫󰾬󰾭󰾮󰾯"
    ]
   },
   {
@@ -11366,7 +11690,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐞤𐞥𐞦𐞧𐞨𐞩𐞪𐞫"
+    "󰾰󰾱󰾲󰾳󰾴󰾵󰾶󰾷"
    ]
   },
   {
@@ -11375,7 +11699,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐞬𐞭𐞮𐞯"
+    "󰾸󰾹󰾺󰾻"
    ]
   },
   {
@@ -11384,7 +11708,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐞰𐞱𐞲𐞳"
+    "󰾼󰾽󰾾󰾿"
    ]
   },
   {
@@ -11393,7 +11717,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐞴𐞵𐞶𐞷"
+    "󰿀󰿁󰿂󰿃"
    ]
   },
   {
@@ -11402,7 +11726,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐞸𐞹𐞺𐞻"
+    "󰿄󰿅󰿆󰿇"
    ]
   },
   {
@@ -11411,8 +11735,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐞼𐞽𐞾𐞿𐟀𐟁",
-    "𐟂𐟃𐟄𐟅𐟆𐟇"
+    "󰿈󰿉󰿊󰿋󰿌󰿍",
+    "󰿎󰿏󰿐󰿑󰿒󰿓"
    ]
   },
   {
@@ -11421,8 +11745,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐟈𐟉𐟊𐟋𐟌",
-    "𐟍𐟎𐟏𐟐𐟑"
+    "󰿔󰿕󰿖󰿗󰿘",
+    "󰿙󰿚󰿛󰿜󰿝"
    ]
   },
   {
@@ -11431,7 +11755,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐟒𐟓𐟔𐟕𐟖"
+    "󰿞󰿟󰿠󰿡󰿢"
    ]
   },
   {
@@ -11440,7 +11764,7 @@
    "height": 48,
    "ascent": 22,
    "chars": [
-    "𐟗𐟘𐟙𐟚𐟛𐟜𐟝𐟞"
+    "󰿣󰿤󰿥󰿦󰿧󰿨󰿩󰿪"
    ]
   },
   {
@@ -11449,8 +11773,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐟟𐟠𐟡𐟢𐟣",
-    "𐟤𐟥𐟦𐟧𐟨"
+    "󰿫󰿬󰿭󰿮󰿯",
+    "󰿰󰿱󰿲󰿳󰿴"
    ]
   },
   {
@@ -11459,7 +11783,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐟩𐟪𐟫𐟬"
+    "󰿵󰿶󰿷󰿸"
    ]
   },
   {
@@ -11468,7 +11792,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐟭𐟮𐟯𐟰𐟱𐟲𐟳𐟴"
+    "󰿹󰿺󰿻󰿼󰿽󰿾󰿿󱀀"
    ]
   },
   {
@@ -11477,8 +11801,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐟵𐟶𐟷𐟸𐟹",
-    "𐟺𐟻𐟼𐟽𐟾"
+    "󱀁󱀂󱀃󱀄󱀅",
+    "󱀆󱀇󱀈󱀉󱀊"
    ]
   },
   {
@@ -11487,88 +11811,88 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    "𐟿𐠀𐠁𐠂𐠃𐠄𐠅𐠆"
+    "󱀋󱀌󱀍󱀎󱀏󱀐󱀑󱀒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spin_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠇𐠈𐠉𐠊𐠋𐠌𐠍𐠎"
+    "󱀓󱀔󱀕󱀖󱀗󱀘󱀙󱀚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spin_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠏𐠐𐠑𐠒𐠓𐠔𐠕𐠖"
+    "󱀛󱀜󱀝󱀞󱀟󱀠󱀡󱀢"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spin_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠗𐠘𐠙𐠚𐠛𐠜𐠝𐠞"
+    "󱀣󱀤󱀥󱀦󱀧󱀨󱀩󱀪"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spin_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠟𐠠𐠡𐠢𐠣𐠤𐠥𐠦"
+    "󱀫󱀬󱀭󱀮󱀯󱀰󱀱󱀲"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spinm_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠧𐠨𐠩𐠪𐠫𐠬𐠭𐠮"
+    "󱀳󱀴󱀵󱀶󱀷󱀸󱀹󱀺"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spinm_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠯𐠰𐠱𐠲𐠳𐠴𐠵𐠶"
+    "󱀻󱀼󱀽󱀾󱀿󱁀󱁁󱁂"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spinm_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠷𐠸𐠹𐠺𐠻𐠼𐠽𐠾"
+    "󱁃󱁄󱁅󱁆󱁇󱁈󱁉󱁊"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_spinm_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐠿𐡀𐡁𐡂𐡃𐡄𐡅𐡆"
+    "󱁋󱁌󱁍󱁎󱁏󱁐󱁑󱁒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_cut.png",
-   "height": 18,
-   "ascent": 7,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐡇𐡈𐡉𐡊𐡋𐡌𐡍𐡎"
+    "󱁓󱁔󱁕󱁖󱁗󱁘󱁙󱁚"
    ]
   },
   {
@@ -11577,7 +11901,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡏𐡐𐡑𐡒"
+    "󱁛󱁜󱁝󱁞"
    ]
   },
   {
@@ -11586,7 +11910,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡓𐡔𐡕𐡖𐡗𐡘"
+    "󱁟󱁠󱁡󱁢󱁣󱁤"
    ]
   },
   {
@@ -11595,16 +11919,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡙𐡚𐡛𐡜𐡝𐡞𐡟𐡠"
+    "󱁥󱁦󱁧󱁨󱁩󱁪󱁫󱁬"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_stab.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 54,
+   "ascent": 25,
    "chars": [
-    "𐡡𐡢𐡣𐡤𐡥𐡦"
+    "󱁭󱁮󱁯󱁰󱁱󱁲"
    ]
   },
   {
@@ -11613,7 +11937,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡧𐡨𐡩𐡪"
+    "󱁳󱁴󱁵󱁶"
    ]
   },
   {
@@ -11622,7 +11946,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡫𐡬𐡭𐡮𐡯𐡰𐡱𐡲"
+    "󱁷󱁸󱁹󱁺󱁻󱁼󱁽󱁾"
    ]
   },
   {
@@ -11631,7 +11955,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡳𐡴𐡵𐡶𐡷𐡸𐡹𐡺"
+    "󱁿󱂀󱂁󱂂󱂃󱂄󱂅󱂆"
    ]
   },
   {
@@ -11640,7 +11964,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡻𐡼𐡽𐡾"
+    "󱂇󱂈󱂉󱂊"
    ]
   },
   {
@@ -11649,25 +11973,25 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐡿𐢀𐢁𐢂𐢃𐢄𐢅𐢆"
+    "󱂋󱂌󱂍󱂎󱂏󱂐󱂑󱂒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_wind.png",
-   "height": 50,
-   "ascent": 23,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐢇𐢈𐢉𐢊𐢋𐢌𐢍𐢎"
+    "󱂓󱂔󱂕󱂖󱂗󱂘󱂙󱂚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_lance_lspin.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐢏𐢐𐢑𐢒𐢓𐢔𐢕𐢖"
+    "󱂛󱂜󱂝󱂞󱂟󱂠󱂡󱂢"
    ]
   },
   {
@@ -11676,7 +12000,7 @@
    "height": 45,
    "ascent": 20,
    "chars": [
-    "𐢗𐢘𐢙𐢚𐢛𐢜𐢝𐢞"
+    "󱂣󱂤󱂥󱂦󱂧󱂨󱂩󱂪"
    ]
   },
   {
@@ -11685,7 +12009,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐢟𐢠𐢡𐢢𐢣𐢤𐢥𐢦"
+    "󱂫󱂬󱂭󱂮󱂯󱂰󱂱󱂲"
    ]
   },
   {
@@ -11694,7 +12018,16 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐢧𐢨𐢩𐢪𐢫𐢬𐢭𐢮"
+    "󱂳󱂴󱂵󱂶󱂷󱂸󱂹󱂺"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_lance_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱂻󱂼󱂽󱂾󱂿󱃀󱃁󱃂"
    ]
   },
   {
@@ -11703,8 +12036,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐢯𐢰𐢱𐢲𐢳",
-    "𐢴𐢵𐢶𐢷𐢸"
+    "󱃃󱃄󱃅󱃆󱃇",
+    "󱃈󱃉󱃊󱃋󱃌"
    ]
   },
   {
@@ -11713,8 +12046,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐢹𐢺𐢻𐢼𐢽",
-    "𐢾𐢿𐣀𐣁𐣂"
+    "󱃍󱃎󱃏󱃐󱃑",
+    "󱃒󱃓󱃔󱃕󱃖"
    ]
   },
   {
@@ -11723,8 +12056,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐣃𐣄𐣅𐣆𐣇",
-    "𐣈𐣉𐣊𐣋𐣌"
+    "󱃗󱃘󱃙󱃚󱃛",
+    "󱃜󱃝󱃞󱃟󱃠"
    ]
   },
   {
@@ -11733,8 +12066,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐣍𐣎𐣏𐣐𐣑",
-    "𐣒𐣓𐣔𐣕𐣖"
+    "󱃡󱃢󱃣󱃤󱃥",
+    "󱃦󱃧󱃨󱃩󱃪"
    ]
   },
   {
@@ -11743,8 +12076,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐣗𐣘𐣙𐣚𐣛",
-    "𐣜𐣝𐣞𐣟𐣠"
+    "󱃫󱃬󱃭󱃮󱃯",
+    "󱃰󱃱󱃲󱃳󱃴"
    ]
   },
   {
@@ -11753,8 +12086,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐣡𐣢𐣣𐣤𐣥",
-    "𐣦𐣧𐣨𐣩𐣪"
+    "󱃵󱃶󱃷󱃸󱃹",
+    "󱃺󱃻󱃼󱃽󱃾"
    ]
   },
   {
@@ -11763,8 +12096,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐣫𐣬𐣭𐣮𐣯",
-    "𐣰𐣱𐣲𐣳𐣴"
+    "󱃿󱄀󱄁󱄂󱄃",
+    "󱄄󱄅󱄆󱄇󱄈"
    ]
   },
   {
@@ -11773,84 +12106,84 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐣵𐣶𐣷𐣸𐣹",
-    "𐣺𐣻𐣼𐣽𐣾"
+    "󱄉󱄊󱄋󱄌󱄍",
+    "󱄎󱄏󱄐󱄑󱄒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐣿𐤀𐤁𐤂𐤃𐤄𐤅𐤆"
+    "󱄓󱄔󱄕󱄖󱄗󱄘󱄙󱄚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐤇𐤈𐤉𐤊𐤋𐤌𐤍𐤎"
+    "󱄛󱄜󱄝󱄞󱄟󱄠󱄡󱄢"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐤏𐤐𐤑𐤒𐤓𐤔𐤕𐤖"
+    "󱄣󱄤󱄥󱄦󱄧󱄨󱄩󱄪"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐤗𐤘𐤙𐤚𐤛𐤜𐤝𐤞"
+    "󱄫󱄬󱄭󱄮󱄯󱄰󱄱󱄲"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_boom_00.png",
-   "height": 54,
-   "ascent": 25,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐤟𐤠𐤡𐤢𐤣𐤤𐤥",
-    "𐤦𐤧𐤨𐤩𐤪𐤫𐤬"
+    "󱄳󱄴󱄵󱄶󱄷󱄸󱄹",
+    "󱄺󱄻󱄼󱄽󱄾󱄿󱅀"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_boom_01.png",
-   "height": 54,
-   "ascent": 25,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐤭𐤮𐤯𐤰𐤱𐤲𐤳",
-    "𐤴𐤵𐤶𐤷𐤸𐤹𐤺"
+    "󱅁󱅂󱅃󱅄󱅅󱅆󱅇",
+    "󱅈󱅉󱅊󱅋󱅌󱅍󱅎"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_boom_10.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐤻𐤼𐤽𐤾𐤿𐥀𐥁",
-    "𐥂𐥃𐥄𐥅𐥆𐥇𐥈"
+    "󱅏󱅐󱅑󱅒󱅓󱅔󱅕",
+    "󱅖󱅗󱅘󱅙󱅚󱅛󱅜"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_boom_11.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐥉𐥊𐥋𐥌𐥍𐥎𐥏",
-    "𐥐𐥑𐥒𐥓𐥔𐥕𐥖"
+    "󱅝󱅞󱅟󱅠󱅡󱅢󱅣",
+    "󱅤󱅥󱅦󱅧󱅨󱅩󱅪"
    ]
   },
   {
@@ -11859,7 +12192,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐥗𐥘𐥙𐥚𐥛𐥜𐥝𐥞"
+    "󱅫󱅬󱅭󱅮󱅯󱅰󱅱󱅲"
    ]
   },
   {
@@ -11868,7 +12201,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐥟𐥠𐥡𐥢𐥣𐥤𐥥𐥦"
+    "󱅳󱅴󱅵󱅶󱅷󱅸󱅹󱅺"
    ]
   },
   {
@@ -11877,7 +12210,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐥧𐥨𐥩𐥪𐥫𐥬𐥭𐥮"
+    "󱅻󱅼󱅽󱅾󱅿󱆀󱆁󱆂"
    ]
   },
   {
@@ -11886,7 +12219,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐥯𐥰𐥱𐥲𐥳𐥴𐥵𐥶"
+    "󱆃󱆄󱆅󱆆󱆇󱆈󱆉󱆊"
    ]
   },
   {
@@ -11895,7 +12228,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐥷𐥸𐥹𐥺"
+    "󱆋󱆌󱆍󱆎"
    ]
   },
   {
@@ -11904,7 +12237,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐥻𐥼𐥽𐥾"
+    "󱆏󱆐󱆑󱆒"
    ]
   },
   {
@@ -11913,7 +12246,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐥿𐦀𐦁𐦂"
+    "󱆓󱆔󱆕󱆖"
    ]
   },
   {
@@ -11922,7 +12255,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐦃𐦄𐦅𐦆"
+    "󱆗󱆘󱆙󱆚"
    ]
   },
   {
@@ -11931,8 +12264,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐦇𐦈𐦉𐦊𐦋𐦌",
-    "𐦍𐦎𐦏𐦐𐦑𐦒"
+    "󱆛󱆜󱆝󱆞󱆟󱆠",
+    "󱆡󱆢󱆣󱆤󱆥󱆦"
    ]
   },
   {
@@ -11941,8 +12274,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐦓𐦔𐦕𐦖𐦗",
-    "𐦘𐦙𐦚𐦛𐦜"
+    "󱆧󱆨󱆩󱆪󱆫",
+    "󱆬󱆭󱆮󱆯󱆰"
    ]
   },
   {
@@ -11951,16 +12284,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐦝𐦞𐦟𐦠𐦡"
+    "󱆱󱆲󱆳󱆴󱆵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 46,
+   "ascent": 21,
    "chars": [
-    "𐦢𐦣𐦤𐦥𐦦𐦧𐦨𐦩"
+    "󱆶󱆷󱆸󱆹󱆺󱆻󱆼󱆽"
    ]
   },
   {
@@ -11969,8 +12302,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐦪𐦫𐦬𐦭𐦮",
-    "𐦯𐦰𐦱𐦲𐦳"
+    "󱆾󱆿󱇀󱇁󱇂",
+    "󱇃󱇄󱇅󱇆󱇇"
    ]
   },
   {
@@ -11979,7 +12312,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐦴𐦵𐦶𐦷"
+    "󱇈󱇉󱇊󱇋"
    ]
   },
   {
@@ -11988,7 +12321,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐦸𐦹𐦺𐦻𐦼𐦽𐦾𐦿"
+    "󱇌󱇍󱇎󱇏󱇐󱇑󱇒󱇓"
    ]
   },
   {
@@ -11997,8 +12330,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐧀𐧁𐧂𐧃𐧄",
-    "𐧅𐧆𐧇𐧈𐧉"
+    "󱇔󱇕󱇖󱇗󱇘",
+    "󱇙󱇚󱇛󱇜󱇝"
    ]
   },
   {
@@ -12007,25 +12340,25 @@
    "height": 24,
    "ascent": 10,
    "chars": [
-    "𐧊𐧋𐧌𐧍𐧎𐧏𐧐𐧑"
+    "󱇞󱇟󱇠󱇡󱇢󱇣󱇤󱇥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_spin_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐧒𐧓𐧔𐧕𐧖𐧗𐧘𐧙"
+    "󱇦󱇧󱇨󱇩󱇪󱇫󱇬󱇭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_spin_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐧚𐧛𐧜𐧝𐧞𐧟𐧠𐧡"
+    "󱇮󱇯󱇰󱇱󱇲󱇳󱇴󱇵"
    ]
   },
   {
@@ -12034,7 +12367,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐧢𐧣𐧤𐧥𐧦𐧧𐧨𐧩"
+    "󱇶󱇷󱇸󱇹󱇺󱇻󱇼󱇽"
    ]
   },
   {
@@ -12043,52 +12376,52 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐧪𐧫𐧬𐧭𐧮𐧯𐧰𐧱"
+    "󱇾󱇿󱈀󱈁󱈂󱈃󱈄󱈅"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_spinm_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 58,
+   "ascent": 27,
    "chars": [
-    "𐧲𐧳𐧴𐧵𐧶𐧷𐧸𐧹"
+    "󱈆󱈇󱈈󱈉󱈊󱈋󱈌󱈍"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_spinm_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 58,
+   "ascent": 27,
    "chars": [
-    "𐧺𐧻𐧼𐧽𐧾𐧿𐨀𐨁"
+    "󱈎󱈏󱈐󱈑󱈒󱈓󱈔󱈕"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_spinm_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 55,
+   "ascent": 25,
    "chars": [
-    "𐨂𐨃𐨄𐨅𐨆𐨇𐨈𐨉"
+    "󱈖󱈗󱈘󱈙󱈚󱈛󱈜󱈝"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_spinm_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 55,
+   "ascent": 25,
    "chars": [
-    "𐨊𐨋𐨌𐨍𐨎𐨏𐨐𐨑"
+    "󱈞󱈟󱈠󱈡󱈢󱈣󱈤󱈥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_cut.png",
-   "height": 17,
-   "ascent": 6,
+   "height": 32,
+   "ascent": 14,
    "chars": [
-    "𐨒𐨓𐨔𐨕𐨖𐨗𐨘𐨙"
+    "󱈦󱈧󱈨󱈩󱈪󱈫󱈬󱈭"
    ]
   },
   {
@@ -12097,7 +12430,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐨚𐨛𐨜𐨝"
+    "󱈮󱈯󱈰󱈱"
    ]
   },
   {
@@ -12106,7 +12439,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐨞𐨟𐨠𐨡𐨢𐨣"
+    "󱈲󱈳󱈴󱈵󱈶󱈷"
    ]
   },
   {
@@ -12115,7 +12448,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐨤𐨥𐨦𐨧𐨨𐨩𐨪𐨫"
+    "󱈸󱈹󱈺󱈻󱈼󱈽󱈾󱈿"
    ]
   },
   {
@@ -12124,7 +12457,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐨬𐨭𐨮𐨯𐨰𐨱"
+    "󱉀󱉁󱉂󱉃󱉄󱉅"
    ]
   },
   {
@@ -12133,7 +12466,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐨲𐨳𐨴𐨵"
+    "󱉆󱉇󱉈󱉉"
    ]
   },
   {
@@ -12142,7 +12475,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐨶𐨷𐨹𐨺𐨸𐨻𐨼𐨽"
+    "󱉊󱉋󱉌󱉍󱉎󱉏󱉐󱉑"
    ]
   },
   {
@@ -12151,7 +12484,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐨾𐨿𐩀𐩁𐩂𐩃𐩄𐩅"
+    "󱉒󱉓󱉔󱉕󱉖󱉗󱉘󱉙"
    ]
   },
   {
@@ -12160,7 +12493,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐩆𐩇𐩈𐩉"
+    "󱉚󱉛󱉜󱉝"
    ]
   },
   {
@@ -12169,16 +12502,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐩊𐩋𐩌𐩍𐩎𐩏𐩐𐩑"
+    "󱉞󱉟󱉠󱉡󱉢󱉣󱉤󱉥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_wind.png",
-   "height": 50,
-   "ascent": 23,
+   "height": 46,
+   "ascent": 21,
    "chars": [
-    "𐩒𐩓𐩔𐩕𐩖𐩗𐩘𐩙"
+    "󱉦󱉧󱉨󱉩󱉪󱉫󱉬󱉭"
    ]
   },
   {
@@ -12187,16 +12520,16 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐩚𐩛𐩜𐩝𐩞𐩟𐩠𐩡"
+    "󱉮󱉯󱉰󱉱󱉲󱉳󱉴󱉵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_gale_swirl.png",
-   "height": 45,
+   "height": 44,
    "ascent": 20,
    "chars": [
-    "𐩢𐩣𐩤𐩥𐩦𐩧𐩨𐩩"
+    "󱉶󱉷󱉸󱉹󱉺󱉻󱉼󱉽"
    ]
   },
   {
@@ -12205,7 +12538,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐩪𐩫𐩬𐩭𐩮𐩯𐩰𐩱"
+    "󱉾󱉿󱊀󱊁󱊂󱊃󱊄󱊅"
    ]
   },
   {
@@ -12214,7 +12547,16 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐩲𐩳𐩴𐩵𐩶𐩷𐩸𐩹"
+    "󱊆󱊇󱊈󱊉󱊊󱊋󱊌󱊍"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_gale_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱊎󱊏󱊐󱊑󱊒󱊓󱊔󱊕"
    ]
   },
   {
@@ -12223,8 +12565,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐩺𐩻𐩼𐩽𐩾",
-    "𐩿𐪀𐪁𐪂𐪃"
+    "󱊖󱊗󱊘󱊙󱊚",
+    "󱊛󱊜󱊝󱊞󱊟"
    ]
   },
   {
@@ -12233,8 +12575,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐪄𐪅𐪆𐪇𐪈",
-    "𐪉𐪊𐪋𐪌𐪍"
+    "󱊠󱊡󱊢󱊣󱊤",
+    "󱊥󱊦󱊧󱊨󱊩"
    ]
   },
   {
@@ -12243,8 +12585,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐪎𐪏𐪐𐪑𐪒",
-    "𐪓𐪔𐪕𐪖𐪗"
+    "󱊪󱊫󱊬󱊭󱊮",
+    "󱊯󱊰󱊱󱊲󱊳"
    ]
   },
   {
@@ -12253,8 +12595,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐪘𐪙𐪚𐪛𐪜",
-    "𐪝𐪞𐪟𐪠𐪡"
+    "󱊴󱊵󱊶󱊷󱊸",
+    "󱊹󱊺󱊻󱊼󱊽"
    ]
   },
   {
@@ -12263,8 +12605,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐪢𐪣𐪤𐪥𐪦",
-    "𐪧𐪨𐪩𐪪𐪫"
+    "󱊾󱊿󱋀󱋁󱋂",
+    "󱋃󱋄󱋅󱋆󱋇"
    ]
   },
   {
@@ -12273,8 +12615,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐪬𐪭𐪮𐪯𐪰",
-    "𐪱𐪲𐪳𐪴𐪵"
+    "󱋈󱋉󱋊󱋋󱋌",
+    "󱋍󱋎󱋏󱋐󱋑"
    ]
   },
   {
@@ -12283,8 +12625,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐪶𐪷𐪸𐪹𐪺",
-    "𐪻𐪼𐪽𐪾𐪿"
+    "󱋒󱋓󱋔󱋕󱋖",
+    "󱋗󱋘󱋙󱋚󱋛"
    ]
   },
   {
@@ -12293,84 +12635,84 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐫀𐫁𐫂𐫃𐫄",
-    "𐫅𐫆𐫇𐫈𐫉"
+    "󱋜󱋝󱋞󱋟󱋠",
+    "󱋡󱋢󱋣󱋤󱋥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐫊𐫋𐫌𐫍𐫎𐫏𐫐𐫑"
+    "󱋦󱋧󱋨󱋩󱋪󱋫󱋬󱋭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐫒𐫓𐫔𐫕𐫖𐫗𐫘𐫙"
+    "󱋮󱋯󱋰󱋱󱋲󱋳󱋴󱋵"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐫚𐫛𐫜𐫝𐫞𐫟𐫠𐫡"
+    "󱋶󱋷󱋸󱋹󱋺󱋻󱋼󱋽"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 44,
+   "ascent": 20,
    "chars": [
-    "𐫢𐫣𐫤𐫦𐫥𐫧𐫨𐫩"
+    "󱋾󱋿󱌀󱌁󱌂󱌃󱌄󱌅"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_boom_00.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐫪𐫫𐫬𐫭𐫮𐫯𐫰",
-    "𐫱𐫲𐫳𐫴𐫵𐫶𐫷"
+    "󱌆󱌇󱌈󱌉󱌊󱌋󱌌",
+    "󱌍󱌎󱌏󱌐󱌑󱌒󱌓"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_boom_01.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐫸𐫹𐫺𐫻𐫼𐫽𐫾",
-    "𐫿𐬀𐬁𐬂𐬃𐬄𐬅"
+    "󱌔󱌕󱌖󱌗󱌘󱌙󱌚",
+    "󱌛󱌜󱌝󱌞󱌟󱌠󱌡"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_boom_10.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐬆𐬇𐬈𐬉𐬊𐬋𐬌",
-    "𐬍𐬎𐬏𐬐𐬑𐬒𐬓"
+    "󱌢󱌣󱌤󱌥󱌦󱌧󱌨",
+    "󱌩󱌪󱌫󱌬󱌭󱌮󱌯"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_boom_11.png",
-   "height": 52,
-   "ascent": 24,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐬔𐬕𐬖𐬗𐬘𐬙𐬚",
-    "𐬛𐬜𐬝𐬞𐬟𐬠𐬡"
+    "󱌰󱌱󱌲󱌳󱌴󱌵󱌶",
+    "󱌷󱌸󱌹󱌺󱌻󱌼󱌽"
    ]
   },
   {
@@ -12379,7 +12721,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐬢𐬣𐬤𐬥𐬦𐬧𐬨𐬩"
+    "󱌾󱌿󱍀󱍁󱍂󱍃󱍄󱍅"
    ]
   },
   {
@@ -12388,7 +12730,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐬪𐬫𐬬𐬭𐬮𐬯𐬰𐬱"
+    "󱍆󱍇󱍈󱍉󱍊󱍋󱍌󱍍"
    ]
   },
   {
@@ -12397,7 +12739,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐬲𐬳𐬴𐬵𐬶𐬷𐬸𐬹"
+    "󱍎󱍏󱍐󱍑󱍒󱍓󱍔󱍕"
    ]
   },
   {
@@ -12406,7 +12748,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐬺𐬻𐬼𐬽𐬾𐬿𐭀𐭁"
+    "󱍖󱍗󱍘󱍙󱍚󱍛󱍜󱍝"
    ]
   },
   {
@@ -12415,7 +12757,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐭂𐭃𐭄𐭅"
+    "󱍞󱍟󱍠󱍡"
    ]
   },
   {
@@ -12424,7 +12766,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐭆𐭇𐭈𐭉"
+    "󱍢󱍣󱍤󱍥"
    ]
   },
   {
@@ -12433,7 +12775,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐭊𐭋𐭌𐭍"
+    "󱍦󱍧󱍨󱍩"
    ]
   },
   {
@@ -12442,17 +12784,17 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐭎𐭏𐭐𐭑"
+    "󱍪󱍫󱍬󱍭"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_boom_s.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 55,
+   "ascent": 25,
    "chars": [
-    "𐭒𐭓𐭔𐭕𐭖𐭗",
-    "𐭘𐭙𐭚𐭛𐭜𐭝"
+    "󱍮󱍯󱍰󱍱󱍲󱍳",
+    "󱍴󱍵󱍶󱍷󱍸󱍹"
    ]
   },
   {
@@ -12461,26 +12803,26 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐭞𐭟𐭠𐭡𐭢",
-    "𐭣𐭤𐭥𐭦𐭧"
+    "󱍺󱍻󱍼󱍽󱍾",
+    "󱍿󱎀󱎁󱎂󱎃"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_crack_s.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 45,
+   "ascent": 20,
    "chars": [
-    "𐭨𐭩𐭪𐭫𐭬"
+    "󱎄󱎅󱎆󱎇󱎈"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐭭𐭮𐭯𐭰𐭱𐭲𐭳𐭴"
+    "󱎉󱎊󱎋󱎌󱎍󱎎󱎏󱎐"
    ]
   },
   {
@@ -12489,8 +12831,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐭵𐭶𐭷𐭸𐭹",
-    "𐭺𐭻𐭼𐭽𐭾"
+    "󱎑󱎒󱎓󱎔󱎕",
+    "󱎖󱎗󱎘󱎙󱎚"
    ]
   },
   {
@@ -12499,7 +12841,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐭿𐮀𐮁𐮂"
+    "󱎛󱎜󱎝󱎞"
    ]
   },
   {
@@ -12508,7 +12850,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐮃𐮄𐮅𐮆𐮇𐮈𐮉𐮊"
+    "󱎟󱎠󱎡󱎢󱎣󱎤󱎥󱎦"
    ]
   },
   {
@@ -12517,8 +12859,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐮋𐮌𐮍𐮎𐮏",
-    "𐮐𐮑𐮒𐮓𐮔"
+    "󱎧󱎨󱎩󱎪󱎫",
+    "󱎬󱎭󱎮󱎯󱎰"
    ]
   },
   {
@@ -12527,79 +12869,79 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    "𐮕𐮖𐮗𐮘𐮙𐮚𐮛𐮜"
+    "󱎱󱎲󱎳󱎴󱎵󱎶󱎷󱎸"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spin_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐮝𐮞𐮟𐮠𐮡𐮢𐮣𐮤"
+    "󱎹󱎺󱎻󱎼󱎽󱎾󱎿󱏀"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spin_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐮥𐮦𐮧𐮨𐮩𐮪𐮫𐮬"
+    "󱏁󱏂󱏃󱏄󱏅󱏆󱏇󱏈"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spin_10.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐮭𐮮𐮯𐮰𐮱𐮲𐮳𐮴"
+    "󱏉󱏊󱏋󱏌󱏍󱏎󱏏󱏐"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spin_11.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐮵𐮶𐮷𐮸𐮹𐮺𐮻𐮼"
+    "󱏑󱏒󱏓󱏔󱏕󱏖󱏗󱏘"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spinm_00.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐮽𐮾𐮿𐯀𐯁𐯂𐯃𐯄"
+    "󱏙󱏚󱏛󱏜󱏝󱏞󱏟󱏠"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spinm_01.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐯅𐯆𐯇𐯈𐯉𐯊𐯋𐯌"
+    "󱏡󱏢󱏣󱏤󱏥󱏦󱏧󱏨"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spinm_10.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐯍𐯎𐯏𐯐𐯑𐯒𐯓𐯔"
+    "󱏩󱏪󱏫󱏬󱏭󱏮󱏯󱏰"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_spinm_11.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐯕𐯖𐯗𐯘𐯙𐯚𐯛𐯜"
+    "󱏱󱏲󱏳󱏴󱏵󱏶󱏷󱏸"
    ]
   },
   {
@@ -12608,7 +12950,7 @@
    "height": 18,
    "ascent": 7,
    "chars": [
-    "𐯝𐯞𐯟𐯠𐯡𐯢𐯣𐯤"
+    "󱏹󱏺󱏻󱏼󱏽󱏾󱏿󱐀"
    ]
   },
   {
@@ -12617,7 +12959,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐯥𐯦𐯧𐯨"
+    "󱐁󱐂󱐃󱐄"
    ]
   },
   {
@@ -12626,7 +12968,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐯩𐯪𐯫𐯬𐯭𐯮"
+    "󱐅󱐆󱐇󱐈󱐉󱐊"
    ]
   },
   {
@@ -12635,7 +12977,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐯯𐯰𐯱𐯲𐯳𐯴𐯵𐯶"
+    "󱐋󱐌󱐍󱐎󱐏󱐐󱐑󱐒"
    ]
   },
   {
@@ -12644,7 +12986,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐯷𐯸𐯹𐯺𐯻𐯼"
+    "󱐓󱐔󱐕󱐖󱐗󱐘"
    ]
   },
   {
@@ -12653,7 +12995,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐯽𐯾𐯿𐰀"
+    "󱐙󱐚󱐛󱐜"
    ]
   },
   {
@@ -12662,7 +13004,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐰁𐰂𐰃𐰄𐰅𐰆𐰇𐰈"
+    "󱐝󱐞󱐟󱐠󱐡󱐢󱐣󱐤"
    ]
   },
   {
@@ -12671,16 +13013,16 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐰉𐰊𐰋𐰌𐰍𐰎𐰏𐰐"
+    "󱐥󱐦󱐧󱐨󱐩󱐪󱐫󱐬"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_comet.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐰑𐰒𐰓𐰔"
+    "󱐭󱐮󱐯󱐰"
    ]
   },
   {
@@ -12689,16 +13031,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐰕𐰖𐰗𐰘𐰙𐰚𐰛𐰜"
+    "󱐱󱐲󱐳󱐴󱐵󱐶󱐷󱐸"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_dragon_wind.png",
-   "height": 50,
-   "ascent": 23,
+   "height": 48,
+   "ascent": 22,
    "chars": [
-    "𐰝𐰞𐰟𐰠𐰡𐰢𐰣𐰤"
+    "󱐹󱐺󱐻󱐼󱐽󱐾󱐿󱑀"
    ]
   },
   {
@@ -12707,7 +13049,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐰥𐰦𐰧𐰨𐰩𐰪𐰫𐰬"
+    "󱑁󱑂󱑃󱑄󱑅󱑆󱑇󱑈"
    ]
   },
   {
@@ -12716,7 +13058,7 @@
    "height": 45,
    "ascent": 20,
    "chars": [
-    "𐰭𐰮𐰯𐰰𐰱𐰲𐰳𐰴"
+    "󱑉󱑊󱑋󱑌󱑍󱑎󱑏󱑐"
    ]
   },
   {
@@ -12725,7 +13067,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐰵𐰶𐰷𐰸𐰹𐰺𐰻𐰼"
+    "󱑑󱑒󱑓󱑔󱑕󱑖󱑗󱑘"
    ]
   },
   {
@@ -12734,7 +13076,16 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐰽𐰾𐰿𐱀𐱁𐱂𐱃𐱄"
+    "󱑙󱑚󱑛󱑜󱑝󱑞󱑟󱑠"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_dragon_shade.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱑡󱑢󱑣󱑤󱑥󱑦󱑧󱑨"
    ]
   },
   {
@@ -12743,8 +13094,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐱅𐱆𐱇𐱈𐱉",
-    "𐱊𐱋𐱌𐱍𐱎"
+    "󱑩󱑪󱑫󱑬󱑭",
+    "󱑮󱑯󱑰󱑱󱑲"
    ]
   },
   {
@@ -12753,8 +13104,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐱏𐱐𐱑𐱒𐱓",
-    "𐱔𐱕𐱖𐱗𐱘"
+    "󱑳󱑴󱑵󱑶󱑷",
+    "󱑸󱑹󱑺󱑻󱑼"
    ]
   },
   {
@@ -12763,8 +13114,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐱙𐱚𐱛𐱜𐱝",
-    "𐱞𐱟𐱠𐱡𐱢"
+    "󱑽󱑾󱑿󱒀󱒁",
+    "󱒂󱒃󱒄󱒅󱒆"
    ]
   },
   {
@@ -12773,8 +13124,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐱣𐱤𐱥𐱦𐱧",
-    "𐱨𐱩𐱪𐱫𐱬"
+    "󱒇󱒈󱒉󱒊󱒋",
+    "󱒌󱒍󱒎󱒏󱒐"
    ]
   },
   {
@@ -12783,8 +13134,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐱭𐱮𐱯𐱰𐱱",
-    "𐱲𐱳𐱴𐱵𐱶"
+    "󱒑󱒒󱒓󱒔󱒕",
+    "󱒖󱒗󱒘󱒙󱒚"
    ]
   },
   {
@@ -12793,8 +13144,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐱷𐱸𐱹𐱺𐱻",
-    "𐱼𐱽𐱾𐱿𐲀"
+    "󱒛󱒜󱒝󱒞󱒟",
+    "󱒠󱒡󱒢󱒣󱒤"
    ]
   },
   {
@@ -12803,8 +13154,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐲁𐲂𐲃𐲄𐲅",
-    "𐲆𐲇𐲈𐲉𐲊"
+    "󱒥󱒦󱒧󱒨󱒩",
+    "󱒪󱒫󱒬󱒭󱒮"
    ]
   },
   {
@@ -12813,8 +13164,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐲋𐲌𐲍𐲎𐲏",
-    "𐲐𐲑𐲒𐲓𐲔"
+    "󱒯󱒰󱒱󱒲󱒳",
+    "󱒴󱒵󱒶󱒷󱒸"
    ]
   },
   {
@@ -12823,44 +13174,44 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐲕𐲖𐲗𐲘𐲙",
-    "𐲚𐲛𐲜𐲝𐲞"
+    "󱒹󱒺󱒻󱒼󱒽",
+    "󱒾󱒿󱓀󱓁󱓂"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_xslash_00.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐲟𐲠𐲡𐲢𐲣𐲤𐲥𐲦"
+    "󱓃󱓄󱓅󱓆󱓇󱓈󱓉󱓊"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_xslash_01.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐲧𐲨𐲩𐲪𐲫𐲬𐲭𐲮"
+    "󱓋󱓌󱓍󱓎󱓏󱓐󱓑󱓒"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_xslash_10.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐲯𐲰𐲱𐲲𐲳𐲴𐲵𐲶"
+    "󱓓󱓔󱓕󱓖󱓗󱓘󱓙󱓚"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_xslash_11.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐲷𐲸𐲹𐲺𐲻𐲼𐲽𐲾"
+    "󱓛󱓜󱓝󱓞󱓟󱓠󱓡󱓢"
    ]
   },
   {
@@ -12869,8 +13220,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐲿𐳀𐳁𐳂𐳃𐳄𐳅",
-    "𐳆𐳇𐳈𐳉𐳊𐳋𐳌"
+    "󱓣󱓤󱓥󱓦󱓧󱓨󱓩",
+    "󱓪󱓫󱓬󱓭󱓮󱓯󱓰"
    ]
   },
   {
@@ -12879,8 +13230,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐳍𐳎𐳏𐳐𐳑𐳒𐳓",
-    "𐳔𐳕𐳖𐳗𐳘𐳙𐳚"
+    "󱓱󱓲󱓳󱓴󱓵󱓶󱓷",
+    "󱓸󱓹󱓺󱓻󱓼󱓽󱓾"
    ]
   },
   {
@@ -12889,8 +13240,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐳛𐳜𐳝𐳞𐳟𐳠𐳡",
-    "𐳢𐳣𐳤𐳥𐳦𐳧𐳨"
+    "󱓿󱔀󱔁󱔂󱔃󱔄󱔅",
+    "󱔆󱔇󱔈󱔉󱔊󱔋󱔌"
    ]
   },
   {
@@ -12899,8 +13250,8 @@
    "height": 52,
    "ascent": 24,
    "chars": [
-    "𐳩𐳪𐳫𐳬𐳭𐳮𐳯",
-    "𐳰𐳱𐳲𐳳𐳴𐳵𐳶"
+    "󱔍󱔎󱔏󱔐󱔑󱔒󱔓",
+    "󱔔󱔕󱔖󱔗󱔘󱔙󱔚"
    ]
   },
   {
@@ -12909,7 +13260,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐳷𐳸𐳹𐳺𐳻𐳼𐳽𐳾"
+    "󱔛󱔜󱔝󱔞󱔟󱔠󱔡󱔢"
    ]
   },
   {
@@ -12918,7 +13269,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐳿𐴀𐴁𐴂𐴃𐴄𐴅𐴆"
+    "󱔣󱔤󱔥󱔦󱔧󱔨󱔩󱔪"
    ]
   },
   {
@@ -12927,7 +13278,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐴇𐴈𐴉𐴊𐴋𐴌𐴍𐴎"
+    "󱔫󱔬󱔭󱔮󱔯󱔰󱔱󱔲"
    ]
   },
   {
@@ -12936,7 +13287,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐴏𐴐𐴑𐴒𐴓𐴔𐴕𐴖"
+    "󱔳󱔴󱔵󱔶󱔷󱔸󱔹󱔺"
    ]
   },
   {
@@ -12945,7 +13296,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐴗𐴘𐴙𐴚"
+    "󱔻󱔼󱔽󱔾"
    ]
   },
   {
@@ -12954,7 +13305,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐴛𐴜𐴝𐴞"
+    "󱔿󱕀󱕁󱕂"
    ]
   },
   {
@@ -12963,7 +13314,7 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐴟𐴠𐴡𐴢"
+    "󱕃󱕄󱕅󱕆"
    ]
   },
   {
@@ -12972,17 +13323,17 @@
    "height": 62,
    "ascent": 29,
    "chars": [
-    "𐴣𐴤𐴥𐴦"
+    "󱕇󱕈󱕉󱕊"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_boom_s.png",
-   "height": 64,
-   "ascent": 30,
+   "height": 56,
+   "ascent": 26,
    "chars": [
-    "𐴧𐴨𐴩𐴪𐴫𐴬",
-    "𐴭𐴮𐴯𐴰𐴱𐴲"
+    "󱕋󱕌󱕍󱕎󱕏󱕐",
+    "󱕑󱕒󱕓󱕔󱕕󱕖"
    ]
   },
   {
@@ -12991,8 +13342,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐴳𐴴𐴵𐴶𐴷",
-    "𐴸𐴹𐴺𐴻𐴼"
+    "󱕗󱕘󱕙󱕚󱕛",
+    "󱕜󱕝󱕞󱕟󱕠"
    ]
   },
   {
@@ -13001,16 +13352,16 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐴽𐴾𐴿𐵀𐵁"
+    "󱕡󱕢󱕣󱕤󱕥"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_flash.png",
-   "height": 48,
-   "ascent": 22,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐵂𐵃𐵄𐵅𐵆𐵇𐵈𐵉"
+    "󱕦󱕧󱕨󱕩󱕪󱕫󱕬󱕭"
    ]
   },
   {
@@ -13019,8 +13370,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐵊𐵋𐵌𐵍𐵎",
-    "𐵏𐵐𐵑𐵒𐵓"
+    "󱕮󱕯󱕰󱕱󱕲",
+    "󱕳󱕴󱕵󱕶󱕷"
    ]
   },
   {
@@ -13029,7 +13380,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐵔𐵕𐵖𐵗"
+    "󱕸󱕹󱕺󱕻"
    ]
   },
   {
@@ -13038,7 +13389,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐵘𐵙𐵚𐵛𐵜𐵝𐵞𐵟"
+    "󱕼󱕽󱕾󱕿󱖀󱖁󱖂󱖃"
    ]
   },
   {
@@ -13047,8 +13398,8 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐵠𐵡𐵢𐵣𐵤",
-    "𐵥𐵦𐵧𐵨𐵩"
+    "󱖄󱖅󱖆󱖇󱖈",
+    "󱖉󱖊󱖋󱖌󱖍"
    ]
   },
   {
@@ -13057,7 +13408,7 @@
    "height": 32,
    "ascent": 14,
    "chars": [
-    "𐵪𐵫𐵬𐵭𐵮𐵯𐵰𐵱"
+    "󱖎󱖏󱖐󱖑󱖒󱖓󱖔󱖕"
    ]
   },
   {
@@ -13066,7 +13417,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐵲𐵳𐵴𐵵𐵶𐵷𐵸𐵹"
+    "󱖖󱖗󱖘󱖙󱖚󱖛󱖜󱖝"
    ]
   },
   {
@@ -13075,7 +13426,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐵺𐵻𐵼𐵽𐵾𐵿𐶀𐶁"
+    "󱖞󱖟󱖠󱖡󱖢󱖣󱖤󱖥"
    ]
   },
   {
@@ -13084,7 +13435,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐶂𐶃𐶄𐶅𐶆𐶇𐶈𐶉"
+    "󱖦󱖧󱖨󱖩󱖪󱖫󱖬󱖭"
    ]
   },
   {
@@ -13093,7 +13444,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐶊𐶋𐶌𐶍𐶎𐶏𐶐𐶑"
+    "󱖮󱖯󱖰󱖱󱖲󱖳󱖴󱖵"
    ]
   },
   {
@@ -13102,7 +13453,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐶒𐶓𐶔𐶕𐶖𐶗𐶘𐶙"
+    "󱖶󱖷󱖸󱖹󱖺󱖻󱖼󱖽"
    ]
   },
   {
@@ -13111,7 +13462,7 @@
    "height": 60,
    "ascent": 28,
    "chars": [
-    "𐶚𐶛𐶜𐶝𐶞𐶟𐶠𐶡"
+    "󱖾󱖿󱗀󱗁󱗂󱗃󱗄󱗅"
    ]
   },
   {
@@ -13120,7 +13471,7 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐶢𐶣𐶤𐶥𐶦𐶧𐶨𐶩"
+    "󱗆󱗇󱗈󱗉󱗊󱗋󱗌󱗍"
    ]
   },
   {
@@ -13129,16 +13480,16 @@
    "height": 56,
    "ascent": 26,
    "chars": [
-    "𐶪𐶫𐶬𐶭𐶮𐶯𐶰𐶱"
+    "󱗎󱗏󱗐󱗑󱗒󱗓󱗔󱗕"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_cut.png",
-   "height": 18,
-   "ascent": 7,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐶲𐶳𐶴𐶵𐶶𐶷𐶸𐶹"
+    "󱗖󱗗󱗘󱗙󱗚󱗛󱗜󱗝"
    ]
   },
   {
@@ -13147,7 +13498,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐶺𐶻𐶼𐶽"
+    "󱗞󱗟󱗠󱗡"
    ]
   },
   {
@@ -13156,43 +13507,43 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐶾𐶿𐷀𐷁𐷂𐷃"
+    "󱗢󱗣󱗤󱗥󱗦󱗧"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_halo_00.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐷄𐷅𐷆𐷇𐷈𐷉𐷊𐷋"
+    "󱗨󱗩󱗪󱗫󱗬󱗭󱗮󱗯"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_halo_01.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐷌𐷍𐷎𐷏𐷐𐷑𐷒𐷓"
+    "󱗰󱗱󱗲󱗳󱗴󱗵󱗶󱗷"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_halo_10.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐷔𐷕𐷖𐷗𐷘𐷙𐷚𐷛"
+    "󱗸󱗹󱗺󱗻󱗼󱗽󱗾󱗿"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_halo_11.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐷜𐷝𐷞𐷟𐷠𐷡𐷢𐷣"
+    "󱘀󱘁󱘂󱘃󱘄󱘅󱘆󱘇"
    ]
   },
   {
@@ -13201,7 +13552,7 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐷤𐷥𐷦𐷧𐷨𐷩𐷪𐷫"
+    "󱘈󱘉󱘊󱘋󱘌󱘍󱘎󱘏"
    ]
   },
   {
@@ -13210,34 +13561,79 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "𐷬𐷭𐷮𐷯𐷰𐷱𐷲𐷳"
+    "󱘐󱘑󱘒󱘓󱘔󱘕󱘖󱘗"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_fwings.png",
-   "height": 62,
-   "ascent": 29,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐷴𐷵𐷶𐷷𐷸𐷹𐷺𐷻"
+    "󱘘󱘙󱘚󱘛󱘜󱘝󱘞󱘟"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_phoenix.png",
-   "height": 60,
-   "ascent": 28,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐷼𐷽𐷾𐷿𐸀𐸁𐸂𐸃"
+    "󱘠󱘡󱘢󱘣󱘤󱘥󱘦󱘧"
    ]
   },
   {
    "type": "bitmap",
    "file": "rpg:font/vfx/el_phoenix_fury.png",
-   "height": 56,
-   "ascent": 26,
+   "height": 64,
+   "ascent": 30,
    "chars": [
-    "𐸄𐸅𐸆𐸇𐸈𐸉𐸊𐸋"
+    "󱘨󱘩󱘪󱘫󱘬󱘭󱘮󱘯"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_phoenix_aura.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱘰󱘱󱘲󱘳󱘴󱘵󱘶󱘷"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_phoenix_aegis.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱘸󱘹󱘺󱘻󱘼󱘽"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_phoenix_shatter.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱘾󱘿󱙀󱙁󱙂󱙃󱙄󱙅"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_icon_elem.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱙆󱙇󱙈󱙉󱙊"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfx/el_icon_stun.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    "󱙋󱙌󱙍󱙎󱙏󱙐󱙑󱙒"
    ]
   }
  ]

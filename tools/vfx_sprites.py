@@ -35,6 +35,16 @@ OUT_INDEX = os.path.join(ROOT, "src/main/resources/mmorpg/vfx_sprites.json")
 
 H = 64  # 글자 높이 (글꼴 단위 — 글자 표시 엔티티에서 1 = 0.025칸 → 1.6칸, 크기는 변환으로)
 FIRST = 0xE000  # 글자 (사용자 영역)
+# 2026-11-16 기본 다국어 판의 사용자 영역 (U+E000 ~ U+F8FF) 을 다 쓰면 15판 사용자 영역 A (U+F0000 ~) 로 건너뜀 — 전에는 U+F900 ~ U+FFFF (호환 한자 · 표시 형태 ·
+# 변이 선택자 · BOM · 대체 문자 U+FFFD · 비문자) 를 지나 1판 (U+10000 ~) 까지 이어 매겼음: 대체 문자 자리에 그림이 들어가고 (el_tyrant_xslash_10) 서버의 char 고르기가
+# 서로게이트 반쪽을 보내 모든 1판 글자가 그 그림으로 보였음 (CI 43903024474)
+PUA_END = 0xF8FF
+PUA_B = 0xF0000
+
+
+def _next_code(code):
+    code += 1
+    return PUA_B if code == PUA_END + 1 else code
 COLS = 8  # 판 한 줄의 칸 수 (넘으면 다음 줄)
 
 
@@ -247,6 +257,10 @@ SPRITES += _jobvfx_phantom.sprites()
 SPRITES += _jobvfx_arsenal.sprites()
 SPRITES += _jobvfx_forge.sprites()
 SPRITES += _jobvfx_element.sprites()
+# 2026-11-16 머리 위 표시 (원소 표시 · 기절 별 — 처음부터 도트, 바꾸지 않음): tools/jobvfx/icons.py
+from jobvfx import icons as _jobvfx_icons  # noqa: E402
+
+SPRITES += _jobvfx_icons.sprites()
 
 
 # 2026-11-16 빈 가장자리 자르기 (사용자 "8gb 지원할거고 옛그림이 있으면 그냥 참고만 하게 따로 치우고 용량 확보하자"): 글꼴 그림판은 접속할 때 통째로 풀려 메모리에
@@ -371,7 +385,7 @@ def build(only=None):
                         nl += "\u0000"
                     else:
                         c = chr(code)
-                        code += 1
+                        code = _next_code(code)
                         chars.append(c)
                         nl += c
                 lines.append(nl)
@@ -412,7 +426,7 @@ def build(only=None):
                         px[cw - 1, 0] = (255, 255, 255, 1)  # 너비가 줄지 않게 (보이지 않음)
                     sheet.paste(cell, (c * cw, r * ch))
                     ch_ = chr(code)
-                    code += 1
+                    code = _next_code(code)
                     chars.append(ch_)
                     line += ch_
                 else:

@@ -67,8 +67,13 @@ public final class Vfx {
      * 을 옮길 자리 (예전 칸 높이 몫 — 오른쪽 · 위): 그림은 예전 칸의 픽셀 자리 그대로
      */
     public record Sheet(String name, String chars, int frames, double aspect, boolean colored, double cx, double cy) {
-        public char glyph(int frame) {
-            return chars.charAt(Math.floorMod(frame, frames));
+        /**
+         * 칸 frame 의 글자 (2026-11-16 코드 포인트로 — 글자 번호가 U+FFFF 를 넘은 그림판 (글꼴 그림 1만 넘게) 은 글자 하나가 두 char (서로게이트 쌍) 라 char 로 고르면
+         * 짝 없는 반쪽이 가서 대체 문자 U+FFFD 의 그림 (다른 그림판) 이 보였음 — CI 43903024474 숨긴 직업 영상의 보랏빛 X 베기)
+         */
+        public String glyph(int frame) {
+            int i = chars.offsetByCodePoints(0, Math.floorMod(frame, frames));
+            return new String(Character.toChars(chars.codePointAt(i)));
         }
     }
 
@@ -938,7 +943,7 @@ public final class Vfx {
 
         private void text() {
             if (removed) return;
-            String g = String.valueOf(sheet.glyph(frame));
+            String g = sheet.glyph(frame);
             e.setText(Component.literal(g).withStyle(Style.EMPTY.withFont(FONT).withColor(rgb)));
         }
 

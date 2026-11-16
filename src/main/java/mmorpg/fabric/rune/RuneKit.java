@@ -575,6 +575,8 @@ public final class RuneKit {
      * o: speed (칸/초) · size (rfx 의 size — 너비 2 × size) · life · grow · alpha · fade (끝에서 사라지는 몫)
      */
     public static void waveCard(ServerLevel level, Vec3 at, Vec3 dir, Vec3 face, Opt o, double[] glow, double[] core) {
+        // 2026-11-16 위르드식 다리: 눕힌 판 (face 위) 은 그 묶음의 날아가는 반달 (PhantomFx.runeFx "wavecard")
+        if (painted != null && glow != null && V.len(face) > 1e-6 && V.unit(face).y > 0.97 && painted.draw(level, "wavecard", at, o.with("dir", dir), glow)) return;
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;
         double life = Math.max(0.05, o.num("life", 0.3));
         Opt card = Opt.of("dir", d, "face", face, "roll", o.num("roll", 0), "vel", V.scale(d, o.num("speed", 0)), "scale", o.num("size", 1), "life", life,
@@ -638,6 +640,8 @@ public final class RuneKit {
             SkillFx.arc(level, at, dir, o);
             return;
         }
+        // 2026-11-16 위르드식 다리: 칠한 직업 · 룬을 쓰는 동안이면 그 묶음의 반달 (PhantomFx.runeFx "arc")
+        if (painted != null && o.get("color") instanceof double[] pc && painted.draw(level, "arc", at, o.with("dir", dir), pc)) return;
         int own = Tasks.owner();
         if (own != 0) SkillFx.arc(level, at, dir, o.with("view", 2.0, "owner", (double) own));
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;

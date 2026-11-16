@@ -23,6 +23,8 @@ final class ElementFx {
     /** 머리 위 원소 그림 (칸 = 원소의 cell · 심지 = cell + 5) */
     static final String ICON = "jelem";
     static final int ICON_CELLS = 5;
+    /** 2026-11-16 도트 원소 표시 그림판 (불 · 물 · 전기 · 얼음 · 바위 — cell 차례) */
+    static final String ICON_ART = "el_icon_elem";
     /** 적마다 하나 (owner = 그 적) — 빛 · 심지 */
     private static final double SOLO_GLOW = 7301;
     private static final double SOLO_CORE = 7302;
@@ -50,6 +52,11 @@ final class ElementFx {
         Vec3 at = RuneKit.overHead(e, 1.0);
         double size = blink && (Tasks.now() / 5) % 2 == 0 ? 0.22 : 0.3;
         Opt o = Opt.of("size", size, "life", life, "fade", 0.12, "vel", RuneKit.entVel(e), "owner", (double) e.getId());
+        // 2026-11-16 위르드식: 처음부터 도트로 그린 원소 표시 (tools/jobvfx/icons.py — 피해 숫자와 같은 도트, 예전 rfx_jelem 의 빛 · 심지 두 장 대신 한 장)
+        if (mmorpg.fabric.vfx.Vfx.hasSheet(ICON_ART) && x.cell() < mmorpg.fabric.vfx.Vfx.sheet(ICON_ART).frames()) {
+            PhantomFx.rfx(level, ICON_ART, 1, x.cell(), at, Opt.of("size", size, "life", life, "fade", 0.12, "vel", RuneKit.entVel(e), "frames", 1.0), PhantomFx.BILL, 1);
+            return;
+        }
         RuneKit.rfx(level, ICON, at, o.with("color", x.glow(), "cell", (double) x.cell(), "alpha", 0.95, "solo", SOLO_GLOW));
         RuneKit.rfx(level, ICON, at, o.with("color", x.core(), "cell", (double) (ICON_CELLS + x.cell()), "alpha", 1.0, "solo", SOLO_CORE));
     }

@@ -1528,7 +1528,8 @@ final class PhantomFx {
      */
     static boolean oldFx(ServerLevel level, String id, Vec3 at, Opt o) {
         boolean group = id.equals("sparks");
-        if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")) return false;
+        if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
+                && !id.equals("rpg:bash_ring")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1537,6 +1538,15 @@ final class PhantomFx {
             case "sparks" -> WyrdKit.sparks(level, L, at, (int) o.num("n", 4), o.num("speed", 3), who);
             case "rpg:arrow_spark" -> WyrdKit.spark(level, L, at, o.vec("dir", V.UP), o.num("speed", 1.5), who);
             case "rpg:arrow_trail" -> WyrdKit.trail(level, L, at, o.vec("dir", V.UP), o.num("size", 0.3), who);
+            case "rpg:bash_ring" -> {
+                // 2026-11-16 정한 쪽을 보는 고리 (SkillFx.ring — 자기 강화 표시 · 눈앞에서 앞으로 퍼짐): 칠한 작은 충격파 (shock_s — 면이 dir, 앞뒤 두 면 · 같은 움직임)
+                if (!Vfx.hasSheet(L.n("shock_s"))) return false;
+                int frames = Vfx.sheet(L.n("shock_s")).frames();
+                double life = Math.max(0.1, o.num("life", 0.4));
+                Opt b = Opt.of("dir", o.vec("dir", V.UP), "speed", o.num("speed", 0), "size", o.num("size", 1), "life", life, "frames", (double) frames, "fps",
+                        frames / life, "fade", 0.3, "alpha", o.num("alpha", 0.9), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                rfx(level, L.n("shock_s"), 1, 0, at, b, FACE_DIR, 1);
+            }
             case "rpg:shock_ring" -> {
                 if (!has(L, "shock")) return false;
                 shock(level, L, V.up(at, -0.12), Math.max(0.6, o.num("size", 1) * 2.0), o.num("life", 0.4) >= 0.5 ? 2 : 1, who);
@@ -1619,7 +1629,7 @@ final class PhantomFx {
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
         switch (name) {
-            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst" -> {
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave" -> {
             }
             default -> {
                 return false;
@@ -1656,15 +1666,11 @@ final class PhantomFx {
                 flash(level, L, at, Math.max(0.4, size * 2 * (1 + grow * 0.5)), who);
             }
             case "rays" -> {
-                // 예전 빛살 (세로 빌보드 · 밑동 at · 높이 2 × size, 너비 = 높이의 1/8) → 묶음의 빛줄기 (beam — 길이 : 굵기 4 : 1) 를 세움 (길이 6칸까지 — 더 길면 굵기가
-                // 1.5칸을 넘어 둘레의 빛살 여럿이 벽처럼 보임) + 온 높이를 따라 스스로 빛나는 바닐라 점 (WyrdKit.beam — 위에서 땅으로)
-                if (!Vfx.hasSheet(L.n("beam"))) return false;
+                // 예전 빛살 (세로 빌보드 · 밑동 at · 높이 2 × size, 너비 = 높이의 1/8) → 온 높이를 따라 스스로 빛나는 바닐라 점 (WyrdKit.beam — 위에서 땅으로 · 끝 반짝임).
+                // 칠한 빛줄기 (beam) 를 세운 1판은 굵기가 길이의 1/4 이라 둘레의 빛살이 넓은 판자처럼 보였음 (CI 43903024474 프리스트 궁)
+                if (WyrdKit.pal(L) == null) return false;
                 double h = size * 2 * (1 + grow * 0.5);
-                double hb = Math.min(h, 6);
-                int frames = Vfx.sheet(L.n("beam")).frames();
-                rfx(level, L.n("beam"), 1, 0, V.up(at, hb / 2), Opt.of("dir", V.UP, "size", hb / 2, "life", life, "frames", (double) frames, "fps", frames / life,
-                        "fade", o.num("fade", 0.4), "alpha", o.num("alpha", 1), "view", o.num("view", 0), "owner", o.num("owner", 0)), LOOK_DIR, 0.25);
-                if (h > 1.2) WyrdKit.beam(level, L, V.up(at, h), at, who);
+                if (h > 0.6) WyrdKit.beam(level, L, V.up(at, h), at, who);
             }
             case "nova" -> {
                 if (!flat || !Vfx.hasSheet(L.n("shock_00"))) return false;
@@ -1673,6 +1679,34 @@ final class PhantomFx {
             case "crack" -> {
                 if (!flat || !Vfx.hasSheet(L.n("crack_s"))) return false;
                 crackS(level, L, ground(level, at), size * 2, who);
+            }
+            case "arc", "wavecard" -> {
+                // 휘두른 자국 판 (RuneKit.arc — 판 모양 arc · heavy · thin, 불룩한 날 = dir) · 날아가는 검기 판 (waveCard — 눕힌 판): 그 묶음의 반달 (moon — JobFx.slash 의 3인칭
+                // 반달과 같은 틀: 가로 휘두름은 눕고 보는 눈 쪽으로 기욺) 이 dir 쪽으로 날아감. 기울기 = 판의 돌림 (arc: flip ? 180 + β − spin : −(β + spin) · waveCard: roll)
+                // 의 반대. 반지름 = 판 크기 (예전 판 모델 반너비 arc 1.06 · thin 0.56 × ARC_CARD 0.7 · 날아가는 판 1) 의 0.9. 주인의 1인칭은 카메라를 보는 칼빛 (예전 원래 파티클 자리)
+                if (!Vfx.hasSheet(L.n("slash_00")) || !Vfx.hasSheet(L.n("slashm_00"))) return false;
+                if (V.len(dir) < 1e-6 || Math.abs(V.unit(dir).y) > 0.9) return false;
+                Vec3 d = V.unit(dir);
+                boolean arc = name.equals("arc");
+                String shape = o.str("shape", "arc");
+                double beta = !arc ? 0 : shape.equals("heavy") ? 90 : shape.equals("thin") ? 45 : 0;
+                double spin = arc ? o.num("spin", 0) : -o.num("roll", 0);
+                boolean flip = arc && o.truthy("flip");
+                double tilt = flip ? 180 + spin - beta : spin + beta;
+                double R = size * (!arc ? 0.85 : shape.equals("thin") ? 0.36 : 0.68);
+                double speed = arc ? o.num("speed", 0) / 5.0 * (1 - Math.exp(-5 * life)) / life : o.num("speed", 0);
+                int own = mmorpg.fabric.Tasks.owner();
+                ServerPlayer owner = own != 0 && level.getEntity(own) instanceof ServerPlayer sp ? sp : null;
+                Moon m = moon(at, d, tilt, R, viewEye(owner, level, at), MOON_LIFT, 0).centered(at);
+                m = m.above(ground(level, at).y);
+                double alpha = Math.min(1, o.num("alpha", 1));
+                moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
+                if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+            }
+            case "wave" -> {
+                // 카메라를 보는 초승달 (예전 rfx_wave — spin 0 = 위로 불룩): 칠한 초승달 (PhantomFx.wave — 같은 뜻의 기울기)
+                if (!Vfx.hasSheet(L.n("slashm_00"))) return false;
+                wave(level, L, at, dir, o.num("speed", 0), size, o.num("spin", 0), life, who, Math.min(1, o.num("alpha", 1)));
             }
             default -> { // sigil
                 if (!flat || !Vfx.hasSheet(L.n("ring_00"))) return false;
@@ -1797,6 +1831,13 @@ final class PhantomFx {
         int count = Math.max(1, Math.min((int) b.num("frames", 1), n - f0));
         Opt bb = b.with("frames", (double) count);
         if (p.scale() != 1) bb = bb.with("size", b.num("size", 0) * p.scale());
+        // 2026-11-16 땅에 눕힌 큰 그림 (지름 6칸 넘게 — 연꽃 들판 · 웅덩이 · 문장): 예전 그림은 부드러운 빛 무리라 바닥이 비쳤는데 칠한 도트는 꽉 찬 칸이라 땅을 덮었음
+        // (CI 43903024474 세인트 궁 — 들판 전체가 노란 꽃 판) → 반투명 위험 구역처럼 절반 불투명
+        if (p.facing() == FACE_DIR) {
+            Vec3 dd = b.vec("dir", V.UP);
+            double hh = 2 * bb.num("size", 0) * p.sy();
+            if (V.len(dd) > 1e-6 && V.unit(dd).y > 0.9 && hh > 6) bb = bb.with("alpha", b.num("alpha", 1) * 0.5);
+        }
         rfx(level, sheet, p.k(), f0, at, bb, p.facing(), p.sy());
         return true;
     }

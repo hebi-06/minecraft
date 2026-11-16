@@ -409,14 +409,16 @@ final class SaintSkills {
         }
         // 땅의 연꽃 (열림 → 활짝 이어 돌림) · 둘레를 도는 꽃잎 · 하늘의 꽃봉오리 (앞 2.5칸 위 3.4칸 — 영상 카메라 안)
         JobFx14.lotus(level0, V.up(ground, 0.06), r, 0, 3, 0.45, false, Opt.of("alpha", 0.95), GOLD, GOLD_CORE);
-        JobFx14.lotus(level0, V.up(ground, 0.09), r * 0.6, 0, 3, 0.45, false, Opt.of("alpha", 0.85), LEAF, LEAF_CORE);
+        // 2026-11-16 칠한 연꽃 (성광 묶음 — 금빛 · 잎빛이 한 그림) 이면 안쪽 잎빛 연꽃은 뺌 (같은 그림이 겹쳐 가운데만 짙었음)
+        boolean oneLotus = PhantomFx.paints("jlotus", LEAF);
+        if (!oneLotus) JobFx14.lotus(level0, V.up(ground, 0.09), r * 0.6, 0, 3, 0.45, false, Opt.of("alpha", 0.85), LEAF, LEAF_CORE);
         RuneKit.later(9, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             // 꽃이 피는 틱보다 5틱 더 (끝 6% 만 흐려짐 — 영상 1: 20% 가 흐려져 꽃이 피기 전에 꽃밭이 사라졌음 · 꽃이 필 때 연꽃 5 ~ 7 이 이어받음)
             double rest = (bloomAt - 9 + 5) / 20.0;
             JobFx14.lotus(lv, V.up(ground, 0.06), r, 3, 3, rest, true, Opt.of("alpha", 0.9, "fade", 0.06), GOLD, GOLD_CORE);
-            JobFx14.lotus(lv, V.up(ground, 0.09), r * 0.6, 3, 3, rest, true, Opt.of("alpha", 0.8, "fade", 0.06), LEAF, LEAF_CORE);
+            if (!oneLotus) JobFx14.lotus(lv, V.up(ground, 0.09), r * 0.6, 3, 3, rest, true, Opt.of("alpha", 0.8, "fade", 0.06), LEAF, LEAF_CORE);
         });
         Vec3 budAt = V.up(V.add(ground, f, 2.5), 3.4);
         Vec3 look = sp.getViewVector(1F);

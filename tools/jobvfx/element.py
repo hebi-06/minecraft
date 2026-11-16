@@ -1654,7 +1654,7 @@ def sets_for(S):
         # 2026-11-16 사제 · 세인트 (성광 — 남은 직업 위르드식): 베기는 쓰지 않음 — 맞은 자리 별빛 · 터짐 · 땅 충격파 · 섬광 · 작은 그림 · 일섬 + (성광) 한 바퀴 고리 ·
         # 빛 고리 (jhalo) · 빛의 방패 (jaegis2) · 띠 (jaura2) · 광선 (jbeam2) · 1인칭 빠른 줄 + 대표 그림 (tools/jobvfx/holy.py — 회복 십자 · 음표 · 성흔 · 종 · 연꽃 ·
         # 큰 꽃 · 나비). 꽃잎 묶음은 세인트가 PETAL 빛으로 부르는 것만 (섬광 · 불씨 · 일섬 · 꽃 · 연꽃 · 나비 · 표식 꽃 · 꽃잎)
-        from . import arcane, holy, shadow
+        from . import arcane, holy, lance, shadow
         if S.kind == "petal":
             return ([(p + "flash", fr("flash"), True), (p + "ember", lambda: ember(S), True), (p + "cut", fr("cut"), True),
                      (p + "blossom", lambda: shadow.frames_of("blossom", S), True), (p + "petal", lambda: shadow.frames_of("petal", S), True)]
@@ -1666,8 +1666,10 @@ def sets_for(S):
                 + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
                 + [(p + "aegis", lambda: [to_img(*arcane.aegis_frame(S, f)) for f in range(arcane.AEGIS_FRAMES)], True),
                    (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
-                   (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True)]
-                + holy.sprites(S))
+                   (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True),
+                   # 2026-11-16 CI 43903024474 에 남은 예전 그림: 돌진 줄기 (jdash2 — 홀리 스텝) · 깃털 (jfeather — 스티그마)
+                   (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)]
+                + holy.sprites(S) + lance.sprites(S, ("feather",)))
     out = (tiled(p + "slash", fr("slash")) + tiled(p + "slashm", mirrored("slash")) + tiled(p + "xslash", fr("xslash")) + tiled(p + "boom", fr("boom"))
            + tiled(p + "shock", fr("shock")) + tiled(p + "ring", fr("ring"))
            + [(p + "boom_s", fr("boom_s"), True), (p + "shock_s", fr("shock_s"), True), (p + "crack_s", fr("crack"), True), (p + "flash", fr("flash"), True),
@@ -1694,6 +1696,10 @@ def sets_for(S):
                 + [(p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True)]
                 + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)])
                 + lance.sprites(S, ("feather",)) + maw.sprites(S, ("cinder",)) + phoenix.sprites(S))
+        # 2026-11-16 CI 43903024474 에 남은 예전 그림: 태세의 띠 (jaura2 — 이그니션) · 빛의 방패 (jaegis2) · 깨지는 방패 (jshatter2)
+        out += [(p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                (p + "aegis", lambda: [to_img(*arcane.aegis_frame(S, f)) for f in range(arcane.AEGIS_FRAMES)], True),
+                (p + "shatter", lambda: [to_img(*arcane.shatter_frame(S, f)) for f in range(arcane.SHATTER_FRAMES)], True)]
     if S.kind == "lance":
         # 2026-11-16 창술사 · 스톰 랜서 · 드라군 (창술사 라인 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 빠른 줄 · 돌진 줄기 · 띠 + 찌르기 번쩍 (shadow.py) ·
         # 빛의 창 (storm.py) · 회오리 · 도는 날 · 불꽃 꼬리 (beast.py) · 서 있는 불꽃 (forge.py) + 깃털 · 바람 고리 · 도는 창 · 바람 소용돌이 · 불꽃 덩이 · 용의 혼 (lance.py)
@@ -1704,6 +1710,9 @@ def sets_for(S):
                    (p + "stab", lambda: shadow.frames_of("stab", S), True)]
                 + storm.sprites(S, ("spear",)) + [(p + k, (lambda k=k: beast.frames_of(k, S)), True) for k in ("twister", "whirl", "comet")]
                 + lance.sprites(S))
+        # 2026-11-16 CI 43903024474 에 남은 예전 그림: 분신 (rfx_shade — 창술사 궁의 잔상)
+        from . import clone
+        out += [(p + "shade", lambda: clone.frames(S), True)]
         if S.lib == "el_dragon":
             out += [(p + "flame", lambda: [to_img(*forge.flame_frame(f)) for f in range(forge.FLAME_FRAMES)], True)]
     if S.kind == "reap":
@@ -1715,6 +1724,13 @@ def sets_for(S):
                 + [(p + "whirl", lambda: beast.frames_of("whirl", S), True), (p + "smoke", lambda: shadow.frames_of("smoke", S), True)]
                 + [(p + k, (lambda k=k: soul.frames_of(k, S)), True) for k in ("soul", "skull", "hand")]
                 + reap.sprites(S) + ward.sprites(S, ("chain",)) + [(p + "spot", lambda: circus.frames_of("spot", S), True)])
+        # 2026-11-16 CI 43903024474 에 남은 예전 그림: 태세의 띠 (jaura2 — 사신 현신 · 소울 사이드 · 조종) · 돌진 줄기 (jdash2 — 레이스 · 트레스패스) · 광선 (jbeam2 —
+        # 소울 하베스트 988장) · 분신 (rfx_shade — 레이스 · 크레센트)
+        from . import clone
+        out += [(p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
+                (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True),
+                (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True),
+                (p + "shade", lambda: clone.frames(S), True)]
     if S.kind in ("thunder", "tyrant"):
         # 2026-11-16 성기사 · 썬더로드 · 타이런트 (뇌광 · 폭군 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 빠른 줄 · 돌진 줄기 · 빛의 방패 · 띠 · 연기 +
         # 벼락 · 번개 고리 · 빛의 창 (storm.py) + 번개 줄 · 먹구름 · 돌 껍데기 · 번개 문장 · 바퀴 자국 · 번개 망치 · 거인의 손 · 번개 기둥 (thunder.py)
@@ -1725,6 +1741,10 @@ def sets_for(S):
                    (p + "dash", lambda: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True),
                    (p + "smoke", lambda: shadow.frames_of("smoke", S), True)]
                 + storm.sprites(S) + thunder.sprites(S) + ward.sprites(S, ("chain",)))  # 썬더로드 번개 사슬 (JobFx.chain)
+        # 2026-11-16 CI 43903024474 에 남은 예전 그림: 혼 (jsoul2 — 타이런트 강탈 · 궁 108장) · 분신 (rfx_shade — 섀클) · 빛 고리 (jhalo)
+        from . import clone, soul
+        out += ([(p + "soul", lambda: soul.frames_of("soul", S), True), (p + "shade", lambda: clone.frames(S), True)]
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)]))
     if S.kind == "maw":
         # 2026-11-16 다크 나이트 (아가리 — 남은 직업 위르드식): 공용 그림 + 한 바퀴 고리 · 일섬 · 연기 (shadow.py 를 아가리 빛으로) · 빠른 줄 · 땅 가르기 +
         # 대표 그림 (tools/jobvfx/maw.py — 방패의 아가리 · 검은 혀 · 땅의 아가리 · 불씨 기둥)
@@ -1732,6 +1752,10 @@ def sets_for(S):
         out += (tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True), (p + "speed", fr("speed"), True),
                                                                                          (p + "rift", fr("rift"), True)]
                 + [(p + "smoke", lambda: shadow.frames_of("smoke", S), True)] + maw.sprites(S))
+        # 2026-11-16 CI 43903024474 에 남은 예전 그림: 태세의 띠 (jaura2 — 언홀리 프렌지) · 빛 고리 (jhalo — 궁)
+        from . import arcane
+        out += ([(p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True)]
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)]))
     if S.kind == "hex":
         # 2026-11-16 워록 (혈주 — 남은 직업 위르드식): 공용 그림 (피처럼 튀는 터짐 · 섬광 · 핏물 기둥) + 한 바퀴 고리 · 일섬 · 연기 (shadow.py 를 혈주 빛으로) ·
         # 띠 · 광선 + 대표 그림 (tools/jobvfx/hex.py — 핏빛 창 · 웅덩이 · 핏물 기둥 · 심장 · 핏빛 불기둥)
@@ -1741,6 +1765,10 @@ def sets_for(S):
                    (p + "aura", lambda: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True),
                    (p + "beam", lambda: [to_img(*arcane.beam_frame(S, f)) for f in range(arcane.BEAM_FRAMES)], True)]
                 + hexart.sprites(S))
+        # 2026-11-16 CI 43903024474 에 남은 예전 그림: 빨아들이는 혼 (jsoul2 — 블러드 랜스 · 노바 · 궁 300장 넘게) · 빛 고리 (jhalo)
+        from . import soul
+        out += ([(p + "soul", lambda: soul.frames_of("soul", S), True)]
+                + tiled(p + "halo", lambda: [to_img(*arcane.halo_frame(S, f)) for f in range(arcane.HALO_FRAMES)]))
     if S.kind == "blood":
         # 2026-11-15 한 바퀴 베기 (spin · spinm — JobFx.ring): 예전 칼날 고리처럼 도는 핏빛 초승달 (크림슨 다이브 · 블러드 클레이브)
         out += tiled(p + "moon", fr("moon")) + [(p + "rift", fr("rift"), True)] + tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin"))

@@ -1039,6 +1039,13 @@ final class JobFx {
     static void stunStars(LivingEntity e, Jobs.Job j, int ticks) {
         if (!(e.level() instanceof ServerLevel level) || ticks <= 0) return;
         double size = 0.45 + Kit.bodyPad(e) * 0.4;
+        // 2026-11-16 위르드식: 처음부터 도트로 그린 기절 별 (tools/jobvfx/icons.py — 같은 틀 · 8칸 되풀이 · 가로 2 : 세로 1)
+        if (mmorpg.fabric.vfx.Vfx.hasSheet("el_icon_stun")) {
+            int n = mmorpg.fabric.vfx.Vfx.sheet("el_icon_stun").frames();
+            PhantomFx.rfx(level, "el_icon_stun", 1, 0, RuneKit.overHead(e, 0.32), Opt.of("size", size, "life", ticks / 20.0, "vel", RuneKit.entVel(e), "fade", 0.12,
+                    "frames", (double) n, "fps", 14.0, "loop", 1.0, "phase", Kit.rand() * n), PhantomFx.BILL, 0.5);
+            return;
+        }
         loop(level, "jstun2", STUN, RuneKit.overHead(e, 0.32), ticks / 20.0, 14, Opt.of("size", size, "vel", RuneKit.entVel(e), "fade", 0.12, "alpha", 0.95),
                 new double[] {1, 0.86, 0.3}, new double[] {1, 1, 0.82});
     }
