@@ -53,6 +53,11 @@ public final class UiIcons {
         return s;
     }
 
+    /** 이 칸이 그린 아이콘 name 인지 (종이 + item_model rpg:icon/name — 시험 · 칸 구분용) */
+    public static boolean is(ItemStack s, String name) {
+        return s != null && s.is(Items.PAPER) && Mmorpg.rpg("icon/" + name).equals(s.get(DataComponents.ITEM_MODEL));
+    }
+
     /** 빈 칸 (그림 없음 — 맨 종이 그림 대신) */
     public static ItemStack blank() {
         return of("blank");

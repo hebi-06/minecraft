@@ -287,6 +287,7 @@ final class PhantomFx {
 
     /** 착탄 (예전 impact2d — BlockFx 상자 터짐 · 상자 조각 대신): 섬광 · 불씨 · 칼 조각 몇 · 크기 size 칸 */
     static void impact(ServerLevel level, Lib L, Vec3 at, double size) {
+        WyrdKit.burst(level, L, at, size * 1.3, null); // 2026-11-16 위르드식 바닐라 파티클 겹
         flash(level, L, at, size * 2.2);
         embers(level, L, at, 5 + (int) (size * 6), size * 1.6, 0.32 + size * 0.12, 14);
         if (size >= 0.9) shards(level, L, at, 2 + (int) (size * 2), size * 1.4, 0.32, 14);
@@ -299,7 +300,9 @@ final class PhantomFx {
         Vec3 g = ground(level, c);
         Vfx.Fx fx = Vfx.at(level, c, 20);
         single(fx, L.n("boom_s"), V.up(c, size * 0.15), size, Kit.rand() * 30 - 15, 1, false);
+        WyrdKit.burst(level, L, V.up(c, size * 0.15), size, null); // 2026-11-16 위르드식 바닐라 파티클 겹
         if (c.y - g.y < 2.5) {
+            WyrdKit.shock(level, L, g, size * 1.6, null);
             Vfx.Fx gx = Vfx.at(level, g, 18);
             Vfx.Sprite sh = single(gx, L.n("shock_s"), V.up(g, 0.02), size * 1.6, 0, 1, false);
             sh.fixed(flat(Kit.rand() * 360));
@@ -322,6 +325,8 @@ final class PhantomFx {
         tiled(level, L.n("boom"), 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
         // 2026-11-15 영상 (팬텀 버스트 3인칭 · 1인칭): 지름 3.2 × rad 는 고리 앞 날이 카메라 밑까지 와서 화면 아래를 흰 띠로 가로질렀음 → 2.5 × rad
         tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 2.5, flat(Kit.rand() * 360), 0, 0, 1);
+        WyrdKit.burst(level, L, V.up(c, 0.9), rad * 1.9, null); // 2026-11-16 위르드식 바닐라 파티클 겹
+        WyrdKit.shock(level, L, gc, rad * 2.5, null);
         if (has(L, "crack_00")) tiled(level, L.n("crack"), 2, gc, rad * 1.7, flat(Kit.rand() * 360), 0, 2, 7);
         else crackS(level, L, gc, rad * 1.7); // 원소 공용 묶음은 한 장 땅 자국만
         embers(level, L, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
@@ -331,6 +336,7 @@ final class PhantomFx {
     /** 땅 충격파만 (2 × 2 — 속이 빈 고리가 퍼짐): 땅 g · 지름 size 칸 · every 틱마다 한 칸 */
     static void shock(ServerLevel level, Lib L, Vec3 g, double size, int every) {
         tiled(level, L.n("shock"), 2, V.up(g, 0.02), size, flat(Kit.rand() * 360), 0, 0, Math.max(1, every));
+        WyrdKit.shock(level, L, g, size, null); // 2026-11-16 위르드식 바닐라 파티클 겹
     }
 
     /** 그을린 땅 (2 × 2 — 달아오른 금이 식음): 땅 g · 지름 size 칸 · from 틱부터 every 틱마다 */
@@ -406,6 +412,7 @@ final class PhantomFx {
             sp.fade(1 + G + Hh, 4);
         }
         fx.on(1 + G / 2, () -> flash(level, L, V.add(c, f, 0.05), r * 1.5));
+        WyrdKit.gate(level, L, c, f, r, G + Hh); // 2026-11-16 위르드식 바닐라 파티클 겹
         return fx;
     }
 
@@ -707,10 +714,12 @@ final class PhantomFx {
         xslash(level, L, b, size * 1.7, Kit.rand() * 360);
         flash(level, L, b, size * 1.9);
         embers(level, L, b, 3 + (int) Math.round(power * 2), size * 1.1, 0.3, 12);
+        WyrdKit.hit(level, L, e, power); // 2026-11-16 위르드식 바닐라 파티클 겹
     }
 
     /** 터짐 (JobFx.burst): 작으면 섬광 · 보통이면 작은 폭발 (boom_s) · 크면 큰 폭발 (2 × 2) — 크기 size (예전 빛 반 크기) */
     static void burst(ServerLevel level, Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
+        WyrdKit.burst(level, L, at, size * 1.7, who); // 2026-11-16 위르드식 바닐라 파티클 겹 (지름 — 섬광 · 작은 · 큰 폭발에 맞춤)
         if (size < 0.7) {
             flash(level, L, at, size * 2.6, who);
             return;
@@ -751,12 +760,14 @@ final class PhantomFx {
         double ds = Math.min(4.5, radius * 1.2);
         single(dx, L.n("dust"), V.up(g, ds * 0.25), ds, 0, 1, false);
         if (who == null) embers(level, L, V.up(g, 0.3), 6 + (int) (radius * 2), radius * 0.8, 0.4, 18);
+        WyrdKit.smash(level, L, g, radius, who); // 2026-11-16 위르드식 바닐라 파티클 겹
     }
 
     /** 칼끝 반짝임 (JobFx.glint): 짧으면 섬광 · 길면 반짝임이 깜박이며 머묾 (vel 칸/초로 같이 움직임) */
     static void glint(ServerLevel level, Lib L, Vec3 at, double size, double life, Vec3 vel, Predicate<ServerPlayer> who) {
         int ticks = Math.max(2, (int) Math.round(life * 20));
         flash(level, L, at, size * 2.0, who);
+        WyrdKit.glint(level, L, at, size, who); // 2026-11-16 위르드식 바닐라 파티클 겹
         if (ticks <= 7) return;
         Vfx.Fx fx = Vfx.at(level, at, ticks + 6, farEye(who, at, nearR(L, size * 1.5)));
         Vfx.Sprite s = single(fx, L.n(L.ember()), at, size * 1.5, Kit.rand() * 40 - 20, 1, true);

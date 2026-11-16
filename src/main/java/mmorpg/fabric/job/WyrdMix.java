@@ -4,13 +4,11 @@ import mmorpg.fabric.rune.RuneProps;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.V;
 import mmorpg.fabric.vfx.Vfx;
-import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -19,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  *   <li>도트 2D: 칠한 연출 그대로 (소용돌이 · 고리 · 별빛 · 섬광 — 그림판은 tools/jobvfx/pixel.py 의 도트)</li>
  *   <li>바닐라 파티클: 크게 키운 색 먼지 덩이 (파랑 · 남보라 — 위르드의 파란 + 덩이) · 회색 연기 뭉치 (poof · cloud) · 흰 반짝임 (end_rod · firework) ·
- *       빨려 드는 보랏빛 (portal · enchant) · 맞음 (crit · enchanted_hit) · 무너짐 (sonic_boom · explosion · 자수정 부스러기)</li>
+ *       빨려 드는 보랏빛 (portal · enchant) · 맞음 (crit · enchanted_hit) · 무너짐 (sonic_boom · explosion · 마법 맞음 반짝임)</li>
  *   <li>떠도는 별 · 결정 조각: 도트 2D 그림 (금빛 별 다섯 · 구르는 결정 조각 여섯 — 돌며 안쪽으로 감김, 무너질 때 별은 사라지고 조각은 밖으로 튕김).
  *       2026-11-16 직접 만든 3D 소품 (wy_star · wy_shard · wy_cube) 은 뺌 — 사용자 "저거 3d 별도 빼라 어줍잔게 넣으니깐 진짜 없어보인다 차라리 그림으로 넣어"</li>
  * </ul>
@@ -185,18 +183,14 @@ final class WyrdMix {
         }
     }
 
-    /** 맞은 적: 치명 · 마법 맞음 반짝임 · 흰 반짝임 · 하늘빛 먼지 덩이 */
-    static void hit(ServerLevel l, LivingEntity e) {
-        Vec3 b = Kit.bodyPoint(e);
-        p(l, ParticleTypes.CRIT, b, 8, 0.25, 0.3, 0.25, 0.35);
-        p(l, ParticleTypes.ENCHANTED_HIT, b, 8, 0.25, 0.3, 0.25, 0.3);
-        p(l, ParticleTypes.END_ROD, b, 3, 0.2, 0.2, 0.2, 0.06);
-        p(l, dust(LIGHT, 2.2), b, 2, 0.3, 0.3, 0.3, 0);
-    }
+    // 맞은 적의 바닐라 겹은 2026-11-16 WyrdKit.hit (JobFx.hit 이 모든 칠한 직업에 겹침 — 비전 묶음 색) 으로 옮김
 
     // ------------------------------------------------------------ 무너짐 · 처형
 
-    /** 무너짐: 소닉 붐 고리 · 폭발 연기 · 불꽃놀이 반짝임 · 땅을 따라 퍼지는 연기 뭉치 · 큰 먼지 덩이 · 자수정 부스러기 */
+    /**
+     * 무너짐: 소닉 붐 고리 · 폭발 연기 · 불꽃놀이 반짝임 · 땅을 따라 퍼지는 연기 뭉치 · 큰 먼지 덩이 · 마법 맞음 반짝임 (2026-11-16 자수정 블록 부스러기는 뺌 — 블록 그림
+     * 파티클 = 바닐라 그림, 사용자 "바닐라 아이템은 다 빼버려")
+     */
     static void collapse(ServerLevel l, Vec3 c, double R) {
         Vec3 m = V.up(c, 1.0);
         p(l, ParticleTypes.SONIC_BOOM, m, 1, 0, 0, 0, 0);
@@ -211,7 +205,7 @@ final class WyrdMix {
             double a = Kit.rand() * Math.PI * 2;
             p(l, dust(i % 3 == 0 ? PALE : pick(i), 2.5 + Kit.rand()), ring(c, R * (0.3 + 0.5 * Kit.rand()), a, 0.3 + Kit.rand() * 1.2), 1, 0, 0, 0, 0);
         }
-        p(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.AMETHYST_BLOCK.defaultBlockState()), m, 40, 0.6, 0.4, 0.6, 0.3);
+        p(l, ParticleTypes.ENCHANTED_HIT, m, 40, 0.6, 0.4, 0.6, 0.9);
     }
 
     /** 처형 (빨려 들어감): 적 → 가운데 보랏빛 줄기 (portal) · 적 둘레 솟는 reverse_portal */

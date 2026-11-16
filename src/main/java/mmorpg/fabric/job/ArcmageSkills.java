@@ -405,7 +405,6 @@ final class ArcmageSkills {
                         if (!RuneKit.fxQuota("jobVortex", 6)) return;
                         if (wyrd) WyrdFx.vortexHit(d, V.up(c, 2.6), e);
                         else JobFx.hit(e, j, 0.9);
-                        if (mix) WyrdMix.hit(d, e);
                     });
                 }
             });

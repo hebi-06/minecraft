@@ -195,6 +195,7 @@ final class JobFx {
     static void slash(ServerPlayer sp, Jobs.Job j, double ahead, double down, double size, double tilt, double life) {
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
+        WyrdKit.slash(sp, PhantomFx.lib(j), at, look, tilt, size); // 2026-11-16 위르드식 바닐라 파티클 겹
         PhantomFx.Lib L = PhantomFx.elem(j);
         if (L != null) {
             // 2026-11-15 원소 공용 묶음 (사용자 "원소 공용 + 직업 대표"): 1인칭 (주인) = 카메라를 보는 눈앞 칼빛 초승달, 3인칭 · 다른 사람 = 같은 자리에 앞을 보고 선 판
@@ -344,6 +345,7 @@ final class JobFx {
         }
         if (PhantomArcher.family(j)) { // 2026-11-15 팬텀 아처 · 2차 둘: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark — 직업 색)
             PhantomArcher.hitMark(level, e, size, PhantomArcher.accent(j)); // 2026-11-15 아스널 킹은 금빛 (루비 빨강이 금빛 묶음과 어긋났음)
+            WyrdKit.hit(level, PhantomFx.lib(j), e, scale); // 2026-11-16 위르드식 바닐라 파티클 겹
             mmorpg.fabric.skill.SkillFx.sparks(level, Kit.bodyPoint(e), inner(j), 5, 3.5 + scale);
             return;
         }
@@ -377,6 +379,8 @@ final class JobFx {
      */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
         PhantomFx.Lib L = PhantomFx.elem(j);
+        // 2026-11-16 위르드식 바닐라 파티클 겹 (칠한 직업 모두 — 원소 공용 · 칠한 매지션 라인 · 팬텀 아처 줄기)
+        WyrdKit.ring(level, PhantomFx.lib(j), center, radius, reverse, (int) Math.round(life * 20), PhantomFx.who(o));
         // 2026-11-16 칠한 직업 (매지션 라인) 은 아래 예전 길 — jring2 를 같은 수명 (도는 장면이 수명에 맞춤) · 같은 잔상 고리로 칠한 고리 (PhantomFx.painted). 원소 공용
         // 길 (spin 8틱 · 오래 머무는 고리는 가는 땅 고리) 은 예전 고리보다 일찍 사라지거나 가늘었음 (CI 43777285755 프로스트 블링크 · 포비든 그리모어)
         if (L != null && PhantomFx.painter(outer(j)) == null) { // 2026-11-15 원소 공용 묶음: 한 바퀴 베기 (강철 spin — 짧은 것) · 오래 머무는 범위 고리는 땅 고리
@@ -1458,6 +1462,7 @@ final class JobFx {
                 Vec3 p = relPoint(sp, rel);
                 double q = Math.min(1, (tt + 2.0) / ticks);
                 s.to(p, size * (0.6 + 1.1 * q), 2);
+                WyrdKit.chargeTick(lv, L, p, q, size, who3); // 2026-11-16 위르드식 바닐라 파티클 겹
                 for (int i = 0; i < 3; i++) {
                     Vec3 r = V.unit(new Vec3(Kit.rand() - 0.5, (Kit.rand() - 0.4) * 0.8, Kit.rand() - 0.5));
                     Vec3 from = V.add(p, r, 1.3 + Kit.rand() * 0.5);
@@ -1474,6 +1479,7 @@ final class JobFx {
             if (!RuneKit.sameLife(sp, life)) return;
             PhantomFx.flash(sp.level(), L, relPoint(sp, rel), size * 2.6, who3);
             if (nearEye) PhantomFx.flash(sp.level(), L, eyeCharge(sp, rel), size * 1.3, PhantomFx.only1p(sp));
+            WyrdKit.chargeEnd(sp.level(), L, relPoint(sp, rel), size, who3);
         });
     }
 

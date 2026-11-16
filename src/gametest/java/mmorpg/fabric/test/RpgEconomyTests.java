@@ -321,10 +321,11 @@ public final class RpgEconomyTests {
             List<FormNet.SlotData> slots = chest(b).slots();
             for (int i = 0; i < MarketWindow.PER_PAGE; i++) if (slots.get(i).name().contains("×2") && slots.get(i).num() == 1250) slot = i;
             h.assertTrue(slot >= 0, "listing shown with price " + slots.subList(0, MarketWindow.PER_PAGE));
-            // 골드가 모자라면: 사기 칸 셋이 누를 수 없는 장식 (방벽) · 본문에 까닭
+            // 골드가 모자라면: 사기 칸 셋이 누를 수 없는 장식 (직접 그린 금지 그림 — 2026-11-16 바닐라 방벽 대신) · 본문에 까닭
             Forms.answer(b, slot, null);
             h.assertTrue(chest(b) != null && chest(b).title().contains("사기 확인") && chest(b).slots().get(MarketWindow.OK).kind() == mmorpg.fabric.ui.Slot.DECO
-                    && chest(b).slots().get(MarketWindow.OK).icon().item().is(Items.BARRIER) && chest(b).body().contains("모자랍니다"), "not enough gold: buy cells disabled " + body(b));
+                    && mmorpg.fabric.ui.UiIcons.is(chest(b).slots().get(MarketWindow.OK).icon().item(), "deny") && chest(b).body().contains("모자랍니다"),
+                    "not enough gold: buy cells disabled (drawn deny icon) " + body(b));
             Forms.answer(b, MarketWindow.NO, null);
             h.assertTrue(chest(b) != null && chest(b).title().contains("유저 장터") && count(b, Items.GOLDEN_APPLE) == 0, "cancel → back to the market, nothing bought");
             Forms.answer(b, -1, null);
