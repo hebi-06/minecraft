@@ -28,6 +28,9 @@ import net.minecraft.world.phys.Vec3;
  * 4판 (CI 43833722984): 땅 연기 (poof) 도 흰 솜 덩이 · 해질녘 보랏빛 덩이로 보여 모두 뺌 (puff 자리는 남김 — 지금 모두 null), 베기 호 · 한 바퀴 베기의 먼지는 작게
  * (크면 1 ~ 2초 머물러 칠한 베기가 사라진 뒤 부스러기 초승달) + 짧은 번쩍 불똥, 맞음은 번쩍 불똥 위주 (1인칭 돌진에서 불꽃놀이 불티가 화면을 덮음).
  * <p>
+ * 5판 (CI 43836338087): 해질녘 영상에서 먼지 고리 · 점이 둘레 빛을 받아 검붉은 얼룩 네모 → 모양 (고리 · 호 · 테 · 모으는 고리) 의 점을 묶음의 스스로 빛나는 점 (dot — 밀랍 금빛 ·
+ * 흰 빛 · 차원문 보랏빛 · 발광 초록) 으로. 피 묶음만 먼지 (붉게 빛나는 바닐라 파티클이 없음 — 밤에는 검붉음).
+ * <p>
  * 블록 · 아이템 그림 부스러기 파티클 (block · item) 은 쓰지 않음 (바닐라 그림 금지). 화면 흔들림 없음. 한 틱에 겹이 많으면 (여러 마리 맞음) fxQuota 로 거름.
  */
 final class WyrdKit {
@@ -50,9 +53,9 @@ final class WyrdKit {
 
     /**
      * 묶음 하나의 겹: 먼지 두 빛 (가운데 · 밝은 — 짙은 빛은 크게 쓰면 탁해서 뺌) · spark (맞음 불티 — 밖으로 튐) · glint (반짝임) · puff (연기 뭉치 — 밝은 묶음만, 없으면
-     * null) · mote (묶음 고유 알갱이) · pull (모을 때 빨려 듦)
+     * null) · mote (묶음 고유 알갱이) · pull (모을 때 빨려 듦) · dot (모양 — 고리 · 호 · 테 — 의 한 점: 5판 스스로 빛나는 점, null 이면 먼지 두 빛)
      */
-    record Pal(int main, int light, Part spark, Part glint, Part puff, Part mote, Part pull) {}
+    record Pal(int main, int light, Part spark, Part glint, Part puff, Part mote, Part pull, Part dot) {}
 
     // 파티클 (reach — 마찰 · 수명으로 어림: crit 0.7 마찰 · 0.4 배, 불꽃 0.96 · 짧은 수명, end_rod · 불꽃놀이 0.91, 토템 0.6, 보랏빛 솟음 마찰 없이 수명 60틱).
     // 3판: 밤 · 해질녘에도 빛나는 것 (end_rod · 불꽃놀이 · 토템 · 불꽃 · 밀랍 · 차원문 — 스스로 빛남) 위주. crit · poof · 먼지는 둘레 빛을 받아 해질녘 영상 (팬텀 아처) 에서
@@ -67,26 +70,30 @@ final class WyrdKit {
     static final Part SMALL_FLAME = new Part(ParticleTypes.SMALL_FLAME, 10);
     static final Part SOUL = new Part(ParticleTypes.SOUL, 10);
     static final Part WAX = new Part(ParticleTypes.WAX_ON, 0);
+    /** 흰 빛 점 (밀랍 벗김 — 10 ~ 40틱 · 스스로 빛남 · 제자리) */
+    static final Part WHITE_DOT = new Part(ParticleTypes.WAX_OFF, 0);
+    /** 물빛 초록 빛 점 (발광 오징어) */
+    static final Part GLOW = new Part(ParticleTypes.GLOW, 0);
     static final Part UNDER = new Part(ParticleTypes.REVERSE_PORTAL, 30);
     static final Part PORTAL = new Part(ParticleTypes.PORTAL, 1, true);
     static final Part ENCHANT = new Part(ParticleTypes.ENCHANT, 1, true);
 
     /** 검사 — 강철 · 푸른 달빛 (흰 불꽃놀이 불티 · 흰 빛) */
-    static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, null, null, END_ROD);
+    static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, null, null, END_ROD, WHITE_DOT);
     /** 블러드 나이트 — 피 (crit · 연기 · 반짝임 없음 — 핏빛 소용돌이는 하늘로 솟아 나선 무늬로 흩어졌음) */
-    static final Pal BLOOD = new Pal(0xC8182F, 0xFF6A68, CRIT, null, null, null, CRIT);
+    static final Pal BLOOD = new Pal(0xC8182F, 0xFF6A68, CRIT, null, null, null, CRIT, null);
     /** 아스널 킹 · 소드 마스터 — 금빛 (흰 불꽃놀이 불티 · 밀랍 금빛 반짝임 · 흰 빛 알갱이) */
-    static final Pal GOLD = new Pal(0xF0B028, 0xFFE28A, SPARKLE, WAX, null, END_ROD, END_ROD);
+    static final Pal GOLD = new Pal(0xF0B028, 0xFFE28A, SPARKLE, WAX, null, END_ROD, END_ROD, WAX);
     /** 블레이드 레인저 — 단조 불 (불꽃 · 밀랍 불빛 반짝임 · 작은 불꽃) */
-    static final Pal FORGE = new Pal(0xF77A18, 0xFFD27A, FLAME, WAX, null, SMALL_FLAME, FLAME);
+    static final Pal FORGE = new Pal(0xF77A18, 0xFFD27A, FLAME, WAX, null, SMALL_FLAME, FLAME, WAX);
     /** 팬텀 아처 — 진홍 불 · 푸른 흰 투영 (불꽃 · 흰 빛 · 작은 불꽃) */
-    static final Pal PHANTOM = new Pal(0xF2412F, 0xFF9E6E, FLAME, END_ROD, null, SMALL_FLAME, FLAME);
+    static final Pal PHANTOM = new Pal(0xF2412F, 0xFF9E6E, FLAME, END_ROD, null, SMALL_FLAME, FLAME, WAX);
     /** 암살자 — 그림자 (빨려 드는 보랏빛 — 맞은 자리로 그림자가 모임 · 흰 빛 · 솟는 보랏빛) */
-    static final Pal SHADOW = new Pal(0xA42A85, 0xCF55AC, PORTAL, END_ROD, null, UNDER, PORTAL);
+    static final Pal SHADOW = new Pal(0xA42A85, 0xCF55AC, PORTAL, END_ROD, null, UNDER, PORTAL, UNDER);
     /** 매지션 · 아크메이지 — 비전 (흰 불꽃놀이 별빛 · 흰 빛 · 마법 글자가 빨려 듦) */
-    static final Pal ARCANE = new Pal(0x5D7CF2, 0xB5C8FF, SPARKLE, END_ROD, null, ENCHANT, ENCHANT);
+    static final Pal ARCANE = new Pal(0x5D7CF2, 0xB5C8FF, SPARKLE, END_ROD, null, ENCHANT, ENCHANT, WHITE_DOT);
     /** 네크로맨서 — 혼 (토템 초록 불티 · 솟는 혼 · 연기 없음) */
-    static final Pal SOUL_P = new Pal(0x35BC5E, 0xA0F2B4, TOTEM, null, null, SOUL, TOTEM);
+    static final Pal SOUL_P = new Pal(0x35BC5E, 0xA0F2B4, TOTEM, null, null, SOUL, TOTEM, GLOW);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -172,9 +179,21 @@ final class WyrdKit {
         spray(l, who, P, at, n, d, d, d, dist);
     }
 
-    /** 수평 먼지 고리 (가운데 c · 반지름 r · n 자리 · 반 칸 엇갈림 shift) */
-    private static void ring(ServerLevel l, Predicate<ServerPlayer> who, Vec3 c, double r, int n, double off, int rgb, double scale) {
-        DustParticleOptions o = dust(rgb, scale);
+    /**
+     * 모양의 한 점 (5판): 묶음의 스스로 빛나는 점 (밀랍 · 차원문 · 발광) — 없으면 (피) 먼지 (alt = 밝은 빛 · 크기 scale). 4판 영상 (해질녘 팬텀 버스트) 에서 먼지 고리가
+     * 둘레 빛을 받아 검붉은 얼룩 네모로 보였음 — 빛나는 점은 밤 · 해질녘에도 같은 빛
+     */
+    private static ParticleOptions dotOf(Pal P, boolean alt, double scale) {
+        return P.dot() != null ? P.dot().o() : dust(alt ? P.light() : P.main(), scale);
+    }
+
+    private static void dot(ServerLevel l, Predicate<ServerPlayer> who, Pal P, Vec3 q, boolean alt, double scale) {
+        p(l, who, dotOf(P, alt, scale), q, 1, 0.02, 0.02, 0.02, 0);
+    }
+
+    /** 수평 고리 (가운데 c · 반지름 r · n 자리 · 처음 각 off) — 모양의 점 */
+    private static void ring(ServerLevel l, Predicate<ServerPlayer> who, Vec3 c, double r, int n, double off, Pal P, boolean alt, double scale) {
+        ParticleOptions o = dotOf(P, alt, scale);
         for (int i = 0; i < n; i++) {
             double a = off + i * Math.PI * 2 / n;
             p(l, who, o, new Vec3(c.x + Math.cos(a) * r, c.y, c.z + Math.sin(a) * r), 1, 0.02, 0.02, 0.02, 0);
@@ -183,7 +202,7 @@ final class WyrdKit {
 
     // ------------------------------------------------------------ 맞음 · 터짐
 
-    /** 맞음 (PhantomFx.hit · JobFx.hit 팬텀 아처 줄기): 몸 가운데 — 불티가 튐 · 번쩍이는 짧은 불똥 · 밝은 먼지 둘. power 1 = 보통 */
+    /** 맞음 (PhantomFx.hit · JobFx.hit 팬텀 아처 줄기): 몸 가운데 — 번쩍이는 짧은 불똥 · 불티 (· 피는 밝은 먼지 하나). power 1 = 보통 */
     static void hit(ServerLevel l, PhantomFx.Lib L, LivingEntity e, double power) {
         Pal P = pal(L);
         if (P == null || e == null || !go("hit", 4)) return;
@@ -193,7 +212,7 @@ final class WyrdKit {
         int k = (int) Math.round(pw * 3);
         spray(l, null, ZAP, b, 3 + k, 0.15 * s, 0.7 * s);
         spray(l, null, P.spark(), b, 1 + k / 2, 0.1, 0.8 * s);
-        p(l, null, dust(P.light(), 0.9), b, 1, 0.1 * s, 0.1 * s, 0.1 * s, 0);
+        if (P.dot() == null) p(l, null, dust(P.light(), 0.9), b, 1, 0.1 * s, 0.1 * s, 0.1 * s, 0);
     }
 
     /**
@@ -218,14 +237,14 @@ final class WyrdKit {
         if (d < 1.2) {
             spray(l, who, P.spark(), at, 5, 0.08, r * 1.4);
             spray(l, who, P.glint(), at, 2, r * 0.3, r);
-            p(l, who, dust(P.light(), 0.9), at, 2, r * 0.2, r * 0.2, r * 0.2, 0);
+            p(l, who, dotOf(P, true, 0.9), at, 2, r * 0.2, r * 0.2, r * 0.2, 0);
             return;
         }
         boolean big = d >= 3.4;
         int n = big ? 20 : 12;
         double off = Kit.rand() * Math.PI * 2;
-        ring(l, who, at, r * 0.55, n, off, P.main(), big ? 1.6 : 1.3);
-        RuneKit.later(2, () -> ring(l, who, at, r * 0.95, n, off + Math.PI / n, P.light(), big ? 1.3 : 1.1));
+        ring(l, who, at, r * 0.55, n, off, P, false, big ? 1.6 : 1.3);
+        RuneKit.later(2, () -> ring(l, who, at, r * 0.95, n, off + Math.PI / n, P, true, big ? 1.3 : 1.1));
         spray(l, who, P.spark(), at, big ? 12 : 7, r * 0.2, r * 1.2);
         spray(l, who, P.glint(), at, big ? 10 : 5, r * 0.35, r * 1.1);
         spray(l, who, P.mote(), at, big ? 6 : 3, r * 0.4, r * 0.5);
@@ -246,7 +265,7 @@ final class WyrdKit {
         Pal P = pal(L);
         if (P == null || !go("ground", 6)) return;
         double r = Math.max(0.4, size * 0.5);
-        ring(l, null, V.up(g, 0.12), r * 0.8, 10, Kit.rand() * Math.PI * 2, P.main(), 1.2);
+        ring(l, null, V.up(g, 0.12), r * 0.8, 10, Kit.rand() * Math.PI * 2, P, false, 1.2);
         if (P.puff() == null) return;
         int m = 5 + (int) Math.round(size);
         double off = Kit.rand() * Math.PI * 2;
@@ -266,7 +285,7 @@ final class WyrdKit {
         double off = Kit.rand() * Math.PI * 2;
         for (int t = 0; t < 3; t++) {
             int tt = t;
-            RuneKit.later(t * 2, () -> ring(l, who, V.up(g, 0.12), R * (0.45 + 0.275 * tt), per, off + tt * Math.PI / per, tt == 0 ? P.light() : P.main(), 1.4));
+            RuneKit.later(t * 2, () -> ring(l, who, V.up(g, 0.12), R * (0.45 + 0.275 * tt), per, off + tt * Math.PI / per, P, tt == 0, 1.4));
         }
         if (P.puff() == null) return;
         int m = Math.max(6, Math.min(12, (int) Math.round(R * 2)));
@@ -309,7 +328,7 @@ final class WyrdKit {
                         double a = a0 + dir * (tt + (i + 0.5) / per) * Math.PI / 2;
                         Vec3 q = new Vec3(c.x + Math.cos(a) * r, c.y + 0.12, c.z + Math.sin(a) * r);
                         boolean hi = i % 3 == 0;
-                        p(l, who, dust(hi ? P.light() : P.main(), hi ? 0.8 : 1.0), q, 1, 0.03, 0.03, 0.03, 0);
+                        dot(l, who, P, q, hi, hi ? 0.8 : 1.0);
                         if (i == per - 1) p(l, who, ZAP.o(), q, 2, 0.08, 0.05, 0.08, 0.05);
                         if (i % 3 == 1 && P.spark() != null) {
                             Vec3 out = new Vec3(Math.cos(a), 0.2, Math.sin(a));
@@ -330,7 +349,7 @@ final class WyrdKit {
             RuneKit.later(k * 6, () -> {
                 for (int i = 0; i < per; i++) {
                     double a = a0 + dir * ((i + (kk % 2) * 0.5) * Math.PI * 2 / per + kk * 0.08);
-                    p(l, who, dust(i % 2 == 0 ? P.main() : P.light(), 1.1), new Vec3(c.x + Math.cos(a) * r, c.y + 0.1, c.z + Math.sin(a) * r), 1, 0.02, 0.02, 0.02, 0);
+                    dot(l, who, P, new Vec3(c.x + Math.cos(a) * r, c.y + 0.1, c.z + Math.sin(a) * r), i % 2 == 1, 1.1);
                 }
                 spray(l, who, P.mote(), V.up(c, 0.25), 2, r * 0.5, 0.15, r * 0.5, 0.6);
             });
@@ -362,7 +381,8 @@ final class WyrdKit {
                     double ph = -Math.PI / 2 + Math.PI * (tt * per + i + 0.5) / (3.0 * per);
                     Vec3 q = V.add(V.add(base, e1, hw * Math.sin(ph)), e2, hh * (Math.cos(ph) - 0.35));
                     // 4판: 먼지는 작게 (크면 1 ~ 2초 머물러 칠한 베기가 사라진 뒤 하늘에 부스러기 초승달로 남았음 — 블러드 클레이브) · 날을 따라 짧은 번쩍 불똥
-                    if (i % 2 == 0) p(l, others, dust(P.main(), 0.8), q, 1, 0.02, 0.02, 0.02, 0);
+                    // 5판: 빛나는 점은 10 ~ 40틱 머물러 호가 남으므로 피 (먼지) 만 · 나머지는 번쩍 불똥만
+                    if (i % 2 == 0 && P.dot() == null) p(l, others, dust(P.main(), 0.8), q, 1, 0.02, 0.02, 0.02, 0);
                     else p(l, others, ZAP.o(), q, 1, 0.03, 0.03, 0.03, 0.02);
                     if (i == per - 1 && P.spark() != null) {
                         Vec3 tan = V.unit(V.add(V.scale(e1, Math.cos(ph)), V.scale(e2, -Math.sin(ph) * hh / hw)));
@@ -394,8 +414,7 @@ final class WyrdKit {
         double off = q * Math.PI * 3;
         for (int i = 0; i < 6; i++) {
             double a = off + i * Math.PI / 3;
-            p(l, who, dust(i % 2 == 0 ? P.main() : P.light(), 0.9 + q * 0.5), new Vec3(p.x + Math.cos(a) * rr, p.y + Math.sin(a * 2) * 0.08, p.z + Math.sin(a) * rr), 1, 0.02,
-                    0.02, 0.02, 0);
+            dot(l, who, P, new Vec3(p.x + Math.cos(a) * rr, p.y + Math.sin(a * 2) * 0.08, p.z + Math.sin(a) * rr), i % 2 == 1, 0.9 + q * 0.5);
         }
     }
 
@@ -412,7 +431,7 @@ final class WyrdKit {
         Pal P = pal(L);
         if (P == null || !go("glint", 4)) return;
         spray(l, who, P.glint(), at, 2, 0.05, 0.25);
-        p(l, who, dust(P.light(), Math.max(0.6, Math.min(1.1, size * 2))), at, 1, 0.04, 0.04, 0.04, 0);
+        dot(l, who, P, at, true, Math.max(0.6, Math.min(1.1, size * 2)));
     }
 
     /** 금빛 문 (PhantomFx.gate): 가운데 c · 앞 f · 테 반지름 r · life 틱 — 3틱마다 테에 먼지 · 고유 알갱이, 6틱마다 문 앞 반짝임 */
@@ -428,7 +447,7 @@ final class WyrdKit {
                 for (int i = 0; i < 3; i++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 q = V.add(V.add(c, ax, Math.cos(a) * r), ay, Math.sin(a) * r);
-                    p(l, null, dust(i == 0 ? P.light() : P.main(), 1.0), q, 1, 0.03, 0.03, 0.03, 0);
+                    dot(l, null, P, q, i == 0, 1.0);
                     if (i == 0) spray(l, null, P.mote(), q, 1, 0.05, 0.1);
                 }
                 if (tt % 6 == 0) spray(l, null, P.glint(), V.add(c, fu, 0.1), 1, r * 0.4, 0.3);
