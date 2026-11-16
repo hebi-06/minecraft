@@ -1477,8 +1477,13 @@ final class JobFx {
             fx.end();
             if (fx1 != null) fx1.end();
             if (!RuneKit.sameLife(sp, life)) return;
-            PhantomFx.flash(sp.level(), L, relPoint(sp, rel), size * 2.6, who3);
-            if (nearEye) PhantomFx.flash(sp.level(), L, eyeCharge(sp, rel), size * 1.3, PhantomFx.only1p(sp));
+            WyrdKit.enter(); // 끝 섬광의 바닐라 겹은 chargeEnd 하나로
+            try {
+                PhantomFx.flash(sp.level(), L, relPoint(sp, rel), size * 2.6, who3);
+                if (nearEye) PhantomFx.flash(sp.level(), L, eyeCharge(sp, rel), size * 1.3, PhantomFx.only1p(sp));
+            } finally {
+                WyrdKit.leave();
+            }
             WyrdKit.chargeEnd(sp.level(), L, relPoint(sp, rel), size, who3);
         });
     }

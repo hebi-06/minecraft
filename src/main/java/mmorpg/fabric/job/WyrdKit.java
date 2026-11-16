@@ -111,18 +111,43 @@ final class WyrdKit {
         return RuneKit.fxQuota("wyrd_" + key, max);
     }
 
+    /**
+     * 묶음 함수 (PhantomFx hit · burst · impact · boomSmall · boom · smash · glint · JobFx 모으기 끝) 가 안에서 부르는 작은 그림 (flash · embers · dust) 에는 겹을
+     * 다시 얹지 않음 — 스킬이 직접 부를 때만 (팬텀 아처 줄기 · 소드 마스터 · 블러드 나이트 등의 섬광 · 불씨 · 흙먼지). 서버 틱 한 줄기에서만 불리므로 셈 하나로 충분
+     */
+    private static int depth;
+
+    static void enter() {
+        depth++;
+    }
+
+    static void leave() {
+        if (depth > 0) depth--;
+    }
+
+    static boolean direct() {
+        return depth == 0;
+    }
+
     static DustParticleOptions dust(int rgb, double scale) {
         return new DustParticleOptions(rgb, (float) Math.max(0.1, Math.min(4.0, scale)));
     }
 
+    /**
+     * 1인칭 눈 바로 앞에는 보내지 않음 (칸): 먼지 덩이 · 연기 하나가 눈에서 1칸 남짓이면 화면에서 수백 픽셀 덩이 (PBridge.DUST_NEAR_EYE 와 같은 까닭 — 1인칭 눈앞 섬광 ·
+     * 모으는 빛에 겹이 붙을 때). 상자로 흩뿌리면 상자 크기만큼 더 멀리. 3인칭은 카메라가 몸 뒤라 그대로
+     */
+    static final double NEAR_EYE = 1.4;
+
     /** count 개를 상자 (dx, dy, dz) 안에 · 속도 speed (count 0 = 한 알을 속도 (dx, dy, dz) × speed 로) — who 가 있으면 그 사람들에게만 */
     static void p(ServerLevel l, Predicate<ServerPlayer> who, ParticleOptions o, Vec3 at, int n, double dx, double dy, double dz, double speed) {
         if (o == null || n < 0) return;
-        if (who == null) {
-            l.sendParticles(o, true, true, at.x, at.y, at.z, n, dx, dy, dz, speed);
-            return;
+        double near = NEAR_EYE + (n > 0 ? Math.max(dx, Math.max(dy, dz)) * 1.5 : 0);
+        for (ServerPlayer sp : l.players()) {
+            if (who != null && !who.test(sp)) continue;
+            if (sp.getEyePosition().distanceToSqr(at) < near * near && !mmorpg.fabric.vfx.PBridge.thirdPersonOf(sp)) continue;
+            l.sendParticles(sp, o, true, true, at.x, at.y, at.z, n, dx, dy, dz, speed);
         }
-        for (ServerPlayer sp : l.players()) if (who.test(sp)) l.sendParticles(sp, o, true, true, at.x, at.y, at.z, n, dx, dy, dz, speed);
     }
 
     /** 한 알을 속도 vel (칸/틱) 로 (portal · enchant 는 at + vel 에서 at 으로) */
@@ -190,6 +215,17 @@ final class WyrdKit {
     static void burst(ServerLevel l, PhantomFx.Lib L, Vec3 at, double d, Predicate<ServerPlayer> who) {
         Pal P = pal(L);
         if (P == null || !go("burst", 4)) return;
+        burst(l, P, at, d, who);
+    }
+
+    /** 섬광 (스킬이 직접 부른 PhantomFx.flash): 그림 크기 size 칸 → 지름 size × 0.6 의 터짐 (터짐과 따로 셈) */
+    static void flash(ServerLevel l, PhantomFx.Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || !go("flash", 4)) return;
+        burst(l, P, at, size * 0.6, who);
+    }
+
+    private static void burst(ServerLevel l, Pal P, Vec3 at, double d, Predicate<ServerPlayer> who) {
         double r = Math.max(0.3, d * 0.5);
         if (d < 1.2) {
             spray(l, who, P.spark(), at, 6, 0.08, r * 1.6);
@@ -210,7 +246,34 @@ final class WyrdKit {
         if (big) p(l, who, ParticleTypes.EXPLOSION, at, 2, r * 0.3, r * 0.2, r * 0.3, 0);
     }
 
+    /** 불씨 (스킬이 직접 부른 PhantomFx.embers): 그림 n 개 → 불티 · 반짝임 · 밝은 먼지 (대략 dist 칸) */
+    static void embers(ServerLevel l, PhantomFx.Lib L, Vec3 c, int n, double dist) {
+        Pal P = pal(L);
+        if (P == null || n <= 0 || !go("embers", 6)) return;
+        spray(l, null, P.spark(), c, Math.max(2, n / 2), 0.15, dist);
+        spray(l, null, P.glint(), c, Math.max(1, n / 3), 0.2, dist * 0.8);
+        p(l, null, dust(P.light(), 1.0), c, Math.max(1, n / 4), 0.25, 0.25, 0.25, 0);
+    }
+
     // ------------------------------------------------------------ 땅
+
+    /** 흙먼지 (스킬이 직접 부른 PhantomFx.dust — 땅에 꽂힘 · 내려앉음): 땅 g · 그림 크기 size — 땅을 따라 밀려나는 연기 뭉치 · 낮은 먼지 덩이 */
+    static void groundPuff(ServerLevel l, PhantomFx.Lib L, Vec3 g, double size) {
+        Pal P = pal(L);
+        if (P == null || !go("ground", 6)) return;
+        double r = Math.max(0.4, size * 0.5);
+        if (P.puff() != null) {
+            int m = 6 + (int) Math.round(size * 2);
+            double off = Kit.rand() * Math.PI * 2;
+            for (int i = 0; i < m; i++) {
+                double a = off + i * Math.PI * 2 / m;
+                Vec3 d = new Vec3(Math.cos(a), 0.08, Math.sin(a));
+                pv(l, null, P.puff().o(), new Vec3(g.x + d.x * r * 0.3, g.y + 0.12, g.z + d.z * r * 0.3), V.scale(d, P.puff().v(r)));
+            }
+        }
+        p(l, null, dust(P.dark(), 1.8), V.up(g, 0.15), 3, r * 0.4, 0.05, r * 0.4, 0);
+        p(l, null, dust(P.main(), 1.3), V.up(g, 0.2), 3, r * 0.3, 0.08, r * 0.3, 0);
+    }
 
     /** 땅 충격파 (PhantomFx.shock · boom · smash): 땅 g · 지름 size — 세 번 (2틱마다) 커지는 땅 먼지 고리 · 땅을 따라 밀려나는 연기 뭉치 */
     static void shock(ServerLevel l, PhantomFx.Lib L, Vec3 g, double size, Predicate<ServerPlayer> who) {

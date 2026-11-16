@@ -245,6 +245,7 @@ final class PhantomFx {
 
     static void embers(ServerLevel level, Lib L, Vec3 c, int n, double dist, double size, int life) {
         fly(level, c, n, dist, size, life, L.n(L.ember()), 1.0);
+        if (WyrdKit.direct()) WyrdKit.embers(level, L, c, n, dist); // 2026-11-16 위르드식 바닐라 파티클 겹 (스킬이 직접 부를 때)
     }
 
     /** 칼 조각 n 개 (묶음 shard — 납작한 강철 조각이 구르는 여덟 칸 · 깨진 가장자리가 달아오름): 불씨보다 낮고 멀리 · 빨리 떨어짐 */
@@ -287,33 +288,43 @@ final class PhantomFx {
 
     /** 착탄 (예전 impact2d — BlockFx 상자 터짐 · 상자 조각 대신): 섬광 · 불씨 · 칼 조각 몇 · 크기 size 칸 */
     static void impact(ServerLevel level, Lib L, Vec3 at, double size) {
-        WyrdKit.burst(level, L, at, size * 1.3, null); // 2026-11-16 위르드식 바닐라 파티클 겹
-        flash(level, L, at, size * 2.2);
-        embers(level, L, at, 5 + (int) (size * 6), size * 1.6, 0.32 + size * 0.12, 14);
-        if (size >= 0.9) shards(level, L, at, 2 + (int) (size * 2), size * 1.4, 0.32, 14);
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            WyrdKit.burst(level, L, at, size * 1.3, null); // 2026-11-16 위르드식 바닐라 파티클 겹
+            flash(level, L, at, size * 2.2);
+            embers(level, L, at, 5 + (int) (size * 6), size * 1.6, 0.32 + size * 0.12, 14);
+            if (size >= 0.9) shards(level, L, at, 2 + (int) (size * 2), size * 1.4, 0.32, 14);
+        } finally {
+            WyrdKit.leave();
+        }
     }
 
     /**
      * 작은 폭발 (한 장 256 — boom_s · shock_s · crack_s: 꽂힌 칼 특성 · 블레이드 레인 칼마다): 가운데 c (몸 높이) · 크기 size 칸 (불덩이 지름) · 불씨 · 조각
      */
     static void boomSmall(ServerLevel level, Lib L, Vec3 c, double size) {
-        Vec3 g = ground(level, c);
-        Vfx.Fx fx = Vfx.at(level, c, 20);
-        single(fx, L.n("boom_s"), V.up(c, size * 0.15), size, Kit.rand() * 30 - 15, 1, false);
-        WyrdKit.burst(level, L, V.up(c, size * 0.15), size, null); // 2026-11-16 위르드식 바닐라 파티클 겹
-        if (c.y - g.y < 2.5) {
-            WyrdKit.shock(level, L, g, size * 1.6, null);
-            Vfx.Fx gx = Vfx.at(level, g, 18);
-            Vfx.Sprite sh = single(gx, L.n("shock_s"), V.up(g, 0.02), size * 1.6, 0, 1, false);
-            sh.fixed(flat(Kit.rand() * 360));
-            Vfx.Fx cx = Vfx.at(level, g, 40);
-            Vfx.Sprite cr = cx.sprite(L.n("crack_s"), V.up(g, 0.01));
-            cr.fixed(flat(Kit.rand() * 360));
-            cr.size(size * 0.9);
-            cr.play(2, 0, Vfx.sheet(L.n("crack_s")).frames(), 6, false);
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            Vec3 g = ground(level, c);
+            Vfx.Fx fx = Vfx.at(level, c, 20);
+            single(fx, L.n("boom_s"), V.up(c, size * 0.15), size, Kit.rand() * 30 - 15, 1, false);
+            WyrdKit.burst(level, L, V.up(c, size * 0.15), size, null); // 2026-11-16 위르드식 바닐라 파티클 겹
+            if (c.y - g.y < 2.5) {
+                WyrdKit.shock(level, L, g, size * 1.6, null);
+                Vfx.Fx gx = Vfx.at(level, g, 18);
+                Vfx.Sprite sh = single(gx, L.n("shock_s"), V.up(g, 0.02), size * 1.6, 0, 1, false);
+                sh.fixed(flat(Kit.rand() * 360));
+                Vfx.Fx cx = Vfx.at(level, g, 40);
+                Vfx.Sprite cr = cx.sprite(L.n("crack_s"), V.up(g, 0.01));
+                cr.fixed(flat(Kit.rand() * 360));
+                cr.size(size * 0.9);
+                cr.play(2, 0, Vfx.sheet(L.n("crack_s")).frames(), 6, false);
+            }
+            embers(level, L, c, 8 + (int) (size * 3), size * 0.9, 0.42, 18);
+            shards(level, L, c, 3 + (int) size, size, 0.4, 16);
+        } finally {
+            WyrdKit.leave();
         }
-        embers(level, L, c, 8 + (int) (size * 3), size * 0.9, 0.42, 18);
-        shards(level, L, c, 3 + (int) size, size, 0.4, 16);
     }
 
     /**
@@ -321,16 +332,21 @@ final class PhantomFx {
      * rad × 3.2 · 그을린 땅 rad × 1.7 · 불씨 · 칼 조각
      */
     static void boom(ServerLevel level, Lib L, Vec3 c, double rad) {
-        Vec3 gc = ground(level, c);
-        tiled(level, L.n("boom"), 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
-        // 2026-11-15 영상 (팬텀 버스트 3인칭 · 1인칭): 지름 3.2 × rad 는 고리 앞 날이 카메라 밑까지 와서 화면 아래를 흰 띠로 가로질렀음 → 2.5 × rad
-        tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 2.5, flat(Kit.rand() * 360), 0, 0, 1);
-        WyrdKit.burst(level, L, V.up(c, 0.9), rad * 1.9, null); // 2026-11-16 위르드식 바닐라 파티클 겹
-        WyrdKit.shock(level, L, gc, rad * 2.5, null);
-        if (has(L, "crack_00")) tiled(level, L.n("crack"), 2, gc, rad * 1.7, flat(Kit.rand() * 360), 0, 2, 7);
-        else crackS(level, L, gc, rad * 1.7); // 원소 공용 묶음은 한 장 땅 자국만
-        embers(level, L, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
-        shards(level, L, V.up(c, 0.3), 12, rad * 1.2, 0.5, 22);
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            Vec3 gc = ground(level, c);
+            tiled(level, L.n("boom"), 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
+            // 2026-11-15 영상 (팬텀 버스트 3인칭 · 1인칭): 지름 3.2 × rad 는 고리 앞 날이 카메라 밑까지 와서 화면 아래를 흰 띠로 가로질렀음 → 2.5 × rad
+            tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 2.5, flat(Kit.rand() * 360), 0, 0, 1);
+            WyrdKit.burst(level, L, V.up(c, 0.9), rad * 1.9, null); // 2026-11-16 위르드식 바닐라 파티클 겹
+            WyrdKit.shock(level, L, gc, rad * 2.5, null);
+            if (has(L, "crack_00")) tiled(level, L.n("crack"), 2, gc, rad * 1.7, flat(Kit.rand() * 360), 0, 2, 7);
+            else crackS(level, L, gc, rad * 1.7); // 원소 공용 묶음은 한 장 땅 자국만
+            embers(level, L, V.up(c, 0.4), 26, rad * 1.1, 0.55, 26);
+            shards(level, L, V.up(c, 0.3), 12, rad * 1.2, 0.5, 22);
+        } finally {
+            WyrdKit.leave();
+        }
     }
 
     /** 땅 충격파만 (2 × 2 — 속이 빈 고리가 퍼짐): 땅 g · 지름 size 칸 · every 틱마다 한 칸 */
@@ -378,6 +394,7 @@ final class PhantomFx {
     static void dust(ServerLevel level, Lib L, Vec3 g, double size) {
         Vfx.Fx fx = Vfx.at(level, g, 14);
         single(fx, L.n("dust"), V.up(g, size * 0.25), size, 0, 1, false);
+        if (WyrdKit.direct()) WyrdKit.groundPuff(level, L, g, size); // 2026-11-16 위르드식 바닐라 파티클 겹 (스킬이 직접 부를 때)
     }
 
     /** X 베기 (2 × 2 xslash — 두 줄기가 차례로 그어지고 교차점 섬광): 가운데 c · 크기 size 칸 · 화면 돌림 roll 도 (카메라를 봄) */
@@ -465,6 +482,7 @@ final class PhantomFx {
     static void flash(ServerLevel level, Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
         Vfx.Fx fx = Vfx.at(level, at, 12, farEye(who, at, nearR(L, size)));
         single(fx, L.n("flash"), at, size, Kit.rand() * 40 - 20, 1, false);
+        if (WyrdKit.direct()) WyrdKit.flash(level, L, at, size, who); // 2026-11-16 위르드식 바닐라 파티클 겹 (스킬이 직접 부를 때)
     }
 
     /**
@@ -709,32 +727,42 @@ final class PhantomFx {
 
     /** 맞은 자리 (JobFx.hit · JobImpact): X 베기 · 섬광 (피 = 맞은 자리 피 튐) · 날아가는 작은 그림 — 몸 가운데 · power (1 = 보통) */
     static void hit(ServerLevel level, Lib L, LivingEntity e, double power) {
-        Vec3 b = front(e, Kit.bodyPoint(e));
-        double size = (0.75 + Kit.bodyPad(e) * 0.6) * power;
-        xslash(level, L, b, size * 1.7, Kit.rand() * 360);
-        flash(level, L, b, size * 1.9);
-        embers(level, L, b, 3 + (int) Math.round(power * 2), size * 1.1, 0.3, 12);
-        WyrdKit.hit(level, L, e, power); // 2026-11-16 위르드식 바닐라 파티클 겹
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            Vec3 b = front(e, Kit.bodyPoint(e));
+            double size = (0.75 + Kit.bodyPad(e) * 0.6) * power;
+            xslash(level, L, b, size * 1.7, Kit.rand() * 360);
+            flash(level, L, b, size * 1.9);
+            embers(level, L, b, 3 + (int) Math.round(power * 2), size * 1.1, 0.3, 12);
+            WyrdKit.hit(level, L, e, power); // 2026-11-16 위르드식 바닐라 파티클 겹
+        } finally {
+            WyrdKit.leave();
+        }
     }
 
     /** 터짐 (JobFx.burst): 작으면 섬광 · 보통이면 작은 폭발 (boom_s) · 크면 큰 폭발 (2 × 2) — 크기 size (예전 빛 반 크기) */
     static void burst(ServerLevel level, Lib L, Vec3 at, double size, Predicate<ServerPlayer> who) {
-        WyrdKit.burst(level, L, at, size * 1.7, who); // 2026-11-16 위르드식 바닐라 파티클 겹 (지름 — 섬광 · 작은 · 큰 폭발에 맞춤)
-        if (size < 0.7) {
-            flash(level, L, at, size * 2.6, who);
-            return;
-        }
-        if (size < 2.0) {
-            Vfx.Fx fx = Vfx.at(level, at, 20, farEye(who, at, nearR(L, size * 1.8)));
-            single(fx, L.n("boom_s"), at, size * 1.8, Kit.rand() * 30 - 15, 1, false);
-            flash(level, L, at, size * 1.5, who);
-            if (who == null) embers(level, L, at, 4 + (int) (size * 3), size, 0.35, 16);
-            return;
-        }
-        tiled(level, L.n("boom"), 2, at, size * 1.6, null, Kit.rand() * 30 - 15, 0, 1, false, null, farEye(who, at, nearR(L, size * 1.6) * 0.5), 1.0);
-        if (who == null) {
-            embers(level, L, at, 14, size * 0.8, 0.45, 22);
-            shards(level, L, at, 6, size * 0.8, 0.4, 18);
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            WyrdKit.burst(level, L, at, size * 1.7, who); // 2026-11-16 위르드식 바닐라 파티클 겹 (지름 — 섬광 · 작은 · 큰 폭발에 맞춤)
+            if (size < 0.7) {
+                flash(level, L, at, size * 2.6, who);
+                return;
+            }
+            if (size < 2.0) {
+                Vfx.Fx fx = Vfx.at(level, at, 20, farEye(who, at, nearR(L, size * 1.8)));
+                single(fx, L.n("boom_s"), at, size * 1.8, Kit.rand() * 30 - 15, 1, false);
+                flash(level, L, at, size * 1.5, who);
+                if (who == null) embers(level, L, at, 4 + (int) (size * 3), size, 0.35, 16);
+                return;
+            }
+            tiled(level, L.n("boom"), 2, at, size * 1.6, null, Kit.rand() * 30 - 15, 0, 1, false, null, farEye(who, at, nearR(L, size * 1.6) * 0.5), 1.0);
+            if (who == null) {
+                embers(level, L, at, 14, size * 0.8, 0.45, 22);
+                shards(level, L, at, 6, size * 0.8, 0.4, 18);
+            }
+        } finally {
+            WyrdKit.leave();
         }
     }
 
@@ -753,26 +781,36 @@ final class PhantomFx {
 
     /** 땅 내려찍기 (JobFx.smash — 반지름 radius 칸): 충격파 · 땅 자국 · 흙먼지 · 날아가는 작은 그림 */
     static void smash(ServerLevel level, Lib L, Vec3 at, double radius, Predicate<ServerPlayer> who) {
-        Vec3 g = ground(level, at);
-        tiled(level, L.n("shock"), 2, V.up(g, 0.03), radius * 2.3, flat(Kit.rand() * 360), 0, 0, 1, false, null, who, 1.0);
-        crackS(level, L, g, radius * 1.5, who);
-        Vfx.Fx dx = Vfx.at(level, g, 14, who);
-        double ds = Math.min(4.5, radius * 1.2);
-        single(dx, L.n("dust"), V.up(g, ds * 0.25), ds, 0, 1, false);
-        if (who == null) embers(level, L, V.up(g, 0.3), 6 + (int) (radius * 2), radius * 0.8, 0.4, 18);
-        WyrdKit.smash(level, L, g, radius, who); // 2026-11-16 위르드식 바닐라 파티클 겹
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            Vec3 g = ground(level, at);
+            tiled(level, L.n("shock"), 2, V.up(g, 0.03), radius * 2.3, flat(Kit.rand() * 360), 0, 0, 1, false, null, who, 1.0);
+            crackS(level, L, g, radius * 1.5, who);
+            Vfx.Fx dx = Vfx.at(level, g, 14, who);
+            double ds = Math.min(4.5, radius * 1.2);
+            single(dx, L.n("dust"), V.up(g, ds * 0.25), ds, 0, 1, false);
+            if (who == null) embers(level, L, V.up(g, 0.3), 6 + (int) (radius * 2), radius * 0.8, 0.4, 18);
+            WyrdKit.smash(level, L, g, radius, who); // 2026-11-16 위르드식 바닐라 파티클 겹
+        } finally {
+            WyrdKit.leave();
+        }
     }
 
     /** 칼끝 반짝임 (JobFx.glint): 짧으면 섬광 · 길면 반짝임이 깜박이며 머묾 (vel 칸/초로 같이 움직임) */
     static void glint(ServerLevel level, Lib L, Vec3 at, double size, double life, Vec3 vel, Predicate<ServerPlayer> who) {
-        int ticks = Math.max(2, (int) Math.round(life * 20));
-        flash(level, L, at, size * 2.0, who);
-        WyrdKit.glint(level, L, at, size, who); // 2026-11-16 위르드식 바닐라 파티클 겹
-        if (ticks <= 7) return;
-        Vfx.Fx fx = Vfx.at(level, at, ticks + 6, farEye(who, at, nearR(L, size * 1.5)));
-        Vfx.Sprite s = single(fx, L.n(L.ember()), at, size * 1.5, Kit.rand() * 40 - 20, 1, true);
-        if (vel != null && V.len(vel) > 1e-3) s.to(V.add(at, vel, ticks / 20.0), -1, Math.min(59, ticks));
-        s.fade(Math.max(1, ticks - 4), 4);
+        WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
+        try {
+            int ticks = Math.max(2, (int) Math.round(life * 20));
+            flash(level, L, at, size * 2.0, who);
+            WyrdKit.glint(level, L, at, size, who); // 2026-11-16 위르드식 바닐라 파티클 겹
+            if (ticks <= 7) return;
+            Vfx.Fx fx = Vfx.at(level, at, ticks + 6, farEye(who, at, nearR(L, size * 1.5)));
+            Vfx.Sprite s = single(fx, L.n(L.ember()), at, size * 1.5, Kit.rand() * 40 - 20, 1, true);
+            if (vel != null && V.len(vel) > 1e-3) s.to(V.add(at, vel, ticks / 20.0), -1, Math.min(59, ticks));
+            s.fade(Math.max(1, ticks - 4), 4);
+        } finally {
+            WyrdKit.leave();
+        }
     }
 
     /**
