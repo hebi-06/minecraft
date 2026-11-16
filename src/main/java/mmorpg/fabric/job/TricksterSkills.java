@@ -430,13 +430,14 @@ final class TricksterSkills {
     /** 거울 (rfx_jpane — 청록 테 · 연분홍 빛줄기) 앞 · 뒤 두 장 (앞면만 그려지므로 둘레 어디서나 보이게): 가운데 at · 면 face 쪽 */
     private static void mirrorPane(ServerLevel level, Vec3 at, Vec3 face, double height, double life, Opt o, Jobs.Job j) {
         JobFx.pane(level, at, face, height, life, o, ILLUSION, JobFx.inner(j));
-        JobFx.pane(level, at, V.scale(face, -1), height, life, o, ILLUSION, JobFx.inner(j));
+        // 2026-11-16 칠한 환영 거울은 앞뒤 두 면 (PhantomFx.rfx) — 뒤 한 장을 더 부르면 같은 자리에 두 장이 겹쳐 깜박임
+        if (!PhantomFx.paints("jpane", ILLUSION)) JobFx.pane(level, at, V.scale(face, -1), height, life, o, ILLUSION, JobFx.inner(j));
     }
 
     /** 거울이 깨짐 (rfx_jmshatter 앞 · 뒤 두 장 · 거울 조각 · 유리 소리) */
     private static void mirrorBreak(ServerLevel level, Vec3 at, Vec3 face, double height, double life, Jobs.Job j) {
         JobFx.mirrorShatter(level, at, face, height, life, Opt.empty(), ILLUSION, JobFx.inner(j));
-        JobFx.mirrorShatter(level, at, V.scale(face, -1), height, life, Opt.empty(), ILLUSION, JobFx.inner(j));
+        if (!PhantomFx.paints("jmshatter", ILLUSION)) JobFx.mirrorShatter(level, at, V.scale(face, -1), height, life, Opt.empty(), ILLUSION, JobFx.inner(j));
         JobFx.mirror(level, at, height * 0.42, 0.45, Opt.empty(), ILLUSION, JobFx.inner(j));
         SkillFx.sparks(level, at, ILLUSION_CORE, 10, 4.0);
         SkillFx.play(level, "block.glass.break", at, 0.9 + Kit.rand() * 0.3, 1.0);
@@ -800,7 +801,7 @@ final class TricksterSkills {
                     Vec3 g = V.add(c0, spots[ii], R);
                     Vec3 m = V.up(new Vec3(g.x, RuneKit.groundAt(lv, V.up(g, 2.0), c0.y), g.z), mirrorH / 2);
                     JobFx.mirrorShatter(lv, m, V.scale(spots[ii], -1), mirrorH, 0.6, Opt.empty(), ILLUSION, JobFx.inner(j));
-                    JobFx.mirrorShatter(lv, m, spots[ii], mirrorH, 0.6, Opt.empty(), ILLUSION, JobFx.inner(j));
+                    if (!PhantomFx.paints("jmshatter", ILLUSION)) JobFx.mirrorShatter(lv, m, spots[ii], mirrorH, 0.6, Opt.empty(), ILLUSION, JobFx.inner(j));
                     if (ii % 2 == 0) SkillFx.play(lv, "block.glass.break", m, 0.7 + Kit.rand() * 0.4, 0.9);
                 });
             }

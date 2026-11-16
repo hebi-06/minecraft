@@ -94,6 +94,10 @@ final class WyrdKit {
     static final Pal ARCANE = new Pal(0x5D7CF2, 0xB5C8FF, SPARKLE, END_ROD, null, ENCHANT, ENCHANT, WHITE_DOT);
     /** 네크로맨서 — 혼 (토템 초록 불티 · 솟는 혼 · 연기 없음) */
     static final Pal SOUL_P = new Pal(0x35BC5E, 0xA0F2B4, TOTEM, null, null, SOUL, TOTEM, GLOW);
+    /** 2026-11-16 환영 (트릭스터): 불꽃놀이 반짝임 · end_rod · 차원문 (자홍 빛이 빨려 듦) · 흰 빛 점 */
+    static final Pal ILLUSION = new Pal(0xD23BA6, 0x6FE6F4, SPARKLE, END_ROD, null, PORTAL, PORTAL, WHITE_DOT);
+    /** 2026-11-16 서커스 (피에로): 불꽃놀이 · 금빛 밀랍 반짝임 · end_rod · 금빛 점 */
+    static final Pal CIRCUS = new Pal(0xE23A44, 0xFFE28A, SPARKLE, WAX, null, END_ROD, END_ROD, WAX);
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
@@ -107,6 +111,8 @@ final class WyrdKit {
             case "el_shadow" -> SHADOW;
             case "el_arcane" -> ARCANE;
             case "el_soul" -> SOUL_P;
+            case "el_illusion" -> ILLUSION;
+            case "el_circus" -> CIRCUS;
             default -> null;
         };
     }

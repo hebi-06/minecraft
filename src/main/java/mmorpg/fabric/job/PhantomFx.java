@@ -64,6 +64,14 @@ final class PhantomFx {
     /** 2026-11-16 혼 (네크로맨서 — el_soul: 녹색 혼불 · 뼈빛 — 혼불 · 해골 · 갈라진 땅 · 뼈 창 · 망자의 손 · 망자의 연기 · 혼 고리 · 혼 터짐, tools/jobvfx/soul.py) */
     static final int GLOW_SOUL = 0x5CF08A;
     static final Lib SOUL = new Lib("el_soul", GLOW_SOUL, GLOW_SOUL, "ember");
+    /**
+     * 2026-11-16 환영 (트릭스터 — el_illusion: 자홍 · 짙은 보라 + 청록 유리빛 — 아치 거울 · 깨지는 거울 · 손거울 · 띠 고리, tools/jobvfx/mirror.py · 공용 그림을 환영 빛으로)
+     */
+    static final int GLOW_ILLUSION = 0xEE66C2;
+    static final Lib ILLUSION = new Lib("el_illusion", GLOW_ILLUSION, 0x6FE6F4, "ember");
+    /** 2026-11-16 서커스 (피에로 — el_circus: 진홍 · 크림 금빛, 무지개 없이 — 색종이 · 풍선 동물 · 불꽃놀이 · 조명, tools/jobvfx/circus.py · 공용 그림을 서커스 빛으로) */
+    static final int GLOW_CIRCUS = 0xFF6A68;
+    static final Lib CIRCUS = new Lib("el_circus", GLOW_CIRCUS, 0xFFE28A, "ember");
 
     /** 이 직업의 그림 묶음 (그리지 않은 직업은 null — 예전 길) */
     static Lib lib(Jobs.Job j) {
@@ -77,6 +85,8 @@ final class PhantomFx {
             case "assassin" -> SHADOW;
             case "mage", "arcmage" -> ARCANE;
             case "necromancer" -> SOUL;
+            case "trickster" -> ILLUSION; // 2026-11-16 남은 직업 위르드식 (트릭스터 · 피에로 — 그림 도구는 2026-11-15 에 있었음)
+            case "pierrot" -> CIRCUS;
             default -> null;
         };
     }
@@ -352,10 +362,20 @@ final class PhantomFx {
      * rad × 3.2 · 그을린 땅 rad × 1.7 · 불씨 · 칼 조각
      */
     static void boom(ServerLevel level, Lib L, Vec3 c, double rad) {
+        boom(level, L, c, rad, null);
+    }
+
+    /**
+     * 같은 것 — 불덩이를 볼 사람 who (null = 모두). 2026-11-16 도트 그림 (라이징 엣지 · 블레이드 이클립스 1인칭 영상): 1인칭 눈이 불덩이 그림 한 변의 0.6 안이면
+     * (카메라를 보는 그림이 세로 시야 70도를 넘게 덮음) 안쪽 도트 칠이 화면 전체를 한 빛 (살구빛) 으로 덮었음 → 그 사람에게는 불덩이를 보내지 않음 (충격파 · 땅 자국 ·
+     * 불씨는 그대로)
+     */
+    static void boom(ServerLevel level, Lib L, Vec3 c, double rad, Predicate<ServerPlayer> who) {
         WyrdKit.enter(); // 안의 섬광 · 불씨에 바닐라 겹을 다시 얹지 않음
         try {
             Vec3 gc = ground(level, c);
-            tiled(level, L.n("boom"), 2, V.up(c, 0.9), rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1);
+            Vec3 ball = V.up(c, 0.9);
+            tiled(level, L.n("boom"), 2, ball, rad * 1.9, null, Kit.rand() * 30 - 15, 0, 1, false, null, farEye(who, ball, rad * 1.9 * 0.6), 1.0);
             // 2026-11-15 영상 (팬텀 버스트 3인칭 · 1인칭): 지름 3.2 × rad 는 고리 앞 날이 카메라 밑까지 와서 화면 아래를 흰 띠로 가로질렀음 → 2.5 × rad
             tiled(level, L.n("shock"), 2, V.up(gc, 0.02), rad * 2.5, flat(Kit.rand() * 360), 0, 0, 1);
             WyrdKit.burst(level, L, V.up(c, 0.9), rad * 1.9, null); // 2026-11-16 위르드식 바닐라 파티클 겹
@@ -371,8 +391,16 @@ final class PhantomFx {
 
     /** 땅 충격파만 (2 × 2 — 속이 빈 고리가 퍼짐): 땅 g · 지름 size 칸 · every 틱마다 한 칸 */
     static void shock(ServerLevel level, Lib L, Vec3 g, double size, int every) {
-        tiled(level, L.n("shock"), 2, V.up(g, 0.02), size, flat(Kit.rand() * 360), 0, 0, Math.max(1, every));
-        WyrdKit.shock(level, L, g, size, null); // 2026-11-16 위르드식 바닐라 파티클 겹
+        shock(level, L, g, size, every, null);
+    }
+
+    /**
+     * 같은 것 — 볼 사람 who (null = 모두). 2026-11-16 블레이드 이클립스 1인칭 영상: 가슴 높이에 눕힌 충격파는 눈 (0.5칸 위) 에서 보면 고리 안쪽 도트 칠이 화면 아래
+     * 절반을 덮었음 → 스킬이 주인의 1인칭을 뺄 때
+     */
+    static void shock(ServerLevel level, Lib L, Vec3 g, double size, int every, Predicate<ServerPlayer> who) {
+        tiled(level, L.n("shock"), 2, V.up(g, 0.02), size, flat(Kit.rand() * 360), 0, 0, Math.max(1, every), false, null, who, 1.0);
+        WyrdKit.shock(level, L, g, size, who); // 2026-11-16 위르드식 바닐라 파티클 겹
     }
 
     /** 그을린 땅 (2 × 2 — 달아오른 금이 식음): 땅 g · 지름 size 칸 · from 틱부터 every 틱마다 */
@@ -1271,10 +1299,20 @@ final class PhantomFx {
             java.util.Map.entry("jhand2", new Paint("hand", 1, VERT, 2, 1)),
             java.util.Map.entry("jsmoke2", new Paint("smoke", 1, BILL, 1, 1)),
             java.util.Map.entry("jburst2", new Paint("flash", 1, BILL, 1, 1.3)),
-            java.util.Map.entry("jring2", new Paint("spin", 2, FACE_DIR, 1, 0.88 / 0.8, "spinm", 2 * 8)));
+            java.util.Map.entry("jring2", new Paint("spin", 2, FACE_DIR, 1, 0.88 / 0.8, "spinm", 2 * 8)),
+            // 2026-11-16 트릭스터 (환영 — tools/jobvfx/mirror.py: 예전 rfx 와 같은 칸 · 칸 수 · 가로세로 비 — 세로 몫 = 높이 / 너비)
+            java.util.Map.entry("jmirror", new Paint("mirror", 1, BILL, 1, 1)),
+            java.util.Map.entry("jpane", new Paint("pane", 1, FACE_DIR, 224 / 128.0, 1)),
+            java.util.Map.entry("jmshatter", new Paint("mshatter", 1, FACE_DIR, 320 / 256.0, 1)),
+            java.util.Map.entry("jribbon", new Paint("ribbon", 1, FACE_DIR, 1, 1)),
+            // 2026-11-16 피에로 (서커스 — tools/jobvfx/circus.py)
+            java.util.Map.entry("jconfetti", new Paint("confetti", 1, BILL, 1, 1)),
+            java.util.Map.entry("jballoon", new Paint("balloon", 1, BILL, 1, 1)),
+            java.util.Map.entry("jfirework", new Paint("firework", 1, BILL, 1, 1)),
+            java.util.Map.entry("jspot", new Paint("spot", 1, VERT, 384 / 128.0, 1)));
 
     /** 칠한 직업 (그 직업의 두 빛으로 그린 예전 rfx 를 그 묶음의 칠한 그림으로 — 직업 빛 배열은 jobs.json 을 다시 읽으면 바뀌므로 그때그때 비교) */
-    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer"};
+    private static final String[] PAINTED_JOBS = {"mage", "arcmage", "necromancer", "trickster", "pierrot"};
     /** 스킬이 직업 빛 대신 쓰는 빛 묶음 (같은 배열) → 묶음: 아크메이지 밤빛 · 금서의 세 주문 빛 · 프리즘 레이 다섯 빛 (무지개 대신 비전 광선) · 망자의 연기 */
     private static java.util.Map<double[], Lib> palette;
 
@@ -1289,6 +1327,9 @@ final class PhantomFx {
             m.put(NecroCrew.DEEP, SOUL); // 네크로맨서 망자의 연기 (짙은 녹색 · 혼불)
             m.put(JobTraits8.GRAVE_SMOKE, SOUL); // 망자의 군대 무덤이 솟을 때 흙먼지
             m.put(ArcmageSkills.STAR_BLUE, ARCANE); // 헤일로 배리어의 별빛 고리
+            for (double[][] c : JobFx.CIRCUS) m.put(c[0], CIRCUS); // 2026-11-16 피에로 색종이 · 풍선 · 불꽃놀이의 서커스 빛 (무지개 대신 서커스 그림)
+            m.put(TricksterSkills.ILLUSION, ILLUSION); // 2026-11-16 트릭스터 거울 · 깨지는 거울 · X 자국의 청록 환영빛
+            m.put(TricksterSkills.ILLUSION_CORE, ILLUSION);
             palette = m;
         }
         Lib L = palette.get(glow);
@@ -1304,6 +1345,13 @@ final class PhantomFx {
      * 2026-11-16 예전 rfx 한 벌 (JobFx.two · cells — 빛 glow · 값 b) 을 칠한 그림 한 장으로: glow 가 칠한 직업의 빛 (painter) 이고 그 묶음에 이 rfx 의 그림 (PAINT) 이
      * 있으면 rfx 다리로 같은 자리 · 크기 · 방향 · 움직임에 그리고 true (사용자 "예전 방향 · 자리 · 크기는 그대로, 그림만")
      */
+    /** 2026-11-16 이 rfx 를 빛 glow 로 부르면 칠한 그림으로 그리는지 (칠한 면 판은 앞뒤 두 면 — 예전 한 면 판을 앞 · 뒤 두 번 부르던 곳은 한 번만) */
+    static boolean paints(String rfx, double[] glow) {
+        Paint p = PAINT.get(rfx);
+        Lib L = p == null ? null : painter(glow);
+        return L != null && Vfx.hasSheet(p.k() > 1 ? L.n(p.art()) + "_00" : L.n(p.art()));
+    }
+
     static boolean painted(ServerLevel level, String rfx, int first, Vec3 at, Opt b, double[] glow) {
         Paint p = PAINT.get(rfx);
         if (p == null) return false;

@@ -381,8 +381,9 @@ final class JobFx {
         }
         if (PhantomArcher.family(j)) { // 2026-11-15 팬텀 아처 · 2차 둘: 2D 깃털 바람 대신 단색 블록 베인 자리 (PhantomArcher.hitMark — 직업 색)
             PhantomArcher.hitMark(level, e, size, PhantomArcher.accent(j)); // 2026-11-15 아스널 킹은 금빛 (루비 빨강이 금빛 묶음과 어긋났음)
-            WyrdKit.hit(level, PhantomFx.lib(j), e, scale); // 2026-11-16 위르드식 바닐라 파티클 겹
-            mmorpg.fabric.skill.SkillFx.sparks(level, Kit.bodyPoint(e), inner(j), 5, 3.5 + scale);
+            // 2026-11-16 위르드식 바닐라 파티클 겹 — 예전 불티 (rpg:arrow_spark → 모드 없는 클라이언트의 색 먼지 다섯) 는 뺌: 위르드식은 먼지를 피 묶음만 씀 (둘레 빛을
+            // 받아 해질녘 검은 점) · 겹이 스스로 빛나는 불티 · 번쩍임을 뿌림 (CI 43868005237 라이징 엣지 jobcensus arrow_spark 40)
+            WyrdKit.hit(level, PhantomFx.lib(j), e, scale);
             return;
         }
         Vec3 b = Kit.bodyPoint(e);

@@ -6,6 +6,7 @@
 
   python3 tools/vfx_sprites.py          # 씀
   python3 tools/vfx_sprites.py --check  # 쓸 것이 없는지
+  python3 tools/vfx_sprites.py --only el_warrior,el_bear   # 2026-11-16 그 접두의 그림판만 다시 그림 (나머지는 이미 쓴 판을 옮김 — 글자 번호만 새로)
 
 만드는 것
 - src/main/resources/assets/rpg/textures/font/vfx/<이름>.png   그림판 (칸 하나 = 글자 하나, 한 판의 칸 크기는 같음 · 칸은 256 이하 — 글꼴 텍스처 한 장이 256 × 256)
@@ -309,11 +310,33 @@ def crop_cells(cells):
 # 램프 색 · 꽉 찬 텍셀 · 네모 픽셀). 비우면 칠한 그림 그대로.
 # 2026-11-16 위르드식 확정 (사용자 "이제 위르드식으로 만들어보자" — 도트 2D + 바닐라 파티클 + 직접 만든 3D): 칠한 묶음 모두 도트로 (비전은 원소 램프 그대로 —
 # 시범에서 본 모습, 나머지는 그림 자체의 색 — 그림자 꽃잎 · 팬텀 아처 불꽃처럼 원소 램프 밖의 색이 있음)
-PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el_shadow": "auto", "el_soul": "auto", "pa": "auto", "ak": "auto", "br": "auto"}
+PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el_shadow": "auto", "el_soul": "auto", "pa": "auto", "ak": "auto", "br": "auto",
+              "el_illusion": "auto", "el_circus": "auto"}  # 2026-11-16 트릭스터 환영 · 피에로 서커스
 
 
-def build():
-    """→ {파일 경로: 바이트} · 글꼴 · 목록"""
+def _old_outputs():
+    """2026-11-16 이미 쓴 글꼴 · 목록 (--only 로 다시 쓰지 않는 그림판을 그대로 옮길 때): {판 이름: (제공자, 목록 항목)}"""
+    try:
+        font = json.load(open(OUT_FONT, encoding="utf-8"))
+        idx = json.load(open(OUT_INDEX, encoding="utf-8"))["sprites"]
+    except (OSError, ValueError, KeyError):
+        return {}
+    out = {}
+    for pv in font.get("providers", []):
+        name = os.path.splitext(os.path.basename(pv.get("file", "")))[0]
+        if name in idx and os.path.exists(os.path.join(OUT_TEX, name + ".png")):
+            out[name] = (pv, idx[name])
+    return out
+
+
+def _wanted(name, only):
+    """--only 접두 (그림판 이름이 '접두' 또는 '접두_…') 에 드는지 — only 가 없으면 모두"""
+    return only is None or any(name == p or name.startswith(p + "_") for p in only)
+
+
+def build(only=None):
+    """→ {파일 경로: 바이트} · 글꼴 · 목록. only = 다시 그릴 그림판 접두 목록 (2026-11-16 — 나머지는 이미 쓴 판을 그대로 옮김: 글자 번호만 새로 매김.
+    직업 묶음을 하나 더할 때 모든 묶음을 다시 그리면 15분 넘게 걸림)"""
     from jobvfx import pixel as _pixel
     files = {}
     providers = []
@@ -322,7 +345,34 @@ def build():
     saved = [0, 0]  # 예전 · 자른 픽셀 수
     makes = {n: mk for n, mk, _ in SPRITES}
     pix_cache = {}
+    old = _old_outputs() if only is not None else {}
+    reused = 0
     for name, make, colored in SPRITES:
+        if not _wanted(name, only) and name in old:
+            pv, ent = old[name]
+            lines = []
+            chars = []
+            for line in pv["chars"]:
+                nl = ""
+                for ch_ in line:
+                    if ch_ == "\u0000":
+                        nl += "\u0000"
+                    else:
+                        c = chr(code)
+                        code += 1
+                        chars.append(c)
+                        nl += c
+                lines.append(nl)
+            assert len(chars) == ent["frames"], name
+            path = os.path.join(OUT_TEX, name + ".png")
+            files[path] = open(path, "rb").read()
+            providers.append({"type": "bitmap", "file": "rpg:font/vfx/%s.png" % name, "height": pv["height"], "ascent": pv["ascent"], "chars": lines})
+            e = {"chars": "".join(chars), "frames": ent["frames"], "aspect": ent["aspect"], "colored": colored}
+            if "crop" in ent:
+                e["crop"] = ent["crop"]
+            index[name] = e
+            reused += 1
+            continue
         cells = _pixel.sheet_cells(name, makes, pix_cache, PIXEL_LIBS) if PIXEL_LIBS else None
         if cells is None:
             cells = make()
@@ -365,6 +415,8 @@ def build():
         if crop != (0.0, 0.0):
             index[name]["crop"] = list(crop)
     font = {"providers": providers}
+    if only is not None:
+        print("reused %d sheets (--only %s)" % (reused, ",".join(only)))
     print("crop: %.1f MB → %.1f MB (decoded RGBA)" % (saved[0] * 4 / 1e6, saved[1] * 4 / 1e6))
     if _pixel.MISSING:
         print("pixel: 크기 없음 (DEFAULT_SIZE %.1f 칸) — %s" % (_pixel.DEFAULT_SIZE, " ".join(sorted(_pixel.MISSING))))
@@ -378,7 +430,8 @@ def build():
 
 def main():
     check = "--check" in sys.argv
-    files, index = build()
+    only = sys.argv[sys.argv.index("--only") + 1].split(",") if "--only" in sys.argv else None
+    files, index = build(only)
     bad = []
     for path, data in files.items():
         old = open(path, "rb").read() if os.path.exists(path) else None

@@ -1343,14 +1343,14 @@ STYLES = {
                     accent=ramp([(0.0, "#1A0514"), (0.5, "#B0217F"), (0.8, "#FF6CCB"), (1.0, "#FFE0F4")]),
                     smoke=ramp([(0.0, "#050208"), (0.45, "#150B22"), (0.8, "#2C1C42"), (1.0, "#4E3A6C")]),
                     ring="ticks", smoke_alpha=0.5, seed=7),
-    # 2026-11-15 환영 (트릭스터 — 자홍 · 짙은 보라 + 청록 유리빛): 거울 · 깨지는 거울 · 손거울 · 띠 고리 (tools/jobvfx/mirror.py). 아직 글꼴에 넣지 않음 (sprites())
+    # 2026-11-15 환영 (트릭스터 — 자홍 · 짙은 보라 + 청록 유리빛): 거울 · 깨지는 거울 · 손거울 · 띠 고리 (tools/jobvfx/mirror.py). 2026-11-16 글꼴에 넣음
     "illusion": Style("el_illusion", "illusion",
                       main=ramp([(0.0, "#0E0210"), (0.12, "#2A0626"), (0.26, "#520C46"), (0.4, "#80156A"), (0.52, "#AC2188"), (0.64, "#D23BA6"),
                                  (0.76, "#EE66C2"), (0.86, "#FF9FDA"), (0.94, "#FFD8F0"), (1.0, "#FFFFFF")]),
                       accent=ramp([(0.0, "#04161C"), (0.5, "#147A8C"), (0.8, "#6FE6F4"), (1.0, "#E8FFFF")]),
                       smoke=ramp([(0.0, "#07030A"), (0.45, "#1A0A20"), (0.8, "#36183F"), (1.0, "#5A3466")]),
                       ring="ticks", smoke_alpha=0.45, seed=9),
-    # 2026-11-15 서커스 (피에로 — 진홍 · 크림 금빛, 무지개 없이): 색종이 · 풍선 · 불꽃놀이 · 조명 (tools/jobvfx/circus.py). 아직 글꼴에 넣지 않음 (sprites())
+    # 2026-11-15 서커스 (피에로 — 진홍 · 크림 금빛, 무지개 없이): 색종이 · 풍선 · 불꽃놀이 · 조명 (tools/jobvfx/circus.py). 2026-11-16 글꼴에 넣음
     "circus": Style("el_circus", "circus",
                     main=ramp([(0.0, "#0E0204"), (0.12, "#2C0509"), (0.26, "#5A0A14"), (0.4, "#8C1222"), (0.52, "#BC1E30"), (0.64, "#E23A44"),
                                (0.76, "#FF6A68"), (0.86, "#FF9E96"), (0.94, "#FFD8D0"), (1.0, "#FFFFFF")]),
@@ -1488,12 +1488,21 @@ def sets_for(S):
         # 한 바퀴 베기 (JobFx.ring) · 일섬 (JobFx.line) 은 공용 그림을 그림자 빛으로, 암살자 대표 그림은 tools/jobvfx/shadow.py
         from . import shadow
         out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + shadow.sprites()
+    if S.kind == "illusion":
+        # 2026-11-16 트릭스터 (환영 — 남은 직업 위르드식 첫째): 공용 그림을 환영 빛으로 + 한 바퀴 베기 · 일섬 + 대표 그림 (tools/jobvfx/mirror.py — 거울 · 깨지는
+        # 거울 · 손거울 · 띠 고리)
+        from . import mirror
+        out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + mirror.sprites()
+    if S.kind == "circus":
+        # 2026-11-16 피에로 (서커스): 공용 그림을 서커스 빛으로 + 한 바퀴 베기 · 일섬 + 대표 그림 (tools/jobvfx/circus.py — 색종이 · 풍선 동물 · 불꽃놀이 · 조명)
+        from . import circus
+        out += tiled(p + "spin", fr("spin")) + tiled(p + "spinm", mirrored("spin")) + [(p + "cut", fr("cut"), True)] + circus.sprites()
     return out
 
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus"):
         out += sets_for(STYLES[key])
     return out
 

@@ -54,8 +54,17 @@ final class BladeRangerSkills {
 
     /** 투영한 칼 한 자루 (단조 불빛 · 길이 len — appear 틱에 커짐 · fx 수명 life 틱) */
     static RuneSwords.Blade blade(ServerLevel level, Vec3 hilt, Vec3 dir, double len, int appear, int life) {
+        return blade(level, hilt, dir, len, appear, life, null);
+    }
+
+    /**
+     * 같은 것 — 볼 사람 who (null = 모두). 2026-11-16 라이징 엣지 · 블레이드 이클립스 1인칭 영상: 몸 곁에 든 쌍검 · 날개 칼은 1인칭 눈 바로 옆이라 검은 칼 면이 화면
+     * 절반을 덮었음 → 주인의 1인칭에서는 뺌 (PhantomFx.hide1p — 1인칭은 눈앞 베기로 봄)
+     */
+    static RuneSwords.Blade blade(ServerLevel level, Vec3 hilt, Vec3 dir, double len, int appear, int life, java.util.function.Predicate<ServerPlayer> who) {
         Vec3 d = V.unit(dir);
         Vfx.Fx fx = RuneProps.fx(level, hilt, Math.max(appear + 6, life));
+        if (who != null) fx.viewers(who);
         PhantomArcher.Pal p = PhantomArcher.FORGE_PAL;
         RuneSwords.Blade b = RuneSwords.phantom(fx, p.sword(), hilt, d, PhantomArcher.faceOf(d), len, 0.05, p.blade(), p.gem());
         b.prop.outline(PhantomFx.FORGE.glow()); // 2026-11-15 직업 전용: 칼이 주황으로 번짐
@@ -341,7 +350,8 @@ final class BladeRangerSkills {
         mid = V.scale(mid, 1.0 / spots.size());
         Vec3 dm = new Vec3(mid.x - c0.x, 0, mid.z - c0.z);
         double dl = V.len(dm);
-        Vec3 hub = ground(level0, dl > 1.2 ? V.add(c0, V.scale(dm, 1 / dl), dl - 1.1) : c0);
+        // 2026-11-16 1인칭 영상: 가운데 1.1칸 앞에 내려앉으면 둘레 적이 눈앞을 다 가렸음 → 2.2칸 앞 (가까우면 제자리)
+        Vec3 hub = ground(level0, dl > 2.3 ? V.add(c0, V.scale(dm, 1 / dl), dl - 2.2) : c0);
         Vec3 air = JobMove.upAt(sp, hub, H);
         Vec3 face0 = dl > 1.2 ? V.scale(dm, 1 / dl) : f0; // 공중에서 보는 쪽 (뜬 적들 쪽)
         // 0: 꽂음 — 쌍검이 손에서 발 앞 땅으로 · 발밑 섬광 · 달아오른 톱니 고리가 둘레로 퍼짐 (예고 — 내리꽂을 때까지) · 작은 열 충격파
@@ -419,7 +429,7 @@ final class BladeRangerSkills {
             for (int s = 0; s < 2; s++) {
                 Vec3 h = V.add(c, rt, (s == 0 ? -1 : 1) * 0.5);
                 PhantomArcher.traceLines(sp.level(), h, V.add(face0, V.UP, 0.4), V.UP, 1.5, 0.2, L.trace());
-                tw[s] = blade(sp.level(), h, V.add(face0, V.UP, 0.4), 1.5, 1, slamAt - riseAt + 4);
+                tw[s] = blade(sp.level(), h, V.add(face0, V.UP, 0.4), 1.5, 1, slamAt - riseAt + 4, PhantomFx.hide1p(sp));
             }
         });
         int cut0 = riseAt + 7;
@@ -482,9 +492,12 @@ final class BladeRangerSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 g = PhantomFx.ground(level, sp.position());
-            PhantomFx.boom(level, L, V.up(g, 0.3), 1.7);
+            // 2026-11-16 1인칭 영상: 발밑 불덩이 · 섬광이 눈을 감싸 화면 전체가 살구빛 → 주인의 1인칭은 앞 땅 쪽에 작은 섬광만
+            PhantomFx.boom(level, L, V.up(g, 0.3), 1.7, PhantomFx.hide1p(sp));
             PhantomFx.shock(level, L, g, R * 2.7, 1);
-            PhantomFx.flash(level, L, V.up(g, 0.5), 3.0);
+            PhantomFx.flash(level, L, V.up(g, 0.5), 3.0, PhantomFx.hide1p(sp));
+            Vec3 lk = V.flat(sp.getViewVector(1F));
+            PhantomFx.flash(level, L, V.up(V.add(g, lk, 2.6), 0.3), 1.6, PhantomFx.only1p(sp));
             SkillFx.play(level, "entity.generic.explode", g, 0.9, 1.0);
             SkillFx.play(level, "block.anvil.land", g, 0.6, 1.0);
             SkillFx.play(level, "item.mace.smash_ground_heavy", g, 0.8, 0.9);
@@ -747,7 +760,8 @@ final class BladeRangerSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
-                PhantomFx.shock(level, L, V.up(PhantomFx.ground(level, c), 1.15), R * 2.1, 1);
+                // 2026-11-16 1인칭 영상: 가슴 높이 충격파의 안쪽 칠이 화면 아래 절반을 덮었음 → 주인의 1인칭은 뺌 (퍼지는 칼날 · 땅 고리로 봄)
+                PhantomFx.shock(level, L, V.up(PhantomFx.ground(level, c), 1.15), R * 2.1, 1, PhantomFx.hide1p(sp));
                 PhantomFx.flash(level, L, V.up(c, haloH), 2.2);
                 SkillFx.play(level, "item.trident.riptide_3", c, 0.9 + cc * 0.12, 0.8);
                 SkillFx.play(level, "entity.player.attack.sweep", c, 0.7 + cc * 0.1, 1.0);
@@ -808,12 +822,12 @@ final class BladeRangerSkills {
                 Vec3 d = V.unit(V.add(V.add(V.UP, rt, side * 0.85), f, -0.35));
                 PhantomArcher.traceLines(sp.level(), h, d, PhantomArcher.faceOf(d), giant, 0.4, L.trace());
                 // 날개처럼 천천히 자람 (blade 의 저절로 자람은 40틱 뒤 — 그 전에 부서짐): 0.05 → 0.4 (2틱) → 1 (6틱)
-                RuneSwords.Blade b = blade(sp.level(), h, d, giant, 40, finalAt - gather + 14);
+                RuneSwords.Blade b = blade(sp.level(), h, d, giant, 40, finalAt - gather + 14, PhantomFx.hide1p(sp));
                 RuneKit.later(1, () -> b.grow(0.4, 2));
                 RuneKit.later(3, () -> b.grow(1, 6));
                 wings[s] = b;
             }
-            PhantomFx.flash(sp.level(), L, V.up(sp.position(), 2.4), 2.6);
+            PhantomFx.flash(sp.level(), L, V.up(sp.position(), 2.4), 2.6, PhantomFx.hide1p(sp));
             SkillFx.play(sp.level(), "item.trident.thunder", sp.position(), 1.6, 0.35);
         });
         // 마지막: 겨눈 적 앞으로 파고들어 거대한 X

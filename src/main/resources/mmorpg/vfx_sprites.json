@@ -3308,6 +3308,866 @@
     -0.023438,
     -0.0
    ]
+  },
+  "el_illusion_slash_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.15625
+   ]
+  },
+  "el_illusion_slash_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.15625
+   ]
+  },
+  "el_illusion_slash_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.265625,
+    0.203125
+   ]
+  },
+  "el_illusion_slash_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.1875,
+    0.171875
+   ]
+  },
+  "el_illusion_slashm_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.15625
+   ]
+  },
+  "el_illusion_slashm_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.15625
+   ]
+  },
+  "el_illusion_slashm_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.1875,
+    0.171875
+   ]
+  },
+  "el_illusion_slashm_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.265625,
+    0.203125
+   ]
+  },
+  "el_illusion_xslash_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.15625,
+    -0.15625
+   ]
+  },
+  "el_illusion_xslash_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.15625,
+    -0.15625
+   ]
+  },
+  "el_illusion_xslash_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.15625,
+    0.15625
+   ]
+  },
+  "el_illusion_xslash_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.15625,
+    0.15625
+   ]
+  },
+  "el_illusion_boom_00": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.078125
+   ]
+  },
+  "el_illusion_boom_01": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.09375
+   ]
+  },
+  "el_illusion_boom_10": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_illusion_boom_11": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_illusion_shock_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_illusion_shock_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_illusion_shock_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_illusion_shock_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_illusion_ring_00": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_illusion_ring_01": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_illusion_ring_10": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_illusion_ring_11": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_illusion_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.021521,
+    -0.0
+   ]
+  },
+  "el_illusion_shock_s": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_illusion_crack_s": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03184,
+    -0.0
+   ]
+  },
+  "el_illusion_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.040242,
+    -0.0
+   ]
+  },
+  "el_illusion_charge": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022111,
+    -0.0
+   ]
+  },
+  "el_illusion_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005896,
+    -0.0
+   ]
+  },
+  "el_illusion_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_illusion_pillar": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_illusion_dust": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.021521,
+    -0.0
+   ]
+  },
+  "el_illusion_spin_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_illusion_spin_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.015625
+   ]
+  },
+  "el_illusion_spin_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.03125
+   ]
+  },
+  "el_illusion_spin_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    0.03125
+   ]
+  },
+  "el_illusion_spinm_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.015625
+   ]
+  },
+  "el_illusion_spinm_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_illusion_spinm_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03125,
+    0.03125
+   ]
+  },
+  "el_illusion_spinm_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.03125
+   ]
+  },
+  "el_illusion_cut": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_illusion_pane": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 0.566,
+   "colored": true
+  },
+  "el_illusion_mshatter": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 0.7925,
+   "colored": true
+  },
+  "el_illusion_mirror": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.00855,
+    -0.0
+   ]
+  },
+  "el_illusion_ribbon": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_slash_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.1875
+   ]
+  },
+  "el_circus_slash_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    -0.171875
+   ]
+  },
+  "el_circus_slash_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.265625,
+    0.203125
+   ]
+  },
+  "el_circus_slash_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.1875,
+    0.171875
+   ]
+  },
+  "el_circus_slashm_00": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03125,
+    -0.171875
+   ]
+  },
+  "el_circus_slashm_01": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    -0.1875
+   ]
+  },
+  "el_circus_slashm_10": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.1875,
+    0.171875
+   ]
+  },
+  "el_circus_slashm_11": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.265625,
+    0.203125
+   ]
+  },
+  "el_circus_xslash_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.15625,
+    -0.15625
+   ]
+  },
+  "el_circus_xslash_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.15625,
+    -0.15625
+   ]
+  },
+  "el_circus_xslash_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.15625,
+    0.15625
+   ]
+  },
+  "el_circus_xslash_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.15625,
+    0.15625
+   ]
+  },
+  "el_circus_boom_00": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    -0.078125
+   ]
+  },
+  "el_circus_boom_01": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    -0.078125
+   ]
+  },
+  "el_circus_boom_10": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.09375,
+    0.09375
+   ]
+  },
+  "el_circus_boom_11": {
+   "chars": "",
+   "frames": 14,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.09375,
+    0.09375
+   ]
+  },
+  "el_circus_shock_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_shock_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_shock_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_shock_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_ring_00": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_circus_ring_01": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_circus_ring_10": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    0.015625
+   ]
+  },
+  "el_circus_ring_11": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    0.015625
+   ]
+  },
+  "el_circus_boom_s": {
+   "chars": "",
+   "frames": 12,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.00059,
+    -0.0
+   ]
+  },
+  "el_circus_shock_s": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_crack_s": {
+   "chars": "",
+   "frames": 5,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007223,
+    -0.0
+   ]
+  },
+  "el_circus_flash": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.048054,
+    -0.0
+   ]
+  },
+  "el_circus_charge": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.017541,
+    -0.0
+   ]
+  },
+  "el_circus_ember": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.005896,
+    -0.0
+   ]
+  },
+  "el_circus_shard": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.007812,
+    -0.0
+   ]
+  },
+  "el_circus_pillar": {
+   "chars": "",
+   "frames": 10,
+   "aspect": 0.4906,
+   "colored": true,
+   "crop": [
+    0.006486,
+    -0.0
+   ]
+  },
+  "el_circus_dust": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.000147,
+    -0.0
+   ]
+  },
+  "el_circus_spin_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.015625,
+    -0.015625
+   ]
+  },
+  "el_circus_spin_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    -0.015625
+   ]
+  },
+  "el_circus_spin_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.03125,
+    0.03125
+   ]
+  },
+  "el_circus_spin_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.046875,
+    0.03125
+   ]
+  },
+  "el_circus_spinm_00": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.046875,
+    -0.015625
+   ]
+  },
+  "el_circus_spinm_01": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.015625,
+    -0.015625
+   ]
+  },
+  "el_circus_spinm_10": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.046875,
+    0.03125
+   ]
+  },
+  "el_circus_spinm_11": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    -0.03125,
+    0.03125
+   ]
+  },
+  "el_circus_cut": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true
+  },
+  "el_circus_confetti": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.022111,
+    -0.0
+   ]
+  },
+  "el_circus_balloon": {
+   "chars": "",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.025354,
+    -0.0
+   ]
+  },
+  "el_circus_firework": {
+   "chars": "",
+   "frames": 6,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.017541,
+    -0.0
+   ]
+  },
+  "el_circus_spot": {
+   "chars": "",
+   "frames": 4,
+   "aspect": 0.3396,
+   "colored": true,
+   "crop": [
+    -0.00457,
+    -0.0
+   ]
   }
  }
 }
