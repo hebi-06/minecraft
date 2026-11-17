@@ -36,6 +36,44 @@ public final class RuneScaleTest {
         return Runes.parseRune(Runes.runeId(fam, grade));
     }
 
+    /**
+     * 2026-11-17 딜타임 (사용자 "쿨 바꿔서 직업 스킬하고 딜타임 만들어둘건데 그사이에 꽂아넣을수 있도록" · "쓰임별로 나눔" · "검사면 검사랑 어울리는 룬 스킬이 있으면
+     * 해당하는 두 스킬에 쿨이 같게"): 새 룬 30 은 필러 (4 ~ 8초) 아니면 딜타임 (27.5 ~ 70초) · RUNE_SET.pairs 의 짝 직업 스킬 (숨기지 않은 직업) 과 쿨이 같음
+     */
+    private static void pairs() {
+        int fillers = 0;
+        int deals = 0;
+        for (String g : Runes.GRADE_ORDER) {
+            for (String fam : Runes.familiesOf(g)) {
+                if (!Runes.isSet(fam)) continue;
+                double cd = rune(fam, g).cd();
+                if (cd >= 4 && cd <= 8) fillers++;
+                else if (cd >= 27.5 && cd <= 70) deals++;
+                else check(false, fam + " cd " + cd + " is neither filler (4 ~ 8) nor deal time (27.5 ~ 70)");
+            }
+        }
+        check(fillers == 13 && deals == 17, "13 fillers · 17 deal-time runes: " + fillers + " · " + deals);
+        Obj p = Rules.get().obj("RUNE_SET").obj("pairs");
+        Set<String> skills = new java.util.HashSet<>();
+        int n = 0;
+        for (String fam : p.keys()) {
+            if (fam.startsWith("_")) continue;
+            String g = null;
+            for (String x : Runes.GRADE_ORDER) if (Runes.hasGrade(fam, x)) g = x;
+            check(g != null && Runes.isSet(fam), fam + " pair: a set rune");
+            if (g == null) continue;
+            double cd = rune(fam, g).cd();
+            for (Object o : p.list(fam)) {
+                String id = String.valueOf(o);
+                Jobs.Job j = Jobs.job(id.substring(0, Math.max(0, id.indexOf('_'))));
+                Jobs.Skill k = j == null ? null : j.skill(id);
+                check(k != null && !Jobs.hidden(j.id()) && Math.abs(k.cd() - cd) < 1e-9 && skills.add(id), fam + " " + cd + "s ↔ " + id + " " + (k == null ? null : k.cd()));
+                n++;
+            }
+        }
+        check(n == 28, "28 rune ↔ job skill pairs " + n);
+    }
+
     /** 배율 합 그대로 두는 룬 (지원 · 버프 — 유틸 값 없음) */
     private static final Set<String> KEEP = Set.of("vit.common", "vit.rare", "vit.noble", "vit.hero", "vit.transcend", "holy.common", "holy.rare", "holy.noble",
             "holy.transcend", "body.common", "body.rare", "body.noble", "body.hero", "body.transcend", "strike.common", "strike.rare", "strike.noble",
@@ -121,6 +159,7 @@ public final class RuneScaleTest {
         }
         check(runes == 150, "150 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30) " + runes);
         check(sets == 30, "30 set runes " + sets);
+        pairs();
         for (String g : Runes.GRADE_ORDER) check(Runes.familiesOf(g).size() == 6, g + ": 6 runes " + Runes.familiesOf(g));
         check(ruled == 99, "99 runes under the rule " + ruled);
         check(leaps == 6, "6 leap runes " + leaps);

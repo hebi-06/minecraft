@@ -102,7 +102,7 @@ public final class JobsTest {
             for (int i : new int[] {0, 1, 2, 4}) check(!Jobs.stanceBudget(j.skill(i)), j.id() + " budget stance only in slot 3");
             if (k.total() <= 0) continue;
             stanceDamage++;
-            check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
+            check(near(k.total(), 12 * j.scale()) && near(k.cd(), stanceCd(k, 30)) && near(Jobs.paceMult(k), k.cd() / 30) && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
         check(stanceDamage == 12, "twelve slot-3 damage skills (2026-11-15 아스널 킹의 킹스 저지먼트 · 블레이드 레인저의 포지 브레이커 · 팬텀 아처의 팬텀 버스트 · 매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로 · 소울 리퍼의 랜턴 오브 소울즈가 스펙트럴 사이스 태세로) "
@@ -387,7 +387,7 @@ public final class JobsTest {
 
         // 글자
         // 2026-11-17 트리니티 엣지 5초 (기준 6초 — 피해 × 5/6: 5.84 → 4.87)
-        check(Jobs.skillLine(sw.skill(0)).equals("트리니티 엣지 · 5초 · 배율 4.87") && Jobs.skillLine(sw.skill(3)).equals("미러 블레이드 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).equals("트리니티 엣지 · 5초 · 배율 4.87") && Jobs.skillLine(sw.skill(3)).equals("미러 블레이드 · 29.5초"), "skill line " + Jobs.skillLine(sw.skill(0)) + " · " + Jobs.skillLine(sw.skill(3)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -414,10 +414,19 @@ public final class JobsTest {
      * 기준의 0.6 ~ 1.4 배 — 기준 쿨 (slotCd) · 재사용 비례 (피해 스킬 = 쿨 ÷ 기준) 가 맞는지
      */
     static boolean paceOk(Jobs.Skill k, double base) {
-        boolean fixed = k.slot() == 1 || k.slot() == 3;
-        boolean cd = fixed ? k.cd() == base : k.cd() >= base * 0.6 - 1e-9 && k.cd() <= base * 1.4 + 1e-9;
+        boolean cd = k.slot() == 1 ? k.cd() == base : k.slot() == 3 ? near(k.cd(), stanceCd(k, base)) : k.cd() >= base * 0.6 - 1e-9 && k.cd() <= base * 1.4 + 1e-9;
         double pace = k.total() > 0 ? k.cd() / base : 1;
         return cd && near(Jobs.baseCd(k), base) && near(Jobs.paceMult(k), pace);
+    }
+
+    /**
+     * 2026-11-17 딜타임 (사용자 "직업마다 다른 주기" · "버프 같은 스킬도 쿨 살짝 다르게 해서 딜레이 만들기"): 숨기지 않은 직업의 태세 칸 = 궁극기 ÷ 2 (태세 버프는 + 2초 —
+     * 궁극기와 어긋남), 숨긴 직업은 기준 그대로
+     */
+    static double stanceCd(Jobs.Skill k, double base) {
+        Jobs.Job j = Jobs.jobOf(k);
+        if (j == null || Jobs.hidden(j.id())) return base;
+        return j.skill(4).cd() / 2 + (k.total() > 0 ? 0 : 2);
     }
 
     /**
@@ -517,7 +526,7 @@ public final class JobsTest {
         check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05)
                 && near(bk.trait().def().numOr("thirstAt", 0), 0.3) && bk.trait().def().numOr("thirstSpeed", 0) > 0 && bk.trait().def().numOr("leechMax", 0) > 0,
                 "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
-        check(Jobs.skillLine(sm.skill(0)).startsWith("라이트닝 드로우 · 4초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("새비지 프렌지 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
+        check(Jobs.skillLine(sm.skill(0)).startsWith("라이트닝 드로우 · 4초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("새비지 프렌지 · 32초"), "skill line " + Jobs.skillLine(sm.skill(0)) + " · " + Jobs.skillLine(bk.skill(3)));
         warriorAdvance(wa, wl, fr);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("elementalblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
@@ -558,8 +567,8 @@ public final class JobsTest {
         check(near(dc.num("bite", 0) + dc.num("tear", 0), 4) && near(dl.num("bite", 0), 2.4) && near(df.num("pull", 0) + df.num("bite", 0), 7.2)
                 && near(du.num("swallow", 0) + du.num("crush", 0), 32), "darkknight totals 4 (1.6 + 2.4) · 2.4 · 7.2 (2.4 + 4.8) · 32 (8 + 24)");
         // 4번 칸: 이그니션 · 언홀리 프렌지 8초 강화 태세 (피해 칸 몫 아님)
-        check(!Jobs.stanceBudget(pg) && pg.total() == 0 && near(pg.num("dur", 0), 160) && !Jobs.stanceBudget(dz) && dz.total() == 0 && near(dz.num("dur", 0), 160),
-                "이그니션 · 언홀리 프렌지 8초 태세");
+        check(!Jobs.stanceBudget(pg) && pg.total() == 0 && near(pg.num("dur", 0), 160) && !Jobs.stanceBudget(dz) && dz.total() == 0 && near(dz.num("dur", 0), 180),
+                "이그니션 8초 · 언홀리 프렌지 9초 태세 (2026-11-17 쿨 34.5초 — 궁극기 65 ÷ 2 + 2)");
         // 초당 피해: 피닉스 가드 = 1차 × 1.2 · 다크 나이트 = 1차 × 1.3 (역할이 바뀜 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈ 1.565 ÷ 삼킴 덤 1.2)
         check(near(Jobs.advanceDps(ph), 1.2) && near(Jobs.advanceDps(dk), 1.3) && near(dps(ph) / dps(gu), 1.2, 0.005) && near(dps(dk) / dps(gu), 1.3, 0.005),
                 "phoenix × 1.2 · darkknight × 1.3");
@@ -593,7 +602,7 @@ public final class JobsTest {
                 && Jobs.utils(du).equals(List.of("pull", "stun1")), "darkknight utils · area");
         check(Jobs.windupTicks(pb) == 6 && Jobs.windupTicks(pw) == 10 && Jobs.windupTicks(pi) == 10 && Jobs.windupTicks(pu) == 10 && Jobs.windupTicks(dc) == 0
                 && Jobs.windupTicks(dl) == 8 && Jobs.windupTicks(df) == 6 && Jobs.windupTicks(du) == 26, "windups 6 · 10 · 10 · 10 / 0 (4틱은 선딜 아님) · 8 · 6 · 26");
-        check(Jobs.skillLine(pb).startsWith("피닉스 배시 · 6초 · 배율 ") && Jobs.skillLine(dz).equals("언홀리 프렌지 · 30초"), "guardian advanced skill line " + Jobs.skillLine(dz));
+        check(Jobs.skillLine(pb).startsWith("피닉스 배시 · 6초 · 배율 ") && Jobs.skillLine(dz).equals("언홀리 프렌지 · 34.5초"), "guardian advanced skill line " + Jobs.skillLine(dz));
         check(ph.color()[0][2] > 0.95 && ph.color()[0][0] < 0.4 && ph.color()[1][2] > 0.95 && dk.color()[0][0] > 0.85 && dk.color()[0][1] < 0.2 && dk.color()[1][0] < 0.3,
                 "colors: phoenix azure · white / darkknight crimson · black");
     }
@@ -692,9 +701,9 @@ public final class JobsTest {
         check(near(wl.num("lance", 0), 5 * pr.scale()) && near(wm.num("pulse", 0) * wm.num("pulses", 0), 3 * pr.scale()) && near(wn.num("drain", 0) * wn.num("drains", 0)
                 + wn.num("burst", 0), pr.skill(2).total()) && near(wu.num("beat", 0) * wu.num("beats", 0) + wu.num("burst", 0), pr.skill(4).total()) && near(wl.total(), 3)
                 && near(wm.total(), 1.8) && near(wn.total(), 5.6) && near(wu.total(), 24), "warlock totals 3 · 1.8 (0.45 × 4) · 5.6 (0.6 × 3 + 3.8) · 24 (2 × 3 + 18)");
-        // 4번 칸: 소울본드 · 애시본 둘 다 강화 태세 (피해 없음 · 10초)
-        check(!Jobs.stanceBudget(sb) && sb.total() == 0 && near(sb.num("dur", 0), 200) && !Jobs.stanceBudget(wa) && wa.total() == 0 && near(wa.num("dur", 0), 200),
-                "소울본드 · 애시본 10초 태세");
+        // 4번 칸: 소울본드 · 애시본 둘 다 강화 태세 (피해 없음 · 2026-11-17 쿨 ÷ 30 만큼 — 10.5초 · 12.5초)
+        check(!Jobs.stanceBudget(sb) && sb.total() == 0 && near(sb.num("dur", 0), 210) && !Jobs.stanceBudget(wa) && wa.total() == 0 && near(wa.num("dur", 0), 250),
+                "소울본드 10.5초 · 애시본 12.5초 태세 (2026-11-17 쿨 32 · 37초 — 궁극기 ÷ 2 + 2)");
         // 초당 피해: 세인트 = 1차 × 1.2 · 워록 = 1차 × 1.425 (역할이 바뀜 — 원거리 딜러 목표 1.14 ÷ 힐러 0.96 × 1.2 · 팀 체력 몫 +20% 는 생명 착취 덤)
         check(near(Jobs.advanceDps(sa), 1.2) && near(Jobs.advanceDps(wk), 1.425) && near(dps(sa) / dps(pr), 1.2, 0.005) && near(dps(wk) / dps(pr), 1.425, 0.005),
                 "saint × 1.2 · warlock × 1.425");
@@ -726,7 +735,7 @@ public final class JobsTest {
                 "warlock utils · area (2026-11-17 블러드 뱅큇 받는 피해 증가 없음)");
         check(Jobs.windupTicks(sw) == 8 && Jobs.windupTicks(su) == 20 && Jobs.windupTicks(wl) == 12 && Jobs.windupTicks(wm) == 10 && Jobs.windupTicks(wn) == 10
                 && Jobs.windupTicks(wu) == 10, "windups 8 · 20 / 12 · 10 · 10 · 10");
-        check(Jobs.skillLine(sw).startsWith("글리머윙 · 15초 · 배율 ") && Jobs.skillLine(wa).equals("애시본 · 30초"), "priest advanced skill line " + Jobs.skillLine(wa));
+        check(Jobs.skillLine(sw).startsWith("글리머윙 · 15초 · 배율 ") && Jobs.skillLine(wa).equals("애시본 · 37초"), "priest advanced skill line " + Jobs.skillLine(wa));
         check(sa.color()[0][0] > 0.95 && sa.color()[0][1] > 0.85 && sa.color()[1][1] > 0.95 && wk.color()[0][0] > 0.8 && wk.color()[0][1] < 0.2 && wk.color()[1][1] > 0.7,
                 "colors: saint gold · green / warlock blood · witch gold");
     }
@@ -944,7 +953,7 @@ public final class JobsTest {
         check(Jobs.windupTicks(ts) == 0 && Jobs.windupTicks(tu) == 0 && Jobs.windupTicks(pb) == 10 && Jobs.windupTicks(ps) == 8 && Jobs.windupTicks(pl) == 14
                 && Jobs.windupTicks(pu) == 10, "windups 0 · 0 · 10 · 8 · 14 · 10");
         check(Jobs.upKey(tm, "reflect") != null && Jobs.upKeys(pd).isEmpty() && Jobs.upKeys(ts).isEmpty(), "assassin advanced up keys");
-        check(Jobs.skillLine(tm).equals("팬텀 왈츠 · 30초") && Jobs.skillLine(ts).startsWith("섀도 스와프 · 6초 · 배율 ") && Jobs.skillLine(pb).startsWith("잭 인 더 박스 · 6초 · 배율 "),
+        check(Jobs.skillLine(tm).equals("팬텀 왈츠 · 29.5초") && Jobs.skillLine(ts).startsWith("섀도 스와프 · 6초 · 배율 ") && Jobs.skillLine(pb).startsWith("잭 인 더 박스 · 6초 · 배율 "),
                 "assassin advanced skill line");
         check(tr.color()[0][0] > 0.9 && tr.color()[0][2] > 0.7 && tr.color()[1][1] < 0.2 && pr.color()[0][0] > 0.9 && pr.color()[0][1] < 0.3 && pr.color()[1][0] > 0.95
                 && pr.color()[1][1] > 0.85, "colors: magenta · violet / circus red · gold");
@@ -1189,8 +1198,8 @@ public final class JobsTest {
         Jobs.Skill jg = fr.skill(3);
         check(near(bs.num("stomp", 0) + bs.num("after", 0), 15.6) && bs.num("afterAt", 0) - bs.num("landAt", 0) >= 10 && near(bs.num("landAt", 0), bs.num("w", 0))
                 && near(bs.num("afterAt", 0), bs.num("t", 0)) && Jobs.utils(bs).equals(List.of("leap", "lift")), "베어 스톰프 11 + 4.6 · w 16 · t 26");
-        check(jg.total() == 0 && near(jg.num("dur", 0), 160) && near(jg.num("echo", 0), 0.6) && near(jg.num("guard", 0), 0.1) && Jobs.upKey(jg, "echo") != null,
-                "요툰 그립 8초 태세 · 거인의 일격 60% · −10%");
+        check(jg.total() == 0 && near(jg.num("dur", 0), 180) && near(jg.num("echo", 0), 0.6) && near(jg.num("guard", 0), 0.1) && Jobs.upKey(jg, "echo") != null,
+                "요툰 그립 9초 태세 (2026-11-17 쿨 34.5초) · 거인의 일격 60% · −10%");
         // 워로드: 대지 가르기 (끝까지 모으면 6.5 · 처음은 절반) · 동면 3.9 · 곰의 포옹 11.7 · 마지막 휘두름 바깥 52 / 안쪽 26
         check(near(wl.skill(0).total(), 6.5) && near(wl.skill(0).num("minPower", 0), 0.5) && wl.skill(0).def().numbersOrNull("len").size() == 2
                 && near(wl.skill(4).num("outer", 0), 52) && near(wl.skill(4).num("inner", 0) * 2, wl.skill(4).num("outer", 0)), "warlord totals 6.5 · 52 (바깥) · 26 (안쪽)");
@@ -1237,7 +1246,7 @@ public final class JobsTest {
         check(Jobs.slotRole(sh).equals("주력") && Jobs.slotRole(wl.skill(2)).equals("광역") && Jobs.slotRole(th).equals(Jobs.slotRole(0)), "slot role 주력 for single slot 3");
         check(Jobs.upKeys(wl.skill(3)).isEmpty() && Jobs.upKey(wl.skill(2), "stun") != null && Jobs.upKey(sh, "chill") != null, "up keys");
         check(Jobs.skillLine(wl.skill(3)).startsWith("베어 스톰프 · 30초 · 배율 ") && Jobs.skillLine(th).startsWith("프로스트 바이트 · 8초 · 배율 ")
-                && Jobs.skillLine(jg).equals("요툰 그립 · 30초"), "warrior advanced skill line");
+                && Jobs.skillLine(jg).equals("요툰 그립 · 34.5초"), "warrior advanced skill line " + Jobs.skillLine(jg));
         check(wl.color()[0][0] > 0.9 && fr.color()[0][2] > 0.9 && fr.color()[0][0] < 0.7 && fr.color()[1][1] > 0.95, "colors: orange · brown / ice · frost white");
         for (Jobs.Skill k : fr.skills()) check(!k.desc().contains("롤:"), "no LoL name in desc " + k.id());
     }
