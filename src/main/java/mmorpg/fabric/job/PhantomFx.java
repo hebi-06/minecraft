@@ -1604,7 +1604,8 @@ final class PhantomFx {
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
-                && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")) return false;
+                && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
+                && !id.equals("rpg:meteor")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1666,6 +1667,16 @@ final class PhantomFx {
                 Vfx.Fx fx = Vfx.at(level, at, 20, who);
                 single(fx, L.n("boom_s"), at, size, Kit.rand() * 30 - 15, 1, false);
                 WyrdKit.burst(level, L, at, size, who);
+            }
+            case "rpg:meteor" -> {
+                // 2026-11-17 날아오는 운석 (예전 rpg:meteor — 가는 쪽을 보는 판 · 길이 size · dir 쪽 speed 칸/초, 수르트): 묶음의 불꽃 꼬리 (comet — JobFx.comet 과 같은 틀,
+                // 길이 = 반 크기 × 2)
+                if (!Vfx.hasSheet(L.n("comet"))) return false;
+                Vec3 d = o.vec("dir", V.DOWN);
+                if (V.len(d) < 1e-6) return false;
+                Opt b = Opt.of("dir", V.unit(d), "speed", o.num("speed", 0), "size", Math.max(0.3, o.num("size", 1) * 0.5), "life", Math.max(0.1, o.num("life", 1)),
+                        "frames", 4.0, "fps", 16.0, "loop", true, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                return paintedWith(level, PAINT.get("jcomet2"), L, 0, at, b);
             }
             case "rpg:snowfall" -> {
                 // 2026-11-17 눈보라 (예전 rpg:snowfall — life 초 동안 초당 30 개를 size × 3 × size 상자에서 dir 쪽 speed 칸/초 · 이미르): 묶음의 날리는 알갱이 (서리 = 눈송이)
