@@ -1650,8 +1650,15 @@ final class PhantomFx {
             }
             case "rpg:skill_rune" -> {
                 // 땅의 룬 원 (예전 rpg:skill_rune — 땅에 눕힘, 반 크기 size): 그 묶음의 땅 고리 (예고 · 테두리)
-                if (!Vfx.hasSheet(L.n("ring_00"))) return false;
                 double r = Math.max(0.4, o.num("size", 1) * (1 + o.num("grow", 0)) * 0.9);
+                if (!Vfx.hasSheet(L.n("ring_00"))) {
+                    // 2026-11-17 땅 고리가 없는 비전 묶음 (마력 룬 마법진 — 글꼴 무게로 뺐음): 별빛 고리 (halo — jhalo 와 같은 틀, 땅에 눕힘 · 되풀이)
+                    if (!Vfx.hasSheet(L.n("halo_00"))) return false;
+                    double life = Math.max(0.2, o.num("life", 0.6));
+                    Opt b = Opt.of("dir", V.UP, "size", r / 0.9, "life", life, "frames", 8.0, "fps", 12.0, "loop", true, "fade", 0.3, "alpha",
+                            Math.min(1, o.num("alpha", 0.9)), "spin", o.num("spin", 0), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                    return paintedWith(level, PAINT.get("jhalo"), L, 0, V.up(ground(level, at), 0.03), b);
+                }
                 ring(level, L, ground(level, at), r, 4, Math.max(2, (int) Math.round(o.num("life", 0.6) * 20) - 8), who, Math.min(1, o.num("alpha", 0.9)));
             }
             case "rpg:ground_crack" -> {
