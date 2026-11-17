@@ -2224,6 +2224,8 @@ final class PhantomFx {
             "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1),
             // 2026-11-17 연막 구름 (rfx_cloud 네 칸 — 암살 룬 연막 · CI 43977395799 암살 고귀 71): 묶음의 연기 (그림자 smoke — 없는 묶음은 예전)
             "cloud", new Paint("smoke", 1, BILL, 1, 1),
+            // 2026-11-17 날아가는 고드름 (rfx_icicle — 만년빙하 · 마력 · 원소 얼음 룬, CI 43982885199 14 + 6): 얼음 창 (icelance — 비전 · 서리 묶음, jicelance 와 같은 몫)
+            "icicle", new Paint("icelance", 1, LOOK_DIR, 0.25, 1),
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
             "jbreak", new Paint("shieldbreak", 1, BILL, 1, 1));
 

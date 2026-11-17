@@ -1881,6 +1881,8 @@ SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
 SPIKE_KEYS = ("frost", "soulreap")
 # 2026-11-17 뭉게 연기 (shadow.py smoke — 그 묶음의 연기 램프) 를 더 갖는 묶음: 보스의 숨결 (예전 rpg:breath — 이미르 서리 숨결)
 SMOKE_KEYS = ("frost",)
+# 2026-11-17 얼음 창 (arcane.py icelance — 얼음 빛 그대로) 을 더 갖는 묶음: 만년빙하 · 원소 얼음 룬의 날아가는 고드름 (예전 rfx_icicle)
+ICELANCE_KEYS = ("frost",)
 
 
 def sprites():
@@ -1899,6 +1901,9 @@ def sprites():
         if key in SMOKE_KEYS:
             from . import shadow
             out.append((S.lib + "_smoke", lambda S=S: shadow.frames_of("smoke", S), True))
+        if key in ICELANCE_KEYS:
+            from . import arcane
+            out.append((S.lib + "_icelance", lambda S=S: arcane.frames_of("icelance", S), True))
     return out
 
 
