@@ -364,55 +364,49 @@ public final class Vfx {
         @Override
         public boolean startWatching(net.minecraft.server.network.ServerGamePacketListenerImpl player) {
             if (viewers != null && !viewers.test(player.getPlayer())) return false;
-            if (eyeIn != null && eyeIn.contains(player.getPlayer().getId())) return false;
             return super.startWatching(player);
         }
 
-        /** 2026-11-17 1인칭 눈이 이 효과의 입체 소품 속에 든 사람 (id — 그동안 보내지 않음, eyeCull) */
-        private java.util.Set<Integer> eyeIn;
-
         /**
-         * 2026-11-17 1인칭 눈이 입체 소품 속에 들거나 큰 그림이 눈앞을 다 덮으면 그 사람에게서 이 효과를 거둠 · 벗어나면 다시 보냄 (룬 1인칭 영상 CI 44002166301 — 힘 영웅 거대한
-         * 망치 · 검 초월 거대한 검 · 도끼 초월이 쓴 사람의 눈을 지나며 화면이 잿빛 · 흙빛 · 핏빛 한 면으로, 암살 초월 · 일반의 대상 바로 앞 X 베기 · 연기가 보랏빛 도트 면으로 덮였음).
-         * 소품 = 모델의 조각 상자 (Prop.contains — 여유 EYE_MARGIN 칸), 그림 = Sprite.covers (거둘 때 1.5 · 다시 보낼 때 1.75 — 경계에서 깜빡이지 않게. 1판 1.15 는 대상 바로 뒤에서 본 암살 일반의 분홍 X 를 남겼음, CI 44005240988). 3인칭 (영상 카메라) ·
-         * 1인칭 눈앞에 일부러 둔 그림 (FirstPerson) 은 그대로
+         * 2026-11-17 1인칭 눈이 입체 소품 속에 들거나 소품 · 큰 그림이 눈앞을 덮으면 그 사람에게서 그 소품 · 그림 하나만 거둠 · 벗어나면 다시 보냄 (룬 1인칭 영상
+         * CI 44002166301 — 힘 영웅 거대한 망치 · 검 초월 거대한 검 · 도끼 초월이 쓴 사람의 눈을 지나며 화면이 잿빛 · 흙빛 · 핏빛 한 면으로, 암살 초월 · 일반의 대상 바로 앞
+         * X 베기 · 연기가 보랏빛 도트 면으로 덮였음). 소품 = 모델 조각 상자 (Prop.contains — 여유 EYE_MARGIN 칸) · 눈앞 2.5칸 안에서 화면을 덮는 몫 (Prop.coverage 0.7 —
+         * 다시 보냄 0.55), 그림 = Sprite.covers (1.5 — 다시 보냄 1.75, 경계에서 깜빡이지 않게). 3인칭 (영상 카메라) · 1인칭 눈앞에 일부러 둔 그림 (FirstPerson) 은 그대로.
+         * 1판 (cf7434bf ~ 06608825) 은 효과 전체 (홀더) 를 거둬서, 몸 둘레 불티가 덮는 도끼 초월은 같은 홀더의 땅 문양 · 도끼까지 1인칭 내내 사라졌음 → 덮는 것만
          */
         private void eyeCull() {
             if (viewers instanceof FirstPerson) return;
             for (ServerPlayer p : level.players()) {
-                int id = p.getId();
-                boolean was = eyeIn != null && eyeIn.contains(id);
-                boolean in = false;
                 Vec3 eye = p.getEyePosition();
-                boolean near = eye.distanceToSqr(origin) < 48 * 48;
-                if (near && !PBridge.thirdPersonOf(p)) {
-                    Vec3 look = p.getViewVector(1F);
-                    for (Prop pr : props) {
-                        if (pr.contains(eye, EYE_MARGIN) || pr.coverage(eye, look) >= (was ? 0.55 : 0.7)) {
-                            in = true;
-                            break;
-                        }
-                    }
-                    if (!in) {
-                        double k = was ? 1.75 : 1.5;
-                        for (Sprite s : sprites) {
-                            if (s.covers(eye, k)) {
-                                in = true;
-                                break;
-                            }
-                        }
-                    }
+                boolean fp = eye.distanceToSqr(origin) < 48 * 48 && !PBridge.thirdPersonOf(p);
+                Vec3 look = fp ? p.getViewVector(1F) : null;
+                for (Prop pr : props) {
+                    if (pr.removed) continue;
+                    boolean was = pr.eyeOff.contains(p.getId());
+                    boolean in = fp && (pr.contains(eye, EYE_MARGIN) || pr.coverage(eye, look) >= (was ? 0.55 : 0.7));
+                    if (in != was) eyeShow(pr.e, pr.eyeOff, p, !in);
                 }
-                if (in == was) continue;
-                if (in) {
-                    if (eyeIn == null) eyeIn = new java.util.HashSet<>();
-                    eyeIn.add(id);
-                    stopWatching(p.connection);
-                } else {
-                    eyeIn.remove(id);
-                    if (near) startWatching(p.connection);
+                for (Sprite sp : sprites) {
+                    if (sp.removed) continue;
+                    boolean was = sp.eyeOff.contains(p.getId());
+                    boolean in = fp && sp.covers(eye, was ? 1.75 : 1.5);
+                    if (in != was) eyeShow(sp.e, sp.eyeOff, p, !in);
                 }
             }
+        }
+
+        /** 그림 · 소품 하나 (e) 를 한 사람에게서 거둠 (거둔 사람 off — 그 요소의 보이기 걸러내기가 봄: 다시 들어와도 띄우지 않음) · 다시 보냄 (지금 보는 사람이면) */
+        private void eyeShow(eu.pb4.polymer.virtualentity.api.elements.GenericEntityElement e, java.util.Set<Integer> off, ServerPlayer p, boolean show) {
+            boolean watching = getWatchingPlayers().contains(p.connection);
+            if (!show) {
+                if (!off.add(p.getId())) return;
+                if (watching) p.connection.send(new net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket(e.getEntityIds()));
+                return;
+            }
+            if (!off.remove(p.getId()) || !watching) return;
+            List<net.minecraft.network.protocol.Packet<? super net.minecraft.network.protocol.game.ClientGamePacketListener>> ps = new ArrayList<>();
+            e.startWatching(p, ps::add);
+            if (!ps.isEmpty()) p.connection.send(new net.minecraft.network.protocol.game.ClientboundBundlePacket(ps));
         }
 
         /**
@@ -465,6 +459,8 @@ public final class Vfx {
 
         /** 2026-11-17 아이템 정의 id (1인칭 눈 거름의 모델 상자 — modelBoxes) */
         final String model;
+        /** 2026-11-17 1인칭 눈 거름으로 이 소품을 거둔 사람 (id — Fx.eyeCull) */
+        final java.util.Set<Integer> eyeOff = new java.util.HashSet<>();
 
         Prop(Fx fx, String itemModel, Vec3 at) {
             this.fx = fx;
@@ -472,6 +468,7 @@ public final class Vfx {
             ItemStack stack = new ItemStack(Items.PAPER);
             stack.set(DataComponents.ITEM_MODEL, Identifier.parse(itemModel));
             this.e = new ItemDisplayElement(stack);
+            e.setVisibilityPredicate(pl -> !eyeOff.contains(pl.getId()));
             e.setItemDisplayContext(ItemDisplayContext.NONE);
             e.setViewRange(1.5F);
             e.setShadowRadius(0F);
@@ -1023,12 +1020,15 @@ public final class Vfx {
         double fadeStart = 1;
         /** 2026-11-15 좌우 거울 (크기 x 를 뒤집음 — 꼭짓점이 거울 자리로 가 삼각형 감김이 뒤집혀 뒷면에서 보임) */
         boolean mirrored;
+        /** 2026-11-17 1인칭 눈 거름으로 이 그림을 거둔 사람 (id — Fx.eyeCull) */
+        final java.util.Set<Integer> eyeOff = new java.util.HashSet<>();
 
         Sprite(Fx fx, Sheet sheet, Vec3 at) {
             this.fx = fx;
             this.sheet = sheet;
             this.pos = at;
             this.e = new TextDisplayElement();
+            e.setVisibilityPredicate(pl -> !eyeOff.contains(pl.getId()));
             e.setBillboardMode(Display.BillboardConstraints.CENTER);
             e.setBackground(0);
             e.setDefaultBackground(false);
