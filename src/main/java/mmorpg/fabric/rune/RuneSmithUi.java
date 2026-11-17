@@ -226,7 +226,7 @@ public final class RuneSmithUi {
             String where = e.slot() < 9 ? "핫바 " + (e.slot() + 1) : "가방";
             String sub = r.gradeName() + " §8· §7" + (e.dup() > 1 ? "같은 룬 " + e.dup() + "개" : "하나뿐") + " §8· §7" + where;
             List<String> lines = new ArrayList<>();
-            lines.add("§7" + r.famName() + " 룬 · " + r.gradeName());
+            lines.add("§7" + Runes.kindLabel(r) + " · " + r.gradeName());
             lines.add("§7갈면 §d" + shard + " +" + v);
             if (e.level() > 0) lines.add("§e" + e.level() + "돌 룬 §7— 룬 " + (e.level() + 1) + "개 값");
             boolean only = e.dup() <= 1;
@@ -270,7 +270,7 @@ public final class RuneSmithUi {
             List<String> lines = new ArrayList<>();
             for (String l : RuneSmith.mergeLore(m)) lines.add(l.startsWith("§r") ? l.substring(2) : l);
             out.add(new SmithNet.Entry(mergeKey(m), Breakthrough.stack(r.family(), r.grade(), m.result()), "§r" + r.gradeColor() + r.def().str("name"),
-                    m.target().level() + "→" + m.result(), 0, first ? "합칠 수 있는 룬" : "", r.gradeName() + " §8· §7" + r.famName() + " 룬",
+                    m.target().level() + "→" + m.result(), 0, first ? "합칠 수 있는 룬" : "", r.gradeName() + " §8· §7" + Runes.kindLabel(r),
                     m.target().level() + "돌", m.result() + "돌", List.copyOf(lines), -1, List.of(), "", -1, "돌파", true, "", List.of()));
             first = false;
         }

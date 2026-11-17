@@ -63,10 +63,10 @@ public final class LimitedRunesTest {
         for (String gone : List.of("arcana", "dipper", "skyeye")) {
             check(Runes.parseRune(Runes.runeId(gone, "transcend")) == null && !Runes.ALL_FAMILIES.contains(gone), gone + " removed (2026-11-11)");
         }
-        check(Runes.FAMILY_ORDER.size() == 9, "draw families 9 (2026-11-14 열넷 숨김) " + Runes.FAMILY_ORDER.size());
+        check(Runes.FAMILY_ORDER.size() == 30, "draw families 30 (2026-11-17 새 룬 — 옛 계열 스물셋 숨김) " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 28 && Runes.ALL_FAMILIES.subList(23, 28).equals(lim), "all families " + Runes.ALL_FAMILIES);
-        check(Runes.ACTIVE_FAMILIES.size() == 14 && Runes.ACTIVE_FAMILIES.subList(9, 14).equals(lim), "active families " + Runes.ACTIVE_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 58 && Runes.ALL_FAMILIES.subList(53, 58).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ACTIVE_FAMILIES.size() == 35 && Runes.ACTIVE_FAMILIES.subList(30, 35).equals(lim), "active families " + Runes.ACTIVE_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("endless"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 (36초, 2026-11-11 만년빙하 32초 — 룬의 cd)
@@ -135,11 +135,11 @@ public final class LimitedRunesTest {
 
         // 한정 뽑기 설정: 초월 픽업만 (영웅 픽업이면 까닭)
         long now = 1_000_000L;
-        Gacha.Spec ok5 = Gacha.Spec.defaults("t", "칼의 축제", List.of("endless"), List.of("blade"), now);
+        Gacha.Spec ok5 = Gacha.Spec.defaults("t", "칼의 축제", List.of("endless"), List.of("shadowblitz"), now);
         check(ok5.problems().isEmpty(), "limited family as transcend pickup ok " + ok5.problems());
-        Gacha.Spec mixed = Gacha.Spec.defaults("t", "섞음", List.of("terra", "int"), List.of(), now);
+        Gacha.Spec mixed = Gacha.Spec.defaults("t", "섞음", List.of("terra", "meteor"), List.of(), now);
         check(mixed.problems().isEmpty(), "limited + normal pickup ok " + mixed.problems());
-        Gacha.Spec bad4 = Gacha.Spec.defaults("t", "영웅", List.of("int"), List.of("glacier"), now);
+        Gacha.Spec bad4 = Gacha.Spec.defaults("t", "영웅", List.of("meteor"), List.of("glacier"), now);
         check(bad4.problems().contains("한정 룬은 초월 픽업만: glacier"), "limited hero pickup refused " + bad4.problems());
         Gacha.Spec unknown = Gacha.Spec.defaults("t", "모름", List.of("nope"), List.of(), now);
         check(unknown.problems().contains("모르는 계열: nope"), "unknown family " + unknown.problems());

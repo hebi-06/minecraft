@@ -21,7 +21,7 @@
         {"key": "lift", "to": 1.6},
         {"key": "range", "to": 28, "text": "사거리 {from} → {to}칸"}
       ],
-      "extra": {"at": 6, "type": "echo", "mult": 0.6, "after": 34, "set": {"delay": 14}, "text": "검이 한 번 더 떨어짐 (지금 겨눈 곳 · 위력 {mult}%)"}
+      "extra": {"at": 6, "type": "echo", "mult": 0.6, "after": 34, "set": {"delay": 14}, "text": "검이 한 번 더 꽂힘 (겨눈 곳 · 위력 {mult}%)"}
     },
     "shadowless": {
       "3": [

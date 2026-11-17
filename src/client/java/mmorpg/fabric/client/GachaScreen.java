@@ -173,7 +173,8 @@ public final class GachaScreen extends Screen {
         g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, GachaArt.banner(b.kind()), ax, ay, ART_W, BODY_H);
         List<String> artTip = history ? drawHistory(g, ax, ay, mx, my) : switch (b.kind()) {
             case "limited" -> drawLimited(g, b, ax, ay, now, mx, my);
-            case "stat" -> drawStat(g, b, ax, ay, now, mx, my);
+            // 2026-11-17 룬 재개발 (계열 없음): 옛 스탯 룬 뽑기권은 일반 뽑기와 같은 룬 (계열 하나가 아니면 일반 그림)
+            case "stat" -> b.banner().families().size() == 1 ? drawStat(g, b, ax, ay, now, mx, my) : drawStandard(g, b, ax, ay, now, mx, my);
             default -> drawStandard(g, b, ax, ay, now, mx, my);
         };
         g.disableScissor();
@@ -244,8 +245,9 @@ public final class GachaScreen extends Screen {
         return switch (b.kind()) {
             case "limited" -> "§c§l한정 뽑기 §r§f" + b.name();
             case "advanced" -> "§6§l고급 뽑기 §r§7일반 룬 없음";
-            case "stat" -> "§a§l" + b.name() + " §r§7" + GachaArt.familyName(b.banner().families().get(0)) + " 계열만";
-            default -> "§b§l일반 뽑기 §r§7룬 " + Runes.FAMILY_ORDER.size() * 5 + "종 모두";
+            case "stat" -> "§a§l" + b.name() + " §r§7" + (b.banner().families().size() == 1 ? GachaArt.familyName(b.banner().families().get(0)) + " 계열만"
+                    : "룬 " + Runes.drawCount() + "종 모두");
+            default -> "§b§l일반 뽑기 §r§7룬 " + Runes.drawCount() + "종 모두";
         };
     }
 
@@ -332,7 +334,8 @@ public final class GachaScreen extends Screen {
         if (n5 == 1) {
             GachaArt.textCentered(g, font, GachaArt.gradeColor("transcend") + GachaArt.runeName(Runes.runeId(f5.get(0), "transcend")), cx, cy + 32, 1F, 0xFFFFFFFF);
             // 0.16.0 한정 초월 룬 (한정 뽑기의 픽업으로만 나옴)
-            String sub = Runes.limited(f5.get(0)) ? "§6§l한정 룬 §7· 이 한정 뽑기에서만" : "§7초월 · " + GachaArt.familyName(f5.get(0)) + " 계열";
+            String sub = Runes.limited(f5.get(0)) ? "§6§l한정 룬 §7· 이 한정 뽑기에서만"
+                    : Runes.isSet(f5.get(0)) ? "§7초월 룬" : "§7초월 · " + GachaArt.familyName(f5.get(0)) + " 계열"; // 2026-11-17 새 룬은 계열 표시 없음
             GachaArt.textCentered(g, font, sub, cx, cy + 43, 0.75F, 0xFFFFFFFF);
         } else {
             GachaArt.textCentered(g, font, "§c§l초월 픽업 " + n5 + "종", cx, cy + 34, 1F, 0xFFFFFFFF);
@@ -373,10 +376,12 @@ public final class GachaScreen extends Screen {
         String title = adv ? "§6§l고급 뽑기" : "§b§l일반 뽑기";
         GachaArt.text(g, font, title, ax + 8, ay + 8, 1.5F, 0xFFFFFFFF);
         Gacha.Banner bn = b.banner();
-        String sub = adv ? "§7일반 룬 없음 · 희귀 이상만" : "§7룬 " + bn.families().size() * 5 + "종 모두" + (bn.pity().on() ? " · 천장 " + bn.pity().hard() + "회" : "");
+        String sub = adv ? "§7일반 룬 없음 · 희귀 이상만" : "§7룬 " + Runes.drawCount() + "종 모두" + (bn.pity().on() ? " · 천장 " + bn.pity().hard() + "회" : "");
         g.text(font, sub, ax + 8, ay + 24, 0xFFFFFFFF, true);
-        // 초월 룬이 차례로
-        List<String> fams = bn.families();
+        // 초월 룬이 차례로 (2026-11-17 새 룬은 등급 하나씩 — 초월 룬만)
+        List<String> fams = new ArrayList<>();
+        for (String f : bn.families()) if (Runes.hasGrade(f, "transcend")) fams.add(f);
+        if (fams.isEmpty()) fams = bn.families();
         long period = 1600;
         int idx = (int) ((now / period) % fams.size());
         float k = (now % period) / (float) period;
@@ -390,18 +395,21 @@ public final class GachaScreen extends Screen {
         // 바뀔 때: 작아졌다 커짐 (아이템 그림은 흐리게 할 수 없어 크기로)
         GachaArt.item(g, GachaArt.rune(fam, "transcend"), cx, cy, 3.2F * (0.55F + 0.45F * (float) Math.sqrt(fade)));
         GachaArt.textCentered(g, font, GachaArt.gradeColor("transcend") + GachaArt.runeName(Runes.runeId(fam, "transcend")), cx, cy + 32, 1F, 0xFFFFFFFF);
-        GachaArt.textCentered(g, font, "§7초월 · " + GachaArt.familyName(fam) + " 계열", cx, cy + 43, 0.75F, 0xFFFFFFFF);
+        GachaArt.textCentered(g, font, Runes.isSet(fam) ? "§7초월 룬" : "§7초월 · " + GachaArt.familyName(fam) + " 계열", cx, cy + 43, 0.75F, 0xFFFFFFFF);
         if (mx >= cx - 26 && mx < cx + 26 && my >= cy - 26 && my < cy + 26) tip = runeTip(Runes.runeId(fam, "transcend"), false);
-        // 나오는 등급 (그 계열의 다섯)
+        // 나오는 등급 (2026-11-17 등급마다 그 등급의 룬이 차례로)
         g.text(font, "§7나오는 등급", ax + 8, ay + 100, 0xFFFFFFFF, true);
         int shown = 0;
         for (String grade : GachaArt.GRADES) {
             if (bn.weights().get(grade) <= 0) continue;
             float x = ax + 18 + shown * 22;
             float y = ay + 120;
+            List<String> of = new ArrayList<>();
+            for (String f : bn.families()) if (Runes.hasGrade(f, grade)) of.add(f);
+            String rf = of.isEmpty() ? fam : of.get((int) ((now / period + shown) % of.size()));
             GachaArt.sprite(g, GachaArt.GLOW, x, y, 24, 0F, GachaArt.argb(110, GachaArt.rgb(grade)));
-            GachaArt.item(g, GachaArt.rune(fam, grade), x, y, 1F);
-            if (mx >= x - 9 && mx < x + 9 && my >= y - 9 && my < y + 9) tip = runeTip(Runes.runeId(fam, grade), false);
+            GachaArt.item(g, GachaArt.rune(rf, grade), x, y, 1F);
+            if (mx >= x - 9 && mx < x + 9 && my >= y - 9 && my < y + 9) tip = runeTip(Runes.runeId(rf, grade), false);
             shown++;
         }
         return tip;
@@ -480,7 +488,7 @@ public final class GachaScreen extends Screen {
         if (r == null) return null;
         List<String> t = new ArrayList<>();
         t.add(r.gradeColor() + r.def().str("name") + (pickup ? " §e[픽업]" : ""));
-        t.add("§7" + r.gradeName() + " · " + r.famName() + " 계열 룬 · 재사용 " + Js.str(r.cd()) + "초");
+        t.add("§7" + r.gradeName() + " · " + (Runes.isSet(r.family()) ? "룬" : r.famName() + " 계열 룬") + " · 재사용 " + Js.str(r.cd()) + "초");
         String desc = r.def().strOrNull("desc");
         if (desc != null) t.add("§8" + desc);
         return t;
@@ -532,11 +540,12 @@ public final class GachaScreen extends Screen {
             }
         } else {
             g.text(font, "§7천장 없음", x + 6, y + 75, 0xFFFFFFFF, true);
-            GachaArt.text(g, font, "§8고급 · 스탯 룬 뽑기권은", x + 6, y + 88, 0.75F, 0xFFFFFFFF);
+            GachaArt.text(g, font, "§8고급 룬 뽑기권은", x + 6, y + 88, 0.75F, 0xFFFFFFFF);
             GachaArt.text(g, font, "§8정해진 확률로만 뽑습니다", x + 6, y + 97, 0.75F, 0xFFFFFFFF);
         }
         if (tip == null && mx >= x && mx < x + INFO_W && my >= y && my < y + 70) {
-            tip = List.of("§f§l등급 확률 §7(한 번 뽑을 때)", "§7계열은 " + bn.families().size() + "개 중 하나 (같은 확률)" + (b.kind().equals("limited") ? " — 픽업은 따로" : ""));
+            // 2026-11-17 등급마다 그 등급의 룬 중 하나 (같은 확률)
+            tip = List.of("§f§l등급 확률 §7(한 번 뽑을 때)", "§7룬은 그 등급의 " + Runes.familiesOf("common").size() + "개 중 하나 (같은 확률)" + (b.kind().equals("limited") ? " — 픽업은 따로" : ""));
         }
         return tip;
     }

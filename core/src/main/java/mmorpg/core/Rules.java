@@ -27,6 +27,8 @@ public final class Rules {
     public static final String RESOURCE = "/mmorpg/rules.json";
     /** Java-only additions merged on top of rules.json (new monsters, leveling — stage 9). */
     public static final String MORE = "/mmorpg/rules_more.json";
+    /** 2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 계열 없는 새 룬 30 · RUNE_SET) — rules_more 위에 같은 방식으로 덧붙임 */
+    public static final String RUNE_SET = "/mmorpg/rules_runes.json";
     /** System property: true = rules.json only (parity test). */
     public static final String PURE = "mmorpg.pureRules";
 
@@ -60,6 +62,8 @@ public final class Rules {
         if (!Boolean.getBoolean(PURE)) {
             Map<String, Object> more = read(MORE);
             if (more != null) merge(base, more);
+            Map<String, Object> set = read(RUNE_SET);
+            if (set != null) merge(base, set);
         }
         return new Rules(base);
     }

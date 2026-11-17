@@ -537,7 +537,7 @@ final class VanillaProbe {
                 List<String> all = mmorpg.core.Runes.ACTIVE_FAMILIES;
                 String err = mmorpg.fabric.gacha.GachaSystem.saveLimited(p.level().getServer(), new java.util.LinkedHashMap<>(java.util.Map.of(
                         "name", "불꽃의 축제", "featured5", List.of(all.get(all.size() - 1)),
-                        "featured4", mmorpg.core.Runes.FAMILY_ORDER.subList(0, 3), "days", 14.0)), null);
+                        "featured4", mmorpg.core.Runes.pickable("hero").subList(0, 3), "days", 14.0)), null); // 2026-11-17 영웅 룬 셋
                 check("limited banner opened " + (err == null ? "" : err), err == null);
                 if (mmorpg.fabric.rune.RuneItems.LIMITED_TICKET != null) p.getInventory().setItem(23, new ItemStack(mmorpg.fabric.rune.RuneItems.LIMITED_TICKET, 12));
                 say(p, "slot " + VanillaMenu.idx(0, 1)); // 위 탭 = 홈
@@ -924,7 +924,7 @@ final class VanillaProbe {
         List<String> keys = new ArrayList<>();
         if (census) {
             for (String fam : mmorpg.core.Runes.ACTIVE_FAMILIES) { // 2026-11-14 숨긴 계열 빼고
-                for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(fam + "_" + g);
+                for (String g : mmorpg.core.Runes.GRADE_ORDER) if (mmorpg.core.Runes.hasGrade(fam, g)) keys.add(fam + "_" + g); // 2026-11-17 새 룬은 등급 하나씩
             }
         } else {
             for (String k : spec.split(",")) {
@@ -970,7 +970,7 @@ final class VanillaProbe {
                     // 2026-11-17 룬 1인칭 (runefp:<계열 또는 계열_등급> — 쓴 사람의 눈: films/vanilla_runefp_<계열>_<등급>)
                     String f = k.substring(7);
                     if (mmorpg.core.Runes.ALL_FAMILIES.contains(f)) {
-                        for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(f + "_" + g + ":fp");
+                        for (String g : mmorpg.core.Runes.GRADE_ORDER) if (mmorpg.core.Runes.hasGrade(f, g)) keys.add(f + "_" + g + ":fp");
                     } else {
                         keys.add(f + ":fp");
                     }
@@ -982,6 +982,7 @@ final class VanillaProbe {
                 String pre = ab ? "old:" : "";
                 if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) {
                     for (String g : mmorpg.core.Runes.GRADE_ORDER) {
+                        if (!mmorpg.core.Runes.hasGrade(k, g)) continue; // 2026-11-17 새 룬은 등급 하나씩
                         if (ab) keys.add(pre + k + "_" + g);
                         keys.add(k + "_" + g);
                     }

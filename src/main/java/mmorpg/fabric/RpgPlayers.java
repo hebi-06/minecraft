@@ -50,6 +50,7 @@ public final class RpgPlayers {
         RpgNet.sync(sp, false);
         mmorpg.fabric.economy.EconomySystem.onJoin(sp); // 0.21.0 에메랄드 → 실버 (한 번) · 지갑 · 장터 대금
         mmorpg.fabric.storage.StorageSystem.onJoin(sp); // 0.22.0 바닐라 엔더 상자 → 엔더 창고 1번 상자 (에메랄드 → 실버 다음)
+        mmorpg.fabric.rune.RuneMigrate.onJoin(sp); // 2026-11-17 룬 재개발: 옛 계열 아홉의 룬 → 새 룬 / 룬 조각, 스탯 룬 뽑기권 → 룬 뽑기권
         if (isNew) {
             Tasks.later(40, () -> {
                 if (sp.isRemoved()) return;

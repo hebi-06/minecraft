@@ -67,13 +67,13 @@ public final class RpgStatTreeTests {
     @GameTest(maxTicks = 20)
     public void growsAndRewardsOnce(GameTestHelper h) {
         ServerPlayer sp = player(h, true);
-        TicketItem strTicket = RuneItems.statTicket("str");
+        TicketItem strTicket = RuneItems.TICKET; // 2026-11-17 룬 재개발 (계열 없음): 스탯 룬 뽑기권 보상 → 룬 뽑기권
         RpgPlayers.addPoints(sp, 300);
         h.assertTrue(RpgPlayers.spend(sp, "str", 9) == 9, "spend 9");
         h.assertTrue(StatTrees.state(sp).claimedOf("str") == 0 && StatTrees.bonus(sp, "atk") == 0, "below 10: nothing");
         RpgPlayers.spend(sp, "str", 11); // 20 → 1 · 2 단계
         h.assertTrue(StatTrees.state(sp).claimedOf("str") == 2, "claimed 2: " + StatTrees.state(sp).claimedOf("str"));
-        h.assertTrue(count(sp, strTicket) == 1, "2단계 → 힘 룬 뽑기권 1: " + count(sp, strTicket));
+        h.assertTrue(count(sp, strTicket) == 1 && count(sp, RuneItems.statTicket("str")) == 0, "2단계 → 룬 뽑기권 1: " + count(sp, strTicket));
         near(h, StatTrees.bonus(sp, "atk"), 2, "단련 공격력 +2");
         near(h, StatTrees.bonus(sp, "critDmg"), 10, "굳센 손아귀 치명타 피해 +10");
         RpgPlayers.spend(sp, "str", 15); // 35 → 3단계 (갈래 — 보상 없음)
@@ -86,16 +86,16 @@ public final class RpgStatTreeTests {
         RpgPlayers.spend(sp, "str", 25);
         h.assertTrue(count(sp, strTicket) == 1, "다시 찍어도 같은 칸 보상 없음: " + count(sp, strTicket));
         near(h, StatTrees.bonus(sp, "atk"), 2, "다시 찍으면 보너스는 다시");
-        // 더 높이: 4 (룬 뽑기권) · 5 (힘 룬 뽑기권), 다 키우면 6 ~ 10
+        // 더 높이: 4 (룬 뽑기권) · 5 (옛 힘 룬 뽑기권 → 룬 뽑기권), 다 키우면 6 ~ 10
         RpgPlayers.setStat(sp, "str", 50);
-        h.assertTrue(count(sp, strTicket) == 2 && count(sp, RuneItems.TICKET) == 1, "4 · 5단계 보상: " + count(sp, strTicket) + " / " + count(sp, RuneItems.TICKET));
+        h.assertTrue(count(sp, RuneItems.TICKET) == 3, "4 · 5단계 보상: " + count(sp, RuneItems.TICKET));
         RpgPlayers.setStat(sp, "str", 120);
         h.assertTrue(StatTrees.state(sp).claimedOf("str") == 10, "다 자람");
-        h.assertTrue(count(sp, strTicket) == 4 && count(sp, RuneItems.TICKET) == 2 && count(sp, RuneItems.ADV_TICKET) == 1,
-                "한 나무 보상 7장: " + count(sp, strTicket) + " · " + count(sp, RuneItems.TICKET) + " · " + count(sp, RuneItems.ADV_TICKET));
+        h.assertTrue(count(sp, RuneItems.TICKET) == 6 && count(sp, RuneItems.ADV_TICKET) == 1 && count(sp, RuneItems.statTicket("str")) == 0,
+                "한 나무 보상 7장: " + count(sp, RuneItems.TICKET) + " · " + count(sp, RuneItems.ADV_TICKET));
         // 다른 나무는 따로
         RpgPlayers.setStat(sp, "vit", 20);
-        h.assertTrue(count(sp, RuneItems.statTicket("vit")) == 1 && StatTrees.state(sp).claimedOf("vit") == 2, "체력 나무 2단계");
+        h.assertTrue(count(sp, RuneItems.TICKET) == 7 && count(sp, RuneItems.statTicket("vit")) == 0 && StatTrees.state(sp).claimedOf("vit") == 2, "체력 나무 2단계");
         StatTreeCommands.class.getName(); // 명령 클래스가 서버에 있음
         done(h, sp);
     }
@@ -188,7 +188,7 @@ public final class RpgStatTreeTests {
         h.assertTrue(StatTrees.reset(sp, "str", false) != null, "고른 갈래가 없으면 초기화 없음");
         h.assertTrue(StatTrees.pick(sp, "str", 2, 1) == null, "강철 피부");
         near(h, StatTrees.defMult(sp), 0.96, "받는 피해 ×0.96");
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3 && count(sp, RuneItems.statTicket("str")) == 1, "보상은 다시 안 줌");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3 && count(sp, RuneItems.TICKET) == 1, "보상은 다시 안 줌");
         // 체력 갈래 (최대 체력이 바로 바뀜)
         RpgPlayers.setStat(sp, "vit", 60);
         double before = RpgHealth.maxHpOf(sp);
@@ -240,14 +240,17 @@ public final class RpgStatTreeTests {
         if (left == 0) {
             int dexRunes = 0;
             int other = 0;
+            int newRunes = 0;
             for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
                 ItemStack s = sp.getInventory().getItem(i);
                 if (s.getItem() instanceof RuneItem ri) {
                     if (ri.rune().family().equals(t.family())) dexRunes += s.getCount();
                     else other += s.getCount();
+                    if (Runes.FAMILY_ORDER.contains(ri.rune().family())) newRunes += s.getCount();
                 }
             }
-            h.assertTrue(dexRunes == 3 && other == 0, "민첩 룬 3 · 다른 계열 0: " + dexRunes + " / " + other);
+            // 2026-11-17 룬 재개발 (계열 없음): 옛 스탯 룬 뽑기권도 새 룬 (뽑기 계열) 만
+            h.assertTrue(dexRunes == 0 && other == 3 && newRunes == 3, "새 룬 3 · 옛 계열 0: " + dexRunes + " / " + other + " / " + newRunes);
             h.assertTrue(count(sp, t) == 0, "뽑기권 3장 다 씀 (" + count(sp, t) + ")"); // 마지막 룬은 빈 손 칸에 들어갈 수 있음
             done(h, sp);
             return;

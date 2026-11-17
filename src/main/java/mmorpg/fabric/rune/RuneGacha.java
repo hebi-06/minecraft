@@ -78,7 +78,7 @@ public final class RuneGacha {
             }
             Runes.Rune r = Runes.parseRune(rid);
             if (r == null || !deliver(sp, rid)) continue;
-            Notify.say(sp, "지난번에 뽑은 룬을 받았습니다: " + r.gradeColor() + r.def().str("name") + "§r §7(" + r.famName() + " 룬 · " + r.gradeName() + ")");
+            Notify.say(sp, "지난번에 뽑은 룬을 받았습니다: " + r.gradeColor() + r.def().str("name") + "§r §7(" + Runes.kindLabel(r) + " · " + r.gradeName() + ")");
         }
     }
 
@@ -150,7 +150,7 @@ public final class RuneGacha {
             Runes.Rune r = Runes.parseRune(rid);
             if (r == null || !deliver(sp, rid)) return;
             revealFx(sp, res.family(), res.grade(), gi);
-            String sn = r.famName() + " 룬";
+            String sn = Runes.kindLabel(r);
             title(sp, r.gradeColor() + r.gradeName() + " 룬!", "§f" + r.def().str("name") + " §7(" + sn + ")");
             Notify.say(sp, "룬 획득: " + r.gradeColor() + r.def().str("name") + "§r §7(" + sn + " · " + r.gradeName() + ") §8- " + r.def().str("desc"));
             if (gi >= GRADES.indexOf(RuneKit.RUNE.str("broadcastFrom"))) {

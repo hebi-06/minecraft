@@ -46,11 +46,11 @@ public final class RunesMoreTest {
 
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
-        List<String> order = Runes.DATA_ORDER;
-        check(order.size() == 23 && order.indexOf("reaper") == order.indexOf("gravity") + 1, "family order (data) " + order);
-        // 2026-11-14 숨긴 계열 (RUNE_HIDDEN — 사용자 "룬도 줄이자" · "둘 다 숨김"): 뽑기 계열은 아홉 (힘 · 민첩 · 체력 · 마력 · 도끼 · 궁수 · 암살자 · 검사 · 정령사)
-        check(Runes.HIDDEN.equals(List.of("holy", "storm", "spellblade", "element", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike")), "hidden families " + Runes.HIDDEN);
-        check(Runes.FAMILY_ORDER.equals(List.of("str", "dex", "vit", "int", "axe", "bow", "assassin", "blade", "spirit")), "draw families " + Runes.FAMILY_ORDER);
+        // 2026-11-17 룬 재개발: 데이터 순서 = 새 룬 30 (등급 순), 옛 계열 스물셋 (2026-11-14 숨긴 열넷 + 남겨 쓰던 아홉) 은 모두 숨김 — 정의 · 아이템은 남김 (접속 때 새 룬으로)
+        check(Runes.DATA_ORDER.size() == 30 && Runes.DATA_ORDER.stream().allMatch(Runes::isSet), "family order (data) = 30 set runes " + Runes.DATA_ORDER);
+        check(Runes.HIDDEN.size() == 23 && Runes.HIDDEN.containsAll(List.of("str", "dex", "vit", "int", "axe", "bow", "assassin", "blade", "spirit", "holy", "storm",
+                "spellblade", "element", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike")), "hidden families " + Runes.HIDDEN);
+        check(Runes.FAMILY_ORDER.equals(Runes.DATA_ORDER), "draw families = set runes " + Runes.FAMILY_ORDER);
         for (String f : Runes.HIDDEN) check(Runes.hidden(f) && Runes.parseRune(Runes.runeId(f, "hero")) != null && Runes.ALL_FAMILIES.contains(f)
                 && !Runes.ACTIVE_FAMILIES.contains(f), f + " hidden but kept (data · item)");
 
@@ -103,14 +103,17 @@ public final class RunesMoreTest {
         check(holy.obj("coef").keys().size() == 2 && holy.obj("coef").num("str") == 0.5 && holy.str("stat").equals("vit"), "holy coef");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_holy_common"), false)).contains("체력 1.0 + 힘 0.5"), "holy lore coef");
 
-        // 뽑기: 계열은 뽑기 계열 (2026-11-14 아홉 — 숨긴 열넷 빼고) 에서 같은 확률 — 정령사 자리
-        List<String> draw = Runes.FAMILY_ORDER;
-        int at = draw.indexOf("spirit");
+        // 뽑기 (2026-11-17 룬 재개발): 등급 → 그 등급의 룬 여섯 중 같은 확률 — 샐러맨더 자리
+        List<String> draw = Runes.familiesOf("common");
+        check(draw.size() == 6 && draw.contains("salamander") && !draw.contains("spirit"), "common pool 6 " + draw);
+        int at = draw.indexOf("salamander");
         double[] seq = {0.0, (at + 0.5) / draw.size()};
         int[] k = {0};
         Runes.Roll roll = Runes.rollRune(() -> seq[k[0]++], false);
-        check(roll.family().equals("spirit") && roll.grade().equals("common"), "roll spirit " + roll);
-        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("계열 9개"), "ticket lore 9");
+        check(roll.family().equals("salamander") && roll.grade().equals("common"), "roll salamander " + roll);
+        check(Runes.parseRune(Runes.runeId(roll.family(), roll.grade())) != null, "rolled rune exists");
+        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("등급마다 룬 6개"), "ticket lore 6");
+        check(Runes.drawCount() == 30, "draw count 30 " + Runes.drawCount());
         check(Rules.get().obj("RUNE").obj("color").has("reaper"), "reaper color");
 
         // 적월 강림 돌파
@@ -132,8 +135,7 @@ public final class RunesMoreTest {
         // 0.25.0 두 스탯 계열 여섯 (사용자: "룬에 마력+체력, 체력+힘, 민첩+힘 등 다양한 스탯 연계" → 조합마다 새 계열 · 보조 × 0.5)
         String[][] pairs = {{"tide", "int", "vit", "해류"}, {"golem", "vit", "int", "골렘"}, {"monk", "dex", "str", "무투"}, {"hunter", "dex", "vit", "사냥꾼"},
             {"volcano", "str", "int", "화산"}, {"gladiator", "vit", "dex", "투사"}};
-        check(Runes.PAIR_FAMILIES.size() == 6 && order.indexOf("tide") == order.indexOf("reaper") + 1 && order.indexOf("body") == order.indexOf("gladiator") + 1,
-                "pair families after reaper " + order);
+        check(Runes.PAIR_FAMILIES.size() == 6, "pair families six (숨김) " + Runes.PAIR_FAMILIES);
         java.util.Set<String> fnsSeen = new java.util.HashSet<>();
         java.util.Set<String> pairSet = new java.util.HashSet<>();
         for (String[] p : pairs) {

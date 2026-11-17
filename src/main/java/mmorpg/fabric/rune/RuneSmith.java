@@ -361,7 +361,7 @@ public final class RuneSmith {
             RuneSlot e = list.get(i);
             int v = grindValue(e.r(), e.level());
             form.set(LIST_FIRST + i, Slot.of(runeStack(e.r(), e.level()), e.r().gradeColor() + e.r().def().str("name") + Breakthrough.nameTag(e.level()) + "§r§7 · "
-                    + e.r().famName() + " 룬").price(v)
+                    + Runes.kindLabel(e.r())).price(v)
                     .lore("§r§7" + e.r().gradeName() + " · 갈면 §d+" + v + " " + shardName(), e.dup() > 1 ? "§r§e같은 룬 " + e.dup() + "개" : "§r§8하나뿐인 룬",
                             e.slot() < 9 ? "§r§8핫바 " + (e.slot() + 1) + "번 칸" : "§r§8가방"));
         }
@@ -380,11 +380,11 @@ public final class RuneSmith {
         ChestForm form = new ChestForm("룬 갈기");
         form.set(11, Slot.of(Icon.sprite("icon_check"), "§a갈기 §7(+" + v + " " + shardName() + ")").price(v));
         form.set(13, Slot.of(runeStack(e.r(), e.level()), e.r().gradeColor() + e.r().def().str("name") + Breakthrough.nameTag(e.level()))
-                .lore("§r§7" + e.r().famName() + " 룬 · " + e.r().gradeName()).deco());
+                .lore("§r§7" + Runes.kindLabel(e.r()) + " · " + e.r().gradeName()).deco());
         form.set(15, Slot.of(Icon.sprite("icon_cross"), "§c취소"));
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add("§0" + e.r().def().str("name") + "§8 (" + e.r().famName() + " 룬 · " + e.r().gradeName() + ") → " + shardName() + " §0" + v + "§8개§r");
+        lines.add("§0" + e.r().def().str("name") + "§8 (" + Runes.kindLabel(e.r()) + " · " + e.r().gradeName() + ") → " + shardName() + " §0" + v + "§8개§r");
         if (e.level() > 0) lines.add("§4돌파한 룬입니다 (" + e.level() + "돌 — 룬 " + (e.level() + 1) + "개 값).§r");
         if (e.dup() <= 1) lines.add("§4하나뿐인 룬입니다. 갈면 되돌릴 수 없습니다.§r");
         lines.add("§8왼쪽 초록 칸: 갈기 · 오른쪽 빨간 칸: 취소§r");

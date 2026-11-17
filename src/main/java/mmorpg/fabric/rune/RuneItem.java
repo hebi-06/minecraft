@@ -40,7 +40,7 @@ public final class RuneItem extends Item {
     @Override
     public Component getName(ItemStack stack) {
         return Component.literal(BedrockText.toJava(rune.gradeColor() + rune.def().str("name") + Breakthrough.nameTag(Breakthrough.of(stack)) + "§r§7 · "
-                + rune.famName() + " 룬 (" + rune.gradeName() + ")"));
+                + Runes.kindLabel(rune) + " (" + rune.gradeName() + ")")); // 2026-11-17 새 룬은 "룬 (희귀)" — 계열 이름 없음
     }
 
     @Override

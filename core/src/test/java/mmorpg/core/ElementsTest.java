@@ -110,7 +110,7 @@ public final class ElementsTest {
                 check(el == null ? !head.contains("원소") : head.contains("원소") && head.contains("−5%"), r.id() + " head line " + head);
             }
         }
-        check(elemental == 36, "36 elemental runes " + elemental);
+        check(elemental == 47, "47 elemental runes (옛 36 + 2026-11-17 새 룬 11 — 불 3 · 얼음 3 · 바위 2 · 물 · 전기 · 여럿) " + elemental);
         check(elemental * 2 < runes, "무속성 룬이 더 많음 " + elemental + " / " + runes);
         check("fire".equals(Runes.element(Runes.parseRune(Runes.runeId("int", "common")))) && "ice".equals(Runes.element(Runes.parseRune(Runes.runeId("int", "rare"))))
                 && "water".equals(Runes.element(Runes.parseRune(Runes.runeId("tide", "hero")))) && "rock".equals(Runes.element(Runes.parseRune(Runes.runeId("golem",

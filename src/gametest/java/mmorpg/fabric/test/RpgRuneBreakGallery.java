@@ -187,10 +187,12 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             sp.getInventory().clearContent();
-            sp.getInventory().setItem(0, Breakthrough.stack("int", "transcend", 3));
-            sp.getInventory().setItem(1, Breakthrough.stack("vit", "transcend", 6));
-            for (int i = 2; i <= 7; i++) sp.getInventory().setItem(i, Breakthrough.stack(Runes.FAMILY_ORDER.get(i), "rare", i - 1));
-            sp.getInventory().setItem(8, Breakthrough.stack("dex", "transcend", 0));
+            // 2026-11-17 룬 재개발: 새 룬 (등급 하나씩)
+            sp.getInventory().setItem(0, Breakthrough.stack("meteor", "transcend", 3));
+            sp.getInventory().setItem(1, Breakthrough.stack("immortaloath", "transcend", 6));
+            List<String> rare = Runes.familiesOf("rare");
+            for (int i = 2; i <= 7; i++) sp.getInventory().setItem(i, Breakthrough.stack(rare.get((i - 2) % rare.size()), "rare", i - 1));
+            sp.getInventory().setItem(8, Breakthrough.stack("lunaexec", "transcend", 0));
             sp.getInventory().setSelectedSlot(8);
         });
         ctx.waitTicks(6);

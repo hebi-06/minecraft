@@ -173,6 +173,7 @@ public final class StatTree {
                 return rune.str("advTicketItem");
             case "stat": {
                 Ticket tk = DATA.tickets().get(stat);
+                if (tk != null && !Runes.FAMILY_ORDER.contains(tk.family())) return rune.str("ticketItem"); // 2026-11-17 룬 재개발 (계열 없음): 스탯 뽑기권 대신 룬 뽑기권
                 return tk == null ? null : tk.item();
             }
             default:

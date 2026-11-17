@@ -125,8 +125,8 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         shot(ctx, "t_grow_fx");
         ctx.waitTicks(10);
         shot(ctx, "t_grow_title");
-        int tickets = server.computeOnServer(s -> RpgGearTests.countIn(player(s), RuneItems.statTicket("str")));
-        check(tickets == 1, "2단계 → 힘 룬 뽑기권 1 (" + tickets + ")");
+        int tickets = server.computeOnServer(s -> RpgGearTests.countIn(player(s), RuneItems.TICKET));
+        check(tickets == 1, "2단계 → 룬 뽑기권 1 (2026-11-17 스탯 룬 뽑기권 없음 — " + tickets + ")");
         camera(ctx, CameraType.FIRST_PERSON);
         ctx.waitTicks(30);
     }
@@ -241,7 +241,7 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
     private void ticket(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
-            sp.getInventory().setItem(1, new ItemStack(RuneItems.statTicket("str"), 1));
+            sp.getInventory().setItem(1, new ItemStack(RuneItems.TICKET, 1)); // 2026-11-17 스탯 트리 보상 = 룬 뽑기권
             sp.getInventory().setSelectedSlot(1);
         });
         ctx.waitTicks(4);
@@ -257,7 +257,7 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         // 0.14.0: 뽑기권 우클릭 → 뽑기 창 (그 스탯의 탭) → 1회 뽑기 → 연출
         ctx.getInput().pressKey(o -> o.keyUse);
         conn.waitForServerboundPackets();
-        if (!waitScreen(ctx, sc -> sc instanceof GachaScreen g && "stat_str".equals(g.tab()), "gacha window (str ticket)")) return;
+        if (!waitScreen(ctx, sc -> sc instanceof GachaScreen g && "normal".equals(g.tab()), "gacha window (rune ticket)")) return;
         away(ctx);
         ctx.waitTicks(4);
         shot(ctx, "t_ticket_drawing");
@@ -269,10 +269,20 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         shot(ctx, "t_ticket_result");
         ctx.setScreen(() -> null);
         ctx.waitTicks(4);
-        int strRunes = server.computeOnServer(s -> runes(player(s), "str"));
+        int strRunes = server.computeOnServer(s -> newRunes(player(s)));
         int all = server.computeOnServer(s -> runes(player(s), null));
         boolean pending = server.computeOnServer(s -> RuneData.pending(player(s)).isEmpty());
-        check(all == runesBefore + 1 && strRunes == 1 && pending, "힘 룬 뽑기권 → 힘 계열 룬 (" + strRunes + " / " + all + ")");
+        check(all == runesBefore + 1 && strRunes == all && pending, "룬 뽑기권 → 새 룬 (" + strRunes + " / " + all + ")");
+    }
+
+    /** 2026-11-17 새 룬 (뽑기 계열) 의 수 */
+    private static int newRunes(ServerPlayer sp) {
+        int n = 0;
+        for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
+            ItemStack st = sp.getInventory().getItem(i);
+            if (st.getItem() instanceof RuneItem ri && mmorpg.core.Runes.FAMILY_ORDER.contains(ri.rune().family())) n += st.getCount();
+        }
+        return n;
     }
 
     private static int runes(ServerPlayer sp, String family) {

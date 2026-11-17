@@ -56,7 +56,7 @@ public final class GachaTest {
         near(std.rate("transcend"), 0.015, 1e-12, "standard transcend 1.5%");
         near(std.rate("hero"), 0.065, 1e-12, "standard hero 6.5%");
         near(std.rate("common"), 0.5, 1e-12, "standard common 50%");
-        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 9, "standard: 9 families (2026-11-14 열넷 숨김) " + std.families().size());
+        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 30, "standard: 30 runes (2026-11-17 새 룬) " + std.families().size());
         for (String f : Runes.HIDDEN) check(!std.families().contains(f) && !Gacha.advanced().families().contains(f), "hidden family not drawn " + f);
         check(!std.pickup(), "standard has no pickup");
 
@@ -108,32 +108,32 @@ public final class GachaTest {
 
         // ---------------------------------------------------------- 반천장 · 확천장 (한정)
         long now = 1_800_000_000_000L;
-        Gacha.Spec spec = Gacha.Spec.defaults("lim1", "불꽃 축제", List.of("spirit"), List.of("axe", "bow", "blade"), now);
+        Gacha.Spec spec = Gacha.Spec.defaults("lim1", "불꽃 축제", List.of("spiritking"), List.of("titanhammer", "runejavelin", "shadowblitz"), now);
         check(spec.problems().isEmpty(), "default spec valid " + spec.problems());
         Gacha.Banner lim = spec.banner();
-        check(lim.pickup() && lim.featured5().equals(List.of("spirit")), "limited pickup");
+        check(lim.pickup() && lim.featured5().equals(List.of("spiritking")), "limited pickup");
         near(lim.share(), 0.5, 1e-12, "share 50%");
         near(lim.rate("transcend"), 0.015, 1e-9, "limited transcend base = standard");
         // 첫 초월: 픽업 놓침 (0.9) → 픽업 아닌 계열, 확정이 생김
         Gacha.Result a = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.0, 0.9, 0.0));
         Gacha.Pull a0 = a.pulls().get(0);
-        check(a0.grade().equals("transcend") && !a0.featured() && a0.lost() && !a0.family().equals("spirit"), "lost 50/50 → not featured " + a0);
+        check(a0.grade().equals("transcend") && !a0.featured() && a0.lost() && !a0.family().equals("spiritking"), "lost 50/50 → not featured " + a0);
         check(a.counter().g5(), "guarantee after a loss");
         // 다음 초월: 확정 (픽업 굴림 없이 — 계열 굴림만)
         Gacha.Result b = Gacha.pull(lim, a.counter(), 1, script(0.0, 0.99));
         Gacha.Pull b0 = b.pulls().get(0);
-        check(b0.grade().equals("transcend") && b0.featured() && !b0.lost() && b0.family().equals("spirit"), "guaranteed featured " + b0);
+        check(b0.grade().equals("transcend") && b0.featured() && !b0.lost() && b0.family().equals("spiritking"), "guaranteed featured " + b0);
         check(!b.counter().g5(), "guarantee used");
         // 반천장 이김 (0.1)
         Gacha.Result c = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.0, 0.1, 0.5));
-        check(c.pulls().get(0).featured() && c.pulls().get(0).family().equals("spirit") && !c.counter().g5(), "won 50/50 " + c.pulls());
+        check(c.pulls().get(0).featured() && c.pulls().get(0).family().equals("spiritking") && !c.counter().g5(), "won 50/50 " + c.pulls());
         // 영웅 픽업 (0.02 → 영웅 자리: p5 0.015 ≤ x < 0.08)
         Gacha.Result d = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.02, 0.2, 0.7));
         Gacha.Pull d0 = d.pulls().get(0);
-        check(d0.grade().equals("hero") && d0.featured() && List.of("axe", "bow", "blade").contains(d0.family()), "hero pickup " + d0);
+        check(d0.grade().equals("hero") && d0.featured() && List.of("titanhammer", "runejavelin", "shadowblitz").contains(d0.family()), "hero pickup " + d0);
         Gacha.Result e = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.02, 0.8, 0.0));
         Gacha.Pull e0 = e.pulls().get(0);
-        check(e0.grade().equals("hero") && !e0.featured() && !List.of("axe", "bow", "blade").contains(e0.family()) && e.counter().g4(), "hero lost → others · guarantee " + e0);
+        check(e0.grade().equals("hero") && !e0.featured() && !List.of("titanhammer", "runejavelin", "shadowblitz").contains(e0.family()) && Runes.hasGrade(e0.family(), "hero") && e.counter().g4(), "hero lost → others · guarantee " + e0);
         // 놓친 결과는 픽업 계열이 아님 (모든 계열 굴림 값으로)
         Set<String> lostFamilies = new HashSet<>();
         for (int i = 0; i < 40; i++) {
@@ -141,7 +141,8 @@ public final class GachaTest {
             Gacha.Pull x = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.0, 0.9, f)).pulls().get(0);
             lostFamilies.add(x.family());
         }
-        check(!lostFamilies.contains("spirit") && lostFamilies.size() == 8 && lostFamilies.stream().noneMatch(Runes::hidden), "lost pool = 8 others (2026-11-14 숨김) " + lostFamilies);
+        check(!lostFamilies.contains("spiritking") && lostFamilies.size() == 5 && lostFamilies.stream().noneMatch(Runes::hidden)
+                && lostFamilies.stream().allMatch(f -> Runes.hasGrade(f, "transcend")), "lost pool = 5 other transcend runes (2026-11-17) " + lostFamilies);
 
         // ---------------------------------------------------------- 고급 · 한 계열
         Gacha.Banner adv = Gacha.advanced();
@@ -152,8 +153,10 @@ public final class GachaTest {
         long tops = advR.pulls().stream().filter(x -> x.grade().equals("transcend")).count();
         check(commons == 0, "advanced: no commons " + commons);
         near(tops / 20_000.0, 0.05, 0.006, "advanced transcend ≈ 5%");
+        // 2026-11-17 옛 스탯 룬 뽑기권 (계열 하나) 은 일반 뽑기와 같음 — 새 룬만 · 그 등급이 있는 룬
         Gacha.Banner one = Gacha.single("str");
-        check(Gacha.pull(one, Gacha.Counter.ZERO, 500, rng::nextDouble).pulls().stream().allMatch(x -> x.family().equals("str")), "single family only");
+        check(Gacha.pull(one, Gacha.Counter.ZERO, 500, rng::nextDouble).pulls().stream().allMatch(x -> Runes.isSet(x.family()) && Runes.hasGrade(x.family(), x.grade())),
+                "old stat ticket = standard draw");
         boolean threw = false;
         try {
             Gacha.single("nope");
@@ -206,7 +209,7 @@ public final class GachaTest {
         check(!lostTwice, "never lose 50/50 twice in a row");
 
         // ---------------------------------------------------------- 한정 뽑기 설정
-        Gacha.Spec custom = new Gacha.Spec("lim2", "별빛", List.of("int"), List.of("dex"), 1.0, 7.0, 80, 66, 10, 75, now, now + 86_400_000L, 20);
+        Gacha.Spec custom = new Gacha.Spec("lim2", "별빛", List.of("meteor"), List.of("gnome"), 1.0, 7.0, 80, 66, 10, 75, now, now + 86_400_000L, 20);
         Map<String, Double> w = custom.weights();
         double total = 0;
         for (double v : w.values()) total += v;
@@ -217,22 +220,22 @@ public final class GachaTest {
         check(cb.pity().hard() == 80 && cb.pity().softStart() == 66 && cb.pity().heroEvery() == 10 && cb.pity().heroSoftStart() == 9, "custom pity " + cb.pity());
         near(cb.share(), 0.75, 1e-12, "custom share");
         check(custom.activeAt(now) && custom.activeAt(now + 1000) && !custom.activeAt(now - 1) && !custom.activeAt(now + 86_400_000L), "active window");
-        check(new Gacha.Spec("x", "끝없음", List.of("int"), List.of(), 1, 6, 90, 74, 10, 50, now, 0, 0).activeAt(now + 999_999_999L), "no end");
+        check(new Gacha.Spec("x", "끝없음", List.of("meteor"), List.of(), 1, 6, 90, 74, 10, 50, now, 0, 0).activeAt(now + 999_999_999L), "no end");
         // 저장 왕복
         Gacha.Spec back = Gacha.Spec.fromMap(Json.parseObject(Json.stringify(custom.toMap())), now);
         check(back.equals(custom), "round trip " + back);
         // 검사
-        check(!problems("", List.of("int"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "empty name refused");
+        check(!problems("", List.of("meteor"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "empty name refused");
         check(!problems("a", List.of(), List.of(), 1.5, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "no featured transcend refused");
         check(!problems("a", List.of("nope"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "unknown family refused");
-        check(!problems("a", List.of("int", "int"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "duplicate refused");
-        check(!problems("a", List.of("int"), List.of(), 0, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "rate5 0 refused");
-        check(!problems("a", List.of("int"), List.of(), 60, 50, 90, 74, now, now + 1, 15).isEmpty(), "rates over 100 refused");
-        check(!problems("a", List.of("int"), List.of(), 1.5, 6.5, 70, 74, now, now + 1, 15).isEmpty(), "soft start after hard refused");
-        check(!problems("a", List.of("int"), List.of(), 1.5, 6.5, 90, 74, now, now - 1, 15).isEmpty(), "end before start refused");
-        check(!problems("a", List.of("int"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, -1).isEmpty(), "negative price refused");
-        check(problems("a", List.of("int", "dex", "vit"), List.of("axe", "bow", "blade"), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "valid spec");
-        check(!problems("a", List.of("int", "dex", "vit", "str"), List.of(), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "too many featured transcend");
+        check(!problems("a", List.of("meteor", "meteor"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "duplicate refused");
+        check(!problems("a", List.of("meteor"), List.of(), 0, 6.5, 90, 74, now, now + 1, 15).isEmpty(), "rate5 0 refused");
+        check(!problems("a", List.of("meteor"), List.of(), 60, 50, 90, 74, now, now + 1, 15).isEmpty(), "rates over 100 refused");
+        check(!problems("a", List.of("meteor"), List.of(), 1.5, 6.5, 70, 74, now, now + 1, 15).isEmpty(), "soft start after hard refused");
+        check(!problems("a", List.of("meteor"), List.of(), 1.5, 6.5, 90, 74, now, now - 1, 15).isEmpty(), "end before start refused");
+        check(!problems("a", List.of("meteor"), List.of(), 1.5, 6.5, 90, 74, now, now + 1, -1).isEmpty(), "negative price refused");
+        check(problems("a", List.of("meteor", "skyfall", "berserker"), List.of("titanhammer", "runejavelin", "shadowblitz"), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "valid spec");
+        check(!problems("a", List.of("meteor", "skyfall", "berserker", "lunaexec"), List.of(), 1.5, 6.5, 90, 74, now, 0, 0).isEmpty(), "too many featured transcend");
         // 기본 기간 (gacha.json days 14)
         near((spec.end() - spec.start()) / 86_400_000.0, 14, 1e-9, "default 14 days");
         check(spec.price() == 15, "default price 15");

@@ -175,6 +175,8 @@ public final class Gacha {
 
     /** 한 계열만 (스탯 룬 뽑기권 — 등급 확률은 룬 뽑기권과 같음), 천장 없음 */
     public static Banner single(String family) {
+        // 2026-11-17 룬 재개발 (계열 없음): 옛 스탯 룬 뽑기권은 일반 뽑기와 같음
+        if (!Runes.FAMILY_ORDER.contains(family) && Runes.HIDDEN.contains(family)) return standard();
         if (!Runes.FAMILY_ORDER.contains(family)) throw new IllegalArgumentException("unknown rune family: " + family);
         return new Banner(Runes.gradeWeights(false), Pity.NONE, List.of(), List.of(), 0, List.of(family));
     }
@@ -269,6 +271,10 @@ public final class Gacha {
             if (grade.equals(TOP)) g5 = !win;
             else g4 = !win;
         }
+        // 2026-11-17 룬 재개발: 새 룬은 등급 하나씩 — 그 등급이 있는 계열만 (없으면 그대로)
+        List<String> graded = new ArrayList<>();
+        for (String f : pool) if (Runes.hasGrade(f, grade)) graded.add(f);
+        if (!graded.isEmpty()) pool = graded;
         String family = pool.get(Math.min(pool.size() - 1, (int) Math.floor(rand.getAsDouble() * pool.size())));
         Counter next;
         int at;
@@ -370,11 +376,13 @@ public final class Gacha {
             for (String f : featured5) {
                 if (Runes.hidden(f)) out.add("숨긴 계열 (준비 중): " + f);
                 else if (!Runes.ACTIVE_FAMILIES.contains(f)) out.add("모르는 계열: " + f);
+                else if (!Runes.hasGrade(f, TOP)) out.add("초월 룬이 아님: " + f); // 2026-11-17 새 룬은 등급 하나씩
             }
             for (String f : featured4) {
                 if (Runes.limited(f)) out.add("한정 룬은 초월 픽업만: " + f);
                 else if (Runes.hidden(f)) out.add("숨긴 계열 (준비 중): " + f);
                 else if (!Runes.FAMILY_ORDER.contains(f)) out.add("모르는 계열: " + f);
+                else if (!Runes.hasGrade(f, HIGH)) out.add("영웅 룬이 아님: " + f);
             }
             if (featured5.stream().distinct().count() != featured5.size() || featured4.stream().distinct().count() != featured4.size()) out.add("같은 계열을 두 번 골랐습니다");
             if (!(rate5 > 0) || rate5 > 100) out.add("초월 확률은 0 보다 크고 100 이하");

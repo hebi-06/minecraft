@@ -89,7 +89,7 @@ public final class RpgGachaTests {
         h.assertTrue(keys.subList(0, 2).equals(List.of("normal", "advanced")) && keys.contains("stat_str") && keys.contains("stat_int"), "banners " + keys);
         GachaSystem.Def normal = GachaSystem.def(server, "normal");
         h.assertTrue(normal.pool().equals("normal") && normal.banner().pity().hard() == 90 && normal.banner().pity().heroEvery() == 10, "normal: pity 90 · 10");
-        h.assertTrue(GachaSystem.def(server, "advanced").pool() == null && GachaSystem.def(server, "stat_str").banner().families().equals(List.of("str")), "no pity · one family");
+        h.assertTrue(GachaSystem.def(server, "advanced").pool() == null && GachaSystem.def(server, "stat_str").banner().families().equals(Runes.FAMILY_ORDER), "no pity · 옛 스탯 뽑기권 = 일반 룬 (2026-11-17 계열 없음)");
         h.succeed();
     }
 
@@ -161,12 +161,12 @@ public final class RpgGachaTests {
         GachaSystem.Drawn adv = GachaSystem.draw(sp, "advanced", 10, GachaSystem.Deliver.NOW);
         h.assertTrue(adv.error() == null && adv.pulls().stream().noneMatch(p -> p.grade().equals("common")), "advanced: no commons " + adv.pulls());
         h.assertTrue(GachaSystem.counter(sp, "normal").equals(before) && !GachaSystem.state(sp).pools().containsKey("advanced"), "advanced: no pity record");
-        // 스탯 룬 뽑기권: 그 계열만
+        // 옛 스탯 룬 뽑기권 (2026-11-17 룬 재개발 — 계열 없음): 일반 룬 뽑기와 같은 룬 (접속 때 룬 뽑기권으로 바뀌지만 남은 것도 쓸 수 있게)
         sp.getInventory().clearContent();
         give(sp, RuneItems.statTicket("str"), 10);
         GachaSystem.Drawn str = GachaSystem.draw(sp, "stat_str", 10, GachaSystem.Deliver.NOW);
-        h.assertTrue(str.error() == null && str.pulls().stream().allMatch(p -> p.family().equals("str")) && GachaSystem.state(sp).totals().get("stat") == 10,
-                "stat ticket: str family only " + str.pulls());
+        h.assertTrue(str.error() == null && str.pulls().stream().allMatch(p -> Runes.FAMILY_ORDER.contains(p.family())) && GachaSystem.state(sp).totals().get("stat") == 10,
+                "old stat ticket: new runes " + str.pulls());
         RpgGearTests.done(h, sp);
     }
 
@@ -181,33 +181,38 @@ public final class RpgGachaTests {
         // 저장 (관리자 창이 보내는 모양)
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("name", "시험 축제");
-        m.put("featured5", List.of("spirit"));
-        m.put("featured4", List.of("axe", "bow", "blade"));
+        m.put("featured5", List.of("spiritking")); // 2026-11-17 새 룬 (정령왕 강림)
+        m.put("featured4", List.of("titanhammer", "runejavelin", "blizzard"));
         m.put("days", 1.0);
         m.put("price", 15.0);
         h.assertTrue(GachaSystem.saveLimited(server, m, null) == null, "save");
         Gacha.Spec spec = GachaSystem.activeLimited(server);
-        h.assertTrue(spec != null && spec.name().equals("시험 축제") && spec.featured5().equals(List.of("spirit")) && spec.hard() == 90 && spec.share() == 50
+        h.assertTrue(spec != null && spec.name().equals("시험 축제") && spec.featured5().equals(List.of("spiritking")) && spec.hard() == 90 && spec.share() == 50
                 && spec.end() - spec.start() == 86_400_000L, "active limited " + spec);
         h.assertTrue(GachaSystem.defs(server).get(0).key().equals("limited") && GachaSystem.def(server, "limited").pool().equals("limited"), "limited tab first");
         // 틀린 설정 · 관리자만
         Map<String, Object> bad = new LinkedHashMap<>(m);
         bad.put("featured5", List.of());
         String err = GachaSystem.saveLimited(server, bad, null);
-        h.assertTrue(err != null && err.contains("픽업 초월") && GachaSystem.activeLimited(server).featured5().equals(List.of("spirit")), "invalid refused " + err);
+        h.assertTrue(err != null && err.contains("픽업 초월") && GachaSystem.activeLimited(server).featured5().equals(List.of("spiritking")), "invalid refused " + err);
+        // 2026-11-17 옛 계열 (숨김) 은 픽업이 안 됨
+        Map<String, Object> old = new LinkedHashMap<>(m);
+        old.put("featured5", List.of("spirit"));
+        String oldErr = GachaSystem.saveLimited(server, old, null);
+        h.assertTrue(oldErr != null && oldErr.contains("숨긴 계열"), "old family refused " + oldErr);
         if (sp.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) server.getPlayerList().deop(sp.nameAndId());
         h.assertTrue(GachaSystem.saveLimited(sp, Json.stringify(m)).contains("관리자만"), "players cannot save");
         // 확천장: 다음 초월은 픽업
         GachaSystem.setCounter(sp, "limited", new Gacha.Counter(89, 0, true, false));
         GachaSystem.Drawn sure = GachaSystem.draw(sp, "limited", 1, GachaSystem.Deliver.NOW);
         Gacha.Pull p0 = sure.pulls().get(0);
-        h.assertTrue(p0.grade().equals("transcend") && p0.featured() && p0.family().equals("spirit") && !GachaSystem.counter(sp, "limited").g5(),
+        h.assertTrue(p0.grade().equals("transcend") && p0.featured() && p0.family().equals("spiritking") && !GachaSystem.counter(sp, "limited").g5(),
                 "guaranteed featured transcend " + p0);
         // 반천장: 결과와 기록이 맞음 (놓치면 확정이 생기고 픽업이 아닌 계열)
         GachaSystem.setCounter(sp, "limited", new Gacha.Counter(89, 0, false, false));
         Gacha.Pull p1 = GachaSystem.draw(sp, "limited", 1, GachaSystem.Deliver.NOW).pulls().get(0);
         Gacha.Counter after = GachaSystem.counter(sp, "limited");
-        h.assertTrue(p1.grade().equals("transcend") && p1.featured() == !after.g5() && p1.lost() == after.g5() && (p1.featured() == p1.family().equals("spirit")),
+        h.assertTrue(p1.grade().equals("transcend") && p1.featured() == !after.g5() && p1.lost() == after.g5() && (p1.featured() == p1.family().equals("spiritking")),
                 "50/50 consistent " + p1 + " " + after);
         // 10회 (일반과 따로 셈)
         Gacha.Counter normal = GachaSystem.counter(sp, "normal");
@@ -237,9 +242,9 @@ public final class RpgGachaTests {
         // 명령어 (운영자): 열기 · 보기 · 끝
         var commands = server.getCommands();
         var src = sp.createCommandSourceStack().withPermission(LevelBasedPermissionSet.OWNER);
-        commands.performPrefixedCommand(src, "뽑기 한정 열기 \"명령 축제\" spirit axe+bow 3");
+        commands.performPrefixedCommand(src, "뽑기 한정 열기 \"명령 축제\" spiritking titanhammer+runejavelin 3");
         Gacha.Spec cmd = GachaSystem.activeLimited(server);
-        h.assertTrue(cmd != null && cmd.name().equals("명령 축제") && cmd.featured4().equals(List.of("axe", "bow")) && cmd.end() - cmd.start() == 3 * 86_400_000L,
+        h.assertTrue(cmd != null && cmd.name().equals("명령 축제") && cmd.featured4().equals(List.of("titanhammer", "runejavelin")) && cmd.end() - cmd.start() == 3 * 86_400_000L,
                 "command start " + cmd);
         commands.performPrefixedCommand(src, "gacha limited close");
         h.assertTrue(GachaSystem.activeLimited(server) == null, "command close");

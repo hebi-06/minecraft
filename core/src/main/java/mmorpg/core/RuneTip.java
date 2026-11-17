@@ -115,6 +115,11 @@ public final class RuneTip {
         // 2026-11-07 원소 룬 ("원소 불 −5%" — 맞은 적에 원소를 묻힘 · 피해는 무속성보다 5% 낮음 · 위의 총 피해에 듦)
         String el = Elements.note(Runes.element(r), L);
         if (el != null) sb.append(D + " · " + L + el);
+        // 2026-11-17 새 룬: 거리 (근 · 중 · 원) · 원거리 시전
+        String rn = Runes.rangeName(r);
+        if (rn != null) sb.append(D + " · " + L + rn);
+        double cast = Runes.castSeconds(r);
+        if (cast > 0) sb.append(D + " · " + L + "시전 " + N + Js.str(Math.round(cast * 100) / 100.0) + "초");
         return sb.toString();
     }
 
@@ -516,6 +521,7 @@ public final class RuneTip {
     private static List<String> coefLines(Runes.Rune r) {
         Obj f = FAMILIES.objOrNull(r.family());
         List<String> out = new ArrayList<>();
+        if (f != null && f.truthy("set")) return out; // 2026-11-17 새 룬: 스탯 줄 없음 (사용자 "표시를 없애")
         if (f != null && f.truthy("mix")) {
             out.add("§r" + L + "적용 = 마력 + 힘·민첩 × " + Js.str(f.obj("coef").numOr("str", 1)));
             out.add("§r" + L + "마력 " + Js.str(f.numOr("ratio", 1)) + " : 힘·민첩 1 → 최대 " + N + "+" + pct(f.num("mix")) + "%");

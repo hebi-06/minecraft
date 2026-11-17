@@ -66,7 +66,8 @@ public final class RpgRuneTests {
     public void runeItemsRegistered(GameTestHelper h) {
         // 뽑기 계열 17 × 등급 5 + 0.16.0 한정 초월 룬 셋 (초월 하나씩)
         // 2026-11-14 숨긴 계열 (RUNE_HIDDEN) 의 아이템도 그대로 (이미 가진 룬)
-        h.assertTrue(RuneItems.runes().size() == (Runes.FAMILY_ORDER.size() + Runes.HIDDEN.size()) * Runes.GRADE_ORDER.size() + Runes.LIMITED_ORDER.size(), "runes "
+        // 2026-11-17 룬 재개발: 뽑기 룬 = 새 룬 30 (등급 하나씩) · 옛 계열 스물셋 (숨김 — 아이템은 남김, 접속 때 바꿈) × 5 · 한정 다섯
+        h.assertTrue(RuneItems.runes().size() == Runes.drawCount() + Runes.HIDDEN.size() * Runes.GRADE_ORDER.size() + Runes.LIMITED_ORDER.size(), "runes "
                 + RuneItems.runes().size());
         for (String f : Runes.LIMITED_ORDER) {
             RuneItem it = RuneItems.byId(Runes.runeId(f, "transcend"));
@@ -75,10 +76,12 @@ public final class RpgRuneTests {
         }
         for (String f : Runes.FAMILY_ORDER) {
             for (String g : Runes.GRADE_ORDER) {
+                if (!Runes.hasGrade(f, g)) continue;
                 RuneItem it = RuneItems.byId(Runes.runeId(f, g));
                 h.assertTrue(it != null && it.rune().family().equals(f) && it.rune().grade().equals(g), "rune item " + f + " " + g);
                 String name = it.getName(new ItemStack(it)).getString();
-                h.assertTrue(name.contains(it.rune().def().str("name")) && name.contains(it.rune().famName()), "name " + name);
+                // 2026-11-17 계열 이름 없음 ("어스 브레이커 · 룬 (일반)")
+                h.assertTrue(name.contains(it.rune().def().str("name")) && name.contains(Runes.kindLabel(it.rune())) && !name.contains(" 계열"), "name " + name);
             }
         }
         h.assertTrue(RuneItems.TICKET != null && RuneItems.ADV_TICKET != null && RuneItems.TICKET != RuneItems.ADV_TICKET, "tickets");
@@ -91,6 +94,7 @@ public final class RpgRuneTests {
         StringBuilder missing = new StringBuilder();
         for (String f : Runes.FAMILY_ORDER) {
             for (String g : Runes.GRADE_ORDER) {
+                if (!Runes.hasGrade(f, g)) continue;
                 String fn = Runes.parseRune(Runes.runeId(f, g)).def().str("fn");
                 if (!RuneCast.has(fn)) missing.append(' ').append(f).append('_').append(g).append('=').append(fn);
             }

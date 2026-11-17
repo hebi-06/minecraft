@@ -230,7 +230,7 @@ public final class RuneCast {
             Breakthrough.noteCast(sp, r, lv); // 콤보로 늦게 나가도 이 단계
             boolean ok;
             int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔 (Tasks.later · SkillFx.every 가 이어 줌)
-            String tg = Tasks.tag(r.family() + ":" + r.grade()); // 0.50.0 계열의 맞은 자리 · 아래 등급 그림 후광 (RuneBoost)
+            String tg = Tasks.tag(lookFamily(r) + ":" + r.grade()); // 0.50.0 계열의 맞은 자리 · 아래 등급 그림 후광 (RuneBoost) — 2026-11-17 새 룬은 look (옛 동작의 그림 묶음)
             // 2026-11-07 원소 룬 (RUNE_SPREAD.runes elem): 쓰는 동안 맞은 적에 원소를 묻힘 — 반응 위력의 바탕 = 룬 위력 (스탯)
             Object elem = mmorpg.fabric.job.ElementSystem.enter(Runes.element(r), power(sp, r.family()), false);
             try {
@@ -264,6 +264,29 @@ public final class RuneCast {
             }
             return ok;
         };
+        // 2026-11-17 룬 재개발: 원거리 시전 — 시전 동안 느리게 걷기, 동작 안의 선딜보다 시전이 길면 그만큼 먼저 기다림 (죽거나 침묵이면 재사용 대기를 돌려줌)
+        double castSec = Runes.castSeconds(r);
+        if (castSec > 0) {
+            RuneKit.effect(sp, "slowness", (int) Math.round(castSec * 20), 1);
+            RuneKit.selfCue(sp, CAST_GLOW, RuneKit.WHITE, false);
+            mmorpg.fabric.skill.SkillFx.play(sp.level(), "block.amethyst_block.resonate", sp.position(), 1.2, 0.7);
+        }
+        int castAdd = Runes.castAddTicks(r);
+        if (castAdd > 0 && plan == null) {
+            startCooldown(sp, r);
+            String life = RuneKit.lifeToken(sp);
+            final double castP = P;
+            Tasks.later(castAdd, () -> {
+                boolean ok = RuneKit.sameLife(sp, life) && !Status.blockedBySilence(sp) && run.getAsBoolean();
+                if (!ok) {
+                    if (!sp.isRemoved()) refundCooldown(sp, r);
+                    return;
+                }
+                AfterCast after = AFTER_CAST.get(r.family());
+                if (after != null) after.run(sp, r, castP);
+            });
+            return true;
+        }
         long now = Tasks.now();
         if (plan != null && plan.start() > now) {
             startCooldown(sp, r);
@@ -286,6 +309,17 @@ public final class RuneCast {
         AfterCast after = AFTER_CAST.get(r.family());
         if (after != null) after.run(sp, r, P);
         return true;
+    }
+
+    /** 시전 표시 빛 (푸른 흰빛) */
+    private static final double[] CAST_GLOW = {0.62, 0.82, 1.0};
+
+    /** 그림 묶음 계열 (2026-11-17 새 룬 = def.look 의 계열 — 옛 동작의 위르드식 그림 · 맞은 자리, 아니면 그 룬의 계열) */
+    static String lookFamily(Runes.Rune r) {
+        String look = r.def().strOrNull("look");
+        if (look == null || look.isEmpty()) return r.family();
+        int c = look.indexOf(':');
+        return c < 0 ? look : look.substring(0, c);
     }
 
     /** 0.12.6: 지금 든 무기로 이 룬을 쓸 수 있는지 (무기 전용 계열 — 사신 = 낫) */

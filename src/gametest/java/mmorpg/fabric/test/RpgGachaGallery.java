@@ -77,7 +77,6 @@ public final class RpgGachaGallery implements FabricClientGameTest {
                 me.getInventory().clearContent();
                 me.getInventory().setItem(0, new ItemStack(RuneItems.TICKET, 40));
                 me.getInventory().setItem(1, new ItemStack(RuneItems.ADV_TICKET, 10));
-                me.getInventory().setItem(2, new ItemStack(RuneItems.statTicket("str"), 5));
                 me.getInventory().setItem(3, new ItemStack(RuneItems.LIMITED_TICKET, 12));
                 me.getInventory().setSelectedSlot(0);
                 if (!s.getPlayerList().isOp(me.nameAndId())) s.getPlayerList().op(me.nameAndId());
@@ -118,7 +117,7 @@ public final class RpgGachaGallery implements FabricClientGameTest {
         String tab = ctx.computeOnClient(mc -> ((GachaScreen) mc.gui.screen()).tab());
         List<String> keys = ctx.computeOnClient(mc -> ((GachaScreen) mc.gui.screen()).tabKeys());
         check(tab.equals("normal"), "opens on the normal tab without a limited banner (" + tab + ")");
-        check(keys.equals(List.of("normal", "advanced", "stat_str")), "tabs: normal · advanced · owned stat ticket " + keys);
+        check(keys.equals(List.of("normal", "advanced")), "tabs: normal · advanced (2026-11-17 스탯 뽑기권 없음) " + keys);
         check(ctx.computeOnClient(mc -> ClientGacha.admin()), "operator sees the settings button");
         hover(ctx, sc -> ((GachaScreen) sc).pullCenter(10));
         shot(ctx, "g_pull10_tip");
@@ -131,18 +130,18 @@ public final class RpgGachaGallery implements FabricClientGameTest {
         click(ctx, conn, sc -> ((GachaScreen) sc).adminCenter());
         if (!waitScreen(ctx, s -> s instanceof GachaAdminScreen, "admin")) return;
         ctx.runOnClient(mc -> ((GachaAdminScreen) mc.gui.screen()).nameBox().setValue("불꽃 정령의 축제"));
-        click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("transcend", "spirit"));
-        for (String f : List.of("str", "axe", "blade")) click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("hero", f));
+        click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("transcend", "spiritking"));
+        for (String f : List.of("titanhammer", "runejavelin", "blizzard")) click(ctx, conn, sc -> ((GachaAdminScreen) sc).iconCenter("hero", f)); // 2026-11-17 새 룬
         List<String> f5 = ctx.computeOnClient(mc -> new ArrayList<>(((GachaAdminScreen) mc.gui.screen()).featured("transcend")));
         List<String> f4 = ctx.computeOnClient(mc -> new ArrayList<>(((GachaAdminScreen) mc.gui.screen()).featured("hero")));
-        check(f5.equals(List.of("spirit")) && f4.equals(List.of("str", "axe", "blade")), "picked by clicking icons " + f5 + " " + f4);
-        hover(ctx, sc -> ((GachaAdminScreen) sc).iconCenter("transcend", "spirit"));
+        check(f5.equals(List.of("spiritking")) && f4.equals(List.of("titanhammer", "runejavelin", "blizzard")), "picked by clicking icons " + f5 + " " + f4);
+        hover(ctx, sc -> ((GachaAdminScreen) sc).iconCenter("transcend", "spiritking"));
         shot(ctx, "g_admin");
         click(ctx, conn, sc -> ((GachaAdminScreen) sc).saveCenter());
         boolean opened = waitServer(ctx, server, s -> GachaSystem.activeLimited(s) != null, 60);
         check(opened, "saving opens the limited banner");
         Gacha.Spec spec = server.computeOnServer(GachaSystem::activeLimited);
-        check(spec != null && spec.name().equals("불꽃 정령의 축제") && spec.featured5().equals(List.of("spirit")) && spec.featured4().equals(List.of("str", "axe", "blade"))
+        check(spec != null && spec.name().equals("불꽃 정령의 축제") && spec.featured5().equals(List.of("spiritking")) && spec.featured4().equals(List.of("titanhammer", "runejavelin", "blizzard"))
                 && spec.hard() == 90 && spec.price() == 15, "limited spec " + spec);
         boolean back = waitScreen(ctx, s -> s instanceof GachaScreen g && "limited".equals(g.tab()), "gacha (limited tab) after saving");
         if (!back) return;
@@ -155,7 +154,7 @@ public final class RpgGachaGallery implements FabricClientGameTest {
 
     private void tabs(ClientGameTestContext ctx, TestServerConnection conn) {
         if (!ensureScreen(ctx)) return;
-        for (String k : List.of("advanced", "stat_str")) {
+        for (String k : List.of("advanced")) {
             click(ctx, conn, sc -> ((GachaScreen) sc).tabCenter(k));
             away(ctx);
             ctx.waitTicks(3);
@@ -181,7 +180,7 @@ public final class RpgGachaGallery implements FabricClientGameTest {
         check("transcend".equals(top), "guaranteed transcend (" + top + ")");
         check(server.computeOnServer(s -> GachaSystem.tickets(me(s), RuneItems.LIMITED_TICKET)) == tickets - 1, "one limited ticket paid");
         String rune = server.computeOnServer(s -> GachaSystem.state(me(s)).history().get(GachaSystem.state(me(s)).history().size() - 1).rune());
-        check("rpg:rune_spirit_transcend".equals(rune), "featured spirit-king rune " + rune);
+        check("rpg:rune_spiritking_transcend".equals(rune), "featured spirit-king rune " + rune);
         away(ctx);
         for (long[] at : new long[][] {{450}, {1250}, {1600}, {2700}}) {
             ctx.runOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).freezeAt(at[0]));

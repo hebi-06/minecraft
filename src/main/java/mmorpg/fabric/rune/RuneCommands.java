@@ -71,11 +71,14 @@ public final class RuneCommands {
         String grade = StringArgumentType.getString(c, "grade");
         Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
         if (r == null) {
-            tell(sp, "§c없는 룬입니다. §7(계열 " + String.join("·", Runes.ALL_FAMILIES) + ", 등급 common·rare·noble·hero·transcend)");
+            // 2026-11-17 새 룬은 등급 하나씩 (룬 이름 + 그 등급)
+            List<String> ids = new java.util.ArrayList<>();
+            for (String f : Runes.ACTIVE_FAMILIES) for (String g : Runes.GRADE_ORDER) if (Runes.hasGrade(f, g)) ids.add(f + " " + g);
+            tell(sp, "§c없는 룬입니다. §7(" + String.join(" · ", ids) + ")");
             return 0;
         }
         Notify.give(sp, Breakthrough.stack(family, grade, level));
-        tell(sp, Notify.PREFIX + "룬 지급: " + r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(level) + "§r §7(" + r.famName() + " 룬 · " + r.gradeName() + ")");
+        tell(sp, Notify.PREFIX + "룬 지급: " + r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(level) + "§r §7(" + Runes.kindLabel(r) + " · " + r.gradeName() + ")");
         return 1;
     }
 

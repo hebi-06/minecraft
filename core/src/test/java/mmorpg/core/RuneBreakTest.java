@@ -77,7 +77,7 @@ public final class RuneBreakTest {
         Set<String> fns = new HashSet<>();
         for (String fam : Runes.ALL_FAMILIES) {
             Runes.Rune t = rune(fam, "transcend");
-            check(t != null, fam + " transcend");
+            check(t != null || Runes.isSet(fam), fam + " transcend"); // 2026-11-17 새 룬은 등급 하나씩
             if (t == null) continue;
             String fn = t.def().str("fn");
             fns.add(fn);
@@ -155,6 +155,7 @@ public final class RuneBreakTest {
         int finales = 0;
         for (String fam : Runes.ALL_FAMILIES) {
             Runes.Rune t = rune(fam, "transcend");
+            if (t == null || Runes.isSet(fam)) continue; // 2026-11-17 새 룬 (등급 하나씩 — 초월 여섯은 옛 동작의 돌파를 그대로 씀)
             RuneBreak.Extra ex = RuneBreak.extra(t.def().str("fn"));
             if (ex == null) continue;
             String fn = t.def().str("fn");
@@ -183,9 +184,9 @@ public final class RuneBreakTest {
         near(RuneBreak.echoDef(fall, 6).num("radius"), 9, "heavenFall echo keeps the 6 radius");
         near(RuneBreak.echoDef(spear, 6).num("charge"), 10, "thunderSpear echo charge 10");
         check(RuneBreak.echoDef(meteor, 6) == RuneBreak.def(meteor, 6) || RuneBreak.echoDef(meteor, 6).num("mult") == 40, "no echo: plain def");
-        check(RuneBreak.extraText(fx6).equals("검이 한 번 더 떨어짐 (지금 겨눈 곳 · 위력 60%)"), "echo text " + RuneBreak.extraText(fx6));
+        check(RuneBreak.extraText(fx6).equals("검이 한 번 더 꽂힘 (겨눈 곳 · 위력 60%)"), "echo text " + RuneBreak.extraText(fx6));
         List<String> fallLines = RuneBreak.tierLines(fall, 6, false).stream().map(RuneBreakTest::plain).toList();
-        check(fallLines.stream().anyMatch(s -> s.trim().equals("◆ 검이 한 번 더 떨어짐 (지금 겨눈 곳 · 위력 60%)")), "extra line in the 6 tier " + fallLines);
+        check(fallLines.stream().anyMatch(s -> s.trim().equals("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · 위력 60%)")), "extra line in the 6 tier " + fallLines);
         check(RuneBreak.tierLines(fall, 3, false).stream().anyMatch(s -> s.startsWith("§r§8     ◆")), "extra line dark below 6");
 
         // 글자

@@ -55,7 +55,17 @@ public final class Runes {
      */
     public static final List<String> LIMITED_ORDER = R.root().has("RUNE_LIMITED_ORDER") ? R.strings("RUNE_LIMITED_ORDER") : List.of();
     /** 모든 계열 (뽑기 계열 · 숨긴 계열 (데이터 순서) · 한정 계열) — 아이템 · 이름 풀이 · 명령어 · 정렬 */
-    public static final List<String> ALL_FAMILIES = joined(joined(FAMILY_ORDER, DATA_ORDER.stream().filter(HIDDEN::contains).toList()), LIMITED_ORDER);
+    public static final List<String> ALL_FAMILIES = joined(joined(FAMILY_ORDER, hiddenDefined()), LIMITED_ORDER);
+
+    /**
+     * 숨긴 계열 중 정의가 있는 것 (2026-11-17 룬 재개발 — 옛 계열 9 는 RUNE_FAMILY_ORDER 에서 빠지고 RUNE_HIDDEN 에만 있음: 옛 아이템을 읽고 새 룬으로 바꾸려고 남김)
+     */
+    private static List<String> hiddenDefined() {
+        List<String> out = new ArrayList<>();
+        for (String f : DATA_ORDER) if (HIDDEN.contains(f)) out.add(f);
+        for (String f : HIDDEN) if (!out.contains(f) && R.obj("RUNE_FAMILIES").has(f) && R.obj("RUNES").has(f)) out.add(f);
+        return out;
+    }
     /** 2026-11-14 게임에 나오는 계열 (뽑기 계열 다음에 한정 계열 — 숨긴 계열 빼고): 한정 픽업 · 창작 탭 · 영상 셈 */
     public static final List<String> ACTIVE_FAMILIES = joined(FAMILY_ORDER, LIMITED_ORDER);
     /** runes.js GRADE_ORDER. */
@@ -337,10 +347,59 @@ public final class Runes {
      */
     private static final Obj SPREAD = R.root().has("RUNE_SPREAD") ? R.obj("RUNE_SPREAD") : null;
 
-    /** 시간 보정 · 유틸 표 (룬 계열.등급 → {t, w, zone, u}) — 없으면 null */
+    /**
+     * 2026-11-17 룬 재개발 (rules_runes.json RUNE_SET — tools/rune_set.py): 계열 없는 새 룬 30 의 거리 (range) · 시전 · 시간 · 유틸 표 (spread). 대조 시험이면 null
+     */
+    private static final Obj SET = R.root().has("RUNE_SET") ? R.obj("RUNE_SET") : null;
+
+    /** 시간 보정 · 유틸 표 (룬 계열.등급 → {t, w, zone, u}) — 새 룬은 RUNE_SET.spread (+ r 거리 · cast 시전), 없으면 null */
     public static Obj spreadEntry(Rune r) {
-        if (SPREAD == null || r == null) return null;
-        return SPREAD.obj("runes").objOrNull(r.family() + "." + r.grade());
+        if (r == null) return null;
+        String key = r.family() + "." + r.grade();
+        if (SET != null && SET.obj("spread").has(key)) return SET.obj("spread").obj(key);
+        if (SPREAD == null) return null;
+        return SPREAD.obj("runes").objOrNull(key);
+    }
+
+    /** 2026-11-17 계열 없는 새 룬인지 (RUNE_FAMILIES 의 set — 계열 이름 · 스탯 계수를 보이지 않음) */
+    public static boolean isSet(String family) {
+        Obj f = FAMILIES.objOrNull(family);
+        return f != null && f.truthy("set");
+    }
+
+    /** 새 룬의 거리 단계 (melee · mid · far — 없으면 null) */
+    public static String rangeKind(Rune r) {
+        Obj e = spreadEntry(r);
+        return e == null ? null : e.strOrNull("r");
+    }
+
+    /** 거리 보정 (근 ×1.2 · 중 ×1.1 · 원 ×1.0 — 사용자 "구분하고 싶은건 그냥 근접하고 원거리의 차이") — 없으면 1 */
+    public static double rangeMult(Rune r) {
+        String k = rangeKind(r);
+        return k == null || SET == null ? 1 : SET.obj("range").numOr(k, 1);
+    }
+
+    /** 거리 이름 ("근거리") — 없으면 null */
+    public static String rangeName(Rune r) {
+        String k = rangeKind(r);
+        return k == null || SET == null ? null : SET.obj("rangeName").strOrNull(k);
+    }
+
+    /** 원거리 시전 (초 — 동작 안의 선딜 포함, 그동안 느리게 걷기) — 시전이 없으면 0 */
+    public static double castSeconds(Rune r) {
+        Obj e = spreadEntry(r);
+        return e == null ? 0 : e.numOr("cast", 0);
+    }
+
+    /** 시전 중 동작 전에 먼저 기다리는 틱 (시전 − 동작 안의 선딜) */
+    public static int castAddTicks(Rune r) {
+        Obj e = spreadEntry(r);
+        return e == null ? 0 : (int) e.numOr("castAdd", 0);
+    }
+
+    /** 2026-11-17 새 룬의 예산 맞춤 (def.scale = 등급 초당 값 × 재사용 ÷ 옛 동작의 배율 합) — 없으면 1 */
+    public static double budgetScale(Rune r) {
+        return r == null ? 1 : r.def().numOr("scale", 1);
     }
 
     /** 선딜 틱 (쓴 때부터 첫 피해까지 — windup.min 틱 미만은 0, 표에 없으면 0) */
@@ -354,7 +413,8 @@ public final class Runes {
     /** 선딜 보정 (틱마다 windup.perTick — 0.5초 +10%, 최대 windup.max) */
     public static double windupBonus(Rune r) {
         Obj wu = SPREAD == null ? null : SPREAD.obj("windup");
-        return wu == null ? 0 : Math.min(wu.num("max"), windupTicks(r) * wu.num("perTick"));
+        if (wu == null || castSeconds(r) > 0) return 0; // 2026-11-17 원거리 시전은 선딜 보정 없음 (거리 보정 안)
+        return Math.min(wu.num("max"), windupTicks(r) * wu.num("perTick"));
     }
 
     /**
@@ -445,7 +505,7 @@ public final class Runes {
      * 대조 시험 (표 없음) 이면 1
      */
     public static double damageScale(Rune r) {
-        return (1 - utilCost(r)) * timeMult(r) * areaMult(r) * Elements.mult(element(r));
+        return (1 - utilCost(r)) * timeMult(r) * areaMult(r) * Elements.mult(element(r)) * rangeMult(r) * budgetScale(r); // 2026-11-17 거리 · 예산 맞춤 (새 룬)
     }
 
     /** 2026-11-07 이 룬의 원소 (RUNE_SPREAD.runes 의 elem — 불 · 물 · 전기 · 얼음 · 바위 · multi, 무속성이면 null) */
@@ -480,11 +540,50 @@ public final class Runes {
             }
             x -= w.get(g);
         }
-        int n = FAMILY_ORDER.size();
+        // 2026-11-17 룬 재개발: 그 등급이 있는 룬 중 같은 확률 (새 룬은 등급 하나씩 — 등급마다 6)
+        List<String> pool = familiesOf(grade);
+        int n = pool.size();
         double i = Math.min(n - 1, Math.floor(rand.getAsDouble() * n));
         if (!(i >= 0)) throw new IllegalArgumentException("random value out of [0, 1)");
-        String family = FAMILY_ORDER.get((int) i);
+        String family = pool.get((int) i);
         return new Roll(family, FAMILIES.obj(family).str("stat"), grade);
+    }
+
+    /** 뽑기에서 나오는 룬 수 (뽑기 계열 × 그 계열에 있는 등급 — 2026-11-17 새 룬은 30) */
+    public static int drawCount() {
+        int n = 0;
+        for (String f : FAMILY_ORDER) for (String g : GRADE_ORDER) if (hasGrade(f, g)) n++;
+        return n;
+    }
+
+    /** 픽업으로 고를 수 있는 룬 (뽑기 계열 · 한정 계열 중 등급 grade 가 있는 것 — 초월 픽업은 한정 룬도) */
+    public static List<String> pickable(String grade) {
+        List<String> out = new ArrayList<>();
+        for (String f : "transcend".equals(grade) ? ACTIVE_FAMILIES : FAMILY_ORDER) if (hasGrade(f, grade)) out.add(f);
+        return List.copyOf(out);
+    }
+
+    /** 계열 family 에 등급 grade 의 룬이 있는지 */
+    public static boolean hasGrade(String family, String grade) {
+        Obj byGrade = RUNES.objOrNull(family);
+        return byGrade != null && byGrade.has(grade);
+    }
+
+    /** 뽑기 계열 (FAMILY_ORDER) 중 등급 grade 의 룬이 있는 것 (데이터 순서) */
+    public static List<String> familiesOf(String grade) {
+        List<String> out = new ArrayList<>();
+        for (String f : FAMILY_ORDER) {
+            Obj byGrade = RUNES.objOrNull(f);
+            if (byGrade != null && byGrade.has(grade)) out.add(f);
+        }
+        return out.isEmpty() ? FAMILY_ORDER : List.copyOf(out);
+    }
+
+    /**
+     * 룬 종류 글자 ("도끼 룬" — 새 룬은 계열이 없어 "룬"): 아이템 이름 · 창의 작은 글자
+     */
+    public static String kindLabel(Rune r) {
+        return r == null || isSet(r.family()) ? "룬" : r.famName() + " 룬";
     }
 
     /**
@@ -492,6 +591,7 @@ public final class Runes {
      * {@code rand} 는 한 번 (등급) 부름.
      */
     public static Roll rollRuneOf(DoubleSupplier rand, boolean adv, String family) {
+        if (!FAMILY_ORDER.contains(family) && HIDDEN.contains(family)) return rollRune(rand, adv); // 2026-11-17 계열 없음 — 일반 뽑기와 같음
         if (!FAMILY_ORDER.contains(family)) throw new IllegalArgumentException("unknown rune family: " + family);
         Map<String, Double> w = gradeWeights(adv);
         double total = 0;
@@ -523,11 +623,16 @@ public final class Runes {
         Obj d = r.def();
         String head = "§r" + L + r.famName() + " 룬 · " + r.gradeName() + " · 재사용 " + Js.str(r.cd()) + "초";
         if (Js.utf8Length(head) > 50) head = "§r" + L + r.famName() + " · " + r.gradeName() + " · 재사용 " + Js.str(r.cd()) + "초";
+        if (isSet(r.family())) { // 2026-11-17 계열 · 스탯 표시 없음 (사용자 "표시를 없애")
+            String rn = rangeName(r);
+            head = "§r" + L + r.gradeName() + " · 재사용 " + Js.str(r.cd()) + "초" + (rn == null ? "" : " · " + rn);
+        }
         List<String> lines = new ArrayList<>();
         lines.add(head);
         lines.add("§r" + L + d.text("desc"));
         if (d.truthy("use")) lines.add("§r" + L + "용도 " + N + d.text("use"));
         double total = r.family().equals(RUNE_STRIKE.str("family")) ? 0 : runeTotalMult(d);
+        if (isSet(r.family()) && total > 0) total = total * damageScale(r); // 2026-11-17 새 룬: 예산 · 거리 · 유틸 · 시간이 든 배율
         if (total > 0 && d.truthy("crush")) {
             String each = d.numOr("hits", 1) > 1 ? d.text("mult") + "×" + d.text("hits") : d.text("mult");
             lines.add("§r" + L + "피해 " + N + "위력×" + Js.str(round1(total)) + L + " (" + each + " + " + d.text("crush") + ")");
@@ -564,6 +669,8 @@ public final class Runes {
                 lines.add("§r" + (dark ? "§1" : "§9") + "마검 부여" + L + ": 평타 " + imbue.text("hits") + "번 (룬 뒤 " + Js.str(imbue.num("ticks") / 20) + "초)");
                 lines.add("§r" + L + "평타 " + N + "+위력×" + d.text("imbue") + L + " · 관통 " + imbue.text("pierce") + "칸");
             }
+        } else if (f != null && f.truthy("set")) {
+            // 2026-11-17 새 룬: 스탯 줄 없음 (룬 위력 = 네 스탯의 합 — 누가 써도 같음, 사용자 "표시를 없애")
         } else if (f != null && f.truthy("best")) {
             lines.add("§r" + L + "적용 = 가장 높은 스탯 × 1.0");
         } else if (f != null && f.truthy("sum")) {
@@ -589,7 +696,8 @@ public final class Runes {
         if (d.truthy("el")) lines.addAll(elementLore(d, L, dark));
         if (d.truthy("spirits")) lines.addAll(spiritLore(d, L, dark));
         if (r.family().equals("gravity")) lines.addAll(gravityLore(d, L, dark));
-        if (!isSupport(d)) lines.add("§r" + L + "위력 = 레벨 공격력×(1+스탯×" + Js.str(Js.round(RUNE.num("perPoint") * 100)) + "%)"); // 가호 · 낙인 룬은 위력을 쓰지 않음
+        if (isSet(r.family())) lines.add("§r" + L + "위력 = 레벨 · 네 스탯의 합 (누가 써도 같음)"); // 2026-11-17 새 룬
+        else if (!isSupport(d)) lines.add("§r" + L + "위력 = 레벨 공격력×(1+스탯×" + Js.str(Js.round(RUNE.num("perPoint") * 100)) + "%)"); // 가호 · 낙인 룬은 위력을 쓰지 않음
         if (r.family().equals(RUNE_COMBO.str("family"))) {
             lines.add("§r" + (dark ? "§5" : "§d") + "콤보" + L + ": " + Js.str(Js.round(RUNE_COMBO.num("window") / 20)) + "초 안에 다른 암살자 룬");
             lines.add("§r" + L + "이을 때마다 피해 +" + Js.str(Js.round(RUNE_COMBO.num("step") * 100)) + "% (" + RUNE_COMBO.text("minOwned") + "종부터)");

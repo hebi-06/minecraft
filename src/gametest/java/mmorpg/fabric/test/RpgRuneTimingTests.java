@@ -94,6 +94,22 @@ public final class RpgRuneTimingTests {
     }
 
     private static void probe(GameTestHelper h, String family) {
+        List<Runes.Rune> runes = new ArrayList<>();
+        for (String g : GRADES) {
+            Runes.Rune r = Runes.parseRune(Runes.runeId(family, g));
+            if (r != null) runes.add(r);
+        }
+        probe(h, family, runes);
+    }
+
+    /** 2026-11-17 룬 재개발: 새 룬은 등급 하나씩 — 등급마다 여섯을 한 시험에서 (원거리 시전 룬은 시전 뒤 동작이 나간 때부터 셈) */
+    private static void probeGrade(GameTestHelper h, String grade) {
+        List<Runes.Rune> runes = new ArrayList<>();
+        for (String f : Runes.familiesOf(grade)) runes.add(Runes.parseRune(Runes.runeId(f, grade)));
+        probe(h, "set." + grade, runes);
+    }
+
+    private static void probe(GameTestHelper h, String family, List<Runes.Rune> list) {
         for (int x = 0; x < 10; x++) for (int z = 0; z < 10; z++) h.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
         ServerPlayer sp = player(h);
         sp.setExperienceLevels(40);
@@ -101,10 +117,7 @@ public final class RpgRuneTimingTests {
         for (String s : new String[] {"str", "dex", "vit", "int"}) RpgPlayers.setStat(sp, s, 120);
         if ("scythe".equals(Runes.weaponOnly(family))) sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(Weapons.weaponId("scythe", 40, "transcend"))));
         Probe p = new Probe();
-        for (String g : GRADES) {
-            Runes.Rune r = Runes.parseRune(Runes.runeId(family, g));
-            if (r != null) p.runes.add(r);
-        }
+        p.runes.addAll(list);
         h.assertTrue(!p.runes.isEmpty(), family + " runes");
         h.succeedWhen(() -> {
             long now = h.getTick();
@@ -126,9 +139,9 @@ public final class RpgRuneTimingTests {
                 p.z = dummy(h);
                 clearStrays(h, p.z);
                 sp.lookAt(EntityAnchorArgument.Anchor.EYES, p.z.getEyePosition());
-                p.want = RuneCast.power(sp, family) * Runes.runeTotalMult(r.def()) * Runes.damageScale(r);
+                p.want = RuneCast.power(sp, r.family()) * Runes.runeTotalMult(r.def()) * Runes.damageScale(r);
                 p.cast = RuneCast.castRune(sp, r, false, 0);
-                p.t0 = now;
+                p.t0 = now + Runes.castAddTicks(r); // 2026-11-17 원거리 시전: 동작 안의 선딜보다 긴 몫은 먼저 기다림
                 p.first = -1;
                 p.last = -1;
                 p.hits.clear();
@@ -151,7 +164,7 @@ public final class RpgRuneTimingTests {
                     p.last, String.format(Locale.ROOT, "%.1f", p.prev), String.format(Locale.ROOT, "%.1f", p.want), p.hits);
             // 지속 보정 표와 맞는지
             mmorpg.core.Obj e = Runes.spreadEntry(r);
-            String id = family + "." + r.grade();
+            String id = r.family() + "." + r.grade();
             // 0.49.0 받는 피해 증가 표식을 스스로 건 룬 (피의 낙인 · 마그마 대지 — 낙인 · 녹은 뒤 타격) 은 뒤 타격이 + vuln 만큼 더 들어감
             double vuln = r.def().numOr("vuln", 0);
             boolean full = p.want > 0 && p.prev >= p.want * 0.99 && p.prev <= p.want * (1 + vuln) * 1.01;
@@ -176,6 +189,31 @@ public final class RpgRuneTimingTests {
             p.measuring = false;
             throw h.assertionException("next");
         });
+    }
+
+    @GameTest(environment = "mmorpg:rt_set_common", maxTicks = 2400)
+    public void timingSetCommon(GameTestHelper h) {
+        probeGrade(h, "common");
+    }
+
+    @GameTest(environment = "mmorpg:rt_set_rare", maxTicks = 2400)
+    public void timingSetRare(GameTestHelper h) {
+        probeGrade(h, "rare");
+    }
+
+    @GameTest(environment = "mmorpg:rt_set_noble", maxTicks = 2400)
+    public void timingSetNoble(GameTestHelper h) {
+        probeGrade(h, "noble");
+    }
+
+    @GameTest(environment = "mmorpg:rt_set_hero", maxTicks = 2400)
+    public void timingSetHero(GameTestHelper h) {
+        probeGrade(h, "hero");
+    }
+
+    @GameTest(environment = "mmorpg:rt_set_transcend", maxTicks = 2400)
+    public void timingSetTranscend(GameTestHelper h) {
+        probeGrade(h, "transcend");
     }
 
     @GameTest(environment = "mmorpg:rt_str", maxTicks = 2100)

@@ -92,9 +92,13 @@ public final class RuneTipTest {
                     check(p.contains(RuneTip.BASIS) || p.contains(RuneTip.BASIS_SELF), id + " basis line");
                     // 계수 줄 (그대로)
                     Obj f = Rules.get().obj("RUNE_FAMILIES").obj(fam);
-                    String coef = f.truthy("mix") ? "적용 = 마력 + 힘·민첩" : f.truthy("best") ? "적용 = 가장 높은 스탯 × 1.0" : f.truthy("sum") ? "적용 = 네 스탯의 합 × 1.0"
-                            : Runes.coefText(fam) + " · 다른 스탯 0.85";
-                    check(all.contains(coef), id + " coef line '" + coef + "'");
+                    String coef = f.truthy("set") ? null : f.truthy("mix") ? "적용 = 마력 + 힘·민첩" : f.truthy("best") ? "적용 = 가장 높은 스탯 × 1.0"
+                            : f.truthy("sum") ? "적용 = 네 스탯의 합 × 1.0" : Runes.coefText(fam) + " · 다른 스탯 0.85";
+                    // 2026-11-17 새 룬 (계열 없음): 스탯 줄 없음 · 머리에 거리 (사용자 "표시를 없애")
+                    if (coef == null) {
+                        check(!all.contains("적용 =") && !all.contains("다른 스탯"), id + " no coef line");
+                        check(p.get(0).contains(Runes.rangeName(r)), id + " range in head " + p.get(0));
+                    } else check(all.contains(coef), id + " coef line '" + coef + "'");
                     // 돌파 줄
                     check(all.contains("돌파 " + RuneBreak.stars(lv)), id + " break summary");
                     // 총 피해 = P × 계수 × 배율 합
@@ -138,7 +142,7 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 120, "120 runes (0.25.0 두 스탯 계열 30 더함 · 2026-11-11 한정 3 뺌) " + runes);
+        check(runes == 150, "150 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30) " + runes);
 
         // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
@@ -197,7 +201,7 @@ public final class RuneTipTest {
         check(m6.contains("⚔ 총 피해 " + RuneTip.fmt(2688 * mS)) && m6.contains("돌파 ★★★★★★ 6/6 · 계수 ×1.6") && m6.contains("기절 1초"), "meteor 6: " + m6);
         // 천붕 6돌: 한 번 더 (60% — 천붕은 6돌에도 배율 32, 범위 · 사거리만 바뀜)
         String hf = joined(RuneTip.lines(rune("str", "transcend"), 6, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
-        check(hf.contains("◆ 검이 한 번 더 떨어짐 (지금 겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
+        check(hf.contains("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
         // 0.17.0 무간참역: 베기 2 × 10 + 마무리 일섬 14 (P 42 → 84 × 10번 + 588 — 나눔이 길어 다음 줄), 영역 줄, 6돌 기절
         List<String> en = plain(RuneTip.lines(rune("endless", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         double eS = Runes.damageScale(rune("endless", "transcend")); // 0.49.0 유틸 없음 × (선딜 0.8초 · 장판 · 4초 넘게 → 최대 ×1.3)

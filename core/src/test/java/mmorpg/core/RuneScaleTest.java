@@ -41,6 +41,8 @@ public final class RuneScaleTest {
             "holy.transcend", "body.common", "body.rare", "body.noble", "body.hero", "body.transcend", "strike.common", "strike.rare", "strike.noble",
             "strike.transcend", "yggdrasil.transcend", "abyss.transcend");
     private static final double[] BUDGET = {4, 7, 12, 20, 32};
+    /** 등급의 재사용 (초 — 새 룬의 예산 = BUDGET ÷ BASE_CD × 룬의 재사용) */
+    private static final double[] BASE_CD = {8, 12, 18, 26, 36};
 
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
@@ -66,6 +68,7 @@ public final class RuneScaleTest {
         int leaps = 0;
         int singles = 0;
         int narrows = 0;
+        int sets = 0;
         for (String fam : Runes.ALL_FAMILIES) {
             for (int gi = 0; gi < Runes.GRADE_ORDER.size(); gi++) {
                 String g = Runes.GRADE_ORDER.get(gi);
@@ -85,11 +88,26 @@ public final class RuneScaleTest {
                 // 0.50.0 범위 보정: a = single (+15%) · narrow (+8%) · 없음 (1)
                 String a = Runes.areaKind(r);
                 check(a == null || a.equals("single") || a.equals("narrow"), id + " area kind " + a);
-                if (a != null && a.equals("single")) singles++;
-                if (a != null && a.equals("narrow")) narrows++;
                 double am = a == null ? 1 : a.equals("single") ? 1.15 : 1.08;
                 near(Runes.areaMult(r), am, id + " area mult");
-                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm * am * Elements.mult(Runes.element(r)), id + " scale = util × time × area × element");
+                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm * am * Elements.mult(Runes.element(r)) * Runes.rangeMult(r) * Runes.budgetScale(r),
+                        id + " scale = util × time × area × element × range × budget");
+                // 2026-11-17 룬 재개발 (계열 없는 새 룬 30): 예산 = 등급 초당 값 × 재사용 · 거리 (근 1.2 · 중 1.1 · 원 1.0) · 받는 피해 증가 없음 · 시전 룬은 선딜 보정 없음
+                if (Runes.isSet(fam)) {
+                    sets++;
+                    check(Runes.familiesOf(g).contains(fam) && !Runes.hasGrade(fam, g.equals("common") ? "rare" : "common"), id + " one grade");
+                    double rm = Runes.rangeMult(r);
+                    check(Math.abs(rm - 1.2) < 1e-9 || Math.abs(rm - 1.1) < 1e-9 || Math.abs(rm - 1.0) < 1e-9, id + " range mult " + rm);
+                    check(!Runes.utils(r).contains("vuln10") && !Runes.utils(r).contains("vuln15") && !d.truthy("vuln"), id + " no vuln (한정 룬만)");
+                    if (Runes.castSeconds(r) > 0) near(Runes.windupBonus(r), 0, id + " cast → no windup bonus");
+                    if (total > 0) {
+                        double want = BUDGET[gi] / BASE_CD[gi] * r.cd();
+                        check(Math.abs(total * Runes.budgetScale(r) - want) <= want * 0.01, id + " budget " + total * Runes.budgetScale(r) + " = " + want);
+                    }
+                    continue;
+                }
+                if (a != null && a.equals("single")) singles++;
+                if (a != null && a.equals("narrow")) narrows++;
                 if (KEEP.contains(id)) {
                     check(Runes.utils(r).isEmpty(), id + " keep: no util cost");
                     continue;
@@ -101,7 +119,9 @@ public final class RuneScaleTest {
                 check(Math.abs(total - budget) <= budget * 0.01, id + " total " + total + " = budget " + budget);
             }
         }
-        check(runes == 120, "120 runes (2026-11-11 한정 3 뺌) " + runes);
+        check(runes == 150, "150 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30) " + runes);
+        check(sets == 30, "30 set runes " + sets);
+        for (String g : Runes.GRADE_ORDER) check(Runes.familiesOf(g).size() == 6, g + ": 6 runes " + Runes.familiesOf(g));
         check(ruled == 99, "99 runes under the rule " + ruled);
         check(leaps == 6, "6 leap runes " + leaps);
         check(singles == 10 && narrows == 35, "area kinds 10 single · 35 narrow: " + singles + " · " + narrows);

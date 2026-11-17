@@ -1,0 +1,1285 @@
+{
+ "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30) · 룬마다 재사용 (예산 = 등급 초당 값 × 재사용) · 룬 위력 = 네 스탯의 합 · 거리 보정 (RUNE_SET.range) · 원거리 시전 (cast — 선딜 보정 없음) · 받는 피해 증가 없음 (한정 룬만). 옛 계열 9 는 숨김 (아이템은 접속 때 새 룬으로).",
+ "RUNE_FAMILIES": {
+  "earthbreaker": {
+   "stat": "str",
+   "name": "어스 브레이커",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "boomerangaxe": {
+   "stat": "str",
+   "name": "부메랑 액스",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "galerush": {
+   "stat": "dex",
+   "name": "게일 러시",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "icelance": {
+   "stat": "int",
+   "name": "아이스 랜스",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "salamander": {
+   "stat": "int",
+   "name": "샐러맨더",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "rampart": {
+   "stat": "str",
+   "name": "램파트",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "solarwave": {
+   "stat": "str",
+   "name": "솔라 웨이브",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "chainarrow": {
+   "stat": "dex",
+   "name": "체인 애로",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "shadowstrike": {
+   "stat": "dex",
+   "name": "섀도 스트라이크",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "undine": {
+   "stat": "int",
+   "name": "운디네",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "aurochs": {
+   "stat": "vit",
+   "name": "오록스 차지",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "grove": {
+   "stat": "vit",
+   "name": "그로브 블레싱",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "fissureslam": {
+   "stat": "str",
+   "name": "피셔 슬램",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "bladehail": {
+   "stat": "dex",
+   "name": "블레이드 헤일",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "thundervolley": {
+   "stat": "dex",
+   "name": "썬더 볼리",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "frostburst": {
+   "stat": "int",
+   "name": "프로스트 버스트",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "firestorm": {
+   "stat": "int",
+   "name": "파이어 스톰",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "fortress": {
+   "stat": "vit",
+   "name": "포트리스 슬램",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "titanhammer": {
+   "stat": "str",
+   "name": "타이탄 해머",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "runejavelin": {
+   "stat": "dex",
+   "name": "룬 재블린",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "shadowblitz": {
+   "stat": "dex",
+   "name": "섀도 블리츠",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "blizzard": {
+   "stat": "int",
+   "name": "블리자드",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "gnome": {
+   "stat": "int",
+   "name": "노움",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "bastion": {
+   "stat": "vit",
+   "name": "바스티온",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "skyfall": {
+   "stat": "str",
+   "name": "스카이폴",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "berserker": {
+   "stat": "str",
+   "name": "버서커",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "lunaexec": {
+   "stat": "dex",
+   "name": "루나 엑시큐션",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "meteor": {
+   "stat": "int",
+   "name": "메테오",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "spiritking": {
+   "stat": "int",
+   "name": "스피릿 킹",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "immortaloath": {
+   "stat": "vit",
+   "name": "이모탈 오스",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  }
+ },
+ "RUNES": {
+  "earthbreaker": {
+   "common": {
+    "fn": "groundSlam",
+    "name": "어스 브레이커",
+    "desc": "무기로 앞 땅을 내려찍어 바위 기둥이 솟음 · 기절",
+    "use": "근접 부채꼴 · 기절 0.5초",
+    "mult": 4,
+    "dist": 2.2,
+    "radius": 2.8,
+    "lift": 0.35,
+    "stun": 10,
+    "cd": 7,
+    "look": "str:common",
+    "scale": 0.875
+   }
+  },
+  "boomerangaxe": {
+   "common": {
+    "fn": "axeBoomerang",
+    "name": "부메랑 액스",
+    "desc": "룬 도끼를 회전시켜 던져 갔다가 돌아옴",
+    "use": "직선 왕복 2타",
+    "mult": 2,
+    "hits": 2,
+    "range": 10,
+    "width": 1.5,
+    "speed": 28,
+    "hover": 10,
+    "buff": 0,
+    "buffTicks": 120,
+    "cd": 6,
+    "look": "axe:common",
+    "scale": 0.75
+   }
+  },
+  "galerush": {
+   "common": {
+    "fn": "galeSlash",
+    "name": "게일 러시",
+    "desc": "앞으로 돌진하며 지나간 자리를 벰",
+    "use": "돌진 · 이동",
+    "mult": 4,
+    "dash": 5,
+    "width": 1.3,
+    "cd": 8,
+    "look": "dex:common",
+    "scale": 1.0
+   }
+  },
+  "icelance": {
+   "common": {
+    "fn": "fireball",
+    "name": "아이스 랜스",
+    "desc": "얼음 창을 쏴 꽂고 터뜨림 · 둔화",
+    "use": "원거리 · 파열 · 둔화 2초",
+    "mult": 4,
+    "range": 20,
+    "speed": 24,
+    "radius": 2.2,
+    "fire": 0,
+    "slowTicks": 40,
+    "slowAmp": 1,
+    "cd": 6,
+    "look": "int:common",
+    "scale": 0.75
+   }
+  },
+  "salamander": {
+   "common": {
+    "fn": "summonSpirits",
+    "name": "샐러맨더",
+    "desc": "샐러맨더를 불러 4초 동안 불덩이를 뱉게 함",
+    "use": "소환 · 불덩이 4번",
+    "spirits": [
+     "salamander"
+    ],
+    "mult": 1,
+    "hits": 4,
+    "gap": 12,
+    "first": 8,
+    "ticks": 60,
+    "range": 12,
+    "cd": 11,
+    "look": "spirit:common",
+    "scale": 1.375
+   }
+  },
+  "rampart": {
+   "common": {
+    "fn": "counterStance",
+    "name": "램파트",
+    "desc": "앞에 방패 결계를 세워 막고, 결계로 앞을 밀어 냄",
+    "use": "앞 피해 −50% 3초 · 밀쳐냄",
+    "mult": 12,
+    "ticks": 60,
+    "reduce": 0.5,
+    "range": 4.5,
+    "cone": 120,
+    "cd": 10,
+    "look": "blade:noble",
+    "scale": 0.4167
+   }
+  },
+  "solarwave": {
+   "rare": {
+    "fn": "swordWave",
+    "name": "솔라 웨이브",
+    "desc": "크게 감아 가로로 베어 태양빛 검기를 날림",
+    "use": "직선 관통 검기",
+    "mult": 7,
+    "range": 14,
+    "width": 1.6,
+    "speed": 26,
+    "cd": 10,
+    "look": "blade:rare",
+    "scale": 0.8333
+   }
+  },
+  "chainarrow": {
+   "rare": {
+    "fn": "pinArrow",
+    "name": "체인 애로",
+    "desc": "룬 활로 쏜 화살이 첫 적을 땅에 사슬로 묶음",
+    "use": "원거리 단일 · 묶음 1.5초",
+    "mult": 7,
+    "range": 18,
+    "cone": 20,
+    "root": 30,
+    "cd": 14,
+    "look": "bow:rare",
+    "scale": 1.1667
+   }
+  },
+  "shadowstrike": {
+   "rare": {
+    "fn": "shadowRaid",
+    "name": "섀도 스트라이크",
+    "desc": "그림자 분신이 둘레 적들을 하나씩 등 뒤에서 벰",
+    "use": "여러 적 · 기습",
+    "mult": 12,
+    "targets": 4,
+    "range": 9,
+    "cone": 70,
+    "gap": 4,
+    "vuln": 0,
+    "vulnTicks": 0,
+    "cd": 11,
+    "look": "dex:noble",
+    "scale": 0.5347
+   }
+  },
+  "undine": {
+   "rare": {
+    "fn": "summonSpirits",
+    "name": "운디네",
+    "desc": "운디네를 불러 물줄기를 세 번 쏘게 함",
+    "use": "소환 · 관통 · 밀쳐냄",
+    "spirits": [
+     "undine"
+    ],
+    "mult": 2.33,
+    "hits": 3,
+    "gap": 20,
+    "first": 8,
+    "ticks": 70,
+    "range": 11,
+    "cd": 13,
+    "look": "spirit:rare",
+    "scale": 1.0849
+   }
+  },
+  "aurochs": {
+   "rare": {
+    "fn": "shieldRush",
+    "name": "오록스 차지",
+    "desc": "들소 영혼과 함께 앞으로 돌진해 부딪힌 적을 밀쳐냄",
+    "use": "돌진 · 밀쳐냄 · 받는 피해 −30%",
+    "mult": 5,
+    "crush": 2,
+    "range": 6,
+    "width": 1.6,
+    "radius": 2.6,
+    "reduce": 0.3,
+    "ticks": 40,
+    "knock": 0.8,
+    "multName": "돌진 ",
+    "crushName": "내려찍기",
+    "flow": [
+     "앞 {range}칸 돌진 · 처음 부딪힌 적에서 멈춤",
+     "돌진하는 동안 받는 피해 감소"
+    ],
+    "cd": 12,
+    "look": "gladiator:rare",
+    "scale": 1.0
+   }
+  },
+  "grove": {
+   "rare": {
+    "fn": "lifeSpring",
+    "name": "그로브 블레싱",
+    "desc": "발밑에 새싹이 자라 빛 잎을 흩날리며 나와 둘레 아군을 회복",
+    "use": "회복 — 나 30% · 아군 15% (3초)",
+    "heal": 0.133,
+    "pulses": 4,
+    "gap": 15,
+    "radius": 5,
+    "share": 0.5,
+    "cd": 12,
+    "look": "vit:rare"
+   }
+  },
+  "fissureslam": {
+   "noble": {
+    "fn": "fissure",
+    "name": "피셔 슬램",
+    "desc": "위에서 아래로 내려찍어 앞 땅을 가름 · 띄움",
+    "use": "직선 관통 · 띄움",
+    "mult": 12,
+    "length": 9,
+    "width": 1.4,
+    "lift": 0.6,
+    "vuln": 0,
+    "vulnTicks": 0,
+    "cd": 15,
+    "look": "str:noble",
+    "scale": 0.8333
+   }
+  },
+  "bladehail": {
+   "noble": {
+    "fn": "bladeStorm",
+    "name": "블레이드 헤일",
+    "desc": "둘레에 룬 칼날이 우박처럼 꽂힘 (움직일 수 있음)",
+    "use": "둘레 연타 · 장판",
+    "mult": 4,
+    "hits": 5,
+    "gap": 10,
+    "radius": 3.5,
+    "speedTicks": 0,
+    "cd": 21,
+    "look": "dex:hero",
+    "scale": 0.7
+   }
+  },
+  "thundervolley": {
+   "noble": {
+    "fn": "backstep",
+    "name": "썬더 볼리",
+    "desc": "뒤로 뛰며 번개 화살을 부채꼴로 쏨",
+    "use": "뒤로 도약 · 부채꼴 연사",
+    "mult": 12,
+    "back": 5,
+    "arrows": 3,
+    "range": 16,
+    "cone": 80,
+    "gap": 3,
+    "air": 6,
+    "cd": 14,
+    "look": "bow:noble",
+    "scale": 0.7778
+   }
+  },
+  "frostburst": {
+   "noble": {
+    "fn": "frostNova",
+    "name": "프로스트 버스트",
+    "desc": "발을 굴러 둘레에 얼음 가시를 솟게 함 · 빙결",
+    "use": "둘레 · 빙결 1초",
+    "mult": 7,
+    "radius": 4.2,
+    "slowTicks": 60,
+    "slowAmp": 1,
+    "freeze": 20,
+    "cd": 18,
+    "look": "int:rare",
+    "scale": 1.7143
+   }
+  },
+  "firestorm": {
+   "noble": {
+    "fn": "fireStorm",
+    "name": "파이어 스톰",
+    "desc": "겨눈 곳에 불기둥 소용돌이 · 끌어당김",
+    "use": "장판 · 끌어당김",
+    "mult": 2,
+    "hits": 6,
+    "gap": 10,
+    "range": 18,
+    "radius": 3.2,
+    "pull": 0.25,
+    "cd": 24,
+    "look": "int:noble",
+    "scale": 1.3333
+   }
+  },
+  "fortress": {
+   "noble": {
+    "fn": "stoneWard",
+    "name": "포트리스 슬램",
+    "desc": "땅을 내리쳐 둘레에 성벽 조각을 세웠다가 쓰러뜨림 · 몸을 지킴",
+    "use": "둘레 2타 · 보호막",
+    "mult": 3.5,
+    "hits": 2,
+    "gap": 20,
+    "radius": 4,
+    "shield": 0.12,
+    "ticks": 120,
+    "multName": "돌기둥 ",
+    "flow": [
+     "내 둘레 {radius}칸 돌기둥 넷 · 솟을 때와 무너질 때"
+    ],
+    "cd": 16,
+    "look": "golem:rare",
+    "scale": 1.5238
+   }
+  },
+  "titanhammer": {
+   "hero": {
+    "fn": "titanSmash",
+    "name": "타이탄 해머",
+    "desc": "겨눈 곳으로 높이 뛰어 거대한 망치와 함께 내려찍음 · 기절",
+    "use": "도약 · 기절 1초",
+    "mult": 20,
+    "range": 12,
+    "radius": 5,
+    "air": 12,
+    "stun": 20,
+    "lift": 0.3,
+    "motionAt": 4,
+    "cd": 24,
+    "look": "str:hero",
+    "scale": 0.9231
+   }
+  },
+  "runejavelin": {
+   "hero": {
+    "fn": "snipe",
+    "name": "룬 재블린",
+    "desc": "빛의 창을 만들어 던짐 — 처음 맞은 적에 꽂혀 터짐",
+    "use": "원거리 단일 큰 한 방",
+    "mult": 20,
+    "range": 40,
+    "cone": 8,
+    "charge": 16,
+    "push": 0,
+    "cd": 22,
+    "look": "bow:hero",
+    "scale": 0.8462
+   }
+  },
+  "shadowblitz": {
+   "hero": {
+    "fn": "shadowFlurry",
+    "name": "섀도 블리츠",
+    "desc": "대상 등 뒤로 순간 이동해 난도질",
+    "use": "단일 연타 · 순간 이동",
+    "mult": 4,
+    "hits": 5,
+    "gap": 10,
+    "range": 7,
+    "cone": 30,
+    "span": 40,
+    "vuln": 0,
+    "vulnTicks": 0,
+    "cd": 20,
+    "look": "assassin:hero",
+    "scale": 0.7692
+   }
+  },
+  "blizzard": {
+   "hero": {
+    "fn": "blizzard",
+    "name": "블리자드",
+    "desc": "겨눈 곳 하늘에 구름을 모아 눈보라 · 둔화",
+    "use": "장판 · 둔화",
+    "mult": 2.5,
+    "hits": 8,
+    "gap": 10,
+    "range": 18,
+    "radius": 5,
+    "slowTicks": 40,
+    "slowAmp": 2,
+    "cd": 30,
+    "look": "int:hero",
+    "scale": 1.1538
+   }
+  },
+  "gnome": {
+   "hero": {
+    "fn": "summonSpirits",
+    "name": "노움",
+    "desc": "노움을 불러 바위 가시를 일으킴 · 묶음",
+    "use": "소환 · 묶음 1초",
+    "spirits": [
+     "gnome"
+    ],
+    "mult": 5,
+    "hits": 4,
+    "gap": 20,
+    "first": 10,
+    "ticks": 90,
+    "range": 12,
+    "root": 20,
+    "cd": 28,
+    "look": "spirit:hero",
+    "scale": 1.0769
+   }
+  },
+  "bastion": {
+   "hero": {
+    "fn": "bulwark",
+    "name": "바스티온",
+    "desc": "방패 벽을 둘러 세워 아군을 지키고 안의 적을 침",
+    "use": "장판 5초 · 아군 받는 피해 −20%",
+    "mult": 2.2,
+    "radius": 4.5,
+    "reduce": 0.2,
+    "ticks": 100,
+    "pulse": 10,
+    "cd": 32,
+    "look": "vit:hero",
+    "scale": 1.1189
+   }
+  },
+  "skyfall": {
+   "transcend": {
+    "fn": "heavenFall",
+    "name": "스카이폴",
+    "desc": "하늘 높이에서 거대한 검이 떨어져 꽂힘",
+    "use": "원거리 광역 큰 한 방",
+    "mult": 32,
+    "range": 22,
+    "radius": 6,
+    "delay": 24,
+    "lift": 1,
+    "cd": 34,
+    "look": "str:transcend",
+    "scale": 0.9444
+   }
+  },
+  "berserker": {
+   "transcend": {
+    "fn": "berserker",
+    "name": "버서커",
+    "desc": "광폭화 — 양손 룬 도끼로 둘레를 난타 · 흡혈",
+    "use": "장판 연타 · 흡혈 · 받는 피해 −20%",
+    "mult": 5.33,
+    "hits": 6,
+    "gap": 20,
+    "radius": 4,
+    "reduce": 0.2,
+    "heal": 0.02,
+    "healMax": 5,
+    "cd": 40,
+    "look": "axe:transcend",
+    "scale": 1.1118
+   }
+  },
+  "lunaexec": {
+   "transcend": {
+    "fn": "moonAssassin",
+    "name": "루나 엑시큐션",
+    "desc": "달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발",
+    "use": "단일 · 순간 이동",
+    "mult": 32,
+    "range": 14,
+    "cone": 20,
+    "delay": 20,
+    "splash": 3,
+    "splashMult": 16,
+    "span": 20,
+    "cd": 30,
+    "look": "assassin:transcend",
+    "scale": 0.8333
+   }
+  },
+  "meteor": {
+   "transcend": {
+    "fn": "meteor",
+    "name": "메테오",
+    "desc": "각진 운석이 떨어져 폭발 · 불타는 땅",
+    "use": "원거리 광역 큰 한 방",
+    "mult": 32,
+    "range": 24,
+    "radius": 6,
+    "delay": 30,
+    "fire": 5,
+    "lift": 0.9,
+    "cd": 38,
+    "look": "int:transcend",
+    "scale": 1.0556
+   }
+  },
+  "spiritking": {
+   "transcend": {
+    "fn": "spiritKing",
+    "name": "스피릿 킹",
+    "desc": "네 정령이 차례로 공격한 뒤 정령왕이 강림",
+    "use": "소환 · 원소",
+    "spirits": [
+     "salamander",
+     "undine",
+     "sylph",
+     "gnome"
+    ],
+    "mult": 2.5,
+    "hits": 4,
+    "elemMult": 3.5,
+    "burstMult": 8,
+    "range": 16,
+    "radius": 6,
+    "first": 4,
+    "stagger": 5,
+    "gap": 6,
+    "ticks": 34,
+    "elemGap": 10,
+    "burstDelay": 16,
+    "pull": 0.45,
+    "knock": 1,
+    "slowTicks": 40,
+    "fire": 3,
+    "stun": 0,
+    "cd": 44,
+    "look": "spirit:transcend",
+    "scale": 1.2222
+   }
+  },
+  "immortaloath": {
+   "transcend": {
+    "fn": "undyingPact",
+    "name": "이모탈 오스",
+    "desc": "쓰러지지 않는 맹약 — 버티며 회복하고 둘레를 침",
+    "use": "버팀 · 회복",
+    "mult": 2.5,
+    "radius": 4,
+    "heal": 0.05,
+    "ticks": 160,
+    "pulse": 20,
+    "cd": 30,
+    "look": "vit:transcend",
+    "scale": 1.3333
+   }
+  }
+ },
+ "RUNE_FAMILY_ORDER": [
+  "earthbreaker",
+  "boomerangaxe",
+  "galerush",
+  "icelance",
+  "salamander",
+  "rampart",
+  "solarwave",
+  "chainarrow",
+  "shadowstrike",
+  "undine",
+  "aurochs",
+  "grove",
+  "fissureslam",
+  "bladehail",
+  "thundervolley",
+  "frostburst",
+  "firestorm",
+  "fortress",
+  "titanhammer",
+  "runejavelin",
+  "shadowblitz",
+  "blizzard",
+  "gnome",
+  "bastion",
+  "skyfall",
+  "berserker",
+  "lunaexec",
+  "meteor",
+  "spiritking",
+  "immortaloath"
+ ],
+ "RUNE_HIDDEN": [
+  "spirit",
+  "blade",
+  "assassin",
+  "bow",
+  "axe",
+  "int",
+  "vit",
+  "dex",
+  "str",
+  "holy",
+  "storm",
+  "spellblade",
+  "element",
+  "gravity",
+  "reaper",
+  "tide",
+  "golem",
+  "monk",
+  "hunter",
+  "volcano",
+  "gladiator",
+  "body",
+  "strike"
+ ],
+ "RUNE": {
+  "ticketLore": [
+   "§r§7보스·퀘스트·룬술사에게서 얻음",
+   "§r§7들고 누르면 룬 하나를 뽑습니다",
+   "§r§7일반 50% · 희귀 28% · 고귀 14%",
+   "§r§7영웅 6.5% · 초월 1.5%",
+   "§r§7등급마다 룬 6개 중 하나 (같은 확률)"
+  ]
+ },
+ "RUNE_SET": {
+  "range": {
+   "melee": 1.2,
+   "mid": 1.1,
+   "far": 1.0
+  },
+  "rangeName": {
+   "melee": "근거리",
+   "mid": "중거리",
+   "far": "원거리"
+  },
+  "spread": {
+   "earthbreaker.common": {
+    "a": "narrow",
+    "t": 2,
+    "u": [
+     "stun05"
+    ],
+    "elem": "rock",
+    "r": "melee"
+   },
+   "boomerangaxe.common": {
+    "a": "narrow",
+    "t": 17,
+    "u": [],
+    "r": "mid"
+   },
+   "galerush.common": {
+    "a": "narrow",
+    "t": 1,
+    "u": [
+     "blink"
+    ],
+    "r": "melee"
+   },
+   "icelance.common": {
+    "a": "narrow",
+    "t": 3,
+    "elem": "ice",
+    "u": [
+     "slow"
+    ],
+    "r": "far",
+    "cast": 0.5,
+    "castAdd": 10
+   },
+   "salamander.common": {
+    "a": "narrow",
+    "t": 47,
+    "w": 11,
+    "elem": "fire",
+    "u": [],
+    "r": "mid"
+   },
+   "rampart.common": {
+    "a": "narrow",
+    "t": 50,
+    "w": 0,
+    "u": [
+     "reduce",
+     "knock"
+    ],
+    "r": "melee"
+   },
+   "solarwave.rare": {
+    "t": 2,
+    "u": [],
+    "r": "mid"
+   },
+   "chainarrow.rare": {
+    "a": "single",
+    "t": 1,
+    "u": [
+     "root"
+    ],
+    "r": "far",
+    "cast": 0.5,
+    "castAdd": 10
+   },
+   "shadowstrike.rare": {
+    "t": 3,
+    "u": [],
+    "r": "mid"
+   },
+   "undine.rare": {
+    "a": "narrow",
+    "t": 50,
+    "w": 10,
+    "u": [
+     "knock"
+    ],
+    "elem": "water",
+    "r": "mid"
+   },
+   "aurochs.rare": {
+    "a": "narrow",
+    "t": 12,
+    "u": [
+     "blink",
+     "knock",
+     "reduce"
+    ],
+    "r": "melee"
+   },
+   "grove.rare": {
+    "u": [],
+    "r": "mid"
+   },
+   "fissureslam.noble": {
+    "a": "narrow",
+    "t": 1,
+    "u": [
+     "lift"
+    ],
+    "r": "mid"
+   },
+   "bladehail.noble": {
+    "t": 41,
+    "zone": true,
+    "u": [],
+    "r": "melee"
+   },
+   "thundervolley.noble": {
+    "t": 3,
+    "u": [
+     "leap"
+    ],
+    "elem": "thunder",
+    "r": "far",
+    "cast": 0.5,
+    "castAdd": 10
+   },
+   "frostburst.noble": {
+    "t": 1,
+    "u": [
+     "stun1"
+    ],
+    "elem": "ice",
+    "r": "melee"
+   },
+   "firestorm.noble": {
+    "t": 51,
+    "zone": true,
+    "u": [
+     "pull"
+    ],
+    "elem": "fire",
+    "r": "far",
+    "cast": 0.7,
+    "castAdd": 14
+   },
+   "fortress.noble": {
+    "t": 24,
+    "u": [
+     "shield"
+    ],
+    "r": "melee"
+   },
+   "titanhammer.hero": {
+    "t": 12,
+    "w": 12,
+    "u": [
+     "leap",
+     "stun1"
+    ],
+    "r": "melee"
+   },
+   "runejavelin.hero": {
+    "a": "single",
+    "t": 17,
+    "w": 17,
+    "u": [],
+    "r": "far",
+    "cast": 0.85,
+    "castAdd": 0
+   },
+   "shadowblitz.hero": {
+    "a": "single",
+    "t": 41,
+    "u": [
+     "blink"
+    ],
+    "r": "mid"
+   },
+   "blizzard.hero": {
+    "t": 71,
+    "zone": true,
+    "u": [
+     "slow"
+    ],
+    "elem": "ice",
+    "r": "far",
+    "cast": 0.8,
+    "castAdd": 16
+   },
+   "gnome.hero": {
+    "a": "narrow",
+    "t": 78,
+    "w": 18,
+    "u": [
+     "root"
+    ],
+    "elem": "rock",
+    "r": "mid"
+   },
+   "bastion.hero": {
+    "t": 100,
+    "zone": true,
+    "u": [
+     "allyGuard"
+    ],
+    "r": "melee"
+   },
+   "skyfall.transcend": {
+    "t": 24,
+    "w": 24,
+    "u": [
+     "lift"
+    ],
+    "r": "far",
+    "cast": 1.2,
+    "castAdd": 0
+   },
+   "berserker.transcend": {
+    "t": 100,
+    "zone": true,
+    "u": [
+     "lifesteal",
+     "reduce"
+    ],
+    "r": "melee"
+   },
+   "lunaexec.transcend": {
+    "a": "single",
+    "t": 20,
+    "w": 20,
+    "u": [
+     "blink"
+    ],
+    "r": "mid"
+   },
+   "meteor.transcend": {
+    "t": 30,
+    "w": 30,
+    "u": [
+     "lift"
+    ],
+    "elem": "fire",
+    "r": "far",
+    "cast": 1.5,
+    "castAdd": 0
+   },
+   "spiritking.transcend": {
+    "t": 97,
+    "w": 7,
+    "u": [
+     "pull",
+     "slow",
+     "knock"
+    ],
+    "elem": "multi",
+    "r": "mid"
+   },
+   "immortaloath.transcend": {
+    "t": 140,
+    "zone": true,
+    "u": [
+     "undying",
+     "heal"
+    ],
+    "r": "melee"
+   }
+  },
+  "migrateFamilies": [
+   "str",
+   "dex",
+   "vit",
+   "int",
+   "axe",
+   "bow",
+   "assassin",
+   "blade",
+   "spirit"
+  ],
+  "migrate": {
+   "str.common": "earthbreaker.common",
+   "axe.common": "boomerangaxe.common",
+   "dex.common": "galerush.common",
+   "spirit.common": "salamander.common",
+   "bow.rare": "chainarrow.rare",
+   "dex.noble": "shadowstrike.rare",
+   "spirit.rare": "undine.rare",
+   "str.noble": "fissureslam.noble",
+   "bow.noble": "thundervolley.noble",
+   "int.rare": "frostburst.noble",
+   "int.noble": "firestorm.noble",
+   "str.hero": "titanhammer.hero",
+   "assassin.hero": "shadowblitz.hero",
+   "int.hero": "blizzard.hero",
+   "spirit.hero": "gnome.hero",
+   "vit.hero": "bastion.hero",
+   "str.transcend": "skyfall.transcend",
+   "axe.transcend": "berserker.transcend",
+   "assassin.transcend": "lunaexec.transcend",
+   "int.transcend": "meteor.transcend",
+   "spirit.transcend": "spiritking.transcend",
+   "vit.transcend": "immortaloath.transcend"
+  }
+ }
+}

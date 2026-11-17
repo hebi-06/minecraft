@@ -349,7 +349,7 @@ public final class GachaShowScreen extends Screen {
             GachaArt.textCentered(g, font, "★".repeat(gi + 1), cx, cardTop - 10, 1F, GachaArt.argb(alpha, GachaArt.mix(col, 0xFFFFFF, 0.3)));
             GachaArt.textCentered(g, font, GachaArt.gradeColor(p.grade()) + GachaArt.runeName(p.rune()), cx, cardBottom + 5, 1.5F, GachaArt.argb(alpha, 0xFFFFFF));
             Runes.Rune r = Runes.parseRune(p.rune());
-            String fam = r == null ? "" : "§7" + r.famName() + " 계열 룬 · 재사용 " + Js.str(r.cd()) + "초" + (p.at() > 0 && gi >= 3 ? " §8· " + p.at() + "회째" : "");
+            String fam = r == null ? "" : "§7" + (Runes.isSet(r.family()) ? "룬" : r.famName() + " 계열 룬") + " · 재사용 " + Js.str(r.cd()) + "초" + (p.at() > 0 && gi >= 3 ? " §8· " + p.at() + "회째" : "");
             GachaArt.textCentered(g, font, fam, cx, cardBottom + 20, 1F, GachaArt.argb(alpha, 0xFFFFFF));
             String desc = r == null ? null : r.def().strOrNull("desc");
             if (desc != null) GachaArt.textCentered(g, font, "§8" + BedrockText.toJava(desc), cx, cardBottom + 31, 0.75F, GachaArt.argb(alpha, 0xFFFFFF));

@@ -48,7 +48,9 @@ public final class StatTreeTest {
                 for (String k : n.reward().keySet()) check(StatTree.rewardItem(stat, k) != null, stat + " reward key " + k);
             }
             StatTree.Ticket tk = StatTree.tickets().get(stat);
-            check(tk != null && Runes.FAMILY_ORDER.contains(tk.family()) && tk.family().equals(stat), stat + " ticket family " + (tk == null ? null : tk.family()));
+            // 2026-11-17 룬 재개발 (계열 없음): 스탯 뽑기권은 남은 아이템만 (쓰면 일반 뽑기) · 보상은 룬 뽑기권
+            check(tk != null && Runes.HIDDEN.contains(tk.family()) && tk.family().equals(stat), stat + " ticket family (hidden) " + (tk == null ? null : tk.family()));
+            check(StatTree.rewardItem(stat, "stat").equals(Rules.get().obj("RUNE").str("ticketItem")), stat + " stat reward → rune ticket");
             check(tk != null && tk.item().equals("rpg:" + stat + "_rune_ticket"), stat + " ticket item");
         }
         for (StatTree.Kind k : StatTree.kinds().values()) check(!k.icon().isBlank() && !k.name().isBlank(), "kind " + k.key());
@@ -91,15 +93,15 @@ public final class StatTreeTest {
         check(get(max, "def") <= StatTree.caps().get("def") + 1e-9, "def capped at " + StatTree.caps().get("def") + " (" + get(max, "def") + ")");
         check(get(max, "cdr") <= StatTree.caps().get("cdr") + 1e-9, "cdr capped");
 
-        // 보상: 칸 2 · 5 · 8 · 10 = 그 스탯 룬 뽑기권, 4 · 7 = 룬 뽑기권, 10 = 고급
+        // 보상: 칸 2 · 5 · 8 · 10 = (2026-11-17 룬 재개발 — 계열이 없어 스탯 룬 뽑기권 대신) 룬 뽑기권, 4 · 7 = 룬 뽑기권, 10 = 고급
         Map<String, Integer> r = StatTree.rewards("str", 0, 10);
-        check(r.getOrDefault("rpg:str_rune_ticket", 0) == 4, "str tickets ×4 " + r);
-        check(r.getOrDefault("rpg:rune_ticket", 0) == 2, "rune tickets ×2 " + r);
+        check(r.getOrDefault("rpg:str_rune_ticket", 0) == 0, "no str tickets " + r);
+        check(r.getOrDefault("rpg:rune_ticket", 0) == 6, "rune tickets ×6 (4 + 2) " + r);
         check(r.getOrDefault("rpg:high_rune_ticket", 0) == 1, "adv ticket ×1 " + r);
         check(StatTree.rewards("str", 0, 1).isEmpty(), "tier 1 has no reward");
-        check(StatTree.rewards("str", 1, 2).equals(Map.of("rpg:str_rune_ticket", 1)), "tier 2 → str ticket");
+        check(StatTree.rewards("str", 1, 2).equals(Map.of("rpg:rune_ticket", 1)), "tier 2 → rune ticket");
         check(StatTree.rewards("str", 3, 3).isEmpty() && StatTree.rewards("str", 5, 3).isEmpty(), "no reward when not higher");
-        check(StatTree.rewards("vit", 0, 10).getOrDefault("rpg:vit_rune_ticket", 0) == 4, "vit tickets");
+        check(StatTree.rewards("vit", 0, 10).getOrDefault("rpg:rune_ticket", 0) == 6, "vit → rune tickets");
         check(StatTree.itemName("rpg:str_rune_ticket").equals("힘 룬 뽑기권") && StatTree.itemName("rpg:rune_ticket").equals("룬 뽑기권"), "item names");
 
         // 초기화 비용 · 글자
@@ -111,7 +113,7 @@ public final class StatTreeTest {
         check(StatTree.bonusText("cdr", 4.5).equals("재사용 대기 -4.5%"), StatTree.bonusText("cdr", 4.5));
         check(StatTree.bonusText(Map.of("critDmg", 10.0)).equals("치명타 피해 +10%"), "critDmg text");
         check(StatTree.nodeName(StatTree.tree("str").nodes().get(2)).equals("광전사 / 강철 피부"), "fork name");
-        check(StatTree.rewardText("str", Map.of("stat", 1)).equals("힘 룬 뽑기권 ×1"), "reward text");
+        check(StatTree.rewardText("str", Map.of("stat", 1)).equals("룬 뽑기권 ×1"), "reward text " + StatTree.rewardText("str", Map.of("stat", 1)));
 
         // 기록 JSON
         StatTree.State s = StatTree.State.EMPTY.withPick("str", 2, 1).withPick("str", 5, 0).withClaimed("str", 6).withClaimed("vit", 2);
@@ -123,7 +125,7 @@ public final class StatTreeTest {
         // 스탯 룬 뽑기권: 계열 고정, 등급은 룬 뽑기권과 같은 무게
         double[] r0 = {0.0};
         Runes.Roll a = Runes.rollRuneOf(() -> r0[0], false, "str");
-        check(a.family().equals("str") && a.grade().equals("common"), "roll 0 → common str");
+        check(Runes.isSet(a.family()) && a.grade().equals("common") && Runes.hasGrade(a.family(), "common"), "roll 0 → common (old stat ticket = normal) " + a);
         r0[0] = 0.999999;
         check(Runes.rollRuneOf(() -> r0[0], false, "dex").grade().equals("transcend"), "roll ~1 → transcend");
         r0[0] = 0.0;
