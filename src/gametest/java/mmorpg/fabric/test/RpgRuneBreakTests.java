@@ -134,7 +134,7 @@ public final class RpgRuneBreakTests {
 
     /**
      * 초월 룬 (불사의 맹약 — 쓰면 바로 하늘빛): 0 · 2돌은 화면 색 연출 없음, 3돌 하늘빛 (테두리 빛 없음), 6돌 하늘빛 + 테두리 빛, 룬 아이템을 쓰면 그 아이템의 단계,
-     * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌, 천붕 6돌은 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁), 메테오 6돌은 맞은 적 기절.
+     * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌, 천붕 6돌은 검이 한 번 더 떨어짐 (위력 28% — 2026-11-17 · 앞 10칸의 과녁), 메테오 6돌은 맞은 적 기절.
      * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로. 시험 환경 mmorpg:runebreak 로 따로 묶음 (앞 10칸 과녁은 시험 자리 밖 —
      * 다른 시험과 함께 돌면 남의 피해로 무적 시간이 걸려 두 번째 검이 들어가지 않을 수 있었음 · 천붕 9칸 범위가 남의 과녁도 맞힘, 빠른 CI 러너에서 2026-10-13).
      */
@@ -178,7 +178,7 @@ public final class RpgRuneBreakTests {
         String meteorFog = RuneKitView.fogOf("meteor");
         h.runAfterDelay(14, () -> {
             h.assertTrue(meteorFog != null && meteorFog.equals(Ult.skyOf(sp)), "tier preview sky " + Ult.skyOf(sp));
-            // 천붕 6돌: 첫 검 (delay 24틱) → 34틱 뒤 한 번 더 (delay 14틱) — 두 번째는 위력 60%
+            // 천붕 6돌: 첫 검 (delay 24틱) → 34틱 뒤 한 번 더 (delay 14틱) — 두 번째는 위력 28% (2026-11-17)
             RpgPlayers.setStat(sp, "str", 30);
             // 앞 10칸 (불사의 맹약 반격 범위 5.5칸 밖 — 앞에서 쓴 맹약이 아직 돎). 시험 자리 (8 × 8) 밖이라 그 청크를 붙잡고, 그 자리의 몹이 돌기 시작할 때까지
             // 기다렸다가 씀 (틱이 빠른 시험 서버에서는 몇십 틱 걸릴 수 있음 — 몹이 돌지 않으면 첫 검의 무적 시간 20틱이 줄지 않아 두 번째 검이 막혔음)
@@ -212,7 +212,7 @@ public final class RpgRuneBreakTests {
             // 두 번째 검: 떨어질 틱 + 4 부터 들어올 때까지 (최대 30틱 더 — 무적 시간으로 밀리면) 기다려 봄
             h.runAfterDelay(second + 4, () -> TestWait.await(h, () -> TestDummies.dealt(z) - d1[0] > 0, 30, () -> {
                 double d2 = TestDummies.dealt(z) - d1[0];
-                h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]
+                h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = " + Math.round(ex.mult() * 100) + "% of the first: " + d2 + " vs " + d1[0]
                         + (d2 > 0 ? "" : " — trace" + trace));
                 // 메테오 6돌: 맞은 적 기절 (구속 X · 1초) — 5돌은 기절 없음
                 z.removeAllEffects();

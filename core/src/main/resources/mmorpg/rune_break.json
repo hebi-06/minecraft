@@ -12,6 +12,7 @@
   "transcend": {
     "heavenFall": {
       "3": [
+        {"key": "mult", "to": 39, "text": "검 위력 ×{from} → ×{to}"},
         {"key": "radius", "to": 7.5, "text": "검이 꽂히는 범위 {from} → {to}칸"},
         {"key": "stun", "to": 10, "base": 0, "div": 20, "text": "맞은 적 기절 {to}초"}
       ],
@@ -19,7 +20,7 @@
         {"key": "radius", "to": 9, "text": "범위 {from} → {to}칸"},
         {"key": "range", "to": 28, "text": "사거리 {from} → {to}칸"}
       ],
-      "extra": {"at": 6, "type": "echo", "mult": 0.6, "after": 34, "set": {"delay": 14}, "text": "검이 한 번 더 꽂힘 (겨눈 곳 · 위력 {mult}%)"}
+      "extra": {"at": 6, "type": "echo", "mult": 0.28, "after": 34, "set": {"delay": 14}, "text": "검이 한 번 더 꽂힘 (겨눈 곳 · 위력 {mult}%)"}
     },
     "shadowless": {
       "3": [
@@ -45,12 +46,13 @@
     },
     "meteor": {
       "3": [
+        {"key": "mult", "to": 33, "text": "운석 위력 ×{from} → ×{to}"},
         {"key": "radius", "to": 7.5, "text": "운석 범위 {from} → {to}칸"},
         {"key": "fire", "to": 8, "text": "불붙음 {from} → {to}초"},
         {"key": "burnZone", "to": 2, "base": 0, "text": "떨어진 자리 3초 불바다 (1초마다 위력 ×{to})"}
       ],
       "6": [
-        {"key": "mult", "to": 40, "text": "운석 위력 ×{from} → ×{to}"},
+        {"key": "mult", "to": 44, "text": "운석 위력 ×{from} → ×{to}"},
         {"key": "radius", "to": 9, "text": "운석 범위 {from} → {to}칸"},
         {"key": "fire", "to": 12, "text": "불붙음 {from} → {to}초"},
         {"key": "stun", "to": 20, "base": 0, "div": 20, "text": "맞은 적 기절 {to}초"}
@@ -107,11 +109,12 @@
     },
     "moonAssassin": {
       "3": [
+        {"key": "mult", "to": 39, "text": "X 베기 위력 ×{from} → ×{to}"},
         {"key": "splash", "to": 4.5, "text": "X 베기 주위 {from} → {to}칸"},
         {"key": "stun", "to": 10, "base": 0, "div": 20, "text": "X 베기에 맞은 적 기절 {to}초"}
       ],
       "6": [
-        {"key": "mult", "to": 40, "text": "X 베기 위력 ×{from} → ×{to}"},
+        {"key": "mult", "to": 50, "text": "X 베기 위력 ×{from} → ×{to}"},
         {"key": "splash", "to": 6, "text": "X 베기 주위 {from} → {to}칸"},
         {"key": "range", "to": 20, "text": "표식 사거리 {from} → {to}칸"}
       ]

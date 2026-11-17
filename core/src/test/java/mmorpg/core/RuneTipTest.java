@@ -147,10 +147,10 @@ public final class RuneTipTest {
         // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
         String glj = String.join("\n", gl);
-        // 0.49.0 빙결 2초 −20% × 시간 보정 (선딜 0.85초 · 장판 · 4초 넘게 → 최대 ×1.3) → 2026-11-17 한정 룬끼리 밸런스: 유틸 값 × 36/32 (재사용 맞춤 — 22.5%) ·
-        // 예산 × 32/36 (scale — 초당 피해가 다른 한정 룬과 같게)
+        // 0.49.0 빙결 2초 −20% × 시간 보정 (선딜 0.85초 · 장판 · 4초 넘게 → 최대 ×1.3) → 2026-11-17 한정 룬끼리 밸런스: 유틸 값 × 36/32 (재사용 맞춤 — 22.5%),
+        // 예산은 34 그대로 (사용자 "얼음 여왕의 분노는 신급 기술 … 살짝 더 좋게" — 32/36 맞춤을 되돌림)
         double gS = Runes.damageScale(rune("glacier", "transcend"));
-        check(near(gS, (1 - 0.2 * 36 / 32.0) * 1.3 * 0.95 * 0.8889) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS))
+        check(near(gS, (1 - 0.2 * 36 / 32.0) * 1.3 * 0.95) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS))
                 && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
                 && gl.contains("유틸 −23% · 시간 보정 +30% 포함")
                 && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
@@ -197,14 +197,15 @@ public final class RuneTipTest {
         check(near(mS, 0.95 * 1.3 * 0.95) && m0.contains("⚔ 총 피해 " + RuneTip.fmt(1344 * mS)) && m0.contains("유틸 −5% · 시간 보정 +30% 포함")
                 && m0.contains("불붙음 5초 · 띄움")
                 && m0.contains("마력 계수 1.0 · 다른 스탯 0.85"), "meteor 0: " + m0);
-        check(m0.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 32 * mS) + " · 운석 범위 6 → 7.5칸") && m0.contains("떨어진 자리 3초 불바다 (1초마다 " + RuneTip.fmt(42 * 1.3 * 2 * mS) + ")"),
+        // 2026-11-17 초월 돌파 피해 줄 (3돌 ×1.22 · 6돌 ×1.56): 운석 3돌 33 (+ 불바다 2 × 3초) · 6돌 44 (+ 6)
+        check(m0.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 33 * mS)) && m0.contains("운석 범위 6 → 7.5칸") && m0.contains("떨어진 자리 3초 불바다 (1초마다 " + RuneTip.fmt(42 * 1.3 * 2 * mS) + ")"),
                 "meteor tier 3 numbers: " + m0);
-        check(m0.contains("☆6돌 총 피해 " + RuneTip.fmt(2688 * mS)) && !m0.contains("운석 피해") && !m0.contains("→ " + RuneTip.fmt(2688 * mS)), "meteor tier 6 total (no mult line): " + m0);
+        check(m0.contains("☆6돌 총 피해 " + RuneTip.fmt(42 * 1.6 * 44 * mS)) && !m0.contains("운석 피해") && !m0.contains("→ " + RuneTip.fmt(42 * 1.6 * 44 * mS)), "meteor tier 6 total (no mult line): " + m0);
         String m6 = joined(RuneTip.lines(meteor, 6, vm));
-        check(m6.contains("⚔ 총 피해 " + RuneTip.fmt(2688 * mS)) && m6.contains("돌파 ★★★★★★ 6/6 · 계수 ×1.6") && m6.contains("기절 1초"), "meteor 6: " + m6);
-        // 천붕 6돌: 한 번 더 (60% — 천붕은 6돌에도 배율 32, 범위 · 사거리만 바뀜)
+        check(m6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 44 * mS)) && m6.contains("돌파 ★★★★★★ 6/6 · 계수 ×1.6") && m6.contains("기절 1초"), "meteor 6: " + m6);
+        // 천붕 6돌: 한 번 더 (2026-11-17 28% — 3돌부터 배율 39, 6돌 39 × 1.28 ≈ 50)
         String hf = joined(RuneTip.lines(rune("str", "transcend"), 6, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
-        check(hf.contains("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
+        check(hf.contains("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 39 * 0.28 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
         // 0.17.0 무간참역 → 2026-11-17 도감 메모 ("모든 틱 데미지가 같은 데미지로 … 쿨타임 증가 40초 … 데미지 증가"): 베기 10 + 마무리 일섬 = 같은 배율 11번 (34 ÷ 11),
         // 재사용 40초 · 예산 × 40/36 (scale), 영역 줄, 6돌 기절
         List<String> en = plain(RuneTip.lines(rune("endless", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));

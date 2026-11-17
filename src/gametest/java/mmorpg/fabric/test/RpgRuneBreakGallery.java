@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory;
  * 8단계 룬 돌파 사진첩 (화면 시험 — MMORPG_ONLY=runebreak, 실제 마우스 입력): 룬술사 돌파 창 (목록 · 풀이 · 확인 창 → 돌파 → 초월 3돌 미리 보기 — 하늘빛 · 제목),
  * 모두 돌파 (확인 → 6돌), 가방의 배지 (1 ~ 6) · 설명 (3돌 · 6돌 강화 줄), 갈기 창 (돌파한 룬의 조각), 메테오 0 · 3 · 6돌을 실제로 써서
  * 화면 색 연출 단계 (0돌 없음 · 3돌 하늘빛 · 6돌 짙은 하늘빛 + 테두리 빛 + 금빛 각성 — 클라이언트의 하늘빛 짙기로도 확인), 6돌 단계 효과 "한 번 더"
- * (천붕 검 · 뇌신의 창 — 과녁 허스크의 두 번째 피해 = 첫 피해 × 60%), 3인칭 6돌 각성.
- * 0.16.1 룬 툴팁 (RuneTip — 총 피해 · 회복 숫자, 계수 · 돌파 줄): 마력 125 로 9종을 가방에서 가리켜 사진 (rt_…), 메테오 툴팁의 총 피해 = 서버 위력 × 32 · 6돌 × 1.6 × 40.
+ * (천붕 검 — 두 번째 피해 = 첫 피해 × 28% (2026-11-17), 뇌신의 창 — × 60%), 3인칭 6돌 각성.
+ * 0.16.1 룬 툴팁 (RuneTip — 총 피해 · 회복 숫자, 계수 · 돌파 줄): 마력 125 로 9종을 가방에서 가리켜 사진 (rt_…), 메테오 툴팁의 총 피해 = 서버 위력 × 32 · 6돌 × 1.6 × 44 (2026-11-17 — 돌파 표의 6돌 배율).
  * 사진 이름 rb_… · rt_… → ci-logs 의 shots/. 확인 항목은 로그 [runebreak-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -238,7 +238,9 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         double P = server.computeOnServer(s -> RuneCast.power(player(s), "int") * StatTrees.runeMult(player(s)))
                 * mmorpg.core.Runes.damageScale(mmorpg.core.Runes.parseRune(mmorpg.core.Runes.runeId("int", "transcend"))); // 0.49.0 피해 배율 (메테오: 띄움 −5% · 선딜 +30%)
         String want0 = "총 피해 " + RuneTip.fmt(P * 32);
-        String want6 = "총 피해 " + RuneTip.fmt(P * RuneBreak.coef(6) * 40);
+        // 2026-11-17 초월 돌파 피해 줄 (6돌 ×1.56): 메테오 6돌 배율 40 → 44 — 돌파 표에서 읽음
+        double mult6 = RuneBreak.def(mmorpg.core.Runes.parseRune(mmorpg.core.Runes.runeId("int", "transcend")), 6).num("mult");
+        String want6 = "총 피해 " + RuneTip.fmt(P * RuneBreak.coef(6) * mult6);
         String tip0 = ctx.computeOnClient(mc -> tooltipOf(mc, 0));
         String tip6 = ctx.computeOnClient(mc -> tooltipOf(mc, 1));
         check(tip0.contains(want0) && tip6.contains(want6), "meteor tooltip numbers = server power (" + want0 + " · " + want6 + ")");
@@ -303,7 +305,7 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
             check(castLv == lv, "cast at " + lv + " (" + castLv + ")");
             ctx.waitTicks(lv == 6 ? 110 : 80);
         }
-        // 천붕 6돌: 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁 허스크)
+        // 천붕 6돌: 검이 한 번 더 떨어짐 (위력 28% — 2026-11-17 · 앞 10칸의 과녁 허스크)
         echo(ctx, server, conn, "str", "heavenFall", "rb_fall6");
         // 뇌신의 창 6돌: 창이 한 번 더 날아감
         echo(ctx, server, conn, "storm", "thunderSpear", "rb_spear6");

@@ -364,7 +364,7 @@
       "transcend": {"fn": "abyssBrand", "cd": 42, "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "ticks": 200, "radius": 6, "range": 20, "charge": 14}
     },
     "glacier": {
-      "transcend": {"fn": "glacierField", "cd": 32, "scale": 0.8889, "_scale": "2026-11-17 한정 룬끼리 밸런스: 재사용 36 → 32초 (11-11 · 메모 \"지속적인 얼음 유틸\") 에 맞춰 한 번의 예산 × 32/36 — 초당 피해가 다른 한정 룬 (무간참역 · 대지 가르기 — 40초 × 40/36) 과 같게", "name": "얼음 여왕의 분노", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
+      "transcend": {"fn": "glacierField", "cd": 32, "_scale": "2026-11-17 한정 룬끼리 밸런스에서 한 번의 예산 × 32/36 (초당 같게) 로 했다가 되돌림 — 사용자 \"얼음 여왕의 분노는 신급 기술을 가져온거여서 다른거보다 유틸이나 딜적으로 살짝 더 좋게\": 예산 34 그대로 (재사용 32초 — 가치/초가 한정 중 가장 높음, 무간참역보다 +7%) · 빙결 2초 (유틸 값 22.5%)", "name": "얼음 여왕의 분노", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
     }
   },
   "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike"],

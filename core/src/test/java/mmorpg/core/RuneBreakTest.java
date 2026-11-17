@@ -116,7 +116,8 @@ public final class RuneBreakTest {
         near(RuneBreak.def(meteor, 6).num("radius"), 9, "meteor 6: radius 9");
         near(RuneBreak.def(meteor, 6).num("fire"), 12, "meteor 6: fire 12");
         near(RuneBreak.def(meteor, 6).num("lift"), 0.9, "meteor 6: lift stays 0.9 (2026-11-17 도감 메모 — 6돌 '더 높이 띄움' 뺌)");
-        near(RuneBreak.def(meteor, 3).num("mult"), 32, "mult stays at 3 (the power P carries the coef)");
+        // 2026-11-17 초월 돌파 피해 줄 (3돌 ×1.22 · 6돌 ×1.56 — 한정 룬이 5 ~ 12% 위): 메테오 3돌 33 (+ 불바다 2 × 3초 = 39) · 6돌 44 (+ 6 = 50)
+        near(RuneBreak.def(meteor, 3).num("mult"), 33, "meteor 3 mult 33 (+ burn zone 2 × 3s = 39)");
         check(RuneBreak.def(meteor, 6).str("fn").equals("meteor") && RuneBreak.def(meteor, 6).str("name").equals("메테오"), "other keys kept");
         Runes.Rune angel = rune("holy", "transcend");
         near(RuneBreak.def(angel, 6).num("heal"), 0.03 * 1.6, "archangel 6 heal × 1.6");
@@ -135,11 +136,11 @@ public final class RuneBreakTest {
         near(Runes.runeTotalMult(RuneBreak.def(rune("vit", "transcend"), 3)), 2.5 * 10, "undying 3: 10 pulses");
 
         // 6돌 더 세게 (위력 계수)
-        near(RuneBreak.def(meteor, 6).num("mult"), 40, "meteor 6: mult 40");
-        near(RuneBreak.def(meteor, 5).num("mult"), 32, "meteor 5: mult 32");
+        near(RuneBreak.def(meteor, 6).num("mult"), 44, "meteor 6: mult 44 (+ burn zone 6 = 50)");
+        near(RuneBreak.def(meteor, 5).num("mult"), 33, "meteor 5: mult 33 (the 3 tier)");
         near(RuneBreak.def(rune("gravity", "transcend"), 6).num("crush"), 28, "blackHole 6: crush 28");
         near(RuneBreak.def(rune("spellblade", "transcend"), 6).num("mult"), 20, "spellblade 6: mult 20");
-        near(Runes.runeTotalMult(RuneBreak.def(meteor, 6)), 40, "meteor 6 lore total 40");
+        near(Runes.runeTotalMult(RuneBreak.def(meteor, 6)), 44, "meteor 6 lore total 44");
 
         // 새로 붙는 값 (base): 메테오 6돌 기절 0 → 1초, 뇌신의 창 3돌 연쇄 1 → 2명
         near(RuneBreak.def(meteor, 6).num("stun"), 20, "meteor 6 stun 20 ticks");
@@ -179,20 +180,22 @@ public final class RuneBreakTest {
         check(finales == Runes.LIMITED_ORDER.size(), "a finale for each limited rune " + finales);
         check(RuneBreak.extraFor(rune("str", "hero"), 6) == null, "not for hero");
         RuneBreak.Extra fx6 = RuneBreak.extraFor(fall, 6);
-        check(fx6 != null && Math.abs(fx6.mult() - 0.6) < 1e-9 && fx6.after() == 34, "heavenFall echo 60% after 34");
+        // 2026-11-17 초월 돌파 피해 줄: 스카이폴 (천붕) 3돌 검 위력 39 · 6돌 한 번 더 28% (39 × 1.28 ≈ 50)
+        check(fx6 != null && Math.abs(fx6.mult() - 0.28) < 1e-9 && fx6.after() == 34, "heavenFall echo 28% after 34");
+        near(RuneBreak.def(fall, 3).num("mult"), 39, "heavenFall 3 mult 39");
         near(RuneBreak.echoDef(fall, 6).num("delay"), 14, "heavenFall echo delay 14");
         near(RuneBreak.echoDef(fall, 6).num("radius"), 9, "heavenFall echo keeps the 6 radius");
         near(RuneBreak.echoDef(spear, 6).num("charge"), 10, "thunderSpear echo charge 10");
-        check(RuneBreak.echoDef(meteor, 6) == RuneBreak.def(meteor, 6) || RuneBreak.echoDef(meteor, 6).num("mult") == 40, "no echo: plain def");
-        check(RuneBreak.extraText(fx6).equals("검이 한 번 더 꽂힘 (겨눈 곳 · 위력 60%)"), "echo text " + RuneBreak.extraText(fx6));
+        check(RuneBreak.echoDef(meteor, 6) == RuneBreak.def(meteor, 6) || RuneBreak.echoDef(meteor, 6).num("mult") == 44, "no echo: plain def");
+        check(RuneBreak.extraText(fx6).equals("검이 한 번 더 꽂힘 (겨눈 곳 · 위력 28%)"), "echo text " + RuneBreak.extraText(fx6));
         List<String> fallLines = RuneBreak.tierLines(fall, 6, false).stream().map(RuneBreakTest::plain).toList();
-        check(fallLines.stream().anyMatch(s -> s.trim().equals("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · 위력 60%)")), "extra line in the 6 tier " + fallLines);
+        check(fallLines.stream().anyMatch(s -> s.trim().equals("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · 위력 28%)")), "extra line in the 6 tier " + fallLines);
         check(RuneBreak.tierLines(fall, 3, false).stream().anyMatch(s -> s.startsWith("§r§8     ◆")), "extra line dark below 6");
 
         // 글자
         check(RuneBreak.stars(2).equals("★★☆☆☆☆") && RuneBreak.stars(6).equals("★★★★★★"), "stars " + RuneBreak.stars(2));
         check(RuneBreak.tag(0).isEmpty() && RuneBreak.tag(3).equals("[3돌]"), "tag " + RuneBreak.tag(3));
-        check(RuneBreak.changeTexts(meteor, 3).equals(List.of("운석 범위 6 → 7.5칸", "불붙음 5 → 8초", "떨어진 자리 3초 불바다 (1초마다 위력 ×2)")),
+        check(RuneBreak.changeTexts(meteor, 3).equals(List.of("운석 위력 ×32 → ×33", "운석 범위 6 → 7.5칸", "불붙음 5 → 8초", "떨어진 자리 3초 불바다 (1초마다 위력 ×2)")),
                 "meteor 3 text " + RuneBreak.changeTexts(meteor, 3));
         // 3돌 새 효과 (base): 각성 · 광전사 밀려나지 않음, 맹약 즉시 회복, 블랙홀 짓눌림
         near(RuneBreak.def(rune("body", "transcend"), 3).num("steadfast"), 1, "awakening 3 steadfast");
@@ -205,7 +208,7 @@ public final class RuneBreakTest {
         check(Runes.runeLore(RuneBreak.leveled(rune("body", "transcend"), 3), false).stream().anyMatch(l -> plain(l).contains("밀려나지 않음")),
                 "awakening 3 lore shows steadfast");
         near(RuneBreak.def(rune("strike", "transcend"), 6).num("cross"), 0.75, "swordGod 6 cross");
-        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "맞은 적 기절 1초")),
+        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×33 → ×44", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "맞은 적 기절 1초")),
                 "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("dex", "transcend"), 3).contains("멈춤 1.5 → 2초"), "shadowless sec " + RuneBreak.changeTexts(rune("dex", "transcend"), 3));
@@ -228,7 +231,7 @@ public final class RuneBreakTest {
         List<String> lore = RuneBreak.lore(meteor, 3, false);
         List<String> plainLore = lore.stream().map(RuneBreakTest::plain).toList();
         check(plainLore.get(1).startsWith("돌파 ★★★☆☆☆ 3/6"), "summary right after the head: " + plainLore.get(1));
-        check(plainLore.stream().anyMatch(s -> s.startsWith("★3돌 운석 범위 6 → 7.5칸")), "3 line " + plainLore);
+        check(plainLore.stream().anyMatch(s -> s.startsWith("★3돌 운석 위력 ×32 → ×33")), "3 line " + plainLore);
         check(lore.stream().anyMatch(s -> s.startsWith("§r§8☆6돌")), "6 not reached: dark");
         check(plainLore.stream().anyMatch(s -> s.contains("+ 화면 색 연출")), "fx 3 line");
         check(plainLore.get(plainLore.size() - 1).startsWith("누르면 사용") && plainLore.get(plainLore.size() - 2).startsWith("터치:"), "control lines last");

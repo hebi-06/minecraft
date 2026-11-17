@@ -80,11 +80,12 @@ public final class RuneScaleTest {
         // 2026-11-17 등급 안 밸런스 (사용자 "각 등급끼리만 봤을때 밸런스"): 램파트는 막는 선딜 (선딜 보정 없음) · 루나 엑시큐션은 달빛 폭발이 둘레도 쳐 좁은 범위
         check(Rules.get().obj("RUNE_SET").obj("spread").obj("rampart.common").truthy("guard") && Runes.windupBonus(rune("rampart", "common")) == 0, "rampart guard");
         check("narrow".equals(Runes.areaKind(rune("lunaexec", "transcend"))), "lunaexec narrow (splash)");
-        // 한정 룬끼리: 초당 예산 같음 (34 × scale ÷ 재사용 = 34 ÷ 36) · 유틸 값 × 36 ÷ 재사용
+        // 한정 룬끼리: 초당 예산 같음 (34 × scale ÷ 재사용 = 34 ÷ 36) — 얼음 여왕의 분노만 34 ÷ 32 (사용자 "신급 기술 … 살짝 더 좋게") · 유틸 값 × 36 ÷ 재사용
         for (String fam : List.of("endless", "terra", "glacier")) {
             Runes.Rune lr = rune(fam, "transcend");
             double perSec = 34 * Runes.budgetScale(lr) / lr.cd();
-            check(Math.abs(perSec - 34 / 36.0) < 1e-3, fam + " per-second budget " + perSec + " = 34 / 36");
+            double wantSec = fam.equals("glacier") ? 34 / 32.0 : 34 / 36.0;
+            check(Math.abs(perSec - wantSec) < 1e-3, fam + " per-second budget " + perSec + " = " + wantSec);
             near(Runes.utilCdFactor(lr), 36 / lr.cd(), fam + " limited util cd factor");
         }
         check(!rune("endless", "transcend").def().truthy("knock") && !rune("endless", "transcend").def().truthy("lift"), "endless finish: no free knock · lift");
@@ -214,7 +215,8 @@ public final class RuneScaleTest {
         Runes.Rune glacier = rune("glacier", "transcend");
         check(Runes.timeCapped(glacier) && "zoneLong".equals(Runes.spreadKind(glacier)), "glacier capped");
         // 2026-11-17 한정 룬끼리 밸런스: 빙결 2초 값 × 36/32 (재사용 맞춤) · 예산 × 32/36 (scale — 초당 같게)
-        near(Runes.damageScale(glacier), (1 - 0.2 * 36 / 32.0) * 1.3 * 0.95 * 0.8889, "glacier scale (얼음 원소 −5% · 유틸 재사용 맞춤 · 예산 32/36)");
+        // 예산은 34 그대로 (사용자 "얼음 여왕의 분노는 신급 기술 … 다른거보다 유틸이나 딜적으로 살짝 더 좋게" — 초당 예산이 다른 한정 룬보다 +12.5%)
+        near(Runes.damageScale(glacier), (1 - 0.2 * 36 / 32.0) * 1.3 * 0.95, "glacier scale (얼음 원소 −5% · 유틸 재사용 맞춤)");
         Runes.Rune blood = rune("strike", "hero");
         check(Runes.utils(blood).equals(List.of("lifesteal")), "blood blade lifesteal");
         near(Runes.damageScale(blood), 0.9 * 1.15, "blood blade: util · single, no time");
