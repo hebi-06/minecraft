@@ -966,6 +966,16 @@ final class VanillaProbe {
                     FILM_FRAMES.add(BOSS_FRAMES);
                     continue;
                 }
+                if (k.startsWith("runefp:")) {
+                    // 2026-11-17 룬 1인칭 (runefp:<계열 또는 계열_등급> — 쓴 사람의 눈: films/vanilla_runefp_<계열>_<등급>)
+                    String f = k.substring(7);
+                    if (mmorpg.core.Runes.ALL_FAMILIES.contains(f)) {
+                        for (String g : mmorpg.core.Runes.GRADE_ORDER) keys.add(f + "_" + g + ":fp");
+                    } else {
+                        keys.add(f + ":fp");
+                    }
+                    continue;
+                }
                 // 2026-11-16 룬 위르드식 견주기 (runeab:<계열 또는 계열_등급>): 룬마다 예전 그림 (old: — PhantomFx.RUNE_WYRD 끔 · films/vanilla_<계열>_<등급>_old) 과 새 그림을 차례로
                 boolean ab = k.startsWith("runeab:");
                 if (ab) k = k.substring(7);
@@ -984,13 +994,15 @@ final class VanillaProbe {
         for (String k0 : keys) {
             boolean old = k0.startsWith("old:");
             String k = old ? k0.substring(4) : k0;
+            boolean fpk = k.endsWith(":fp");
+            if (fpk) k = k.substring(0, k.length() - 3);
             int cut = k.lastIndexOf('_');
             if (cut < 0) continue;
             String fam = k.substring(0, cut);
             String g = k.substring(cut + 1);
             String id = mmorpg.core.Runes.runeId(fam, g);
             if (mmorpg.core.Runes.parseRune(id) == null) continue;
-            FILM_RUNES.add(old ? "old:" + id : id);
+            FILM_RUNES.add((old ? "old:" + id : id) + (fpk ? ":fp" : ""));
             FILM_FRAMES.add(switch (g) {
                 case "transcend" -> 150;
                 case "hero" -> 96;
@@ -1058,7 +1070,7 @@ final class VanillaProbe {
                     log("film warm sprites " + pre + " " + t + " ticks");
                 }
             });
-            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0).replace("old:", ""));
+            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0).replace("old:", "").replace(":fp", ""));
             if (warm != null) {
                 Tasks.later(10, () -> {
                     if (p.isRemoved()) return;
@@ -1101,9 +1113,13 @@ final class VanillaProbe {
             motionFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
-        boolean oldLook = FILM_RUNES.get(i).startsWith("old:"); // 2026-11-16 룬 위르드식 견주기 (예전 그림)
+        // 2026-11-17 룬 1인칭 (runefp: — 끝에 :fp)
+        String entry = FILM_RUNES.get(i);
+        boolean fpLook = entry.endsWith(":fp");
+        if (fpLook) entry = entry.substring(0, entry.length() - 3);
+        boolean oldLook = entry.startsWith("old:"); // 2026-11-16 룬 위르드식 견주기 (예전 그림)
         mmorpg.fabric.job.JobSystem.RUNE_WYRD = !oldLook;
-        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(oldLook ? FILM_RUNES.get(i).substring(4) : FILM_RUNES.get(i));
+        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(oldLook ? entry.substring(4) : entry);
         if (r == null) {
             check("film rune " + FILM_RUNES.get(i), false);
             Tasks.later(2, () -> film(p, step + 1));
@@ -1129,14 +1145,24 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        String name = "vanilla_" + r.family() + "_" + r.grade() + (oldLook ? "_old" : "");
+        String name = "vanilla_" + (fpLook ? "runefp_" : "") + r.family() + "_" + r.grade() + (oldLook ? "_old" : "");
         int frames = FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1));
-        // 모드 없는 클라이언트는 1 · 3인칭을 서버가 모름 — 영상 카메라는 3인칭 (몸 둘레 그림 · 판을 봄, 1인칭 눈앞 그림은 숨김)
-        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
-        // 카메라: 모드 영상과 같은 자리 (RpgRuneGallery.film — 영웅 · 초월은 넓게), 사진기가 지금 (옮긴 뒤) 몸 자리를 기준으로 삼음
-        boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
-        say(p, "cam film 105 " + (big ? "7.6 4.2 1.9" : "7.0 3.6 1.1") + " 3.0 0.6");
-        mmorpg.fabric.vfx.PBridge.filmCam(p, 105, big ? 7.6 : 7.0, big ? 4.2 : 3.6, big ? 1.9 : 1.1, 3.0, 0.6);
+        if (fpLook) {
+            // 2026-11-17 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임 · 내 뼈 몸 보기 끔, 직업 jobfp 와 같음) — 룬 그림이 1인칭 화면을 덮는지 보기
+            if (VanillaRig.selfView(p)) VanillaRig.selfView(p, false);
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
+            mmorpg.fabric.vfx.PBridge.filmCamOff(p);
+            say(p, "cam off");
+            say(p, "cam first");
+        } else {
+            // 모드 없는 클라이언트는 1 · 3인칭을 서버가 모름 — 영상 카메라는 3인칭 (몸 둘레 그림 · 판을 봄, 1인칭 눈앞 그림은 숨김)
+            mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+            if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+            // 카메라: 모드 영상과 같은 자리 (RpgRuneGallery.film — 영웅 · 초월은 넓게), 사진기가 지금 (옮긴 뒤) 몸 자리를 기준으로 삼음
+            boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
+            say(p, "cam film 105 " + (big ? "7.6 4.2 1.9" : "7.0 3.6 1.1") + " 3.0 0.6");
+            mmorpg.fabric.vfx.PBridge.filmCam(p, 105, big ? 7.6 : 7.0, big ? 4.2 : 3.6, big ? 1.9 : 1.1, 3.0, 0.6);
+        }
         if (census) {
             Tasks.later(30, () -> census(p, r, name, step));
             return;
