@@ -222,7 +222,9 @@ final class PhantomFx {
         int v = o == null ? 0 : (int) o.num("view", 0);
         if (v == 0) return null;
         int owner = (int) o.num("owner", 0);
-        return v == 1 ? p -> !(p.getId() == owner && !PBridge.thirdPersonOf(p)) : p -> p.getId() == owner && !PBridge.thirdPersonOf(p);
+        // 2026-11-17 주인의 1인칭에만 (눈앞에 일부러 둔 그림) = Vfx.FirstPerson — 눈앞을 덮어도 거두지 않음 (Vfx.Fx.eyeCull)
+        if (v == 1) return p -> !(p.getId() == owner && !PBridge.thirdPersonOf(p));
+        return (Vfx.FirstPerson) p -> p.getId() == owner && !PBridge.thirdPersonOf(p);
     }
 
     /** 주인이 1인칭이면 숨김 (몸 앞 판 · 몸 둘레 그림) */
@@ -234,7 +236,7 @@ final class PhantomFx {
     /** 주인의 1인칭에만 (눈앞에 따로 그리는 그림) */
     static Predicate<ServerPlayer> only1p(ServerPlayer sp) {
         int id = sp.getId();
-        return p -> p.getId() == id && !PBridge.thirdPersonOf(p);
+        return (Vfx.FirstPerson) p -> p.getId() == id && !PBridge.thirdPersonOf(p);
     }
 
     /**
@@ -246,6 +248,7 @@ final class PhantomFx {
         if (r <= 0) return who;
         double r2 = r * r;
         Predicate<ServerPlayer> far = p -> PBridge.thirdPersonOf(p) || p.getEyePosition().distanceToSqr(at) >= r2;
+        if (who instanceof Vfx.FirstPerson) return (Vfx.FirstPerson) p -> who.test(p) && far.test(p); // 2026-11-17 1인칭에 일부러 둔 그림 표시를 잃지 않게
         return who == null ? far : who.and(far);
     }
 
@@ -2464,7 +2467,8 @@ final class PhantomFx {
             if (p.distanceToSqr(at) > 128 * 128 || (base != null && !base.test(p))) continue;
             int id = p.getId();
             Predicate<ServerPlayer> one = q -> q.getId() == id;
-            last = rfx1(level, sheet, k, first, at, b, facing, sy, base == null ? one : base.and(one), p);
+            Predicate<ServerPlayer> each = base == null ? one : base instanceof Vfx.FirstPerson ? (Vfx.FirstPerson) q -> base.test(q) && one.test(q) : base.and(one);
+            last = rfx1(level, sheet, k, first, at, b, facing, sy, each, p);
         }
         return last;
     }

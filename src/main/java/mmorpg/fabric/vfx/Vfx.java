@@ -292,6 +292,7 @@ public final class Vfx {
             p.show();
             props.add(p);
             propsMade++;
+            eyeCheck();
             return p;
         }
 
@@ -305,6 +306,7 @@ public final class Vfx {
             p.show();
             props.add(p);
             propsMade++;
+            eyeCheck();
             return p;
         }
 
@@ -362,7 +364,62 @@ public final class Vfx {
         @Override
         public boolean startWatching(net.minecraft.server.network.ServerGamePacketListenerImpl player) {
             if (viewers != null && !viewers.test(player.getPlayer())) return false;
+            if (eyeIn != null && eyeIn.contains(player.getPlayer().getId())) return false;
             return super.startWatching(player);
+        }
+
+        /** 2026-11-17 1인칭 눈이 이 효과의 입체 소품 속에 든 사람 (id — 그동안 보내지 않음, eyeCull) */
+        private java.util.Set<Integer> eyeIn;
+
+        /**
+         * 2026-11-17 1인칭 눈이 입체 소품 속에 들거나 큰 그림이 눈앞을 다 덮으면 그 사람에게서 이 효과를 거둠 · 벗어나면 다시 보냄 (룬 1인칭 영상 CI 44002166301 — 힘 영웅 거대한
+         * 망치 · 검 초월 거대한 검 · 도끼 초월이 쓴 사람의 눈을 지나며 화면이 잿빛 · 흙빛 · 핏빛 한 면으로, 암살 초월 · 일반의 대상 바로 앞 X 베기 · 연기가 보랏빛 도트 면으로 덮였음).
+         * 소품 = 모델의 조각 상자 (Prop.contains — 여유 EYE_MARGIN 칸), 그림 = Sprite.covers (거둘 때 1.15 · 다시 보낼 때 1.35 — 경계에서 깜빡이지 않게). 3인칭 (영상 카메라) ·
+         * 1인칭 눈앞에 일부러 둔 그림 (FirstPerson) 은 그대로
+         */
+        private void eyeCull() {
+            if (viewers instanceof FirstPerson) return;
+            for (ServerPlayer p : level.players()) {
+                int id = p.getId();
+                boolean was = eyeIn != null && eyeIn.contains(id);
+                boolean in = false;
+                Vec3 eye = p.getEyePosition();
+                boolean near = eye.distanceToSqr(origin) < 48 * 48;
+                if (near && !PBridge.thirdPersonOf(p)) {
+                    for (Prop pr : props) {
+                        if (pr.contains(eye, EYE_MARGIN)) {
+                            in = true;
+                            break;
+                        }
+                    }
+                    if (!in) {
+                        double k = was ? 1.35 : 1.15;
+                        for (Sprite s : sprites) {
+                            if (s.covers(eye, k)) {
+                                in = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (in == was) continue;
+                if (in) {
+                    if (eyeIn == null) eyeIn = new java.util.HashSet<>();
+                    eyeIn.add(id);
+                    stopWatching(p.connection);
+                } else {
+                    eyeIn.remove(id);
+                    if (near) startWatching(p.connection);
+                }
+            }
+        }
+
+        /**
+         * 2026-11-17 만든 틱 안의 거름 (그림 · 소품의 크기 · 자리 · 방향을 정할 때마다): 붙자마자 보낸 그림이 다음 틱의 eyeCull 전에 한 틱 화면을 덮지 않게 —
+         * 같은 틱에 거두면 띄움 · 거둠 패킷이 함께 가서 그려지지 않음
+         */
+        void eyeCheck() {
+            if (age == 0 && !ended) eyeCull();
         }
 
         @Override
@@ -372,6 +429,7 @@ public final class Vfx {
                 end();
                 return;
             }
+            if (!props.isEmpty() || !sprites.isEmpty()) eyeCull();
             int t = age;
             for (Iterator<Job> it = new ArrayList<>(jobs).iterator(); it.hasNext(); ) {
                 Job j = it.next();
@@ -404,8 +462,12 @@ public final class Vfx {
         Vector3f grip = new Vector3f(8, 8, 8);
         boolean removed;
 
+        /** 2026-11-17 아이템 정의 id (1인칭 눈 거름의 모델 상자 — modelBoxes) */
+        final String model;
+
         Prop(Fx fx, String itemModel, Vec3 at) {
             this.fx = fx;
+            this.model = itemModel;
             ItemStack stack = new ItemStack(Items.PAPER);
             stack.set(DataComponents.ITEM_MODEL, Identifier.parse(itemModel));
             this.e = new ItemDisplayElement(stack);
@@ -505,6 +567,7 @@ public final class Vfx {
             e.setInterpolationDuration(Math.max(0, ticks));
             apply();
             e.startInterpolationIfDirty();
+            fx.eyeCheck();
             return this;
         }
 
@@ -547,6 +610,130 @@ public final class Vfx {
             removed = true;
             fx.removeElement(e);
         }
+
+        /**
+         * 2026-11-17 세상의 점 p 가 이 소품의 모델 조각 상자 (여유 margin 칸) 안인지: 모델 픽셀 m = 쥔 곳 + 16 × rot⁻¹ (p − pos) / 크기 (apply 의 거꿀셈 — 서버가 아는 끝 모습,
+         * 보간 중이면 여유가 메움)
+         */
+        boolean contains(Vec3 p, double margin) {
+            if (removed) return false;
+            float[][] boxes = modelBoxes(model);
+            if (boxes.length == 0) return false;
+            Vector3f sc = scale3 != null ? scale3 : new Vector3f(scale, scale, scale);
+            if (Math.abs(sc.x) < 1e-4F || Math.abs(sc.y) < 1e-4F || Math.abs(sc.z) < 1e-4F) return false;
+            Vector3f d = new Vector3f((float) (p.x - pos.x), (float) (p.y - pos.y), (float) (p.z - pos.z));
+            new Quaternionf(rot).normalize().conjugate().transform(d);
+            float mx = grip.x + 16F * d.x / sc.x;
+            float my = grip.y + 16F * d.y / sc.y;
+            float mz = grip.z + 16F * d.z / sc.z;
+            float gx = (float) (16 * margin / Math.abs(sc.x));
+            float gy = (float) (16 * margin / Math.abs(sc.y));
+            float gz = (float) (16 * margin / Math.abs(sc.z));
+            for (float[] b : boxes) {
+                if (mx >= b[0] - gx && mx <= b[3] + gx && my >= b[1] - gy && my <= b[4] + gy && mz >= b[2] - gz && mz <= b[5] + gz) return true;
+            }
+            return false;
+        }
+    }
+
+    /** 2026-11-17 1인칭 눈 거름의 여유 (칸 — 모델 겉에서 이만큼 안이면 속으로 셈: 눈앞 0.05칸의 가까운 면도 화면을 덮음) */
+    static final double EYE_MARGIN = 0.25;
+
+    /** 2026-11-17 소품 모델의 조각 상자 (아이템 정의 id → {x0, y0, z0, x1, y1, z1} 모델 픽셀 — 돌린 조각은 돌린 꼭짓점을 감싸는 상자. 못 읽으면 빈 목록) */
+    private static final Map<String, float[][]> MODEL_BOXES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    static float[][] modelBoxes(String itemModel) {
+        return MODEL_BOXES.computeIfAbsent(itemModel, Vfx::loadBoxes);
+    }
+
+    private static float[][] loadBoxes(String itemModel) {
+        try {
+            Identifier id = Identifier.parse(itemModel);
+            Map<String, Object> def = readJson("/assets/" + id.getNamespace() + "/items/" + id.getPath() + ".json");
+            String model = def == null ? null : firstModel(def.get("model"));
+            List<float[]> out = new ArrayList<>();
+            Identifier mid = model == null ? null : Identifier.parse(model);
+            for (int depth = 0; depth < 4 && mid != null; depth++) {
+                Map<String, Object> m = readJson("/assets/" + mid.getNamespace() + "/models/" + mid.getPath() + ".json");
+                if (m == null) break;
+                if (m.get("elements") instanceof List<?> els) {
+                    for (Object o : els) {
+                        if (o instanceof Map<?, ?> e) {
+                            float[] b = elementBox(e);
+                            if (b != null) out.add(b);
+                        }
+                    }
+                    break;
+                }
+                mid = m.get("parent") instanceof String par ? Identifier.parse(par) : null;
+            }
+            return out.toArray(new float[0][]);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[vfx] model boxes " + itemModel + ": " + e);
+            return new float[0][];
+        }
+    }
+
+    private static Map<String, Object> readJson(String path) {
+        try (InputStream in = Vfx.class.getResourceAsStream(path)) {
+            if (in == null) return null;
+            return Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /** 아이템 정의의 첫 모델 id (select · composite 안쪽까지) */
+    private static String firstModel(Object o) {
+        if (o instanceof Map<?, ?> m) {
+            if (m.get("model") instanceof String s) return s;
+            for (Object v : m.values()) {
+                String s = firstModel(v);
+                if (s != null) return s;
+            }
+        } else if (o instanceof List<?> l) {
+            for (Object v : l) {
+                String s = firstModel(v);
+                if (s != null) return s;
+            }
+        }
+        return null;
+    }
+
+    private static float[] elementBox(Map<?, ?> e) {
+        if (!(e.get("from") instanceof List<?> f) || !(e.get("to") instanceof List<?> t) || f.size() < 3 || t.size() < 3) return null;
+        float[] a = new float[3];
+        float[] b = new float[3];
+        for (int i = 0; i < 3; i++) {
+            a[i] = ((Number) f.get(i)).floatValue();
+            b[i] = ((Number) t.get(i)).floatValue();
+        }
+        float[] box = {Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2])};
+        if (!(e.get("rotation") instanceof Map<?, ?> r) || !(r.get("angle") instanceof Number ang) || Math.abs(ang.doubleValue()) < 1e-3) return box;
+        // 돌린 조각: 여덟 꼭짓점을 origin 둘레로 돌려 감싸는 상자
+        int axis = "x".equals(r.get("axis")) ? 0 : "y".equals(r.get("axis")) ? 1 : 2;
+        float[] o = {8, 8, 8};
+        if (r.get("origin") instanceof List<?> ol && ol.size() >= 3) {
+            for (int i = 0; i < 3; i++) o[i] = ((Number) ol.get(i)).floatValue();
+        }
+        double th = Math.toRadians(ang.doubleValue());
+        double c = Math.cos(th);
+        double s = Math.sin(th);
+        float[] out = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
+        for (int k = 0; k < 8; k++) {
+            double[] v = {(k & 1) == 0 ? box[0] : box[3], (k & 2) == 0 ? box[1] : box[4], (k & 4) == 0 ? box[2] : box[5]};
+            int i = (axis + 1) % 3;
+            int j = (axis + 2) % 3;
+            double vi = v[i] - o[i];
+            double vj = v[j] - o[j];
+            v[i] = o[i] + vi * c - vj * s;
+            v[j] = o[j] + vi * s + vj * c;
+            for (int q = 0; q < 3; q++) {
+                out[q] = (float) Math.min(out[q], v[q]);
+                out[q + 3] = (float) Math.max(out[q + 3], v[q]);
+            }
+        }
+        return out;
     }
 
     // ------------------------------------------------------------ 조각 물체
@@ -804,6 +991,7 @@ public final class Vfx {
             facing = new Quaternionf(q);
             e.setBillboardMode(Display.BillboardConstraints.FIXED);
             transform();
+            fx.eyeCheck();
             return this;
         }
 
@@ -812,6 +1000,7 @@ public final class Vfx {
             facing = null;
             e.setBillboardMode(Display.BillboardConstraints.VERTICAL);
             transform();
+            fx.eyeCheck();
             return this;
         }
 
@@ -843,6 +1032,7 @@ public final class Vfx {
             e.setInterpolationDuration(Math.max(0, ticks));
             transform();
             e.startInterpolationIfDirty();
+            fx.eyeCheck();
             return this;
         }
 
@@ -850,6 +1040,7 @@ public final class Vfx {
             size = blocks;
             SIZE_MAX.merge(sheet.name(), blocks, Math::max);
             transform();
+            fx.eyeCheck();
             return this;
         }
 
@@ -868,6 +1059,7 @@ public final class Vfx {
             e.setInterpolationDuration(Math.max(0, ticks));
             transform();
             e.startInterpolationIfDirty();
+            fx.eyeCheck();
             return this;
         }
 
@@ -975,5 +1167,25 @@ public final class Vfx {
             removed = true;
             fx.removeElement(e);
         }
+
+        /**
+         * 2026-11-17 이 그림이 1인칭 눈앞을 다 덮는지 (눈에서 가운데까지 &lt; k × 반 너비 — 반 너비 / 거리 0.75 넘게면 시야 70° 를 넘음): 카메라를 보는 그림 · 세운 판만 (땅 · 하늘에
+         * 눕힌 판은 아래 · 위를 덮을 뿐 — 발밑 룬 원은 그대로), 반 너비 0.6칸 아래 작은 그림 · 거의 투명한 그림은 뺌
+         */
+        boolean covers(Vec3 eye, double k) {
+            if (removed || hidden || alpha < 0.12) return false;
+            double half = 0.5 * size * Math.max(1.0, sheet.aspect()) + offset.length();
+            if (half < 0.6) return false;
+            if (facing != null) {
+                Vector3f n = new Quaternionf(facing).transform(new Vector3f(0, 0, 1));
+                if (Math.abs(n.y) > 0.8F) return false;
+            }
+            return eye.distanceTo(pos) < k * half;
+        }
     }
+
+    /**
+     * 2026-11-17 1인칭 눈앞에 일부러 둔 그림의 보는 사람 (주인의 1인칭에만 — 1인칭 대검 · 눈앞 칼빛): 이 걸러내기를 쓴 효과는 눈앞을 덮어도 거두지 않음 (Fx.eyeCull)
+     */
+    public interface FirstPerson extends Predicate<ServerPlayer> {}
 }
