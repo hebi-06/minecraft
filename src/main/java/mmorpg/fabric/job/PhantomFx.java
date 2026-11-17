@@ -1403,27 +1403,26 @@ final class PhantomFx {
     }
 
     /**
-     * 2026-11-17 불덩이 · 운석 불꼬리 (마력 룬 — CI 43997410683 일반 1 · 초월 1): 예전 rfx_fireball (128 × 128 둥근 불덩이 · 카메라를 봄 · 지름 2 × size · 속에 3D 운석) 은
-     * 묶음의 불꽃 꼬리 불덩이 (fireball — 가는 쪽으로 누움 · 머리 x 0.6 · 머리 지름 = 반 길이 × 0.4) 를 머리 지름이 예전 지름의 0.8 (반 길이 = size × 4) 이 되게 머리를 예전
-     * 가운데에, 예전 rfx_meteor (256 × 128 · 운석 머리 x 0.56 — 메테오 후광) 는 묶음의 불꽃 꼬리 (comet — jcomet2 와 같은 틀 · 머리 x 0.64) 를 같은 크기로 머리를 같은
-     * 자리에. 같은 길 · 빠르기 · 칸을 되풀이 (예전 fps · phase)
+     * 2026-11-17 불덩이 · 운석 불꼬리 (마력 룬 — CI 43997410683 일반 1 · 초월 1): 묶음의 불꽃 꼬리 불덩이 (fireball — 가는 쪽으로 누움 · 머리 x 0.6 · 머리 지름 = 반 길이
+     * × 0.4 · 불꽃 혀 · 불티). 예전 rfx_fireball (128 × 128 둥근 불덩이 · 카메라를 봄 · 지름 2 × size · 속에 3D 운석) 은 머리 지름이 예전 지름의 0.8 (반 길이 = size × 4) 이 되게
+     * 머리를 예전 가운데에, 예전 rfx_meteor (256 × 128 · 운석 머리 x 0.56 — 메테오 후광) 는 같은 크기로 머리를 같은 자리에 (머리는 3D 운석 속 · 꼬리가 불길).
+     * 1판의 운석 꼬리 (beast.py comet — 고른 띠) 는 큰 크기에서 옅은 흙빛 관으로 보였음 (CI 44005240988). 같은 길 · 빠르기 · 칸을 되풀이 (예전 fps · phase)
      */
     static boolean fireComet(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
         boolean ball = name.equals("fireball");
-        String art = ball ? "fireball" : "comet";
         Lib L = jobLib(glow);
-        if (L == null || !hasArt(L, art)) return false;
+        if (L == null || !hasArt(L, "fireball")) return false;
         Vec3 d = o.vec("dir", V.UP);
         if (V.len(d) < 1e-6) return false;
         Vec3 u = V.unit(d);
         double size = Math.max(0.1, o.num("size", 0.5));
         double half = ball ? size * 4 : size;
-        Vec3 c = V.add(at, u, ball ? -0.6 * half : (0.56 - 0.64) * half);
-        int frames = Vfx.sheet(L.n(art)).frames();
+        Vec3 c = V.add(at, u, ball ? -0.6 * half : (0.56 - 0.6) * half);
+        int frames = Vfx.sheet(L.n("fireball")).frames();
         // 운석 불꼬리는 예전 후광 (옅은 빛 0.42) 으로 부름 — 칠한 도트를 그 불투명도로 그리면 하늘에서 잿빛 줄로 보였음 (CI 44001064291 마력 초월) → 0.8 부터
         double alpha = ball ? o.num("alpha", 1) : Math.min(1, Math.max(0.8, o.num("alpha", 1) * 2));
-        return paintedWith(level, PAINT.get(ball ? "jfireball" : "jcomet2"), L, 0, c, o.with("dir", u, "size", half, "frames", (double) frames, "fps", o.num("fps",
-                12), "loop", true, "cell", null, "alpha", alpha));
+        return paintedWith(level, PAINT.get("jfireball"), L, 0, c, o.with("dir", u, "size", half, "frames", (double) frames, "fps", o.num("fps", 12), "loop", true,
+                "cell", null, "alpha", alpha));
     }
 
     /** 핏빛 달 (moon 2 × 2 되풀이 — 카메라를 봄): 가운데 at · 지름 size 칸 · life 틱 (grow 틱에 커지며 나타남 · 끝 10틱 옅어짐) */

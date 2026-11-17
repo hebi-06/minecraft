@@ -1957,15 +1957,14 @@ def sprites():
             from . import hex as hexart
             out.append((S.lib + "_pool", lambda S=S: hexart.frames_of("pool", S), True))
         if key in FIRE_KEYS:
-            from . import arcane, beast
+            from . import arcane
             from . import hex as hexart
             F = Style(S.lib, S.kind, S.main, FIRE_ACCENT, S.smoke, S.ring, S.smoke_alpha, S.seed)
             out.append((S.lib + "_pool", lambda F=F: hexart.frames_of("lava", F), True))
             out.append((S.lib + "_pyre", lambda F=F: hexart.frames_of("pyre", F), True))
             # 2026-11-17 마력 룬 불덩이 (rfx_fireball — 미리 칠한 둥근 불덩이 · 빛 없이 부름) · 메테오 불꼬리 후광 (rfx_meteor): 불꽃 꼬리 불덩이 (arcane.py fireball —
-            # 불빛 그대로) · 불꽃 꼬리 (beast.py comet — 원소 묶음의 금빛 주황)
+            # 불빛 그대로 · 불꽃 혀 · 불티). 메테오 꼬리 (3.2칸 높이) 까지 같은 그림 — 1판의 comet (beast.py 고른 띠) 은 큰 크기에서 옅은 흙빛 관이었음
             out.append((S.lib + "_fireball", lambda: [to_img(*arcane.fireball_frame(f)) for f in range(arcane.SPELL_FRAMES)], True))
-            out.append((S.lib + "_comet", lambda F=F: beast.frames_of("comet", F), True))
         if key in SWIRL_KEYS:
             from . import lance
             out.append((S.lib + "_swirl", lambda S=S: lance.frames_of("swirl", S), True))
