@@ -1874,6 +1874,9 @@ def sets_for(S):
 
 # 2026-11-17 긴 일섬 (cutl) 을 갖는 묶음: 룬 계열 · 원소 묶음 (PhantomFx.runeLib · elementLib — 룬이 부른 예전 rpg:light_cut 을 그 묶음의 일섬으로)
 CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw", "bear", "holy", "tyrant", "frost", "element")
+# 2026-11-17 방패 깨짐 (beast.py shieldbreak — 분노 묶음에만 있었음) 을 더 갖는 묶음: 받는 피해 증가 표식을 거는 룬 계열 (도끼 = 피 · 암살 = 그림자 · 민첩 = 질풍) ·
+# 원소 반응 (원소 · 서리 · 곰) — RuneMarks 의 머리 위 금 간 방패 (예전 rfx_jbreak)
+SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
 
 
 def sprites():
@@ -1883,6 +1886,9 @@ def sprites():
         out += sets_for(S)
         if key in CUTL_KEYS:
             out.append((S.lib + "_cutl", lambda S=S: frames_of(S, "cutl"), True))
+        if key in SHIELDBREAK_KEYS:
+            from . import beast
+            out.append((S.lib + "_shieldbreak", lambda S=S: beast.frames_of("shieldbreak", S), True))
     return out
 
 

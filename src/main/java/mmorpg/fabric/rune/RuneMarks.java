@@ -33,7 +33,8 @@ import net.minecraft.world.phys.Vec3;
 public final class RuneMarks {
     private RuneMarks() {}
 
-    private record Vuln(LivingEntity e, long until, double add, double[] glow, double[] core) {}
+    /** tag = 건 룬의 꼬리표 (Tasks.tag — 1초마다 다시 그릴 때 그 계열 묶음으로 칠하게, 2026-11-17) */
+    private record Vuln(LivingEntity e, long until, double add, double[] glow, double[] core, String tag) {}
 
     private record Buff(long until, double add, String name, double[] glow, double[] core) {}
 
@@ -73,7 +74,7 @@ public final class RuneMarks {
             add = Math.max(add, old.add());
             until = Math.max(until, old.until());
         }
-        VULN.put(e.getUUID(), new Vuln(e, until, add, glow, core));
+        VULN.put(e.getUUID(), new Vuln(e, until, add, glow, core, Tasks.tag()));
         if (show && e.level() instanceof ServerLevel level) {
             drawMark(level, e, glow, core, fresh ? 0.62 : 0.5, 0.7);
             if (fresh) SkillFx.play(level, "block.chain.break", RuneKit.overHead(e, 0.6), 1.1, 0.7);
@@ -97,8 +98,11 @@ public final class RuneMarks {
         Vec3 at = RuneKit.overHead(e, 0.55 + size * 0.4);
         double fps = BREAK_FRAMES / Math.max(0.05, life);
         Opt b = Opt.of("size", size, "life", life, "frames", (double) BREAK_FRAMES, "fps", fps, "fade", 0.3, "vel", RuneKit.entVel(e));
-        RuneKit.rfx(level, "jbreak", at, b.with("color", glow, "cell", 0.0, "alpha", 0.95));
-        RuneKit.rfx(level, "jbreak", at, b.with("color", core, "cell", (double) BREAK_FRAMES, "alpha", 0.9));
+        Opt g = b.with("color", glow, "cell", 0.0, "alpha", 0.95);
+        // 2026-11-17 위르드식: 그 계열 묶음의 방패 깨짐 한 장 (빛 · 심지 두 장 대신) — 없으면 예전 두 장
+        if (RuneKit.painted != null && glow != null && RuneKit.painted.draw(level, "jbreak", at, g, glow)) return;
+        RuneKit.rfxOld(level, "jbreak", at, g);
+        RuneKit.rfxOld(level, "jbreak", at, b.with("color", core, "cell", (double) BREAK_FRAMES, "alpha", 0.9));
     }
 
     // ------------------------------------------------------------ 가하는 피해 증가
@@ -151,7 +155,12 @@ public final class RuneMarks {
                 // 1초마다 다시 그림 (적마다 다른 틱 — 한 틱에 몰리지 않게), 끝나기 1초 전부터는 작게
                 if (drawn < MARKS_PER_TICK && (n + e.getId()) % 20 == 0 && e.level() instanceof ServerLevel level) {
                     drawn++;
-                    drawMark(level, e, v.glow(), v.core(), v.until() - now > 20 ? 0.42 : 0.32, 0.9);
+                    String prevTag = Tasks.tag(v.tag());
+                    try {
+                        drawMark(level, e, v.glow(), v.core(), v.until() - now > 20 ? 0.42 : 0.32, 0.9);
+                    } finally {
+                        Tasks.tag(prevTag);
+                    }
                 }
             }
         }

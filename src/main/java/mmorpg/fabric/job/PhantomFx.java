@@ -2029,7 +2029,9 @@ final class PhantomFx {
             "aura", new Paint("aura", 1, VERT, 2, 1),
             "emblem", new Paint("aegis", 1, BILL, 1.25, 1),
             "leaf", new Paint("petal", 1, BILL, 1, 1),
-            "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1));
+            "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1),
+            // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
+            "jbreak", new Paint("shieldbreak", 1, BILL, 1, 1));
 
     static boolean paintedWith(ServerLevel level, Paint p, Lib L, int first, Vec3 at, Opt b) {
         String art = p.art();

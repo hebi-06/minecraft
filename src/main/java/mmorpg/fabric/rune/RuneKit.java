@@ -514,6 +514,12 @@ public final class RuneKit {
 
     public static Painted painted;
 
+    /** 2026-11-17 rfx 의 예전 파티클 (다리를 앞에서 이미 해 본 곳 — RuneMarks 표식의 빛 · 심지 두 장) */
+    static void rfxOld(ServerLevel level, String name, Vec3 at, Opt o) {
+        if (SkillFx.diag != null) SkillFx.diag.merge(SkillFx.diagKey("rfx_" + name, o.get("color")), 1, Integer::sum);
+        rfx0(level, name, at, o);
+    }
+
     /** rfx 의 예전 파티클 (다리 없이) */
     private static void rfx0(ServerLevel level, String name, Vec3 at, Opt o) {
         AddonFx.Rfx r = new AddonFx.Rfx();
