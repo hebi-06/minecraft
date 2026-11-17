@@ -1611,7 +1611,9 @@ final class PhantomFx {
                 return A != null && Vfx.hasSheet(A.n("slash_00")) && Vfx.hasSheet(A.n("slashm_00")) && V.len(o.vec("dir", V.UP)) > 1e-6
                         && Math.abs(V.unit(o.vec("dir", V.UP)).y) <= 0.9;
             }
-            return runeFx(level, "arc", at, o, ag);
+            if (runeFx(level, "arc", at, o, ag)) return true;
+            // 2026-11-17 먹빛 판 (무간참역의 검은 초승달 — 빛은 먹빛 INK · 겉 aura 가 진홍): 겉빛으로 칠함 (CI 43982885199 slash_thin aura 10)
+            return o.get("aura") instanceof double[] au && runeFx(level, "arc", at, o, au);
         }
         if (id.startsWith("rpg:slash_") && id.endsWith("_glow") && !o.truthy("basic")) {
             // 2026-11-17 휘두른 자국 판의 빛 장을 바로 부른 것 (보스 · 몹 — SkillFx.fx("rpg:slash_heavy_r_glow") 한 장): 판 모양 · 좌우를 이름에서 → 같은 반달
