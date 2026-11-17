@@ -1603,7 +1603,7 @@ final class PhantomFx {
         }
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
-                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust")) return false;
+                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1638,6 +1638,17 @@ final class PhantomFx {
                 // 땅 금 (예전 rpg:ground_crack — 땅에 눕힘): 그 묶음의 땅 자국
                 if (!Vfx.hasSheet(L.n("crack_s"))) return false;
                 crackS(level, L, ground(level, at), Math.max(0.6, o.num("size", 1) * 2), who);
+            }
+            case "rpg:tyr_ghostfire" -> {
+                // 2026-11-17 녹색 무덤불 (네크로맨서 · 망자 선원 — 예전 tyr_ghostfire: 세로축 빌보드 · 밑동 at · 높이 size · 너비 size/2, CI 43979933145 블라이트 136):
+                // 묶음의 혼불 (soul — 불꽃 밑동이 칸 아래에서 0.29 · 불꽃 높이는 칸의 0.62)
+                if (!Vfx.hasSheet(L.n("soul"))) return false;
+                double H = Math.max(0.3, o.num("size", 1)) / 0.62;
+                double life = Math.max(0.15, o.num("life", 0.5));
+                int frames = Vfx.sheet(L.n("soul")).frames();
+                Opt b = Opt.of("size", H / 2, "life", life, "frames", (double) frames, "fps", 12.0, "loop", true, "phase", Math.floor(Kit.rand() * frames), "fade",
+                        0.35, "alpha", Math.min(1, o.num("alpha", 0.9)), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                rfx(level, L.n("soul"), 1, 0, V.up(at, 0.21 * H), b, VERT, 1);
             }
             case "rpg:dust" -> {
                 // 흙먼지 (예전 rpg:dust): 그 묶음의 흙먼지 (꽂힌 자리 먼지)
@@ -1937,6 +1948,7 @@ final class PhantomFx {
             for (double[][] c : MageSkills.SPELLS) m.put(c[0], ARCANE);
             for (double[][] c : MageSkills.PRISM) m.put(c[0], ARCANE);
             m.put(NecroCrew.DEEP, SOUL); // 네크로맨서 망자의 연기 (짙은 녹색 · 혼불)
+            m.put(NecroCrew.FIRE, SOUL); // 2026-11-17 녹색 무덤불 (rpg:tyr_ghostfire — 망자 선원 틱에도: 맥락 없이 이 빛이면 혼 묶음)
             m.put(JobTraits8.GRAVE_SMOKE, SOUL); // 망자의 군대 무덤이 솟을 때 흙먼지
             m.put(ArcmageSkills.STAR_BLUE, ARCANE); // 헤일로 배리어의 별빛 고리
             for (double[][] c : JobFx.CIRCUS) { // 2026-11-16 피에로 색종이 · 풍선 · 불꽃놀이의 서커스 빛 (무지개 대신 서커스 그림)
