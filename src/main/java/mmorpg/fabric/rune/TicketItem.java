@@ -82,6 +82,12 @@ public final class TicketItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        if (stat != null && (family() == null || !Runes.FAMILY_ORDER.contains(family()))) {
+            // 2026-11-17 룬 재개발 (계열 없음): 옛 스탯 룬 뽑기권 = 일반 룬 뽑기와 같은 룬 (접속 때 룬 뽑기권으로 바뀜)
+            tooltip.accept(line("§r§7옛 스탯 룬 뽑기권 — 룬 뽑기권과 같음"));
+            tooltip.accept(line("§r§7등급마다 룬 " + Runes.familiesOf("common").size() + "개 중 하나 (같은 확률)"));
+            return;
+        }
         if (stat != null) {
             String fam = family();
             mmorpg.core.Obj f = fam == null ? null : mmorpg.core.Rules.get().obj("RUNE_FAMILIES").objOrNull(fam);
