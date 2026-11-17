@@ -95,7 +95,16 @@ public final class JobTraits8 {
         Vfx.Prop p = RuneProps.prop(fx, STONE3D, V.up(ground, -h * 0.95), new double[] {8, 0, 8}, q, s, NecroCrew.FIRE);
         p.move(V.up(ground, -0.04), Math.max(1, rise));
         RuneKit.rockBurst(level, V.up(ground, 0.2), 6, 3.5, 0.18);
-        fx.on(life, () -> crumbleStone(level, p, ground, s));
+        // 2026-11-17 무너질 때도 세울 때의 칠할 묶음 맥락 (Tasks.paint — 그림 시계 fx.on 은 이어 주지 않음: 그레이브야드 무너짐의 예전 돌덩이 100 장)
+        Object ctx = mmorpg.fabric.Tasks.paint();
+        fx.on(life, () -> {
+            Object prev = mmorpg.fabric.Tasks.paint(ctx);
+            try {
+                crumbleStone(level, p, ground, s);
+            } finally {
+                mmorpg.fabric.Tasks.paint(prev);
+            }
+        });
         return p;
     }
 
