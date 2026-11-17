@@ -57,6 +57,9 @@ def groups(only):
         # 2026-11-15 shaderprobe 는 build 작업의 셰이더 시험 단계만 켬 (모드 클라이언트 묶음을 만들지 않음)
         keys = [k for k in keys if k not in ("prod", "vanilla", "vfilm", "vcensus", "shaderprobe") and not k.startswith("vfilm=")]
         out.append({"name": "g%d" % (i + 1), "only": ",".join(keys) if keys else "none", "prod": prod, "vanilla": vanilla, "vfilm": vfilm})
+    # 2026-11-17 build.yml 의 publish 일은 g1 ~ g10 의 로그 캐시만 되살림 (더 많으면 ci-logs 에 안 올라감 — 묶음을 합쳐서 돌릴 것)
+    if len(out) > 10:
+        raise SystemExit("only: 묶음 %d개 — publish 가 되살리는 g1 ~ g10 보다 많음" % len(out))
     return out
 
 

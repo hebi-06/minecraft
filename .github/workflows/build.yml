@@ -347,6 +347,34 @@ jobs:
           key: ci-${{ github.run_id }}-client-g6-${{ github.run_attempt }}
           restore-keys: ci-${{ github.run_id }}-client-g6-
           path: ci-out
+      # 2026-11-17 묶음 g7 (수동 실행 only 의 7번째 묶음 — 직업 도감 영상 8묶음에서 g7 · g8 영상이 ci-logs 에 안 올라갔음, CI 44063758248)
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g7-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g7-
+          path: ci-out
+      # 2026-11-17 묶음 g8 (수동 실행 only 의 8번째 묶음 — 직업 도감 영상 8묶음에서 g7 · g8 영상이 ci-logs 에 안 올라갔음, CI 44063758248)
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g8-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g8-
+          path: ci-out
+      # 2026-11-17 묶음 g9 (수동 실행 only 의 9번째 묶음 — 직업 도감 영상 8묶음에서 g7 · g8 영상이 ci-logs 에 안 올라갔음, CI 44063758248)
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g9-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g9-
+          path: ci-out
+      # 2026-11-17 묶음 g10 (수동 실행 only 의 10번째 묶음 — 직업 도감 영상 8묶음에서 g7 · g8 영상이 ci-logs 에 안 올라갔음, CI 44063758248)
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g10-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g10-
+          path: ci-out
 
       - name: Publish logs
         env:
