@@ -44,13 +44,15 @@ SET = [
     dict(key="galerush", name="게일 러시", grade="common", cd=8, r="melee", src="dex.common", u=["blink"], a="narrow",
          desc="앞으로 돌진하며 지나간 자리를 벰", use="돌진 · 이동"),
     dict(key="icelance", name="아이스 랜스", grade="common", cd=6, r="far", src="int.common", elem="ice", u=["slow"], a="narrow", cast=0.5,
-         set={"fire": 0, "slowTicks": 40, "slowAmp": 1}, desc="얼음 창을 쏴 꽂고 터뜨림 · 둔화", use="원거리 · 파열 · 둔화 2초"),
+         set={"fn": "iceLance", "fire": 0, "slowTicks": 40, "slowAmp": 1}, spread={"t": 6}, desc="얼음 창을 쏴 꽂고 터뜨림 · 둔화", use="원거리 · 파열 · 둔화 2초"),
     dict(key="salamander", name="샐러맨더", grade="common", cd=11, r="mid", src="spirit.common", elem="fire", u=[], a="narrow",
          desc="샐러맨더를 불러 4초 동안 불덩이를 뱉게 함", use="소환 · 불덩이 4번"),
-    dict(key="rampart", name="램파트", grade="common", cd=10, r="melee", src="blade.noble", u=["reduce", "knock"], a="narrow",
-         set={"ticks": 60, "reduce": 0.5}, spread={"t": 60}, desc="앞에 방패 결계를 세워 막고, 결계로 앞을 밀어 냄", use="앞 피해 −50% 3초 · 밀쳐냄"),
+    # 2026-11-17 램파트 · 블레이드 헤일 · 아이스 랜스는 새 동작 (RuneSet · RuneInt.iceLance — 옛 동작을 빌리지 않음), look = 그림 묶음 계열 (꼬리표 · 빛)
+    dict(key="rampart", name="램파트", grade="common", cd=10, r="melee", src="blade.noble", u=["reduce", "knock"], a="narrow", look="gladiator:common",
+         set={"fn": "rampart", "ticks": 60, "reduce": 0.5, "knock": 0.9}, spread={"t": 60, "w": 60},
+         desc="빛의 방패 결계로 3초 버티고 앞으로 밀어 냄", use="받는 피해 −50% 3초 · 끝에 앞을 밀쳐냄"),
     # ---------------------------------------------------------------- 희귀 (평균 12초)
-    dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=10, r="mid", src="blade.rare", u=[],
+    dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=10, r="mid", src="blade.rare", u=[], look="holy:rare",
          desc="크게 감아 가로로 베어 태양빛 검기를 날림", use="직선 관통 검기"),
     dict(key="chainarrow", name="체인 애로", grade="rare", cd=14, r="far", src="bow.rare", u=["root"], a="single", cast=0.5,
          set={"root": 30}, desc="룬 활로 쏜 화살이 첫 적을 땅에 사슬로 묶음", use="원거리 단일 · 묶음 1.5초"),
@@ -67,7 +69,7 @@ SET = [
     dict(key="fissureslam", name="피셔 슬램", grade="noble", cd=15, r="mid", src="str.noble", u=["lift"], a="narrow",
          set={"vuln": 0, "vulnTicks": 0}, desc="위에서 아래로 내려찍어 앞 땅을 가름 · 띄움", use="직선 관통 · 띄움"),
     dict(key="bladehail", name="블레이드 헤일", grade="noble", cd=21, r="melee", src="dex.hero", u=[],
-         set={"speedTicks": 0}, desc="둘레에 룬 칼날이 우박처럼 꽂힘 (움직일 수 있음)", use="둘레 연타 · 장판"),
+         set={"fn": "bladeHail", "speedTicks": 0}, spread={"t": 44, "w": 4, "zone": True}, desc="둘레에 룬 칼날이 우박처럼 꽂힘 (움직일 수 있음)", use="둘레 연타 · 장판"),
     dict(key="thundervolley", name="썬더 볼리", grade="noble", cd=14, r="far", src="bow.noble", elem="thunder", u=["leap"], cast=0.5,
          desc="뒤로 뛰며 번개 화살을 부채꼴로 쏨", use="뒤로 도약 · 부채꼴 연사"),
     dict(key="frostburst", name="프로스트 버스트", grade="noble", cd=18, r="melee", src="int.rare", elem="ice", u=["stun1"],
@@ -176,7 +178,7 @@ def build():
             d["desc"] = e["desc"]
             d["use"] = e["use"]
             d["cd"] = e["cd"]
-            d["look"] = fam + ":" + grade
+            d["look"] = e.get("look", fam + ":" + grade)
             budget_pct, base_cd = GRADE_BASE[g]
             budget = budget_pct / base_cd * e["cd"] / 100.0  # 배율 합 (예: 3.5 = 350%)
             old = total_mult(d)

@@ -25,6 +25,7 @@ final class RuneInt {
 
     static void register() {
         RuneCast.register("fireball", RuneInt::fireball);
+        RuneCast.register("iceLance", RuneInt::iceLance); // 2026-11-17 룬 재개발 — 아이스 랜스 (마력 일반)
         RuneCast.register("frostNova", RuneInt::frostNova);
         RuneCast.register("fireStorm", RuneInt::fireStorm);
         RuneCast.register("blizzard", RuneInt::blizzard);
@@ -83,6 +84,85 @@ final class RuneInt {
             for (LivingEntity e : Kit.around(sp, at, radius, 3)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.burn(e, k.num("fire"));
             }
+        });
+        return true;
+    }
+
+    /**
+     * 2026-11-17 아이스 랜스 (룬 재개발 — 마력 일반, 사용자 컨셉 「얼음 창을 쏴 꽂고 터뜨림 · 둔화」): 시전 (RuneCast — 0.5초 느리게) 동안 손끝에 서리가 모임 →
+     * 얼음 창 (rfx_icicle — 서리 묶음의 얼음 창 icelance) 이 겨눈 적 (없으면 겨눈 곳) 으로 곧게 날아가 꽂힘 → 박힌 창이 0.15초 뒤 터짐: 둘레 radius 칸 피해 ·
+     * slowTicks 틱 둔화 (slowAmp) · 땅에서 3D 얼음 가시 셋 · 얼음 조각이 사방으로 · 눈송이. 불은 쓰지 않음 (화염구와 다른 원소)
+     */
+    static boolean iceLance(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
+        ServerLevel level = sp.level();
+        Vec3 head = sp.getEyePosition();
+        Vec3 f = V.flat(sp.getViewVector(1F));
+        double range = k.num("range");
+        LivingEntity target = Kit.pickTarget(sp, range, 20);
+        Vec3 to = target != null ? Kit.bodyPoint(target) : V.up(RuneKit.groundAim(sp, range), 0.5);
+        Vec3 from = V.add(V.up(head, -0.25), V.rightOf(f), 0.3);
+        Vec3 d = V.unit(V.sub(to, from));
+        double len = V.len(V.sub(to, from));
+        double life = Math.max(0.05, len / k.num("speed"));
+        int ticks = Math.max(1, (int) Math.round(life * 20));
+        double[] glow = RuneKit.ICE[0];
+        double[] core = RuneKit.ICE[1];
+        double s0 = Math.min(0.8, len * 0.5);
+        // 창: 손 앞 0.8칸부터 곧게 (얼음 창 그림 — 빛 · 흰 심지), 뒤로 서리 꼬리 (가는 빛줄기 · 눈송이)
+        RuneKit.rfx2(level, "icicle", V.add(from, d, s0), Opt.of("dir", d, "speed", (len - s0) / life, "size", 0.62, "life", life), glow, RuneKit.WHITE);
+        for (double s = 0.9; s < len; s += 0.6) {
+            double delay = (s / len) * life;
+            SkillFx.fx(level, "rpg:arrow_trail", V.add(from, d, s), Opt.of("dir", d, "size", 0.3, "thick", 0.22, "life", delay + 0.28, "delay", delay,
+                    "color", core, "alpha", 0.7));
+        }
+        for (int t = 1; t < ticks; t += 2) {
+            Vec3 p = V.add(from, d, (len * t) / ticks);
+            Tasks.later(t, () -> SkillFx.vanilla(level, "minecraft:snowflake_particle", p));
+        }
+        SkillFx.fx(level, "rpg:magic_circle_flash", from, Opt.of("size", 0.42, "life", 0.22, "spin", Kit.rand() * 360, "color", glow, "alpha", 1.0));
+        SkillFx.play(level, "block.amethyst_block.chime", head, 1.6, 0.9);
+        SkillFx.play(level, "item.trident.throw", head, 1.4, 0.7);
+        int slowTicks = (int) k.numOr("slowTicks", 40);
+        int slowAmp = (int) k.numOr("slowAmp", 1);
+        double radius = k.num("radius");
+        Tasks.later(ticks, () -> {
+            if (sp.isRemoved()) return;
+            Vec3 at = target != null && !target.isRemoved() ? Kit.bodyPoint(target) : to;
+            // 꽂힘: 창이 박혀 남음 (0.15초) · 서리 번쩍
+            RuneKit.rfx2(level, "icicle", V.add(at, d, -0.35), Opt.of("dir", d, "speed", 0.0, "size", 0.62, "life", 0.18, "fade", 0.4), glow, RuneKit.WHITE);
+            SkillFx.play(level, "block.glass.place", at, 1.2, 0.9);
+            RuneKit.later(3, () -> {
+                if (sp.isRemoved()) return;
+                Vec3 c = target != null && !target.isRemoved() ? Kit.bodyPoint(target) : at;
+                Vec3 g = new Vec3(c.x, RuneKit.groundAt(level, c, c.y - 1.2), c.z);
+                double sc = RuneKit.nearK(sp, c, 4, 0.4);
+                // 터짐: 얼음 조각이 사방으로 (작은 고드름 여섯) · 서리 번쩍 · 땅의 서리 고리 · 3D 얼음 가시 셋 (밑동 둘레)
+                for (int i = 0; i < 6; i++) {
+                    double a = (i / 6.0) * Math.PI * 2 + Kit.rand() * 0.4;
+                    Vec3 dd = V.unit(new Vec3(Math.cos(a), 0.35 + Kit.rand() * 0.3, Math.sin(a)));
+                    RuneKit.rfx2(level, "icicle", V.add(c, dd, 0.3), Opt.of("dir", dd, "speed", 7.0, "size", 0.26 * sc, "life", 0.28), i % 2 == 0 ? glow : core,
+                            RuneKit.WHITE);
+                }
+                SkillFx.burst(level, c, core, 1.3 * sc, 0.3);
+                SkillFx.sparks(level, c, core, 8, 4);
+                RuneKit.zonePulse(level, g, glow, radius, 0.4);
+                for (int i = 0; i < 3; i++) {
+                    double a = (i / 3.0) * Math.PI * 2 + Kit.rand();
+                    Vec3 p = new Vec3(g.x + Math.cos(a) * radius * 0.45, g.y, g.z + Math.sin(a) * radius * 0.45);
+                    RuneKit.iceCrystal(sp, level, p, 0.42 + Kit.rand() * 0.12, glow, Opt.of("life", 0.9, "fade", 0.35, "v", (double) i));
+                }
+                RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 2D 강화 (아래 등급 터짐): 터진 자리의 땅
+                for (int i = 0; i < 5; i++) {
+                    double a = Kit.rand() * Math.PI * 2;
+                    double rr = Kit.rand() * radius;
+                    SkillFx.vanilla(level, "minecraft:snowflake_particle", new Vec3(c.x + Math.cos(a) * rr, c.y + Kit.rand(), c.z + Math.sin(a) * rr));
+                }
+                SkillFx.play(level, "random.glass", c, 1.3, 0.8);
+                SkillFx.play(level, "mob.player.hurt_freeze", c, 0.9, 0.8);
+                for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
+                    if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.effect(e, "slowness", slowTicks, slowAmp);
+                }
+            });
         });
         return true;
     }

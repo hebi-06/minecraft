@@ -414,7 +414,7 @@
   },
   "icelance": {
    "common": {
-    "fn": "fireball",
+    "fn": "iceLance",
     "name": "아이스 랜스",
     "desc": "얼음 창을 쏴 꽂고 터뜨림 · 둔화",
     "use": "원거리 · 파열 · 둔화 2초",
@@ -452,17 +452,18 @@
   },
   "rampart": {
    "common": {
-    "fn": "counterStance",
+    "fn": "rampart",
     "name": "램파트",
-    "desc": "앞에 방패 결계를 세워 막고, 결계로 앞을 밀어 냄",
-    "use": "앞 피해 −50% 3초 · 밀쳐냄",
+    "desc": "빛의 방패 결계로 3초 버티고 앞으로 밀어 냄",
+    "use": "받는 피해 −50% 3초 · 끝에 앞을 밀쳐냄",
     "mult": 12,
     "ticks": 60,
     "reduce": 0.5,
     "range": 4.5,
     "cone": 120,
+    "knock": 0.9,
     "cd": 10,
-    "look": "blade:noble",
+    "look": "gladiator:common",
     "scale": 0.4167
    }
   },
@@ -477,7 +478,7 @@
     "width": 1.6,
     "speed": 26,
     "cd": 10,
-    "look": "blade:rare",
+    "look": "holy:rare",
     "scale": 0.8333
    }
   },
@@ -593,7 +594,7 @@
   },
   "bladehail": {
    "noble": {
-    "fn": "bladeStorm",
+    "fn": "bladeHail",
     "name": "블레이드 헤일",
     "desc": "둘레에 룬 칼날이 우박처럼 꽂힘 (움직일 수 있음)",
     "use": "둘레 연타 · 장판",
@@ -1010,7 +1011,7 @@
    },
    "icelance.common": {
     "a": "narrow",
-    "t": 3,
+    "t": 6,
     "elem": "ice",
     "u": [
      "slow"
@@ -1030,7 +1031,7 @@
    "rampart.common": {
     "a": "narrow",
     "t": 60,
-    "w": 0,
+    "w": 60,
     "u": [
      "reduce",
      "knock"
@@ -1090,9 +1091,10 @@
     "r": "mid"
    },
    "bladehail.noble": {
-    "t": 41,
+    "t": 44,
     "zone": true,
     "u": [],
+    "w": 4,
     "r": "melee"
    },
    "thundervolley.noble": {

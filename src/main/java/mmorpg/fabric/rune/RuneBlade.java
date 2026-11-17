@@ -101,7 +101,7 @@ final class RuneBlade {
         Vec3 dir = V.unit(new Vec3(f.x, view.y * 0.3, f.z));
         Vec3 from = V.up(V.add(sp.position(), f, 0.6), 1.1);
         double len = Math.max(1, RuneKit.rayLength(level, from, dir, k.num("range")));
-        double[][] cs = RuneKit.colorOf("blade");
+        double[][] cs = RuneKit.lookColors(k, "blade"); // 2026-11-17 솔라 웨이브 (look holy) 는 성광 금빛
         double[] glow = cs[0];
         double[] core = cs[1];
         double speed = k.num("speed");

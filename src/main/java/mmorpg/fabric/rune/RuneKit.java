@@ -86,11 +86,40 @@ public final class RuneKit {
         AURA_DRAWN.remove(id);
     }
 
-    /** 계열 색 {빛, 심지} (RUNE.color[계열]) */
+    /** 계열 색 {빛, 심지} (RUNE.color[계열] — 2026-11-17 새 룬 (계열 없음) 은 그림 묶음 계열 def.look 의 색: 뽑기 연출 · 창의 빛) */
     public static double[][] colorOf(String family) {
         List<Object> pair = RUNE.obj("color").listOrNull(family);
-        if (pair == null) return new double[][] {WHITE, WHITE};
+        if (pair == null) {
+            String look = setLook(family);
+            if (look != null && !look.equals(family) && RUNE.obj("color").listOrNull(look) != null) return colorOf(look);
+            return new double[][] {WHITE, WHITE};
+        }
         return new double[][] {Kit.rgb(pair.get(0)), Kit.rgb(pair.get(1))};
+    }
+
+    /** 2026-11-17 새 룬 (RUNE_SET — 등급 하나) 의 그림 묶음 계열 (def.look "holy:rare" 의 앞 — 없으면 null) */
+    static String setLook(String family) {
+        if (family == null || !mmorpg.core.Runes.isSet(family)) return null;
+        for (String g : mmorpg.core.Runes.GRADE_ORDER) {
+            if (!mmorpg.core.Runes.hasGrade(family, g)) continue;
+            mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(mmorpg.core.Runes.runeId(family, g));
+            String look = r == null ? null : r.def().strOrNull("look");
+            if (look == null) return null;
+            int c = look.indexOf(':');
+            return c < 0 ? look : look.substring(0, c);
+        }
+        return null;
+    }
+
+    /**
+     * 2026-11-17 룬 재개발: 동작이 그릴 빛 = 그 룬의 그림 묶음 계열 (def.look) 의 색 (없으면 fallback 계열 — 옛 룬). 빌려 쓰는 동작 (솔라 웨이브 = 검 계열의 검기)
+     * 을 새 룬의 묶음 (성광 금빛) 으로 칠하게
+     */
+    public static double[][] lookColors(Obj k, String fallback) {
+        String look = k == null ? null : k.strOrNull("look");
+        if (look == null) return colorOf(fallback);
+        int c = look.indexOf(':');
+        return colorOf(c < 0 ? look : look.substring(0, c));
     }
 
     // ------------------------------------------------------------ 피해 · 도구

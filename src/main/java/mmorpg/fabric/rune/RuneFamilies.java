@@ -36,6 +36,7 @@ final class RuneFamilies {
         RuneHunter.register();
         RuneVolcano.register();
         RuneGladiator.register();
+        RuneSet.register(); // 2026-11-17 룬 재개발: 새 동작 (램파트 · 블레이드 헤일 — 아이스 랜스는 RuneInt)
     }
 
     /** 등록한 룬 효과 수 (함수 이름 — 정령사는 다섯 등급이 하나) */
