@@ -37,22 +37,27 @@ public final class RuneScaleTest {
     }
 
     /**
-     * 2026-11-17 딜타임 (사용자 "쿨 바꿔서 직업 스킬하고 딜타임 만들어둘건데 그사이에 꽂아넣을수 있도록" · "쓰임별로 나눔" · "검사면 검사랑 어울리는 룬 스킬이 있으면
-     * 해당하는 두 스킬에 쿨이 같게"): 새 룬 30 은 필러 (4 ~ 8초) 아니면 딜타임 (27.5 ~ 70초) · RUNE_SET.pairs 의 짝 직업 스킬 (숨기지 않은 직업) 과 쿨이 같음
+     * 2026-11-17 딜타임 (사용자 "쿨 바꿔서 직업 스킬하고 딜타임 만들어둘건데 그사이에 꽂아넣을수 있도록" · "검사면 검사랑 어울리는 룬 스킬이 있으면 해당하는 두 스킬에
+     * 쿨이 같게") → 등급마다 재사용 범위 ("일반은 6~15초 이내에서 만들고 희귀는 12초~21초 사이 고귀는 15초~25초 사이 영웅은 27초~38초 사이 초월은 32초~50초 사이"):
+     * 새 룬 30 은 제 등급 범위 안 (RUNE_SET.cdRange) · RUNE_SET.pairs 의 짝 직업 스킬 (숨기지 않은 직업) 과 쿨이 같음 · 직업 스킬 하나에 룬 하나
      */
     private static void pairs() {
-        int fillers = 0;
-        int deals = 0;
-        for (String g : Runes.GRADE_ORDER) {
+        double[][] want = {{6, 15}, {12, 21}, {15, 25}, {27, 38}, {32, 50}};
+        Obj range = Rules.get().obj("RUNE_SET").obj("cdRange");
+        int sets = 0;
+        for (int gi = 0; gi < Runes.GRADE_ORDER.size(); gi++) {
+            String g = Runes.GRADE_ORDER.get(gi);
+            List<Object> lh = range.list(g);
+            check(lh.size() == 2 && Math.abs(((Number) lh.get(0)).doubleValue() - want[gi][0]) < 1e-9 && Math.abs(((Number) lh.get(1)).doubleValue() - want[gi][1]) < 1e-9,
+                    g + " cd range " + lh);
             for (String fam : Runes.familiesOf(g)) {
                 if (!Runes.isSet(fam)) continue;
+                sets++;
                 double cd = rune(fam, g).cd();
-                if (cd >= 4 && cd <= 8) fillers++;
-                else if (cd >= 27.5 && cd <= 70) deals++;
-                else check(false, fam + " cd " + cd + " is neither filler (4 ~ 8) nor deal time (27.5 ~ 70)");
+                check(cd >= want[gi][0] - 1e-9 && cd <= want[gi][1] + 1e-9, fam + " cd " + cd + " in the " + g + " range " + want[gi][0] + " ~ " + want[gi][1]);
             }
         }
-        check(fillers == 13 && deals == 17, "13 fillers · 17 deal-time runes: " + fillers + " · " + deals);
+        check(sets == 30, "30 set runes in grade ranges " + sets);
         Obj p = Rules.get().obj("RUNE_SET").obj("pairs");
         Set<String> skills = new java.util.HashSet<>();
         int n = 0;
@@ -71,7 +76,7 @@ public final class RuneScaleTest {
                 n++;
             }
         }
-        check(n == 28, "28 rune ↔ job skill pairs " + n);
+        check(n == 27, "27 rune ↔ job skill pairs " + n);
     }
 
     /** 배율 합 그대로 두는 룬 (지원 · 버프 — 유틸 값 없음) */
@@ -136,7 +141,7 @@ public final class RuneScaleTest {
                     check(Runes.familiesOf(g).contains(fam) && !Runes.hasGrade(fam, g.equals("common") ? "rare" : "common"), id + " one grade");
                     double rm = Runes.rangeMult(r);
                     check(Math.abs(rm - 1.2) < 1e-9 || Math.abs(rm - 1.1) < 1e-9 || Math.abs(rm - 1.0) < 1e-9, id + " range mult " + rm);
-                    check(!Runes.utils(r).contains("vuln10") && !Runes.utils(r).contains("vuln15") && !d.truthy("vuln"), id + " no vuln (한정 룬만)");
+                    check(!Runes.utils(r).contains("vuln5") && !Runes.utils(r).contains("vuln10") && !Runes.utils(r).contains("vuln15") && !d.truthy("vuln"), id + " no vuln (한정 룬만)");
                     if (Runes.castSeconds(r) > 0) near(Runes.windupBonus(r), 0, id + " cast → no windup bonus");
                     if (total > 0) {
                         double want = BUDGET[gi] / BASE_CD[gi] * r.cd();

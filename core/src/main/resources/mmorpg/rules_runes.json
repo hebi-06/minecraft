@@ -1,5 +1,5 @@
 {
- "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30) · 룬마다 재사용 (예산 = 등급 초당 값 × 재사용) · 룬 위력 = 네 스탯의 합 · 거리 보정 (RUNE_SET.range) · 원거리 시전 (cast — 선딜 보정 없음) · 받는 피해 증가 없음 (한정 룬만). 옛 계열 9 는 숨김 (아이템은 접속 때 새 룬으로).",
+ "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30) · 룬마다 재사용 (등급 범위 안 — 일반 6 ~ 15 · 희귀 12 ~ 21 · 고귀 15 ~ 25 · 영웅 27 ~ 38 · 초월 32 ~ 50초, 예산 = 등급 초당 값 × 재사용) · 룬 위력 = 네 스탯의 합 · 거리 보정 (RUNE_SET.range) · 원거리 시전 (cast — 선딜 보정 없음) · 받는 피해 증가 없음 (한정 룬만). 옛 계열 9 는 숨김 (아이템은 접속 때 새 룬으로).",
  "RUNE_FAMILIES": {
   "earthbreaker": {
    "stat": "str",
@@ -407,9 +407,9 @@
     "mult": 4,
     "dash": 5,
     "width": 1.3,
-    "cd": 5,
+    "cd": 12,
     "look": "dex:common",
-    "scale": 0.625
+    "scale": 1.5
    }
   },
   "icelance": {
@@ -462,9 +462,9 @@
     "range": 4.5,
     "cone": 120,
     "knock": 0.9,
-    "cd": 32,
+    "cd": 15,
     "look": "gladiator:common",
-    "scale": 1.3333
+    "scale": 0.625
    }
   },
   "solarwave": {
@@ -477,9 +477,9 @@
     "range": 14,
     "width": 1.6,
     "speed": 26,
-    "cd": 4,
+    "cd": 13,
     "look": "holy:rare",
-    "scale": 0.3333
+    "scale": 1.0833
    }
   },
   "chainarrow": {
@@ -492,9 +492,9 @@
     "range": 18,
     "cone": 20,
     "root": 30,
-    "cd": 5,
+    "cd": 12,
     "look": "bow:rare",
-    "scale": 0.4167
+    "scale": 1.0
    }
   },
   "shadowstrike": {
@@ -510,9 +510,9 @@
     "gap": 4,
     "vuln": 0,
     "vulnTicks": 0,
-    "cd": 55,
+    "cd": 13,
     "look": "dex:noble",
-    "scale": 2.6736
+    "scale": 0.6319
    }
   },
   "undine": {
@@ -530,9 +530,9 @@
     "first": 8,
     "ticks": 70,
     "range": 11,
-    "cd": 40,
+    "cd": 18,
     "look": "spirit:rare",
-    "scale": 3.3381
+    "scale": 1.5021
    }
   },
   "aurochs": {
@@ -556,9 +556,9 @@
      "돌진하는 동안 받는 피해 감소"
     ],
     "bison": 1,
-    "cd": 7,
+    "cd": 12,
     "look": "gladiator:rare",
-    "scale": 0.5833
+    "scale": 1.0
    }
   },
   "grove": {
@@ -566,13 +566,13 @@
     "fn": "lifeSpring",
     "name": "그로브 블레싱",
     "desc": "발밑에 새싹이 자라 빛 잎을 흩날리며 나와 둘레 아군을 회복",
-    "use": "회복 — 나 15% · 아군 7.5% (3초)",
-    "heal": 0.0667,
+    "use": "회복 — 나 37% · 아군 19% (3초)",
+    "heal": 0.1667,
     "pulses": 4,
     "gap": 15,
     "radius": 5,
     "share": 0.5,
-    "cd": 6,
+    "cd": 15,
     "look": "vit:rare"
    }
   },
@@ -588,9 +588,9 @@
     "lift": 0.6,
     "vuln": 0,
     "vulnTicks": 0,
-    "cd": 6,
+    "cd": 16,
     "look": "str:noble",
-    "scale": 0.3333
+    "scale": 0.8889
    }
   },
   "bladehail": {
@@ -604,9 +604,9 @@
     "gap": 10,
     "radius": 3.5,
     "speedTicks": 0,
-    "cd": 32,
+    "cd": 15,
     "look": "dex:hero",
-    "scale": 1.0667
+    "scale": 0.5
    }
   },
   "thundervolley": {
@@ -622,9 +622,9 @@
     "cone": 80,
     "gap": 3,
     "air": 6,
-    "cd": 7,
+    "cd": 15,
     "look": "bow:noble",
-    "scale": 0.3889
+    "scale": 0.8333
    }
   },
   "frostburst": {
@@ -638,9 +638,9 @@
     "slowTicks": 60,
     "slowAmp": 1,
     "freeze": 20,
-    "cd": 34.5,
+    "cd": 15,
     "look": "int:rare",
-    "scale": 3.2857
+    "scale": 1.4286
    }
   },
   "firestorm": {
@@ -655,9 +655,9 @@
     "range": 18,
     "radius": 3.2,
     "pull": 0.25,
-    "cd": 37,
+    "cd": 18,
     "look": "int:noble",
-    "scale": 2.0556
+    "scale": 1.0
    }
   },
   "fortress": {
@@ -676,9 +676,9 @@
     "flow": [
      "내 둘레 {radius}칸 돌기둥 넷 · 솟을 때와 무너질 때"
     ],
-    "cd": 42,
+    "cd": 22,
     "look": "golem:rare",
-    "scale": 4.0
+    "scale": 2.0952
    }
   },
   "titanhammer": {
@@ -694,9 +694,9 @@
     "stun": 20,
     "lift": 0.3,
     "motionAt": 4,
-    "cd": 70,
+    "cd": 37,
     "look": "str:hero",
-    "scale": 2.6923
+    "scale": 1.4231
    }
   },
   "runejavelin": {
@@ -730,9 +730,9 @@
     "span": 40,
     "vuln": 0,
     "vulnTicks": 0,
-    "cd": 6,
+    "cd": 29.5,
     "look": "assassin:hero",
-    "scale": 0.2308
+    "scale": 1.1346
    }
   },
   "blizzard": {
@@ -748,9 +748,9 @@
     "radius": 5,
     "slowTicks": 40,
     "slowAmp": 2,
-    "cd": 65,
+    "cd": 34.5,
     "look": "int:hero",
-    "scale": 2.5
+    "scale": 1.3269
    }
   },
   "gnome": {
@@ -785,9 +785,9 @@
     "reduce": 0.2,
     "ticks": 100,
     "pulse": 10,
-    "cd": 60,
+    "cd": 32,
     "look": "gladiator:hero",
-    "scale": 2.0979
+    "scale": 1.1189
    }
   },
   "skyfall": {
@@ -819,9 +819,9 @@
     "reduce": 0.2,
     "heal": 0.02,
     "healMax": 5,
-    "cd": 37,
+    "cd": 32,
     "look": "axe:transcend",
-    "scale": 1.0284
+    "scale": 0.8894
    }
   },
   "lunaexec": {
@@ -837,9 +837,9 @@
     "splash": 3,
     "splashMult": 16,
     "span": 20,
-    "cd": 8,
+    "cd": 50,
     "look": "assassin:transcend",
-    "scale": 0.2222
+    "scale": 1.3889
    }
   },
   "meteor": {
@@ -854,9 +854,9 @@
     "delay": 30,
     "fire": 5,
     "lift": 0,
-    "cd": 60,
+    "cd": 50,
     "look": "int:transcend",
-    "scale": 1.6667
+    "scale": 1.3889
    }
   },
   "spiritking": {
@@ -888,9 +888,9 @@
     "slowTicks": 40,
     "fire": 3,
     "stun": 0,
-    "cd": 65,
+    "cd": 35,
     "look": "spirit:transcend",
-    "scale": 1.8056
+    "scale": 0.9722
    }
   },
   "immortaloath": {
@@ -904,9 +904,9 @@
     "heal": 0.05,
     "ticks": 160,
     "pulse": 20,
-    "cd": 60,
+    "cd": 32,
     "look": "vit:transcend",
-    "scale": 2.6667
+    "scale": 1.4222
    }
   }
  },
@@ -986,6 +986,28 @@
    "melee": "근거리",
    "mid": "중거리",
    "far": "원거리"
+  },
+  "cdRange": {
+   "common": [
+    6,
+    15
+   ],
+   "rare": [
+    12,
+    21
+   ],
+   "noble": [
+    15,
+    25
+   ],
+   "hero": [
+    27,
+    38
+   ],
+   "transcend": [
+    32,
+    50
+   ]
   },
   "spread": {
    "earthbreaker.common": {
@@ -1281,7 +1303,7 @@
    "spirit.transcend": "spiritking.transcend",
    "vit.transcend": "immortaloath.transcend"
   },
-  "_pairs": "2026-11-17 룬 → 같은 쿨의 어울리는 직업 스킬 id (사용자 \"검사면 검사랑 어울리는 룬 스킬이 있으면 해당하는 두 스킬에 쿨이 같게\") — 게임에는 안 보임 (룬에 직업 글자 없음), RuneScaleTest 가 쿨이 같은지 봄",
+  "_pairs": "2026-11-17 룬 → 같은 쿨의 어울리는 직업 스킬 id (사용자 \"검사면 검사랑 어울리는 룬 스킬이 있으면 해당하는 두 스킬에 쿨이 같게\" — 등급 범위 안의 스킬만 · 직업 스킬 하나에 룬 하나) — 게임에는 안 보임 (룬에 직업 글자 없음), RuneScaleTest 가 쿨이 같은지 봄",
   "pairs": {
    "earthbreaker": [
     "warrior_crush"
@@ -1290,7 +1312,7 @@
     "frostraider_throw"
    ],
    "galerush": [
-    "swordsman_flurry"
+    "swordsman_flash"
    ],
    "icelance": [
     "mage_bolts"
@@ -1299,71 +1321,68 @@
     "necromancer_call"
    ],
    "rampart": [
-    "guardian_bulwark"
+    "guardian_throw"
    ],
    "solarwave": [
-    "swordmaster_draw"
+    "swordmaster_echo"
    ],
    "chainarrow": [
-    "bladeranger_twin"
+    "bladeranger_boomerang"
    ],
    "shadowstrike": [
-    "trickster_ult"
+    "trickster_twin"
    ],
    "aurochs": [
-    "darkknight_crunch"
+    "darkknight_lunge"
    ],
    "grove": [
-    "priest_heal"
+    "priest_hymn"
    ],
    "bladehail": [
-    "bloodknight_frenzy"
+    "bloodknight_chains"
    ],
    "thundervolley": [
-    "arsenalking_volley"
+    "arsenalking_rain"
    ],
    "frostburst": [
-    "frostraider_jotunn"
+    "frostraider_shatter"
    ],
    "firestorm": [
-    "warlock_ash"
+    "warlock_nova"
    ],
    "titanhammer": [
-    "warrior_ult"
+    "warrior_spirit"
    ],
    "runejavelin": [
     "archer_burst"
    ],
    "shadowblitz": [
-    "trickster_swap"
+    "trickster_waltz"
    ],
    "blizzard": [
-    "frostraider_ult"
+    "frostraider_jotunn"
    ],
    "gnome": [
     "necromancer_blight"
    ],
    "bastion": [
-    "guardian_ult"
+    "guardian_bulwark"
    ],
    "skyfall": [
     "swordmaster_ult"
    ],
    "berserker": [
-    "warrior_spirit"
+    "bloodknight_frenzy"
    ],
    "lunaexec": [
-    "assassin_bloom"
-   ],
-   "meteor": [
-    "arcmage_ult"
+    "assassin_ult"
    ],
    "spiritking": [
-    "necromancer_ult"
+    "mage_overload"
    ],
    "immortaloath": [
-    "priest_ult",
-    "saint_ult"
+    "priest_stigma",
+    "saint_bond"
    ]
   }
  }

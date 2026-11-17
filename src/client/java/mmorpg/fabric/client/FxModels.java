@@ -637,6 +637,11 @@ public final class FxModels {
             Z.normalize();
             Vector3f X = new Vector3f(Y).cross(Z).normalize();
             if (in.m.upright && X.y < 0) X.negate(); // 0.50.0 옆모습 판: 등 (+X) 이 늘 위 — 좌우를 뒤집어 그림
+            if ((in.flags & Fx3d.F_LEAD) != 0 && (in.flags & Fx3d.F_FACE_CAM) != 0 && face.lengthSquared() > 1e-6F) {
+                // 2026-11-17 날이 앞섬 (vfx.PBridge 와 같게): 부른 face 로 셈한 +X (Y × face) 와 반대쪽이면 좌우를 뒤집어 그림
+                Vector3f want = new Vector3f(Y).cross(new Vector3f(face).normalize());
+                if (want.lengthSquared() > 1e-6F && X.dot(want.normalize()) < -0.25F) X.negate();
+            }
             R.set(X, Y, Z);
             if (v[6] != 0) R.rotateY(v[6] * Mth.DEG_TO_RAD);
             float spin = camSpinUp ? 0F : v[7] * tf * Mth.DEG_TO_RAD;

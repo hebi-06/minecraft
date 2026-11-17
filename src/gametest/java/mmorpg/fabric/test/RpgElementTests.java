@@ -119,12 +119,12 @@ public final class RpgElementTests {
             ElementSystem.apply(sp, b, "thunder", P, true, false);
             h.assertTrue(ElementSystem.apply(sp, b, "water", P, true, false) == Elements.byId("shock") && rooted(b) && b.hasEffect(MobEffects.WEAKNESS),
                     "thunder + water = shock (stun)");
-            // 초전도 (얼음 + 전기): 둘레 받는 피해 +10% 5초
+            // 초전도 (얼음 + 전기): 둘레 받는 피해 +5% 5초 (2026-11-17 +10% → +5%)
             Husk c = target(h, 6, 6, true);
             all.add(c);
             ElementSystem.apply(sp, c, "ice", P, true, false);
             h.assertTrue(ElementSystem.apply(sp, c, "thunder", P, true, false) == Elements.byId("superconduct") && RuneMarks.vulnLeft(c) > 90
-                    && RpgJobTests.near(RuneMarks.vulnMult(c), 1.1), "ice + thunder = superconduct (+10%) " + RuneMarks.vulnMult(c));
+                    && RpgJobTests.near(RuneMarks.vulnMult(c), 1.05), "ice + thunder = superconduct (+5%) " + RuneMarks.vulnMult(c));
             // 과부하 (불 + 전기): 둘레 3칸 적마다 1.5
             Husk d = target(h, -1, 10, true);
             Husk d2 = target(h, 1, 10, true);

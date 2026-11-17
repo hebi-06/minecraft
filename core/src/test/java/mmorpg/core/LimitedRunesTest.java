@@ -72,10 +72,10 @@ public final class LimitedRunesTest {
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 (36초, 2026-11-11 만년빙하 32초 — 룬의 cd)
         String[] fams = {"endless", "terra", "glacier"};
         String[] fns = {"endlessSlash", "earthSplitter", "glacierField"};
-        // 2026-11-17 도감 메모: 만년빙하 → 얼음 여왕의 분노 · 대지 가르기 재사용 36 → 40초 (예산 × 40/36 — scale)
+        // 2026-11-17 도감 메모: 만년빙하 → 얼음 여왕의 분노 · 대지 가르기 재사용 36 → 40초 (예산 × 40/36 — scale) · 무간참역 모든 틱 같은 피해 · 재사용 40초 (× 40/36)
         String[] names = {"무간참역", "대지 가르기", "얼음 여왕의 분노"};
         String[] famNames = {"무간", "대지", "빙하"};
-        double[] cds = {36, 40, 32};
+        double[] cds = {40, 40, 32};
         for (int i = 0; i < fams.length; i++) {
             for (String g : Runes.GRADE_ORDER) {
                 Runes.Rune r = Runes.parseRune(Runes.runeId(fams[i], g));
@@ -94,7 +94,8 @@ public final class LimitedRunesTest {
             check(!lore.contains("총 피해") && lore.contains("위력×34"), fams[i] + " lore: ×34, no total-text line (0.20.1): " + lore);
             check(!lore.contains("다른 스탯 0.85"), fams[i] + " no off-stat line");
         }
-        check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_endless_transcend"), false)).contains("(2×10 + 14)"), "endless parts 2×10 + 14");
+        check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_endless_transcend"), false)).contains("(3.09×11)"), "endless parts 3.09 × 11 (모든 틱 같은 피해)");
+        check(Runes.evenFinish(Runes.parseRune("rpg:rune_endless_transcend").def()) && !Runes.evenFinish(Runes.parseRune("rpg:rune_terra_transcend").def()), "endless even finish");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_terra_transcend"), false)).contains("(3×6 + 16)"), "terra parts 3×6 + 16");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_glacier_transcend"), false)).contains("(3×8 + 10)"), "glacier parts 3×8 + 10");
         check(Runes.parseRune("rpg:rune_endless_hero") == null && Runes.parseRune("rpg:rune_nope_transcend") == null, "no other ids");
@@ -176,7 +177,7 @@ public final class LimitedRunesTest {
         check(top > 100 && lostTop > 0 && lostTop < top, "transcend " + top + " lost " + lostTop);
 
         // 돌파 3 · 6돌 (배율 합: 0돌 34 · 3돌 42 · 6돌 55)
-        double[][] totals = {{2 * 10 + 14, 2.25 * 12 + 15, 2.5 * 14 + 20}, {3 * 6 + 16, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 8 + 10, 3 * 10 + 12, 3.5 * 12 + 13}};
+        double[][] totals = {{34, 42, 55}, {3 * 6 + 16, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 8 + 10, 3 * 10 + 12, 3.5 * 12 + 13}};
         // 처음 설계 (다른 초월과 같은 줄) — 사용자 요청 '5% ~ 12% 더 쎄게': 0 · 3 · 6돌 모두 이 값의 1.05 ~ 1.12 배
         // (0.17.0 무간참역 · 0.18.0 대지 가르기는 처음부터 이 줄로 — 다른 초월의 기준 32 · 39 · 50 보다 5 ~ 12% 위)
         double[][] first = {{32, 39, 50}, {32, 39, 50}, {32, 39, 50}};
@@ -186,6 +187,8 @@ public final class LimitedRunesTest {
             near(Runes.runeTotalMult(RuneBreak.def(r, 0)), totals[i][0], fams[i] + " 0 total");
             near(Runes.runeTotalMult(RuneBreak.def(r, 3)), totals[i][1], fams[i] + " 3 total");
             near(Runes.runeTotalMult(RuneBreak.def(r, 6)), totals[i][2], fams[i] + " 6 total");
+            // 2026-11-17 무간참역: 0 · 3 · 6돌 모두 마무리 일섬 = 한 번의 베기 (같은 피해)
+            if (fams[i].equals("endless")) for (int lv : new int[] {0, 3, 6}) check(Runes.evenFinish(RuneBreak.def(r, lv)), "endless " + lv + " even finish");
             for (int lv = 0; lv <= 6; lv++) {
                 double cur = Runes.runeTotalMult(RuneBreak.def(r, lv));
                 double was = first[i][lv < 3 ? 0 : lv < 6 ? 1 : 2];

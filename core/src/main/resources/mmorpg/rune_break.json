@@ -202,14 +202,14 @@
       "3": [
         {"key": "radius", "to": 10, "text": "영역 {from} → {to}칸"},
         {"key": "hits", "to": 12, "text": "영역 베기 {from} → {to}번 (1초 더)"},
-        {"key": "mult", "to": 2.25, "text": "베기 위력 ×{from} → ×{to}"},
-        {"key": "crush", "to": 15, "text": "마무리 일섬 위력 ×{from} → ×{to}"}
+        {"key": "mult", "to": 3.230769230769, "text": "베기 · 일섬 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 3.230769230769, "text": ""}
       ],
       "6": [
         {"key": "radius", "to": 12, "text": "영역 {from} → {to}칸"},
         {"key": "hits", "to": 14, "text": "영역 베기 {from} → {to}번 (1초 더)"},
-        {"key": "mult", "to": 2.5, "text": "베기 위력 ×{from} → ×{to}"},
-        {"key": "crush", "to": 20, "text": "마무리 일섬 위력 ×{from} → ×{to}"},
+        {"key": "mult", "to": 3.666666666667, "text": "베기 · 일섬 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 3.666666666667, "text": ""},
         {"key": "stun", "to": 20, "base": 0, "div": 20, "text": "일섬에 맞은 적 기절 {to}초"}
       ],
       "extra": {"at": 6, "type": "finale", "text": "하늘 가르기 — 일섬 뒤 하늘이 X자로 갈라짐"}

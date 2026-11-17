@@ -1376,7 +1376,7 @@ public final class RpgJobTests {
             h.assertTrue(JobSkills.press(sp, 3), "성흔 cast");
             h.assertTrue(JobTraits4.stigmaOn(z.get(0)) && JobTraits4.faith(sp) == 1, "stigma on the target, faith 1");
             // 2026-11-17 힐러의 받는 피해 증가: 성흔이 찍힌 적은 받는 피해 +10%
-            h.assertTrue(Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1.1) < 1e-9, "stigma: taken +10% " + mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)));
+            h.assertTrue(Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1.05) < 1e-9, "stigma: taken +5% " + mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)));
         }));
         // 성흔 찍힌 적을 홀 평타로: 홀 흡혈 (준 피해 5% · 최대 체력 1% 까지) + 성흔 4%
         steps.add(new Step(4, () -> {

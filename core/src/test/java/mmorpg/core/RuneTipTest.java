@@ -202,18 +202,21 @@ public final class RuneTipTest {
         // 천붕 6돌: 한 번 더 (60% — 천붕은 6돌에도 배율 32, 범위 · 사거리만 바뀜)
         String hf = joined(RuneTip.lines(rune("str", "transcend"), 6, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
         check(hf.contains("◆ 검이 한 번 더 꽂힘 (겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
-        // 0.17.0 무간참역: 베기 2 × 10 + 마무리 일섬 14 (P 42 → 84 × 10번 + 588 — 나눔이 길어 다음 줄), 영역 줄, 6돌 기절
+        // 0.17.0 무간참역 → 2026-11-17 도감 메모 ("모든 틱 데미지가 같은 데미지로 … 쿨타임 증가 40초 … 데미지 증가"): 베기 10 + 마무리 일섬 = 같은 배율 11번 (34 ÷ 11),
+        // 재사용 40초 · 예산 × 40/36 (scale), 영역 줄, 6돌 기절
         List<String> en = plain(RuneTip.lines(rune("endless", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
-        double eS = Runes.damageScale(rune("endless", "transcend")); // 0.49.0 유틸 없음 × (선딜 0.8초 · 장판 · 4초 넘게 → 최대 ×1.3)
-        check(near(eS, 1.3) && en.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * eS)) && en.contains("  베기 " + RuneTip.fmt(84 * eS) + " × 10번 + 마무리 일섬 " + RuneTip.fmt(588 * eS))
+        double eS = Runes.damageScale(rune("endless", "transcend")); // 유틸 없음 × (선딜 0.8초 · 장판 · 4초 넘게 → 최대 ×1.3) × 40/36
+        double eEach = 42 * 34 / 11.0;
+        String enj = String.join("\n", en);
+        check(near(eS, 1.3 * 1.1111) && enj.contains("총 피해 " + RuneTip.fmt(eEach * 11 * eS)) && enj.contains("베기 " + RuneTip.fmt(eEach * eS) + " × 11번 · 마무리 일섬까지")
                 && en.contains("영역 반지름 8칸 · 0.5초마다 영역 안 모든 적")
-                && en.get(0).equals("재사용 36초 · 한정") && en.stream().anyMatch(l -> l.contains("적용 = 네 스탯의 합 × 1.0")), "endless: " + en);
+                && en.get(0).equals("재사용 40초 · 한정") && en.stream().anyMatch(l -> l.contains("적용 = 네 스탯의 합 × 1.0")), "endless: " + en);
         // 2026-11-11 룬마다 재사용 (cd): 만년빙하 32초 · 세계수의 가호 48초 · 심연의 낙인 42초
         check(plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 32초 · 한정"), "glacier cd 32");
         check(plain(RuneTip.lines(rune("yggdrasil", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 48초 · 한정"), "yggdrasil cd 48");
         check(plain(RuneTip.lines(rune("abyss", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 42초 · 한정"), "abyss cd 42");
         String en6 = joined(RuneTip.lines(rune("endless", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
-        check(en6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * eS)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
+        check(en6.contains("총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * eS)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
         // 0.18.0 대지 가르기: 대검 16 (먼저) + 여진 3 × 6 (P 42 → 672 + 126 × 6번), 균열 줄 (앞으로 14칸 · 폭 5칸), 6돌 20칸 · 폭 7칸 · 기절
         List<String> te = plain(RuneTip.lines(rune("terra", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         String tej = String.join("\n", te);

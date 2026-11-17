@@ -218,8 +218,8 @@ final class PriestSkills {
         }
         int dur = (int) k.num("dur", 200);
         JobTraits4.stigmaOn(sp, e, dur, JobUpgrades.num(sp, k, "rate", 0.04)); // 0.31.0 강화
-        // 2026-11-17 받는 피해 +vuln (사용자 "받피증은 … 힐러랑 한정 룬에만") — 표식 그림은 머리 위 십자가 (JobTraits4.redrawStigmas) 그대로
-        mmorpg.fabric.rune.RuneMarks.vuln(e, k.num("vuln", 0.1), dur, JobKit.glow(j), JobKit.core(j), false, mmorpg.fabric.rune.RuneMarks.QUIET);
+        // 2026-11-17 받는 피해 +vuln (사용자 "받피증은 … 힐러랑 한정 룬에만" → "받피 5%로 줄이고") — 표식 그림은 머리 위 십자가 (JobTraits4.redrawStigmas) 그대로
+        mmorpg.fabric.rune.RuneMarks.vuln(e, k.num("vuln", 0.05), dur, JobKit.glow(j), JobKit.core(j), false, mmorpg.fabric.rune.RuneMarks.QUIET);
         ServerLevel level = sp.level();
         JobFx.beam(level, tip(sp), Kit.bodyPoint(e), j, 2.0, 0.3, Opt.of("alpha", 0.8));
         JobFx.stigma(level, RuneKit.overHead(e, 0.75), 0.62 + Kit.bodyPad(e) * 0.25, j, 0.8, Opt.of("vel", RuneKit.entVel(e), "grow", -0.3, "fade", 0.3));

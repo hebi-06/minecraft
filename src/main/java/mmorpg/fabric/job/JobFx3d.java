@@ -245,7 +245,8 @@ final class JobFx3d {
         Vec3 d0 = V.add(V.scale(up, Math.cos(r0)), sweep, Math.sin(r0));
         double t = Math.max(0.05, secs);
         double h = Math.max(0, hold);
-        return spawn(level, model, pivot, j, carry(o).with("dir", d0, "face", V.unit(V.cross(sweep, up)), "arcAxis", axis, "arc", a1 - a0, "arcTime", t, "arcEase", o.str(
+        // 2026-11-17 lead: 날 (+X) 이 휘두르는 쪽 (넓은 면이 카메라를 봐도 — 직업 도감 메모 "도끼가 거꾸로 찍음", Fx3d.F_LEAD)
+        return spawn(level, model, pivot, j, carry(o).with("lead", o.num("lead", 1), "dir", d0, "face", V.unit(V.cross(sweep, up)), "arcAxis", axis, "arc", a1 - a0, "arcTime", t, "arcEase", o.str(
                 "arcEase", "in"), "grip", grip, "faceCam", o.num("faceCam", 1), "scale", scale, "life", t + h, "fadeIn", 0.03, "fadeOut", Math.max(0.05, h * 0.8), "pop",
                 o.numOrNull("pop"), "glowAlpha", o.num("glowAlpha", 0.5), "shine", o.num("shine", 0.25)));
     }

@@ -85,7 +85,7 @@ public final class ElementsTest {
         check(Elements.byId("shock").num("ticks", 0) == 20 && Elements.byId("freeze").num("ticks", 0) == 20 && Elements.byId("shock").num("bossSlow", 0) == 40,
                 "stuns 1s (boss slow 2s)");
         check(Elements.byId("mud").num("ticks", 0) == 40, "mud root 2s");
-        check(near(Elements.byId("superconduct").num("add", 0), 0.1) && Elements.byId("superconduct").num("ticks", 0) == 100, "superconduct +10% 5s");
+        check(near(Elements.byId("superconduct").num("add", 0), 0.05) && Elements.byId("superconduct").num("ticks", 0) == 100, "superconduct +5% 5s");
         check(Elements.byId("lava").num("ticks", 0) == 60 && Elements.byId("lava").num("every", 0) == 10 && near(Elements.byId("lava").num("power", 0), 0.3),
                 "lava 3s · 0.5s · 0.3");
         check(near(Elements.byId("magnet").num("radius", 0), 5), "magnet 5 blocks");

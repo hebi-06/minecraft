@@ -83,7 +83,7 @@ public final class RuneTip {
         }
         Ctx c = new Ctx(r, lv, d, d.strOrNull("fn"), pBase, maxHp, scale, applied);
         List<String> out = new ArrayList<>();
-        out.add(head(r));
+        out.addAll(head(r));
         out.add("§r" + L + d.text("desc"));
         out.addAll(damage(c));
         if (!c.strike()) out.addAll(scaleLines(c));
@@ -107,7 +107,17 @@ public final class RuneTip {
 
     // ------------------------------------------------------------------ 머리 · 숫자
 
-    private static String head(Runes.Rune r) {
+    /** 머리 줄 — 길면 (36자 넘게) 원거리 시전을 다음 줄로 (2026-11-17 블리자드 재사용 34.5초 · 원소 얼음 · 원거리 · 시전 0.8초) */
+    private static List<String> head(Runes.Rune r) {
+        String h = headLine(r);
+        double cast = Runes.castSeconds(r);
+        if (!(cast > 0)) return List.of(h);
+        String c = "시전 " + N + Js.str(Math.round(cast * 100) / 100.0) + "초";
+        String one = h + D + " · " + L + c;
+        return plain(one).length() <= 36 ? List.of(one) : List.of(h, "§r" + L + c);
+    }
+
+    private static String headLine(Runes.Rune r) {
         StringBuilder sb = new StringBuilder("§r" + L + "재사용 " + N + Js.str(r.cd()) + "초");
         if (Runes.limited(r.family())) sb.append(D + " · §6한정");
         String only = Runes.weaponOnly(r.family());
@@ -118,8 +128,6 @@ public final class RuneTip {
         // 2026-11-17 새 룬: 거리 (근 · 중 · 원) · 원거리 시전
         String rn = Runes.rangeName(r);
         if (rn != null) sb.append(D + " · " + L + rn);
-        double cast = Runes.castSeconds(r);
-        if (cast > 0) sb.append(D + " · " + L + "시전 " + N + Js.str(Math.round(cast * 100) / 100.0) + "초");
         return sb.toString();
     }
 
@@ -275,6 +283,12 @@ public final class RuneTip {
         boolean crush = d.truthy("crush");
         if (!(h > 1) && !dot && !crush) return List.of();
         List<String> out = new ArrayList<>();
+        // 2026-11-17 무간참역 (도감 메모 "모든 틱 데미지가 같은 데미지로"): 마무리도 같은 배율 — 한 줄 (베기 × (hits + 1)번 · 마무리까지)
+        if (crush && Runes.evenFinish(d)) {
+            out.add((d.truthy("multName") ? d.text("multName") : multLabel(fn)) + dmg(c, m) + " × " + n(h + 1) + "번 · " + crushLabel(fn, d) + "까지");
+            if (dot) out.add(Runes.dotName(c.r().family(), d) + " " + dmg(c, d.num("dot")) + " × " + n(d.num("dots")) + "번");
+            return out;
+        }
         // 0.18.0 대지 가르기: 대검 내려치기 (crush) 가 먼저, 그 뒤 갈라진 땅 여진 (mult × hits)
         boolean crushFirst = "earthSplitter".equals(fn);
         if (crush && crushFirst) out.add(crushLabel(fn, d) + " " + dmg(c, d.num("crush")));

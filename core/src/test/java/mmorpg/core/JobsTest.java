@@ -728,7 +728,7 @@ public final class JobsTest {
                 "생명 착취 4% · 혼자 8% · 25% · 몫 하나당 +10% · 최대 5");
         // 유틸 · 범위 · 선딜
         // 2026-11-17 글리머윙 빛가루 (받는 피해 +10% 5초 — 힐러)
-        check(Jobs.areaKind(sw) == null && Jobs.areaKind(su) == null && Jobs.utils(sw).equals(List.of("healAlly", "vuln10")) && near(sw.num("vuln", 0), 0.1)
+        check(Jobs.areaKind(sw) == null && Jobs.areaKind(su) == null && Jobs.utils(sw).equals(List.of("healAlly", "vuln5")) && near(sw.num("vuln", 0), 0.05)
                 && near(sw.num("vulnFor", 0), 100) && Jobs.utils(su).equals(Jobs.utils(pr.skill(4))), "saint utils · area");
         check("single".equals(Jobs.areaKind(wl)) && "narrow".equals(Jobs.areaKind(wm)) && Jobs.areaKind(wn) == null && Jobs.areaKind(wu) == null && Jobs.utils(wl).isEmpty()
                 && Jobs.utils(wm).equals(List.of("invuln", "slow")) && Jobs.utils(wn).equals(List.of("knock")) && Jobs.utils(wu).isEmpty() && !wu.def().has("vuln"),

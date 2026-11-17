@@ -2946,12 +2946,12 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(9, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6) * 1.2;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 첫 나비 (신앙 2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 2026-11-17 빛가루: 나비가 앉은 적은 5초 받는 피해 +10% (힐러)
-            h.assertTrue(Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1.1) < 1e-9, "light dust: taken +10% " + mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)));
+            // 2026-11-17 빛가루: 나비가 앉은 적은 5초 받는 피해 +5% (힐러 — 사용자 "받피 5%로 줄이고")
+            h.assertTrue(Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1.05) < 1e-9, "light dust: taken +5% " + mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)));
             h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "saint rule-colored number");
         }));
         steps.add(new RpgJobTests.Step(32, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6 + (1.6 + 2.4) * 1.1) * 1.2; // 둘째 · 셋째 나비는 빛가루 (+10%) 위에
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6 + (1.6 + 2.4) * 1.05) * 1.2; // 둘째 · 셋째 나비는 빛가루 (+5%) 위에
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 (적에게 셋 — 1.6 · 1.6 · 2.4 · 빛가루) " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         steps.add(new RpgJobTests.Step(10, () -> {

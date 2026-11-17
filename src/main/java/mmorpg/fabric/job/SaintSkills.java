@@ -264,7 +264,7 @@ final class SaintSkills {
                 boolean third = foes[0] >= 3;
                 JobKit.strike(sp, to, j, P, third ? k.num("last", 2.4) : k.num("hit", 1.6), true, third, life, 0, d -> {
                     // 2026-11-17 빛가루: 나비가 앉은 적은 vulnFor 틱 받는 피해 + vuln (힐러) — 머리 위 금빛 · 잎빛 가루가 1초마다 흩날림
-                    mmorpg.fabric.rune.RuneMarks.vuln(to, k.num("vuln", 0.1), (int) k.num("vulnFor", 100), GOLD, GOLD_CORE, true, SaintSkills::dustMark);
+                    mmorpg.fabric.rune.RuneMarks.vuln(to, k.num("vuln", 0.05), (int) k.num("vulnFor", 100), GOLD, GOLD_CORE, true, SaintSkills::dustMark);
                     JobImpact.fx(sp, to, j, third ? 1.3 : 1.0);
                     if (to.level() instanceof ServerLevel el) {
                         JobFx14.bloom(el, Kit.bodyPoint(to), 0.55 + Kit.bodyPad(to) * 0.3, 5, 3, 0.35, false, Opt.of("vel", RuneKit.entVel(to)), GOLD, GOLD_CORE);

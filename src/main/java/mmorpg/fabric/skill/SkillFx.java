@@ -86,6 +86,24 @@ public final class SkillFx {
         return id.replace("rpg:", "") + "#" + hex + "@" + ctx;
     }
 
+    /**
+     * 2026-11-17 칠할 묶음을 정해 부르는 동안의 묶음 앞 이름 ("el_hex" …): PhantomFx.jobLib 이 꼬리표 · 빛보다 먼저 봄 (메테오의 붉은 마법진 — 도감 메모
+     * "마법진이 빨간색으로 수정": 불빛은 원소 묶음 (금빛 주황) 으로 칠해져 붉은빛을 넘겨도 금빛이었음)
+     */
+    public static final ThreadLocal<String> PAINT_LIB = new ThreadLocal<>();
+
+    /** r 를 부르는 동안 칠할 묶음을 lib (앞 이름) 로 */
+    public static void withLib(String lib, Runnable r) {
+        String was = PAINT_LIB.get();
+        PAINT_LIB.set(lib);
+        try {
+            r.run();
+        } finally {
+            if (was == null) PAINT_LIB.remove();
+            else PAINT_LIB.set(was);
+        }
+    }
+
     /** 애드온 파티클 하나 (모두에게) */
     public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
         // 2026-11-17 keep = 예전 그림 그대로 (칠하지 않음 — 활 초월의 시위처럼 2틱마다 다시 긋는 가는 줄)

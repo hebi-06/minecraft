@@ -633,7 +633,11 @@ public final class Runes {
         if (d.truthy("use")) lines.add("§r" + L + "용도 " + N + d.text("use"));
         double total = r.family().equals(RUNE_STRIKE.str("family")) ? 0 : runeTotalMult(d);
         if (isSet(r.family()) && total > 0) total = total * damageScale(r); // 2026-11-17 새 룬: 예산 · 거리 · 유틸 · 시간이 든 배율
-        if (total > 0 && d.truthy("crush")) {
+        if (total > 0 && d.truthy("crush") && evenFinish(d)) {
+            // 2026-11-17 무간참역 (도감 메모 "모든 틱 데미지가 같은 데미지로"): 마무리도 같은 배율 — 배율 × (hits + 1)
+            lines.add("§r" + L + "피해 " + N + "위력×" + Js.str(round1(total)) + L + " (" + Js.str(Math.round(d.num("mult") * 100) / 100.0) + "×"
+                    + Js.str(d.numOr("hits", 1) + 1) + ")");
+        } else if (total > 0 && d.truthy("crush")) {
             String each = d.numOr("hits", 1) > 1 ? d.text("mult") + "×" + d.text("hits") : d.text("mult");
             lines.add("§r" + L + "피해 " + N + "위력×" + Js.str(round1(total)) + L + " (" + each + " + " + d.text("crush") + ")");
         } else if (total > 0) {
@@ -808,6 +812,11 @@ public final class Runes {
         out.add(ice);
         out.add(thunder);
         return out;
+    }
+
+    /** 마무리 (crush) 가 한 번의 배율 (mult) 과 같은 룬 — 2026-11-17 무간참역 (모든 틱이 같은 피해) */
+    public static boolean evenFinish(Obj d) {
+        return d.truthy("crush") && d.numOr("mult", 0) > 0 && Math.abs(d.num("crush") - d.num("mult")) < 1e-6;
     }
 
     /** runes.js gravityLore (중력): pull, lift, crush and slow lines. */

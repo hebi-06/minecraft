@@ -209,12 +209,12 @@ public final class RpgLimitedRuneTests {
 
     @GameTest(environment = "mmorpg:lr_endless", maxTicks = 200)
     public void endlessSlash(GameTestHelper h) {
-        cast(h, "endless", 0, EVEN, 2 * 10 + 14, 11, 150, false);
+        cast(h, "endless", 0, EVEN, 34, 11, 150, false); // 2026-11-17 모든 틱 같은 피해 (34 ÷ 11 × 11)
     }
 
     @GameTest(environment = "mmorpg:lr_endless6", maxTicks = 240)
     public void endlessSlashSixStars(GameTestHelper h) {
-        cast(h, "endless", 6, EVEN, 2.5 * 14 + 20, 15, 190, false);
+        cast(h, "endless", 6, EVEN, 55, 15, 190, false); // 6돌 55 ÷ 15 × 15
     }
 
     /** 0.18.0 대지 가르기: 대검 내려치기 16 + 갈라진 땅 여진 3 × 6 (과녁은 시전자 앞 4.5칸 — 균열 안), 6돌 27 + 3.5 × 8 */

@@ -443,8 +443,9 @@ final class WarriorSkills {
             Vec3 x = V.unit(V.add(V.scale(V.DOWN, 0.6), r, 0.8));
             Vec3 stick = V.sub(V.up(ground, -0.5), V.add(V.scale(x, 0.41 * sc), y, 0.45 * sc));
             Vec3 from = V.add(stick, y, -12);
+            // 2026-11-17 lead: 날이 박히는 쪽 (오른쪽 아래) 그대로 — 판이 카메라를 봐도 (직업 도감 메모 "도끼 내려찍는게 날이 위로 가있음" — 내 몸 왼쪽 카메라)
             JobFx3d.spawn(level, "phantom_axe", from, j, Opt.of("to", stick, "ctrl", V.lerp(from, stick, 0.5), "travel", 0.3, "ease", "in", "dir", y, "face", f, "scale",
-                    sc, "life", 1.5, "fadeIn", 0.05, "fadeOut", 0.5, "glowAlpha", 0.6, "shine", 0.5));
+                    sc, "life", 1.5, "fadeIn", 0.05, "fadeOut", 0.5, "glowAlpha", 0.6, "shine", 0.5, "lead", 1.0));
             SkillFx.play(level, "item.trident.riptide_3", at, 0.6, 0.8);
         });
         RuneKit.later(finalAt, () -> {

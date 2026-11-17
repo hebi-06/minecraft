@@ -766,6 +766,8 @@ public final class PBridge {
         final boolean faceCam;
         /** 옆모습 판 (모델 JSON "upright" — client: +X 가 세계 아래쪽이면 좌우를 뒤집어 그림, 등이 늘 위) */
         final boolean upright;
+        /** 2026-11-17 날이 앞섬 (Fx3d.F_LEAD — faceCam 판의 +X 를 부른 face 로 셈한 쪽으로: 도끼 날이 휘두르는 쪽 · 박히는 쪽) */
+        final boolean lead;
         String animName = "";
         final double animSpeed;
         final double animPhase;
@@ -792,6 +794,7 @@ public final class PBridge {
             this.follow = follow;
             this.faceCam = faceCam;
             this.upright = upright;
+            this.lead = o.truthy("lead");
             this.dir0 = o.vec("dir", new Vec3(0, 1, 0));
             this.face0 = o.vec("face", Vec3.ZERO);
             this.roll = o.num("roll", 0);
@@ -999,6 +1002,12 @@ public final class PBridge {
             Vector3f X = new Vector3f(Y).cross(Z).normalize();
             Matrix3f R = new Matrix3f(X, Y, Z);
             if (upright && X.y < 0) R.m00(-R.m00()).m01(-R.m01()).m02(-R.m02()); // 첫 열 (X) 을 뒤집음 — 등 (+X) 이 늘 위
+            if (lead && faceCam && face.lengthSquared() > 1e-6F) {
+                // 2026-11-17 날이 앞섬: 부른 face 로 셈한 +X (Y × face) 와 뚜렷이 반대쪽이면 (−0.25 아래 — 옆에서 본 판) 좌우를 뒤집음 (넓은 면은 보는 사람 쪽 그대로).
+                // 앞뒤에서 본 판 (날이 옆 — 1인칭) 은 그대로 (0 언저리에서 틱마다 뒤집히지 않게)
+                Vector3f want = new Vector3f(Y).cross(new Vector3f(face).normalize());
+                if (want.lengthSquared() > 1e-6F && X.dot(want.normalize()) < -0.25F) R.m00(-R.m00()).m01(-R.m01()).m02(-R.m02());
+            }
             if (roll != 0) R.rotateY((float) Math.toRadians(roll));
             float sp = camSpinUp ? 0F : (float) Math.toRadians(spin * tf);
             if (sp != 0) {

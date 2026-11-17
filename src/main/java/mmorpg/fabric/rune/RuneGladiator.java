@@ -247,7 +247,8 @@ final class RuneGladiator {
         Vec3 away = V.add(V.scale(right, -7.0), V.scale(f, 2.0));
         Opt base = Opt.of("size", BISON_SIZE, "color", STEEL, "frames", 6.0, "fps", 14.0, "loop", true, "alpha", 0.95);
         Opt others = base.with("view", 1.0, "owner", owner);
-        Opt mine = base.with("view", 2.0, "owner", owner);
+        // 2026-11-17 1인칭 들소는 가려지지 않는 그림 (seeThrough — 내 앞 4칸 넘게 달리는 들소가 바로 앞 과녁 무리 몸에 가려 한 번도 보이지 않았음, CI 44057837261)
+        Opt mine = base.with("view", 2.0, "owner", owner, "seeThrough", true);
         // 나타남: 머리 자리에 쇠빛 번쩍 · 울음
         Vec3 h0 = V.add(V.up(a0, -0.2), f, BISON_HEAD);
         SkillFx.burst(level, h0, CORE, 0.9, 0.25);

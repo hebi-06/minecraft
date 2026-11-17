@@ -21,6 +21,10 @@ final class RuneInt {
      * (CI 43989923127 마력 초월에 빛 없는 예전 터짐 5 · 잿빛 연기 11) · 불 폭풍 (고귀) 의 불 회오리 · 불꽃 (옅은 금빛 속불이 성광 묶음으로 가던 것 — CI 43995311742 80)
      */
     static final double[] FIRE_PAINT = {1.0, 0.55, 0.15};
+    /** 2026-11-17 메테오 마법진 (도감 메모 "마법진이 빨간색으로") — 붉은 빛 · 속빛 · 칠할 묶음 (혈주: 진홍 고리) */
+    static final double[] SIGIL_RED = {0.9, 0.1, 0.08};
+    static final double[] SIGIL_CORE = {1.0, 0.42, 0.3};
+    static final String SIGIL_LIB = "el_hex";
     private RuneInt() {}
 
     static void register() {
@@ -484,20 +488,22 @@ final class RuneInt {
         double[] red = {1.0, 0.2, 0.1};
         int delay = (int) k.num("delay");
         double radius = k.num("radius");
+        // 2026-11-17 도감 메모 ("마법진이 빨간색으로 수정"): 겨눈 땅의 마법진 (룬 원 · 비전 문양 · 떨어질 자리 고리) 은 붉은 빛 · 혈주 묶음 (진홍 — 불빛은 원소 묶음의
+        // 금빛 주황이라 붉은빛을 넘겨도 금빛이었음 · CI 44057837261). 운석 · 불꼬리 · 폭발은 불빛 그대로
         for (int t = 0; t < delay; t += 2) {
             final int tt = t;
-            Tasks.later(t, () -> {
-                SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.14, "color", glow, "alpha", 0.9, "progress", Math.min(1, (tt + 2) / (delay * 0.7)), "rate",
-                        0.0, "spin", -tt * 3.0));
-                if (tt % 8 == 0) RuneKit.zonePulse(level, g, red, radius, 0.35); // 떨어질 자리 (피해 범위 그대로)
-            });
+            Tasks.later(t, () -> SkillFx.withLib(SIGIL_LIB, () -> {
+                SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.14, "color", SIGIL_RED, "alpha", 0.9, "progress", Math.min(1, (tt + 2) / (delay * 0.7)),
+                        "rate", 0.0, "spin", -tt * 3.0));
+                if (tt % 8 == 0) RuneKit.zonePulse(level, g, SIGIL_RED, radius, 0.35); // 떨어질 자리 (피해 범위 그대로)
+            }));
         }
         SkillFx.play(level, "mob.blaze.shoot", sp.getEyePosition(), 0.6, 1);
         SkillFx.play(level, "fire.fire", g, 0.7, 1);
         // 2차 강화 — 예고: 불타는 하늘 · 겨눈 땅의 비전 문양 (불빛, 커지며 거꾸로 돎) · 운석이 오기 전에 앞쪽 하늘이 불타며 갈라짐
         RuneKit.ultSkyFor(sp, level, g, "meteor", delay + 46, null);
-        RuneKit.domainSigil(level, g, radius * 1.15, "arcane", glow, core, Opt.of("life", (delay + 1) / 20.0, "spinRate", -30.0, "grow", 0.3, "alpha", 0.78,
-                "fade", 0.08));
+        SkillFx.withLib(SIGIL_LIB, () -> RuneKit.domainSigil(level, g, radius * 1.15, "arcane", SIGIL_RED, SIGIL_CORE, Opt.of("life", (delay + 1) / 20.0, "spinRate",
+                -30.0, "grow", 0.3, "alpha", 0.78, "fade", 0.08)));
         Vec3 burning = RuneKit.skyPoint(sp, g, 6, 21, 6, 22);
         RuneKit.later(Math.max(0, delay - 22), () -> RuneKit.skyPlate(sp, level, "crack", burning, 6.4, red, core, Opt.of("life", 1.4, "grow", 0.45, "fade", 0.35,
                 "cell", (double) RuneKit.CRACK_V)));

@@ -99,6 +99,12 @@ public final class Fx3d {
     public static final int F_ANIM = 1024;
     /** 0.50.0 뒤로 옮기기 (F_MOVE 와 함께): 가는 쪽을 보는 모델 (align) 이 옮기는 동안 떠난 쪽을 봄 — 물고 물러나는 뱀이 적을 보며 뒷걸음 */
     public static final int F_BACK = 2048;
+    /**
+     * 2026-11-17 날이 앞섬 (faceCam 과 함께): 넓은 면은 보는 사람 쪽 그대로, 모델 +X (도끼 날) 는 부른 face 로 셈한 쪽 (Y × face — 휘두르는 쪽 · 박히는 쪽) —
+     * 반대면 좌우를 뒤집어 그림. 직업 도감 메모 (전사 헬름 브레이커 "도끼가 거꾸로 찍음" · 메테오 크래시 "도끼 내려찍는게 날이 위로 가있음"): 넓은 면만 카메라를 보면
+     * 내 몸 왼쪽에서 보는 카메라에는 날이 뒤 · 위로 갔음
+     */
+    public static final int F_LEAD = 4096;
 
     private static final AtomicInteger NEXT = new AtomicInteger(1);
     /** 시험: 보낸 모델 수 · 마지막 이름 */
@@ -246,6 +252,7 @@ public final class Fx3d {
         if (path) flags |= F_PATH;
         if (o.truthy("align")) flags |= F_ALIGN;
         if (o.truthy("faceCam")) flags |= F_FACE_CAM;
+        if (o.truthy("lead")) flags |= F_LEAD;
         if (o.truthy("loop")) flags |= F_LOOP;
         flags |= ((int) o.num("view", 0) & 3) << VIEW_SHIFT;
         int id = NEXT.getAndIncrement() & 0x3FFFFFFF;

@@ -1965,6 +1965,8 @@ final class PhantomFx {
      * 묶음, 다른 빛 (속빛 · 겉빛 · 테 빛) 은 그 직업 묶음. 없으면 null (예전 길)
      */
     static Lib jobLib(double[] glow) {
+        Lib forced = forcedLib();
+        if (forced != null) return forced; // 2026-11-17 정해 부른 묶음 (SkillFx.withLib — 메테오의 붉은 마법진)
         String tag = mmorpg.fabric.Tasks.tag();
         if (tag != null) return tagLib(tag, glow); // 2026-11-16 룬을 쓰는 동안 (룬 계열 묶음) · 2026-11-17 보스 싸움 (보스 빛 묶음)
         Lib L = painter(glow, false);
@@ -1972,6 +1974,20 @@ final class PhantomFx {
         if (!(mmorpg.fabric.Tasks.paint() instanceof Lib K)) return null;
         Lib E = elementOf(glow);
         return E != null ? E : K;
+    }
+
+    /** 2026-11-17 SkillFx.withLib 로 정한 묶음 (위르드식 룬이 켜져 있을 때만 · 모르는 이름이면 null) */
+    static Lib forcedLib() {
+        String n = mmorpg.fabric.skill.SkillFx.PAINT_LIB.get();
+        if (n == null || !JobSystem.RUNE_WYRD) return null;
+        return switch (n) {
+            case "el_hex" -> HEX;
+            case "el_blood" -> BLOOD;
+            case "el_maw" -> MAW;
+            case "el_rage" -> RAGE;
+            case "el_element" -> ELEMENT;
+            default -> null;
+        };
     }
 
     /**
@@ -2531,6 +2547,7 @@ final class PhantomFx {
         Quaternionf q = facing == FACE_DIR ? dirFace(d) : look ? lookDir(d, at, looker) : null;
         int sides = facing == FACE_DIR ? 2 : 1;
         boolean mirror = b.truthy("mirror") && facing != FACE_DIR; // 2026-11-17 좌우를 뒤집은 그림 (들소 1인칭 — 머리가 화면 왼쪽)
+        boolean through = b.truthy("seeThrough"); // 2026-11-17 가려지지 않는 그림 (들소 1인칭 — 과녁 몸 · 땅에 가려졌음)
         java.util.List<Vfx.Sprite> all = new java.util.ArrayList<>();
         double[] off = new double[k * k * sides * 2];
         int i = 0;
@@ -2542,6 +2559,7 @@ final class PhantomFx {
                     if (facing == VERT) sp.vertical();
                     else if (q != null) sp.fixed(q);
                     if (side == 1 || mirror) sp.mirror();
+                    if (through) sp.seeThrough();
                     off[i * 2] = c - (k - 1) / 2.0;
                     off[i * 2 + 1] = (k - 1) / 2.0 - r;
                     all.add(sp);

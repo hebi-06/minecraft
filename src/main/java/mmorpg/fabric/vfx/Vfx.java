@@ -1175,6 +1175,15 @@ public final class Vfx {
             return this;
         }
 
+        /**
+         * 2026-11-17 가려지지 않는 그림 (글자 표시의 see_through — 깊이 시험 없이 블록 · 몸 위에 그려짐): 1인칭 눈앞을 지나가는 큰 그림이 과녁 몸 · 땅 모서리에
+         * 가려 반만 보이던 것 (오록스 차지 1인칭 들소 — CI 44054369134 · 44057837261)
+         */
+        public Sprite seeThrough() {
+            e.setSeeThrough(true);
+            return this;
+        }
+
         /** 2026-11-15 그림 면 안의 자리 옮김 (칸 — 조각 그림: 오른쪽 x · 위 y) */
         public Sprite offset(double x, double y) {
             offset = new Vector3f((float) x, (float) y, 0F);
