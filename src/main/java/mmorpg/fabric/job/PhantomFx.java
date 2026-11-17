@@ -1816,7 +1816,17 @@ final class PhantomFx {
                 rfx(level, L.n("shock_s"), 1, 0, at, b, FACE_DIR, 1);
             }
             case "rpg:shock_ring" -> {
-                if (!has(L, "shock")) return false;
+                if (!Vfx.hasSheet(L.n("shock_00"))) {
+                    // 2026-11-17 큰 충격파 (2 × 2) 가 없는 묶음 (혼 — 네크로맨서): 작은 충격파 한 장 (shock_s — 땅에 눕힘 · 같은 끝 지름). has(L, "shock") 는
+                    // 앞이 같은 shock_s 도 세어 2 × 2 를 찾다 멈출 수 있어 꼭 그대로 확인
+                    if (!Vfx.hasSheet(L.n("shock_s"))) return false;
+                    int frames = Vfx.sheet(L.n("shock_s")).frames();
+                    double life = Math.max(0.1, o.num("life", 0.4));
+                    Opt b = Opt.of("dir", V.UP, "speed", 0.0, "size", Math.max(0.6, o.num("size", 1) * 4.6) / 2, "life", life, "frames", (double) frames, "fps",
+                            frames / life, "fade", 0.3, "alpha", Math.min(1, o.num("alpha", 0.9)), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                    rfx(level, L.n("shock_s"), 1, 0, ground(level, at), b, FACE_DIR, 1);
+                    return true;
+                }
                 // 2026-11-16 예전 고리는 반 크기 size × (1 + 1.6 × 시간 몫) 까지 퍼짐 (rpg:shock_ring) → 끝 지름 약 4.6 × size (그림의 테 0.9). 1판 (× 2) 은 고리가 예전의
                 // 0.4배라 룬 영상에서 영역 고리 (zonePulse) 가 거의 보이지 않았음 (CI 43915612802 암살 · 검 영웅)
                 shock(level, L, V.up(at, -0.12), Math.max(0.6, o.num("size", 1) * 4.6), o.num("life", 0.4) >= 0.5 ? 2 : 1, who);

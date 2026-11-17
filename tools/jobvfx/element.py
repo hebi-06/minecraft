@@ -1883,6 +1883,8 @@ SPIKE_KEYS = ("frost", "soulreap")
 SMOKE_KEYS = ("frost",)
 # 2026-11-17 얼음 창 (arcane.py icelance — 얼음 빛 그대로) 을 더 갖는 묶음: 만년빙하 · 원소 얼음 룬의 날아가는 고드름 (예전 rfx_icicle)
 ICELANCE_KEYS = ("frost",)
+# 2026-11-17 땅 금 · 작은 충격파 (crack_s · shock_s — 한 장 256) 를 더 갖는 묶음: 혼 (네크로맨서의 녹색 땅 금 · 땅 고리 — CI 43979933145 남은 예전 그림 40)
+GROUND_KEYS = ("soul",)
 
 
 def sprites():
@@ -1904,6 +1906,9 @@ def sprites():
         if key in ICELANCE_KEYS:
             from . import arcane
             out.append((S.lib + "_icelance", lambda S=S: arcane.frames_of("icelance", S), True))
+        if key in GROUND_KEYS:
+            out.append((S.lib + "_crack_s", lambda S=S: frames_of(S, "crack"), True))
+            out.append((S.lib + "_shock_s", lambda S=S: frames_of(S, "shock_s"), True))
     return out
 
 
