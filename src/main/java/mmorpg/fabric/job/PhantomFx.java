@@ -2065,7 +2065,8 @@ final class PhantomFx {
             return paintedWith(level, rp, L, Math.max(0, cell), at, o);
         }
         switch (name) {
-            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade", "hitmark", "flystreak" -> {
+            // 2026-11-17 얼음 마법진 (RuneGlacier.frostSigil — rfx_frost, 땅에 눕힘 · 반지름 size: 만년빙하 4) 은 문양과 같은 길 (묶음의 땅 고리)
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "frost", "rockburst", "arc", "wavecard", "wave", "shade", "hitmark", "flystreak" -> {
             }
             default -> {
                 return false;
