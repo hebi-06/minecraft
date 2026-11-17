@@ -1623,7 +1623,7 @@ final class PhantomFx {
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
                 && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
-                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike")) return false;
+                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike") && !id.equals("rpg:drop")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1707,14 +1707,14 @@ final class PhantomFx {
                         "view", o.num("view", 0), "owner", o.num("owner", 0));
                 return paintedWith(level, PAINT.get("jspike"), L, 0, V.up(at, size * 0.5), b);
             }
-            case "rpg:glob", "rpg:boulder" -> {
-                // 2026-11-17 던진 덩이 (예전 rpg:glob 용암 덩이 — 반 크기 size · dir 쪽 speed 칸/초 · 아래로 20 · 수르트 / rpg:boulder 돌덩이 — 같은 틀): 묶음의 불꽃 덩이
-                // (fire) · 조각 (shard) 한 장이 같은 포물선으로
-                String art = id.equals("rpg:glob") ? "fire" : "shard";
+            case "rpg:glob", "rpg:boulder", "rpg:drop" -> {
+                // 2026-11-17 던진 덩이 (예전 rpg:glob 용암 덩이 — 반 크기 size · dir 쪽 speed 칸/초 · 아래로 20 · 수르트 / rpg:boulder 돌덩이 — 같은 틀 / rpg:drop 방울 —
+                // 아래로 30): 묶음의 불꽃 덩이 (fire) · 조각 (shard) · 불씨 (ember) 한 장이 같은 포물선으로
+                String art = id.equals("rpg:glob") ? "fire" : id.equals("rpg:boulder") ? "shard" : L.ember();
                 if (!Vfx.hasSheet(L.n(art))) return false;
                 Vec3 d = o.vec("dir", V.UP);
                 Vec3 vel = V.len(d) < 1e-6 ? V.ZERO : V.scale(V.unit(d), o.num("speed", 0));
-                lob(level, L, art, at, vel, 20, Math.max(0.1, o.num("life", 1)), Math.max(0.3, o.num("size", 0.5) * 2), who);
+                lob(level, L, art, at, vel, id.equals("rpg:drop") ? 30 : 20, Math.max(0.1, o.num("life", 1)), Math.max(0.2, o.num("size", 0.5) * 2), who);
             }
             case "rpg:snowfall" -> {
                 // 2026-11-17 눈보라 (예전 rpg:snowfall — life 초 동안 초당 30 개를 size × 3 × size 상자에서 dir 쪽 speed 칸/초 · 이미르): 묶음의 날리는 알갱이 (서리 = 눈송이)
