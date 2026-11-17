@@ -1194,6 +1194,24 @@ final class PhantomFx {
     }
 
     /**
+     * 2026-11-17 던진 덩이 하나 (예전 rpg:glob · rpg:boulder — 포물선으로 나는 그림 한 장): 그림판 art 가 at 에서 vel (칸/초) · 아래로 g (칸/초²) 로 life 초 날아감
+     * (2틱마다 다음 자리로 옮김 — 표시 엔티티 보간) · 크기 size 칸 · 칸은 2틱마다 되풀이 · 끝 4틱 옅어짐
+     */
+    static void lob(ServerLevel level, Lib L, String art, Vec3 at, Vec3 vel, double g, double life, double size, Predicate<ServerPlayer> who) {
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        Vfx.Fx fx = Vfx.at(level, at, ticks + 2, who);
+        Vfx.Sprite sp = fx.sprite(L.n(art), at);
+        sp.size(size);
+        sp.play(0, 0, Vfx.sheet(L.n(art)).frames(), 2, true);
+        for (int t = 2; t <= ticks; t += 2) {
+            double s = t / 20.0;
+            Vec3 p = new Vec3(at.x + vel.x * s, at.y + vel.y * s - 0.5 * g * s * s, at.z + vel.z * s);
+            fx.on(t - 2, () -> sp.to(p, 0, 2));
+        }
+        sp.fade(Math.max(0, ticks - 4), 4);
+    }
+
+    /**
      * 2026-11-17 세운 고리 (예전 rfx_sigil 의 면이 위가 아닌 문양 — 심연 룬의 눈 · 손바닥 문양, 보스 문양): 가운데 c · 반지름 r · 면 normal 쪽 (앞뒤 두 면 — 뒷면은 거울 ·
      * 조각 자리도 거울이라 뒤에서도 같은 그림). 커지기 grow 틱 · 머묾 hold 틱
      */
@@ -1605,7 +1623,7 @@ final class PhantomFx {
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
                 && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
-                && !id.equals("rpg:meteor")) return false;
+                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1677,6 +1695,15 @@ final class PhantomFx {
                 Opt b = Opt.of("dir", V.unit(d), "speed", o.num("speed", 0), "size", Math.max(0.3, o.num("size", 1) * 0.5), "life", Math.max(0.1, o.num("life", 1)),
                         "frames", 4.0, "fps", 16.0, "loop", true, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
                 return paintedWith(level, PAINT.get("jcomet2"), L, 0, at, b);
+            }
+            case "rpg:glob", "rpg:boulder" -> {
+                // 2026-11-17 던진 덩이 (예전 rpg:glob 용암 덩이 — 반 크기 size · dir 쪽 speed 칸/초 · 아래로 20 · 수르트 / rpg:boulder 돌덩이 — 같은 틀): 묶음의 불꽃 덩이
+                // (fire) · 조각 (shard) 한 장이 같은 포물선으로
+                String art = id.equals("rpg:glob") ? "fire" : "shard";
+                if (!Vfx.hasSheet(L.n(art))) return false;
+                Vec3 d = o.vec("dir", V.UP);
+                Vec3 vel = V.len(d) < 1e-6 ? V.ZERO : V.scale(V.unit(d), o.num("speed", 0));
+                lob(level, L, art, at, vel, 20, Math.max(0.1, o.num("life", 1)), Math.max(0.3, o.num("size", 0.5) * 2), who);
             }
             case "rpg:snowfall" -> {
                 // 2026-11-17 눈보라 (예전 rpg:snowfall — life 초 동안 초당 30 개를 size × 3 × size 상자에서 dir 쪽 speed 칸/초 · 이미르): 묶음의 날리는 알갱이 (서리 = 눈송이)
