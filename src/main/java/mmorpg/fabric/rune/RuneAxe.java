@@ -494,9 +494,11 @@ final class RuneAxe {
     /**
      * 광전사의 혼: hits × gap 틱 동안 광폭화 (받는 피해 -reduce). gap 틱마다 주위 radius 칸을 난타, 맞힌 적마다 최대 체력 × heal 회복 (healMax 명까지).
      * 죽으면 끝 (차원 이동으로는 끝나지 않음). 초월: 핏빛 하늘 · 번쩍임 (모드 클라이언트 — 화면 색).
-     * 2026-11-11 Vfx: 광폭화 순간 핏빛 터짐 · 번쩍 · 고리 둘 · 솟는 핏빛 불기둥 · 발밑의 거대한 칼날 고리 (광폭화 동안 몸을 따라 돎) · 몸의 핏빛 불꽃 셋 →
-     * 룬 도끼 둘 (3D — 머리가 바깥, 날이 도는 쪽) 이 허리 높이에서 몸 둘레를 천천히 돌다가 난타마다 반 바퀴를 휩씀 · 휩쓴 자리의 초승달 ·
-     * 발밑 고리 · 맞은 적마다 X 베기 · 피 → 마지막 난타는 큰 핏빛 터짐. 죽으면 모두 사라짐
+     * 2026-11-11 Vfx: 광폭화 순간 핏빛 터짐 · 번쩍 · 고리 둘 · 솟는 핏빛 불기둥 · 몸의 핏빛 불꽃 셋.
+     * 2026-11-17 도감 메모 (광전사의 혼 → 버서커 "빙빙 도는거 짜쳐서 다른걸로 수정"): 몸 둘레를 돌던 룬 도끼 둘 · 발밑에서 돌던 칼날 고리를 뺌 → 난타마다
+     * 핏빛 거대한 룬 도끼 (3D) 가 둘레 한 곳 (번갈아 앞 오른쪽 · 앞 왼쪽 · 옆 뒤) 을 내려찍음 (chop — 치기 7틱 전에 내 머리 위 앞에서 커지며 뒤로 젖혀져 나타나
+     * 치는 틱에 2틱 동안 내리찍어 날이 땅에 박힘) → 갈라진 땅 · 핏빛 충격 고리 (반지름 radius — 맞는 범위) · 터짐 · 흙먼지 · 튀는 돌 · 맞은 적마다 X 베기 · 피 →
+     * 박힌 도끼는 가라앉음. 첫 난타 (쓴 틱) 는 광폭화 터짐, 마지막은 도끼 둘이 앞 양쪽에 함께 · 큰 핏빛 터짐. 피해 · 틱 · 범위 · 흡혈 그대로. 죽으면 모두 사라짐
      */
     static boolean berserker(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         int hits = (int) k.num("hits");
@@ -522,22 +524,13 @@ final class RuneAxe {
         VfxKit.ring(fx, c0, radius, BLOOD, 0, 12);
         VfxKit.ring(fx, c0, radius * 1.35, glow, 3, 12);
         fx.sprite("cinder", V.up(c0, 1.9)).color(BLOOD).size(4.6).alpha(0.9).play(0, 0, 8, 2, false);
-        Vfx.Sprite sigil = fx.sprite("bladering", V.up(c0, 0.07)).color(BLOOD).fixed(Vfx.flat(0)).size(4.0).alpha(0.6);
-        sigil.play(0, 0, 8, 2, true);
-        sigil.to(null, radius * 2.3, 6);
+        VfxKit.crack(fx, c0, radius * 1.8, BLOOD, 0, 40); // 광폭화 순간 발밑이 갈라짐 (돌지 않음)
         // 몸의 핏빛 불꽃 셋 (양옆 · 뒤 — 1인칭 화면을 덮지 않게 앞은 비움)
         Vfx.Sprite[] flames = new Vfx.Sprite[3];
         for (int i = 0; i < 3; i++) {
             flames[i] = fx.sprite("aura", V.up(c0, 1.0)).color(i == 1 ? glow : BLOOD).size(2.0).alpha(0.75);
             flames[i].play(0, i * 3, 8, 2, true);
         }
-        // 룬 도끼 둘: 쥔 곳이 몸에서 1칸 · 머리가 바깥 (허리 높이)
-        double[] g = gripOf(r.grade());
-        double fit = fitOf(r.grade());
-        Vfx.Prop[] axes = new Vfx.Prop[2];
-        for (int j = 0; j < 2; j++) axes[j] = fx.prop(axeModel(r), V.up(c0, 0.75)).grip(g[0], g[1], g[2]).bright();
-        double[] ang = {Kit.rand() * 360};
-        int[] sweepUntil = {-1};
         fx.each(0, total + 12, 1, t -> {
             if (!RuneKit.aliveSince(sp, alive) || sp.isRemoved()) {
                 endBloodSky(sp, level0); // 죽으면 핏빛 하늘도 걷힘
@@ -545,25 +538,26 @@ final class RuneAxe {
                 return;
             }
             Vec3 c = sp.position();
-            boolean ending = t >= total;
-            ang[0] += t < sweepUntil[0] ? 30 : 6;
             Vec3 facing = Kit.facingOf(sp);
-            for (int j = 0; j < 2; j++) {
-                Vec3 radial = V.turnY(new Vec3(1, 0, 0), ang[0] + j * 180);
-                Vec3 tangent = V.turnY(radial, 90); // 도는 쪽 (ang 이 커지는 쪽 — 날이 앞)
-                Vec3 grip = V.add(V.up(c, 0.75), radial, 0.95);
-                axes[j].to(grip, axeRot(radial, tangent), (ending ? 0.2 : (t < 4 ? 0.2 + t * 0.2 : 0.82)) * fit, 1);
-            }
-            sigil.to(V.up(c, 0.07), -1, 1);
             for (int i = 0; i < 3; i++) {
                 Vec3 d = V.turnY(facing, 100 + i * 80);
                 flames[i].to(V.add(V.up(c, 1.0), d, 0.55), -1, 1);
             }
-            if (ending && t == total) {
-                sigil.fade(t, 8);
-                for (Vfx.Sprite fl : flames) fl.fade(t, 6);
-            }
+            if (t == total) for (Vfx.Sprite fl : flames) fl.fade(t, 6);
         });
+        // 거대한 도끼 내려찍기 (둘째 난타부터 — 치기 CHOP_LEAD 틱 전에 나타남): 내 쪽 (보는 쪽) 에서 번갈아 앞 오른쪽 · 앞 왼쪽 · 옆 뒤 · 마지막은 앞 양쪽에 함께
+        double[] turns = {0, 45, -45, 125, -125, 30};
+        for (int i = 1; i < hits; i++) {
+            int at = i * gap;
+            boolean last = i == hits - 1;
+            final double turn = turns[Math.min(i, turns.length - 1)];
+            RuneKit.later(Math.max(0, at - CHOP_LEAD), () -> {
+                if (!RuneKit.aliveSince(sp, alive) || sp.isRemoved()) return;
+                Vec3 face = Kit.facingOf(sp);
+                giantChop(fx, sp, r, V.turnY(face, turn), last);
+                if (last) giantChop(fx, sp, r, V.turnY(face, -turn), true);
+            });
+        }
         SkillFx.every(hits, gap, i -> {
             if (!RuneKit.aliveSince(sp, alive)) {
                 endBloodSky(sp, level0);
@@ -571,15 +565,10 @@ final class RuneAxe {
             }
             ServerLevel level = sp.level();
             Vec3 c = sp.position();
-            sweepUntil[0] = fx.age() + 6; // 도끼 둘이 6틱 동안 반 바퀴를 휩씀
-            // 휩쓴 자리의 초승달 (도끼 둘 — 바닥에 가깝게 눕혀 · 도는 쪽)
-            for (int j = 0; j < 2; j++) {
-                Vec3 radial = V.turnY(new Vec3(1, 0, 0), ang[0] + j * 180 + 60);
-                VfxKit.slash(fx, V.add(V.up(c, 0.8), radial, 2.2), V.turnY(radial, 90), V.unit(V.add(V.UP, radial, 0.35)), 4.0, j == 1 ? BLOOD : glow, 2);
-            }
+            // 난타: 핏빛 충격 고리 (맞는 범위 — 반지름 radius) · 발밑 흙먼지 (도는 칼날 고리 · 휩쓴 초승달은 뺌 — 도끼가 내려찍힌 자리는 giantChop)
             VfxKit.ring(fx, c, radius, i % 2 == 1 ? BLOOD : glow, 0, 8);
-            fx.sprite("bladering", V.up(c, 0.09)).color(i % 2 == 1 ? glow : BLOOD).fixed(Vfx.flat(i * 23)).size(radius * 1.6).alpha(0.7)
-                    .play(fx.age(), 8, 8, 1, false);
+            VfxKit.ring(fx, c, radius * 0.55, core, 2, 6);
+            VfxKit.dust(fx, c, radius * 0.6, 4, VfxKit.DUST, 1);
             SkillFx.play(level, "mace.smash_air", c, 0.8 + i * 0.05, 0.8);
             SkillFx.play(level, "mace.smash_ground", c, 0.7, 0.6);
             int n = 0;
@@ -609,5 +598,61 @@ final class RuneAxe {
             if (p != null) SkillFx.play(p.level(), "mob.zombie.unfect", p.position(), 0.8, 0.5);
         });
         return true;
+    }
+
+    /** 거대한 도끼가 나타나 내려찍기까지 (틱) — 치는 틱 (난타) 에 날이 땅에 닿음 */
+    static final int CHOP_LEAD = 7;
+
+    /**
+     * 2026-11-17 버서커의 거대한 룬 도끼 하나 (giantChop): 쓴 사람 둘레 d 쪽 3.1칸 땅을 내려찍음 — 쥔 곳은 내 머리 위 앞 (d 로 0.9칸 · 2.7칸 높이), 지금부터
+     * CHOP_LEAD − 2 틱 동안 커지며 뒤로 젖혀진 채 (머리가 위 뒤 · 날이 앞) → 2틱 동안 내리찍어 머리가 땅에 박힘 (CHOP_LEAD 틱 — 난타와 같은 틱) →
+     * 갈라진 땅 · 터짐 · 흙먼지 · 튀는 돌 · 불꽃 · 위에서 아래로 그어지는 핏빛 초승달 → 8틱 머문 뒤 땅속으로 가라앉으며 사라짐. 보이기만 (피해는 난타)
+     */
+    private static void giantChop(Vfx.Fx fx, ServerPlayer sp, Runes.Rune r, Vec3 d0, boolean big) {
+        ServerLevel level = sp.level();
+        Vec3 d = V.flat(d0);
+        Vec3 c = sp.position();
+        Vec3 hit = VfxKit.ground(level, V.add(c, d, 3.1));
+        Vec3 grip = V.add(V.up(c, 2.7), d, 0.9);
+        Vec3 down = V.unit(V.sub(V.up(hit, 0.2), grip));
+        double sc = (V.len(V.sub(V.up(hit, 0.2), grip)) + 0.15) / (headReach(r.grade()) / 16.0);
+        Vec3 up0 = V.unit(V.add(V.UP, d, -0.35)); // 젖힘: 머리가 위 · 조금 뒤
+        Vec3 edge0 = V.unit(V.add(d, V.UP, 0.4));
+        Vec3 mid = V.unit(V.add(V.add(up0, down), d, 0.7));
+        Vec3 right = V.rightOf(d);
+        Vec3 edgeMid = V.unit(V.cross(mid, right)); // 날 = 자루 × 오른쪽 (휘두르는 쪽)
+        Vec3 edgeEnd = V.unit(V.cross(down, right));
+        double[] g = gripOf(r.grade());
+        Vfx.Prop axe = fx.prop(axeModel(r), grip).grip(g[0], g[1], g[2]).bright();
+        axe.to(null, axeRot(up0, edge0), sc * 0.35, 0);
+        axe.to(null, null, sc, 3); // 커지며 나타남
+        Vfx.Sprite halo = fx.sprite("glow", V.add(grip, up0, sc * headReach(r.grade()) / 16.0)).color(BLOOD).size(2.4).alpha(0.5);
+        SkillFx.play(level, "mob.ravager.attack", c, 0.6, 0.7);
+        int now = fx.age();
+        int swing = now + CHOP_LEAD - 2;
+        fx.on(swing, () -> {
+            axe.to(grip, axeRot(mid, edgeMid), sc, 1);
+            halo.remove();
+            SkillFx.play(level, "item.trident.riptide_1", grip, 0.6, 0.6);
+        });
+        fx.on(swing + 1, () -> axe.to(grip, axeRot(down, edgeEnd), sc, 1));
+        fx.on(now + CHOP_LEAD, () -> {
+            double[][] cs = RuneKit.colorOf("axe");
+            double[] glow = cs[0];
+            double[] core = cs[1];
+            VfxKit.slash(fx, V.up(hit, 1.6), V.DOWN, V.scale(d, -1), big ? 4.6 : 3.8, glow, 0);
+            VfxKit.slash(fx, V.up(hit, 1.5), V.DOWN, V.scale(d, -1), big ? 4.0 : 3.2, BLOOD, 1);
+            VfxKit.crack(fx, hit, big ? 5.6 : 4.4, BLOOD, 0, 40);
+            VfxKit.burst(fx, V.up(hit, 0.5), big ? 3.6 : 2.8, glow, 0);
+            VfxKit.ring(fx, hit, big ? 2.6 : 2.0, core, 1, 8);
+            VfxKit.dust(fx, hit, 1.6, 6, VfxKit.DUST, 1);
+            VfxKit.rocks(fx, hit, big ? 9 : 6, 6.0, 0.4, new String[] {"minecraft:cobbled_deepslate", "minecraft:deepslate", "minecraft:tuff", "minecraft:cobblestone"}, 1);
+            VfxKit.sparks(fx, V.up(hit, 0.4), core, 6, 1.8, 1);
+            VfxKit.blood(fx, V.up(hit, 0.6), big ? 1.2 : 0.8, big ? 4 : 2, BLOOD, 1);
+            SkillFx.play(level, "mace.heavy_smash_ground", hit, 0.8, big ? 1.0 : 0.8);
+        });
+        // 박힌 도끼: 8틱 머문 뒤 땅속으로 가라앉으며 사라짐
+        fx.on(now + CHOP_LEAD + 8, () -> axe.to(V.add(grip, down, 0.8), null, sc * 0.4, 8));
+        fx.on(now + CHOP_LEAD + 17, axe::remove);
     }
 }

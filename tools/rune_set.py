@@ -103,7 +103,7 @@ SET = [
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
          set={"lift": 0}, desc="하늘 높이에서 거대한 검이 떨어져 꽂힘", use="원거리 광역 큰 한 방"),
     dict(key="berserker", name="버서커", grade="transcend", cd=37, pair=["warrior_spirit"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
-         set={"reduce": 0.2}, desc="광폭화 — 양손 룬 도끼로 둘레를 난타 · 흡혈", use="장판 연타 · 흡혈 · 받는 피해 −20%"),
+         set={"reduce": 0.2}, desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −20%"),
     dict(key="lunaexec", name="루나 엑시큐션", grade="transcend", cd=8, pair=["assassin_bloom"], r="mid", src="assassin.transcend", u=["blink"], a="single",
          desc="달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발", use="단일 · 순간 이동"),
     # 2026-11-17 도감 메모 (메테오 "유틸 띄움 삭제 데미지 소량 증가 및 이에 따른 쿨타임 증가"): 띄움을 뺌 (쿨 60초)
