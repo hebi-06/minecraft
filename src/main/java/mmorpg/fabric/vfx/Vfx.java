@@ -1254,12 +1254,26 @@ public final class Vfx {
          */
         boolean covers(Vec3 eye, double k) {
             if (removed || hidden || alpha < 0.12) return false;
-            double half = 0.5 * size * Math.max(1.0, sheet.aspect()) + offset.length();
-            if (half < 0.6) return false;
+            double hw = 0.5 * size * sheet.aspect();
+            double hh = 0.5 * size;
             if (facing != null) {
-                Vector3f n = new Quaternionf(facing).transform(new Vector3f(0, 0, 1));
+                Quaternionf q = new Quaternionf(facing);
+                if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
+                Vector3f n = q.transform(new Vector3f(0, 0, 1));
                 if (Math.abs(n.y) > 0.8F) return false;
+                // 2026-11-17 고정 판은 눈에서 본 겉보기 너비 · 높이 (판의 가로 · 세로 축이 눈 → 판 쪽과 이루는 각으로 줄어듦): 가는 쪽으로 누운 긴 그림 (불덩이 · 줄기) 을
+                // 뒤에서 보면 길이가 거의 없음 — 판 길이로 셈하면 날아가는 내내 1인칭 주인에게서 거둬졌음 (마력 일반 불덩이, CI 44012061831)
+                double dl = eye.distanceTo(pos);
+                if (dl > 1e-6) {
+                    Vector3f v = new Vector3f((float) ((pos.x - eye.x) / dl), (float) ((pos.y - eye.y) / dl), (float) ((pos.z - eye.z) / dl));
+                    float cx = q.transform(new Vector3f(1, 0, 0)).dot(v);
+                    float cy = q.transform(new Vector3f(0, 1, 0)).dot(v);
+                    hw *= Math.sqrt(Math.max(0, 1 - cx * cx));
+                    hh *= Math.sqrt(Math.max(0, 1 - cy * cy));
+                }
             }
+            double half = Math.max(hw, hh) + offset.length();
+            if (half < 0.6) return false;
             return eye.distanceTo(pos) < k * half;
         }
     }
