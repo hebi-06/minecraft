@@ -1611,9 +1611,12 @@ final class PhantomFx {
                 return A != null && Vfx.hasSheet(A.n("slash_00")) && Vfx.hasSheet(A.n("slashm_00")) && V.len(o.vec("dir", V.UP)) > 1e-6
                         && Math.abs(V.unit(o.vec("dir", V.UP)).y) <= 0.9;
             }
-            if (runeFx(level, "arc", at, o, ag)) return true;
-            // 2026-11-17 먹빛 판 (무간참역의 검은 초승달 — 빛은 먹빛 INK · 겉 aura 가 진홍): 겉빛으로 칠함 (CI 43982885199 slash_thin aura 10)
-            return o.get("aura") instanceof double[] au && runeFx(level, "arc", at, o, au);
+            // 2026-11-17 판이 위를 보는 것 (무간참역의 검은 초승달 — dir 위 · 화면의 기울기 spin): 카메라를 보는 초승달 (wave — 같은 기울기)
+            Vec3 ad = o.vec("dir", V.UP);
+            String kind = V.len(ad) < 1e-6 || Math.abs(V.unit(ad).y) > 0.9 ? "wave" : "arc";
+            if (runeFx(level, kind, at, o, ag)) return true;
+            // 2026-11-17 먹빛 판 (빛은 먹빛 INK · 겉 aura 가 진홍): 겉빛으로 칠함 (CI 43982885199 slash_thin aura 10)
+            return o.get("aura") instanceof double[] au && runeFx(level, kind, at, o, au);
         }
         if (id.startsWith("rpg:slash_") && id.endsWith("_glow") && !o.truthy("basic")) {
             // 2026-11-17 휘두른 자국 판의 빛 장을 바로 부른 것 (보스 · 몹 — SkillFx.fx("rpg:slash_heavy_r_glow") 한 장): 판 모양 · 좌우를 이름에서 → 같은 반달
@@ -1910,6 +1913,8 @@ final class PhantomFx {
         if (!JobSystem.RUNE_WYRD || glow == null || glow.length < 3) return null;
         double[] h = hsv(glow);
         if (h[0] <= 48 && h[1] > 0.55 && h[2] > 0.7) return ELEMENT;
+        // 옅은 금빛 (색조 38 ~ 62° · 채도 0.3 ~ 0.55 · 밝기 0.85 넘게 — 마력 초월의 금빛 불티 · 일섬, CI 43987516768 32) = 성광
+        if (h[0] >= 38 && h[0] <= 62 && h[1] >= 0.3 && h[1] <= 0.55 && h[2] > 0.85) return HOLY;
         if (h[0] >= 180 && h[0] <= 215 && h[1] >= 0.2 && h[1] <= 0.75 && h[2] > 0.75) return FROST;
         if (h[0] >= 15 && h[0] <= 45 && h[1] >= 0.25 && h[1] <= 0.65 && h[2] >= 0.35 && h[2] <= 0.75) return BEAR;
         return null;
@@ -2248,21 +2253,23 @@ final class PhantomFx {
      * 2026-11-16 룬 계열 대표 그림 (예전 RuneKit rfx 이름 → 묶음 그림 — PAINT 와 같은 틀): 몸의 기운 (rfx_aura — 세로축) · 문장 (rfx_emblem) · 잎 (rfx_leaf) ·
      * 육각 판 (rfx_hex — 면이 dir)
      */
-    static final java.util.Map<String, Paint> RUNE_PAINT = java.util.Map.of(
-            "aura", new Paint("aura", 1, VERT, 2, 1),
-            "emblem", new Paint("aegis", 1, BILL, 1.25, 1),
+    static final java.util.Map<String, Paint> RUNE_PAINT = java.util.Map.ofEntries(
+            java.util.Map.entry("aura", new Paint("aura", 1, VERT, 2, 1)),
+            java.util.Map.entry("emblem", new Paint("aegis", 1, BILL, 1.25, 1)),
             // 2026-11-17 방패 문장 (RuneKit.shieldEmblem — 화면을 봄 · CI 43979933145 체력 일반 10): 묶음의 빛의 방패 (aegis — 문장과 같은 몫)
-            "shield", new Paint("aegis", 1, BILL, 1.25, 1),
-            "leaf", new Paint("petal", 1, BILL, 1, 1),
-            "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1),
+            java.util.Map.entry("shield", new Paint("aegis", 1, BILL, 1.25, 1)),
+            java.util.Map.entry("leaf", new Paint("petal", 1, BILL, 1, 1)),
+            java.util.Map.entry("hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1)),
             // 2026-11-17 연막 구름 (rfx_cloud 네 칸 — 암살 룬 연막 · CI 43977395799 암살 고귀 71): 묶음의 연기 (그림자 smoke — 없는 묶음은 예전)
-            "cloud", new Paint("smoke", 1, BILL, 1, 1),
+            java.util.Map.entry("cloud", new Paint("smoke", 1, BILL, 1, 1)),
             // 2026-11-17 날아가는 고드름 (rfx_icicle — 만년빙하 · 마력 · 원소 얼음 룬, CI 43982885199 14 + 6): 얼음 창 (icelance — 비전 · 서리 묶음, jicelance 와 같은 몫)
-            "icicle", new Paint("icelance", 1, LOOK_DIR, 0.25, 1),
+            java.util.Map.entry("icicle", new Paint("icelance", 1, LOOK_DIR, 0.25, 1)),
             // 2026-11-17 검은 가시 손 (rfx_thorn — 심연 낙인 · 밑동 고정, CI 43982885199 19): 솟는 가시 (spike — 폭군 묶음, 솟았다 가라앉는 여덟 칸을 life 동안)
-            "thorn", new Paint("spike", 1, VERT, 1, 1),
+            java.util.Map.entry("thorn", new Paint("spike", 1, VERT, 1, 1)),
+            // 2026-11-17 소용돌이 (rfx_vortex — 민첩 영웅 10): 묶음의 소용돌이 (swirl — 질풍 묶음, jswirl 과 같은 몫)
+            java.util.Map.entry("vortex", new Paint("swirl", 1, BILL, 1, 1)),
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
-            "jbreak", new Paint("shieldbreak", 1, BILL, 1, 1));
+            java.util.Map.entry("jbreak", new Paint("shieldbreak", 1, BILL, 1, 1)));
 
     static boolean paintedWith(ServerLevel level, Paint p, Lib L, int first, Vec3 at, Opt b) {
         String art = p.art();

@@ -498,9 +498,15 @@ public final class JobTraits8 {
         GRAVES.add(grave);
         // 2026-11-13 3D 묘비 (쓰러진 적이 보던 쪽을 봄 — 무덤이 있는 동안 서 있다 끝에 무너짐)
         double yr = Math.toRadians(yaw);
-        STONES.put(grave, stone(level, g, new Vec3(-Math.sin(yr), 0, Math.cos(yr)), 0.62, 5, ticks));
-        JobFx.soul(level, V.up(g, 0.5), 0.3, j, 0.5, Opt.of("dir", V.UP, "speed", 0.8));
-        SkillFx.sparks(level, V.up(g, 0.3), NecroCrew.FIRE, 5, 2);
+        // 2026-11-17 특성으로 솟는 무덤도 네크로맨서 묶음 맥락 (Tasks.paint — 스킬 밖이라 묘비의 돌덩이가 예전 그림이었음: CI 43987516768 미스트 60 장)
+        Object prev = Tasks.paint(PhantomFx.lib(j));
+        try {
+            STONES.put(grave, stone(level, g, new Vec3(-Math.sin(yr), 0, Math.cos(yr)), 0.62, 5, ticks));
+            JobFx.soul(level, V.up(g, 0.5), 0.3, j, 0.5, Opt.of("dir", V.UP, "speed", 0.8));
+            SkillFx.sparks(level, V.up(g, 0.3), NecroCrew.FIRE, 5, 2);
+        } finally {
+            Tasks.paint(prev);
+        }
         SkillFx.play(level, "block.rooted_dirt.place", g, 0.7, 1.0);
     }
 
@@ -533,7 +539,12 @@ public final class JobTraits8 {
         GRAVES.add(g);
         // 2026-11-13 3D 묘비 (영상 · 사진첩에 보이게 — 가까운 사람 쪽을 봄)
         net.minecraft.world.entity.player.Player near = level.getNearestPlayer(at.x, at.y, at.z, 32, false);
-        STONES.put(g, stone(level, at, near != null ? V.sub(near.position(), at) : new Vec3(0, 0, 1), 0.62, 4, ticks));
+        Object prev = Tasks.paint(PhantomFx.SOUL); // 2026-11-17 시험 무덤도 혼 묶음 맥락
+        try {
+            STONES.put(g, stone(level, at, near != null ? V.sub(near.position(), at) : new Vec3(0, 0, 1), 0.62, 4, ticks));
+        } finally {
+            Tasks.paint(prev);
+        }
     }
 
     /** 시험용: 남은 무덤 수 */
