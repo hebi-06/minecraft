@@ -115,6 +115,54 @@ def pool_frame(S, f, n=256, frames=POOL_FRAMES):
     return rgb, a * (1 - sstep(0.95, 0.995, r))
 
 
+# ------------------------------------------------------------------ 2026-11-17 용암 웅덩이 (원소 묶음 — jpool 과 같은 틀 · 칸 차례)
+
+def lava_frame(S, f, n=256, frames=POOL_FRAMES):
+    """식은 껍질 조각 사이로 빛나는 금 · 테두리 불빛 · 끓는 거품 (원소 반응 용암 — ElementFx LAVA 의 rfx_jpool). 핏물 웅덩이와 같은 크기 · 튐 · 줄어듦"""
+    x, y = grid(n)
+    aa = 2.0 / n
+    r = np.hypot(x, y)
+    th = np.arctan2(y, x)
+    N = Noise3(2600)
+    R = [0.55, 0.85, 0.85, 0.85, 0.85, 0.85, 0.5, 0.42][f]
+    k = [1, 1, 1, 1, 1, 1, 0.85, 0.4][f]
+    edge_n = N.fbm(np.cos(th) * 2 + 3, np.sin(th) * 2, 0.3 * f, 3) - 0.5
+    rim = R * (1 + 0.12 * edge_n)
+    body = 1 - sstep(rim - aa * 2, rim + aa * 2, r)
+    if f == 0:
+        rng = np.random.default_rng(2601)
+        for i in range(11):
+            a = i * 2 * math.pi / 11 + rng.uniform(-0.2, 0.2)
+            L = rng.uniform(0.25, 0.4)
+            body = np.maximum(body, taper(x, y, [(0.45 * math.cos(a), 0.45 * math.sin(a)), ((0.45 + L) * math.cos(a), (0.45 + L) * math.sin(a))], 0.05, 0.01, aa))
+            body = np.maximum(body, disk(x, y, (0.5 + L) * math.cos(a), (0.5 + L) * math.sin(a), 0.035, 0.035, aa))
+    t = 0.12 * f
+    q = N.fbm(x * 3.2 + 11, y * 3.2 - t, t, 4)
+    ridge = 1 - np.abs(2 * q - 1)
+    vein = sstep(0.82, 0.95, ridge)
+    crust = sstep(0.36, 0.5, N.fbm(x * 2.2 - 5, y * 2.2 + t, t + 3, 3)) * (1 - vein)
+    hot = sstep(0.7, 1.0, r / np.maximum(rim, 1e-3))
+    tone = np.clip(0.18 + 0.5 * (1 - crust) + 0.12 * hot + 0.06 * (N.fbm(x * 6, y * 6, t + 7, 2) - 0.5), 0, 1)
+    layers = [(S.main(0.35), np.exp(-(r / (R + 0.12)) ** 2) * 0.35 * k), (S.main(tone), body * k),
+              (S.accent(0.8), body * np.maximum(vein * (0.5 + 0.5 * crust), hot * 0.5) * k), (WHITE, body * sstep(0.94, 1.0, ridge) * 0.45 * k)]
+    if 2 <= f <= 5:
+        rng = np.random.default_rng(2610 + f)
+        for i in range(6):
+            a = rng.uniform(0, 2 * math.pi)
+            rr = rng.uniform(0.1, R * 0.7)
+            bx, by = rr * math.cos(a), rr * math.sin(a)
+            br = rng.uniform(0.025, 0.05) * (1 + 0.5 * ((f + i) % 2))
+            d = np.hypot(x - bx, y - by)
+            layers.append((S.accent(0.9), np.exp(-((d - br) / 0.009) ** 2) * 0.9 * k))
+            layers.append((WHITE, np.exp(-(d / (br * 0.45)) ** 2) * 0.6 * k))
+    if f == 6:
+        sw = np.exp(-((r - 0.3) / 0.03) ** 2) * (np.sin(th * 3 + r * 12) * 0.5 + 0.5)
+        layers.append((S.accent(0.85), sw * body * 0.6))
+    rgb, a = compose(layers, n)
+    rgb, a = bloom(rgb, a, n, thresh=0.7, sigma=0.02, gain=0.45)
+    return rgb, a * (1 - sstep(0.95, 0.995, r))
+
+
 # ------------------------------------------------------------------ 핏물 기둥 (jgeyser — 192 × 384 · 아래 끝 = 땅)
 
 def geyser_frame(S, f, h=384, w=192, frames=GEYSER_FRAMES):
@@ -246,7 +294,9 @@ def pyre_frame(S, f, h=448, w=192, frames=PYRE_FRAMES):
     smoke = np.zeros_like(x)
     if f >= 6:
         smoke = np.exp(-((x / 0.3) ** 2 + ((y - top + 0.1) / 0.5) ** 2)) * (0.45 if f == 6 else 0.6) * sstep(0.3, 0.6, N.fbm(x * 4, y * 3, t, 3))
-    layers = [(S.smoke(0.6), smoke), (S.main(0.35), np.exp(-(x / 0.3) ** 2) * (y < top) * 0.25 * k), (S.main(np.clip(0.45 + 0.4 * heat, 0, 1)), flame * k),
+    # 2026-11-17 기둥 빛 무리의 위 끝을 부드럽게 (y < top 으로 자르면 도트 알파 (0 · 255) 에서 무너지는 칸 (6) 의 연기와 겹쳐 네모난 판이 보였음)
+    halo = np.exp(-(x / 0.3) ** 2) * (1 - sstep(top - 0.25, top, y)) * 0.25 * k
+    layers = [(S.smoke(0.6), smoke), (S.main(0.35), halo), (S.main(np.clip(0.45 + 0.4 * heat, 0, 1)), flame * k),
               (S.accent(np.clip(0.55 + 0.4 * heat, 0, 1)), flame * sstep(0.35, 0.8, heat) * k), (WHITE, flame * sstep(0.75, 0.95, heat) * 0.7 * k),
               (S.accent(0.9), sparks * k)]
     rgb, a = compose(layers, (h, w))
@@ -260,6 +310,7 @@ FRAMES = {
     "geyser": (GEYSER_FRAMES, geyser_frame),
     "heart": (HEART_FRAMES, heart_frame),
     "pyre": (PYRE_FRAMES, pyre_frame),
+    "lava": (POOL_FRAMES, lava_frame),
 }
 
 
@@ -268,7 +319,7 @@ def frames_of(name, S):
     return [to_img(*fn(S, f)) for f in range(n)]
 
 
-def sprites(S, names=tuple(FRAMES)):
+def sprites(S, names=("lance", "pool", "geyser", "heart", "pyre")):  # 2026-11-17 lava 는 원소 묶음만 (element.py FIRE_KEYS)
     p = S.lib + "_"
     cache = {}
 

@@ -2019,6 +2019,11 @@ final class PhantomFx {
                 double size = Math.max(0.2, o.num("size", 0.5));
                 return paintedWith(level, rp, L, 0, V.up(at, size), o.with("frames", (double) n, "fps", n / life, "grow", 0.0));
             }
+            if (name.equals("fountain")) {
+                // 2026-11-17 불기둥 (pyre — 붙음 · 솟음 · 타오름 · 무너짐 · 재 연기 여덟 칸) 은 예전 분수 (비슷한 칸 넷을 돌림) 와 달리 처음과 끝이 있어 life 동안 다
+                int n = Vfx.sheet(L.n(rp.art())).frames();
+                return paintedWith(level, rp, L, 0, at, o.with("frames", (double) n, "fps", n / Math.max(0.1, o.num("life", 0.5))));
+            }
             return paintedWith(level, rp, L, Math.max(0, cell), at, o);
         }
         switch (name) {
@@ -2268,6 +2273,9 @@ final class PhantomFx {
             java.util.Map.entry("thorn", new Paint("spike", 1, VERT, 1, 1)),
             // 2026-11-17 소용돌이 (rfx_vortex — 민첩 영웅 10): 묶음의 소용돌이 (swirl — 질풍 묶음, jswirl 과 같은 몫)
             java.util.Map.entry("vortex", new Paint("swirl", 1, BILL, 1, 1)),
+            // 2026-11-17 솟는 분수 (rfx_fountain 128 × 256 — 아래 끝 = 땅, 정령왕 불 원소 · CI 43987516768 정령 초월 6): 불빛이면 원소 묶음의 불기둥 (pyre — 같은 세움 ·
+            // 아래 끝 = 땅). 체력 룬의 녹색 분수는 꽃잎 묶음에 불기둥이 없어 예전
+            java.util.Map.entry("fountain", new Paint("pyre", 1, VERT, 2, 1)),
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
             java.util.Map.entry("jbreak", new Paint("shieldbreak", 1, BILL, 1, 1)));
 
