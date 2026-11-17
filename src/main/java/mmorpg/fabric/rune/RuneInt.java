@@ -16,6 +16,11 @@ import net.minecraft.world.phys.Vec3;
 
 /** 마력 룬 (runes.js "마력" — 파랑: 원소 마법): 화염구 · 서리 폭발 · 화염 폭풍 · 블리자드 · 메테오 */
 final class RuneInt {
+    /**
+     * 2026-11-17 미리 칠한 불 폭발 (rfx_boom) · 메테오의 잿빛 연기 (rfx_cloud) 를 칠할 빛 (paintGlow — 위르드식 2판): 불빛 → 원소 묶음의 터짐 · 불타는 연기
+     * (CI 43989923127 마력 초월에 빛 없는 예전 터짐 5 · 잿빛 연기 11)
+     */
+    static final double[] FIRE_PAINT = {1.0, 0.55, 0.15};
     private RuneInt() {}
 
     static void register() {
@@ -63,7 +68,7 @@ final class RuneInt {
             Vec3 at = target != null && !target.isRemoved() ? Kit.bodyPoint(target) : to;
             double sc = RuneKit.nearK(sp, at, 4, 0.4);
             double radius = k.num("radius");
-            RuneKit.rfx(level, "boom", V.up(at, 0.2), Opt.of("size", radius * 0.75 * sc, "life", 0.55, "frames", 8.0, "fps", 15.0));
+            RuneKit.rfx(level, "boom", V.up(at, 0.2), Opt.of("size", radius * 0.75 * sc, "life", 0.55, "frames", 8.0, "fps", 15.0, "paintGlow", FIRE_PAINT));
             SkillFx.burst(level, at, glow, 1.6 * sc, 0.3);
             SkillFx.ring(level, at, d, core, 0.9, 0.3, 0);
             SkillFx.sparks(level, at, glow, 10, 5);
@@ -226,7 +231,7 @@ final class RuneInt {
                 }
             }
             if (i == hits - 1) {
-                RuneKit.rfx(level, "boom", V.up(g, 1.0), Opt.of("size", radius * 0.8 * sc, "life", 0.55, "frames", 8.0, "fps", 15.0));
+                RuneKit.rfx(level, "boom", V.up(g, 1.0), Opt.of("size", radius * 0.8 * sc, "life", 0.55, "frames", 8.0, "fps", 15.0, "paintGlow", FIRE_PAINT));
                 SkillFx.burst(level, V.up(g, 1), glow, 2.2, 0.35);
                 SkillFx.sparks(level, V.up(g, 1), core, 12, 6);
                 RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 폭발
@@ -432,7 +437,7 @@ final class RuneInt {
                     Vec3 p = V.add(start, d, (len * tt) / fall);
                     SkillFx.vanilla(level, "minecraft:lava_particle", p);
                     RuneKit.rfx(level, "cloud", V.add(p, d, -2.5), Opt.of("size", 1.3, "life", 1.1, "grow", 1.4, "cell", (double) (tt % 4), "color",
-                            new double[] {0.32, 0.28, 0.27}, "alpha", 0.7, "fade", 0.7));
+                            new double[] {0.32, 0.28, 0.27}, "alpha", 0.7, "fade", 0.7, "paintGlow", FIRE_PAINT));
                 });
             }
             SkillFx.play(level, "mob.ghast.fireball", g, 0.5, 1);
@@ -452,13 +457,15 @@ final class RuneInt {
                 final int ii = i;
                 RuneKit.later(3 + i * 2, () -> RuneKit.rfx(level, "cloud", V.up(g, 2.5 + ii * 2.6), Opt.of("dir", V.UP, "speed", 2.2, "size",
                         (2.0 + ii * 0.9) * sc, "life", 1.8, "grow", 0.7, "cell", (double) (ii % 4), "color", new double[] {0.36, 0.26, 0.22}, "alpha", 0.75,
-                        "fade", 0.6)));
+                        "fade", 0.6, "paintGlow", FIRE_PAINT)));
             }
-            RuneKit.rfx(level, "boom", V.up(g, radius * 0.45 * sc), Opt.of("size", radius * 0.95 * sc, "life", 0.9, "frames", 8.0, "fps", 9.0));
+            RuneKit.rfx(level, "boom", V.up(g, radius * 0.45 * sc), Opt.of("size", radius * 0.95 * sc, "life", 0.9, "frames", 8.0, "fps", 9.0, "paintGlow",
+                    FIRE_PAINT));
             for (int i = 0; i < 4; i++) {
                 double a = (i / 4.0) * Math.PI * 2 + 0.6;
                 Vec3 at = new Vec3(g.x + Math.cos(a) * radius * 0.6, g.y + 1.0, g.z + Math.sin(a) * radius * 0.6);
-                RuneKit.later(2 + i, () -> RuneKit.rfx(level, "boom", at, Opt.of("size", radius * 0.42 * sc, "life", 0.6, "frames", 8.0, "fps", 14.0)));
+                RuneKit.later(2 + i, () -> RuneKit.rfx(level, "boom", at, Opt.of("size", radius * 0.42 * sc, "life", 0.6, "frames", 8.0, "fps", 14.0, "paintGlow",
+                        FIRE_PAINT)));
             }
             SkillFx.burst(level, mid, glow, 6.0 * sc, 0.55);
             SkillFx.burst(level, mid, red, 4.0 * sc, 0.45);

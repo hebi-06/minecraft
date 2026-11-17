@@ -1880,8 +1880,9 @@ SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
 # 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 얼음 가시 (예전 rpg:ice_spike — 서리 · 영혼 수확) · 심연 룬의 검은 가시 손 (rfx_thorn — 폭군)
 SPIKE_KEYS = ("frost", "soulreap", "tyrant", "arcane")
 # 2026-11-17 뭉게 연기 (shadow.py smoke — 그 묶음의 연기 램프) 를 더 갖는 묶음: 보스의 숨결 (예전 rpg:breath — 이미르 서리 숨결) · 정령 룬의 부름 연기
-# (rfx_jsmoke2 흰빛 — 질풍 묶음, CI 43987516768 정령 초월 20: 질풍의 연기 램프는 짙은 녹색이라 옅은 박하빛 램프로 · 도트 색은 그림 자체의 색 — vfx_sprites PIXEL_LIBS)
-SMOKE_KEYS = ("frost", "gale")
+# (rfx_jsmoke2 흰빛 — 질풍 묶음, CI 43987516768 정령 초월 20: 질풍의 연기 램프는 짙은 녹색이라 옅은 박하빛 램프로 · 도트 색은 그림 자체의 색 — vfx_sprites PIXEL_LIBS) ·
+# 마력 룬 메테오의 불타는 연기 꼬리 · 버섯구름 (rfx_cloud 잿빛 — 원소 묶음의 흙빛 연기 램프 · 속빛은 불빛 FIRE_ACCENT, CI 43989923127 11)
+SMOKE_KEYS = ("frost", "gale", "element")
 SMOKE_RAMPS = {"gale": ramp([(0.0, "#24423A"), (0.45, "#5A8A7C"), (0.8, "#9CC8BA"), (1.0, "#D4F0E6")])}
 # 2026-11-17 얼음 창 (arcane.py icelance — 얼음 빛 그대로) 을 더 갖는 묶음: 만년빙하 · 원소 얼음 룬의 날아가는 고드름 (예전 rfx_icicle)
 ICELANCE_KEYS = ("frost",)
@@ -1896,6 +1897,8 @@ SLASH_KEYS = ("soul",)
 # 2026-11-17 용암 웅덩이 · 불기둥 (hex.py lava · pyre — 불빛을 뜻으로 받는 원소 묶음, PhantomFx.semanticLib): 원소 반응 용암 (ElementFx LAVA — 예전 rfx_jpool) ·
 # 정령왕 불 원소의 불기둥 (예전 rfx_fountain). 원소 묶음의 둘째 빛 (accent) 은 얼음 푸른빛이라 이 둘은 불의 속빛 (금빛) 으로
 FIRE_KEYS = ("element",)
+# 2026-11-17 진흙 웅덩이 (hex.py pool 을 곰 묶음의 흙빛으로 — 원소 반응 진흙 ElementFx MUD 의 rfx_jpool, CI 43989923127 정령 초월 6)
+MUD_KEYS = ("bear",)
 FIRE_ACCENT = ramp([(0.0, "#2A1404"), (0.5, "#E08A1A"), (0.8, "#FFD060"), (1.0, "#FFF6D8")])
 
 
@@ -1915,7 +1918,7 @@ def sprites():
             out.append((S.lib + "_spike", lambda G=G: beast.frames_of("spike", G), True))
         if key in SMOKE_KEYS:
             from . import shadow
-            M = Style(S.lib, S.kind, S.main, S.accent, SMOKE_RAMPS[key], S.ring, S.smoke_alpha, S.seed) if key in SMOKE_RAMPS else S
+            M = Style(S.lib, S.kind, S.main, FIRE_ACCENT if key in FIRE_KEYS else S.accent, SMOKE_RAMPS.get(key, S.smoke), S.ring, S.smoke_alpha, S.seed)
             out.append((S.lib + "_smoke", lambda M=M: shadow.frames_of("smoke", M), True))
         if key in ICELANCE_KEYS:
             from . import arcane
@@ -1931,6 +1934,9 @@ def sprites():
                     sl_cache["f"] = frames_of(S, "slash")
                 return sl_cache["f"]
             out += tiled(S.lib + "_slash", sl) + tiled(S.lib + "_slashm", lambda sl=sl: [im.transpose(Image.FLIP_LEFT_RIGHT) for im in sl()])
+        if key in MUD_KEYS:
+            from . import hex as hexart
+            out.append((S.lib + "_pool", lambda S=S: hexart.frames_of("pool", S), True))
         if key in FIRE_KEYS:
             from . import hex as hexart
             F = Style(S.lib, S.kind, S.main, FIRE_ACCENT, S.smoke, S.ring, S.smoke_alpha, S.seed)
