@@ -191,6 +191,10 @@ public final class SkillFx {
     /** 빛의 베인 자국 (rpg:light_cut): 몸에 그어진 뒤 hold 초 동안 떠 있다가 굵어지며 사라짐 */
     public static void cutMark(ServerLevel level, Vec3 at, Vec3 view, double angle, double hold, double[] glow, double[] core, double scale) {
         Vec3 dir = V.screenDir(view, angle);
+        // 2026-11-17 위르드식: 심지 빛으로 칠한 일섬 한 장이면 겉빛 줄 (무간참역의 검은 먹빛 굵은 줄) 은 그리지 않음 — 칠한 일섬 뒤에 예전 검은 줄이 남았음
+        // (CI 43982885199 light_cut#1f0005 428)
+        if (painted != null && painted.draw(level, "rpg:light_cut", V.add(at, view, -0.05), Opt.of("dir", dir, "size", 0.95 * scale, "thick", 0.36 * scale, "life",
+                hold + 0.16, "delay", hold, "color", core, "alpha", 1.0))) return;
         fx(level, "rpg:light_cut", at, Opt.of("dir", dir, "size", 0.95 * scale, "thick", 0.36 * scale, "life", hold + 0.16, "delay", hold, "color", glow, "alpha", 0.85));
         fx(level, "rpg:light_cut", V.add(at, view, -0.05), Opt.of("dir", dir, "size", 0.9 * scale, "thick", 0.13 * scale, "life", hold + 0.16, "delay", hold,
                 "color", core, "alpha", 1.0));

@@ -61,8 +61,11 @@ public final class JobSystem {
     /** 2026-11-16 룬 위르드식 (PhantomFx.runeLib — 룬 계열 → 칠한 묶음). 영상 견주기 (VanillaProbe runeab: 의 old: 영상) 만 끔 */
     public static boolean RUNE_WYRD = true;
 
-    /** 2026-11-17 보스 위르드식 (PhantomFx.bossLib — 보스 빛 → 칠한 묶음). 영상 견주기 (VanillaProbe bossab: 의 :old 영상) 만 끔 */
-    public static boolean BOSS_WYRD = true;
+    /**
+     * 2026-11-17 보스 위르드식 (PhantomFx.bossLib — 보스 빛 → 칠한 묶음) — 멈춤 (사용자 "보스는 건들지 말아봐 보스 모델링 수정할거야"): 보스 틱의 꼬리표
+     * (Tasks.tag "boss:key") 를 되돌려 쓰는 곳이 없고 기본도 꺼 둠. 다시 할 때 Bosses.tick 꼬리표와 함께 켬
+     */
+    public static boolean BOSS_WYRD = false;
 
     public static void init() {
         JobSkills.provider = JobSystem::slot;

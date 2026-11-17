@@ -79,7 +79,14 @@ final class RuneAssassin {
         Notify.addHudSuffix(sp -> RuneCast.combo == null ? "" : RuneCast.combo.hud(sp));
         // v1.6.0 암살 표식 표시 (10틱마다 — registerRunes 의 markTick)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (Tasks.now() % 10 == 0) markTick();
+            if (Tasks.now() % 10 != 0) return;
+            // 2026-11-17 표식 연출도 암살 계열 꼬리표 (칠할 묶음 — 틱 처리는 룬 시전 밖이라 예전 마법진이었음)
+            String prevTag = Tasks.tag("assassin:mark");
+            try {
+                markTick();
+            } finally {
+                Tasks.tag(prevTag);
+            }
         });
         // 죽음 · 차원 이동 (onLifeEnded): 콤보와 암살 표식이 끝남
         RuneKit.onLifeEnded(RuneAssassin::endCombo);

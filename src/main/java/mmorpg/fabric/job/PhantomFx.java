@@ -1744,10 +1744,12 @@ final class PhantomFx {
                 // 2026-11-17 던진 덩이 (예전 rpg:glob 용암 덩이 — 반 크기 size · dir 쪽 speed 칸/초 · 아래로 20 · 수르트 / rpg:boulder 돌덩이 — 같은 틀 / rpg:drop 방울 —
                 // 아래로 30): 묶음의 불꽃 덩이 (fire) · 조각 (shard) · 불씨 (ember) 한 장이 같은 포물선으로
                 String art = id.equals("rpg:glob") ? "fire" : id.equals("rpg:boulder") ? "shard" : L.ember();
-                if (!Vfx.hasSheet(L.n(art))) return false;
+                // 돌덩이는 늘 곰 묶음의 흙 조각 (PhantomFx.rocks 와 같음 — 맥락의 묶음 빛으로 칠한 조각은 돌로 보이지 않음)
+                Lib LL = id.equals("rpg:boulder") && has(BEAR, "shard") ? BEAR : L;
+                if (!Vfx.hasSheet(LL.n(art))) return false;
                 Vec3 d = o.vec("dir", V.UP);
                 Vec3 vel = V.len(d) < 1e-6 ? V.ZERO : V.scale(V.unit(d), o.num("speed", 0));
-                lob(level, L, art, at, vel, id.equals("rpg:drop") ? 30 : 20, Math.max(0.1, o.num("life", 1)), Math.max(0.2, o.num("size", 0.5) * 2), who);
+                lob(level, LL, art, at, vel, id.equals("rpg:drop") ? 30 : 20, Math.max(0.1, o.num("life", 1)), Math.max(0.2, o.num("size", 0.5) * 2), who);
             }
             case "rpg:snowfall" -> {
                 // 2026-11-17 눈보라 (예전 rpg:snowfall — life 초 동안 초당 30 개를 size × 3 × size 상자에서 dir 쪽 speed 칸/초 · 이미르): 묶음의 날리는 알갱이 (서리 = 눈송이)
@@ -1861,7 +1863,22 @@ final class PhantomFx {
         double[][] col = RuneKit.colorOf(fam);
         if (near(glow, col[0]) || near(glow, col[1]) || glow[0] + glow[1] + glow[2] > 2.7) return L;
         Lib E = elementOf(glow);
-        return E != null && JobSystem.RUNE_WYRD ? E : null;
+        if (E != null) return JobSystem.RUNE_WYRD ? E : null;
+        return semanticLib(glow);
+    }
+
+    /**
+     * 2026-11-17 뜻이 있는 빛의 묶음 (계열 빛이 아닌 불 · 얼음 · 흙 빛 — 뜻은 그대로 두고 그 뜻의 칠한 묶음으로): 불빛 (색조 0 ~ 48° · 채도 0.55 · 밝기 0.7 넘게) = 원소
+     * (금빛 주황 불꽃), 얼음빛 (180 ~ 215° · 채도 0.2 ~ 0.75 · 밝기 0.75 넘게) = 서리, 흙빛 (15 ~ 45° · 채도 0.25 ~ 0.65 · 밝기 0.35 ~ 0.75) = 곰. 그 밖은 null (예전 그림).
+     * CI 43982885199: 정령 초월의 불벽 · 금빛 불티 · 힘 초월의 돌덩이가 계열 빛이 아니라 예전 그림이었음
+     */
+    static Lib semanticLib(double[] glow) {
+        if (!JobSystem.RUNE_WYRD || glow == null || glow.length < 3) return null;
+        double[] h = hsv(glow);
+        if (h[0] <= 48 && h[1] > 0.55 && h[2] > 0.7) return ELEMENT;
+        if (h[0] >= 180 && h[0] <= 215 && h[1] >= 0.2 && h[1] <= 0.75 && h[2] > 0.75) return FROST;
+        if (h[0] >= 15 && h[0] <= 45 && h[1] >= 0.25 && h[1] <= 0.65 && h[2] >= 0.35 && h[2] <= 0.75) return BEAR;
+        return null;
     }
 
     /** 2026-11-17 꼬리표 맥락의 칠할 묶음: 보스 싸움 ("boss:key") 이면 bossLib, 아니면 룬 ("계열:등급") */
@@ -1899,7 +1916,7 @@ final class PhantomFx {
         Lib E = elementOf(glow);
         if (E != null) return E;
         double[] h = hsv(glow);
-        if (h[1] < 0.15 && h[2] > 0.85) return pal[0]; // 흰빛 · 아주 옅은 빛 → 대표 묶음
+        if (h[1] < 0.3 && h[2] > 0.85) return pal[0]; // 흰빛 · 옅은 빛 (거품 · 눈 — CI 43982885199 요르문간드 물보라 · 이미르 흙먼지) → 대표 묶음
         if (h[1] < 0.35 || h[2] < 0.55) return null; // 잿빛 · 흙먼지 · 먹물 · 뼈 (뜻이 있는 빛 — 예전 그림)
         Lib best = null;
         double bd = 1e9;

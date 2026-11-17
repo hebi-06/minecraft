@@ -192,7 +192,13 @@ public final class RuneAbyss {
                 }
                 if ((now + (en.getKey().hashCode() & 7)) % 10 == 0 && drawn < 16) {
                     drawn++;
-                    brandFx(e, b.cast(), now);
+                    // 2026-11-17 낙인 연출도 룬 꼬리표 (칠할 계열 묶음 — 틱 처리는 룬 시전 밖이라 예전 그림이었음: CI 43982885199 불티 · 반짝임 · 문양 · 마법진 81 씩)
+                    String prevTag = Tasks.tag("abyss:transcend");
+                    try {
+                        brandFx(e, b.cast(), now);
+                    } finally {
+                        Tasks.tag(prevTag);
+                    }
                 }
             }
         }

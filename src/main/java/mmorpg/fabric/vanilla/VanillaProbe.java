@@ -1075,7 +1075,7 @@ final class VanillaProbe {
         SPAWNED.clear();
         if (i >= FILM_RUNES.size()) {
             mmorpg.fabric.job.JobSystem.RUNE_WYRD = true;
-            mmorpg.fabric.job.JobSystem.BOSS_WYRD = true;
+            mmorpg.fabric.job.JobSystem.BOSS_WYRD = false; // 2026-11-17 보스 위르드식 멈춤 (기본 끔)
             run(server, "tick rate 20");
             mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
             mmorpg.fabric.vfx.PBridge.filmCamOff(p);
@@ -1088,7 +1088,7 @@ final class VanillaProbe {
             return;
         }
         mmorpg.fabric.job.JobSystem.RUNE_WYRD = true; // 2026-11-16 앞 영상이 예전 그림 견주기 (old:) 였어도 되돌림
-        mmorpg.fabric.job.JobSystem.BOSS_WYRD = true;
+        mmorpg.fabric.job.JobSystem.BOSS_WYRD = false; // 2026-11-17 보스 위르드식 멈춤 (기본 끔)
         if (FILM_RUNES.get(i).startsWith("job:")) {
             jobFilm(p, step, FILM_RUNES.get(i), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
@@ -1120,6 +1120,9 @@ final class VanillaProbe {
             net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(sp[0], y, sp[1]), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {
                 m.setNoAi(true);
+                // 2026-11-17 룬 영상의 과녁도 공격하지 않음 (직업 영상과 같은 꼬리표 — 과녁이 달려들며 낸 청록 빛줄기 · 붉은 예고 고리 · 회색 터짐이 룬 영상마다
+                // 수십 장 끼어 남은 예전 그림 셈을 흐렸음: CI 43982885199 arrow_trail#73f2ff 433)
+                m.addTag(Monsters.FILM_TARGET_TAG);
                 var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
                 if (hp != null) hp.setBaseValue(200_000); // 영상 동안 쓰러지지 않게
                 m.setHealth(m.getMaxHealth());
@@ -1245,7 +1248,7 @@ final class VanillaProbe {
         run(server, "tick rate 20");
         mmorpg.fabric.rune.RuneKit.filmReset(p);
         clearStrays(server);
-        mmorpg.fabric.job.JobSystem.BOSS_WYRD = !old;
+        mmorpg.fabric.job.JobSystem.BOSS_WYRD = false; // 2026-11-17 보스 위르드식 멈춤 (사용자 "보스는 건들지 말아봐") — 보스 영상은 지금 그림 그대로
         // 짓기 규칙의 높이 (바닥 아래 4칸이 세계 바닥 + 5칸 위) — 평지 세계면 땅보다 조금 위
         int bx = 4000 + step * 300;
         int bz = 4000;
