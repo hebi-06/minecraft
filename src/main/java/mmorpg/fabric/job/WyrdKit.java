@@ -322,6 +322,27 @@ final class WyrdKit {
     }
 
     /**
+     * 2026-11-17 퍼지는 불꽃 고리 한 차례 (예전 rpg:fire_wave — 땅 둘레 반지름 r 에 불꽃이 늘어섬, 2틱 몫): 둘레 n 점에 묶음의 솟는 알갱이 (mote — 없으면 spark) 를
+     * 땅 위 0.2 ~ h 높이에 · 조금 위로
+     */
+    static void ringRise(ServerLevel l, PhantomFx.Lib L, Vec3 c, double r, int n, double h, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || n <= 0 || !go("ringRise", 6)) return;
+        Part m = P.mote() != null ? P.mote() : P.spark();
+        if (m == null) return;
+        double off = Kit.rand() * Math.PI * 2;
+        for (int i = 0; i < n; i++) {
+            double a = off + i * Math.PI * 2 / n;
+            Vec3 p = new Vec3(c.x + Math.cos(a) * r, c.y + 0.2 + Kit.rand() * Math.max(0.1, h - 0.2), c.z + Math.sin(a) * r);
+            pv(l, who, m.o(), p, new Vec3(0, 0.03 + Kit.rand() * 0.04, 0));
+        }
+        if (P.glint() != null) for (int i = 0; i < Math.max(1, n / 6); i++) {
+            double a = Kit.rand() * Math.PI * 2;
+            pv(l, who, P.glint().o(), new Vec3(c.x + Math.cos(a) * r, c.y + 0.3, c.z + Math.sin(a) * r), new Vec3(0, 0.05, 0));
+        }
+    }
+
+    /**
      * 2026-11-17 솟는 불씨 한 차례 (예전 rpg:ember 발생기 — 상자에서 위로 솟는 불씨, 4틱 몫): 상자 (가운데 at · 반 너비 hw · 높이 ±0.5) 안에서 묶음의 솟는 알갱이
      * (mote — 없으면 spark) n 개가 위로 (예전 빠르기 speed 칸/초 × 0.6 ~ 1.2 · 옆으로 ±0.35 몫)
      */

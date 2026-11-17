@@ -1603,7 +1603,8 @@ final class PhantomFx {
         }
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
-                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")) return false;
+                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
+                && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1638,6 +1639,33 @@ final class PhantomFx {
                 // 땅 금 (예전 rpg:ground_crack — 땅에 눕힘): 그 묶음의 땅 자국
                 if (!Vfx.hasSheet(L.n("crack_s"))) return false;
                 crackS(level, L, ground(level, at), Math.max(0.6, o.num("size", 1) * 2), who);
+            }
+            case "rpg:fire_wall" -> {
+                // 2026-11-17 서 있는 불꽃 하나 (예전 rpg:fire_wall — 세로축 빌보드 · 밑동 at · 높이 size): 묶음의 불꽃 혀 (flame — 용 · 원소 묶음), 한 번 솟았다 사그라듦
+                if (!Vfx.hasSheet(L.n("flame"))) return false;
+                int frames = Vfx.sheet(L.n("flame")).frames();
+                flame(level, L, at, Math.max(0.4, o.num("size", 1)), Math.max(1, (int) Math.round(o.num("life", 0.6) * 20 / frames)));
+            }
+            case "rpg:fire_wave" -> {
+                // 2026-11-17 퍼지는 불꽃 고리 (예전 rpg:fire_wave — life 초 동안 반지름 speed × 시간 (0.5 부터) 의 둘레에 높이 size 불꽃이 늘어섬 · 수르트): 묶음의 솟는
+                // 바닐라 알갱이 고리를 2틱마다 (WyrdKit.ringRise — 둘레 길이에 맞춘 수, 48 까지)
+                if (WyrdKit.pal(L) == null) return false;
+                double speed = o.num("speed", 10);
+                double h = Math.max(0.4, o.num("size", 1));
+                int ticks = Math.max(2, (int) Math.round(o.num("life", 1) * 20));
+                for (int t = 0; t < ticks; t += 2) {
+                    double r = Math.max(0.5, speed * t / 20.0);
+                    int n = (int) Math.max(8, Math.min(48, r * 1.4));
+                    mmorpg.fabric.Tasks.later(t, () -> WyrdKit.ringRise(level, L, at, r, n, h, who));
+                }
+            }
+            case "rpg:splash" -> {
+                // 2026-11-17 물보라 · 튐 (예전 rpg:splash — 세로축 빌보드 한 장 · 반 크기 size): 묶음의 작은 터짐 (boom_s — 물 묶음이 없어 바다 · 얼음 · 독 빛의 묶음)
+                if (!Vfx.hasSheet(L.n("boom_s"))) return false;
+                double size = Math.max(0.5, o.num("size", 1) * 2);
+                Vfx.Fx fx = Vfx.at(level, at, 20, who);
+                single(fx, L.n("boom_s"), at, size, Kit.rand() * 30 - 15, 1, false);
+                WyrdKit.burst(level, L, at, size, who);
             }
             case "rpg:ember" -> {
                 // 2026-11-17 솟는 불씨 (예전 rpg:ember — life 초 동안 초당 10 + 4 × size 개 (90 까지) 를 size × 1 × size 상자에서 위로 · 수르트 왕관 · 분노 · 용암):
