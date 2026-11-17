@@ -1897,6 +1897,8 @@ SLASH_KEYS = ("soul",)
 # 2026-11-17 용암 웅덩이 · 불기둥 (hex.py lava · pyre — 불빛을 뜻으로 받는 원소 묶음, PhantomFx.semanticLib): 원소 반응 용암 (ElementFx LAVA — 예전 rfx_jpool) ·
 # 정령왕 불 원소의 불기둥 (예전 rfx_fountain). 원소 묶음의 둘째 빛 (accent) 은 얼음 푸른빛이라 이 둘은 불의 속빛 (금빛) 으로
 FIRE_KEYS = ("element",)
+# 2026-11-17 몸의 기운 (arcane.py aura — 위로 타오르는 띠, RUNE_PAINT aura) 을 더 갖는 묶음: 피 (도끼 룬 분노 버프의 몸 기운 — CI 43995311742 도끼 일반 48)
+AURA_KEYS = ("blood",)
 # 2026-11-17 진흙 웅덩이 (hex.py pool 을 곰 묶음의 흙빛으로 — 원소 반응 진흙 ElementFx MUD 의 rfx_jpool, CI 43989923127 정령 초월 6)
 MUD_KEYS = ("bear",)
 FIRE_ACCENT = ramp([(0.0, "#2A1404"), (0.5, "#E08A1A"), (0.8, "#FFD060"), (1.0, "#FFF6D8")])
@@ -1934,6 +1936,9 @@ def sprites():
                     sl_cache["f"] = frames_of(S, "slash")
                 return sl_cache["f"]
             out += tiled(S.lib + "_slash", sl) + tiled(S.lib + "_slashm", lambda sl=sl: [im.transpose(Image.FLIP_LEFT_RIGHT) for im in sl()])
+        if key in AURA_KEYS:
+            from . import arcane
+            out.append((S.lib + "_aura", lambda S=S: [to_img(*arcane.aura_frame(S, f)) for f in range(arcane.AURA_FRAMES)], True))
         if key in MUD_KEYS:
             from . import hex as hexart
             out.append((S.lib + "_pool", lambda S=S: hexart.frames_of("pool", S), True))

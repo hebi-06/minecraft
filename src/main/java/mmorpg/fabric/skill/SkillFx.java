@@ -89,7 +89,8 @@ public final class SkillFx {
     /** 애드온 파티클 하나 (모두에게) */
     public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
         // 2026-11-17 keep = 예전 그림 그대로 (칠하지 않음 — 활 초월의 시위처럼 2틱마다 다시 긋는 가는 줄)
-        if (painted != null && !o.truthy("keep") && painted.draw(level, id, at, o)) return;
+        // paintGlow = 칠할 묶음을 고를 빛 (예전 그림의 빛 color 는 그대로 — 마력 룬 불 폭풍의 옅은 금빛 속불을 불빛 묶음으로)
+        if (painted != null && !o.truthy("keep") && painted.draw(level, id, at, o.get("paintGlow") instanceof double[] pg ? o.with("color", pg) : o)) return;
         if (diag != null && !o.truthy("keep")) diag.merge(diagKey(id, o.get("color")), 1, Integer::sum);
         AddonFx.spawn(level, id, at, vars(o));
     }

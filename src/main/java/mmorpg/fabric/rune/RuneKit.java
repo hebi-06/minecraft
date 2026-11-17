@@ -1017,7 +1017,7 @@ public final class RuneKit {
     public static void vortexAt(ServerLevel level, Vec3 at, double size, double[] color, Opt o) {
         rfx(level, "vortex", at, Opt.of("size", size, "life", o.num("life", 0.4), "color", color, "alpha", o.num("alpha", 0.9), "frames", 8.0, "fps", o.num("fps", 20),
                 "loop", true, "phase", o.has("phase") ? o.num("phase", 0) : Kit.rand() * 8, "fade", o.num("fade", 0.3), "grow", o.num("grow", 0), "vel",
-                o.vec("vel", V_ZERO)));
+                o.vec("vel", V_ZERO), "paintGlow", o.get("paintGlow")));
     }
 
     // ------------------------------------------------------------ 여러 계열이 함께 쓰는 그림 · 피해

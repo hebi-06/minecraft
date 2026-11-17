@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 final class RuneInt {
     /**
      * 2026-11-17 미리 칠한 불 폭발 (rfx_boom) · 메테오의 잿빛 연기 (rfx_cloud) 를 칠할 빛 (paintGlow — 위르드식 2판): 불빛 → 원소 묶음의 터짐 · 불타는 연기
-     * (CI 43989923127 마력 초월에 빛 없는 예전 터짐 5 · 잿빛 연기 11)
+     * (CI 43989923127 마력 초월에 빛 없는 예전 터짐 5 · 잿빛 연기 11) · 불 폭풍 (고귀) 의 불 회오리 · 불꽃 (옅은 금빛 속불이 성광 묶음으로 가던 것 — CI 43995311742 80)
      */
     static final double[] FIRE_PAINT = {1.0, 0.55, 0.15};
     private RuneInt() {}
@@ -199,16 +199,16 @@ final class RuneInt {
                     Vec3 q = new Vec3(g.x + Math.cos(b) * r2, g.y, g.z + Math.sin(b) * r2);
                     Vec3 tang = new Vec3(Math.sin(b), 0, -Math.cos(b));
                     RuneKit.vortexAt(level, q, (0.9 + 0.15 * j) * sc, j > 0 ? glow : core, Opt.of("life", 0.2, "alpha", 0.85, "fade", last ? 0.5 : 0.05, "phase",
-                            (double) ((tt + j * 3) % 8), "vel", V.scale(tang, r2 * 4.4)));
+                            (double) ((tt + j * 3) % 8), "vel", V.scale(tang, r2 * 4.4), "paintGlow", FIRE_PAINT));
                 }
                 if (tt % 6 == 0) {
                     // 가운데 거대한 불 회오리 (다음까지 이어짐) + 밑동에서 날름거리는 불꽃 둘
                     RuneKit.vortexAt(level, g, 2.5 * sc, glow, Opt.of("life", 0.36, "alpha", 0.95, "fps", 22.0, "fade", tt + 6 >= total ? 0.5 : 0.0, "grow",
-                            tt == 0 ? 0.25 : 0.0, "phase", (double) (tt % 8)));
+                            tt == 0 ? 0.25 : 0.0, "phase", (double) (tt % 8), "paintGlow", FIRE_PAINT));
                     for (int j = 0; j < 2; j++) {
                         double b = tt * 0.9 + j * Math.PI;
                         SkillFx.fx(level, "rpg:fire_wall", new Vec3(g.x + Math.cos(b) * 0.5 * sc, g.y, g.z + Math.sin(b) * 0.5 * sc), Opt.of("size", 1.5 * sc,
-                                "life", 0.45, "color", j > 0 ? core : glow, "alpha", 0.9, "spin", Kit.rand() * 360));
+                                "life", 0.45, "color", j > 0 ? core : glow, "alpha", 0.9, "spin", Kit.rand() * 360, "paintGlow", FIRE_PAINT));
                     }
                 }
                 if (tt % 9 == 0) {

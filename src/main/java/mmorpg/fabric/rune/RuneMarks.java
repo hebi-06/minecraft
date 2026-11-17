@@ -36,7 +36,8 @@ public final class RuneMarks {
     /** tag = 건 룬의 꼬리표 (Tasks.tag — 1초마다 다시 그릴 때 그 계열 묶음으로 칠하게, 2026-11-17) */
     private record Vuln(LivingEntity e, long until, double add, double[] glow, double[] core, String tag) {}
 
-    private record Buff(long until, double add, String name, double[] glow, double[] core) {}
+    /** 가하는 피해 증가 (2026-11-17 tag = 건 룬의 꼬리표 — 버프 동안 몸 기운을 그 계열 묶음으로 다시 그림) */
+    private record Buff(long until, double add, String name, double[] glow, double[] core, String tag) {}
 
     private static final Map<UUID, Vuln> VULN = new HashMap<>();
     private static final Map<UUID, Buff> BUFF = new HashMap<>();
@@ -116,7 +117,7 @@ public final class RuneMarks {
             add = old.add();
             name = old.name();
         }
-        BUFF.put(sp.getUUID(), new Buff(until, add, name, glow, core));
+        BUFF.put(sp.getUUID(), new Buff(until, add, name, glow, core, Tasks.tag()));
         ServerLevel level = sp.level();
         RuneKit.bodyAura(sp, glow, Opt.of("n", 8.0, "size", 1.25, "life", 0.45, "alpha", 0.85, "force", true));
         RuneKit.auraCue(sp, core, 6);
@@ -175,8 +176,14 @@ public final class RuneMarks {
                 if (n % 4 != 0) continue;
                 ServerPlayer sp = server.getPlayerList().getPlayer(en.getKey());
                 if (sp == null || sp.isRemoved() || sp.isSpectator()) continue;
-                RuneKit.bodyAura(sp, b.glow(), Opt.of("n", 4.0, "size", 0.95, "alpha", 0.6));
-                if (n % 16 == 0) RuneKit.auraCue(sp, b.core(), 2);
+                // 2026-11-17 버프 틱은 룬을 쓴 뒤라 맥락이 없음 — 건 룬의 꼬리표로 (계열 묶음의 몸 기운 · 불티, CI 43995311742 도끼 일반 · 검 영웅 132)
+                String prevTag = Tasks.tag(b.tag());
+                try {
+                    RuneKit.bodyAura(sp, b.glow(), Opt.of("n", 4.0, "size", 0.95, "alpha", 0.6));
+                    if (n % 16 == 0) RuneKit.auraCue(sp, b.core(), 2);
+                } finally {
+                    Tasks.tag(prevTag);
+                }
             }
         }
     }

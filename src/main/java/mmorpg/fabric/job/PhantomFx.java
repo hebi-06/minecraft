@@ -1943,7 +1943,7 @@ final class PhantomFx {
 
     /**
      * 2026-11-17 뜻이 있는 빛의 묶음 (계열 빛이 아닌 불 · 얼음 · 흙 빛 — 뜻은 그대로 두고 그 뜻의 칠한 묶음으로): 불빛 (색조 0 ~ 48° · 채도 0.55 · 밝기 0.7 넘게) = 원소
-     * (금빛 주황 불꽃), 얼음빛 (180 ~ 215° · 채도 0.2 ~ 0.75 · 밝기 0.75 넘게) = 서리, 흙빛 (15 ~ 45° · 채도 0.25 ~ 0.75 · 밝기 0.35 ~ 0.75) = 곰. 그 밖은 null (예전 그림).
+     * (금빛 주황 불꽃), 얼음빛 (180 ~ 215° · 채도 0.2 ~ 0.75 · 밝기 0.75 넘게) = 서리, 흙빛 (15 ~ 45° · 채도 0.2 ~ 0.75 · 밝기 0.25 ~ 0.75) = 곰, 독빛 = 혼, 회복빛 = 성광. 그 밖은 null (예전 그림).
      * CI 43982885199: 정령 초월의 불벽 · 금빛 불티 · 힘 초월의 돌덩이가 계열 빛이 아니라 예전 그림이었음
      */
     static Lib semanticLib(double[] glow) {
@@ -1953,8 +1953,13 @@ final class PhantomFx {
         // 옅은 금빛 (색조 38 ~ 62° · 채도 0.3 ~ 0.55 · 밝기 0.85 넘게 — 마력 초월의 금빛 불티 · 일섬, CI 43987516768 32) = 성광
         if (h[0] >= 38 && h[0] <= 62 && h[1] >= 0.3 && h[1] <= 0.55 && h[2] > 0.85) return HOLY;
         if (h[0] >= 180 && h[0] <= 215 && h[1] >= 0.2 && h[1] <= 0.75 && h[2] > 0.75) return FROST;
-        // 2026-11-17 채도 0.75 까지 (원소 반응 진흙의 짙은 흙빛 0.36 · 0.22 · 0.1 — 채도 0.72)
-        if (h[0] >= 15 && h[0] <= 45 && h[1] >= 0.25 && h[1] <= 0.75 && h[2] >= 0.35 && h[2] <= 0.75) return BEAR;
+        // 2026-11-17 채도 0.75 까지 (원소 반응 진흙의 짙은 흙빛 0.36 · 0.22 · 0.1 — 채도 0.72) · 채도 0.2 · 밝기 0.25 부터 (돌 불티 0.72 · 0.64 · 0.54 — 채도 0.25 가
+        // 셈 끝수에 걸림, 정령 부름의 짙은 흙빛 땅 금 0.3 · 0.2 · 0.1 — CI 43995311742 힘 영웅 · 활 고귀 6 · 정령 5)
+        if (h[0] >= 15 && h[0] <= 45 && h[1] >= 0.2 && h[1] <= 0.75 && h[2] >= 0.25 && h[2] <= 0.75) return BEAR;
+        // 2026-11-17 독빛 (색조 95 ~ 125° · 채도 0.5 · 밝기 0.6 넘게 — 암살 희귀 독 표창 0.45 · 1 · 0.35) = 혼 (독의 녹색 혼불), 회복빛 (125 ~ 165° · 채도 0.3 ~ 0.6 · 밝기
+        // 0.8 넘게 — 체력 희귀 치유 0.5 · 1 · 0.6) = 성광 (사제의 회복 연둣빛) — CI 43995311742 예전 39 · 57
+        if (h[0] >= 95 && h[0] < 125 && h[1] >= 0.5 && h[2] >= 0.6) return SOUL;
+        if (h[0] >= 125 && h[0] <= 165 && h[1] >= 0.3 && h[1] <= 0.6 && h[2] >= 0.8) return HOLY;
         return null;
     }
 
@@ -2049,6 +2054,7 @@ final class PhantomFx {
         Paint rp = RUNE_PAINT.get(name);
         if (rp != null) { // 2026-11-16 계열 대표 그림 (예전 rfx 와 같은 자리 · 움직임 — 묶음에 그 그림이 있을 때만)
             Lib L = jobLib(glow);
+            if (L != null && name.equals("vortex") && !Vfx.hasSheet(L.n("twister")) && Vfx.hasSheet(L.n("swirl"))) rp = new Paint("swirl", 1, BILL, 1, 1);
             if (L == null || !Vfx.hasSheet(rp.k() > 1 ? L.n(rp.art()) + "_00" : L.n(rp.art()))) return false; // 조각 그림 (k = 2) 은 이름_00
             int cell = (int) Math.round(o.num("cell", 0)) - RuneKit.RFX.getOrDefault(name, new int[] {0, 1})[0];
             if (name.equals("thorn")) {
@@ -2321,8 +2327,9 @@ final class PhantomFx {
             java.util.Map.entry("icicle", new Paint("icelance", 1, LOOK_DIR, 0.25, 1)),
             // 2026-11-17 검은 가시 손 (rfx_thorn — 심연 낙인 · 밑동 고정, CI 43982885199 19): 솟는 가시 (spike — 폭군 묶음, 솟았다 가라앉는 여덟 칸을 life 동안)
             java.util.Map.entry("thorn", new Paint("spike", 1, VERT, 1, 1)),
-            // 2026-11-17 소용돌이 (rfx_vortex — 민첩 영웅 10): 묶음의 소용돌이 (swirl — 질풍 묶음, jswirl 과 같은 몫)
-            java.util.Map.entry("vortex", new Paint("swirl", 1, BILL, 1, 1)),
+            // 2026-11-17 회오리 (rfx_vortex 128 × 256 — 밑동 고정 · 위로 벌어진 깔때기, 민첩 영웅 · 마력 고귀 불 폭풍 · 힘 희귀 흙먼지): 묶음의 회오리 (twister — jtwister2 와
+            // 같은 세움 · 아래 끝 = 땅). 1판의 swirl (도는 바람개비 · 카메라를 봄) 은 모양이 달랐음 — 회오리가 없는 묶음만 swirl
+            java.util.Map.entry("vortex", new Paint("twister", 1, VERT, 2, 1)),
             // 2026-11-17 솟는 분수 (rfx_fountain 128 × 256 — 아래 끝 = 땅, 정령왕 불 원소 · CI 43987516768 정령 초월 6): 불빛이면 원소 묶음의 불기둥 (pyre — 같은 세움 ·
             // 아래 끝 = 땅). 체력 룬의 녹색 분수는 꽃잎 묶음에 불기둥이 없어 예전
             java.util.Map.entry("fountain", new Paint("pyre", 1, VERT, 2, 1)),
