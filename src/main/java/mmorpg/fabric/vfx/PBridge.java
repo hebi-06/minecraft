@@ -1039,6 +1039,10 @@ public final class PBridge {
      */
     static final class Card extends Mover {
         final List<Layer[]> frames;
+        /** 2026-11-17 좌우를 뒤집은 판 (tools/vfx_particles.py CARD_MIRROR — <이름>_m, 없으면 null): Pose.mirror (날이 앞섬 lead) 일 때 — 글자 표시는 거울로 못 그림 */
+        final List<Layer[]> mframes;
+        /** 지금 그린 판이 뒤집은 판인지 (바뀌면 글자를 다시) */
+        boolean shownMirror;
         final TextDisplayElement e;
         final int[] color;
         PDefs.CardAnim animDef;
@@ -1050,6 +1054,7 @@ public final class PBridge {
             // 구운 판 (입체 모델의 앞모습) 은 늘 보는 사람 쪽 — 옆에서 얇게 보이지 않게
             super(batch, model, at, o, follow, o.truthy("faceCam") || PDefs.bill(model), false);
             this.frames = frames;
+            this.mframes = PDefs.card(model + "_m");
             double[] c = o.color("color", new double[] {1, 1, 1});
             double[] g = o.color("glow", c);
             this.color = new int[] {rgb(c[0], c[1], c[2]), rgb(g[0], g[1], g[2]), 0xFFFFFF};
@@ -1109,20 +1114,23 @@ public final class PBridge {
                 u = loop ? u - Math.floor(u) : Math.max(0, Math.min(1, u));
                 f = Math.min(frames.size() - 1, (int) Math.floor(u * frames.size()));
             }
+            boolean flip = ps.mirror() && mframes != null && mframes.size() == frames.size();
+            List<Layer[]> fs = flip ? mframes : frames;
             if (pos == null || p.distanceToSqr(pos) > 1e-6) {
                 pos = p;
                 e.setTeleportDuration(dur);
                 e.setOffset(p.subtract(batch.origin));
             }
-            if (o < MIN_OPACITY || s <= 0.001 || f < 0 || f >= frames.size()) {
+            if (o < MIN_OPACITY || s <= 0.001 || f < 0 || f >= fs.size()) {
                 hide();
                 return;
             }
             boolean wasHidden = hidden;
             hidden = false;
-            Layer[] ls = frames.get(f);
-            if (f != frame) {
+            Layer[] ls = fs.get(f);
+            if (f != frame || flip != shownMirror) {
                 frame = f;
+                shownMirror = flip;
                 MutableComponent text = Component.empty();
                 for (int i = 0; i < ls.length; i++) {
                     Layer l = ls[i];

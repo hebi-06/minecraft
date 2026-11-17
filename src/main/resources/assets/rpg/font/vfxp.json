@@ -3656,7 +3656,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_axe_m_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3665,7 +3665,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_axe_m_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3674,7 +3674,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_spear_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3683,7 +3683,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_spear_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3692,7 +3692,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_spear_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3701,7 +3701,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_spear_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3710,7 +3710,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_spear_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3719,7 +3719,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_spear_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_spear_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3728,7 +3728,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_spear_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3737,7 +3737,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_spear_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3746,7 +3746,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3755,7 +3755,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3764,7 +3764,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3773,7 +3773,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3782,7 +3782,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3791,7 +3791,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_arrow_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3800,7 +3800,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_dagger_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3809,7 +3809,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_dagger_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_arrow_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3818,7 +3818,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_dagger_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3827,7 +3827,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_dagger_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3836,7 +3836,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3845,7 +3845,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3854,7 +3854,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3863,7 +3863,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3872,7 +3872,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3881,7 +3881,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bolt_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3890,7 +3890,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3899,7 +3899,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_bolt_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3908,7 +3908,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3917,7 +3917,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3926,7 +3926,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3935,7 +3935,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3944,7 +3944,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3953,7 +3953,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3962,7 +3962,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f4_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3971,7 +3971,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f4_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3980,7 +3980,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f5_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3989,7 +3989,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f5_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -3998,7 +3998,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f6_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4007,7 +4007,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f6_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4016,7 +4016,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f7_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4025,7 +4025,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_orb_f7_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4034,7 +4034,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_orb_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4043,7 +4043,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_orb_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4052,7 +4052,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4061,7 +4061,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4070,7 +4070,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4079,7 +4079,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4088,7 +4088,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4097,7 +4097,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4106,7 +4106,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f4_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4115,7 +4115,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f4_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4124,7 +4124,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f5_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4133,7 +4133,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f5_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4142,7 +4142,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f6_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4151,7 +4151,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f6_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4160,7 +4160,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f7_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4169,7 +4169,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f7_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4178,7 +4178,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f8_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4187,7 +4187,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f8_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4196,7 +4196,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f9_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4205,7 +4205,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f9_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4214,7 +4214,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f10_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4223,7 +4223,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f10_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4232,7 +4232,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f11_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f10_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4241,7 +4241,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_tome_f11_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f10_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4250,7 +4250,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_tome_f11_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4259,7 +4259,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_tome_f11_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4268,7 +4268,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_page_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4277,7 +4277,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_page_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4286,7 +4286,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_page_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4295,7 +4295,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_page_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4304,7 +4304,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_page_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4313,7 +4313,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_page_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_page_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4322,7 +4322,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_page_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4331,7 +4331,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_page_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4340,7 +4340,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_maul_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4349,7 +4349,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_maul_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4358,7 +4358,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_maul_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4367,7 +4367,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_maul_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4376,7 +4376,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_maul_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4385,7 +4385,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_maul_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_maul_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4394,7 +4394,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_maul_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4403,7 +4403,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_maul_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4412,7 +4412,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4421,7 +4421,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4430,7 +4430,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4439,7 +4439,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4448,7 +4448,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4457,7 +4457,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4466,7 +4466,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f4_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4475,7 +4475,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f4_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4484,7 +4484,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f5_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4493,7 +4493,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f5_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4502,7 +4502,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f6_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4511,7 +4511,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f6_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4520,7 +4520,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f7_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4529,7 +4529,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bell_f7_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4538,7 +4538,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_buckler_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_bell_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4547,7 +4547,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_buckler_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_bell_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4556,7 +4556,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_buckler_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4565,7 +4565,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_buckler_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4574,7 +4574,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4583,7 +4583,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4592,7 +4592,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4601,7 +4601,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4610,7 +4610,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4619,7 +4619,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4628,7 +4628,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f4_0.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4637,7 +4637,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f4_1.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4646,7 +4646,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f5_0.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4655,7 +4655,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_aegis_f5_1.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4664,7 +4664,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4673,7 +4673,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_aegis_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4682,7 +4682,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f1_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4691,7 +4691,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f1_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4700,7 +4700,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f2_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4709,7 +4709,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f2_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4718,7 +4718,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f3_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4727,7 +4727,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f3_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4736,7 +4736,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f4_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4745,7 +4745,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f4_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4754,7 +4754,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f5_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4763,7 +4763,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f5_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4772,7 +4772,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f6_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4781,7 +4781,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f6_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4790,7 +4790,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f7_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4799,7 +4799,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_card_bow_f7_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4808,7 +4808,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f0_0.png",
+   "file": "rpg:font/vfxp/card_card_bow_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4817,7 +4817,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f0_1.png",
+   "file": "rpg:font/vfxp/card_card_bow_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4826,7 +4826,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f1_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4835,7 +4835,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f1_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4844,7 +4844,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f2_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4853,7 +4853,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f2_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4862,7 +4862,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f3_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4871,7 +4871,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f3_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4880,7 +4880,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f4_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4889,7 +4889,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f4_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4898,7 +4898,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f5_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4907,7 +4907,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f5_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4916,7 +4916,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f6_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4925,7 +4925,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f6_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4934,7 +4934,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f7_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4943,7 +4943,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f7_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4952,7 +4952,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f8_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4961,7 +4961,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f8_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4970,7 +4970,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f9_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4979,7 +4979,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_f9_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4988,7 +4988,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f0_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -4997,7 +4997,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f0_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5006,7 +5006,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f1_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5015,7 +5015,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f1_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5024,7 +5024,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f2_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5033,7 +5033,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f2_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5042,7 +5042,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f3_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5051,7 +5051,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f3_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5060,7 +5060,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f4_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5069,7 +5069,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f4_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5078,7 +5078,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f5_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5087,7 +5087,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f5_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5096,7 +5096,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f6_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5105,7 +5105,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f6_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5114,7 +5114,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f7_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5123,7 +5123,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f7_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5132,7 +5132,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f8_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5141,7 +5141,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f8_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5150,7 +5150,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f9_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5159,7 +5159,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_l_f9_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5168,7 +5168,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f0_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5177,7 +5177,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f0_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_l_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5186,7 +5186,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f1_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5195,7 +5195,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f1_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5204,7 +5204,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f2_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5213,7 +5213,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f2_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5222,7 +5222,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f3_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5231,7 +5231,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f3_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5240,7 +5240,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f4_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5249,7 +5249,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f4_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5258,7 +5258,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f5_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5267,7 +5267,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f5_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5276,7 +5276,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f6_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5285,7 +5285,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f6_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5294,7 +5294,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f7_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5303,7 +5303,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f7_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5312,7 +5312,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f8_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5321,7 +5321,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f8_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5330,7 +5330,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f9_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5339,7 +5339,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_w_f9_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5348,7 +5348,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f0_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5357,7 +5357,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f0_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_w_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5366,7 +5366,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f1_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5375,7 +5375,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f1_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5384,7 +5384,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f2_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5393,7 +5393,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f2_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5402,7 +5402,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f3_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5411,7 +5411,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f3_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5420,7 +5420,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f4_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5429,7 +5429,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f4_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5438,7 +5438,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f5_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5447,7 +5447,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f5_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5456,7 +5456,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f6_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5465,7 +5465,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f6_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5474,7 +5474,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f7_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5483,7 +5483,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f7_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5492,7 +5492,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f8_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5501,7 +5501,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f8_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5510,7 +5510,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f9_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5519,7 +5519,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_basic_wl_f9_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5528,7 +5528,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f0_0.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5537,7 +5537,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f0_1.png",
+   "file": "rpg:font/vfxp/card_slash_basic_wl_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5546,7 +5546,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f1_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5555,7 +5555,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f1_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5564,7 +5564,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f2_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5573,7 +5573,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f2_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5582,7 +5582,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f3_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5591,7 +5591,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f3_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5600,7 +5600,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f4_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5609,7 +5609,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f4_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5618,7 +5618,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f5_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5627,7 +5627,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f5_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5636,7 +5636,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f6_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5645,7 +5645,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f6_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5654,7 +5654,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f7_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5663,7 +5663,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f7_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5672,7 +5672,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f8_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5681,7 +5681,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f8_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5690,7 +5690,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f9_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5699,7 +5699,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_thrust_f9_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5708,7 +5708,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f0_0.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5717,7 +5717,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f0_1.png",
+   "file": "rpg:font/vfxp/card_slash_thrust_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5726,7 +5726,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f1_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5735,7 +5735,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f1_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5744,7 +5744,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f2_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5753,7 +5753,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f2_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5762,7 +5762,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f3_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5771,7 +5771,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f3_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5780,7 +5780,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f4_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5789,7 +5789,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f4_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5798,7 +5798,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f5_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5807,7 +5807,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f5_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5816,7 +5816,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f6_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5825,7 +5825,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f6_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5834,7 +5834,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f7_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5843,7 +5843,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f7_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5852,7 +5852,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f8_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5861,7 +5861,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f8_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5870,7 +5870,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f9_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5879,7 +5879,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_slash_bash_f9_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5888,7 +5888,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f0_0.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f9_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5897,7 +5897,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f0_1.png",
+   "file": "rpg:font/vfxp/card_slash_bash_f9_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5906,7 +5906,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f1_0.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5915,7 +5915,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f1_1.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5924,7 +5924,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f2_0.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5933,7 +5933,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f2_1.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5942,7 +5942,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f3_0.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5951,7 +5951,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f3_1.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5960,7 +5960,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f4_0.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5969,7 +5969,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_hit_spark_f4_1.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5978,7 +5978,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f0_0.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5987,7 +5987,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f0_1.png",
+   "file": "rpg:font/vfxp/card_hit_spark_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -5996,7 +5996,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f1_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f0_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6005,7 +6005,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f1_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f0_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6014,7 +6014,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f2_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f1_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6023,7 +6023,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f2_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f1_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6032,7 +6032,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f3_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f2_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6041,7 +6041,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f3_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f2_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6050,7 +6050,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f4_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f3_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6059,7 +6059,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f4_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f3_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6068,7 +6068,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f5_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f4_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6077,7 +6077,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f5_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f4_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6086,7 +6086,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f6_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f5_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6095,7 +6095,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f6_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f5_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6104,7 +6104,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f7_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f6_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6113,7 +6113,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f7_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f6_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6122,7 +6122,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f8_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f7_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6131,7 +6131,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f8_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f7_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6140,7 +6140,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f9_0.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f8_0.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6149,7 +6149,7 @@
   },
   {
    "type": "bitmap",
-   "file": "rpg:font/vfxp/card_streak_trail_f9_1.png",
+   "file": "rpg:font/vfxp/card_streak_trail_f8_1.png",
    "height": 64,
    "ascent": 30,
    "chars": [
@@ -6158,11 +6158,29 @@
   },
   {
    "type": "bitmap",
+   "file": "rpg:font/vfxp/card_streak_trail_f9_0.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "rpg:font/vfxp/card_streak_trail_f9_1.png",
+   "height": 64,
+   "ascent": 30,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "rpg:font/vfxp/card_bone_hand.png",
    "height": 64,
    "ascent": 30,
    "chars": [
-    ""
+    ""
    ]
   },
   {
@@ -6171,9 +6189,9 @@
    "height": 64,
    "ascent": 30,
    "chars": [
-    "",
-    "",
-    "\u0000\u0000\u0000\u0000"
+    "",
+    "",
+    "\u0000\u0000\u0000\u0000"
    ]
   },
   {

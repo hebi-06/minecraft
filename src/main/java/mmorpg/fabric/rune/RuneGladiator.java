@@ -240,11 +240,13 @@ final class RuneGladiator {
         Vec3 a0 = V.up(V.add(V.add(start, f, 1.9), right, 1.3), BISON_LIFT);
         Vec3 a1 = V.up(V.add(V.add(start, f, reach + 1.55), right, 0.55), BISON_LIFT);
         // 1인칭 (CI 44050025999 · 44054369134 영상 — 같은 쪽으로 나란히 달리는 옆모습은 눈에서 비스듬한 조각으로만 보였음): 세로축만 카메라를 보는 옆모습
-        // (bisonfp · mirror — 머리가 화면 왼쪽) 이 오른쪽 앞 (내가 멈출 자리 앞 3.4칸 · 오른쪽 3.6칸) 에서 과녁 무리 뒤 (앞 4칸 · 오른쪽 0.4칸) 로 달려듦 →
-        // 그대로 왼쪽 앞으로 달려 나가며 옅어짐. 내 눈에서 4칸 넘게 (그림 높이 2.2칸이 화면 세로의 1/3 쯤)
-        Vec3 b0 = V.up(V.add(V.add(start, f, reach + 3.4), right, 3.6), BISON_LIFT);
-        Vec3 b1 = V.up(V.add(V.add(start, f, reach + 4.0), right, 0.4), BISON_LIFT);
-        Vec3 away = V.add(V.scale(right, -7.0), V.scale(f, 2.0));
+        // (bisonfp — 머리가 화면 오른쪽, 그림 그대로) 이 왼쪽 앞 (내가 멈출 자리 앞 3.4칸 · 왼쪽 3.6칸) 에서 과녁 무리 뒤 (앞 4칸 · 왼쪽 0.4칸) 로 달려듦 →
+        // 그대로 오른쪽 앞으로 달려 나가며 옅어짐. 내 눈에서 4칸 넘게 (그림 높이 2.2칸이 화면 세로의 1/3 쯤).
+        // 2026-11-17 좌우 거울 (mirror — 크기 x 를 뒤집어 판의 뒷면이 앞) 은 카메라를 보는 판에서는 뒷면이라 그려지지 않았음 (CI 44057837261 · 44063758248
+        // 1인칭에 들소 없음) → 거울 없이 왼쪽에서 오른쪽으로
+        Vec3 b0 = V.up(V.add(V.add(start, f, reach + 3.4), right, -3.6), BISON_LIFT);
+        Vec3 b1 = V.up(V.add(V.add(start, f, reach + 4.0), right, -0.4), BISON_LIFT);
+        Vec3 away = V.add(V.scale(right, 7.0), V.scale(f, 2.0));
         Opt base = Opt.of("size", BISON_SIZE, "color", STEEL, "frames", 6.0, "fps", 14.0, "loop", true, "alpha", 0.95);
         Opt others = base.with("view", 1.0, "owner", owner);
         // 2026-11-17 1인칭 들소는 가려지지 않는 그림 (seeThrough — 내 앞 4칸 넘게 달리는 들소가 바로 앞 과녁 무리 몸에 가려 한 번도 보이지 않았음, CI 44057837261)
@@ -256,13 +258,13 @@ final class RuneGladiator {
         SkillFx.play(level, "mob.ravager.roar", start, 1.15, 0.7);
         // 함께 달림 (부딪히는 틱까지)
         RuneKit.rfx(level, "bison", a0, others.with("dir", V.unit(V.sub(a1, a0)), "life", t1 / 20.0, "vel", V.scale(V.sub(a1, a0), 20.0 / t1)));
-        RuneKit.rfx(level, "bisonfp", b0, mine.with("dir", V.unit(V.sub(b1, b0)), "life", t1 / 20.0, "vel", V.scale(V.sub(b1, b0), 20.0 / t1), "mirror", true));
+        RuneKit.rfx(level, "bisonfp", b0, mine.with("dir", V.unit(V.sub(b1, b0)), "life", t1 / 20.0, "vel", V.scale(V.sub(b1, b0), 20.0 / t1)));
         double phase = Math.round(t1 * 14 / 20.0);
         RuneKit.later(t1, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             // 들이받음 → 그대로 앞으로 달려 나가며 옅어짐
             RuneKit.rfx(level, "bison", a1, others.with("dir", f, "life", 0.55, "vel", V.scale(f, 9.0), "fade", 0.6, "phase", phase));
-            RuneKit.rfx(level, "bisonfp", b1, mine.with("dir", V.unit(away), "life", 0.55, "vel", away, "fade", 0.6, "phase", phase, "mirror", true));
+            RuneKit.rfx(level, "bisonfp", b1, mine.with("dir", V.unit(away), "life", 0.55, "vel", away, "fade", 0.6, "phase", phase));
             Vec3 hp = V.add(V.up(a1, -0.2), f, BISON_HEAD);
             clang(level, hp, 1.3);
             SkillFx.ring(level, hp, f, CORE, 1.2, 0.35, 3.2);

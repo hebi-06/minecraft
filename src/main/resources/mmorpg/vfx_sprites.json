@@ -11235,7 +11235,11 @@
    "chars": "󰵽󰵾󰵿󰶀󰶁󰶂",
    "frames": 6,
    "aspect": 0.25,
-   "colored": true
+   "colored": true,
+   "crop": [
+    0.003906,
+    -0.0
+   ]
   },
   "el_abyss_volt": {
    "chars": "󰶃󰶄󰶅󰶆󰶇󰶈󰶉󰶊",
@@ -11329,7 +11333,7 @@
    "aspect": 1.0,
    "colored": true,
    "crop": [
-    -0.002534,
+    -0.010346,
     -0.0
    ]
   },

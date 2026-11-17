@@ -25,6 +25,8 @@ final class RuneInt {
     static final double[] SIGIL_RED = {0.9, 0.1, 0.08};
     static final double[] SIGIL_CORE = {1.0, 0.42, 0.3};
     static final String SIGIL_LIB = "el_hex";
+    /** 2026-11-17 메테오 터진 자리의 고리 · 충격파 묶음 (분노 — 주황 · 금빛) */
+    static final String IMPACT_LIB = "el_rage";
     private RuneInt() {}
 
     static void register() {
@@ -539,7 +541,8 @@ final class RuneInt {
             RuneKit.ultFlashFor(sp, level, g, "meteor", "flash", Opt.empty());
             RuneBoost.impact(level, g, glow, core, radius); // 0.50.0 2D 강화 (초월 나머지): 운석이 떨어진 자리의 터짐
             RuneKit.skyFlare(level, burning, 4.4, glow, core, Opt.of("life", 0.6));
-            RuneKit.later(1, () -> RuneKit.novaRing(level, g, 2.4, 3.0, glow, core, Opt.of("life", 0.5)));
+            // 2026-11-17 터진 자리 고리 · 충격파는 분노 묶음 (주황 · 금빛 — 원소 묶음의 얼음 하늘빛 둘째 빛이 불 운석에 섞여 보였음, CI 44063758248)
+            RuneKit.later(1, () -> SkillFx.withLib(IMPACT_LIB, () -> RuneKit.novaRing(level, g, 2.4, 3.0, glow, core, Opt.of("life", 0.5))));
             RuneKit.later(2, () -> RuneKit.glowCrack(level, g, radius * 1.15, new double[] {1.0, 0.38, 0.08}, new double[] {1.0, 0.86, 0.5}, Opt.of("life", 2.8,
                     "fade", 0.6, "v", 1.0)));
             for (int i = 0; i < 3; i++) {
@@ -562,7 +565,7 @@ final class RuneInt {
             SkillFx.fx(level, "rpg:arrow_spark", mid, Opt.of("dir", V.UP, "size", 4 * sc, "grow", 2.0, "life", 0.22, "color", RuneKit.WHITE, "alpha", 1.0));
             for (int i = 0; i < 5; i++) {
                 final int ii = i;
-                Tasks.later(i * 2, () -> SkillFx.shock(level, g, ii % 2 == 1 ? red : glow, 2 + ii * 1.5, 0.55 + ii * 0.1));
+                Tasks.later(i * 2, () -> SkillFx.withLib(IMPACT_LIB, () -> SkillFx.shock(level, g, ii % 2 == 1 ? red : glow, 2 + ii * 1.5, 0.55 + ii * 0.1)));
             }
             for (int i = 0; i < 10; i++) {
                 Vec3 dd = RuneKit.turn(new Vec3(1, 0, 0), i * 36 + Kit.rand() * 12);

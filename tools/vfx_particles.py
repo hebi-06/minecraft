@@ -26,7 +26,7 @@ import sys
 from io import BytesIO
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import vfx_bake3d  # noqa: E402
@@ -171,6 +171,10 @@ def scale_at(keys, u):
     return keys[-1][1]
 
 
+# 2026-11-17 좌우를 뒤집은 판도 굽는 카드 (날이 한쪽인 것 — 환영 도끼)
+CARD_MIRROR = {"card_axe"}
+
+
 def card_anims(m):
     """카드 모델의 움직임 → {이름: {len, seq: [[u, 칸]]}} (칸 = 그림이 있는 부분의 차례 — card_layers 와 같음). 모드는 움직임의 부분마다 scale 열쇠로 한 칸만
     켬 (1) · 나머지는 끔 (0): u 구간마다 켜진 칸 (구간 가운데에서 0.5 넘는 것 — 바뀌는 짧은 틈은 앞 칸 그대로). 열쇠가 없는 부분은 늘 켜짐"""
@@ -308,6 +312,19 @@ def build():
         anims = card_anims(json.load(open(os.path.join(MODEL_DIR, name + ".json"))))
         if anims:
             index_anims[name] = anims
+        # 2026-11-17 좌우를 뒤집은 판 (<이름>_m — 그림 · 겹 자리 x 를 뒤집음): 글자 표시는 한쪽 면이라 판을 거울로 그릴 수 없어, 날이 휘두르는 쪽에 오게
+        # (Fx3d lead — vfx.PBridge 가 Pose.mirror 일 때 이 판으로) 미리 뒤집은 그림 (직업 도감 메모 "도끼가 거꾸로 찍음" · "날이 위로 가있음")
+        if name in CARD_MIRROR:
+            mframes = []
+            for fi, layers in enumerate(cards[name]):
+                fr = []
+                for li, (cell, mat, c, half) in enumerate(layers):
+                    chars, cw, ch, adv = sheet_png("card_%s_m_f%d_%d" % (name, fi, li), [ImageOps.mirror(cell)])
+                    fr.append({"c": chars[0], "mat": mat, "at": [round(-c[0], 4), c[1], c[2]], "half": half, "adv": adv})
+                mframes.append(fr)
+            index_cards[name + "_m"] = mframes
+            if anims:
+                index_anims[name + "_m"] = anims
     # 2026-11-14 입체 모델을 구운 판 (tools/vfx_bake3d.py — 명계의 문 · 망자의 손): 칸마다 한 겹 (mat 2 = 흰 글자 — 색을 구워 넣음) · 보는 사람 쪽으로 돌림 (bill)
     bill = []
     for name in sorted(vfx_bake3d.BAKE):

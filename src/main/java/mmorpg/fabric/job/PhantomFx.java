@@ -2546,7 +2546,8 @@ final class PhantomFx {
         boolean look = facing == LOOK_DIR;
         Quaternionf q = facing == FACE_DIR ? dirFace(d) : look ? lookDir(d, at, looker) : null;
         int sides = facing == FACE_DIR ? 2 : 1;
-        boolean mirror = b.truthy("mirror") && facing != FACE_DIR; // 2026-11-17 좌우를 뒤집은 그림 (들소 1인칭 — 머리가 화면 왼쪽)
+        // 2026-11-17 좌우를 뒤집은 그림 (mirror — 고정 방향 판만: 카메라를 보는 판 (BILL · VERT · LOOK_DIR) 은 뒤집으면 뒷면이 카메라를 봐 그려지지 않음 — 들소 1인칭)
+        boolean mirror = b.truthy("mirror") && facing != FACE_DIR && facing != VERT && facing != BILL && facing != LOOK_DIR;
         boolean through = b.truthy("seeThrough"); // 2026-11-17 가려지지 않는 그림 (들소 1인칭 — 과녁 몸 · 땅에 가려졌음)
         java.util.List<Vfx.Sprite> all = new java.util.ArrayList<>();
         double[] off = new double[k * k * sides * 2];
