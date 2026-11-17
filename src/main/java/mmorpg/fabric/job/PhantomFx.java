@@ -2147,6 +2147,17 @@ final class PhantomFx {
                 double size = Math.max(0.2, o.num("size", 0.5));
                 return paintedWith(level, rp, L, 0, V.up(at, size), o.with("frames", (double) n, "fps", n / life, "grow", 0.0));
             }
+            if ((name.equals("shield") || name.equals("emblem")) && rp.art().equals("aegis")) {
+                // 2026-11-17 빛의 방패 (aegis 여섯 칸 — 0 = 테두리만 생기는 칸 · 1 ~ 5 = 채운 방패 · 빛이 지나감): 예전 문장 한 칸 (cell 0) 이 테두리만이라 방패가
+                // 옅은 선으로 보였음 (CI 44039915209 램파트 — 8틱마다 다시 부르면 늘 0 칸) → 커지며 나타날 때 (grow > 0) 는 0 ~ 5 를 life 동안, 아니면 채운 칸 1 ~ 5 를 되풀이
+                int n = Vfx.sheet(L.n(rp.art())).frames();
+                if (n >= 6) {
+                    double life = Math.max(0.1, o.num("life", 0.5));
+                    if (o.num("grow", 0) > 0) return paintedWith(level, rp, L, 0, at, o.with("frames", (double) n, "fps", n / life));
+                    return paintedWith(level, rp, L, 1, at, o.with("frames", (double) (n - 1), "fps", 10.0, "loop", true, "phase", // 다시 부른 방패가 이어 돌게 (때로 고름)
+                            (double) Math.floorMod(mmorpg.fabric.Tasks.now() / 2, n - 1)));
+                }
+            }
             if (name.equals("fountain") || name.equals("boom")) {
                 // 2026-11-17 불기둥 (pyre — 붙음 · 솟음 · 타오름 · 무너짐 · 재 연기 여덟 칸) 은 예전 분수 (비슷한 칸 넷을 돌림) 와 달리 처음과 끝이 있어 life 동안 다 ·
                 // 터짐 (boom — 번쩍 · 불덩이 · 연기로 흩어짐) 도 예전 여덟 칸 대신 칠한 칸을 다 life 동안
