@@ -388,7 +388,7 @@ public final class Vfx {
                 if (near && !PBridge.thirdPersonOf(p)) {
                     Vec3 look = p.getViewVector(1F);
                     for (Prop pr : props) {
-                        if (pr.contains(eye, EYE_MARGIN) || pr.coverage(eye, look) >= (was ? 0.45 : 0.6)) {
+                        if (pr.contains(eye, EYE_MARGIN) || pr.coverage(eye, look) >= (was ? 0.55 : 0.7)) {
                             in = true;
                             break;
                         }
@@ -630,15 +630,22 @@ public final class Vfx {
             float gx = (float) (16 * margin / Math.abs(sc.x));
             float gy = (float) (16 * margin / Math.abs(sc.y));
             float gz = (float) (16 * margin / Math.abs(sc.z));
+            Vector3f m = new Vector3f(mx, my, mz);
+            float gm = Math.max(gx, Math.max(gy, gz));
             for (float[] b : boxes) {
-                if (mx >= b[0] - gx && mx <= b[3] + gx && my >= b[1] - gy && my <= b[4] + gy && mz >= b[2] - gz && mz <= b[5] + gz) return true;
+                Vector3f q = toElement(b, m, true);
+                float hx = b[6] < 0 ? gx : gm;
+                float hy = b[6] < 0 ? gy : gm;
+                float hz = b[6] < 0 ? gz : gm;
+                if (q.x >= b[0] - hx && q.x <= b[3] + hx && q.y >= b[1] - hy && q.y <= b[4] + hy && q.z >= b[2] - hz && q.z <= b[5] + hz) return true;
             }
             return false;
         }
 
         /**
          * 2026-11-17 1인칭 화면을 이 소품이 가까이서 덮는 몫: 눈 eye 에서 보는 쪽 f 둘레 (가로 ±40° · 세로 ±25°) 5 × 5 빛줄 중 EYE_NEAR 칸 안에서 모델 조각 상자에 닿는 몫
-         * (힘 영웅 망치 머리가 눈앞 1칸에서 화면 2/3 를 잿빛 면으로 덮었음 — 눈이 속에 들지 않아 contains 로는 못 거름, CI 44007116244). 가늘고 긴 칼 · 옆의 물기둥은 몇 줄만 닿음
+         * (힘 영웅 망치 머리가 눈앞 1칸에서 화면 2/3 를 잿빛 면으로 덮었음 — 눈이 속에 들지 않아 contains 로는 못 거름, CI 44007116244). 거둠 0.7 · 다시 보냄 0.55 —
+         * 검 고귀 반격 자세의 가로 검 (가슴 앞 0.85칸 · 화면 아래 절반) 은 0.48 이라 그대로
          */
         double coverage(Vec3 eye, Vec3 f) {
             if (removed) return 0;
@@ -676,8 +683,10 @@ public final class Vfx {
     static final double[] COVER_V = {-25, -12.5, 0, 12.5, 25};
 
     /** 모델 픽셀 공간의 빛줄 (o + t d, t = 0 ~ tmax 칸) 이 조각 상자 하나에라도 닿는지 (slab) */
-    static boolean rayHits(Vector3f o, Vector3f d, float[][] boxes, double tmax) {
+    static boolean rayHits(Vector3f o0, Vector3f d0, float[][] boxes, double tmax) {
         for (float[] b : boxes) {
+            Vector3f o = toElement(b, o0, true);
+            Vector3f d = toElement(b, d0, false);
             double t0 = 0;
             double t1 = tmax;
             boolean ok = true;
@@ -768,6 +777,10 @@ public final class Vfx {
         return null;
     }
 
+    /**
+     * 조각 하나 → {x0, y0, z0, x1, y1, z1, 축 (0 · 1 · 2, 안 돌렸으면 −1), 각 (라디안), origin x · y · z} — 돌린 조각은 그 조각의 틀 (origin 둘레로 −각 만큼 되돌림)
+     * 에서 상자로 봄 (2026-11-17 1판은 돌린 꼭짓점을 감싸는 큰 상자라 비스듬한 칼날 조각이 넓게 부풀어 검 고귀 반격 자세의 가로 검이 1인칭 내내 거둬졌음 — CI 44008618300)
+     */
     private static float[] elementBox(Map<?, ?> e) {
         if (!(e.get("from") instanceof List<?> f) || !(e.get("to") instanceof List<?> t) || f.size() < 3 || t.size() < 3) return null;
         float[] a = new float[3];
@@ -776,31 +789,30 @@ public final class Vfx {
             a[i] = ((Number) f.get(i)).floatValue();
             b[i] = ((Number) t.get(i)).floatValue();
         }
-        float[] box = {Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2])};
+        float[] box = {Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2]), -1, 0,
+                8, 8, 8};
         if (!(e.get("rotation") instanceof Map<?, ?> r) || !(r.get("angle") instanceof Number ang) || Math.abs(ang.doubleValue()) < 1e-3) return box;
-        // 돌린 조각: 여덟 꼭짓점을 origin 둘레로 돌려 감싸는 상자
-        int axis = "x".equals(r.get("axis")) ? 0 : "y".equals(r.get("axis")) ? 1 : 2;
-        float[] o = {8, 8, 8};
+        box[6] = "x".equals(r.get("axis")) ? 0 : "y".equals(r.get("axis")) ? 1 : 2;
+        box[7] = (float) Math.toRadians(ang.doubleValue());
         if (r.get("origin") instanceof List<?> ol && ol.size() >= 3) {
-            for (int i = 0; i < 3; i++) o[i] = ((Number) ol.get(i)).floatValue();
+            for (int i = 0; i < 3; i++) box[8 + i] = ((Number) ol.get(i)).floatValue();
         }
-        double th = Math.toRadians(ang.doubleValue());
-        double c = Math.cos(th);
-        double s = Math.sin(th);
-        float[] out = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
-        for (int k = 0; k < 8; k++) {
-            double[] v = {(k & 1) == 0 ? box[0] : box[3], (k & 2) == 0 ? box[1] : box[4], (k & 4) == 0 ? box[2] : box[5]};
-            int i = (axis + 1) % 3;
-            int j = (axis + 2) % 3;
-            double vi = v[i] - o[i];
-            double vj = v[j] - o[j];
-            v[i] = o[i] + vi * c - vj * s;
-            v[j] = o[j] + vi * s + vj * c;
-            for (int q = 0; q < 3; q++) {
-                out[q] = (float) Math.min(out[q], v[q]);
-                out[q + 3] = (float) Math.max(out[q + 3], v[q]);
-            }
-        }
+        return box;
+    }
+
+    /** 모델 픽셀의 점 · 방향 v 를 돌린 조각 b 의 틀로 (그 축 둘레로 −각 — 오른손 돌림, 마크 모델 조각 돌림과 같은 방향). point 면 origin 둘레로 */
+    static Vector3f toElement(float[] b, Vector3f v, boolean point) {
+        if (b[6] < 0) return v;
+        int axis = (int) b[6];
+        int i = (axis + 1) % 3;
+        int j = (axis + 2) % 3;
+        double c = Math.cos(-b[7]);
+        double sn = Math.sin(-b[7]);
+        double vi = v.get(i) - (point ? b[8 + i] : 0);
+        double vj = v.get(j) - (point ? b[8 + j] : 0);
+        Vector3f out = new Vector3f(v);
+        out.setComponent(i, (float) ((point ? b[8 + i] : 0) + vi * c - vj * sn));
+        out.setComponent(j, (float) ((point ? b[8 + j] : 0) + vi * sn + vj * c));
         return out;
     }
 

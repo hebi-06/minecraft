@@ -408,7 +408,15 @@ public final class SkillFx {
             case "minecraft:heart_particle" -> level.sendParticles(ParticleTypes.HEART, at.x, at.y, at.z, 1, 0, 0, 0, 0);
             case "minecraft:totem_particle" -> level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, at.x, at.y, at.z, 6, 0.2, 0.2, 0.2, 0.3);
             case "minecraft:snowflake_particle" -> level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 1, 0.05, 0.05, 0.05, 0.02);
-            case "minecraft:huge_explosion_emitter" -> level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            case "minecraft:huge_explosion_emitter" -> {
+                // 2026-11-17 1인칭 눈이 4.5칸 안이면 그 사람에게는 보내지 않음 (큰 폭발 구름이 1인칭 화면을 다 덮음 — 힘 영웅 망치 내려찍기, 룬 1인칭 CI 44008618300).
+                // 3인칭 (영상 카메라) · 먼 사람은 그대로
+                for (net.minecraft.server.level.ServerPlayer p : level.players()) {
+                    if (p.distanceToSqr(at) > 96 * 96) continue;
+                    if (!mmorpg.fabric.vfx.PBridge.thirdPersonOf(p) && p.getEyePosition().distanceTo(at) < 4.5) continue;
+                    level.sendParticles(p, ParticleTypes.EXPLOSION_EMITTER, true, false, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+                }
+            }
             case "minecraft:lava_particle" -> level.sendParticles(ParticleTypes.LAVA, at.x, at.y, at.z, 1, 0, 0, 0, 0);
             case "minecraft:critical_hit_emitter" -> level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 10, 0.25, 0.25, 0.25, 0.3);
             case "minecraft:basic_flame_particle" -> level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, 1, 0, 0, 0, 0.01);
