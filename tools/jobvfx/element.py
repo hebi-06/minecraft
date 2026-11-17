@@ -560,8 +560,9 @@ def shock_frame(S, f, n=512, frames=SHOCK_FRAMES, seed_add=0):
 CRACK_FRAMES = 5
 
 
-def crack_frame(S, f, n=256):
-    """땅 자국 (위에서 봄): smoke 로 물든 자국 + 가운데서 뻗은 금 (밝음 → 식음 · 피 = 흩뿌린 얼룩)"""
+def crack_frame(S, f, n=256, burn_on=True):
+    """땅 자국 (위에서 봄): smoke 로 물든 자국 + 가운데서 뻗은 금 (밝음 → 식음 · 피 = 흩뿌린 얼룩).
+    2026-11-17 burn_on False = 하늘 금 (crackv — 그을린 자국 · 얼룩 없이 빛나는 금만: 세운 금 RuneKit.skyPlate 의 하늘에 흙빛 자국이 떠 보였음, CI 44001064291)"""
     N = Noise3(371 + S.seed)
     rng = np.random.default_rng(371 + S.seed)
     x, y = grid(n)
@@ -580,8 +581,8 @@ def crack_frame(S, f, n=256):
             wid = 0.02 * (1 - prog) + 0.005
             cr = np.maximum(cr, 1 - sstep(wid * 0.5, wid + aa, dd))
     heat = (1 - u) ** 1.2
-    layers = [(S.smoke(0.2), burn * (0.85 - 0.3 * u))]
-    if S.drops:
+    layers = [(S.smoke(0.2), burn * (0.85 - 0.3 * u))] if burn_on else []
+    if S.drops and burn_on:
         sp = np.zeros_like(r)
         for i in range(14):
             a = rng.uniform(0, 2 * math.pi)
@@ -1595,6 +1596,8 @@ def frames_of(S, name):
         return [to_img(*ring_frame(S, f)) for f in range(RING_FRAMES)]
     if name == "crack":
         return [to_img(*crack_frame(S, f)) for f in range(CRACK_FRAMES)]
+    if name == "crackv":
+        return [to_img(*crack_frame(S, f, burn_on=False)) for f in range(CRACK_FRAMES)]
     if name == "flash":
         return [to_img(*flash_frame(S, f)) for f in range(FLASH_FRAMES)]
     if name == "charge":
@@ -1909,6 +1912,9 @@ CHAIN_KEYS = ("gale",)
 DASH_KEYS = ("soul", "shadow")
 # 분신 (clone.py — 예전 rfx_shade 의 몸 · 테를 묶음 빛으로): 암살 영웅 그림자 분신 (그림자 묶음)
 SHADE_KEYS = ("shadow",)
+# 2026-11-17 하늘 금 (crackv — 땅 금 crack_s 에서 그을린 자국을 뺀 빛나는 금): 세운 금 (RuneKit.skyPlate "crack") 을 칠하는 묶음 — 힘 초월 천붕 (분노) · 민첩 (질풍) ·
+# 마력 초월 메테오 (붉은 빛 = 원소) · 암살 초월 달 (그림자)
+CRACKV_KEYS = ("rage", "gale", "element", "shadow")
 FIRE_ACCENT = ramp([(0.0, "#2A1404"), (0.5, "#E08A1A"), (0.8, "#FFD060"), (1.0, "#FFF6D8")])
 
 
@@ -1972,6 +1978,8 @@ def sprites():
         if key in SHADE_KEYS:
             from . import clone
             out.append((S.lib + "_shade", lambda S=S: clone.frames(S), True))
+        if key in CRACKV_KEYS:
+            out.append((S.lib + "_crackv", lambda S=S: frames_of(S, "crackv"), True))
     return out
 
 

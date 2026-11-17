@@ -1417,8 +1417,10 @@ final class PhantomFx {
         double half = ball ? size * 4 : size;
         Vec3 c = V.add(at, u, ball ? -0.6 * half : (0.56 - 0.64) * half);
         int frames = Vfx.sheet(L.n(art)).frames();
+        // 운석 불꼬리는 예전 후광 (옅은 빛 0.42) 으로 부름 — 칠한 도트를 그 불투명도로 그리면 하늘에서 잿빛 줄로 보였음 (CI 44001064291 마력 초월) → 0.8 부터
+        double alpha = ball ? o.num("alpha", 1) : Math.min(1, Math.max(0.8, o.num("alpha", 1) * 2));
         return paintedWith(level, PAINT.get(ball ? "jfireball" : "jcomet2"), L, 0, c, o.with("dir", u, "size", half, "frames", (double) frames, "fps", o.num("fps",
-                12), "loop", true, "cell", null));
+                12), "loop", true, "cell", null, "alpha", alpha));
     }
 
     /** 핏빛 달 (moon 2 × 2 되풀이 — 카메라를 봄): 가운데 at · 지름 size 칸 · life 틱 (grow 틱에 커지며 나타남 · 끝 10틱 옅어짐) */
@@ -2212,10 +2214,12 @@ final class PhantomFx {
                 } else {
                     // 2026-11-17 세운 금 (하늘이 갈라짐 — RuneKit.skyPlate: 면이 쓴 사람의 눈 쪽, 마력 초월 메테오 · 암살 · 힘 · 무간 초월의 하늘): 칠한 땅 금 한 장을
                     // 그 쪽으로 세움 (같은 자리 · 반 크기 · 자람 · 옅어짐 — 밝은 금이 식어 가는 칸을 life 동안)
-                    int frames = Vfx.sheet(L.n("crack_s")).frames();
+                    // 하늘 금 (crackv — 그을린 흙빛 자국 없이 빛나는 금만, 하늘에 흙빛 덩이가 떠 보였음 CI 44001064291) 이 있으면 그것
+                    String sheet = hasArt(L, "crackv") ? L.n("crackv") : L.n("crack_s");
+                    int frames = Vfx.sheet(sheet).frames();
                     Opt b = Opt.of("dir", V.unit(dir), "speed", 0.0, "size", size, "life", life, "grow", grow, "frames", (double) frames, "fps", frames / life, "fade",
                             o.num("fade", 0.3), "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
-                    rfx(level, L.n("crack_s"), 1, 0, at, b, FACE_DIR, 1);
+                    rfx(level, sheet, 1, 0, at, b, FACE_DIR, 1);
                 }
             }
             case "arc", "wavecard" -> {
