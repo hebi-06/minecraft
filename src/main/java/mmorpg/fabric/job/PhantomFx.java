@@ -2034,6 +2034,8 @@ final class PhantomFx {
     static final java.util.Map<String, Paint> RUNE_PAINT = java.util.Map.of(
             "aura", new Paint("aura", 1, VERT, 2, 1),
             "emblem", new Paint("aegis", 1, BILL, 1.25, 1),
+            // 2026-11-17 방패 문장 (RuneKit.shieldEmblem — 화면을 봄 · CI 43979933145 체력 일반 10): 묶음의 빛의 방패 (aegis — 문장과 같은 몫)
+            "shield", new Paint("aegis", 1, BILL, 1.25, 1),
             "leaf", new Paint("petal", 1, BILL, 1, 1),
             "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1),
             // 2026-11-17 연막 구름 (rfx_cloud 네 칸 — 암살 룬 연막 · CI 43977395799 암살 고귀 71): 묶음의 연기 (그림자 smoke — 없는 묶음은 예전)
