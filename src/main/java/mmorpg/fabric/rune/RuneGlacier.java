@@ -641,7 +641,13 @@ final class RuneGlacier {
         Vec3 mid = V.up(f.at, bh * 0.5);
         shards(level, mid, big ? 50 : 34, bw * 0.5 + 0.2, bh * 0.4, big ? 0.25 : 0.15);
         snow(level, mid, 12, bw * 0.5, bh * 0.4, 0.05);
-        SkillFx.fx(level, "rpg:splash", V.up(f.at, 0.3), Opt.of("size", bw + 1.0, "life", 0.5, "color", FROST, "alpha", 0.9));
+        // 2026-11-17 얼음이 풀리는 때는 룬을 쓴 뒤 (틱 · 맞음) 라 맥락이 없음 — 이 룬의 꼬리표로 칠함 (서리 묶음 작은 터짐, CI 43993371289 맥락 없는 물보라 6)
+        String prevTag = mmorpg.fabric.Tasks.tag("glacier:transcend");
+        try {
+            SkillFx.fx(level, "rpg:splash", V.up(f.at, 0.3), Opt.of("size", bw + 1.0, "life", 0.5, "color", FROST, "alpha", 0.9));
+        } finally {
+            mmorpg.fabric.Tasks.tag(prevTag);
+        }
         SkillFx.play(level, "block.glass.break", mid, big ? 0.8 : 1.0, big ? 1.0 : 0.8);
     }
 
