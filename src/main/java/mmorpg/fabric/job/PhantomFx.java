@@ -1595,6 +1595,12 @@ final class PhantomFx {
             }
             return runeFx(level, "arc", at, o, ag);
         }
+        if (id.startsWith("rpg:slash_") && id.endsWith("_glow") && !o.truthy("basic")) {
+            // 2026-11-17 휘두른 자국 판의 빛 장을 바로 부른 것 (보스 · 몹 — SkillFx.fx("rpg:slash_heavy_r_glow") 한 장): 판 모양 · 좌우를 이름에서 → 같은 반달
+            String[] parts = id.substring(10).split("_"); // heavy · r · glow
+            if (parts.length != 3 || !(o.get("color") instanceof double[] sg)) return false;
+            return runeFx(level, "arc", at, o.with("shape", parts[0], "flip", parts[1].equals("l")), sg);
+        }
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust")) return false;
@@ -2030,6 +2036,8 @@ final class PhantomFx {
             "emblem", new Paint("aegis", 1, BILL, 1.25, 1),
             "leaf", new Paint("petal", 1, BILL, 1, 1),
             "hex", new Paint("aegis", 1, FACE_DIR, 1.25, 1),
+            // 2026-11-17 연막 구름 (rfx_cloud 네 칸 — 암살 룬 연막 · CI 43977395799 암살 고귀 71): 묶음의 연기 (그림자 smoke — 없는 묶음은 예전)
+            "cloud", new Paint("smoke", 1, BILL, 1, 1),
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
             "jbreak", new Paint("shieldbreak", 1, BILL, 1, 1));
 

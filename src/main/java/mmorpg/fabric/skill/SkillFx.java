@@ -179,6 +179,7 @@ public final class SkillFx {
         Opt base = Opt.of("dir", dir, "speed", o.num("speed", 0), "spin", o.num("spin", 0), "size", o.num("size", 0), "life", o.num("life", 0.3));
         // 0.48.2 보는 사람 걸러내기 (룬의 휘두른 자국 판 — 주인의 1인칭에만 이 파티클)
         if (o.num("view", 0) != 0) base = base.with("view", o.num("view", 0), "owner", o.num("owner", 0));
+        if (o.truthy("basic")) base = base.with("basic", true); // 2026-11-17 평타 표시 (빛 장 다리도 건너뜀)
         double a = o.num("alpha", 1);
         double size = o.num("size", 0);
         double[] color = o.color("color", WHITE);
