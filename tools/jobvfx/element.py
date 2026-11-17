@@ -1901,6 +1901,14 @@ FIRE_KEYS = ("element",)
 AURA_KEYS = ("blood",)
 # 2026-11-17 진흙 웅덩이 (hex.py pool 을 곰 묶음의 흙빛으로 — 원소 반응 진흙 ElementFx MUD 의 rfx_jpool, CI 43989923127 정령 초월 6)
 MUD_KEYS = ("bear",)
+# 2026-11-17 룬 2판 남은 예전 그림 (CI 43997410683 18): 땅에 누워 도는 바람 소용돌이 (lance.py swirl) — 힘 희귀 흙먼지 소용돌이 (예전 rpg:whirlpool · 분노 묶음)
+SWIRL_KEYS = ("rage",)
+# 빛의 사슬 (ward.py chain — 고리 넷 · 반짝임이 흐름): 활 희귀 속박 화살의 깃 → 몸 사슬 (예전 rfx_chain · 질풍 묶음)
+CHAIN_KEYS = ("gale",)
+# 돌진 줄기 (arcane.py dash): 날아가는 빛 (RuneKit.flyStreak) — 암살 희귀 독 표창 (독빛 = 혼) · 그림자 빛 줄기 (그림자)
+DASH_KEYS = ("soul", "shadow")
+# 분신 (clone.py — 예전 rfx_shade 의 몸 · 테를 묶음 빛으로): 암살 영웅 그림자 분신 (그림자 묶음)
+SHADE_KEYS = ("shadow",)
 FIRE_ACCENT = ramp([(0.0, "#2A1404"), (0.5, "#E08A1A"), (0.8, "#FFD060"), (1.0, "#FFF6D8")])
 
 
@@ -1943,10 +1951,27 @@ def sprites():
             from . import hex as hexart
             out.append((S.lib + "_pool", lambda S=S: hexart.frames_of("pool", S), True))
         if key in FIRE_KEYS:
+            from . import arcane, beast
             from . import hex as hexart
             F = Style(S.lib, S.kind, S.main, FIRE_ACCENT, S.smoke, S.ring, S.smoke_alpha, S.seed)
             out.append((S.lib + "_pool", lambda F=F: hexart.frames_of("lava", F), True))
             out.append((S.lib + "_pyre", lambda F=F: hexart.frames_of("pyre", F), True))
+            # 2026-11-17 마력 룬 불덩이 (rfx_fireball — 미리 칠한 둥근 불덩이 · 빛 없이 부름) · 메테오 불꼬리 후광 (rfx_meteor): 불꽃 꼬리 불덩이 (arcane.py fireball —
+            # 불빛 그대로) · 불꽃 꼬리 (beast.py comet — 원소 묶음의 금빛 주황)
+            out.append((S.lib + "_fireball", lambda: [to_img(*arcane.fireball_frame(f)) for f in range(arcane.SPELL_FRAMES)], True))
+            out.append((S.lib + "_comet", lambda F=F: beast.frames_of("comet", F), True))
+        if key in SWIRL_KEYS:
+            from . import lance
+            out.append((S.lib + "_swirl", lambda S=S: lance.frames_of("swirl", S), True))
+        if key in CHAIN_KEYS:
+            from . import ward
+            out.append((S.lib + "_chain", lambda S=S: ward.frames_of("chain", S), True))
+        if key in DASH_KEYS:
+            from . import arcane
+            out.append((S.lib + "_dash", lambda S=S: [to_img(*arcane.dash_frame(S, f)) for f in range(arcane.DASH_FRAMES)], True))
+        if key in SHADE_KEYS:
+            from . import clone
+            out.append((S.lib + "_shade", lambda S=S: clone.frames(S), True))
     return out
 
 

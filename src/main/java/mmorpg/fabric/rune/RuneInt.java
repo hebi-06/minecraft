@@ -48,8 +48,9 @@ final class RuneInt {
         double[] core = RuneKit.FIRE[1];
         // 불덩이는 손에서 0.8칸 앞부터 (1인칭 화면 가운데를 덮지 않게)
         double s0 = Math.min(0.8, len * 0.5);
+        // 2026-11-17 미리 칠한 불덩이 (빛 없이 부름): paintGlow 불빛 → 원소 묶음의 불꽃 꼬리 불덩이 (PhantomFx.fireComet)
         RuneKit.rfx(level, "fireball", V.add(from, d, s0), Opt.of("dir", d, "speed", (len - s0) / life, "size", 0.5, "life", life, "frames", 4.0, "fps", 14.0,
-                "loop", true, "phase", Kit.rand() * 4));
+                "loop", true, "phase", Kit.rand() * 4, "paintGlow", FIRE_PAINT));
         // 2026-11-13 2D 불덩이 속 3D 운석 (0.7칸 — 사용자 "이재 다른 룬들도 모션하고 이펙트 추가하자"): 같은 길을 구르며 날아가 터지는 자리에 박혀 사라짐
         meteorRock(level, V.add(from, d, s0), to, d, ticks, 0.7);
         for (double s = 0.9; s < len; s += 0.6) {

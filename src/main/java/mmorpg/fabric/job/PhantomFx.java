@@ -1364,6 +1364,63 @@ final class PhantomFx {
         return true;
     }
 
+    /**
+     * 2026-11-17 빛의 화살 (RuneKit.flyArrow — 예전 rfx_arrow 256 × 64 · 가운데 at · 반 길이 size · dir 쪽 speed, 활 희귀 · 고귀 CI 43997410683 4): 3D 룬 화살이 같은 길을
+     * 함께 날아가므로 화살 모양은 3D 가 맡고, 2D 는 묶음의 돌진 줄기 (dash — jdash2 와 같은 틀 · 같은 길 · 빠르기 · 칸을 다 life 동안) = 화살 뒤의 빛줄기
+     */
+    static boolean runeArrow(ServerLevel level, Vec3 at, Opt o, double[] glow) {
+        Lib L = jobLib(glow);
+        if (L == null || !hasArt(L, "dash")) return false;
+        Vec3 d = o.vec("dir", V.UP);
+        if (V.len(d) < 1e-6) return false;
+        double life = Math.max(0.05, o.num("life", 0.3));
+        int frames = Vfx.sheet(L.n("dash")).frames();
+        return paintedWith(level, PAINT.get("jdash2"), L, 0, at, Opt.of("dir", V.unit(d), "speed", o.num("speed", 0), "size", Math.max(0.1, o.num("size", 0.5)), "life",
+                life, "frames", (double) frames, "fps", frames / life, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0)));
+    }
+
+    /**
+     * 2026-11-17 빛의 사슬 (예전 rfx_chain 256 × 48 · 가운데 at · 반 길이 size · dir — 활 희귀 속박 화살의 깃 → 몸, CI 43997410683 3): 묶음의 사슬 (chain — jchain2 와 같은
+     * 틀) 을 1.1칸마다 한 장 (JobFx.chain 과 같음 — 고리 크기가 사슬 길이에 따라 늘지 않게) · 네 칸을 10 fps 로 돌림 (반짝임이 사슬을 따라 흐름) · life · fade · alpha 그대로
+     */
+    static boolean runeChain(ServerLevel level, Vec3 at, Opt o, double[] glow) {
+        Lib L = jobLib(glow);
+        if (L == null || !hasArt(L, "chain")) return false;
+        Vec3 d = o.vec("dir", V.UP);
+        if (V.len(d) < 1e-6) return false;
+        Vec3 u = V.unit(d);
+        double half = Math.max(0.1, o.num("size", 0.5));
+        int n = Math.max(1, (int) Math.round(half * 2 / 1.1));
+        double step = half * 2 / n;
+        int frames = Vfx.sheet(L.n("chain")).frames();
+        Opt b = o.with("dir", u, "size", step / 2 * 1.04, "frames", (double) frames, "fps", 10.0, "loop", true, "speed", 0.0, "grow", 0.0);
+        Paint p = PAINT.get("jchain2");
+        for (int i = 0; i < n; i++) paintedWith(level, p, L, 0, V.add(at, u, -half + step * (i + 0.5)), b);
+        return true;
+    }
+
+    /**
+     * 2026-11-17 불덩이 · 운석 불꼬리 (마력 룬 — CI 43997410683 일반 1 · 초월 1): 예전 rfx_fireball (128 × 128 둥근 불덩이 · 카메라를 봄 · 지름 2 × size · 속에 3D 운석) 은
+     * 묶음의 불꽃 꼬리 불덩이 (fireball — 가는 쪽으로 누움 · 머리 x 0.6 · 머리 지름 = 반 길이 × 0.4) 를 머리 지름이 예전 지름의 0.8 (반 길이 = size × 4) 이 되게 머리를 예전
+     * 가운데에, 예전 rfx_meteor (256 × 128 · 운석 머리 x 0.56 — 메테오 후광) 는 묶음의 불꽃 꼬리 (comet — jcomet2 와 같은 틀 · 머리 x 0.64) 를 같은 크기로 머리를 같은
+     * 자리에. 같은 길 · 빠르기 · 칸을 되풀이 (예전 fps · phase)
+     */
+    static boolean fireComet(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
+        boolean ball = name.equals("fireball");
+        String art = ball ? "fireball" : "comet";
+        Lib L = jobLib(glow);
+        if (L == null || !hasArt(L, art)) return false;
+        Vec3 d = o.vec("dir", V.UP);
+        if (V.len(d) < 1e-6) return false;
+        Vec3 u = V.unit(d);
+        double size = Math.max(0.1, o.num("size", 0.5));
+        double half = ball ? size * 4 : size;
+        Vec3 c = V.add(at, u, ball ? -0.6 * half : (0.56 - 0.64) * half);
+        int frames = Vfx.sheet(L.n(art)).frames();
+        return paintedWith(level, PAINT.get(ball ? "jfireball" : "jcomet2"), L, 0, c, o.with("dir", u, "size", half, "frames", (double) frames, "fps", o.num("fps",
+                12), "loop", true, "cell", null));
+    }
+
     /** 핏빛 달 (moon 2 × 2 되풀이 — 카메라를 봄): 가운데 at · 지름 size 칸 · life 틱 (grow 틱에 커지며 나타남 · 끝 10틱 옅어짐) */
     static Vfx.Fx moon(ServerLevel level, Lib L, Vec3 at, double size, int grow, int life) {
         Vfx.Fx fx = Vfx.at(level, at, life + 4);
@@ -1666,7 +1723,7 @@ final class PhantomFx {
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
                 && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
                 && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike") && !id.equals("rpg:drop")
-                && !id.equals("rpg:breath") && !id.equals("rpg:arrow_shot")) return false;
+                && !id.equals("rpg:breath") && !id.equals("rpg:arrow_shot") && !id.equals("rpg:whirlpool") && !id.equals("rpg:magic_circle_flash")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1840,6 +1897,18 @@ final class PhantomFx {
                         0.35, "alpha", Math.min(1, o.num("alpha", 0.9)), "view", o.num("view", 0), "owner", o.num("owner", 0));
                 rfx(level, L.n("soul"), 1, 0, V.up(at, 0.21 * H), b, VERT, 1);
             }
+            case "rpg:whirlpool" -> {
+                // 2026-11-17 땅에 누워 도는 소용돌이 (예전 rpg:whirlpool — 땅에 눕힘 · 반 크기 size · 처음 spin 도 + 초당 speed 도 · 처음 15% 나타남 · 끝 25% 사라짐, 힘 희귀
+                // 흙먼지 · 정령 초월 바람 CI 43997410683 4): 묶음의 바람 소용돌이 (swirl — 번쩍 · 펼쳐짐 · 세 갈래 팔 · 풀림 · 흩어짐 여덟 칸을 life 동안, 팔 끝 = 반 크기
+                // × 0.86 → 크기 / 0.86 으로 예전 끝까지) · 같은 돌림
+                if (!Vfx.hasSheet(L.n("swirl"))) return false;
+                double life = Math.max(0.1, o.num("life", 0.5));
+                int frames = Vfx.sheet(L.n("swirl")).frames();
+                Opt b = Opt.of("dir", V.UP, "size", Math.max(0.3, o.num("size", 1)) / 0.86, "life", life, "frames", (double) frames, "fps", frames / life, "fade", 0.25,
+                        "alpha", Math.min(1, o.num("alpha", 0.8)), "spin", o.num("spin", 0), "spinRate", o.num("speed", 0), "view", o.num("view", 0), "owner",
+                        o.num("owner", 0));
+                rfx(level, L.n("swirl"), 1, 0, at, b, FACE_DIR, 1);
+            }
             case "rpg:dust" -> {
                 // 흙먼지 (예전 rpg:dust): 그 묶음의 흙먼지 (꽂힌 자리 먼지)
                 if (!Vfx.hasSheet(L.n("dust"))) return false;
@@ -1956,6 +2025,9 @@ final class PhantomFx {
         // 2026-11-17 채도 0.75 까지 (원소 반응 진흙의 짙은 흙빛 0.36 · 0.22 · 0.1 — 채도 0.72) · 채도 0.2 · 밝기 0.25 부터 (돌 불티 0.72 · 0.64 · 0.54 — 채도 0.25 가
         // 셈 끝수에 걸림, 정령 부름의 짙은 흙빛 땅 금 0.3 · 0.2 · 0.1 — CI 43995311742 힘 영웅 · 활 고귀 6 · 정령 5)
         if (h[0] >= 15 && h[0] <= 45 && h[1] >= 0.2 && h[1] <= 0.75 && h[2] >= 0.25 && h[2] <= 0.75) return BEAR;
+        // 2026-11-17 짙은 그을음 흙빛 (색조 8 ~ 45° · 밝기 0.2 ~ 0.4 — 채도는 셈 끝수로 높게 나옴: 마력 초월 운석 자리의 탄 땅 금 0.3 · 0.08 · 0.02 = 색조 13° · 채도 0.93,
+        // CI 43997410683) = 곰
+        if (h[0] >= 8 && h[0] <= 45 && h[1] >= 0.2 && h[2] >= 0.2 && h[2] < 0.4) return BEAR;
         // 2026-11-17 독빛 (색조 95 ~ 125° · 채도 0.5 · 밝기 0.6 넘게 — 암살 희귀 독 표창 0.45 · 1 · 0.35) = 혼 (독의 녹색 혼불), 회복빛 (125 ~ 165° · 채도 0.3 ~ 0.6 · 밝기
         // 0.8 넘게 — 체력 희귀 치유 0.5 · 1 · 0.6) = 성광 (사제의 회복 연둣빛) — CI 43995311742 예전 39 · 57
         if (h[0] >= 95 && h[0] < 125 && h[1] >= 0.5 && h[2] >= 0.6) return SOUL;
@@ -2051,6 +2123,9 @@ final class PhantomFx {
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
         if (name.equals("fissure")) return fissure(level, at, o);
+        if (name.equals("arrow")) return runeArrow(level, at, o, glow);
+        if (name.equals("chain")) return runeChain(level, at, o, glow);
+        if (name.equals("fireball") || name.equals("meteor")) return fireComet(level, name, at, o, glow);
         Paint rp = RUNE_PAINT.get(name);
         if (rp != null) { // 2026-11-16 계열 대표 그림 (예전 rfx 와 같은 자리 · 움직임 — 묶음에 그 그림이 있을 때만)
             Lib L = jobLib(glow);
