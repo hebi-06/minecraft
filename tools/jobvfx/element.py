@@ -1877,8 +1877,8 @@ CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw"
 # 2026-11-17 방패 깨짐 (beast.py shieldbreak — 분노 묶음에만 있었음) 을 더 갖는 묶음: 받는 피해 증가 표식을 거는 룬 계열 (도끼 = 피 · 암살 = 그림자 · 민첩 = 질풍) ·
 # 원소 반응 (원소 · 서리 · 곰) — RuneMarks 의 머리 위 금 간 방패 (예전 rfx_jbreak)
 SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
-# 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 보스의 얼음 가시 (예전 rpg:ice_spike — 이미르 = 서리 · 헬 = 혼)
-SPIKE_KEYS = ("frost", "soulreap")
+# 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 얼음 가시 (예전 rpg:ice_spike — 서리 · 영혼 수확) · 심연 룬의 검은 가시 손 (rfx_thorn — 폭군)
+SPIKE_KEYS = ("frost", "soulreap", "tyrant")
 # 2026-11-17 뭉게 연기 (shadow.py smoke — 그 묶음의 연기 램프) 를 더 갖는 묶음: 보스의 숨결 (예전 rpg:breath — 이미르 서리 숨결)
 SMOKE_KEYS = ("frost",)
 # 2026-11-17 얼음 창 (arcane.py icelance — 얼음 빛 그대로) 을 더 갖는 묶음: 만년빙하 · 원소 얼음 룬의 날아가는 고드름 (예전 rfx_icicle)

@@ -1893,6 +1893,9 @@ final class PhantomFx {
         if (L == null || glow == null || glow.length < 3) return null;
         double[][] col = RuneKit.colorOf(fam);
         if (near(glow, col[0]) || near(glow, col[1]) || glow[0] + glow[1] + glow[2] > 2.7) return L;
+        // 2026-11-17 묶음 빛과 같은 색조 (40° 안) — 한정 룬 (심연 · 무간참역 · 대지 · 빙하 · 세계수) 은 RUNE.color 에 계열 빛이 없어 흰빛만 맞았음
+        // (CI 43982885199 심연 자홍 · 와인빛 불티 · 반짝임 · 문양 · 마법진 · 가시)
+        if (libNear(glow, L)) return L;
         Lib E = elementOf(glow);
         if (E != null) return JobSystem.RUNE_WYRD ? E : null;
         return semanticLib(glow);
@@ -1963,6 +1966,19 @@ final class PhantomFx {
         return bd <= 36 ? best : null; // 묶음 빛과 먼 빛 (독 연둣빛 · 쓸개 빛 …) 은 예전 그림
     }
 
+    /** 2026-11-17 묶음 L 의 두 빛 (glow · trace) 중 하나와 색조 40° 안 (채도 0.3 · 밝기 0.2 넘게) */
+    static boolean libNear(double[] glow, Lib L) {
+        double[] h = hsv(glow);
+        if (h[1] < 0.3 || h[2] < 0.2) return false;
+        for (int c : new int[] {L.glow(), L.trace()}) {
+            double[] lh = hsv(new double[] {(c >> 16 & 255) / 255.0, (c >> 8 & 255) / 255.0, (c & 255) / 255.0});
+            if (lh[1] < 0.25) continue;
+            double d = Math.abs(h[0] - lh[0]);
+            if (Math.min(d, 360 - d) <= 40) return true;
+        }
+        return false;
+    }
+
     /** 가까운 빛: RGB 거리 0.3 안, 또는 같은 색조 (22° 안 · 둘 다 채도 0.25 넘게 — 계열 빛을 어둡게 · 밝게 섞은 빛) */
     private static boolean near(double[] a, double[] b) {
         double dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
@@ -1991,6 +2007,13 @@ final class PhantomFx {
             Lib L = jobLib(glow);
             if (L == null || !Vfx.hasSheet(L.n(rp.art()))) return false;
             int cell = (int) Math.round(o.num("cell", 0)) - RuneKit.RFX.getOrDefault(name, new int[] {0, 1})[0];
+            if (name.equals("thorn")) {
+                // 가시는 칸 고르기 (예전 손 셋) 대신 솟았다 가라앉는 칸을 다 — 밑동 at 에서 높이 2 × size
+                int n = Vfx.sheet(L.n(rp.art())).frames();
+                double life = Math.max(0.1, o.num("life", 0.5));
+                double size = Math.max(0.2, o.num("size", 0.5));
+                return paintedWith(level, rp, L, 0, V.up(at, size), o.with("frames", (double) n, "fps", n / life, "grow", 0.0));
+            }
             return paintedWith(level, rp, L, Math.max(0, cell), at, o);
         }
         switch (name) {
@@ -2236,6 +2259,8 @@ final class PhantomFx {
             "cloud", new Paint("smoke", 1, BILL, 1, 1),
             // 2026-11-17 날아가는 고드름 (rfx_icicle — 만년빙하 · 마력 · 원소 얼음 룬, CI 43982885199 14 + 6): 얼음 창 (icelance — 비전 · 서리 묶음, jicelance 와 같은 몫)
             "icicle", new Paint("icelance", 1, LOOK_DIR, 0.25, 1),
+            // 2026-11-17 검은 가시 손 (rfx_thorn — 심연 낙인 · 밑동 고정, CI 43982885199 19): 솟는 가시 (spike — 폭군 묶음, 솟았다 가라앉는 여덟 칸을 life 동안)
+            "thorn", new Paint("spike", 1, VERT, 1, 1),
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
             "jbreak", new Paint("shieldbreak", 1, BILL, 1, 1));
 
