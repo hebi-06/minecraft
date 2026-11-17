@@ -1261,15 +1261,14 @@ public final class Vfx {
                 if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
                 Vector3f n = q.transform(new Vector3f(0, 0, 1));
                 if (Math.abs(n.y) > 0.8F) return false;
-                // 2026-11-17 고정 판은 눈에서 본 겉보기 너비 · 높이 (판의 가로 · 세로 축이 눈 → 판 쪽과 이루는 각으로 줄어듦): 가는 쪽으로 누운 긴 그림 (불덩이 · 줄기) 을
-                // 뒤에서 보면 길이가 거의 없음 — 판 길이로 셈하면 날아가는 내내 1인칭 주인에게서 거둬졌음 (마력 일반 불덩이, CI 44012061831)
+                // 2026-11-17 가는 쪽으로 누운 긴 그림 (가로세로 비 2 넘게 — 불덩이 · 줄기 · 광선) 의 긴 축은 눈에서 본 겉보기 길이로 (긴 축이 눈 → 판 쪽과 이루는 각만큼 줄어듦):
+                // 뒤에서 보면 길이가 거의 없음 — 판 길이로 셈하면 날아가는 내내 1인칭 주인에게서 거둬졌음 (마력 일반 불덩이, CI 44012061831). 정사각에 가까운 판은 그대로
+                // (가까이 있는 큰 판은 비스듬해도 화면을 채움 — 모든 판에 걸었던 094438e7 에서 도끼 초월의 핏빛 판이 다시 한 장 화면을 덮었음, CI 44013192154)
                 double dl = eye.distanceTo(pos);
-                if (dl > 1e-6) {
+                if (dl > 1e-6 && sheet.aspect() >= 2) {
                     Vector3f v = new Vector3f((float) ((pos.x - eye.x) / dl), (float) ((pos.y - eye.y) / dl), (float) ((pos.z - eye.z) / dl));
                     float cx = q.transform(new Vector3f(1, 0, 0)).dot(v);
-                    float cy = q.transform(new Vector3f(0, 1, 0)).dot(v);
-                    hw *= Math.sqrt(Math.max(0, 1 - cx * cx));
-                    hh *= Math.sqrt(Math.max(0, 1 - cy * cy));
+                    hw = Math.max(hh, hw * Math.sqrt(Math.max(0, 1 - cx * cx)));
                 }
             }
             double half = Math.max(hw, hh) + offset.length();
