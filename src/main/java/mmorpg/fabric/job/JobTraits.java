@@ -89,7 +89,6 @@ public final class JobTraits {
         JobTraits15.init(); // 0.51.0 수호기사 2차 (피닉스 가드 불사조의 재 · 이그니션 · 다크 나이트 탐식 · 언홀리 프렌지 — 피닉스 가드의 반격은 JobTraits4)
         JobTraits13.init(); // 0.51.0 성기사 2차 (썬더로드 갈라지는 벼락 · 썬더헤드 · 빛의 가호 · 타이런트 강탈 · 콜로서스 — 썬더로드의 심판은 JobTraits4)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits3.tickMarks(Tasks.now());
             JobTraits4.tickGlobal(server, Tasks.now());
             if (Tasks.now() % 40 == 0) JobTraits16.tickGlobal(Tasks.now()); // 2026-11-07 끝난 서리 · 얼어붙음 지움

@@ -28,7 +28,7 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>전사 「분노」 (0 ~ 100): 도끼 평타가 맞으면 +onHit · 맞으면 +onHurt, idle 틱 동안 싸우지 않으면 1초에 decay 씩 줄어듦 (투혼 동안은 그대로).
  * 0.51.0 각성 워로드 도 같은 분노 — 다 차면 곰의 화신 (JobTraits6: 그동안 분노가 줄어 끝나면 0 · 쌓이지 않음 · 평타 + fullBonus).
- * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 파쇄격의 방어 깨짐 (맞는 쪽 배율 — RpgCombat.takenMult).
+ * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 2026-11-17 파쇄격 (헬름 브레이커) 의 방어 깨짐은 뺌 (딜러의 받는 피해 증가 없음).
  * 투혼: 체력이 low 아래로 떨어지면 한 번 heal 회복 (RpgHealth.lossHook)</li>
  * <li>매지션 「주문 연쇄」: 직업 스킬을 쓰고 window 틱 안에 다른 직업 스킬을 쓰면 연쇄 +1 (최대 max — 하나당 피해 + perChain, JobSystem 이 위력에 곱함).
  * 0.51.0 각성 아크메이지 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8 · 이어지는 틱: JobTraits8.chainWindow).
@@ -67,15 +67,9 @@ public final class JobTraitsMore {
 
     private static final Map<UUID, State> STATES = new HashMap<>();
     /** 파쇄격 방어 깨짐: 적 → {적, 끝 틱, 받는 피해 +} */
-    private record Broken(LivingEntity e, long until, double add) {}
-
-    private static final Map<UUID, Broken> BREAKS = new HashMap<>();
-
     static void init() {
         java.util.function.ToDoubleBiFunction<ServerPlayer, Weapon> bm = RpgCombat.basicMult;
         RpgCombat.basicMult = (p, w) -> bm.applyAsDouble(p, w) * basicMult(p, w);
-        java.util.function.ToDoubleFunction<LivingEntity> tm = RpgCombat.takenMult;
-        RpgCombat.takenMult = e -> tm.applyAsDouble(e) * breakMult(e);
         RpgHealth.LossHook lh = RpgHealth.lossHook;
         RpgHealth.lossHook = (sp, src, loss, before, after) -> {
             lh.lost(sp, src, loss, before, after);
@@ -100,7 +94,6 @@ public final class JobTraitsMore {
         RpgCombat.addWeaponHitHook(JobTraitsMore::onWeaponHit);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             STATES.clear();
-            BREAKS.clear();
         });
     }
 
@@ -237,19 +230,6 @@ public final class JobTraitsMore {
         }
         if (breathJob(j) && "bow".equals(w.type())) return 1 + st.breath * trait(j, "perStack", 0.04); // 0.51.0 스나이퍼도 (최대 8)
         return 1;
-    }
-
-    /** 파쇄격 방어 깨짐: ticks 틱 동안 이 적이 받는 피해 + add (다시 걸면 새로) */
-    static void applyBreak(LivingEntity e, double add, int ticks) {
-        if (e == null || e.isRemoved()) return;
-        BREAKS.put(e.getUUID(), new Broken(e, Tasks.now() + ticks, add));
-    }
-
-    /** 이 적의 받는 피해 배율 (방어 깨짐이 걸렸으면 1 + add) */
-    public static double breakMult(LivingEntity e) {
-        if (e == null || BREAKS.isEmpty()) return 1;
-        Broken b = BREAKS.get(e.getUUID());
-        return b == null || b.until() <= Tasks.now() ? 1 : 1 + b.add();
     }
 
     /** 맞음 (RpgHealth.lossHook): 전사 — 몹 · 플레이어에게 맞으면 분노 + onHurt, 투혼 동안 체력이 low 아래로 떨어지면 한 번 회복 */
@@ -639,19 +619,6 @@ public final class JobTraitsMore {
                 JobTraits8.clearStars(sp); // 0.51.0 아크메이지: 연쇄가 끊기면 별도 사라짐
                 JobTraits.sendGauge(sp, false);
             }
-        }
-    }
-
-    /** 방어 깨짐 표시 (서버 틱마다 한 번 — JobTraits): 끝난 것을 지우고, 16틱마다 머리 위에 옅은 갈라진 방패 */
-    static void tickBreaks(long now) {
-        if (BREAKS.isEmpty()) return;
-        BREAKS.values().removeIf(b -> b.until() <= now || b.e().isRemoved() || !b.e().isAlive());
-        if (now % 16 != 0) return;
-        Jobs.Job war = Jobs.job("warrior");
-        if (war == null) return;
-        for (Broken b : BREAKS.values()) {
-            if (b.until() - now < 8 || !RuneKit.fxQuota("jobBreak", 8)) continue;
-            JobFx.breakMark(b.e(), war, 0.3, 0.55, 0.65);
         }
     }
 

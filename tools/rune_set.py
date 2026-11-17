@@ -48,7 +48,7 @@ SET = [
     dict(key="salamander", name="샐러맨더", grade="common", cd=11, r="mid", src="spirit.common", elem="fire", u=[], a="narrow",
          desc="샐러맨더를 불러 4초 동안 불덩이를 뱉게 함", use="소환 · 불덩이 4번"),
     dict(key="rampart", name="램파트", grade="common", cd=10, r="melee", src="blade.noble", u=["reduce", "knock"], a="narrow",
-         set={"ticks": 60, "reduce": 0.5}, desc="앞에 방패 결계를 세워 막고, 결계로 앞을 밀어 냄", use="앞 피해 −50% 3초 · 밀쳐냄"),
+         set={"ticks": 60, "reduce": 0.5}, spread={"t": 60}, desc="앞에 방패 결계를 세워 막고, 결계로 앞을 밀어 냄", use="앞 피해 −50% 3초 · 밀쳐냄"),
     # ---------------------------------------------------------------- 희귀 (평균 12초)
     dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=10, r="mid", src="blade.rare", u=[],
          desc="크게 감아 가로로 베어 태양빛 검기를 날림", use="직선 관통 검기"),

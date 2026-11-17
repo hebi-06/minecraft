@@ -482,8 +482,9 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 3 * bonus);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피의 돌진 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             var slow = z.get(0).getEffect(MobEffects.SLOWNESS);
-            h.assertTrue(slow != null && slow.getAmplifier() >= 10 && Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.1) < 1e-6,
-                    "stunned · armor break +10%: " + JobTraitsMore.breakMult(z.get(0)));
+            // 2026-11-17 받는 피해 증가 없음 (딜러)
+            h.assertTrue(slow != null && slow.getAmplifier() >= 10 && Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1) < 1e-6,
+                    "stunned · no vuln: " + mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)));
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3));
@@ -2945,11 +2946,13 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(9, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6) * 1.2;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 첫 나비 (신앙 2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 2026-11-17 빛가루: 나비가 앉은 적은 5초 받는 피해 +10% (힐러)
+            h.assertTrue(Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1.1) < 1e-9, "light dust: taken +10% " + mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)));
             h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "saint rule-colored number");
         }));
         steps.add(new RpgJobTests.Step(32, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 5.6) * 1.2;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 (적에게 셋 — 1.6 · 1.6 · 2.4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6 + (1.6 + 2.4) * 1.1) * 1.2; // 둘째 · 셋째 나비는 빛가루 (+10%) 위에
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 (적에게 셋 — 1.6 · 1.6 · 2.4 · 빛가루) " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         steps.add(new RpgJobTests.Step(10, () -> {
             double got = ally[0].getHealth() - mark[0];
@@ -3155,16 +3158,16 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(JobSkills.press(sp, 4), "블러드 뱅큇 cast");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 2) * 1.2 * 1.1;
-            h.assertTrue(JobTraits14.plagued(z.get(0)), "blood plague on the target");
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 뱅큇 첫 고동 (역병 +10%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 2) * 1.2; // 2026-11-17 역병의 받는 피해 +10% 뺌 (딜러)
+            h.assertTrue(JobTraits14.plagued(z.get(0)) && Math.abs(mmorpg.fabric.rune.RuneMarks.vulnMult(z.get(0)) - 1) < 1e-9, "blood plague on the target (no vuln)");
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 뱅큇 첫 고동 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         steps.add(new RpgJobTests.Step(52, () -> {
             double lost = mark[1] - ally[0].getHealth();
             h.assertTrue(RpgJobTests.close(lost, RpgHealth.maxOf(ally[0]) * 0.19, RpgHealth.maxOf(ally[0]) * 0.02), "the feast took the ally's 15% (+ 4% tithe): " + lost);
         }));
         steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 6 + 18 * 1.15) * 1.2 * 1.1;
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 6 + 18 * 1.15) * 1.2;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 뱅큇 (2 × 3 + 18 × 1.15) " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {

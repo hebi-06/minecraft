@@ -163,7 +163,7 @@ public final class JobsTest {
             for (int i = 0; i < j.skills().size(); i++) {
                 Jobs.Skill k = j.skills().get(i);
                 check(k.slot() == i && !k.name().isEmpty() && !k.desc().isEmpty(), j.id() + " skill " + i);
-                check(k.cd() == cds[i], j.id() + " skill " + i + " cd " + k.cd());
+                check(paceOk(k, cds[i]), j.id() + " skill " + i + " cd " + k.cd());
             }
             if (j.rune() != null) check(Runes.ALL_FAMILIES.contains(j.rune()), j.id() + " rune family " + j.rune());
         }
@@ -386,7 +386,8 @@ public final class JobsTest {
         check(tyr.reqs().size() == 2 && tyr.reqs().get(0).value() == 74 && tyr.reqs().get(1).value() == 36, "tyrfing requirement unchanged " + tyr.reqs());
 
         // 글자
-        check(Jobs.skillLine(sw.skill(0)).equals("트리니티 엣지 · 6초 · 배율 5.84") && Jobs.skillLine(sw.skill(3)).equals("미러 블레이드 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        // 2026-11-17 트리니티 엣지 5초 (기준 6초 — 피해 × 5/6: 5.84 → 4.87)
+        check(Jobs.skillLine(sw.skill(0)).equals("트리니티 엣지 · 5초 · 배율 4.87") && Jobs.skillLine(sw.skill(3)).equals("미러 블레이드 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -397,12 +398,26 @@ public final class JobsTest {
         if (!BAD.isEmpty()) System.exit(1);
     }
 
-    /** 직업 초당 피해 (피해 스킬의 배율 합 × 피해 배율 ÷ 재사용 대기 — 범위 보정 · 2026-11-07 원소 배율 (원소 스킬 −5%) 은 직업 맞춤 밖이라 뺌) */
+    /**
+     * 직업 초당 피해 (피해 스킬의 배율 합 × 피해 배율 ÷ 재사용 대기 — 범위 보정 · 2026-11-07 원소 배율 (원소 스킬 −5%) 은 직업 맞춤 밖이라 뺌). 2026-11-17 받는 피해 증가를
+     * 뺀 몫 (dpsAdj) 도 빼고 셈 — 1차 × 1.2 같은 직업 사이 비는 보정 앞의 값
+     */
     static double dps(Jobs.Job j) {
         double sum = 0;
         for (Jobs.Skill k : j.skills())
             if (k.total() > 0 && k.cd() > 0 && !Jobs.stanceBudget(k)) sum += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / Jobs.elementMult(k) / k.cd();
-        return sum;
+        return sum / Jobs.dpsAdj(j);
+    }
+
+    /**
+     * 2026-11-17 칸의 쿨 (사용자 "직업들 쿨도 줄이거나 늘려도 됨 대신 그만큼 딜 좀 높여줘야 함"): 이동 · 방어 (1) · 태세 (3) 는 기준 그대로, 연계기 · 광역 · 궁극기는
+     * 기준의 0.6 ~ 1.4 배 — 기준 쿨 (slotCd) · 재사용 비례 (피해 스킬 = 쿨 ÷ 기준) 가 맞는지
+     */
+    static boolean paceOk(Jobs.Skill k, double base) {
+        boolean fixed = k.slot() == 1 || k.slot() == 3;
+        boolean cd = fixed ? k.cd() == base : k.cd() >= base * 0.6 - 1e-9 && k.cd() <= base * 1.4 + 1e-9;
+        double pace = k.total() > 0 ? k.cd() / base : 1;
+        return cd && near(Jobs.baseCd(k), base) && near(Jobs.paceMult(k), pace);
     }
 
     /**
@@ -454,7 +469,7 @@ public final class JobsTest {
             check(a.color().length == 2 && a.color()[0].length == 3, a.id() + " two colors");
             for (int i = 0; i < Jobs.SLOTS; i++) {
                 Jobs.Skill k = a.skill(i);
-                check(k.slot() == i && k.cd() == cds[i] && k.id().startsWith(a.id() + "_") && !k.desc().isEmpty() && ids.add(k.id()), a.id() + " skill " + i + " " + k.id());
+                check(k.slot() == i && paceOk(k, cds[i]) && k.id().startsWith(a.id() + "_") && !k.desc().isEmpty() && ids.add(k.id()), a.id() + " skill " + i + " " + k.id());
                 check(names.add(k.name()), a.id() + " skill name unique " + k.name());
                 for (String u : Jobs.utils(k)) check(Rules.get().obj("RUNE_SPREAD").obj("utils").has(u), k.id() + " util " + u + " known");
                 if (k.total() > 0) check(k.def().has("t") && (Jobs.areaKind(k) == null || List.of("single", "narrow").contains(Jobs.areaKind(k))), k.id() + " t · area");
@@ -502,7 +517,7 @@ public final class JobsTest {
         check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05)
                 && near(bk.trait().def().numOr("thirstAt", 0), 0.3) && bk.trait().def().numOr("thirstSpeed", 0) > 0 && bk.trait().def().numOr("leechMax", 0) > 0,
                 "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
-        check(Jobs.skillLine(sm.skill(0)).startsWith("라이트닝 드로우 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("새비지 프렌지 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
+        check(Jobs.skillLine(sm.skill(0)).startsWith("라이트닝 드로우 · 4초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("새비지 프렌지 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, fr);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("elementalblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
@@ -703,11 +718,12 @@ public final class JobsTest {
                 && near(wk.trait().def().numOr("floor", 0), 0.25) && near(wk.trait().def().numOr("bonus", 0), 0.1) && near(wk.trait().def().numOr("radius", 0), 10),
                 "생명 착취 4% · 혼자 8% · 25% · 몫 하나당 +10% · 최대 5");
         // 유틸 · 범위 · 선딜
-        check(Jobs.areaKind(sw) == null && Jobs.areaKind(su) == null && Jobs.utils(sw).equals(List.of("healAlly")) && Jobs.utils(su).equals(Jobs.utils(pr.skill(4))),
-                "saint utils · area");
+        // 2026-11-17 글리머윙 빛가루 (받는 피해 +10% 5초 — 힐러)
+        check(Jobs.areaKind(sw) == null && Jobs.areaKind(su) == null && Jobs.utils(sw).equals(List.of("healAlly", "vuln10")) && near(sw.num("vuln", 0), 0.1)
+                && near(sw.num("vulnFor", 0), 100) && Jobs.utils(su).equals(Jobs.utils(pr.skill(4))), "saint utils · area");
         check("single".equals(Jobs.areaKind(wl)) && "narrow".equals(Jobs.areaKind(wm)) && Jobs.areaKind(wn) == null && Jobs.areaKind(wu) == null && Jobs.utils(wl).isEmpty()
-                && Jobs.utils(wm).equals(List.of("invuln", "slow")) && Jobs.utils(wn).equals(List.of("knock")) && Jobs.utils(wu).equals(List.of("vuln10")),
-                "warlock utils · area");
+                && Jobs.utils(wm).equals(List.of("invuln", "slow")) && Jobs.utils(wn).equals(List.of("knock")) && Jobs.utils(wu).isEmpty() && !wu.def().has("vuln"),
+                "warlock utils · area (2026-11-17 블러드 뱅큇 받는 피해 증가 없음)");
         check(Jobs.windupTicks(sw) == 8 && Jobs.windupTicks(su) == 20 && Jobs.windupTicks(wl) == 12 && Jobs.windupTicks(wm) == 10 && Jobs.windupTicks(wn) == 10
                 && Jobs.windupTicks(wu) == 10, "windups 8 · 20 / 12 · 10 · 10 · 10");
         check(Jobs.skillLine(sw).startsWith("글리머윙 · 15초 · 배율 ") && Jobs.skillLine(wa).equals("애시본 · 30초"), "priest advanced skill line " + Jobs.skillLine(wa));
@@ -993,7 +1009,7 @@ public final class JobsTest {
                 && near(ak.trait().def().numOr("radius", 0), 2.5), "황금 문 최대 8 · 한 발에 둘 · 터짐 120%");
         check(br.trait().name().equals("쌍검") && near(br.trait().def().numOr("twin", 0), 4) && near(br.trait().def().numOr("cleave", 0), 0.5)
                 && near(br.trait().def().numOr("nearBonus", 0), 0.2) && near(br.trait().def().numOr("farCut", 0), 0.3), "쌍검 4칸 · 베기 50% · +20% / −30%");
-        check(Jobs.skillLine(ak.skill(0)).startsWith("골든 볼리 · 6초 · 배율 ") && Jobs.skillLine(br.skill(4)).startsWith("블레이드 이클립스 · 60초 · 배율 "), "archer advanced skill line");
+        check(Jobs.skillLine(ak.skill(0)).startsWith("골든 볼리 · 7초 · 배율 ") && Jobs.skillLine(br.skill(4)).startsWith("블레이드 이클립스 · 60초 · 배율 "), "archer advanced skill line");
         check(ak.color()[0][0] > 0.9 && ak.color()[0][1] > 0.6 && ak.color()[0][2] < 0.4 && br.color()[0][0] > 0.9 && br.color()[0][1] < 0.6, "colors: gold / forge orange");
     }
 
@@ -1055,7 +1071,7 @@ public final class JobsTest {
                 "windups 10 · 10 · 10 · 6 · 8");
         check(Jobs.upKeys(as).isEmpty() && Jobs.upKeys(ah).isEmpty() && Jobs.upKeys(nb).isEmpty(), "up keys: none on the stance-budget slot");
         check(Jobs.skillLine(as).startsWith("셀레스티얼 오빗 · 30초 · 배율 ") && Jobs.skillLine(au).startsWith("콘스텔레이션 · 60초 · 배율 ")
-                && Jobs.skillLine(nk).startsWith("그레이브 콜 · 6초 · 배율 "), "mage advanced skill line");
+                && Jobs.skillLine(nk).startsWith("그레이브 콜 · 7초 · 배율 "), "mage advanced skill line");
         check(am.color()[0][2] > 0.9 && am.color()[1][0] > 0.9 && nc.color()[0][1] > 0.85 && nc.color()[1][0] > 0.85 && nc.color()[1][2] > 0.6,
                 "colors: star blue · gold / poison green · bone");
     }
@@ -1204,7 +1220,8 @@ public final class JobsTest {
                 && near(wl.trait().def().numOr("onHit", 0), wa.trait().def().numOr("onHit", -1)), "분노 · 곰의 화신");
         check(fr.trait().name().equals("빙결") && fr.trait().max() == 5 && near(fr.trait().def().numOr("frostFor", 0), 120) && near(fr.trait().def().numOr("freezeFor", 0), 30)
                 && near(fr.trait().def().numOr("shatter", 0), 0.3) && near(fr.trait().def().numOr("shardRadius", 0), 2) && near(fr.trait().def().numOr("shard", 0), 0.6)
-                && near(fr.trait().def().numOr("bossTaken", 0), 0.1), "빙결 5 · 6초 · 얼어붙음 1.5초 · 깨짐 +30% · 조각 2칸 × 0.6 · 보스 +10%");
+                && near(fr.trait().def().numOr("bossTaken", 0), 0) && near(fr.trait().def().numOr("bossFor", 0), 80),
+                "빙결 5 · 6초 · 얼어붙음 1.5초 · 깨짐 +30% · 조각 2칸 × 0.6 · 보스는 4초 얼어붙음 (2026-11-17 받는 피해 증가 없음)");
         // 유틸 · 범위: 대지 가르기 띄움 · 동면 피해 감소 + 밀쳐냄 · 곰의 포옹 끌당 + 기절 1초 · 마지막 휘두름 피해 감소 + 띄움 / 아이스 바운드 도약 + 보호막 · 샤터 · 핌불윈터
         // 묶음 — 프로스트 바이트 · 샤터는 단일 (범위 보정 +15%) · 아이스 바운드 · 핌불윈터는 좁은 범위
         check(Jobs.utils(wl.skill(0)).equals(List.of("lift")) && "narrow".equals(Jobs.areaKind(wl.skill(0))) && Jobs.windupTicks(wl.skill(0)) == 16, "대지 가르기 util · narrow · w 16");
@@ -1219,7 +1236,7 @@ public final class JobsTest {
         // 칸 이름: 단일 스킬의 3번 칸은 주력 (재설계안 2판 기준 8) · 나머지는 그대로
         check(Jobs.slotRole(sh).equals("주력") && Jobs.slotRole(wl.skill(2)).equals("광역") && Jobs.slotRole(th).equals(Jobs.slotRole(0)), "slot role 주력 for single slot 3");
         check(Jobs.upKeys(wl.skill(3)).isEmpty() && Jobs.upKey(wl.skill(2), "stun") != null && Jobs.upKey(sh, "chill") != null, "up keys");
-        check(Jobs.skillLine(wl.skill(3)).startsWith("베어 스톰프 · 30초 · 배율 ") && Jobs.skillLine(th).startsWith("프로스트 바이트 · 6초 · 배율 ")
+        check(Jobs.skillLine(wl.skill(3)).startsWith("베어 스톰프 · 30초 · 배율 ") && Jobs.skillLine(th).startsWith("프로스트 바이트 · 8초 · 배율 ")
                 && Jobs.skillLine(jg).equals("요툰 그립 · 30초"), "warrior advanced skill line");
         check(wl.color()[0][0] > 0.9 && fr.color()[0][2] > 0.9 && fr.color()[0][0] < 0.7 && fr.color()[1][1] > 0.95, "colors: orange · brown / ice · frost white");
         for (Jobs.Skill k : fr.skills()) check(!k.desc().contains("롤:"), "no LoL name in desc " + k.id());
@@ -1252,13 +1269,13 @@ public final class JobsTest {
                 // 2026-11-07 원소 배율 (원소 스킬 × 0.95 · 무속성 1 — 직업 맞춤 밖)
                 double em = Jobs.element(k) == null ? 1 : 0.95;
                 check(near(Jobs.elementMult(k), em), k.id() + " element mult " + Jobs.elementMult(k));
-                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j) * am * em), k.id() + " scale = util × time × norm × area × element");
+                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j) * am * em * Jobs.paceMult(k)), k.id() + " scale = util × time × norm × area × element × pace");
                 check(Jobs.jobOf(k) == j, k.id() + " job");
                 if (Jobs.stanceBudget(k)) continue; // 0.51.0 태세 칸 몫 (직업 맞춤 밖)
-                was += k.total() * Jobs.spreadMult(k) / k.cd();
+                was += k.total() * Jobs.spreadMult(k) / Jobs.baseCd(k); // 2026-11-17 기준 쿨로 (쿨을 바꾸면 피해가 비례)
                 now += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / Jobs.elementMult(k) / k.cd();
             }
-            check(near(was, now), j.id() + " job damage per second kept (without the area bonus) " + was + " → " + now);
+            check(near(was * Jobs.dpsAdj(j), now), j.id() + " job damage per second kept (without the area bonus · × dpsAdj) " + was + " → " + now);
             double n = Jobs.jobNorm(j);
             check(n > 0.9 && n < 1.6, j.id() + " norm " + n);
         }
@@ -1285,7 +1302,7 @@ public final class JobsTest {
         check(near(Math.round(Jobs.jobNorm(pr) * 100) / 100.0, 1.48), "priest norm 1.48 " + Jobs.jobNorm(pr));
         String note = Jobs.scaleNote(pr.skill(2));
         check(note != null && note.contains("유틸 −25%") && note.contains("시간 +10%") && note.contains("직업 맞춤 ×1.48"), "스칼드의 노래 note " + note);
-        check(Jobs.skillLine(sw.skill(0)).startsWith("트리니티 엣지 · 6초 · 배율 "), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).startsWith("트리니티 엣지 · 5초 · 배율 "), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(sw.trait().name().equals("투지") && Jobs.job("reaper").trait().name().equals("영혼"), "trait names 투지 · 영혼");
         check(near(Jobs.utilCost(pr.skill(0)), 0) && near(Jobs.damageScale(pr.skill(0)), 1), "heal (no damage) scale 1");
         check(Jobs.utilName("stun07").equals("기절 0.7초") && near(utils.obj("undying").num("cost"), 0.2), "job utils in the table");

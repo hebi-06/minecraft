@@ -230,8 +230,7 @@ final class BloodknightSkills {
                 JobImpact.hit(sp, e, j, 1.5);
                 if (e.level() instanceof ServerLevel l2) splash(l2, Kit.bodyPoint(e), 1.2 + Kit.bodyPad(e) * 0.5, j, 8);
                 if (!JobKit.isBoss(e)) RuneKit.stun(e, (int) k.num("stun", 10), JobFx.outer(j), true);
-                JobTraitsMore.applyBreak(e, k.num("shred", 0.1), (int) k.num("shredFor", 80));
-                JobFx.breakMark(e, j, 0.6, 0.6, 0.95);
+                // 2026-11-17 받는 피해 +10% 뺌 (딜러 — 블러드 나이트 dpsAdj 로 채움)
             });
         });
         return true;

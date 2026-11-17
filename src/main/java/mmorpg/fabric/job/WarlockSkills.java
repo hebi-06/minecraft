@@ -506,7 +506,6 @@ final class WarlockSkills {
         SkillFx.play(level0, "block.bubble_column.upwards_inside", mid, 0.7, 1.0);
         List<LivingEntity> marked = new ArrayList<>();
         int plague = (int) k.num("plague", 72);
-        double vuln = k.num("vuln", 0.1);
         for (int i = 0; i < beats; i++) {
             int ii = i;
             int at = first + i * every;
@@ -530,7 +529,7 @@ final class WarlockSkills {
                     if (!e.isAlive() || e.isRemoved()) continue;
                     if (!marked.contains(e)) {
                         marked.add(e);
-                        JobTraits14.plague(e, Math.max(left + 4, plague - ii * every), vuln);
+                        JobTraits14.plague(e, Math.max(left + 4, plague - ii * every));
                     }
                     if (e.level() instanceof ServerLevel el) JobFx14.heart(el, RuneKit.overHead(e, 0.7), 0.42 + Kit.bodyPad(e) * 0.2, 1, 4, Math.min(every, left) / 20.0,
                             true, Opt.of("vel", RuneKit.entVel(e)), BLOOD, BLOOD_CORE);

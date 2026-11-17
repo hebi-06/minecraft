@@ -68,8 +68,8 @@ final class WarriorSkills {
     // ------------------------------------------------------------ 파쇄격
 
     /**
-     * 파쇄격: 도끼를 머리 위로 들어 (windup 틱 — 머리 위 반원) 앞 ahead 칸 땅을 내려찍음 — 그 둘레 radius 칸 + 앞 reach 칸 · arc 도 부채꼴 (mult), 맞은 적 breakFor 틱
-     * 방어 깨짐 (받는 피해 + break · 보스 + breakBoss — 머리 위 갈라지는 방패). 분노가 rageUse 이상이면 써서 피해 × (1 + rageBonus)
+     * 파쇄격 (헬름 브레이커): 도끼를 머리 위로 들어 (windup 틱 — 머리 위 반원) 앞 ahead 칸 땅을 내려찍음 — 그 둘레 radius 칸 + 앞 reach 칸 · arc 도 부채꼴 (mult).
+     * 분노가 rageUse 이상이면 써서 피해 × (1 + rageBonus). 2026-11-17 방어 깨짐 (받는 피해 증가) 은 뺌 — 딜러 (jobs.json warrior.dpsAdj)
      */
     static boolean crush(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int windup = (int) k.num("windup", 6);
@@ -119,13 +119,11 @@ final class WarriorSkills {
             for (LivingEntity e : Kit.around(sp, ground, radius, 2.5)) if (seen.add(e.getUUID())) list.add(e);
             for (LivingEntity e : RuneKit.coneTargets(sp, k.num("reach", 3.4), k.num("arc", 100), 10)) if (seen.add(e.getUUID())) list.add(e);
             int[] cnt = {0};
-            int breakFor = (int) k.num("breakFor", 100);
             for (LivingEntity e : list) {
+                // 2026-11-17 방어 깨짐 (받는 피해 증가) 뺌 — 사용자 "받피증은 딜러들한테 안넣어주고" (전사 dpsAdj 로 채움)
                 JobKit.strike(sp, e, j, P, mult, false, false, life, 0, d -> {
-                    JobTraitsMore.applyBreak(e, JobKit.isBoss(e) ? k.num("breakBoss", 0.05) : k.num("break", 0.1), breakFor);
                     if (cnt[0]++ >= 8) return;
                     JobFx.hit(e, j, 1.25);
-                    JobFx.breakMark(e, j, 0.45, 0.6, 1.0);
                     if (cnt[0] == 1) SkillFx.play(level, "block.chain.break", Kit.bodyPoint(e), 0.8, 0.9);
                 });
             }

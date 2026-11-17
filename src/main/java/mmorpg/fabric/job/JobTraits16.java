@@ -30,7 +30,8 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>서리: 도끼 평타 (무기 훅) · 직업 스킬 (JobKit.hit 뒤) 이 맞힌 적에 서리 +1 (스킬은 {@link #addFrost} 로 더) — 최대 max · frostFor 틱 (맞힐 때마다 다시).
  * 하나당 이동 속도 −slowPer (구속 효과 단계 — 서리 2 · 4 에서 한 단계씩)</li>
- * <li>얼어붙음: 서리가 max 가 되면 freezeFor 틱 묶임 (RuneKit.stun · 얼음 결정 JobFx.frost) — 보스는 대신 bossFor 틱 받는 피해 + bossTaken (RpgCombat.takenMult)</li>
+ * <li>얼어붙음: 서리가 max 가 되면 freezeFor 틱 묶임 (RuneKit.stun · 얼음 결정 JobFx.frost) — 보스는 묶이지 않는 대신 bossFor 틱 얼어붙음 (깨짐을 노릴 틈 —
+ * 2026-11-17 받는 피해 증가는 뺌: 딜러)</li>
  * <li>깨짐: 이 사람이 얼린 적을 직업 스킬로 치면 그 타 × (1 + shatter) (JobKit.hit 배율) → 둘레 shardRadius 칸의 다른 적에 얼음 조각 (위력 × shard) · 서리 0 · 풀림.
  * 샤터 · 핌불윈터는 제 결정을 제 숫자로 깨므로 그 타 앞에 {@link #thaw} (덤 없음)</li>
  * <li>요툰 그립 (태세): 도끼 평타가 맞으면 평타 × echo 를 더함 (무기 덤) · 서리 +1 더 · 휘두를 때마다 등 뒤 서리 거인의 어깨에서 거대한 얼음 도끼가 머리 위를 넘어
@@ -51,8 +52,6 @@ public final class JobTraits16 {
     private static final Map<UUID, Map<UUID, long[]>> FROST = new HashMap<>();
     /** 얼어붙은 적 → {끝 틱, 얼린 사람 (UUID 해시 두 개 — most · least)} */
     private static final Map<UUID, long[]> FROZEN = new HashMap<>();
-    /** 보스 받는 피해 증가 → 끝 틱 */
-    private static final Map<UUID, Long> BOSS = new HashMap<>();
     /** 쓴 사람 → 마지막으로 친 적 (게이지) */
     private static final Map<UUID, UUID> LAST = new HashMap<>();
 
@@ -64,12 +63,9 @@ public final class JobTraits16 {
             sh.accept(sp, w);
             onSwing(sp, w);
         };
-        java.util.function.ToDoubleFunction<LivingEntity> tm = RpgCombat.takenMult;
-        RpgCombat.takenMult = e -> tm.applyAsDouble(e) * bossTaken(e);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             FROST.clear();
             FROZEN.clear();
-            BOSS.clear();
             LAST.clear();
         });
     }
@@ -92,13 +88,11 @@ public final class JobTraits16 {
         FROST.remove(id);
         LAST.remove(id);
         FROZEN.remove(id);
-        BOSS.remove(id);
     }
 
     /** 40틱마다 (JobTraits): 끝난 서리 · 얼어붙음 · 보스 받는 피해를 지움 (쓰러진 적이 남지 않게) */
     static void tickGlobal(long now) {
         if (!FROZEN.isEmpty()) FROZEN.values().removeIf(v -> v[0] < now);
-        if (!BOSS.isEmpty()) BOSS.values().removeIf(v -> v < now);
         for (Map<UUID, long[]> m : FROST.values()) m.values().removeIf(v -> v[1] < now);
     }
 
@@ -151,14 +145,12 @@ public final class JobTraits16 {
     /** 같은 것 — mark 가 false 면 몸의 눈꽃 결정 (JobFx.frost) 을 그리지 않음 (샤터 · 핌불윈터는 얼음 결정 감옥을 따로 그림) */
     static void freeze(ServerPlayer sp, Jobs.Job j, LivingEntity e, int ticks, boolean mark) {
         if (e == null || e.isRemoved()) return;
-        long until = Tasks.now() + Math.max(1, ticks);
+        boolean boss = JobKit.isBoss(e);
+        // 2026-11-17 보스: 묶이지 않는 대신 bossFor 틱 얼어붙음 (받는 피해 증가 없음 — 깨짐을 노릴 틈)
+        long until = Tasks.now() + Math.max(1, boss ? Math.max(ticks, (int) trait(j, "bossFor", 80)) : ticks);
         UUID by = sp.getUUID();
         FROZEN.put(e.getUUID(), new long[] {until, by.getMostSignificantBits(), by.getLeastSignificantBits()});
-        if (JobKit.isBoss(e)) {
-            BOSS.put(e.getUUID(), Tasks.now() + (long) trait(j, "bossFor", 80));
-        } else {
-            RuneKit.stun(e, ticks, ICE, false);
-        }
+        if (!boss) RuneKit.stun(e, ticks, ICE, false);
         if (mark) JobFx.frost(e, ICE, FROST_WHITE, ticks);
         if (e.level() instanceof ServerLevel level) {
             SkillFx.play(level, "block.glass.place", e.position(), 0.7, 0.9);
@@ -185,13 +177,6 @@ public final class JobTraits16 {
         Map<UUID, long[]> m = FROST.get(sp.getUUID());
         if (m != null) m.remove(e.getUUID());
         JobTraits.sendGauge(sp, false);
-    }
-
-    private static double bossTaken(LivingEntity e) {
-        Long until = e == null ? null : BOSS.get(e.getUUID());
-        if (until == null || until < Tasks.now()) return 1;
-        Jobs.Job j = Jobs.job(FR);
-        return 1 + trait(j, "bossTaken", 0.1);
     }
 
     // ------------------------------------------------------------ 깨짐 (직업 스킬)

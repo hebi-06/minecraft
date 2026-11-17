@@ -263,6 +263,8 @@ final class SaintSkills {
                 struck.add(to.getUUID());
                 boolean third = foes[0] >= 3;
                 JobKit.strike(sp, to, j, P, third ? k.num("last", 2.4) : k.num("hit", 1.6), true, third, life, 0, d -> {
+                    // 2026-11-17 빛가루: 나비가 앉은 적은 vulnFor 틱 받는 피해 + vuln (힐러) — 머리 위 금빛 · 잎빛 가루가 1초마다 흩날림
+                    mmorpg.fabric.rune.RuneMarks.vuln(to, k.num("vuln", 0.1), (int) k.num("vulnFor", 100), GOLD, GOLD_CORE, true, SaintSkills::dustMark);
                     JobImpact.fx(sp, to, j, third ? 1.3 : 1.0);
                     if (to.level() instanceof ServerLevel el) {
                         JobFx14.bloom(el, Kit.bodyPoint(to), 0.55 + Kit.bodyPad(to) * 0.3, 5, 3, 0.35, false, Opt.of("vel", RuneKit.entVel(to)), GOLD, GOLD_CORE);
@@ -282,6 +284,19 @@ final class SaintSkills {
             }
             hop(sp, j, k, P, life, i + 1, hops, every, at, next, foes, struck, heal, hopR);
         });
+    }
+
+    /** 2026-11-17 빛가루 표식 (RuneMarks.Drawer — 1초마다): 머리 위에서 금빛 · 잎빛 가루 셋이 천천히 내려앉음 (끝나기 1초 전부터 작게) */
+    static void dustMark(ServerLevel level, LivingEntity e, boolean ending) {
+        Vec3 top = RuneKit.overHead(e, 0.35);
+        double r = 0.25 + Kit.bodyPad(e) * 0.3;
+        int n = ending ? 2 : 3;
+        for (int s = 0; s < n; s++) {
+            double a = Kit.rand() * Math.PI * 2;
+            Vec3 p = V.add(top, new Vec3(Math.cos(a) * r, Kit.rand() * 0.2, Math.sin(a) * r));
+            SkillFx.fx(level, "rpg:arrow_spark", p, Opt.of("dir", new Vec3(0, -1, 0), "speed", 0.35, "size", ending ? 0.08 : 0.11, "grow", 0.3, "life", 0.7,
+                    "color", s % 2 == 0 ? GOLD_CORE : LEAF, "alpha", 0.9, "vel", RuneKit.entVel(e)));
+        }
     }
 
     /** 다음 적: at 둘레 r 칸 — 아직 맞지 않은 적 먼저 (가까운 차례), 다 맞았으면 가장 가까운 적 */

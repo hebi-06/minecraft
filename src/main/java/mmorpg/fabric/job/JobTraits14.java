@@ -40,7 +40,7 @@ import net.minecraft.world.phys.Vec3;
  * RpgHealth.lossShare · 회복 + healUp), 에버블룸 (꽃밭 안의 아군은 쓰러지지 않음 — RpgHealth.undying · 받은 피해를 적어 두었다가 꽃이 필 때 되돌림 — RpgHealth.lossHook)</li>
  * <li>워록 「생명 착취」 (1차와 거꾸로 — 아군에게 체력을 주는 대신 빼앗아 씀): 피해 직업 스킬을 쓸 때 둘레 radius 칸 아군 (나 포함) 의 체력 take 씩 (floor 아래는 빼지
  * 않음 · 다른 아군이 없으면 나 solo) — 빼앗은 몫 (take 하나) 하나당 위력 + bonus (최대 max 몫 — {@link #castMult} · 빼앗는 것은 나간 뒤 {@link #afterCast}). 애시본 동안은
- * 내 체력만 (self — 체력 1 에서 멈춤) · 위력 + power. 블러드 뱅큇 피의 역병 (받는 피해 + vuln — RpgCombat.takenMult), 크림슨 마이어 이동 속도 (Attributes.MOVEMENT_SPEED)</li>
+ * 내 체력만 (self — 체력 1 에서 멈춤) · 위력 + power. 블러드 뱅큇 피의 역병 (표식 — 2026-11-17 받는 피해 증가는 뺌: 딜러), 크림슨 마이어 이동 속도 (Attributes.MOVEMENT_SPEED)</li>
  * </ul>
  */
 public final class JobTraits14 {
@@ -114,14 +114,12 @@ public final class JobTraits14 {
     private static final List<Field> FIELDS = new ArrayList<>();
     /** 에버블룸: 쓰러지지 않는 사람 → 끝 틱 */
     private static final Map<UUID, Long> BLOOM = new HashMap<>();
-    /** 블러드 뱅큇 피의 역병: 적 → {끝 틱, 받는 피해 +} */
+    /** 블러드 뱅큇 피의 역병: 적 → {끝 틱} (2026-11-17 받는 피해 증가 없음 — 머리 위 피의 심장 · 터지는 과녁) */
     private static final Map<UUID, double[]> PLAGUE = new HashMap<>();
     /** 크림슨 마이어 이동 속도 */
     private static final Identifier MIRE_SPEED = Mmorpg.id("job_warlock_mire");
 
     static void init() {
-        java.util.function.ToDoubleFunction<LivingEntity> tm = RpgCombat.takenMult;
-        RpgCombat.takenMult = e -> tm.applyAsDouble(e) * plagueMult(e);
         java.util.function.Predicate<ServerPlayer> und = RpgHealth.undying;
         java.util.function.Consumer<ServerPlayer> saved = RpgHealth.undyingSaved;
         RpgHealth.undying = p -> und.test(p) || bloomOn(p);
@@ -542,22 +540,15 @@ public final class JobTraits14 {
 
     // ------------------------------------------------------------ 워록 — 피의 역병 · 크림슨 마이어
 
-    /** 피의 역병: ticks 동안 받는 피해 + vuln */
-    static void plague(LivingEntity e, int ticks, double vuln) {
-        PLAGUE.put(e.getUUID(), new double[] {Tasks.now() + ticks, vuln});
+    /** 피의 역병: ticks 동안 (2026-11-17 받는 피해 증가 없음) */
+    static void plague(LivingEntity e, int ticks) {
+        PLAGUE.put(e.getUUID(), new double[] {Tasks.now() + ticks});
     }
 
     /** 시험: 피의 역병이 걸려 있는지 */
     public static boolean plagued(LivingEntity e) {
         double[] p = e == null ? null : PLAGUE.get(e.getUUID());
         return p != null && p[0] > Tasks.now();
-    }
-
-    /** RpgCombat.takenMult: 피의 역병 1 + vuln */
-    private static double plagueMult(LivingEntity e) {
-        if (PLAGUE.isEmpty() || e == null) return 1;
-        double[] p = PLAGUE.get(e.getUUID());
-        return p == null || p[0] <= Tasks.now() ? 1 : 1 + p[1];
     }
 
     /** 크림슨 마이어 이동 속도 + amount (0 = 뗌) */

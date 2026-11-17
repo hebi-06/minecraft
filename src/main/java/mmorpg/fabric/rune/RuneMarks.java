@@ -33,8 +33,19 @@ import net.minecraft.world.phys.Vec3;
 public final class RuneMarks {
     private RuneMarks() {}
 
-    /** tag = 건 룬의 꼬리표 (Tasks.tag — 1초마다 다시 그릴 때 그 계열 묶음으로 칠하게, 2026-11-17) */
-    private record Vuln(LivingEntity e, long until, double add, double[] glow, double[] core, String tag) {}
+    /**
+     * 2026-11-17 받는 피해 증가 표식을 1초마다 다시 그리는 것 (null = 금 간 표식 — 룬): 힐러의 표식 (사제 홀리 스티그마 — 십자가가 따로 · 세인트 빛가루) 은 제 그림으로.
+     * ending = 끝나기 1초 전부터 (작게)
+     */
+    public interface Drawer {
+        void draw(ServerLevel level, LivingEntity e, boolean ending);
+    }
+
+    /** 다시 그리지 않음 (표식 그림이 따로 있는 것 — 홀리 스티그마) */
+    public static final Drawer QUIET = (level, e, ending) -> {};
+
+    /** tag = 건 룬의 꼬리표 (Tasks.tag — 1초마다 다시 그릴 때 그 계열 묶음으로 칠하게, 2026-11-17) · drawer = 다시 그리는 것 (null 이면 금 간 표식) */
+    private record Vuln(LivingEntity e, long until, double add, double[] glow, double[] core, String tag, Drawer drawer) {}
 
     /** 가하는 피해 증가 (2026-11-17 tag = 건 룬의 꼬리표 — 버프 동안 몸 기운을 그 계열 묶음으로 다시 그림) */
     private record Buff(long until, double add, String name, double[] glow, double[] core, String tag) {}
@@ -67,6 +78,11 @@ public final class RuneMarks {
      * 받는 피해 증가: e 가 ticks 동안 받는 피해 × (1 + add). 처음 걸 때 금 간 표식이 크게 갈라짐 (show — 여러 적이면 앞의 몇만)
      */
     public static void vuln(LivingEntity e, double add, int ticks, double[] glow, double[] core, boolean show) {
+        vuln(e, add, ticks, glow, core, show, null);
+    }
+
+    /** 같은 것 — drawer: 1초마다 다시 그리는 것 (null = 금 간 표식 · {@link #QUIET} = 그리지 않음) — 마지막에 건 것의 그림 */
+    public static void vuln(LivingEntity e, double add, int ticks, double[] glow, double[] core, boolean show, Drawer drawer) {
         if (e == null || e.isRemoved() || !(add > 0) || ticks <= 0) return;
         long until = Tasks.now() + ticks;
         Vuln old = VULN.get(e.getUUID());
@@ -75,9 +91,10 @@ public final class RuneMarks {
             add = Math.max(add, old.add());
             until = Math.max(until, old.until());
         }
-        VULN.put(e.getUUID(), new Vuln(e, until, add, glow, core, Tasks.tag()));
+        VULN.put(e.getUUID(), new Vuln(e, until, add, glow, core, Tasks.tag(), drawer));
         if (show && e.level() instanceof ServerLevel level) {
-            drawMark(level, e, glow, core, fresh ? 0.62 : 0.5, 0.7);
+            if (drawer != null) drawer.draw(level, e, false);
+            else drawMark(level, e, glow, core, fresh ? 0.62 : 0.5, 0.7);
             if (fresh) SkillFx.play(level, "block.chain.break", RuneKit.overHead(e, 0.6), 1.1, 0.7);
         }
     }
@@ -158,7 +175,8 @@ public final class RuneMarks {
                     drawn++;
                     String prevTag = Tasks.tag(v.tag());
                     try {
-                        drawMark(level, e, v.glow(), v.core(), v.until() - now > 20 ? 0.42 : 0.32, 0.9);
+                        if (v.drawer() != null) v.drawer().draw(level, e, v.until() - now <= 20);
+                        else drawMark(level, e, v.glow(), v.core(), v.until() - now > 20 ? 0.42 : 0.32, 0.9);
                     } finally {
                         Tasks.tag(prevTag);
                     }

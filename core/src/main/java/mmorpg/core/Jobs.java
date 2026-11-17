@@ -150,8 +150,13 @@ public final class Jobs {
     private record Advance(int level, double silver, double dps, Map<String, String> paths, Map<String, Job> jobs, Map<String, String> upIds,
             Map<String, Double> jobDps) {}
 
+    /**
+     * @param dpsAdj 2026-11-17 직업마다 초당 피해 보정 (jobs.json jobs.&lt;id&gt;.dpsAdj · advance.jobs.&lt;id&gt;.dpsAdj — 없으면 1): 딜러의 받는 피해 증가를 뺀 몫
+     *               (사용자 "받피증은 딜러들한테 안넣어주고 힐러랑 한정 룬에만"). 1차 직업의 값은 그 직업에만 (2차 직업의 기준 — 1차의 앞 값 — 에는 넣지 않음)
+     * @param slotCd 2026-11-17 칸마다 기준 재사용 대기 (jobs.json slotCd — 6 · 12 · 15 · 30 · 60): 재사용 대기를 바꾼 스킬은 피해 × 재사용 ÷ 기준 ({@link #paceMult})
+     */
     private record Data(int changeLevel, double changeSilver, double perPoint, int[] unlock, List<String> slotRoles, Map<String, Job> jobs, Upgrade upgrade,
-            Map<String, List<UpKey>> upKeys, Advance advance, List<String> hidden) {}
+            Map<String, List<UpKey>> upKeys, Advance advance, List<String> hidden, Map<String, Double> dpsAdj, double[] slotCd) {}
 
     private static final Data DATA = load();
 
@@ -443,29 +448,53 @@ public final class Jobs {
         Map<String, Double> was = new LinkedHashMap<>();
         for (Job j : DATA.jobs().values()) {
             double w = wasOf(j), now = nowOf(j);
-            was.put(j.id(), w);
-            out.put(j.id(), SPREAD == null || now <= 0 ? 1.0 : w / now);
+            was.put(j.id(), w); // 2차 직업의 기준 — 1차 직업의 보정 (dpsAdj) 은 넣지 않음
+            out.put(j.id(), SPREAD == null || now <= 0 ? 1.0 : w * dpsAdj(j) / now);
         }
         for (Job a : DATA.advance().jobs().values()) {
             double now = nowOf(a);
-            double w = was.getOrDefault(a.base(), 0.0) * advanceDps(a); // 2026-11-06 피에로 (탱커) 는 1차와 같은 1.0
+            double w = was.getOrDefault(a.base(), 0.0) * advanceDps(a) * dpsAdj(a); // 2026-11-06 피에로 (탱커) 는 1차와 같은 1.0
             out.put(a.id(), SPREAD == null || now <= 0 || w <= 0 ? 1.0 : w / now);
         }
         return Map.copyOf(out);
     }
 
-    /** Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) — 피해 스킬만 (직업 맞춤의 기준: 1차 직업의 초당 피해 — 태세 칸 몫 스킬은 뺌) */
+    /**
+     * Σ (배율 합 × 0.26.0 지속 보정 ÷ 칸의 기준 쿨) — 피해 스킬만 (직업 맞춤의 기준: 1차 직업의 초당 피해 — 태세 칸 몫 스킬은 뺌). 2026-11-17 쿨을 바꾼 스킬은
+     * 피해도 쿨에 비례 ({@link #paceMult}) 하므로 기준 쿨로 셈 (초당 피해 그대로)
+     */
     private static double wasOf(Job j) {
         double sum = 0;
-        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !stanceBudget(k)) sum += k.total() * spreadMult(k) / k.cd();
+        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !stanceBudget(k)) sum += k.total() * spreadMult(k) / baseCd(k);
         return sum;
     }
 
-    /** Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만 (태세 칸 몫 스킬은 뺌) */
+    /** Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 칸의 기준 쿨) — 피해 스킬만 (태세 칸 몫 스킬은 뺌) */
     private static double nowOf(Job j) {
         double sum = 0;
-        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !stanceBudget(k)) sum += k.total() * (1 - utilCost(k)) * timeMult(k) / k.cd();
+        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !stanceBudget(k)) sum += k.total() * (1 - utilCost(k)) * timeMult(k) / baseCd(k);
         return sum;
+    }
+
+    /** 2026-11-17 칸의 기준 재사용 대기 (jobs.json slotCd — 칸 밖이면 그 스킬의 쿨) */
+    public static double baseCd(Skill k) {
+        if (k == null) return 0;
+        return k.slot() >= 0 && k.slot() < DATA.slotCd().length ? DATA.slotCd()[k.slot()] : k.cd();
+    }
+
+    /**
+     * 2026-11-17 재사용 비례 (사용자 "직업들 쿨도 줄이거나 늘려도 됨 대신 그만큼 딜 좀 높여줘야 함"): 쿨 ÷ 칸의 기준 쿨 — 쿨이 길면 한 번의 피해가 그만큼 큼 (초당
+     * 피해는 그대로). 피해가 없는 스킬은 1
+     */
+    public static double paceMult(Skill k) {
+        if (k == null || k.total() <= 0 || k.cd() <= 0) return 1;
+        double b = baseCd(k);
+        return b > 0 ? k.cd() / b : 1;
+    }
+
+    /** 2026-11-17 직업의 초당 피해 보정 (jobs.json dpsAdj — 없으면 1): 받는 피해 증가를 뺀 딜러의 몫 */
+    public static double dpsAdj(Job j) {
+        return j == null ? 1 : DATA.dpsAdj().getOrDefault(j.id(), 1.0);
     }
 
     /**
@@ -507,11 +536,11 @@ public final class Jobs {
     /**
      * 피해 배율 = (1 − 유틸 값 합) × 시간 보정 × 직업 맞춤 × 범위 보정 — 직업 스킬을 쓸 때 위력 P 에 곱함 (툴팁의 과녁 하나 피해도). 범위 보정은 직업 맞춤
      * 밖 (사용자 "그 스킬만 오름" — 단일 · 좁은 스킬이 많은 직업은 초당 피해가 오름, 직업 맞춤은 범위 보정 없이 셈). 배율 합이 없는 스킬 (태세 ·
-     * 회복 · 보호막) · 대조 시험이면 1
+     * 회복 · 보호막) · 대조 시험이면 1. 2026-11-17 × 재사용 비례 ({@link #paceMult} — 쿨을 바꾼 스킬)
      */
     public static double damageScale(Skill k) {
         if (SPREAD == null || k == null || k.total() <= 0) return 1;
-        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k)) * areaMult(k) * elementMult(k);
+        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k)) * areaMult(k) * elementMult(k) * paceMult(k);
     }
 
     /** 2026-11-07 이 스킬의 원소 (jobs.json elem — 불 · 물 · 전기 · 얼음 · 바위 · multi, 무속성이면 null) */
@@ -539,6 +568,8 @@ public final class Jobs {
         if (a > 1 + 1e-9) parts.add(Runes.areaName(areaKind(k)) + " +" + Math.round((a - 1) * 100) + "%");
         double n = jobNorm(jobOf(k));
         if (Math.abs(n - 1) > 0.005) parts.add("직업 맞춤 ×" + Js.str(Math.round(n * 100) / 100.0));
+        double pace = paceMult(k);
+        if (Math.abs(pace - 1) > 0.005) parts.add("재사용 " + Js.str(k.cd()) + "초 ×" + Js.str(Math.round(pace * 100) / 100.0)); // 2026-11-17 쿨에 비례
         String el = Elements.notePlain(element(k));
         if (el != null) parts.add(el);
         return parts.isEmpty() ? null : String.join(" · ", parts) + " 포함";
@@ -743,8 +774,16 @@ public final class Jobs {
         Advance advance = advance(root, jobs, upKeys);
         List<String> hidden = new ArrayList<>();
         if (root.has("hidden")) for (Object o : root.list("hidden")) hidden.add(String.valueOf(o));
+        // 2026-11-17 직업마다 초당 피해 보정 · 칸마다 기준 재사용 대기
+        Map<String, Double> adj = new LinkedHashMap<>();
+        for (String id : jobs.keySet()) if (js.obj(id).has("dpsAdj")) adj.put(id, js.obj(id).num("dpsAdj"));
+        Obj aj = root.has("advance") ? root.obj("advance").objOrNull("jobs") : null;
+        if (aj != null) for (String id : advance.jobs().keySet()) if (aj.obj(id).has("dpsAdj")) adj.put(id, aj.obj(id).num("dpsAdj"));
+        List<Double> sc = root.numbersOrNull("slotCd");
+        double[] slotCd = new double[SLOTS];
+        for (int i = 0; i < SLOTS; i++) slotCd[i] = sc != null && sc.size() == SLOTS ? sc.get(i) : new double[] {6, 12, 15, 30, 60}[i];
         return new Data((int) root.num("changeLevel"), root.num("changeSilver"), root.num("perPoint"), unlock, List.copyOf(roles), jobs, upgrade(root),
-                Map.copyOf(upKeys), advance, List.copyOf(hidden));
+                Map.copyOf(upKeys), advance, List.copyOf(hidden), Map.copyOf(adj), slotCd);
     }
 
     /**
