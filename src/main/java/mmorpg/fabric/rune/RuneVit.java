@@ -445,7 +445,8 @@ final class RuneVit {
     static boolean bulwark(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
-        double[][] cs = RuneKit.colorOf("vit");
+        // 2026-11-17 바스티온 (새 룬 — 그림 묶음 투사 = 수호의 강철 푸른빛 방패 벽): 체력 계열의 분홍 꽃잎 빛이 "방패 벽" 과 어긋났음 (CI 44048300921) → 그림 묶음 계열의 빛
+        double[][] cs = RuneKit.lookColors(k, "vit");
         double[] glow = cs[0];
         double[] core = cs[1];
         double[] gold = {1.0, 0.82, 0.45};

@@ -95,7 +95,7 @@ SET = [
          desc="겨눈 곳 하늘에 구름을 모아 눈보라 · 둔화", use="장판 · 둔화"),
     dict(key="gnome", name="노움", grade="hero", cd=32.5, pair=["necromancer_blight"], r="mid", src="spirit.hero", elem="rock", u=["root"], a="narrow",
          desc="노움을 불러 바위 가시를 일으킴 · 묶음", use="소환 · 묶음 1초"),
-    dict(key="bastion", name="바스티온", grade="hero", cd=60, pair=["guardian_ult"], r="melee", src="vit.hero", u=["allyGuard"],
+    dict(key="bastion", name="바스티온", grade="hero", cd=60, pair=["guardian_ult"], r="melee", src="vit.hero", u=["allyGuard"], look="gladiator:hero",
          set={"reduce": 0.2, "ticks": 100, "pulse": 10}, spread={"t": 100, "zone": True},
          desc="방패 벽을 둘러 세워 아군을 지키고 안의 적을 침", use="장판 5초 · 아군 받는 피해 −20%"),
     # ---------------------------------------------------------------- 초월 (초당 89%)

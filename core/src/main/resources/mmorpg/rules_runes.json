@@ -786,7 +786,7 @@
     "ticks": 100,
     "pulse": 10,
     "cd": 60,
-    "look": "vit:hero",
+    "look": "gladiator:hero",
     "scale": 2.0979
    }
   },
