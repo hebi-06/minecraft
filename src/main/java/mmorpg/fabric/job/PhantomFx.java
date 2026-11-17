@@ -1626,7 +1626,7 @@ final class PhantomFx {
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
                 && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
                 && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike") && !id.equals("rpg:drop")
-                && !id.equals("rpg:breath")) return false;
+                && !id.equals("rpg:breath") && !id.equals("rpg:arrow_shot")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1705,6 +1705,25 @@ final class PhantomFx {
                 Opt b = Opt.of("dir", V.unit(d), "speed", o.num("speed", 0), "size", Math.max(0.3, o.num("size", 1) * 0.5), "life", Math.max(0.1, o.num("life", 1)),
                         "frames", 4.0, "fps", 16.0, "loop", true, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
                 return paintedWith(level, PAINT.get("jcomet2"), L, 0, at, b);
+            }
+            case "rpg:arrow_shot" -> {
+                // 2026-11-17 빛 줄기 (예전 rpg:arrow_shot — 가는 쪽을 보는 줄 · 반 길이 size): 멈춘 세로 줄 (표식 위 빛기둥) = 스스로 빛나는 바닐라 점 기둥
+                // (WyrdKit.beam — 빛살 다리와 같음), 날아가는 줄 = 묶음의 돌진 줄기 (dash — 같은 길 · 빠르기). 빛 · 심지 두 줄 (RuneKit.flyStreak) 은 flystreak 다리가 한 번에
+                Vec3 d = o.vec("dir", V.UP);
+                if (V.len(d) < 1e-6) return false;
+                Vec3 u = V.unit(d);
+                double half = Math.max(0.1, o.num("size", 0.5));
+                double speed = o.num("speed", 0);
+                if (speed <= 0.01) {
+                    if (half * 2 < 0.6) return false;
+                    WyrdKit.beam(level, L, V.add(at, u, half), V.add(at, u, -half), who);
+                    return true;
+                }
+                if (!Vfx.hasSheet(L.n("dash"))) return false;
+                double life = Math.max(0.05, o.num("life", 0.3));
+                int frames = Vfx.sheet(L.n("dash")).frames();
+                return paintedWith(level, PAINT.get("jdash2"), L, 0, at, Opt.of("dir", u, "speed", speed, "size", half, "life", life, "frames", (double) frames,
+                        "fps", frames / life, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0)));
             }
             case "rpg:breath" -> {
                 // 2026-11-17 숨결 뭉게 하나 (예전 rpg:breath — dir 쪽 speed 칸/초 · 끌림 1.1 · 반 크기 size 의 0.45 → 1.6 배로 커지며 옅어짐 · 이미르 서리 숨결 · 니드호그):
@@ -1965,7 +1984,7 @@ final class PhantomFx {
             return paintedWith(level, rp, L, Math.max(0, cell), at, o);
         }
         switch (name) {
-            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade", "hitmark" -> {
+            case "prop", "sword", "flare", "rays", "nova", "crack", "sigil", "rockburst", "arc", "wavecard", "wave", "shade", "hitmark", "flystreak" -> {
             }
             default -> {
                 return false;
@@ -2047,6 +2066,13 @@ final class PhantomFx {
                 double alpha = Math.min(1, o.num("alpha", 1));
                 moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
                 if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+            }
+            case "flystreak" -> {
+                // 2026-11-17 날아가는 빛 (RuneKit.flyStreak — 예전 arrow_shot 빛 · 심지 두 줄): 묶음의 돌진 줄기 한 장 (dash — 같은 길 · 빠르기 · 반 길이 size)
+                if (!Vfx.hasSheet(L.n("dash")) || V.len(dir) < 1e-6) return false;
+                int frames = Vfx.sheet(L.n("dash")).frames();
+                return paintedWith(level, PAINT.get("jdash2"), L, 0, at, Opt.of("dir", V.unit(dir), "speed", o.num("speed", 0), "size", Math.max(0.1, size), "life", life,
+                        "frames", (double) frames, "fps", frames / life, "alpha", 1.0));
             }
             case "hitmark" -> {
                 // 룬 맞은 자국 (RuneBoost.mark — 예전 rfx_jhits 계열 줄 + rfx_jburst2 + 색 불티): 그 묶음의 X 베기 + 섬광 + 불씨 + 바닐라 맞음 겹 (PhantomFx.hit 과 같은 틀)

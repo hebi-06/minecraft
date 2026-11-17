@@ -441,6 +441,10 @@ public final class RuneKit {
         double len = V.len(d);
         double life = Math.max(0.05, len / speed);
         Vec3 u = V.unit(d);
+        // 2026-11-17 위르드식 다리: 계열 묶음의 돌진 줄기 한 장 (빛 · 심지 두 줄 대신)
+        if (painted != null && glow != null && painted.draw(level, "flystreak", from, Opt.of("dir", u, "speed", len / life, "size", size, "life", life), glow)) {
+            return Math.max(1, (int) Math.round(life * 20));
+        }
         SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", u, "speed", len / life, "size", size, "thick", thick, "life", life, "color", glow, "alpha", 1.0));
         SkillFx.fx(level, "rpg:arrow_shot", from, Opt.of("dir", u, "speed", len / life, "size", size * 0.75, "thick", thick * 0.35, "life", life, "color", core,
                 "alpha", 1.0));
