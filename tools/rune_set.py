@@ -13,7 +13,8 @@
 - 재사용 = 등급 범위 안 (GRADE_CD — 일반 6 ~ 15 · 희귀 12 ~ 21 · 고귀 15 ~ 25 · 영웅 27 ~ 38 · 초월 32 ~ 50초) — 범위 안에 어울리는 직업 스킬 (pair) 이 있으면
   그 스킬과 같은 쿨 (jobs.json 과 맞는지 · 범위 안인지 여기서 봄 · 직업 스킬 하나에 룬 하나 · RUNE_SET.pairs → RuneScaleTest). 범위 안에 어울리는 스킬이 없으면 짝 없음
 - 실효 = 예산 × 거리 (근 ×1.2 · 중 ×1.1 · 원 ×1.0) × 원소 (−5%) × (1 − 유틸) × 시간 보정 × 범위 보정 — Runes.damageScale (+ 거리 · scale)
-- 시간 보정: 원거리 시전 룬 (cast) 은 선딜 보정 없음 (거리 보정 안)
+- 시간 보정: 원거리 시전 룬 (cast) 은 선딜 보정 없음 (거리 보정 안) · 막는 선딜 (spread guard — 선딜 동안 피해 감소) 도 선딜 보정 없음
+- 유틸 값 = 표의 값 × 등급 기준 재사용 ÷ 룬의 재사용 (RUNE_SET.baseCd — Runes.utilCdFactor: 한 번에 같은 유틸 → 쿨이 길면 드물게 켜져 초당 값이 작음)
 - 룬 위력 = 네 스탯의 합 (한정 룬 식 — sum)
 - 받는 피해 증가는 일반 룬에 없음 (한정 룬만)
 - 동작 (fn) 은 처음에 옛 룬의 것을 이어 씀 (look = 옛 계열:등급 — 위르드식 그림 묶음), 새 컨셉 여덟은 비슷한 옛 동작 → 시범 · 등급 묶음에서 전용 동작으로
@@ -57,7 +58,7 @@ SET = [
          desc="샐러맨더를 불러 4초 동안 불덩이를 뱉게 함", use="소환 · 불덩이 4번"),
     # 2026-11-17 램파트 · 블레이드 헤일 · 아이스 랜스는 새 동작 (RuneSet · RuneInt.iceLance — 옛 동작을 빌리지 않음), look = 그림 묶음 계열 (꼬리표 · 빛)
     dict(key="rampart", name="램파트", grade="common", cd=15, pair=["guardian_throw"], r="melee", src="blade.noble", u=["reduce", "knock"], a="narrow", look="gladiator:common",
-         set={"fn": "rampart", "ticks": 60, "reduce": 0.5, "knock": 0.9}, spread={"t": 60, "w": 60},
+         set={"fn": "rampart", "ticks": 60, "reduce": 0.5, "knock": 0.9}, spread={"t": 60, "w": 60, "guard": True},
          desc="빛의 방패 결계로 3초 버티고 앞으로 밀어 냄", use="받는 피해 −50% 3초 · 끝에 앞을 밀쳐냄"),
     # ---------------------------------------------------------------- 희귀 (초당 58%)
     dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=13, pair=["swordmaster_echo"], r="mid", src="blade.rare", u=[], look="holy:rare",
@@ -109,8 +110,9 @@ SET = [
          set={"lift": 0}, desc="하늘 높이에서 거대한 검이 떨어져 꽂힘", use="원거리 광역 큰 한 방"),
     dict(key="berserker", name="버서커", grade="transcend", cd=32, pair=["bloodknight_frenzy"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
          set={"reduce": 0.2}, desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −20%"),
-    dict(key="lunaexec", name="루나 엑시큐션", grade="transcend", cd=50, pair=["assassin_ult"], r="mid", src="assassin.transcend", u=["blink"], a="single",
-         desc="달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발", use="단일 · 순간 이동"),
+    # 2026-11-17 등급 안 밸런스: 달빛 폭발이 둘레 3칸 적도 침 (splashMult 16 — 대상의 절반) → 단일 (+15%) 이 아니라 좁은 범위 (+8% — π × 3² ≈ 28칸²)
+    dict(key="lunaexec", name="루나 엑시큐션", grade="transcend", cd=50, pair=["assassin_ult"], r="mid", src="assassin.transcend", u=["blink"], a="narrow",
+         desc="달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발", use="대상 + 둘레 3칸 달빛 폭발 (절반) · 순간 이동"),
     # 2026-11-17 도감 메모 (메테오 "유틸 띄움 삭제 데미지 소량 증가 및 이에 따른 쿨타임 증가"): 띄움을 뺌 · 쿨 60초 (판 14 — 본 뒤 메모는 마법진 색만) →
     # 등급 범위 (초월 32 ~ 50초) 의 끝 50초 (긴 쿨 큰 한 방 그대로). 매지션의 범위 안 스킬 (프리즘 레이 35초) 은 스피릿 킹의 짝
     dict(key="meteor", name="메테오", grade="transcend", cd=50, r="far", src="int.transcend", elem="fire", u=[], cast=1.0,
@@ -163,7 +165,7 @@ def time_mult(sp, more, cast):
         return 1.0
     w = sp.get("w", 0)
     wt = w if w >= S["windup"]["min"] else 0
-    wb = 0 if cast else min(S["windup"]["max"], wt * S["windup"]["perTick"])
+    wb = 0 if cast or sp.get("guard") else min(S["windup"]["max"], wt * S["windup"]["perTick"])
     d = max(0, sp["t"] - wt)
     if sp.get("zone"):
         kind = "zoneLong" if d > S["zoneLong"] else "zone"
@@ -249,7 +251,7 @@ def build():
             spread[key + "." + g] = sp
             order.append(key)
             # 실효 (표 — 원거리 룬은 시전에 선딜 보정 없음)
-            util = min(S["utilMax"], sum(S["utils"][u]["cost"] for u in e["u"]))
+            util = min(S["utilMax"], sum(S["utils"][u]["cost"] for u in e["u"]) * base_cd / e["cd"])
             area = 1 + (S["area"][e["a"]]["bonus"] if e.get("a") else 0)
             el = 0.95 if e.get("elem") else 1.0
             tm = time_mult(sp, more, e.get("cast"))
@@ -274,6 +276,8 @@ def build():
             "range": RANGE,
             "rangeName": {"melee": "근거리", "mid": "중거리", "far": "원거리"},
             "cdRange": {g: list(GRADE_CD[g]) for g in GRADES},
+            "_baseCd": "2026-11-17 유틸 값의 기준 재사용 (등급 · 한정 — Runes.utilCdFactor: 유틸 값 × 기준 ÷ 룬의 재사용)",
+            "baseCd": dict({g: GRADE_BASE[g][1] for g in GRADES}, limited=36),
             "spread": spread,
             "migrateFamilies": OLD_VISIBLE,
             "migrate": migrate,

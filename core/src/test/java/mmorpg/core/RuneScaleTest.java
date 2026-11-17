@@ -77,6 +77,17 @@ public final class RuneScaleTest {
             }
         }
         check(n == 27, "27 rune ↔ job skill pairs " + n);
+        // 2026-11-17 등급 안 밸런스 (사용자 "각 등급끼리만 봤을때 밸런스"): 램파트는 막는 선딜 (선딜 보정 없음) · 루나 엑시큐션은 달빛 폭발이 둘레도 쳐 좁은 범위
+        check(Rules.get().obj("RUNE_SET").obj("spread").obj("rampart.common").truthy("guard") && Runes.windupBonus(rune("rampart", "common")) == 0, "rampart guard");
+        check("narrow".equals(Runes.areaKind(rune("lunaexec", "transcend"))), "lunaexec narrow (splash)");
+        // 한정 룬끼리: 초당 예산 같음 (34 × scale ÷ 재사용 = 34 ÷ 36) · 유틸 값 × 36 ÷ 재사용
+        for (String fam : List.of("endless", "terra", "glacier")) {
+            Runes.Rune lr = rune(fam, "transcend");
+            double perSec = 34 * Runes.budgetScale(lr) / lr.cd();
+            check(Math.abs(perSec - 34 / 36.0) < 1e-3, fam + " per-second budget " + perSec + " = 34 / 36");
+            near(Runes.utilCdFactor(lr), 36 / lr.cd(), fam + " limited util cd factor");
+        }
+        check(!rune("endless", "transcend").def().truthy("knock") && !rune("endless", "transcend").def().truthy("lift"), "endless finish: no free knock · lift");
     }
 
     /** 배율 합 그대로 두는 룬 (지원 · 버프 — 유틸 값 없음) */
@@ -143,6 +154,12 @@ public final class RuneScaleTest {
                     check(Math.abs(rm - 1.2) < 1e-9 || Math.abs(rm - 1.1) < 1e-9 || Math.abs(rm - 1.0) < 1e-9, id + " range mult " + rm);
                     check(!Runes.utils(r).contains("vuln5") && !Runes.utils(r).contains("vuln10") && !Runes.utils(r).contains("vuln15") && !d.truthy("vuln"), id + " no vuln (한정 룬만)");
                     if (Runes.castSeconds(r) > 0) near(Runes.windupBonus(r), 0, id + " cast → no windup bonus");
+                    // 2026-11-17 등급 안 밸런스: 유틸 값 × 등급 기준 재사용 ÷ 룬의 재사용 (쿨이 길면 유틸이 드물게 켜짐) · 막는 선딜 (guard) 은 선딜 보정 없음
+                    double raw = 0;
+                    for (String k : Runes.utils(r)) raw += u.obj(k).num("cost");
+                    near(Runes.utilCdFactor(r), BASE_CD[gi] / r.cd(), id + " util cd factor");
+                    near(Runes.utilCost(r), Math.min(0.6, raw * BASE_CD[gi] / r.cd()), id + " util cost × base cd ÷ cd");
+                    if (e.truthy("guard")) near(Runes.windupBonus(r), 0, id + " guard → no windup bonus");
                     if (total > 0) {
                         double want = BUDGET[gi] / BASE_CD[gi] * r.cd();
                         check(Math.abs(total * Runes.budgetScale(r) - want) <= want * 0.01, id + " budget " + total * Runes.budgetScale(r) + " = " + want);
@@ -196,7 +213,8 @@ public final class RuneScaleTest {
         near(Runes.damageScale(counter), 0.9 * 1.1 * 1.08, "counter stance scale (narrow cone)");
         Runes.Rune glacier = rune("glacier", "transcend");
         check(Runes.timeCapped(glacier) && "zoneLong".equals(Runes.spreadKind(glacier)), "glacier capped");
-        near(Runes.damageScale(glacier), 0.8 * 1.3 * 0.95, "glacier scale (얼음 원소 −5%)");
+        // 2026-11-17 한정 룬끼리 밸런스: 빙결 2초 값 × 36/32 (재사용 맞춤) · 예산 × 32/36 (scale — 초당 같게)
+        near(Runes.damageScale(glacier), (1 - 0.2 * 36 / 32.0) * 1.3 * 0.95 * 0.8889, "glacier scale (얼음 원소 −5% · 유틸 재사용 맞춤 · 예산 32/36)");
         Runes.Rune blood = rune("strike", "hero");
         check(Runes.utils(blood).equals(List.of("lifesteal")), "blood blade lifesteal");
         near(Runes.damageScale(blood), 0.9 * 1.15, "blood blade: util · single, no time");

@@ -414,6 +414,9 @@ public final class Runes {
     public static double windupBonus(Rune r) {
         Obj wu = SPREAD == null ? null : SPREAD.obj("windup");
         if (wu == null || castSeconds(r) > 0) return 0; // 2026-11-17 원거리 시전은 선딜 보정 없음 (거리 보정 안)
+        // 2026-11-17 막는 선딜 (spread.guard — 램파트: 선딜 3초 동안 받는 피해 −50%) 은 선딜 보정 없음 — 선딜이 위험이 아니라 유틸 (피해 감소 값으로 냄)
+        Obj e = spreadEntry(r);
+        if (e != null && e.truthy("guard")) return 0;
         return Math.min(wu.num("max"), windupTicks(r) * wu.num("perTick"));
     }
 
@@ -467,7 +470,19 @@ public final class Runes {
         if (SPREAD == null) return 0;
         double sum = 0;
         for (String k : utils(r)) sum += SPREAD.obj("utils").obj(k).num("cost");
-        return Math.min(SPREAD.numOr("utilMax", 1), sum);
+        return Math.min(SPREAD.numOr("utilMax", 1), sum * utilCdFactor(r));
+    }
+
+    /**
+     * 2026-11-17 유틸 값의 재사용 맞춤 (새 룬 30 · 한정 룬 — 사용자 "한정 룬은 한정룬 끼리 보고 각 등급끼리만 봤을때 밸런스"): 유틸 값 표는 등급 기준 재사용
+     * (RUNE_SET.baseCd — 일반 8 · 희귀 12 · 고귀 18 · 영웅 26 · 초월 · 한정 36초) 의 값 → × 기준 ÷ 룬의 재사용. 유틸은 한 번에 같은 것을 주므로 재사용이 길면 드물게
+     * 켜져 초당 값이 작음 (예산은 재사용에 비례하니 깎는 몫을 그대로 두면 쿨이 긴 룬이 유틸 값을 더 냄). 옛 룬 · 대조 시험은 1
+     */
+    public static double utilCdFactor(Rune r) {
+        if (r == null || SET == null || !SET.has("baseCd") || !(r.cd() > 0)) return 1;
+        String key = limited(r.family()) ? "limited" : isSet(r.family()) ? r.grade() : null;
+        double base = key == null ? 0 : SET.obj("baseCd").numOr(key, 0);
+        return base > 0 ? base / r.cd() : 1;
     }
 
     // ------------------------------------------------------------------ 0.50.0 범위 보정 (사용자 "범위가 작거나 단일 공격인 애들은 계수를 좀 더 주자")

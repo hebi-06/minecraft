@@ -147,9 +147,12 @@ public final class RuneTipTest {
         // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
         String glj = String.join("\n", gl);
-        double gS = Runes.damageScale(rune("glacier", "transcend")); // 0.49.0 빙결 2초 −20% × 시간 보정 (선딜 0.85초 · 장판 · 4초 넘게 → 최대 ×1.3)
-        check(near(gS, 0.8 * 1.3 * 0.95) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS)) && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
-                && gl.contains("유틸 −20% · 시간 보정 +30% 포함")
+        // 0.49.0 빙결 2초 −20% × 시간 보정 (선딜 0.85초 · 장판 · 4초 넘게 → 최대 ×1.3) → 2026-11-17 한정 룬끼리 밸런스: 유틸 값 × 36/32 (재사용 맞춤 — 22.5%) ·
+        // 예산 × 32/36 (scale — 초당 피해가 다른 한정 룬과 같게)
+        double gS = Runes.damageScale(rune("glacier", "transcend"));
+        check(near(gS, (1 - 0.2 * 36 / 32.0) * 1.3 * 0.95 * 0.8889) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS))
+                && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
+                && gl.contains("유틸 −23% · 시간 보정 +30% 포함")
                 && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
                 && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 32초 · 한정 · 원소 얼음 −5%")
                 && glj.contains("띄움"), "glacier: " + gl);

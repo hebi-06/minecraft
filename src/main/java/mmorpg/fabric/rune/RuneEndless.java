@@ -25,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
  *       (공중 참격은 시전자 눈 · 3인칭 카메라에서 3칸 안에는 그리지 않음 — 1인칭 화면을 덮지 않게)</li>
  *   <li>마무리 일섬 (마지막 베기 finish 틱 뒤): 꽂힌 검이 뽑혀 한가운데 둘레로 모인 뒤 영역을 가로지르는 흰 일섬 한 줄 (왼쪽 → 오른쪽으로 0.15초에 그어짐)
  *       → 영역 곳곳에 한꺼번에 베인 자국, 영역 안 모든 적 위력 × crush (굵은 흰 기울임 숫자 !) · 밀쳐냄 · 띄움 (6돌 기절 stun 틱), 바닥이 갈라짐.
- *       2026-11-17 도감 메모 ("모든 틱 데미지가 같은 데미지로"): crush = mult (베기와 같은 피해 — 그림 · 밀쳐냄만 마무리답게)</li>
+ *       2026-11-17 도감 메모 ("모든 틱 데미지가 같은 데미지로"): crush = mult (베기와 같은 피해 — 그림만 마무리답게), 밀쳐냄 · 띄움은 def 의 knock · lift (0 — 유틸 값 없는 덤을 뺌)</li>
  *   <li>6돌 하늘 가르기: 일섬 뒤 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 갈라진 곳에서 검 조각이 영역으로 쏟아짐 (피해 없음)</li>
  * </ol>
  * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (검붉은 하늘 rpg:ult_bloodvoid · 붉은 기 도는 흰 번쩍임 — rules_more ULT_RUNES_MORE, 번쩍임은 일섬이 다 그어진 뒤 짧게).
@@ -231,8 +231,11 @@ final class RuneEndless {
             for (LivingEntity e : Kit.around(sp, c, R, 5)) {
                 Vec3 body = e.getBoundingBox().getCenter();
                 if (marks[0] < 10) SkillFx.fx(level, "rpg:slash_x", body, Opt.of("dir", viewTo(sp, body), "size", 1.6, "life", 0.3, "color", EDGE, "alpha", 1.0));
+                // 2026-11-17 밀쳐냄 · 띄움은 def 의 knock · lift (지금 0 — 유틸 값을 내지 않던 덤을 뺌, 한정 룬끼리 밸런스)
+                double kn = k.numOr("knock", 0.7);
+                double lf = k.numOr("lift", 0.5);
                 RuneLimited.hit(sp, life, e, P, k.num("crush"), DamageNumbers.Style.ISSEOM, tally, x -> {
-                    RuneKit.knock(x, V.sub(x.position(), c), 0.7, k.numOr("lift", 0.5));
+                    if (kn > 0 || lf > 0) RuneKit.knock(x, V.sub(x.position(), c), kn, lf);
                     if (stun > 0) RuneKit.stun(x, stun, CRIMSON, marks[0]++ < 10);
                 });
             }

@@ -829,7 +829,7 @@
     "fn": "moonAssassin",
     "name": "루나 엑시큐션",
     "desc": "달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발",
-    "use": "단일 · 순간 이동",
+    "use": "대상 + 둘레 3칸 달빛 폭발 (절반) · 순간 이동",
     "mult": 32,
     "range": 14,
     "cone": 20,
@@ -1009,6 +1009,15 @@
     50
    ]
   },
+  "_baseCd": "2026-11-17 유틸 값의 기준 재사용 (등급 · 한정 — Runes.utilCdFactor: 유틸 값 × 기준 ÷ 룬의 재사용)",
+  "baseCd": {
+   "common": 8,
+   "rare": 12,
+   "noble": 18,
+   "hero": 26,
+   "transcend": 36,
+   "limited": 36
+  },
   "spread": {
    "earthbreaker.common": {
     "a": "narrow",
@@ -1060,6 +1069,7 @@
      "reduce",
      "knock"
     ],
+    "guard": true,
     "r": "melee"
    },
    "solarwave.rare": {
@@ -1230,7 +1240,7 @@
     "r": "melee"
    },
    "lunaexec.transcend": {
-    "a": "single",
+    "a": "narrow",
     "t": 20,
     "w": 20,
     "u": [
