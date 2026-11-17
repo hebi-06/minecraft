@@ -343,6 +343,21 @@ final class WyrdKit {
     }
 
     /**
+     * 2026-11-17 날리는 알갱이 한 차례 (예전 rpg:snowfall 발생기 — 상자에서 바람 쪽으로 날리는 눈, 4틱 몫): 상자 (가운데 at · 반 너비 hw · 반 높이 hh) 안에서 묶음의
+     * 솟는 알갱이 (mote — 서리 묶음은 눈송이) n 개가 vel (칸/틱) × 0.7 ~ 1.3 으로
+     */
+    static void drift(ServerLevel l, PhantomFx.Lib L, Vec3 at, double hw, double hh, int n, Vec3 vel, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || n <= 0 || !go("drift", 6)) return;
+        Part m = P.mote() != null ? P.mote() : P.spark();
+        if (m == null) return;
+        for (int i = 0; i < n; i++) {
+            Vec3 p = new Vec3(at.x + (Kit.rand() * 2 - 1) * hw, at.y + (Kit.rand() * 2 - 1) * hh, at.z + (Kit.rand() * 2 - 1) * hw);
+            pv(l, who, m.o(), p, V.scale(vel, 0.7 + Kit.rand() * 0.6));
+        }
+    }
+
+    /**
      * 2026-11-17 솟는 불씨 한 차례 (예전 rpg:ember 발생기 — 상자에서 위로 솟는 불씨, 4틱 몫): 상자 (가운데 at · 반 너비 hw · 높이 ±0.5) 안에서 묶음의 솟는 알갱이
      * (mote — 없으면 spark) n 개가 위로 (예전 빠르기 speed 칸/초 × 0.6 ~ 1.2 · 옆으로 ±0.35 몫)
      */

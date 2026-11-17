@@ -1604,7 +1604,7 @@ final class PhantomFx {
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
-                && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash")) return false;
+                && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1666,6 +1666,13 @@ final class PhantomFx {
                 Vfx.Fx fx = Vfx.at(level, at, 20, who);
                 single(fx, L.n("boom_s"), at, size, Kit.rand() * 30 - 15, 1, false);
                 WyrdKit.burst(level, L, at, size, who);
+            }
+            case "rpg:snowfall" -> {
+                // 2026-11-17 눈보라 (예전 rpg:snowfall — life 초 동안 초당 30 개를 size × 3 × size 상자에서 dir 쪽 speed 칸/초 · 이미르): 묶음의 날리는 알갱이 (서리 = 눈송이)
+                double size = Math.max(0.5, o.num("size", 4));
+                Vec3 vel = V.scale(V.unit(o.vec("dir", V.DOWN)), o.num("speed", 3) / 20.0);
+                int ticks = Math.max(1, (int) Math.round(o.num("life", 1) * 20));
+                for (int t = 0; t < ticks; t += 4) mmorpg.fabric.Tasks.later(t, () -> WyrdKit.drift(level, L, at, size * 0.5, 1.5, 6, vel, who));
             }
             case "rpg:ember" -> {
                 // 2026-11-17 솟는 불씨 (예전 rpg:ember — life 초 동안 초당 10 + 4 × size 개 (90 까지) 를 size × 1 × size 상자에서 위로 · 수르트 왕관 · 분노 · 용암):
