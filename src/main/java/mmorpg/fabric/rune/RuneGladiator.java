@@ -158,6 +158,7 @@ final class RuneGladiator {
         Kit.noFall(sp, 30);
         // 2026-11-13 3D 탑 방패 (tower_shield — 2D 방패 문장 대신, rushShield): 몸 앞 오른쪽에 들고 돌진 → 부딪힐 때 앞으로 밀쳐 번쩍 → 머리 위로 들었다가 앞 땅에 내려찍어 박힘
         rushShield(sp, life, f, dash + 1, dash + 11);
+        if (k.truthy("bison")) bison(sp, life, start, f, reach, dash);
         SkillFx.play(level, "item.shield.block", start, 0.8, 1.0);
         SkillFx.play(level, "mob.ravager.stun", start, 1.4, 0.5);
         for (int t = 0; t <= dash; t++) {
@@ -216,6 +217,47 @@ final class RuneGladiator {
             }
         });
         return true;
+    }
+
+    /** 들소 그림 높이 (칸 — 길이는 두 배, tools/jobvfx/sheet_sizes.json el_ward_bison) · 그림 가운데에서 머리까지 (그림 x 0.62) · 땅에서 그림 가운데 (늘어진 털 끝이 땅) */
+    static final double BISON_SIZE = 2.2;
+    static final double BISON_HEAD = 0.62 * BISON_SIZE;
+    static final double BISON_LIFT = 1.05;
+
+    /**
+     * 2026-11-17 들소 영혼 (오록스 차지 — 룬 설명 "들소 영혼과 함께 앞으로 돌진", CI 44039915209 영상에 없던 것): 수호 묶음의 칠한 들소 (el_ward_bison —
+     * tools/jobvfx/ward.py 옆모습 · 가는 쪽으로 누워 보는 사람마다 눈 쪽을 봄 · 6장 달림) 가 몸 오른쪽 앞에서 함께 달려 나가 부딪히는 틱 (dash + 1) 에 앞의 적을
+     * 지나며 들이받고 (쇠 번쩍 · 불티 · 고리) 0.55초 더 달려 나가며 옅어짐. 1인칭에서도 오른쪽 앞에 보이게 몸보다 앞 (눈 바로 앞은 PhantomFx 가 거름)
+     */
+    static void bison(ServerPlayer sp, String life, Vec3 start, Vec3 f, double reach, int dash) {
+        ServerLevel level = sp.level();
+        Vec3 right = V.rightOf(f);
+        Vec3 a0 = V.up(V.add(V.add(start, f, 1.9), right, 1.3), BISON_LIFT);
+        Vec3 a1 = V.up(V.add(V.add(start, f, reach + 1.55), right, 0.55), BISON_LIFT);
+        int t1 = dash + 1;
+        Opt base = Opt.of("size", BISON_SIZE, "color", STEEL, "frames", 6.0, "fps", 14.0, "loop", true, "alpha", 0.95);
+        // 나타남: 머리 자리에 쇠빛 번쩍 · 울음
+        Vec3 h0 = V.add(V.up(a0, -0.2), f, BISON_HEAD);
+        SkillFx.burst(level, h0, CORE, 0.9, 0.25);
+        SkillFx.sparks(level, V.up(a0, 0.3), STEEL, 8, 3);
+        SkillFx.play(level, "mob.ravager.roar", start, 1.15, 0.7);
+        // 함께 달림: a0 → a1 (부딪히는 틱까지)
+        RuneKit.rfx(level, "bison", a0, base.with("dir", V.unit(V.sub(a1, a0)), "life", t1 / 20.0, "vel", V.scale(V.sub(a1, a0), 20.0 / t1)));
+        RuneKit.later(t1, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            // 들이받음 → 그대로 앞으로 달려 나가며 옅어짐
+            RuneKit.rfx(level, "bison", a1, base.with("dir", f, "life", 0.55, "vel", V.scale(f, 9.0), "fade", 0.6, "phase", (double) Math.round(t1 * 14 / 20.0)));
+            Vec3 hp = V.add(V.up(a1, -0.2), f, BISON_HEAD);
+            clang(level, hp, 1.3);
+            SkillFx.ring(level, hp, f, CORE, 1.2, 0.35, 3.2);
+            SkillFx.play(level, "entity.goat.ram_impact", hp, 0.7, 1.0);
+            // 풀림: 0.4초 뒤 들소 몸 자리에서 빛 티끌이 흩어짐
+            RuneKit.later(8, () -> {
+                Vec3 c = V.add(a1, f, 9.0 * 0.4);
+                SkillFx.sparks(level, c, STEEL, 10, 3);
+                SkillFx.sparks(level, V.add(c, f, BISON_HEAD * 0.6), CORE, 6, 3);
+            });
+        });
     }
 
     // ------------------------------------------------------------ 고귀: 사슬 회전

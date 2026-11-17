@@ -2430,7 +2430,9 @@ final class PhantomFx {
             // 2026-11-17 미리 칠한 불 폭발 (rfx_boom 128 × 128 · 여덟 칸 — 빛 없이 부름, 마력 룬 파이어볼 · 메테오 · 유성우: paintGlow 불빛): 원소 묶음의 터짐 (boom 2 × 2 · 카메라를 봄)
             java.util.Map.entry("boom", new Paint("boom", 2, BILL, 1, 1)),
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
-            java.util.Map.entry("jbreak", new Paint("shieldbreak", 1, BILL, 1, 1)));
+            java.util.Map.entry("jbreak", new Paint("shieldbreak", 1, BILL, 1, 1)),
+            // 2026-11-17 들소 영혼 (오록스 차지 — RuneGladiator.bison): 수호 묶음의 들소 (tools/jobvfx/ward.py bison — 옆모습 2 : 1 · 가는 쪽으로 누움, jwolf 와 같은 틀)
+            java.util.Map.entry("bison", new Paint("bison", 1, LOOK_DIR, 0.5, 1)));
 
     static boolean paintedWith(ServerLevel level, Paint p, Lib L, int first, Vec3 at, Opt b) {
         String art = p.art();

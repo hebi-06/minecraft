@@ -14,8 +14,8 @@ import sys
 
 import numpy as np
 
-from .base import WHITE, bloom, compose, grid, preview, sstep, to_img
-from .beast import disk, gridhw
+from .base import Noise3, WHITE, bloom, compose, grid, preview, sstep, to_img
+from .beast import disk, gridhw, outline, taper, tri
 from .element import star4, wet
 
 BUCKLER_FRAMES = 4
@@ -101,10 +101,106 @@ def chain_frame(S, f, h=32, w=256, frames=CHAIN_FRAMES):
     return arr[..., :3], arr[..., 3]
 
 
+# ------------------------------------------------------------------ 들소 영혼 (오록스 차지 — 2026-11-17 룬 설명 "들소 영혼과 함께 앞으로 돌진")
+
+BISON_FRAMES = 6
+
+
+def _strands(x, y, aa, rng, items, ph):
+    """흩날리는 털 가닥 [(시작 x, y, 길이 L, 방향 각 (도), 굵기, 물결 세기)] — 끝으로 가늘어지는 띠 · 물결이 뒤로 흐름"""
+    out = np.zeros_like(x)
+    for i, (x0, y0, L, ang, w0, amp) in enumerate(items):
+        r = math.radians(ang)
+        ux, uy = math.cos(r), math.sin(r)
+        nx, ny = -uy, ux
+        k = rng.uniform(4.0, 6.5)
+        pts = []
+        for q in np.linspace(0, 1, 22):
+            wv = amp * q * math.sin(k * q * math.pi + ph + i * 1.7)
+            pts.append((x0 + ux * L * q + nx * wv, y0 + uy * L * q + ny * wv))
+        out = np.maximum(out, taper(x, y, pts, w0, 0.004, aa, p=0.8) * (0.8 + 0.2 * math.sin(ph * 2 + i)))
+    return out
+
+
+def bison_frame(S, f, h=256, w=512, frames=BISON_FRAMES):
+    """옆모습 (머리 = 오른쪽 · 가는 쪽 +x — jwolf 와 같은 틀 2 : 1): 높이 솟은 어깨 혹 · 낮게 숙인 큰 머리 (곱슬 털 이마) · 위로 솟아 앞으로 굽은 뿔 · 흰 눈 ·
+    턱수염 · 앞다리의 긴 털, 몸 뒤쪽은 뒤로 흩날리는 빛 가닥으로 풀림 (다리 없음 — 정령). 도트 (세로 35 텍셀 안팎) 로 옮기므로 실루엣 · 띠 · 짙은 테 위주.
+    6장 되풀이 (몸 들썩 · 머리 끄덕 · 가닥 물결)"""
+    x, y = gridhw(h, w)
+    aa = 2.0 / w
+    ph = f / frames * 2 * math.pi
+    nz = Noise3(S.seed + 91)
+    rng = np.random.default_rng(S.seed + 93)
+    by = 0.016 * math.sin(ph)  # 몸 들썩
+    hy = by + 0.022 * math.sin(ph + 0.9)  # 머리 끄덕 (몸보다 늦게)
+    # 몸: 어깨 혹 (가장 높음) · 앞어깨 · 뒤 몸 (가장자리가 털 결로 들쭉날쭉 — 가닥이 여기서 풀려 나감)
+    hump = disk(x, y, 0.05, 0.08 + by, 0.38, 0.32, aa)
+    shoulder = disk(x, y, 0.3, -0.01 + by, 0.22, 0.3, aa)
+    rear = disk(x, y, -0.3, 0.0 + by, 0.24, 0.2, aa)
+    ragged = sstep(-0.6, -0.36, x + 0.12 * nz.fbm(x * 5, y * 9, 1.0 + f * 0.3, oct=2))
+    tufts = np.zeros_like(x)  # 혹 윗테의 털 뭉치 (실루엣이 들쭉날쭉)
+    for i in range(6):
+        cx = -0.24 + i * 0.1
+        cy = 0.08 + by + 0.32 * math.sqrt(max(0.0, 1 - ((cx - 0.05) / 0.38) ** 2))
+        tufts = np.maximum(tufts, disk(x, y, cx + 0.02 * math.sin(ph + i), cy - 0.01, 0.05, 0.045, aa))
+    body = np.clip(hump + shoulder + tufts + rear * ragged, 0, 1)
+    # 머리: 크게 · 낮게 · 앞이마가 거의 곧게 섬 (곱슬 털) · 아래로 숙인 주둥이
+    skull = disk(x, y, 0.58, -0.1 + hy, 0.18, 0.2, aa)
+    mop = disk(x, y, 0.52, 0.02 + hy, 0.18, 0.16, aa)
+    muzzle = disk(x, y, 0.72, -0.22 + hy, 0.11, 0.1, aa)
+    head = np.clip(skull + mop + muzzle, 0, 1)
+    beard = tri(x, y, (0.55, -0.25 + hy), (0.74, -0.3 + hy), (0.6, -0.49 + hy), aa)
+    solid = np.clip(body + head + beard, 0, 1)
+    # 뿔: 이마 옆에서 위로 솟아 앞으로 굽음 (가까운 뿔 밝게 · 먼 뿔 짙게)
+    horn = taper(x, y, [(0.58, 0.1 + hy), (0.62, 0.22 + hy), (0.7, 0.28 + hy), (0.78, 0.25 + hy)], 0.052, 0.012, aa, p=0.9)
+    horn_far = taper(x, y, [(0.46, 0.14 + hy), (0.48, 0.26 + hy), (0.55, 0.32 + hy), (0.62, 0.31 + hy)], 0.042, 0.01, aa, p=0.9) * (1 - horn)
+    # 앞다리의 긴 털 · 턱수염 끝 (아래로 늘어지며 뒤로 날림)
+    hang = _strands(x, y, aa, rng, [(0.6, -0.42 + hy, 0.08, -110, 0.04, 0.012), (0.44, -0.24 + by, 0.21, -116, 0.06, 0.02),
+                                     (0.31, -0.26 + by, 0.21, -120, 0.065, 0.02), (0.18, -0.25 + by, 0.19, -126, 0.06, 0.02),
+                                     (0.04, -0.2 + by, 0.17, -138, 0.05, 0.025)], ph)
+    # 몸 뒤: 혹 · 등 · 배에서 뒤로 흩날리는 빛 가닥 (정령 몸이 풀림)
+    trail = []
+    for i in range(7):
+        t = i / 6
+        y0 = -0.16 + 0.42 * t + rng.uniform(-0.015, 0.015)
+        trail.append((-0.42 + 0.1 * math.sin(t * math.pi), y0 + by, rng.uniform(0.42, 0.58), 180 + (y0 - 0.04) * 22, rng.uniform(0.065, 0.085),
+                      rng.uniform(0.03, 0.05)))
+    mane = _strands(x, y, aa, rng, trail, ph)
+    grain = nz.fbm(x * 7 + f * 0.6, y * 7, f * 0.3, oct=3)
+    mane = np.clip(mane * (0.85 + 0.3 * grain), 0, 1)
+    curls = np.clip(nz.fbm(x * 14, y * 14, 3.0, oct=2) * 1.8 - 0.5, 0, 1)
+    socket = disk(x, y, 0.67, -0.07 + hy, 0.08, 0.055, aa) * head
+    eye = disk(x, y, 0.675, -0.07 + hy, 0.06, 0.036, aa)
+    nostril = disk(x, y, 0.79, -0.25 + hy, 0.025, 0.02, aa) * head
+    rim = outline((np.clip(solid + horn + horn_far + hang + mane, 0, 1) > 0.5).astype(float), 9) * 0.95
+    # 띠: 혹 · 등 위 (가장 밝은 털) · 몸 가운데 · 배 (짙음) — 머리는 짙게 (뿔 · 눈이 돋보이게), 이마 털은 가운데 밝기
+    fur = 0.05 * nz.fbm(x * 9, y * 4, 7.0 + f * 0.2, oct=2)  # 띠 경계를 털 결로 (곧은 줄 대신)
+    band_top = body * sstep(0.2, 0.24, y - by + 0.16 * (x - 0.05) + fur) * (1 - head)
+    band_low = solid * (1 - sstep(-0.1, -0.06, y - by + fur)) * (1 - head)
+    layers = [(S.main(0.2), rim),
+              (S.main(0.5 + 0.38 * mane), np.clip(mane * 1.3, 0, 1) * (1 - solid)),
+              (S.main(0.42), np.clip(hang * 1.3, 0, 1) * (1 - solid)),
+              (S.main(0.66), solid),
+              (S.main(0.48), band_low),
+              (S.main(0.92), band_top),
+              (S.main(0.42), head),
+              (S.main(0.6 + 0.2 * curls), mop * head * (1 - sstep(0.62, 0.7, x))),
+              (S.main(0.44), beard),
+              (S.main(0.3), horn_far),
+              (S.accent(0.95), horn),
+              (S.main(0.12), socket),
+              (S.main(0.12), nostril),
+              (WHITE, eye)]
+    rgb, a = compose(layers, (h, w))
+    rgb, a = bloom(rgb, a, (h, w), thresh=0.8, sigma=0.012, gain=0.35)
+    return rgb, a * (1 - sstep(0.94, 0.995, np.abs(x)))
+
+
 FRAMES = {
     "buckler": (BUCKLER_FRAMES, buckler_frame),
     "bifrost": (BIFROST_FRAMES, bifrost_frame),
     "chain": (CHAIN_FRAMES, chain_frame),
+    "bison": (BISON_FRAMES, bison_frame),
 }
 
 

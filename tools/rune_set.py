@@ -65,7 +65,7 @@ SET = [
     dict(key="undine", name="운디네", grade="rare", cd=40, r="mid", src="spirit.rare", elem="water", u=["knock"], a="narrow",
          desc="운디네를 불러 물줄기를 세 번 쏘게 함", use="소환 · 관통 · 밀쳐냄"),
     dict(key="aurochs", name="오록스 차지", grade="rare", cd=7, pair=["darkknight_crunch"], r="melee", src="gladiator.rare", u=["blink", "knock", "reduce"], a="narrow",
-         set={"range": 6}, desc="들소 영혼과 함께 앞으로 돌진해 부딪힌 적을 밀쳐냄", use="돌진 · 밀쳐냄 · 받는 피해 −30%"),
+         set={"range": 6, "bison": 1}, desc="들소 영혼과 함께 앞으로 돌진해 부딪힌 적을 밀쳐냄", use="돌진 · 밀쳐냄 · 받는 피해 −30%"),
     dict(key="grove", name="그로브 블레싱", grade="rare", cd=6, pair=["priest_heal"], r="mid", src="vit.rare", u=[], support=True,
          set={"heal": 0.0667, "pulses": 4, "gap": 15, "radius": 5, "share": 0.5}, desc="발밑에 새싹이 자라 빛 잎을 흩날리며 나와 둘레 아군을 회복",
          use="회복 — 나 15% · 아군 7.5% (3초)"),
