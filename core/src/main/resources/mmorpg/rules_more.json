@@ -355,7 +355,7 @@
       "transcend": {"fn": "endlessSlash", "name": "무간참역", "desc": "주위를 영역으로 덮고 무수한 참격으로 벰", "use": "주위 영역 · 참격 연타 · 마무리 일섬", "mult": 2, "hits": 10, "crush": 14, "radius": 8, "charge": 16, "gap": 10, "finish": 12, "lift": 0.5}
     },
     "terra": {
-      "transcend": {"fn": "earthSplitter", "name": "대지 가르기", "desc": "거대한 대지의 대검이 땅을 가름", "use": "앞쪽 직선 · 대검 내려치기 · 갈라진 땅 여진", "mult": 3, "hits": 6, "crush": 16, "length": 14, "width": 2.5, "start": 1.5, "charge": 24, "gap": 10, "lift": 0.9}
+      "transcend": {"fn": "earthSplitter", "cd": 40, "scale": 1.1111, "name": "대지 가르기", "desc": "거대한 대지의 대검이 땅을 가름", "use": "앞쪽 직선 · 대검 내려치기 · 갈라진 땅 여진", "mult": 3, "hits": 6, "crush": 16, "length": 14, "width": 2.5, "start": 1.5, "charge": 24, "gap": 10, "lift": 0}
     },
     "yggdrasil": {
       "transcend": {"fn": "worldTreeGrace", "cd": 48, "name": "세계수의 가호", "desc": "세계수의 환영이 둘레 아군에게 가호를 내림", "use": "아군 버프 · 가하는 피해 증가 · 받는 피해 감소", "graceUp": 0.1, "graceCut": 0.1, "gracePer": 0.0008, "graceCap": 0.12, "ticks": 240, "radius": 8, "charge": 18, "tree": 2.8, "dist": 12, "side": 6}
@@ -364,7 +364,7 @@
       "transcend": {"fn": "abyssBrand", "cd": 42, "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "ticks": 200, "radius": 6, "range": 20, "charge": 14}
     },
     "glacier": {
-      "transcend": {"fn": "glacierField", "cd": 32, "name": "만년빙하", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
+      "transcend": {"fn": "glacierField", "cd": 32, "name": "얼음 여왕의 분노", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
     }
   },
   "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike"],
@@ -550,7 +550,7 @@
       "strike.noble": {"a": "narrow"},
       "strike.hero": {"a": "single", "u": ["lifesteal"]},
       "endless.transcend": {"t": 118, "w": 16, "zone": true},
-      "terra.transcend": {"t": 90, "w": 24, "zone": true, "u": ["lift"], "elem": "rock"},
+      "terra.transcend": {"t": 90, "w": 24, "zone": true, "elem": "rock"},
       "glacier.transcend": {"t": 128, "w": 17, "zone": true, "u": ["stun2"], "elem": "ice"}
     }
   },

@@ -217,10 +217,11 @@ public final class RuneTipTest {
         // 0.18.0 대지 가르기: 대검 16 (먼저) + 여진 3 × 6 (P 42 → 672 + 126 × 6번), 균열 줄 (앞으로 14칸 · 폭 5칸), 6돌 20칸 · 폭 7칸 · 기절
         List<String> te = plain(RuneTip.lines(rune("terra", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         String tej = String.join("\n", te);
-        double tS = Runes.damageScale(rune("terra", "transcend")); // 0.49.0 띄움 −5% × (선딜 1.2초 · 장판 → 최대 ×1.3)
-        check(near(tS, 0.95 * 1.3 * 0.95) && tej.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * tS)) && tej.contains("대검 " + RuneTip.fmt(672 * tS) + " + 여진 " + RuneTip.fmt(126 * tS) + " × 6번")
+        // 2026-11-17 도감 메모 ("유틸 띄움 삭제 … 소량의 쿨타임 증가로 인한 데미지 증가"): 띄움 없음 · 재사용 40초 · 예산 × 40/36 (scale 1.1111)
+        double tS = Runes.damageScale(rune("terra", "transcend")); // (선딜 1.2초 · 장판 → 최대 ×1.3) × 원소 바위 −5% × 40/36
+        check(near(tS, 1.3 * 0.95 * 1.1111) && tej.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * tS)) && tej.contains("대검 " + RuneTip.fmt(672 * tS) + " + 여진 " + RuneTip.fmt(126 * tS) + " × 6번")
                 && te.contains("앞으로 14칸 균열 (폭 5칸) 안 모든 적")
-                && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 36초 · 한정 · 원소 바위 −5%") && tej.contains("띄움"), "terra: " + te);
+                && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 40초 · 한정 · 원소 바위 −5%") && !tej.contains("띄움"), "terra: " + te);
         String te6 = joined(RuneTip.lines(rune("terra", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
         check(te6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * tS)) && te6.contains("기절 1초") && te6.contains("앞으로 20칸 균열 (폭 7칸)") && !te6.contains("지맥 폭발"),
                 "terra 6: " + te6);

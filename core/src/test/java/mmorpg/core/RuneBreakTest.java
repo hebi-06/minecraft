@@ -115,7 +115,7 @@ public final class RuneBreakTest {
         near(RuneBreak.def(meteor, 5).num("lift"), 0.9, "meteor 5: lift 0.9");
         near(RuneBreak.def(meteor, 6).num("radius"), 9, "meteor 6: radius 9");
         near(RuneBreak.def(meteor, 6).num("fire"), 12, "meteor 6: fire 12");
-        near(RuneBreak.def(meteor, 6).num("lift"), 1.3, "meteor 6: lift 1.3");
+        near(RuneBreak.def(meteor, 6).num("lift"), 0.9, "meteor 6: lift stays 0.9 (2026-11-17 도감 메모 — 6돌 '더 높이 띄움' 뺌)");
         near(RuneBreak.def(meteor, 3).num("mult"), 32, "mult stays at 3 (the power P carries the coef)");
         check(RuneBreak.def(meteor, 6).str("fn").equals("meteor") && RuneBreak.def(meteor, 6).str("name").equals("메테오"), "other keys kept");
         Runes.Rune angel = rune("holy", "transcend");
@@ -205,7 +205,7 @@ public final class RuneBreakTest {
         check(Runes.runeLore(RuneBreak.leveled(rune("body", "transcend"), 3), false).stream().anyMatch(l -> plain(l).contains("밀려나지 않음")),
                 "awakening 3 lore shows steadfast");
         near(RuneBreak.def(rune("strike", "transcend"), 6).num("cross"), 0.75, "swordGod 6 cross");
-        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "더 높이 띄움", "맞은 적 기절 1초")),
+        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "맞은 적 기절 1초")),
                 "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("dex", "transcend"), 3).contains("멈춤 1.5 → 2초"), "shadowless sec " + RuneBreak.changeTexts(rune("dex", "transcend"), 3));

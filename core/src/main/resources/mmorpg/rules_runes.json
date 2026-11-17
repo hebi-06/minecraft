@@ -800,7 +800,7 @@
     "range": 22,
     "radius": 6,
     "delay": 24,
-    "lift": 1,
+    "lift": 0,
     "cd": 50,
     "look": "str:transcend",
     "scale": 1.3889
@@ -853,7 +853,7 @@
     "radius": 6,
     "delay": 30,
     "fire": 5,
-    "lift": 0.9,
+    "lift": 0,
     "cd": 60,
     "look": "int:transcend",
     "scale": 1.6667
@@ -1193,9 +1193,7 @@
    "skyfall.transcend": {
     "t": 24,
     "w": 24,
-    "u": [
-     "lift"
-    ],
+    "u": [],
     "r": "far",
     "cast": 1.2,
     "castAdd": 0
@@ -1221,9 +1219,7 @@
    "meteor.transcend": {
     "t": 30,
     "w": 30,
-    "u": [
-     "lift"
-    ],
+    "u": [],
     "elem": "fire",
     "r": "far",
     "cast": 1.5,

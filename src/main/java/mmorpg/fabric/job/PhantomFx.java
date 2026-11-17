@@ -108,6 +108,9 @@ final class PhantomFx {
     /** 2026-11-16 폭군 (타이런트 — 보랏빛 · 핏빛 번개: 뇌광과 같은 그림 · 거인의 손) */
     static final int GLOW_TYRANT = 0xBC78FF;
     static final Lib TYRANT = new Lib("el_tyrant", GLOW_TYRANT, 0xFF8080, "ember");
+    /** 2026-11-17 심연 (한정 룬 심연의 낙인 — 도감 메모 "좀 더 어두웠으면 좋겠음"): 폭군 그림을 짙은 심연빛 (거의 검은 보라 · 검붉은 진홍 · 먹빛 연기) 으로 */
+    static final int GLOW_ABYSS = 0x9C38A0;
+    static final Lib ABYSS = new Lib("el_abyss", GLOW_ABYSS, 0xC8203C, "ember");
     /** 2026-11-16 사신 라인 (사신 청록 혼 · 소울 리퍼 하늘빛 · 엑시큐셔너 금빛 · 자줏빛: 망자의 비명 · 사신 그림자 · 처형 표식 — tools/jobvfx/reap.py · soul.py) */
     static final Lib REAP = new Lib("el_reap", 0x62E8D6, 0x9AF6F0, "ember");
     static final Lib SOULREAP = new Lib("el_soulreap", 0x64B8F6, 0xA8E2FF, "ember");
@@ -1991,7 +1994,7 @@ final class PhantomFx {
             case "endless" -> MAW;
             case "terra" -> BEAR;
             case "yggdrasil" -> HOLY;
-            case "abyss" -> TYRANT;
+            case "abyss" -> ABYSS; // 2026-11-17 폭군 → 심연 (더 어둡게 — 도감 메모)
             case "glacier" -> FROST;
             case "gladiator", "golem" -> WARD;
             case "holy" -> HOLY;
@@ -2443,7 +2446,10 @@ final class PhantomFx {
             // 2026-11-17 받는 피해 증가 표식 (RuneMarks — 머리 위 금 간 방패, 빛 장만 — 심지 장은 RuneMarks 가 부르지 않음): 계열 묶음의 방패 깨짐
             java.util.Map.entry("jbreak", new Paint("shieldbreak", 1, BILL, 1, 1)),
             // 2026-11-17 들소 영혼 (오록스 차지 — RuneGladiator.bison): 수호 묶음의 들소 (tools/jobvfx/ward.py bison — 옆모습 2 : 1 · 가는 쪽으로 누움, jwolf 와 같은 틀)
-            java.util.Map.entry("bison", new Paint("bison", 1, LOOK_DIR, 0.5, 1)));
+            java.util.Map.entry("bison", new Paint("bison", 1, LOOK_DIR, 0.5, 1)),
+            // 쓴 사람의 1인칭 들소 (CI 44054369134 — 가는 쪽으로 누운 옆모습은 같은 쪽으로 달리는 눈에서 비스듬한 조각으로만 보였음): 세로축만 카메라를 보는 옆모습
+            // (Opt mirror — 머리가 화면 왼쪽, 오른쪽 앞에서 과녁 쪽으로 달려듦)
+            java.util.Map.entry("bisonfp", new Paint("bison", 1, VERT, 0.5, 1)));
 
     static boolean paintedWith(ServerLevel level, Paint p, Lib L, int first, Vec3 at, Opt b) {
         String art = p.art();
@@ -2524,17 +2530,18 @@ final class PhantomFx {
         boolean look = facing == LOOK_DIR;
         Quaternionf q = facing == FACE_DIR ? dirFace(d) : look ? lookDir(d, at, looker) : null;
         int sides = facing == FACE_DIR ? 2 : 1;
+        boolean mirror = b.truthy("mirror") && facing != FACE_DIR; // 2026-11-17 좌우를 뒤집은 그림 (들소 1인칭 — 머리가 화면 왼쪽)
         java.util.List<Vfx.Sprite> all = new java.util.ArrayList<>();
         double[] off = new double[k * k * sides * 2];
         int i = 0;
         for (int r = 0; r < k; r++) {
             for (int c = 0; c < k; c++) {
                 for (int side = 0; side < sides; side++) {
-                    String name = k == 1 ? sheet : sheet + "_" + r + (side == 0 ? c : k - 1 - c);
+                    String name = k == 1 ? sheet : sheet + "_" + r + (side == 0 && !mirror ? c : k - 1 - c);
                     Vfx.Sprite sp = fx.sprite(name, at);
                     if (facing == VERT) sp.vertical();
                     else if (q != null) sp.fixed(q);
-                    if (side == 1) sp.mirror();
+                    if (side == 1 || mirror) sp.mirror();
                     off[i * 2] = c - (k - 1) / 2.0;
                     off[i * 2 + 1] = (k - 1) / 2.0 - r;
                     all.add(sp);

@@ -32,6 +32,8 @@ public final class RuneMob {
     public static final String SPIRIT_KING = "rpg:rune_spirit_king";
     /** 2026-11-13 그림자 분신 (암살자 — 그림자 난도질 · 월광 암살): 동작 appear · slash · slash2 · stab · xcut (치는 때 SHADE_STRIKE_AT 틱) · vanish */
     public static final String SHADE = "rpg:rune_shade";
+    /** 2026-11-17 민첩 그림자 분신 (게일 러시 · 섀도 스트라이크 — 도감 메모 "그림자 초록색으로 수정"): SHADE 와 같은 모양 · 동작, 숲빛 · 초록 빛 */
+    public static final String SHADE_DEX = "rpg:rune_shade_dex";
     /** 그림자 분신의 slash · slash2 · stab 이 닿는 때 (동작을 튼 뒤 틱 — 0.2초), xcut 은 5틱 */
     public static final int SHADE_STRIKE_AT = 4;
     public static final int SHADE_XCUT_AT = 5;

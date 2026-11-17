@@ -1521,6 +1521,14 @@ STYLES = {
                     accent=ramp([(0.0, "#2A0408"), (0.5, "#D8303C"), (0.8, "#FF8080"), (1.0, "#FFECEC")]),
                     smoke=ramp([(0.0, "#08040C"), (0.45, "#1E1028"), (0.8, "#382246"), (1.0, "#563A66")]),
                     ring="ticks", smoke_alpha=0.45, seed=39),
+    # 2026-11-17 심연 (한정 룬 심연의 낙인 — 도감 메모 "좀 더 어두웠으면 좋겠음"): 폭군과 같은 그림을 짙은 심연빛으로 — 몸은 거의 검은 보라에서 가라앉은 자줏빛까지
+    # (흰빛 끝 없음 · 가장 밝은 테도 옅은 라일락), 둘째 빛은 검붉은 진홍, 연기는 먹빛 (짙게)
+    "abyss": Style("el_abyss", "tyrant",
+                   main=ramp([(0.0, "#030106"), (0.12, "#0A0312"), (0.26, "#160624"), (0.4, "#260A3C"), (0.52, "#3A0F58"), (0.64, "#561678"),
+                              (0.76, "#76209A"), (0.86, "#9A3CBC"), (0.94, "#C06AD8"), (1.0, "#E0A8F0")]),
+                   accent=ramp([(0.0, "#140206"), (0.5, "#7A0E24"), (0.8, "#C8203C"), (1.0, "#F06070")]),
+                   smoke=ramp([(0.0, "#010002"), (0.45, "#07020C"), (0.8, "#12061C"), (1.0, "#1E0C2C")]),
+                   ring="ticks", smoke_alpha=0.65, seed=43),
     # 2026-11-16 사신 라인: 사신 (청록 혼 — jobs.json reaper [0.22, 0.96, 0.86] · [0.1, 0.36, 0.38]) · 소울 리퍼 (하늘빛 · 남빛) · 엑시큐셔너 (금빛 · 자줏빛) —
     # 망자의 비명 · 사신 그림자 · 처형 표식 (tools/jobvfx/reap.py) + 혼불 · 해골 · 망자의 손 · 연기 (soul.py) 를 묶음 빛으로
     "reap": Style("el_reap", "reap",
@@ -1876,12 +1884,12 @@ def sets_for(S):
 
 
 # 2026-11-17 긴 일섬 (cutl) 을 갖는 묶음: 룬 계열 · 원소 묶음 (PhantomFx.runeLib · elementLib — 룬이 부른 예전 rpg:light_cut 을 그 묶음의 일섬으로)
-CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw", "bear", "holy", "tyrant", "frost", "element")
+CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw", "bear", "holy", "tyrant", "abyss", "frost", "element")
 # 2026-11-17 방패 깨짐 (beast.py shieldbreak — 분노 묶음에만 있었음) 을 더 갖는 묶음: 받는 피해 증가 표식을 거는 룬 계열 (도끼 = 피 · 암살 = 그림자 · 민첩 = 질풍) ·
 # 원소 반응 (원소 · 서리 · 곰) — RuneMarks 의 머리 위 금 간 방패 (예전 rfx_jbreak)
 SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
 # 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 얼음 가시 (예전 rpg:ice_spike — 서리 · 영혼 수확) · 심연 룬의 검은 가시 손 (rfx_thorn — 폭군)
-SPIKE_KEYS = ("frost", "soulreap", "tyrant", "arcane")
+SPIKE_KEYS = ("frost", "soulreap", "tyrant", "abyss", "arcane")
 # 2026-11-17 뭉게 연기 (shadow.py smoke — 그 묶음의 연기 램프) 를 더 갖는 묶음: 보스의 숨결 (예전 rpg:breath — 이미르 서리 숨결) · 정령 룬의 부름 연기
 # (rfx_jsmoke2 흰빛 — 질풍 묶음, CI 43987516768 정령 초월 20: 질풍의 연기 램프는 짙은 녹색이라 옅은 박하빛 램프로 · 도트 색은 그림 자체의 색 — vfx_sprites PIXEL_LIBS) ·
 # 마력 룬 메테오의 불타는 연기 꼬리 · 버섯구름 (rfx_cloud 잿빛 — 원소 묶음의 흙빛 연기 램프 · 속빛은 불빛 FIRE_ACCENT, CI 43989923127 11)
@@ -1920,7 +1928,7 @@ FIRE_ACCENT = ramp([(0.0, "#2A1404"), (0.5, "#E08A1A"), (0.8, "#FFD060"), (1.0, 
 
 def sprites():
     out = []
-    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element", "holy", "petal", "hex", "ward", "maw", "thunder", "tyrant", "reap", "soulreap", "exec", "lance", "gale", "dragon", "phoenix"):
+    for key in ("steel", "blood", "gold", "shadow", "arcane", "soul", "illusion", "circus", "rage", "bear", "frost", "rune", "element", "holy", "petal", "hex", "ward", "maw", "thunder", "tyrant", "abyss", "reap", "soulreap", "exec", "lance", "gale", "dragon", "phoenix"):
         S = STYLES[key]
         out += sets_for(S)
         if key in CUTL_KEYS:

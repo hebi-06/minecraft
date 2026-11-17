@@ -335,6 +335,7 @@ PIXEL_LIBS = {"el_arcane": "arcane", "el_steel": "auto", "el_blood": "auto", "el
               "el_ward": "ward",  # 2026-11-16 수호기사 (수호)
               "el_maw": "maw",  # 2026-11-16 다크 나이트 (아가리)
               "el_thunder": "thunder", "el_tyrant": "tyrant",  # 2026-11-16 성기사 · 썬더로드 (뇌광) · 타이런트 (폭군)
+              "el_abyss": "abyss",  # 2026-11-17 심연의 낙인 (도감 메모 "좀 더 어두웠으면") — 폭군 그림을 짙은 심연 램프로
               "el_reap": "reap", "el_soulreap": "soulreap", "el_exec": "exec",  # 2026-11-16 사신 라인
               "el_lance": "lance", "el_gale": "gale", "el_dragon": "dragon",  # 2026-11-16 창술사 라인
               "el_blood_aura": "hex",  # 2026-11-17 피 묶음 몸 기운 (도끼 룬 버프) — 그림 자체의 색 (auto) 은 단계가 납작해 혈주 램프 (진홍 · 분홍 · 금빛) 로

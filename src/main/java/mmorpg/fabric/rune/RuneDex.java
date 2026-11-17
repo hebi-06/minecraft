@@ -41,8 +41,9 @@ final class RuneDex {
         Vec3 start = sp.position();
         Vec3 f = V.flat(sp.getViewVector(1F));
         double dist = RuneKit.dashDistance(sp, f, k.num("dash"));
-        // 2026-11-17 내려서는 자리 (게일 러시 1인칭 영상): 몸 속이면 그 몸 앞 0.6칸까지 — 맞는 적은 원래 길 (dist) 그대로
-        double go = RuneKit.clearLanding(sp, start, f, dist, 0.6);
+        // 2026-11-17 내려서는 자리 (게일 러시 1인칭 영상): 몸 속이면 그 몸 앞 1칸까지 (CI 44054369134 — 0.6칸은 드라우그 가슴이 화면을 다 채움) —
+        // 맞는 적은 원래 길 (dist) 그대로
+        double go = RuneKit.clearLanding(sp, start, f, dist, 1.0);
         Vec3 end = V.add(start, f, go);
         double[][] cs = RuneKit.colorOf("dex");
         double[] glow = cs[0];
@@ -64,7 +65,7 @@ final class RuneDex {
         double[] qs = {0.3, 0.65};
         for (int j = 0; j < qs.length; j++) {
             if (go * qs[j] < 0.8) continue;
-            RuneMob sh = RuneMob.spawn(RuneMob.SHADE, level, V.add(start, f, go * qs[j]), f, 24, 1.0, true);
+            RuneMob sh = RuneMob.spawn(RuneMob.SHADE_DEX, level, V.add(start, f, go * qs[j]), f, 24, 1.0, true); // 2026-11-17 초록 그림자 (도감 메모)
             if (sh == null) continue;
             sh.anim(j == 0 ? "slash" : "slash2");
             Tasks.later(4 + j * 2, () -> sh.leave("vanish", 7));
@@ -219,7 +220,7 @@ final class RuneDex {
                 int hitT = Math.max(1, (int) Math.round(life * 20));
                 // 2026-11-13 3D 그림자 분신 (rpg:rune_shade — 2D 분신 그림 대신): 내 곁에서 솟아 적의 옆으로 미끄러져 가서 (hitT 틱 — 움직이는 적을 따라감) 적을 보고
                 // 벰 (치는 때 SHADE_STRIKE_AT 틱 먼저 동작) → 그림자로 꺼짐
-                RuneMob sh = RuneMob.spawn(RuneMob.SHADE, level, fromFeet, toward, hitT + 24, 1.0, true);
+                RuneMob sh = RuneMob.spawn(RuneMob.SHADE_DEX, level, fromFeet, toward, hitT + 24, 1.0, true); // 2026-11-17 초록 그림자 (도감 메모)
                 if (sh != null) {
                     sh.moveTo(() -> e.isRemoved() ? toFeet : V.add(e.position(), flank, 0.9 + Kit.bodyPad(e)), hitT, 0.25, RuneMob.OUT, true);
                     Tasks.later(Math.max(0, hitT - RuneMob.SHADE_STRIKE_AT), () -> sh.anim(nth % 2 == 0 ? "slash" : "slash2"));

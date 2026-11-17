@@ -869,19 +869,30 @@ SH_CORE = (255, 214, 255)
 SH_VOID = (8, 4, 12)
 SH_STEEL = (70, 58, 92)
 
+# 2026-11-17 그림자 분신의 빛 묶음: 암살자 (검보라 · 자홍 — 루나 엑시큐션 · 섀도 블리츠) · 민첩 (검푸른 숲빛 · 초록 — 게일 러시 · 섀도 스트라이크:
+# 도감 메모 "그림자 초록색으로 수정" — 민첩 룬 빛 RUNE.color.dex [0.35, 1, 0.55])
+SH_PALETTES = {
+    "assassin": dict(cloth=SH_CLOTH, cloth2=SH_CLOTH2, trim=SH_TRIM, core=SH_CORE, void=SH_VOID, steel=SH_STEEL, accent=(26, 14, 34), accent2=(40, 22, 52),
+                     wrap=(44, 28, 40), smoke=(60, 30, 80), smoke2=(90, 40, 120)),
+    "dex": dict(cloth=(18, 62, 40), cloth2=(28, 88, 58), trim=(70, 255, 130), core=(214, 255, 226), void=(3, 12, 8), steel=(60, 100, 82),
+                accent=(10, 40, 26), accent2=(18, 62, 40), wrap=(30, 64, 48), smoke=(30, 110, 66), smoke2=(60, 170, 105)),
+}
 
-def rune_shade():
-    """그림자 분신: 두건을 쓴 검보라 그림자 암살자 — 얼굴은 어둠 · 자홍 눈 둘, 자홍 테의 망토 · 목도리 두 가닥 (뒤로 날림), 두 손에 자홍 날의 단검 (앞으로),
-    발밑은 그림자 연기 (비침). 키 약 1.9칸 (사람과 같음) · 앞 = −Z"""
-    m = Model("rune_shade", tex_w=128)
-    cloth = Mat(SH_CLOTH, "knit", noise=5, edge=0.8, seed=1101, accent=(26, 14, 34), seam=SH_TRIM, seam_glow=0.7, seam_band=6, seam_dir="v", seam_gap=0.6)
-    cloth2 = Mat(SH_CLOTH2, "knit", noise=5, edge=0.82, seed=1102, accent=(40, 22, 52))
+
+def rune_shade(key="rune_shade", pal="assassin"):
+    """그림자 분신: 두건을 쓴 그림자 암살자 — 얼굴은 어둠 · 빛나는 눈 둘, 빛 테의 망토 · 목도리 두 가닥 (뒤로 날림), 두 손에 빛나는 날의 단검 (앞으로),
+    발밑은 그림자 연기 (비침). 키 약 1.9칸 (사람과 같음) · 앞 = −Z. pal = 빛 묶음 (SH_PALETTES — 암살자 검보라 · 자홍 / 민첩 숲빛 · 초록)"""
+    P = SH_PALETTES[pal]
+    SH_CLOTH, SH_CLOTH2, SH_TRIM, SH_CORE, SH_VOID, SH_STEEL = P["cloth"], P["cloth2"], P["trim"], P["core"], P["void"], P["steel"]
+    m = Model(key, tex_w=128)
+    cloth = Mat(SH_CLOTH, "knit", noise=5, edge=0.8, seed=1101, accent=P["accent"], seam=SH_TRIM, seam_glow=0.7, seam_band=6, seam_dir="v", seam_gap=0.6)
+    cloth2 = Mat(SH_CLOTH2, "knit", noise=5, edge=0.82, seed=1102, accent=P["accent2"])
     trim = Mat(SH_TRIM, "flat", noise=4, edge=1.0, glow=0.85, seed=1103)
     void = Mat(SH_VOID, "flat", noise=2, edge=1.0, seed=1104)
     steel = Mat(SH_STEEL, "metal", noise=5, edge=0.86, seed=1105)
     edge = Mat(SH_CORE, "flat", noise=3, edge=1.0, glow=1.0, seed=1106)
-    wrap = Mat((44, 28, 40), "knit", noise=4, edge=0.85, seed=1107)
-    smoke = see(Mat((60, 30, 80), "ice", noise=8, edge=0.95, seed=1108, accent=(90, 40, 120)), 0.5)
+    wrap = Mat(P["wrap"], "knit", noise=4, edge=0.85, seed=1107)
+    smoke = see(Mat(P["smoke"], "ice", noise=8, edge=0.95, seed=1108, accent=P["smoke2"]), 0.5)
     tail = see(Mat(SH_CLOTH2, "knit", noise=5, edge=0.85, seed=1109, rim=SH_TRIM, rim_glow=0.6), 0.9)
     eye = SH_CORE
 
@@ -1312,6 +1323,9 @@ MOBS = {
     "rune_spirit_king": (rune_spirit_king, rune_spirit_king_anims, dict(fam="rune_spirit_king", health=200, move=0.3, box=[1.0, 2.6], fly=True),
                          "entity_emissive", ["idle"], None),
     "rune_shade": (rune_shade, rune_shade_anims, dict(fam="rune_shade", health=40, move=0.4, box=[0.6, 1.8], fly=True), "entity_alphablend", ["idle"], True),
+    # 2026-11-17 민첩 그림자 분신 (게일 러시 · 섀도 스트라이크 — 도감 메모 "그림자 초록색으로 수정"): 같은 모양 · 동작, 숲빛 · 초록 빛
+    "rune_shade_dex": (lambda: rune_shade("rune_shade_dex", "dex"), rune_shade_anims, dict(fam="rune_shade_dex", health=40, move=0.4, box=[0.6, 1.8], fly=True),
+                       "entity_alphablend", ["idle"], True),
     "rune_ki_avatar": (rune_ki_avatar, rune_ki_avatar_anims, dict(fam="rune_ki_avatar", health=40, move=0.4, box=[0.9, 2.0], fly=True), "entity_alphablend",
                        ["idle"], True),
     "rune_war_god": (rune_war_god, rune_war_god_anims, dict(fam="rune_war_god", health=40, move=0.4, box=[1.0, 2.4], fly=True), "entity_alphablend",
@@ -1419,6 +1433,8 @@ PREVIEW_POSES = {
                        (["idle", "finisher"], 0.25)),
     "rune_war_god": ((["idle"], 0.0), (["idle", "roar"], 0.15), (["idle", "roar"], 0.5), (["idle", "slam"], 0.2), (["idle", "slam"], 0.35)),
     "rune_shade": ((["idle"], 0.0), (["idle", "slash"], 0.1), (["idle", "slash"], 0.2), (["idle", "stab"], 0.2), (["idle", "xcut"], 0.15),
+                   (["idle", "xcut"], 0.25)),
+    "rune_shade_dex": ((["idle"], 0.0), (["idle", "slash"], 0.1), (["idle", "slash"], 0.2), (["idle", "stab"], 0.2), (["idle", "xcut"], 0.15),
                    (["idle", "xcut"], 0.25)),
 }
 

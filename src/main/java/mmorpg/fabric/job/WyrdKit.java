@@ -81,6 +81,8 @@ final class WyrdKit {
     static final Part ENCHANT = new Part(ParticleTypes.ENCHANT, 1, true);
     /** 2026-11-16 눈송이 (흰 · 천천히 떨어짐 — 프로스트 레이더의 눈보라 · 예전 rpg:snowfall 대신) */
     static final Part SNOW = new Part(ParticleTypes.SNOWFLAKE, 6);
+    /** 2026-11-17 먹물 (오징어 먹물 — 검은 연기 뭉치, 심연의 낙인) */
+    static final Part INK = new Part(ParticleTypes.SQUID_INK, 4);
 
     /** 검사 — 강철 · 푸른 달빛 (흰 불꽃놀이 불티 · 흰 빛) */
     static final Pal STEEL = new Pal(0x9DB4E0, 0xE8F2FF, SPARKLE, END_ROD, null, null, END_ROD, WHITE_DOT);
@@ -126,6 +128,11 @@ final class WyrdKit {
     static final Pal THUNDER = new Pal(0xF4BC36, 0x9CDCFF, ZAP, WAX, null, END_ROD, END_ROD, WAX);
     /** 2026-11-16 폭군 (타이런트): 번쩍 불똥 · end_rod · 차원문 (보랏빛이 빨려 듦) · 흰 빛 점 */
     static final Pal TYRANT = new Pal(0xA050F0, 0xFF8080, ZAP, END_ROD, null, PORTAL, PORTAL, WHITE_DOT);
+    /**
+     * 2026-11-17 심연 (심연의 낙인 — 도감 메모 "좀 더 어두웠으면"): 흰 빛 (번쩍 불똥 · end_rod · 흰 빛 점) 없이 — 차원문 (보랏빛이 튀고 빨려 듦) · 먹물 연기 뭉치 ·
+     * 솟는 보랏빛 · 먼지는 짙은 보라 · 검붉은 자홍
+     */
+    static final Pal ABYSS = new Pal(0x4A1066, 0x9A2058, PORTAL, null, INK, UNDER, PORTAL, null);
     /** 2026-11-16 사신 라인: 혼불 (soul) · end_rod · 발광 물빛 점 (사신 · 소울 리퍼) / 엑시큐셔너는 금빛 밀랍 · 차원문 (자줏빛) */
     static final Pal REAP = new Pal(0x2ECCB8, 0x9AF6F0, SOUL, END_ROD, null, SOUL, SOUL, GLOW);
     static final Pal SOULREAP = new Pal(0x3492E0, 0xA8E2FF, SOUL, END_ROD, null, SOUL, SOUL, WHITE_DOT);
@@ -163,6 +170,7 @@ final class WyrdKit {
             case "el_maw" -> MAW;
             case "el_thunder" -> THUNDER;
             case "el_tyrant" -> TYRANT;
+            case "el_abyss" -> ABYSS;
             case "el_reap" -> REAP;
             case "el_soulreap" -> SOULREAP;
             case "el_exec" -> EXEC;

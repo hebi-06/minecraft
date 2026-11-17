@@ -72,9 +72,10 @@ public final class LimitedRunesTest {
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 (36초, 2026-11-11 만년빙하 32초 — 룬의 cd)
         String[] fams = {"endless", "terra", "glacier"};
         String[] fns = {"endlessSlash", "earthSplitter", "glacierField"};
-        String[] names = {"무간참역", "대지 가르기", "만년빙하"};
+        // 2026-11-17 도감 메모: 만년빙하 → 얼음 여왕의 분노 · 대지 가르기 재사용 36 → 40초 (예산 × 40/36 — scale)
+        String[] names = {"무간참역", "대지 가르기", "얼음 여왕의 분노"};
         String[] famNames = {"무간", "대지", "빙하"};
-        double[] cds = {36, 36, 32};
+        double[] cds = {36, 40, 32};
         for (int i = 0; i < fams.length; i++) {
             for (String g : Runes.GRADE_ORDER) {
                 Runes.Rune r = Runes.parseRune(Runes.runeId(fams[i], g));
