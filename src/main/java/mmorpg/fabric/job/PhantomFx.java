@@ -2198,7 +2198,16 @@ final class PhantomFx {
             }
             case "nova" -> {
                 if (flat) {
-                    if (!Vfx.hasSheet(L.n("shock_00"))) return false;
+                    if (!Vfx.hasSheet(L.n("shock_00"))) {
+                        // 2026-11-17 큰 충격파 (2 × 2) 가 없는 묶음 (비전 — 마력 희귀 · 영웅의 땅 충격 고리, 마지막 셈 CI 44015730629 2 · 2): 작은 충격파 한 장 (shock_s — 땅에
+                        // 눕힘 · 같은 끝 지름 · oldFx shock_ring 과 같은 길)
+                        if (!Vfx.hasSheet(L.n("shock_s"))) return false;
+                        int frames = Vfx.sheet(L.n("shock_s")).frames();
+                        Opt b = Opt.of("dir", V.UP, "speed", 0.0, "size", Math.max(0.6, 2 * size * (1 + grow)) / 2, "life", life, "frames", (double) frames, "fps",
+                                frames / life, "fade", 0.3, "alpha", Math.min(1, o.num("alpha", 0.9)), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                        rfx(level, L.n("shock_s"), 1, 0, ground(level, at), b, FACE_DIR, 1);
+                        return true;
+                    }
                     shock(level, L, ground(level, at), Math.max(0.6, 2 * size * (1 + grow)), life >= 0.5 ? 2 : 1, who);
                 } else {
                     // 2026-11-17 세운 충격 고리 (면이 dir — 정한 쪽으로 퍼짐): 칠한 작은 충격파 (shock_s — bash_ring 다리와 같은 틀, 앞뒤 두 면)
