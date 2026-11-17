@@ -1879,6 +1879,8 @@ CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw"
 SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
 # 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 보스의 얼음 가시 (예전 rpg:ice_spike — 이미르 = 서리 · 헬 = 혼)
 SPIKE_KEYS = ("frost", "soulreap")
+# 2026-11-17 뭉게 연기 (shadow.py smoke — 그 묶음의 연기 램프) 를 더 갖는 묶음: 보스의 숨결 (예전 rpg:breath — 이미르 서리 숨결)
+SMOKE_KEYS = ("frost",)
 
 
 def sprites():
@@ -1894,6 +1896,9 @@ def sprites():
         if key in SPIKE_KEYS:
             from . import beast
             out.append((S.lib + "_spike", lambda S=S: beast.frames_of("spike", S), True))
+        if key in SMOKE_KEYS:
+            from . import shadow
+            out.append((S.lib + "_smoke", lambda S=S: shadow.frames_of("smoke", S), True))
     return out
 
 

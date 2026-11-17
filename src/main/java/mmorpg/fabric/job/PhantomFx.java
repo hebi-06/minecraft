@@ -1623,7 +1623,8 @@ final class PhantomFx {
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
                 && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
-                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike") && !id.equals("rpg:drop")) return false;
+                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike") && !id.equals("rpg:drop")
+                && !id.equals("rpg:breath")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1702,6 +1703,31 @@ final class PhantomFx {
                 Opt b = Opt.of("dir", V.unit(d), "speed", o.num("speed", 0), "size", Math.max(0.3, o.num("size", 1) * 0.5), "life", Math.max(0.1, o.num("life", 1)),
                         "frames", 4.0, "fps", 16.0, "loop", true, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
                 return paintedWith(level, PAINT.get("jcomet2"), L, 0, at, b);
+            }
+            case "rpg:breath" -> {
+                // 2026-11-17 숨결 뭉게 하나 (예전 rpg:breath — dir 쪽 speed 칸/초 · 끌림 1.1 · 반 크기 size 의 0.45 → 1.6 배로 커지며 옅어짐 · 이미르 서리 숨결 · 니드호그):
+                // 묶음의 뭉게 연기 한 장 (smoke — 같은 길 · 크기, 2틱마다 옮김)
+                if (!Vfx.hasSheet(L.n("smoke"))) return false;
+                double size = Math.max(0.3, o.num("size", 1) * 2);
+                double life = Math.max(0.2, o.num("life", 1));
+                double speed = o.num("speed", 0);
+                Vec3 d = V.len(o.vec("dir", V.ZERO)) < 1e-6 ? V.ZERO : V.unit(o.vec("dir", V.ZERO));
+                int ticks = Math.max(2, (int) Math.round(life * 20));
+                Vfx.Fx fx = Vfx.at(level, at, ticks + 2, who);
+                String name = L.n("smoke");
+                int frames = Vfx.sheet(name).frames();
+                Vfx.Sprite sp = fx.sprite(name, at);
+                sp.size(size * 0.45);
+                int f0 = (int) (Kit.rand() * frames);
+                sp.play(0, 0, frames, 3, true);
+                sp.frame(f0);
+                for (int t = 2; t <= ticks; t += 2) {
+                    double sec = t / 20.0;
+                    Vec3 p = V.add(at, d, speed / 1.1 * (1 - Math.exp(-1.1 * sec)));
+                    double sz = size * (0.45 + 1.15 * t / (double) ticks);
+                    fx.on(t - 2, () -> sp.to(p, sz, 2));
+                }
+                sp.fade(ticks / 2, ticks - ticks / 2);
             }
             case "rpg:ice_spike" -> {
                 // 2026-11-17 솟는 얼음 가시 (예전 rpg:ice_spike — 세로축 빌보드 · 밑동 at · 높이 size, 솟았다 머묾 · 이미르 · 헬): 묶음의 솟는 가시 (spike — 솟았다 가라앉는
