@@ -533,7 +533,8 @@ final class RuneInt {
             }
             SkillFx.play(level, "mob.ghast.fireball", g, 0.5, 1);
         });
-        Tasks.later(delay, () -> {
+        // 2026-11-17 터짐 전체를 분노 묶음으로 (Tasks.lib — 미룬 고리 · 충격파 · 불바다도): 원소 묶음의 하늘빛 둘째 빛이 터짐 (RuneBoost.impact) 고리에 남았음 (CI 44070881724)
+        Tasks.later(delay, () -> SkillFx.withLib(IMPACT_LIB, () -> {
             if (sp.isRemoved()) return;
             Vec3 mid = V.up(g, 1);
             double sc = RuneKit.nearK(sp, mid, 8, 0.35);
@@ -542,7 +543,7 @@ final class RuneInt {
             RuneBoost.impact(level, g, glow, core, radius); // 0.50.0 2D 강화 (초월 나머지): 운석이 떨어진 자리의 터짐
             RuneKit.skyFlare(level, burning, 4.4, glow, core, Opt.of("life", 0.6));
             // 2026-11-17 터진 자리 고리 · 충격파는 분노 묶음 (주황 · 금빛 — 원소 묶음의 얼음 하늘빛 둘째 빛이 불 운석에 섞여 보였음, CI 44063758248)
-            RuneKit.later(1, () -> SkillFx.withLib(IMPACT_LIB, () -> RuneKit.novaRing(level, g, 2.4, 3.0, glow, core, Opt.of("life", 0.5))));
+            RuneKit.later(1, () -> RuneKit.novaRing(level, g, 2.4, 3.0, glow, core, Opt.of("life", 0.5)));
             RuneKit.later(2, () -> RuneKit.glowCrack(level, g, radius * 1.15, new double[] {1.0, 0.38, 0.08}, new double[] {1.0, 0.86, 0.5}, Opt.of("life", 2.8,
                     "fade", 0.6, "v", 1.0)));
             for (int i = 0; i < 3; i++) {
@@ -565,7 +566,7 @@ final class RuneInt {
             SkillFx.fx(level, "rpg:arrow_spark", mid, Opt.of("dir", V.UP, "size", 4 * sc, "grow", 2.0, "life", 0.22, "color", RuneKit.WHITE, "alpha", 1.0));
             for (int i = 0; i < 5; i++) {
                 final int ii = i;
-                Tasks.later(i * 2, () -> SkillFx.withLib(IMPACT_LIB, () -> SkillFx.shock(level, g, ii % 2 == 1 ? red : glow, 2 + ii * 1.5, 0.55 + ii * 0.1)));
+                Tasks.later(i * 2, () -> SkillFx.shock(level, g, ii % 2 == 1 ? red : glow, 2 + ii * 1.5, 0.55 + ii * 0.1));
             }
             for (int i = 0; i < 10; i++) {
                 Vec3 dd = RuneKit.turn(new Vec3(1, 0, 0), i * 36 + Kit.rand() * 12);
@@ -624,7 +625,7 @@ final class RuneInt {
                     });
                 }
             }
-        });
+        }));
         return true;
     }
 }

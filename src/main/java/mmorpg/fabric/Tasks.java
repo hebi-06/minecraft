@@ -36,15 +36,18 @@ public final class Tasks {
         String tg = tag;
         Object el = elem;
         Object pt = paint;
-        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null && el == null && pt == null ? run : () -> {
+        String lb = lib;
+        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null && el == null && pt == null && lb == null ? run : () -> {
             int prev = owner;
             String prevTag = tag;
             Object prevEl = elem;
             Object prevPt = paint;
+            String prevLib = lib;
             owner = own;
             tag = tg;
             elem = el;
             paint = pt;
+            lib = lb;
             try {
                 run.run();
             } finally {
@@ -52,6 +55,7 @@ public final class Tasks {
                 tag = prevTag;
                 elem = prevEl;
                 paint = prevPt;
+                lib = prevLib;
             }
         }));
     }
@@ -64,20 +68,24 @@ public final class Tasks {
         int own = owner;
         String tg = tag;
         Object pt = paint;
-        if (own == 0 && tg == null && pt == null) return run;
+        String lb = lib;
+        if (own == 0 && tg == null && pt == null && lb == null) return run;
         return () -> {
             int prev = owner;
             String prevTag = tag;
             Object prevPt = paint;
+            String prevLib = lib;
             owner = own;
             tag = tg;
             paint = pt;
+            lib = lb;
             try {
                 run.run();
             } finally {
                 owner = prev;
                 tag = prevTag;
                 paint = prevPt;
+                lib = prevLib;
             }
         };
     }
@@ -87,20 +95,24 @@ public final class Tasks {
         int own = owner;
         String tg = tag;
         Object pt = paint;
-        if (own == 0 && tg == null && pt == null) return fn;
+        String lb = lib;
+        if (own == 0 && tg == null && pt == null && lb == null) return fn;
         return t -> {
             int prev = owner;
             String prevTag = tag;
             Object prevPt = paint;
+            String prevLib = lib;
             owner = own;
             tag = tg;
             paint = pt;
+            lib = lb;
             try {
                 fn.accept(t);
             } finally {
                 owner = prev;
                 tag = prevTag;
                 paint = prevPt;
+                lib = prevLib;
             }
         };
     }
@@ -119,6 +131,23 @@ public final class Tasks {
     public static Object paint(Object p) {
         Object prev = paint;
         paint = p;
+        return prev;
+    }
+
+    /**
+     * 2026-11-17 정해 부른 칠할 묶음 이름 (null = 없음 — SkillFx.withLib 가 정함, later · bind 가 이어 줌): 룬 계열 묶음 대신 고른 묶음 (메테오의 붉은 마법진 ·
+     * 터진 자리 분노 묶음). CI 44070881724: 터짐 (RuneBoost.impact) 안에서 later 로 미룬 고리 · 충격파가 맥락을 잃어 원소 묶음의 하늘빛 둘째 빛으로 남았음
+     */
+    private static String lib;
+
+    public static String lib() {
+        return lib;
+    }
+
+    /** 정해 부른 칠할 묶음을 바꾸고 예전 값을 돌려줌 (끝나면 되돌림) */
+    public static String lib(String l) {
+        String prev = lib;
+        lib = l;
         return prev;
     }
 

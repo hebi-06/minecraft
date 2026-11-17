@@ -1978,7 +1978,7 @@ final class PhantomFx {
 
     /** 2026-11-17 SkillFx.withLib 로 정한 묶음 (위르드식 룬이 켜져 있을 때만 · 모르는 이름이면 null) */
     static Lib forcedLib() {
-        String n = mmorpg.fabric.skill.SkillFx.PAINT_LIB.get();
+        String n = mmorpg.fabric.Tasks.lib();
         if (n == null || !JobSystem.RUNE_WYRD) return null;
         return switch (n) {
             case "el_hex" -> HEX;
