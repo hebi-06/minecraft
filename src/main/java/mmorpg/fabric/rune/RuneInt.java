@@ -429,7 +429,9 @@ final class RuneInt {
         Tasks.later(delay - fall, () -> {
             Opt mo = Opt.of("dir", d, "speed", len / (fall / 20.0), "size", 3.2, "life", fall / 20.0, "frames", 4.0, "fps", 12.0, "loop", true);
             // 0.50.0 2D 강화 (초월 나머지): 운석 후광 (불빛 · 1.35배 · 옅게, 같은 길) — 불꼬리
-            RuneBoost.aura(level, "meteor", V.add(start, d, -0.3 * 6.4 * 0.35), mo, glow, 1.35, 0.42);
+            // 2026-11-17 불꼬리는 3D 운석과 같은 빠르기 (운석은 start + 1.92 칸에서 g 까지 — 불꼬리가 len 을 같은 틱에 가면 머리가 운석 앞으로 1.9칸까지 앞서 나갔음,
+            // CI 44008618300 위르드식 불꽃 꼬리 불덩이에서 또렷)
+            RuneBoost.aura(level, "meteor", V.add(start, d, -0.3 * 6.4 * 0.35), mo.with("speed", (len - 0.3 * 6.4) / (fall / 20.0)), glow, 1.35, 0.42);
             // 2026-11-12 3D 운석 (사용자 "메테오 3d 모델 운석으로 수정" — tools/vfx_props.py meteor): 2D 운석 그림 대신 바위가 구르며 떨어짐 (불꼬리는 2D) → 땅에 박혀 작아짐
             meteorRock(level, V.add(start, d, 0.3 * 6.4), g, d, fall, 2.6);
             for (int t = 0; t < fall; t += 2) {
