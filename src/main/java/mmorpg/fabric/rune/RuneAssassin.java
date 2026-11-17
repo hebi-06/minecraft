@@ -586,7 +586,7 @@ final class RuneAssassin {
         // 달빛 표식: 대상 머리 위 초승달이 커지며 차오르고 (달 그림 + 자홍 무리), 발밑에 자홍 룬
         SkillFx.rune(level, target.position(), Opt.of("size", 1.6, "life", delay / 20.0 + 0.2, "color", glow, "alpha", 0.85, "rate", 120.0, "progress", 1.0,
                 "grow", 0.3));
-        moonShades(sp, target, life, delay, glow);
+        RuneMob[] shades = moonShades(sp, target, life, delay, glow);
         for (int t = 0; t < delay; t += 4) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -605,6 +605,12 @@ final class RuneAssassin {
             if (tgt != null) {
                 Vec3 dest = behindSpot(level, tgt, sp.position());
                 if (dest != null) RuneKit.moveTo(sp, dest, tgt.getEyePosition()); // 못 옮기면 그 자리에서 벰
+                // 2026-11-17 1인칭: 옮긴 눈에서 2.2칸 안의 그림자 분신은 쓴 사람에게서 숨김 — 대상 바로 뒤로 옮기면 대상에게 달려든 분신 (뒤쪽 180°) 의 몸이 1인칭 화면
+                // 아래 절반을 검게 덮었음 (CI 44007116244). 다른 사람 · 3인칭 영상에는 그대로
+                Vec3 eye0 = sp.getEyePosition();
+                if (!mmorpg.fabric.vfx.PBridge.thirdPersonOf(sp)) {
+                    for (RuneMob m : shades) if (m != null && m.alive() && m.pos().distanceTo(eye0) < 2.2) m.hideFrom(sp);
+                }
             }
             Vec3 eye = sp.getEyePosition();
             Vec3 at = tgt != null ? Kit.bodyPoint(tgt) : V.up(c, 1);
@@ -652,7 +658,7 @@ final class RuneAssassin {
      * 2026-11-13 월광 암살의 3D 그림자 분신 셋 (rpg:rune_shade): 쓸 때 대상 둘레 (반지름 2.6 — 내 쪽 ±60° 는 비움) 에 그림자에서 솟아 대상을 보며
      * 천천히 둘레를 돌다가 (2틱마다), delay − SHADE_XCUT_AT − 3 틱에 대상에게 달려들어 내 X 베기와 같은 틱에 X 로 벰 → 그림자로 꺼짐
      */
-    private static void moonShades(ServerPlayer sp, LivingEntity target, String life, int delay, double[] glow) {
+    private static RuneMob[] moonShades(ServerPlayer sp, LivingEntity target, String life, int delay, double[] glow) {
         ServerLevel level = sp.level();
         Vec3 c = target.position();
         Vec3 mine = V.flat(V.sub(sp.position(), c));
@@ -707,6 +713,7 @@ final class RuneAssassin {
         RuneKit.later(delay + 8, () -> {
             for (RuneMob m : ms) if (m != null && m.alive()) m.leave("vanish", 7);
         });
+        return ms;
     }
 
     // ------------------------------------------------------------ 암살 표식 · 이어 쓰기 콤보 (RUNE_COMBO)

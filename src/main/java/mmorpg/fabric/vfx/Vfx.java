@@ -386,8 +386,9 @@ public final class Vfx {
                 Vec3 eye = p.getEyePosition();
                 boolean near = eye.distanceToSqr(origin) < 48 * 48;
                 if (near && !PBridge.thirdPersonOf(p)) {
+                    Vec3 look = p.getViewVector(1F);
                     for (Prop pr : props) {
-                        if (pr.contains(eye, EYE_MARGIN)) {
+                        if (pr.contains(eye, EYE_MARGIN) || pr.coverage(eye, look) >= (was ? 0.45 : 0.6)) {
                             in = true;
                             break;
                         }
@@ -634,6 +635,73 @@ public final class Vfx {
             }
             return false;
         }
+
+        /**
+         * 2026-11-17 1인칭 화면을 이 소품이 가까이서 덮는 몫: 눈 eye 에서 보는 쪽 f 둘레 (가로 ±40° · 세로 ±25°) 5 × 5 빛줄 중 EYE_NEAR 칸 안에서 모델 조각 상자에 닿는 몫
+         * (힘 영웅 망치 머리가 눈앞 1칸에서 화면 2/3 를 잿빛 면으로 덮었음 — 눈이 속에 들지 않아 contains 로는 못 거름, CI 44007116244). 가늘고 긴 칼 · 옆의 물기둥은 몇 줄만 닿음
+         */
+        double coverage(Vec3 eye, Vec3 f) {
+            if (removed) return 0;
+            float[][] boxes = modelBoxes(model);
+            if (boxes.length == 0) return 0;
+            Vector3f sc = scale3 != null ? scale3 : new Vector3f(scale, scale, scale);
+            if (Math.abs(sc.x) < 1e-4F || Math.abs(sc.y) < 1e-4F || Math.abs(sc.z) < 1e-4F) return 0;
+            float big = Math.max(Math.abs(sc.x), Math.max(Math.abs(sc.y), Math.abs(sc.z)));
+            if (eye.distanceTo(pos) > EYE_NEAR + 2.5 * big) return 0; // 모델은 크기 1 에 3칸 안 (쥔 곳에서)
+            Quaternionf inv = new Quaternionf(rot).normalize().conjugate();
+            Vector3f o = inv.transform(new Vector3f((float) (eye.x - pos.x), (float) (eye.y - pos.y), (float) (eye.z - pos.z)));
+            Vector3f m0 = new Vector3f(grip.x + 16F * o.x / sc.x, grip.y + 16F * o.y / sc.y, grip.z + 16F * o.z / sc.z);
+            Vec3 fw = f.normalize();
+            Vec3 r = fw.cross(new Vec3(0, 1, 0));
+            r = r.lengthSqr() < 1e-6 ? new Vec3(1, 0, 0) : r.normalize();
+            Vec3 u = r.cross(fw);
+            int hit = 0;
+            int n = 0;
+            for (double ay : COVER_V) {
+                for (double ax : COVER_H) {
+                    Vec3 d = fw.add(r.scale(Math.tan(Math.toRadians(ax)))).add(u.scale(Math.tan(Math.toRadians(ay)))).normalize();
+                    Vector3f dm = inv.transform(new Vector3f((float) d.x, (float) d.y, (float) d.z));
+                    dm.set(16F * dm.x / sc.x, 16F * dm.y / sc.y, 16F * dm.z / sc.z);
+                    if (rayHits(m0, dm, boxes, EYE_NEAR)) hit++;
+                    n++;
+                }
+            }
+            return hit / (double) n;
+        }
+    }
+
+    /** 2026-11-17 소품이 화면을 덮는지 볼 거리 (칸 — 이보다 먼 면은 덮어도 그대로: 하늘에서 내려오는 거대한 검 같은 큰 그림은 멀리서 화면을 채우는 것이 연출) */
+    static final double EYE_NEAR = 2.5;
+    static final double[] COVER_H = {-40, -20, 0, 20, 40};
+    static final double[] COVER_V = {-25, -12.5, 0, 12.5, 25};
+
+    /** 모델 픽셀 공간의 빛줄 (o + t d, t = 0 ~ tmax 칸) 이 조각 상자 하나에라도 닿는지 (slab) */
+    static boolean rayHits(Vector3f o, Vector3f d, float[][] boxes, double tmax) {
+        for (float[] b : boxes) {
+            double t0 = 0;
+            double t1 = tmax;
+            boolean ok = true;
+            for (int i = 0; i < 3 && ok; i++) {
+                double oi = o.get(i);
+                double di = d.get(i);
+                if (Math.abs(di) < 1e-9) {
+                    if (oi < b[i] || oi > b[i + 3]) ok = false;
+                } else {
+                    double ta = (b[i] - oi) / di;
+                    double tb = (b[i + 3] - oi) / di;
+                    if (ta > tb) {
+                        double tmp = ta;
+                        ta = tb;
+                        tb = tmp;
+                    }
+                    t0 = Math.max(t0, ta);
+                    t1 = Math.min(t1, tb);
+                    if (t0 > t1) ok = false;
+                }
+            }
+            if (ok) return true;
+        }
+        return false;
     }
 
     /** 2026-11-17 1인칭 눈 거름의 여유 (칸 — 모델 겉에서 이만큼 안이면 속으로 셈: 눈앞 0.05칸의 가까운 면도 화면을 덮음) */
