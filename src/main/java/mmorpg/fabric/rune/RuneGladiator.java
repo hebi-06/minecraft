@@ -230,7 +230,7 @@ final class RuneGladiator {
      * 지나며 들이받고 (쇠 번쩍 · 불티 · 고리) 0.55초 더 달려 나가며 옅어짐.
      * <p>
      * 쓴 사람의 1인칭 (CI 44046252216 영상): 옆모습은 같은 쪽으로 달리면 눈에서 거의 모로 보이고 (판이 가는 쪽으로 누움), 적을 들이받는 자리는 쓴 사람도 닿는 곳이라
-     * 눈 옆을 덮었음 → 1인칭에는 따로 — 오른쪽 2.4 → 1.5칸 · 앞 3.4칸에서 나란히 달려 적 오른쪽을 지나감 (Vfx.FirstPerson). 3인칭 · 다른 사람은 적을 들이받는 길
+     * 눈 옆을 덮었음 → 1인칭에는 따로 — 오른쪽 1.9 → 1.0칸 · 앞 4.2칸에서 (내 앞 4칸 넘게) 나란히 달려 적 오른쪽을 지나감 (Vfx.FirstPerson). 3인칭 · 다른 사람은 적을 들이받는 길
      */
     static void bison(ServerPlayer sp, String life, Vec3 start, Vec3 f, double reach, int dash) {
         ServerLevel level = sp.level();
@@ -239,8 +239,9 @@ final class RuneGladiator {
         double owner = sp.getId();
         Vec3 a0 = V.up(V.add(V.add(start, f, 1.9), right, 1.3), BISON_LIFT);
         Vec3 a1 = V.up(V.add(V.add(start, f, reach + 1.55), right, 0.55), BISON_LIFT);
-        Vec3 b0 = V.up(V.add(V.add(start, f, 3.4), right, 2.4), BISON_LIFT);
-        Vec3 b1 = V.up(V.add(V.add(start, f, reach + 2.6), right, 1.5), BISON_LIFT);
+        // 1인칭 (CI 44050025999 영상 — 들소 뒤쪽 절반이 화면 오른쪽 밖): 그림 길이 4.4칸 (높이 × 2) 의 뒤끝이 눈 앞 2칸 넘게 · 옆 1.9칸 안 (가로 시야 ±51° 안)
+        Vec3 b0 = V.up(V.add(V.add(start, f, 4.2), right, 1.9), BISON_LIFT);
+        Vec3 b1 = V.up(V.add(V.add(start, f, reach + 4.0), right, 1.0), BISON_LIFT);
         Opt base = Opt.of("size", BISON_SIZE, "color", STEEL, "frames", 6.0, "fps", 14.0, "loop", true, "alpha", 0.95);
         Opt others = base.with("view", 1.0, "owner", owner);
         Opt mine = base.with("view", 2.0, "owner", owner);

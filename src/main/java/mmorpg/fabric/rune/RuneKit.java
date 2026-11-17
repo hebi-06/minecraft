@@ -299,6 +299,40 @@ public final class RuneKit {
         return Math.max(0, dist);
     }
 
+    /**
+     * 2026-11-17 돌진이 몸 속에서 끝나지 않게 (게일 러시 1인칭 영상 — 5칸 앞 과녁 자리에 내려서 카메라가 드라우그 몸 안에 들어갔음): start → f 로 dist 칸 간 자리가
+     * 산 몸 (나 · 관전자 빼고, 높이가 겹치는 것) 의 둘레 (몸 반지름 + 내 반지름 0.3 + gap) 안이면 그 몸 앞까지 줄임 — 줄인 자리가 다른 몸에 걸리면 다시 (네 번까지).
+     * 맞는 적 (돌진 길) 은 부르는 쪽이 원래 거리로 정함 — 피해 · 범위는 그대로, 내려서는 자리만 바뀜
+     */
+    public static double clearLanding(ServerPlayer sp, Vec3 start, Vec3 f, double dist, double gap) {
+        if (dist <= 0) return 0;
+        double d = dist;
+        AABB area = new AABB(start, V.add(start, f, dist)).inflate(3.0, 2.0, 3.0);
+        List<LivingEntity> near = sp.level().getEntitiesOfClass(LivingEntity.class, area, e -> e != sp && e.isAlive() && !e.isSpectator());
+        double lo = start.y + 0.1;
+        double hi = start.y + sp.getBbHeight();
+        for (int it = 0; it < 4; it++) {
+            boolean moved = false;
+            for (LivingEntity e : near) {
+                AABB b = e.getBoundingBox();
+                if (b.maxY < lo || b.minY > hi) continue;
+                double r = e.getBbWidth() / 2 + 0.3 + gap;
+                double px = e.getX() - start.x;
+                double pz = e.getZ() - start.z;
+                double along = px * f.x + pz * f.z;
+                double across = Math.abs(px * f.z - pz * f.x);
+                if (across >= r) continue;
+                double ex = Math.sqrt(r * r - across * across);
+                if (Math.abs(along - d) < ex) {
+                    d = along - ex;
+                    moved = true;
+                }
+            }
+            if (!moved || d <= 0) break;
+        }
+        return Math.max(0, Math.min(dist, d));
+    }
+
     /** p 자리의 땅 높이 (p 보다 1.6 위에서 아래로 3.5칸 안, 없으면 fallback) — 한 칸 턱을 넘어 옮길 때 */
     public static double groundAt(Level level, Vec3 p, double fallback) {
         Kit.Hit hit = Kit.ray(level, V.up(p, 1.6), V_DOWN, 3.5, false);

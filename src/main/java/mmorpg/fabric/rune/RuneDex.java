@@ -41,7 +41,9 @@ final class RuneDex {
         Vec3 start = sp.position();
         Vec3 f = V.flat(sp.getViewVector(1F));
         double dist = RuneKit.dashDistance(sp, f, k.num("dash"));
-        Vec3 end = V.add(start, f, dist);
+        // 2026-11-17 내려서는 자리 (게일 러시 1인칭 영상): 몸 속이면 그 몸 앞 0.6칸까지 — 맞는 적은 원래 길 (dist) 그대로
+        double go = RuneKit.clearLanding(sp, start, f, dist, 0.6);
+        Vec3 end = V.add(start, f, go);
         double[][] cs = RuneKit.colorOf("dex");
         double[] glow = cs[0];
         double[] core = cs[1];
@@ -54,15 +56,15 @@ final class RuneDex {
             double across = Math.abs(p.x * f.z - p.z * f.x);
             if (along >= -0.5 - pad && along <= dist + 1.0 + pad && across <= width + pad) targets.add(e);
         }
-        for (double s = 0.3; s <= dist; s += 0.8) {
+        for (double s = 0.3; s <= go; s += 0.8) {
             SkillFx.fx(level, "rpg:arrow_trail", V.up(V.add(start, f, s), 1.0), Opt.of("dir", f, "size", 0.4, "thick", 0.2, "life", 0.45, "color", glow,
                     "alpha", 0.85));
         }
         // 잔상: 2026-11-13 지나간 길에 3D 그림자 분신 둘 (rpg:rune_shade — 2D 분신 그림 대신): 베는 자세로 남았다가 그림자로 꺼짐 (1인칭에서는 등 뒤라 안 보임)
         double[] qs = {0.3, 0.65};
         for (int j = 0; j < qs.length; j++) {
-            if (dist * qs[j] < 0.8) continue;
-            RuneMob sh = RuneMob.spawn(RuneMob.SHADE, level, V.add(start, f, dist * qs[j]), f, 24, 1.0, true);
+            if (go * qs[j] < 0.8) continue;
+            RuneMob sh = RuneMob.spawn(RuneMob.SHADE, level, V.add(start, f, go * qs[j]), f, 24, 1.0, true);
             if (sh == null) continue;
             sh.anim(j == 0 ? "slash" : "slash2");
             Tasks.later(4 + j * 2, () -> sh.leave("vanish", 7));
@@ -70,7 +72,7 @@ final class RuneDex {
         RuneKit.arc(level, V.up(V.add(start, f, 1.2), 1.1), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.24, "speed", 4.0, "spin", -20.0,
                 "color", glow, "aura", core));
         SkillFx.sparks(level, V.up(start, 0.5), glow, 6, 4);
-        if (dist > 0.2) Kit.moveTo(sp, end); // 못 옮기면 (막힌 자리) 제자리에서 벰
+        if (go > 0.2) Kit.moveTo(sp, end); // 못 옮기면 (막힌 자리) 제자리에서 벰
         // 2026-11-13 3D 룬 검 (3칸): 내려선 자리 앞을 오른쪽에서 왼쪽 끝까지 휩씀 (1틱에 앞을 지남 — 동작 rn_gale_slash 와 같은 때)
         RuneSwing.sword(sp, RuneKit.lifeToken(sp), 1.15, 0.65, 3.0, 6, 80, -100, 0, 3, 2, "out", glow, core);
         RuneKit.waveCard(level, V.up(V.add(end, f, 1.9), 1.0), f, V.UP, Opt.of("size", 1.2, "life", 0.22, "grow", 0.3, "fade", 0.6, "roll", 15.0), glow, core);
