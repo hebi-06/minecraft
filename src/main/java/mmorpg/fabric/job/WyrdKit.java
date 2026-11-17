@@ -322,6 +322,22 @@ final class WyrdKit {
     }
 
     /**
+     * 2026-11-17 솟는 불씨 한 차례 (예전 rpg:ember 발생기 — 상자에서 위로 솟는 불씨, 4틱 몫): 상자 (가운데 at · 반 너비 hw · 높이 ±0.5) 안에서 묶음의 솟는 알갱이
+     * (mote — 없으면 spark) n 개가 위로 (예전 빠르기 speed 칸/초 × 0.6 ~ 1.2 · 옆으로 ±0.35 몫)
+     */
+    static void rise(ServerLevel l, PhantomFx.Lib L, Vec3 at, double hw, int n, double speed, Predicate<ServerPlayer> who) {
+        Pal P = pal(L);
+        if (P == null || n <= 0 || !go("rise", 8)) return;
+        Part m = P.mote() != null ? P.mote() : P.spark();
+        if (m == null) return;
+        for (int i = 0; i < n; i++) {
+            Vec3 p = new Vec3(at.x + (Kit.rand() * 2 - 1) * hw, at.y + (Kit.rand() - 0.5), at.z + (Kit.rand() * 2 - 1) * hw);
+            double v = Math.max(0.5, speed) * (0.6 + Kit.rand() * 0.6) / 20.0;
+            pv(l, who, m.o(), p, new Vec3((Kit.rand() - 0.5) * 0.7 * v, v, (Kit.rand() - 0.5) * 0.7 * v));
+        }
+    }
+
+    /**
      * 2026-11-16 예전 색 먼지 불티 한 무리 (SkillFx.sparks — 다리 PhantomFx.oldFx): 묶음의 스스로 빛나는 불티 · 반짝임 (그림판 없이 — 불티는 스킬 하나에 수백 개라 표시
      * 엔티티 대신 파티클). n 개 (예전 수의 절반쯤) · speed 칸/초 (예전 값 — 날아가는 거리 ≈ speed × 0.3)
      */

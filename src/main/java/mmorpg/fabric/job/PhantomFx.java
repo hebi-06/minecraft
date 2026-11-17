@@ -1603,7 +1603,7 @@ final class PhantomFx {
         }
         if (!group && !id.equals("rpg:arrow_spark") && !id.equals("rpg:shock_ring") && !id.equals("rpg:bash_burst") && !id.equals("rpg:arrow_trail")
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
-                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire")) return false;
+                && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1638,6 +1638,16 @@ final class PhantomFx {
                 // 땅 금 (예전 rpg:ground_crack — 땅에 눕힘): 그 묶음의 땅 자국
                 if (!Vfx.hasSheet(L.n("crack_s"))) return false;
                 crackS(level, L, ground(level, at), Math.max(0.6, o.num("size", 1) * 2), who);
+            }
+            case "rpg:ember" -> {
+                // 2026-11-17 솟는 불씨 (예전 rpg:ember — life 초 동안 초당 10 + 4 × size 개 (90 까지) 를 size × 1 × size 상자에서 위로 · 수르트 왕관 · 분노 · 용암):
+                // 묶음의 솟는 바닐라 알갱이를 4틱마다 (WyrdKit.rise)
+                double size = Math.max(0.2, o.num("size", 1));
+                double life = Math.max(0.1, o.num("life", 1));
+                double speed = o.num("speed", 1);
+                int per = Math.max(1, (int) Math.round(Math.min(90, 10 + size * 4) / 5.0));
+                int ticks = Math.max(1, (int) Math.round(life * 20));
+                for (int t = 0; t < ticks; t += 4) mmorpg.fabric.Tasks.later(t, () -> WyrdKit.rise(level, L, at, size * 0.5, per, speed, who));
             }
             case "rpg:tyr_ghostfire" -> {
                 // 2026-11-17 녹색 무덤불 (네크로맨서 · 망자 선원 — 예전 tyr_ghostfire: 세로축 빌보드 · 밑동 at · 높이 size · 너비 size/2, CI 43979933145 블라이트 136):
