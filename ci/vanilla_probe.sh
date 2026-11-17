@@ -67,7 +67,11 @@ if [ $up -eq 1 ]; then
       sleep 5
     done ) &
   MEMPID=$!
-  timeout 1200 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew probeClient --stacktrace --console=plain > ci-out/vanilla-client${SUF}.txt 2>&1
+  # 2026-11-17 영상 묶음 (VFILM) 은 40분까지 — 보스 영상 (신전 짓기 + 420장, 한 편 약 3.6분) 여섯이 20분을 넘어 마지막 영상이 잘렸음 (CI 43982885199 g1 ~ g3).
+  # 클라이언트 잡 (timeout-minutes 50) 안
+  PTIME=1200
+  if [ -n "${FILMS_FLAG:-}" ]; then PTIME=2400; fi
+  timeout $PTIME xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew probeClient --stacktrace --console=plain > ci-out/vanilla-client${SUF}.txt 2>&1
   pcode=$?
   kill $MEMPID 2>/dev/null
   echo "[vanilla] probe client exit $pcode"
