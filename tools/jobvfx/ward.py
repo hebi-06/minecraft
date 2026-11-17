@@ -177,13 +177,14 @@ def bison_frame(S, f, h=256, w=512, frames=BISON_FRAMES):
     fur = 0.05 * nz.fbm(x * 9, y * 4, 7.0 + f * 0.2, oct=2)  # 띠 경계를 털 결로 (곧은 줄 대신)
     band_top = body * sstep(0.2, 0.24, y - by + 0.16 * (x - 0.05) + fur) * (1 - head)
     band_low = solid * (1 - sstep(-0.1, -0.06, y - by + fur)) * (1 - head)
+    # 2026-11-17 영상 (CI 44046252216): 몸이 하늘빛 덩이로 보였음 → 몸 · 배를 조금 짙게 (위 띠와 차이). 짙은 테는 도트로 옮기면 빛 번짐 띠 (밝은 색) 가 됨
     layers = [(S.main(0.2), rim),
               (S.main(0.5 + 0.38 * mane), np.clip(mane * 1.3, 0, 1) * (1 - solid)),
               (S.main(0.42), np.clip(hang * 1.3, 0, 1) * (1 - solid)),
-              (S.main(0.66), solid),
-              (S.main(0.48), band_low),
+              (S.main(0.6), solid),
+              (S.main(0.44), band_low),
               (S.main(0.92), band_top),
-              (S.main(0.42), head),
+              (S.main(0.38), head),
               (S.main(0.6 + 0.2 * curls), mop * head * (1 - sstep(0.62, 0.7, x))),
               (S.main(0.44), beard),
               (S.main(0.3), horn_far),

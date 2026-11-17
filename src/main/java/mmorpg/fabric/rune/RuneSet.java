@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 2026-11-17 룬 재개발 (rules_runes.json RUNE_SET — 계열 없이 등급마다 여섯) 에서 옛 동작을 빌려 쓰지 않는 새 동작 (사용자 "재개발을 시작해보자" · 컨셉 문서
- * 「룬 재개발 컨셉」): 램파트 (일반 — 방패 결계) · 블레이드 헤일 (고귀 — 칼날 우박). 아이스 랜스는 RuneInt.iceLance.
+ * 「룬 재개발 컨셉」): 램파트 (일반 — 방패 결계) · 블레이드 헤일 (고귀 — 칼날 우박) · 룬 재블린 (영웅 — 빛의 창 던지기). 아이스 랜스는 RuneInt.iceLance.
  * <p>
  * 그림은 그림 묶음 계열 (def.look) 의 빛으로 부름 — 꼬리표 (RuneCast 가 look 으로 붙임) 의 위르드식 묶음이 칠함: 램파트 = 투사 (수호 묶음 — 강철 푸른빛 방패),
  * 블레이드 헤일 = 민첩 (질풍 묶음). 느낌 층 (claude/rune-job-synergy.md): 램파트 = 체력 (버티고 섬 · 막을 때 파문 · 단단한 소리), 블레이드 헤일 = 민첩 (가는 칼 ·
@@ -30,6 +30,7 @@ final class RuneSet {
     static void register() {
         RuneCast.register("rampart", RuneSet::rampart);
         RuneCast.register("bladeHail", RuneSet::bladeHail);
+        RuneCast.register("javelin", RuneSet::javelin);
     }
 
     // ------------------------------------------------------------ 램파트 (일반)
@@ -205,5 +206,79 @@ final class RuneSet {
         fx.on(FALL + HAIL_STUCK + HAIL_SINK, blade::remove);
         // 떨어지는 길의 가는 빛 (칼끝 뒤 — 2D 날아가는 빛줄기: 질풍 묶음의 돌진 줄기)
         RuneKit.flyStreak(level, start, V.up(g, rest), sky / (FALL / 20.0), glow, core, 0.6, 0.2);
+    }
+
+    // ------------------------------------------------------------ 룬 재블린 (영웅)
+
+    /**
+     * 2026-11-17 룬 재블린 (영웅 — "빛의 창을 만들어 던짐 · 처음 맞은 적에 꽂혀 터짐"): 옛 저격 (snipe — 활 시위를 당기는 동작 · 석궁 소리 · 빛 화살) 을 빌려 썼는데
+     * 무기와 상관없는 룬이 활을 당기는 모습이라 설명과 어긋났음 (CI 44046252216 영상) → charge 틱 동안 오른 어깨 위에 3D 빛의 창 (RuneStorm.Spear3d — 창 모델 ·
+     * 계열 빛) 이 빛을 모으며 커짐 (촉 반짝임 · 둘레 빛 알갱이) → 던짐 (창 던지기 동작 rn_thunder_spear): 겨눈 적 (range 칸 · cone 도) 에 꽂히는 틱에 터짐 — 위력 × mult
+     * (단일) · 꽂힌 자리 섬광 · 고리 · 발밑 충격파. 창은 꽂힌 채 떨리다 흩어짐 (Spear3d)
+     */
+    static boolean javelin(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
+        LivingEntity target = Kit.pickTarget(sp, k.num("range"), k.num("cone"));
+        if (target == null) {
+            mmorpg.fabric.Notify.warn(sp, "§c" + k.str("name") + ": §7" + k.text("range") + "칸 안에 대상이 없습니다");
+            return false;
+        }
+        ServerLevel level = sp.level();
+        double[][] cs = RuneKit.lookColors(k, "bow");
+        double[] glow = cs[0];
+        double[] core = cs[1];
+        int charge = (int) k.num("charge");
+        String life = RuneKit.lifeToken(sp);
+        RuneStorm.Spear3d spear = new RuneStorm.Spear3d(sp, charge, k.numOr("len", 3.0), glow, core);
+        double glint = RuneKit.RFX.get("glint")[0];
+        SkillFx.play(level, "item.trident.return", sp.position(), 1.3, 0.9);
+        for (int t = 2; t < charge; t += 3) {
+            final int tt = t;
+            RuneKit.later(tt, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 tip = spear.tipNow();
+                double q = (double) tt / charge;
+                RuneKit.rfx(level, "prop", tip, Opt.of("size", 0.12 + 0.22 * q, "life", 0.18, "cell", glint, "spin", tt * 20.0, "color", core, "alpha", 0.9));
+                SkillFx.sparks(level, V.lerp(spear.gripNow(), tip, 0.55), glow, 3, 1.5);
+            });
+        }
+        RuneKit.later(Math.max(0, charge - 5), () -> {
+            if (RuneKit.sameLife(sp, life)) SkillFx.play(level, "item.trident.riptide_1", sp.position(), 1.5, 0.6);
+        });
+        RuneKit.later(charge, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 shown = V.up(V.add(sp.getEyePosition(), Kit.facingOf(sp), 0.5), 0.25);
+            boolean alive = !target.isRemoved() && target.isAlive();
+            Vec3 to = alive ? Kit.bodyPoint(target) : V.add(shown, sp.getViewVector(1F), 8);
+            Vec3 d = V.unit(V.sub(to, shown));
+            double len = V.len(V.sub(to, shown));
+            double ray = RuneKit.rayLength(level, shown, d, len);
+            boolean open = alive && ray >= len - 0.6;
+            int fly = spear.thrown(shown, d, Math.max(1, open ? len + 0.3 : ray), 60);
+            SkillFx.play(level, "item.trident.throw", shown, 0.9, 1.0);
+            SkillFx.ring(level, V.add(shown, d, 1.2), d, glow, 0.6, 0.25, 3);
+            RuneKit.later(fly, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 at = open && !target.isRemoved() ? Kit.bodyPoint(target) : V.add(shown, d, Math.max(1, ray));
+                if (!open || target.isRemoved()) {
+                    SkillFx.burst(level, at, glow, 1.0, 0.25);
+                    SkillFx.play(level, "item.trident.hit", at, 1.2, 0.6);
+                    return;
+                }
+                if (RuneKit.runeHit(sp, target, P, k.num("mult"), r.stat()) <= 0) return;
+                RuneKit.knock(target, d, k.numOr("push", 0), 0.3);
+                // 꽂혀 터짐: 섬광 · 세운 고리 · 발밑 충격파 · 불티
+                SkillFx.burst(level, at, core, 2.2, 0.35);
+                SkillFx.burst(level, at, glow, 1.6, 0.45);
+                SkillFx.ring(level, at, d, glow, 1.6, 0.35, 3.5);
+                RuneKit.rfx(level, "prop", V.add(at, d, -0.4), Opt.of("size", 1.4, "life", 0.35, "cell", glint, "spin", 45.0, "color", RuneKit.WHITE, "grow", 0.5,
+                        "fade", 0.6));
+                RuneKit.zonePulse(level, target.position(), glow, 2.4, 0.45);
+                RuneBoost.impact(level, target.position(), glow, core, 2.6, r.grade());
+                SkillFx.sparks(level, at, core, 12, 6);
+                SkillFx.play(level, "item.trident.hit", at, 0.8, 1.0);
+                SkillFx.play(level, "firework.blast", at, 0.7, 0.9);
+            });
+        });
+        return true;
     }
 }

@@ -701,15 +701,16 @@
   },
   "runejavelin": {
    "hero": {
-    "fn": "snipe",
+    "fn": "javelin",
     "name": "룬 재블린",
     "desc": "빛의 창을 만들어 던짐 — 처음 맞은 적에 꽂혀 터짐",
     "use": "원거리 단일 큰 한 방",
     "mult": 20,
     "range": 40,
     "cone": 8,
-    "charge": 16,
+    "charge": 20,
     "push": 0,
+    "len": 3.0,
     "cd": 27.5,
     "look": "bow:hero",
     "scale": 1.0577
@@ -1145,11 +1146,11 @@
    },
    "runejavelin.hero": {
     "a": "single",
-    "t": 17,
-    "w": 17,
+    "t": 21,
+    "w": 21,
     "u": [],
     "r": "far",
-    "cast": 0.85,
+    "cast": 1.05,
     "castAdd": 0
    },
    "shadowblitz.hero": {

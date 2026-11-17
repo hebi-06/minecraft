@@ -227,26 +227,37 @@ final class RuneGladiator {
     /**
      * 2026-11-17 들소 영혼 (오록스 차지 — 룬 설명 "들소 영혼과 함께 앞으로 돌진", CI 44039915209 영상에 없던 것): 수호 묶음의 칠한 들소 (el_ward_bison —
      * tools/jobvfx/ward.py 옆모습 · 가는 쪽으로 누워 보는 사람마다 눈 쪽을 봄 · 6장 달림) 가 몸 오른쪽 앞에서 함께 달려 나가 부딪히는 틱 (dash + 1) 에 앞의 적을
-     * 지나며 들이받고 (쇠 번쩍 · 불티 · 고리) 0.55초 더 달려 나가며 옅어짐. 1인칭에서도 오른쪽 앞에 보이게 몸보다 앞 (눈 바로 앞은 PhantomFx 가 거름)
+     * 지나며 들이받고 (쇠 번쩍 · 불티 · 고리) 0.55초 더 달려 나가며 옅어짐.
+     * <p>
+     * 쓴 사람의 1인칭 (CI 44046252216 영상): 옆모습은 같은 쪽으로 달리면 눈에서 거의 모로 보이고 (판이 가는 쪽으로 누움), 적을 들이받는 자리는 쓴 사람도 닿는 곳이라
+     * 눈 옆을 덮었음 → 1인칭에는 따로 — 오른쪽 2.4 → 1.5칸 · 앞 3.4칸에서 나란히 달려 적 오른쪽을 지나감 (Vfx.FirstPerson). 3인칭 · 다른 사람은 적을 들이받는 길
      */
     static void bison(ServerPlayer sp, String life, Vec3 start, Vec3 f, double reach, int dash) {
         ServerLevel level = sp.level();
         Vec3 right = V.rightOf(f);
+        int t1 = dash + 1;
+        double owner = sp.getId();
         Vec3 a0 = V.up(V.add(V.add(start, f, 1.9), right, 1.3), BISON_LIFT);
         Vec3 a1 = V.up(V.add(V.add(start, f, reach + 1.55), right, 0.55), BISON_LIFT);
-        int t1 = dash + 1;
+        Vec3 b0 = V.up(V.add(V.add(start, f, 3.4), right, 2.4), BISON_LIFT);
+        Vec3 b1 = V.up(V.add(V.add(start, f, reach + 2.6), right, 1.5), BISON_LIFT);
         Opt base = Opt.of("size", BISON_SIZE, "color", STEEL, "frames", 6.0, "fps", 14.0, "loop", true, "alpha", 0.95);
+        Opt others = base.with("view", 1.0, "owner", owner);
+        Opt mine = base.with("view", 2.0, "owner", owner);
         // 나타남: 머리 자리에 쇠빛 번쩍 · 울음
         Vec3 h0 = V.add(V.up(a0, -0.2), f, BISON_HEAD);
         SkillFx.burst(level, h0, CORE, 0.9, 0.25);
         SkillFx.sparks(level, V.up(a0, 0.3), STEEL, 8, 3);
         SkillFx.play(level, "mob.ravager.roar", start, 1.15, 0.7);
-        // 함께 달림: a0 → a1 (부딪히는 틱까지)
-        RuneKit.rfx(level, "bison", a0, base.with("dir", V.unit(V.sub(a1, a0)), "life", t1 / 20.0, "vel", V.scale(V.sub(a1, a0), 20.0 / t1)));
+        // 함께 달림 (부딪히는 틱까지)
+        RuneKit.rfx(level, "bison", a0, others.with("dir", V.unit(V.sub(a1, a0)), "life", t1 / 20.0, "vel", V.scale(V.sub(a1, a0), 20.0 / t1)));
+        RuneKit.rfx(level, "bison", b0, mine.with("dir", V.unit(V.sub(b1, b0)), "life", t1 / 20.0, "vel", V.scale(V.sub(b1, b0), 20.0 / t1)));
+        double phase = Math.round(t1 * 14 / 20.0);
         RuneKit.later(t1, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             // 들이받음 → 그대로 앞으로 달려 나가며 옅어짐
-            RuneKit.rfx(level, "bison", a1, base.with("dir", f, "life", 0.55, "vel", V.scale(f, 9.0), "fade", 0.6, "phase", (double) Math.round(t1 * 14 / 20.0)));
+            RuneKit.rfx(level, "bison", a1, others.with("dir", f, "life", 0.55, "vel", V.scale(f, 9.0), "fade", 0.6, "phase", phase));
+            RuneKit.rfx(level, "bison", b1, mine.with("dir", f, "life", 0.55, "vel", V.scale(f, 9.0), "fade", 0.6, "phase", phase));
             Vec3 hp = V.add(V.up(a1, -0.2), f, BISON_HEAD);
             clang(level, hp, 1.3);
             SkillFx.ring(level, hp, f, CORE, 1.2, 0.35, 3.2);
@@ -405,7 +416,11 @@ final class RuneGladiator {
      */
     private static void rushShield(ServerPlayer sp, String life, Vec3 f, int bash, int slam) {
         ServerLevel level = sp.level();
-        mmorpg.fabric.vfx.Vfx.Fx fx = RuneProps.fx(level, sp.position(), slam + 20);
+        // 2026-11-17 1인칭 영상 (CI 44046252216 오록스 차지): 몸 앞 0.95칸의 1.7칸 탑 방패가 돌진 · 내려찍기 내내 화면 한가운데를 검은 판으로 덮었음 → 쓴 사람의
+        // 1인칭에는 띄우지 않음 (3인칭 · 다른 사람은 그대로 — 1인칭은 들소 영혼 · 부딪힘 빛으로)
+        int owner = sp.getId();
+        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(level, sp.position(), slam + 20,
+                p -> !(p.getId() == owner && !mmorpg.fabric.vfx.PBridge.thirdPersonOf(p)));
         double s = RuneProps.scaleFor(1.7, RuneProps.TOWER_SHIELD_H); // 2026-11-13 영상에서 몸에 가려 1.4 → 1.7칸 · 몸 앞으로 (0.75 → 0.95칸 · 오른쪽 0.3 → 0.12)
         java.util.function.Supplier<Vec3> held = () -> V.up(V.add(V.add(sp.position(), f, 0.95), V.rightOf(f), 0.12), 1.0);
         Quaternionf front = RuneProps.facing(f, V.UP);

@@ -393,8 +393,8 @@ final class RuneStorm {
             return b.tip();
         }
 
-        /** 던짐: shown (눈 조금 위) 에서 view 쪽 len 칸까지 speed 칸/초 → 촉이 박힘 · 떨림 · 흩어짐 */
-        void thrown(Vec3 shown, Vec3 view, double reach, double speed) {
+        /** 던짐: shown (눈 조금 위) 에서 view 쪽 len 칸까지 speed 칸/초 → 촉이 박힘 · 떨림 · 흩어짐. 돌려준 값 = 박히기까지 틱 (2026-11-17 룬 재블린이 맞는 틱으로 씀) */
+        int thrown(Vec3 shown, Vec3 view, double reach, double speed) {
             flying = true;
             b.grow(1, 1);
             double toTip = b.reach();
@@ -422,6 +422,7 @@ final class RuneStorm {
                 b.prop.move(V.add(stuck, view, toTip * 0.7), 6);
             });
             fx.on(t0 + fly + 27, b::remove);
+            return fly;
         }
     }
 

@@ -85,8 +85,10 @@ SET = [
     # ---------------------------------------------------------------- 영웅 (초당 77%)
     dict(key="titanhammer", name="타이탄 해머", grade="hero", cd=70, pair=["warrior_ult"], r="melee", src="str.hero", u=["leap", "stun1"],
          set={"range": 12}, desc="겨눈 곳으로 높이 뛰어 거대한 망치와 함께 내려찍음 · 기절", use="도약 · 기절 1초"),
-    dict(key="runejavelin", name="룬 재블린", grade="hero", cd=27.5, pair=["archer_burst"], r="far", src="bow.hero", u=[], a="single", cast=0.85,
-         set={"push": 0}, desc="빛의 창을 만들어 던짐 — 처음 맞은 적에 꽂혀 터짐", use="원거리 단일 큰 한 방"),
+    # 2026-11-17 룬 재블린은 새 동작 (RuneSet.javelin — 어깨 위 3D 빛의 창 · 창 던지기 동작, 옛 저격의 활 시위 · 석궁 소리가 설명 "던짐" 과 어긋났음 · CI 44046252216)
+    dict(key="runejavelin", name="룬 재블린", grade="hero", cd=27.5, pair=["archer_burst"], r="far", src="bow.hero", u=[], a="single", cast=1.0,
+         set={"fn": "javelin", "charge": 20, "len": 3.0, "push": 0}, spread={"t": 21, "w": 21}, desc="빛의 창을 만들어 던짐 — 처음 맞은 적에 꽂혀 터짐",
+         use="원거리 단일 큰 한 방"),
     dict(key="shadowblitz", name="섀도 블리츠", grade="hero", cd=6, pair=["trickster_swap"], r="mid", src="assassin.hero", u=["blink"], a="single",
          set={"vuln": 0, "vulnTicks": 0}, desc="대상 등 뒤로 순간 이동해 난도질", use="단일 연타 · 순간 이동"),
     dict(key="blizzard", name="블리자드", grade="hero", cd=65, pair=["frostraider_ult"], r="far", src="int.hero", elem="ice", u=["slow"], cast=0.8,
