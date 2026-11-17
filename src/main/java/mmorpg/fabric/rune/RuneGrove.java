@@ -169,7 +169,7 @@ public final class RuneGrove {
         Long last = HIT_CUE.get(attacker.getUUID());
         if (last != null && now - last < 6) return;
         HIT_CUE.put(attacker.getUUID(), now);
-        hitCue(victim);
+        tagged(() -> hitCue(victim));
     }
 
     /** 가호가 피해를 막아 줌 (가장 센 감소일 때): 몸 둘레 비췻빛 고리 (8틱에 한 번) */
@@ -180,7 +180,7 @@ public final class RuneGrove {
         Long last = WARD_CUE.get(sp.getUUID());
         if (last != null && now - last < 8) return;
         WARD_CUE.put(sp.getUUID(), now);
-        wardCue(sp);
+        tagged(() -> wardCue(sp));
     }
 
     /** 상태 줄: "세계수 +20%·-20% 8.5초" */
@@ -219,10 +219,10 @@ public final class RuneGrove {
                 }
                 if (now >= g.until()) {
                     it.remove();
-                    expired(sp);
+                    tagged(() -> expired(sp));
                     continue;
                 }
-                if ((now + (e.getKey().hashCode() & 7)) % 10 == 0) aura(sp, now);
+                if ((now + (e.getKey().hashCode() & 7)) % 10 == 0) tagged(() -> aura(sp, now));
             }
         }
     }
@@ -451,6 +451,19 @@ public final class RuneGrove {
         glint(level, crown, 1.6, 0.5);
         SkillFx.play(level, "block.azalea_leaves.break", crown, 0.8, 1.0);
         SkillFx.play(level, "firework.twinkle", crown, 1.2, 0.6);
+    }
+
+    /**
+     * 2026-11-17 가호 동안의 연출 (틱 · 맞힘 · 막음 · 끝 — 룬을 쓴 뒤라 맥락이 없음) 을 이 룬의 꼬리표로 (세계수 묶음 · 칠한 잎 · 고리 — CI 43989923127 맥락 없는 예전
+     * 잎 · 불티 · 고리 45)
+     */
+    private static void tagged(Runnable r) {
+        String prev = Tasks.tag("yggdrasil:transcend");
+        try {
+            r.run();
+        } finally {
+            Tasks.tag(prev);
+        }
     }
 
     // ------------------------------------------------------------ 몸 · 맞힘 · 막음 · 끝 연출

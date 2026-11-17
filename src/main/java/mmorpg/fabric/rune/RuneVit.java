@@ -35,6 +35,11 @@ final class RuneVit {
     private static final Map<UUID, Long> UNDYING = new HashMap<>();
     /** 불사 발동 연출을 너무 자주 하지 않게 (플레이어 → 연출한 틱) */
     private static final Map<UUID, Long> UNDYING_FX_AT = new HashMap<>();
+    /**
+     * 2026-11-17 불사의 문장 (미리 칠한 rfx_emblem — 빛 없이 부름) 을 칠할 빛: 옅은 금빛 → 성광 묶음의 빛의 방패 (aegis — 위르드식 2판 RUNE_PAINT emblem). CI 43989923127
+     * 체력 초월에 빛 없는 예전 문장 38
+     */
+    private static final double[] EMBLEM_PAINT = {1.0, 0.9, 0.6};
 
     static void register() {
         RuneCast.register("guardShout", RuneVit::guardShout);
@@ -562,7 +567,7 @@ final class RuneVit {
         Vec3 eye0 = sp.getEyePosition();
         Vec3 view0 = sp.getViewVector(1F);
         Vec3 emAt = V.up(V.add(eye0, view0, 2.8), 0.45);
-        Opt emO = Opt.of("size", 0.62, "life", 0.9, "grow", 0.35, "fade", 0.55);
+        Opt emO = Opt.of("size", 0.62, "life", 0.9, "grow", 0.35, "fade", 0.55, "paintGlow", EMBLEM_PAINT);
         // 0.50.0 2D 강화 (초월 나머지): 문장 후광 — 미리 칠한 그림이라 천공의 눈처럼 물들이지 않고 (흰색) 1.35배 · 옅게
         RuneBoost.aura(level0, "emblem", emAt, emO, RuneKit.WHITE, 1.35, 0.42);
         RuneKit.rfx(level0, "emblem", emAt, emO);
@@ -617,7 +622,7 @@ final class RuneVit {
                 RuneKit.bodyAura(sp, crimson, Opt.of("n", 4, "alpha", 0.68));
                 if (tt % 12 == 0) RuneKit.auraCue(sp, tt % 24 != 0 ? gold : crimson, 2);
                 if (tt % 4 == 0) {
-                    Opt ho = Opt.of("size", 0.42, "life", 0.24, "vel", RuneKit.bodyVel(sp));
+                    Opt ho = Opt.of("size", 0.42, "life", 0.24, "vel", RuneKit.bodyVel(sp), "paintGlow", EMBLEM_PAINT);
                     RuneBoost.aura(sp.level(), "emblem", V.up(sp.position(), 2.95), ho, RuneKit.WHITE, 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 머리 위 문장 후광
                     RuneKit.rfx(sp.level(), "emblem", V.up(sp.position(), 2.95), ho);
                 }
@@ -643,8 +648,13 @@ final class RuneVit {
         ServerLevel level = sp.level();
         Vec3 c = V.up(sp.position(), 1);
         SkillFx.burst(level, c, new double[] {1.0, 0.8, 0.35}, 1.8, 0.35);
-        RuneKit.rfx(level, "emblem", V.up(V.add(sp.getEyePosition(), sp.getViewVector(1F), 2.6), 0.2), Opt.of("size", 0.85, "life", 0.7, "grow", 0.4,
-                "fade", 0.6));
+        String prevTag = Tasks.tag("vit:transcend"); // 2026-11-17 쓰러짐을 막은 때는 룬을 쓴 뒤라 맥락이 없음 — 이 룬의 꼬리표로 칠함
+        try {
+            RuneKit.rfx(level, "emblem", V.up(V.add(sp.getEyePosition(), sp.getViewVector(1F), 2.6), 0.2), Opt.of("size", 0.85, "life", 0.7, "grow", 0.4,
+                    "fade", 0.6, "paintGlow", EMBLEM_PAINT));
+        } finally {
+            Tasks.tag(prevTag);
+        }
         SkillFx.vanilla(level, "minecraft:totem_particle", c);
         SkillFx.play(level, "random.totem", c, 1.4, 0.6);
         Notify.notify(sp, "§6§l불사! §r§7쓰러지지 않았습니다", 30);

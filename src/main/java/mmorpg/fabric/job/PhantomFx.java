@@ -1327,6 +1327,43 @@ final class PhantomFx {
         }
     }
 
+    /**
+     * 2026-11-17 대지 가르기의 균열 (RuneTerra.Seg — rfx_fissure 세 겹: 어두운 틈 · 호박빛 · 쇳물, 땅에 누움 · 반 길이 size · 길 방향 spin = atan2(f.z, −f.x)): 계열 묶음
+     * (대지 = 곰) 의 갈라지는 땅 (rift) 토막을 같은 줄에 — 번쩍 · 벌어짐 (0 ~ 2) 을 바로, 벌어진 칸으로 life 동안 머문 뒤 식으며 사라짐 (3 ~ 5). 첫 겹 (cell 0) 에
+     * 그리고 나머지 두 겹은 그리지 않음. 빛이 계열 빛이 아니어도 (어두운 흙 · 불빛) 계열 묶음 — 균열은 이 룬의 대표 그림 (CI 43989923127 예전 9)
+     */
+    static boolean fissure(ServerLevel level, Vec3 at, Opt o) {
+        String tag = mmorpg.fabric.Tasks.tag();
+        if (tag == null) return false;
+        int c = tag.indexOf(':');
+        Lib L = runeLib(c < 0 ? tag : tag.substring(0, c));
+        if (L == null || !hasArt(L, "rift")) return false;
+        Vec3 dir = o.vec("dir", V.UP);
+        if (V.len(dir) > 1e-6 && V.unit(dir).y < 0.97) return false;
+        if ((int) Math.round(o.num("cell", 0)) != 0) return true;
+        String name = L.n("rift");
+        int frames = Vfx.sheet(name).frames();
+        double half = Math.max(0.5, o.num("size", 1));
+        double th = Math.toRadians(o.num("spin", 0));
+        Vec3 h = new Vec3(-Math.cos(th), 0, Math.sin(th));
+        int ticks = Math.max(14, (int) Math.round(o.num("life", 1) * 20));
+        double piece = Math.min(2.6, half);
+        Predicate<ServerPlayer> who = who(o);
+        for (double s = -half + piece * 0.45; s < half; s += piece * 0.78) {
+            Vec3 m = V.up(V.add(at, h, s), 0.015);
+            Vec3 ex = Kit.rand() < 0.5 ? h : V.scale(h, -1);
+            Quaternionf q = Vfx.basis(ex, V.cross(V.UP, ex), V.UP);
+            Vfx.Fx fx = Vfx.at(level, m, ticks + 2, who);
+            Vfx.Sprite sp = fx.sprite(name, m);
+            sp.fixed(q);
+            sp.size(piece * 1.15);
+            sp.play(0, 0, Math.min(3, frames), 2, false);
+            int cool = Math.max(8, ticks - 5 * Math.max(1, frames - 3));
+            if (frames > 3) fx.on(cool, () -> sp.play(fx.age(), 3, frames - 3, 5, false));
+        }
+        return true;
+    }
+
     /** 핏빛 달 (moon 2 × 2 되풀이 — 카메라를 봄): 가운데 at · 지름 size 칸 · life 틱 (grow 틱에 커지며 나타남 · 끝 10틱 옅어짐) */
     static Vfx.Fx moon(ServerLevel level, Lib L, Vec3 at, double size, int grow, int life) {
         Vfx.Fx fx = Vfx.at(level, at, life + 4);
@@ -2007,6 +2044,7 @@ final class PhantomFx {
      * = 칠한 땅 자국, 영역 문양 (sigil) = 칠한 땅 고리. 땅에 눕힌 것만 (dir 이 위). 묶음에 그림이 없으면 false (예전 길)
      */
     static boolean runeFx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow) {
+        if (name.equals("fissure")) return fissure(level, at, o);
         Paint rp = RUNE_PAINT.get(name);
         if (rp != null) { // 2026-11-16 계열 대표 그림 (예전 rfx 와 같은 자리 · 움직임 — 묶음에 그 그림이 있을 때만)
             Lib L = jobLib(glow);
@@ -2084,8 +2122,17 @@ final class PhantomFx {
                 }
             }
             case "crack" -> {
-                if (!flat || !Vfx.hasSheet(L.n("crack_s"))) return false;
-                crackS(level, L, ground(level, at), size * 2, who);
+                if (!Vfx.hasSheet(L.n("crack_s"))) return false;
+                if (flat) {
+                    crackS(level, L, ground(level, at), size * 2, who);
+                } else {
+                    // 2026-11-17 세운 금 (하늘이 갈라짐 — RuneKit.skyPlate: 면이 쓴 사람의 눈 쪽, 마력 초월 메테오 · 암살 · 힘 · 무간 초월의 하늘): 칠한 땅 금 한 장을
+                    // 그 쪽으로 세움 (같은 자리 · 반 크기 · 자람 · 옅어짐 — 밝은 금이 식어 가는 칸을 life 동안)
+                    int frames = Vfx.sheet(L.n("crack_s")).frames();
+                    Opt b = Opt.of("dir", V.unit(dir), "speed", 0.0, "size", size, "life", life, "grow", grow, "frames", (double) frames, "fps", frames / life, "fade",
+                            o.num("fade", 0.3), "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
+                    rfx(level, L.n("crack_s"), 1, 0, at, b, FACE_DIR, 1);
+                }
             }
             case "arc", "wavecard" -> {
                 // 휘두른 자국 판 (RuneKit.arc — 판 모양 arc · heavy · thin, 불룩한 날 = dir) · 날아가는 검기 판 (waveCard — 눕힌 판): 그 묶음의 반달 (moon — JobFx.slash 의 3인칭

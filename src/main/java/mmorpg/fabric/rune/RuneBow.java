@@ -437,7 +437,7 @@ final class RuneBow {
                     Vec3 dv = V.sub(nock, tip);
                     double L = V.len(dv);
                     SkillFx.fx(level, "rpg:light_cut", V.add(tip, dv, 0.5), Opt.of("dir", V.unit(dv), "size", L / 2, "thick", 0.07, "life", 0.13, "color", gold,
-                            "alpha", 1.0));
+                            "alpha", 1.0, "keep", true)); // 2026-11-17 시위는 예전 가는 빛줄 그대로 (칠한 일섬은 끝이 뾰족한 베기 — 2틱마다 다시 그으면 깜빡임)
                 }
             });
         }
@@ -446,7 +446,7 @@ final class RuneBow {
             ar.pose(V.up(center, rest + 22), V.UP, face, 4);
             Vec3 dv = V.sub(tipB, tipA);
             SkillFx.fx(level, "rpg:light_cut", V.add(tipA, dv, 0.5), Opt.of("dir", V.unit(dv), "size", V.len(dv) / 2, "thick", 0.1, "life", 0.3, "color", gold,
-                    "alpha", 1.0));
+                    "alpha", 1.0, "keep", true));
         });
         fx.on(draw + 5, ar::remove);
         fx.on(draw + 12, () -> {

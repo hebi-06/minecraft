@@ -1878,7 +1878,7 @@ CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw"
 # 원소 반응 (원소 · 서리 · 곰) — RuneMarks 의 머리 위 금 간 방패 (예전 rfx_jbreak)
 SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
 # 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 얼음 가시 (예전 rpg:ice_spike — 서리 · 영혼 수확) · 심연 룬의 검은 가시 손 (rfx_thorn — 폭군)
-SPIKE_KEYS = ("frost", "soulreap", "tyrant")
+SPIKE_KEYS = ("frost", "soulreap", "tyrant", "arcane")
 # 2026-11-17 뭉게 연기 (shadow.py smoke — 그 묶음의 연기 램프) 를 더 갖는 묶음: 보스의 숨결 (예전 rpg:breath — 이미르 서리 숨결) · 정령 룬의 부름 연기
 # (rfx_jsmoke2 흰빛 — 질풍 묶음, CI 43987516768 정령 초월 20: 질풍의 연기 램프는 짙은 녹색이라 옅은 박하빛 램프로 · 도트 색은 그림 자체의 색 — vfx_sprites PIXEL_LIBS)
 SMOKE_KEYS = ("frost", "gale")
@@ -1886,7 +1886,13 @@ SMOKE_RAMPS = {"gale": ramp([(0.0, "#24423A"), (0.45, "#5A8A7C"), (0.8, "#9CC8BA
 # 2026-11-17 얼음 창 (arcane.py icelance — 얼음 빛 그대로) 을 더 갖는 묶음: 만년빙하 · 원소 얼음 룬의 날아가는 고드름 (예전 rfx_icicle)
 ICELANCE_KEYS = ("frost",)
 # 2026-11-17 땅 금 · 작은 충격파 (crack_s · shock_s — 한 장 256) 를 더 갖는 묶음: 혼 (네크로맨서의 녹색 땅 금 · 땅 고리 — CI 43979933145 남은 예전 그림 40)
-GROUND_KEYS = ("soul",)
+GROUND_KEYS = ("soul", "arcane")
+# 2026-11-17 마력 룬 (비전 묶음 — 마력 계열 빛은 얼음 하늘빛) 의 얼음 가시 · 땅 금 · 충격파 (CI 43989923127 마력 영웅 블리자드 47 — 비전 묶음에 가시 · 충격파가 없었음):
+# 비전 둘째 빛 (금빛) 대신 서리의 둘째 빛 (얼음빛) 으로 — 가시 몸 · 고리 테가 둘째 빛
+ICE_ACCENT_KEYS = ("arcane",)
+# 2026-11-17 휘두른 반달 (slash · slashm 2 × 2 — 마법 묶음은 베기를 빼 두었음) 을 더 갖는 묶음: 혼 (네크로맨서 망자 선원의 도끼 찍기 — SkillFx.arc 녹색 반달,
+# CI 43989923127 남은 예전 판 18)
+SLASH_KEYS = ("soul",)
 # 2026-11-17 용암 웅덩이 · 불기둥 (hex.py lava · pyre — 불빛을 뜻으로 받는 원소 묶음, PhantomFx.semanticLib): 원소 반응 용암 (ElementFx LAVA — 예전 rfx_jpool) ·
 # 정령왕 불 원소의 불기둥 (예전 rfx_fountain). 원소 묶음의 둘째 빛 (accent) 은 얼음 푸른빛이라 이 둘은 불의 속빛 (금빛) 으로
 FIRE_KEYS = ("element",)
@@ -1903,9 +1909,10 @@ def sprites():
         if key in SHIELDBREAK_KEYS:
             from . import beast
             out.append((S.lib + "_shieldbreak", lambda S=S: beast.frames_of("shieldbreak", S), True))
+        G = Style(S.lib, S.kind, S.main, STYLES["frost"].accent, S.smoke, S.ring, S.smoke_alpha, S.seed) if key in ICE_ACCENT_KEYS else S
         if key in SPIKE_KEYS:
             from . import beast
-            out.append((S.lib + "_spike", lambda S=S: beast.frames_of("spike", S), True))
+            out.append((S.lib + "_spike", lambda G=G: beast.frames_of("spike", G), True))
         if key in SMOKE_KEYS:
             from . import shadow
             M = Style(S.lib, S.kind, S.main, S.accent, SMOKE_RAMPS[key], S.ring, S.smoke_alpha, S.seed) if key in SMOKE_RAMPS else S
@@ -1914,8 +1921,16 @@ def sprites():
             from . import arcane
             out.append((S.lib + "_icelance", lambda S=S: arcane.frames_of("icelance", S), True))
         if key in GROUND_KEYS:
-            out.append((S.lib + "_crack_s", lambda S=S: frames_of(S, "crack"), True))
-            out.append((S.lib + "_shock_s", lambda S=S: frames_of(S, "shock_s"), True))
+            out.append((S.lib + "_crack_s", lambda G=G: frames_of(G, "crack"), True))
+            out.append((S.lib + "_shock_s", lambda G=G: frames_of(G, "shock_s"), True))
+        if key in SLASH_KEYS:
+            sl_cache = {}
+
+            def sl(S=S, sl_cache=sl_cache):
+                if "f" not in sl_cache:
+                    sl_cache["f"] = frames_of(S, "slash")
+                return sl_cache["f"]
+            out += tiled(S.lib + "_slash", sl) + tiled(S.lib + "_slashm", lambda sl=sl: [im.transpose(Image.FLIP_LEFT_RIGHT) for im in sl()])
         if key in FIRE_KEYS:
             from . import hex as hexart
             F = Style(S.lib, S.kind, S.main, FIRE_ACCENT, S.smoke, S.ring, S.smoke_alpha, S.seed)

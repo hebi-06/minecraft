@@ -273,14 +273,15 @@ public final class Vfx {
                 if (!ended) fn.run();
                 return this;
             }
-            jobs.add(new Job(tick, tick, 1, t -> fn.run()));
+            Runnable g = mmorpg.fabric.Tasks.bind(fn); // 2026-11-17 부른 때의 그림 맥락 (꼬리표 · 칠할 묶음 · 주인) 으로 — 시간표 안의 예전 그림도 칠함
+            jobs.add(new Job(tick, tick, 1, t -> g.run()));
             keep(tick + 1);
             return this;
         }
 
         /** from ~ to 틱 동안 step 틱마다 fn(나이) */
         public Fx each(int from, int to, int step, IntConsumer fn) {
-            jobs.add(new Job(from, to, Math.max(1, step), fn));
+            jobs.add(new Job(from, to, Math.max(1, step), mmorpg.fabric.Tasks.bind(fn)));
             keep(to + 1);
             return this;
         }

@@ -57,6 +57,55 @@ public final class Tasks {
     }
 
     /**
+     * 2026-11-17 지금의 그림 맥락 (주인 owner · 꼬리표 tag · 칠할 묶음 paint) 을 묶은 run — 연출 시간표 (Vfx.Fx.on · each) 가 나중에 불러도 같은 맥락으로 그림.
+     * 원소 맥락 (elem — 맞은 적에 원소를 묻힘) 은 놀이에 닿으므로 묶지 않음. CI 43989923127: 시간표 안에서 부른 예전 그림이 맥락 없이 (@-) 남았음 (검사 초월의 칼빛 불티 28 등)
+     */
+    public static Runnable bind(Runnable run) {
+        int own = owner;
+        String tg = tag;
+        Object pt = paint;
+        if (own == 0 && tg == null && pt == null) return run;
+        return () -> {
+            int prev = owner;
+            String prevTag = tag;
+            Object prevPt = paint;
+            owner = own;
+            tag = tg;
+            paint = pt;
+            try {
+                run.run();
+            } finally {
+                owner = prev;
+                tag = prevTag;
+                paint = prevPt;
+            }
+        };
+    }
+
+    /** bind 의 나이를 받는 꼴 (Vfx.Fx.each) */
+    public static java.util.function.IntConsumer bind(java.util.function.IntConsumer fn) {
+        int own = owner;
+        String tg = tag;
+        Object pt = paint;
+        if (own == 0 && tg == null && pt == null) return fn;
+        return t -> {
+            int prev = owner;
+            String prevTag = tag;
+            Object prevPt = paint;
+            owner = own;
+            tag = tg;
+            paint = pt;
+            try {
+                fn.accept(t);
+            } finally {
+                owner = prev;
+                tag = prevTag;
+                paint = prevPt;
+            }
+        };
+    }
+
+    /**
      * 2026-11-16 지금 효과를 칠할 직업 묶음 (null = 없음 — 직업 스킬을 쓰는 동안 · 태세 연출 동안 JobSkills · JobTraits 가 정함 (job.PhantomFx.Lib), later 가 이어 줌):
      * 칠한 빛 배열이 아닌 빛 (원소 빛 · 속빛 · 겉빛) 으로 부른 예전 불티 · 공용 룬 그림도 그 직업 묶음으로 (위르드식 남은 예전 그림)
      */

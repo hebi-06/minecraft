@@ -503,7 +503,9 @@ public final class RuneKit {
      * speed (dir 쪽 칸/초) · grow · cell · frames · fps · loop · phase · fade · vel (몸을 따라오는 속도 칸/초) · view · owner (0.27.0 보는 사람 걸러내기)
      */
     public static void rfx(ServerLevel level, String name, Vec3 at, Opt o) {
-        if (painted != null && o.get("color") instanceof double[] c && painted.draw(level, name, at, o, c)) return;
+        // 2026-11-17 paintGlow = 칠할 묶음을 고를 빛 (미리 칠한 그림 — 빛 없이 부르는 불사의 문장 · 그 후광): 있으면 color 보다 앞
+        double[] pc = o.get("paintGlow") instanceof double[] g ? g : o.get("color") instanceof double[] c ? c : null;
+        if (painted != null && pc != null && painted.draw(level, name, at, o, pc)) return;
         if (SkillFx.diag != null) SkillFx.diag.merge(SkillFx.diagKey("rfx_" + name, o.get("color")), 1, Integer::sum); // 2026-11-17 남은 예전 그림 셈
         rfx0(level, name, at, o);
     }
