@@ -1623,7 +1623,7 @@ final class PhantomFx {
                 && !id.equals("rpg:bash_ring") && !id.equals("rpg:light_cut") && !id.equals("rpg:slash_x") && !id.equals("rpg:skill_rune")
                 && !id.equals("rpg:ground_crack") && !id.equals("rpg:dust") && !id.equals("rpg:tyr_ghostfire") && !id.equals("rpg:ember")
                 && !id.equals("rpg:fire_wall") && !id.equals("rpg:fire_wave") && !id.equals("rpg:splash") && !id.equals("rpg:snowfall")
-                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder")) return false;
+                && !id.equals("rpg:meteor") && !id.equals("rpg:glob") && !id.equals("rpg:boulder") && !id.equals("rpg:ice_spike")) return false;
         if (!(o.get("color") instanceof double[] glow)) return false;
         Lib L = jobLib(glow);
         if (L == null || WyrdKit.pal(L) == null) return false;
@@ -1695,6 +1695,17 @@ final class PhantomFx {
                 Opt b = Opt.of("dir", V.unit(d), "speed", o.num("speed", 0), "size", Math.max(0.3, o.num("size", 1) * 0.5), "life", Math.max(0.1, o.num("life", 1)),
                         "frames", 4.0, "fps", 16.0, "loop", true, "alpha", Math.min(1, o.num("alpha", 1)), "view", o.num("view", 0), "owner", o.num("owner", 0));
                 return paintedWith(level, PAINT.get("jcomet2"), L, 0, at, b);
+            }
+            case "rpg:ice_spike" -> {
+                // 2026-11-17 솟는 얼음 가시 (예전 rpg:ice_spike — 세로축 빌보드 · 밑동 at · 높이 size, 솟았다 머묾 · 이미르 · 헬): 묶음의 솟는 가시 (spike — 솟았다 가라앉는
+                // 여덟 칸을 life 동안 · 서리 · 혼 · 곰 묶음)
+                if (!Vfx.hasSheet(L.n("spike"))) return false;
+                double size = Math.max(0.4, o.num("size", 1));
+                double life = Math.max(0.2, o.num("life", 1));
+                int frames = Vfx.sheet(L.n("spike")).frames();
+                Opt b = Opt.of("size", size * 0.5, "life", life, "frames", (double) frames, "fps", frames / life, "fade", 0.15, "alpha", Math.min(1, o.num("alpha", 1)),
+                        "view", o.num("view", 0), "owner", o.num("owner", 0));
+                return paintedWith(level, PAINT.get("jspike"), L, 0, V.up(at, size * 0.5), b);
             }
             case "rpg:glob", "rpg:boulder" -> {
                 // 2026-11-17 던진 덩이 (예전 rpg:glob 용암 덩이 — 반 크기 size · dir 쪽 speed 칸/초 · 아래로 20 · 수르트 / rpg:boulder 돌덩이 — 같은 틀): 묶음의 불꽃 덩이

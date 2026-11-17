@@ -1877,6 +1877,8 @@ CUTL_KEYS = ("rage", "gale", "arcane", "blood", "shadow", "reap", "petal", "maw"
 # 2026-11-17 방패 깨짐 (beast.py shieldbreak — 분노 묶음에만 있었음) 을 더 갖는 묶음: 받는 피해 증가 표식을 거는 룬 계열 (도끼 = 피 · 암살 = 그림자 · 민첩 = 질풍) ·
 # 원소 반응 (원소 · 서리 · 곰) — RuneMarks 의 머리 위 금 간 방패 (예전 rfx_jbreak)
 SHIELDBREAK_KEYS = ("blood", "shadow", "gale", "element", "frost", "bear")
+# 2026-11-17 솟는 가시 (beast.py spike — 곰 묶음의 돌창) 를 더 갖는 묶음: 보스의 얼음 가시 (예전 rpg:ice_spike — 이미르 = 서리 · 헬 = 혼)
+SPIKE_KEYS = ("frost", "soulreap")
 
 
 def sprites():
@@ -1889,6 +1891,9 @@ def sprites():
         if key in SHIELDBREAK_KEYS:
             from . import beast
             out.append((S.lib + "_shieldbreak", lambda S=S: beast.frames_of("shieldbreak", S), True))
+        if key in SPIKE_KEYS:
+            from . import beast
+            out.append((S.lib + "_spike", lambda S=S: beast.frames_of("spike", S), True))
     return out
 
 
