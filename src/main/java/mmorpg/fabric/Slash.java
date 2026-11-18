@@ -288,7 +288,10 @@ public final class Slash {
         boolean card = ok && BasicSlash.has(motion);
         if (trail || card) {
             try {
-                BasicSlash.swing(sp, w, style, motion);
+                // 2026-11-18 축복의 길: 연타의 마지막 타 (칼 둘째 · 대검 · 낫 셋째 · 창 둘째) 는 스킬급 마무리 (BasicFx)
+                java.util.List<String> combo = mmorpg.core.Motions.combo(w.type());
+                boolean finisher = m != null && combo.size() >= 2 && m.step() == combo.size();
+                BasicSlash.swing(sp, w, style, motion, finisher);
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] basic slash {}", motion, e);
             }

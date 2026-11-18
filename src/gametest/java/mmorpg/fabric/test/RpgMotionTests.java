@@ -342,12 +342,15 @@ public final class RpgMotionTests {
             int ticks = Motions.playTicks(9, Motions.playSpeed(2.0));
             double life = Math.max(0.42, (0.68 - 0.3) * ticks / 20.0 / 0.3); // 2026-11-15 minLife 0.42초
             h.assertTrue(Math.abs(mmorpg.fabric.BasicSlash.lastLife - life) < 1e-3, "life follows the play speed " + mmorpg.fabric.BasicSlash.lastLife + " vs " + life);
+            // 2026-11-18 축복의 길: 평타마다 스킬급 연출 (BasicFx) — 칼 1타는 마무리가 아님
+            h.assertTrue(Boolean.FALSE.equals(mmorpg.fabric.job.BasicFx.lastFinisher(sp)), "sword step 1 → skill-grade fx, not a finisher");
         });
         h.runAfterDelay(2 + Motions.attackInterval(2.0) + 1, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
             Slash.onPunch(sp); // 2026-11-15 2타 = 오른쪽 → 왼쪽 (거울이 아닌 그림 · 같은 누운 판 + 겹 둘)
             h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 4 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic"),
                     "slash_h → the plain (right → left) card " + mmorpg.fabric.BasicSlash.lastModel);
+            h.assertTrue(Boolean.TRUE.equals(mmorpg.fabric.job.BasicFx.lastFinisher(sp)), "sword step 2 (last of the combo) → finisher fx");
             hold(sp, gs);
         });
         h.runAfterDelay(4 + 2 * Motions.attackInterval(2.0) + Motions.comboWindow(), () -> {

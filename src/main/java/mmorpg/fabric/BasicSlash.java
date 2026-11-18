@@ -56,6 +56,11 @@ public final class BasicSlash {
      * 휘두름 (Slash.swing — 요구 조건을 맞춘 근접 무기의 궤적 평타): 동작의 판들. style = 무기 참격 모습 (SLASH · 평타 강화 모습 — glow 빛깔 · core 날 빛)
      */
     public static void swing(ServerPlayer sp, Weapon w, Obj style, String motion) {
+        swing(sp, w, style, motion, false);
+    }
+
+    /** 같은 것 — 2026-11-18 축복의 길: 첫 판의 휘두름에 스킬급 연출 (BasicFx — 직업 그림 묶음의 눈앞 베기 · 불티, finisher = 연타의 마지막 타면 크게) */
+    public static void swing(ServerPlayer sp, Weapon w, Obj style, String motion, boolean finisher) {
         if (sp == null || w == null || !has(motion)) return;
         MotionPoses.Motion mo = MotionPoses.get(motion);
         if (mo == null) return;
@@ -85,6 +90,7 @@ public final class BasicSlash {
             double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1));
             spawn(sp, s, thick, radius, delay, life, glow, core);
             if (s.has("impact")) impact(sp, s, radius, delay + sweep, glow, core);
+            if (s == specs.get(0)) mmorpg.fabric.job.BasicFx.swing(sp, s, delay, radius, finisher);
         }
     }
 
