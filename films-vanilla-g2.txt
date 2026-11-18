@@ -1,0 +1,4 @@
+film vanilla_fp_bow: 497 frames, 496 ticks, gaps [1]
+film vanilla_fp_dagger: 323 frames, 322 ticks, gaps [1]
+film vanilla_fp_sword: 395 frames, 394 ticks, gaps [1]
+films: 3 made

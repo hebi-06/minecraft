@@ -1,0 +1,417 @@
+Downloading Minecraft server
+Installing Fabric Loader 0.19.5(26.3) on the server
+Downloading required files
+Downloading library org.ow2.asm:asm:9.10.1
+Downloading library org.ow2.asm:asm-analysis:9.10.1
+Downloading library org.ow2.asm:asm-commons:9.10.1
+Downloading library org.ow2.asm:asm-tree:9.10.1
+Downloading library org.ow2.asm:asm-util:9.10.1
+Downloading library net.fabricmc:sponge-mixin:0.17.4+mixin.0.8.7
+Downloading library net.fabricmc:fabric-loader:0.19.5
+Generating server launch JAR
+Unpacking 26.3/server-26.3.jar (versions:26.3) to versions/26.3/server-26.3.jar
+Unpacking at/yawk/lz4/lz4-java/1.10.1/lz4-java-1.10.1.jar (libraries:at.yawk.lz4:lz4-java:1.10.1) to libraries/at/yawk/lz4/lz4-java/1.10.1/lz4-java-1.10.1.jar
+Unpacking com/azure/azure-json/1.4.0/azure-json-1.4.0.jar (libraries:com.azure:azure-json:1.4.0) to libraries/com/azure/azure-json/1.4.0/azure-json-1.4.0.jar
+Unpacking com/github/oshi/oshi-core/6.9.0/oshi-core-6.9.0.jar (libraries:com.github.oshi:oshi-core:6.9.0) to libraries/com/github/oshi/oshi-core/6.9.0/oshi-core-6.9.0.jar
+Unpacking com/google/code/gson/gson/2.14.0/gson-2.14.0.jar (libraries:com.google.code.gson:gson:2.14.0) to libraries/com/google/code/gson/gson/2.14.0/gson-2.14.0.jar
+Unpacking com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.jar (libraries:com.google.guava:failureaccess:1.0.3) to libraries/com/google/guava/failureaccess/1.0.3/failureaccess-1.0.3.jar
+Unpacking com/google/guava/guava/33.6.0-jre/guava-33.6.0-jre.jar (libraries:com.google.guava:guava:33.6.0-jre) to libraries/com/google/guava/guava/33.6.0-jre/guava-33.6.0-jre.jar
+Unpacking com/microsoft/azure/msal4j/1.24.1/msal4j-1.24.1.jar (libraries:com.microsoft.azure:msal4j:1.24.1) to libraries/com/microsoft/azure/msal4j/1.24.1/msal4j-1.24.1.jar
+Unpacking com/mojang/authlib/10.0.77/authlib-10.0.77.jar (libraries:com.mojang:authlib:10.0.77) to libraries/com/mojang/authlib/10.0.77/authlib-10.0.77.jar
+Unpacking com/mojang/brigadier/1.3.11/brigadier-1.3.11.jar (libraries:com.mojang:brigadier:1.3.11) to libraries/com/mojang/brigadier/1.3.11/brigadier-1.3.11.jar
+Unpacking com/mojang/datafixerupper/10.0.21/datafixerupper-10.0.21.jar (libraries:com.mojang:datafixerupper:10.0.21) to libraries/com/mojang/datafixerupper/10.0.21/datafixerupper-10.0.21.jar
+Unpacking com/mojang/jtracy/1.14.38/jtracy-1.14.38.jar (libraries:com.mojang:jtracy:1.14.38) to libraries/com/mojang/jtracy/1.14.38/jtracy-1.14.38.jar
+Unpacking com/mojang/logging/1.7.12/logging-1.7.12.jar (libraries:com.mojang:logging:1.7.12) to libraries/com/mojang/logging/1.7.12/logging-1.7.12.jar
+Unpacking commons-io/commons-io/2.20.0/commons-io-2.20.0.jar (libraries:commons-io:commons-io:2.20.0) to libraries/commons-io/commons-io/2.20.0/commons-io-2.20.0.jar
+Unpacking io/netty/netty-buffer/4.2.16.Final/netty-buffer-4.2.16.Final.jar (libraries:io.netty:netty-buffer:4.2.16.Final) to libraries/io/netty/netty-buffer/4.2.16.Final/netty-buffer-4.2.16.Final.jar
+Unpacking io/netty/netty-codec-base/4.2.16.Final/netty-codec-base-4.2.16.Final.jar (libraries:io.netty:netty-codec-base:4.2.16.Final) to libraries/io/netty/netty-codec-base/4.2.16.Final/netty-codec-base-4.2.16.Final.jar
+Unpacking io/netty/netty-codec-compression/4.2.16.Final/netty-codec-compression-4.2.16.Final.jar (libraries:io.netty:netty-codec-compression:4.2.16.Final) to libraries/io/netty/netty-codec-compression/4.2.16.Final/netty-codec-compression-4.2.16.Final.jar
+Unpacking io/netty/netty-codec-http/4.2.16.Final/netty-codec-http-4.2.16.Final.jar (libraries:io.netty:netty-codec-http:4.2.16.Final) to libraries/io/netty/netty-codec-http/4.2.16.Final/netty-codec-http-4.2.16.Final.jar
+Unpacking io/netty/netty-common/4.2.16.Final/netty-common-4.2.16.Final.jar (libraries:io.netty:netty-common:4.2.16.Final) to libraries/io/netty/netty-common/4.2.16.Final/netty-common-4.2.16.Final.jar
+Unpacking io/netty/netty-handler/4.2.16.Final/netty-handler-4.2.16.Final.jar (libraries:io.netty:netty-handler:4.2.16.Final) to libraries/io/netty/netty-handler/4.2.16.Final/netty-handler-4.2.16.Final.jar
+Unpacking io/netty/netty-resolver/4.2.16.Final/netty-resolver-4.2.16.Final.jar (libraries:io.netty:netty-resolver:4.2.16.Final) to libraries/io/netty/netty-resolver/4.2.16.Final/netty-resolver-4.2.16.Final.jar
+Unpacking io/netty/netty-transport/4.2.16.Final/netty-transport-4.2.16.Final.jar (libraries:io.netty:netty-transport:4.2.16.Final) to libraries/io/netty/netty-transport/4.2.16.Final/netty-transport-4.2.16.Final.jar
+Unpacking io/netty/netty-transport-classes-epoll/4.2.16.Final/netty-transport-classes-epoll-4.2.16.Final.jar (libraries:io.netty:netty-transport-classes-epoll:4.2.16.Final) to libraries/io/netty/netty-transport-classes-epoll/4.2.16.Final/netty-transport-classes-epoll-4.2.16.Final.jar
+Unpacking io/netty/netty-transport-classes-kqueue/4.2.16.Final/netty-transport-classes-kqueue-4.2.16.Final.jar (libraries:io.netty:netty-transport-classes-kqueue:4.2.16.Final) to libraries/io/netty/netty-transport-classes-kqueue/4.2.16.Final/netty-transport-classes-kqueue-4.2.16.Final.jar
+Unpacking io/netty/netty-transport-native-epoll/4.2.16.Final/netty-transport-native-epoll-4.2.16.Final-linux-x86_64.jar (libraries:io.netty:netty-transport-native-epoll:4.2.16.Final:linux-x86_64) to libraries/io/netty/netty-transport-native-epoll/4.2.16.Final/netty-transport-native-epoll-4.2.16.Final-linux-x86_64.jar
+Unpacking io/netty/netty-transport-native-epoll/4.2.16.Final/netty-transport-native-epoll-4.2.16.Final-linux-aarch_64.jar (libraries:io.netty:netty-transport-native-epoll:4.2.16.Final:linux-aarch_64) to libraries/io/netty/netty-transport-native-epoll/4.2.16.Final/netty-transport-native-epoll-4.2.16.Final-linux-aarch_64.jar
+Unpacking io/netty/netty-transport-native-kqueue/4.2.16.Final/netty-transport-native-kqueue-4.2.16.Final-osx-x86_64.jar (libraries:io.netty:netty-transport-native-kqueue:4.2.16.Final:osx-x86_64) to libraries/io/netty/netty-transport-native-kqueue/4.2.16.Final/netty-transport-native-kqueue-4.2.16.Final-osx-x86_64.jar
+Unpacking io/netty/netty-transport-native-kqueue/4.2.16.Final/netty-transport-native-kqueue-4.2.16.Final-osx-aarch_64.jar (libraries:io.netty:netty-transport-native-kqueue:4.2.16.Final:osx-aarch_64) to libraries/io/netty/netty-transport-native-kqueue/4.2.16.Final/netty-transport-native-kqueue-4.2.16.Final-osx-aarch_64.jar
+Unpacking io/netty/netty-transport-native-unix-common/4.2.16.Final/netty-transport-native-unix-common-4.2.16.Final.jar (libraries:io.netty:netty-transport-native-unix-common:4.2.16.Final) to libraries/io/netty/netty-transport-native-unix-common/4.2.16.Final/netty-transport-native-unix-common-4.2.16.Final.jar
+Unpacking it/unimi/dsi/fastutil/8.5.18/fastutil-8.5.18.jar (libraries:it.unimi.dsi:fastutil:8.5.18) to libraries/it/unimi/dsi/fastutil/8.5.18/fastutil-8.5.18.jar
+Unpacking net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar (libraries:net.java.dev.jna:jna:5.17.0) to libraries/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar
+Unpacking net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar (libraries:net.java.dev.jna:jna-platform:5.17.0) to libraries/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar
+Unpacking net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar (libraries:net.sf.jopt-simple:jopt-simple:5.0.4) to libraries/net/sf/jopt-simple/jopt-simple/5.0.4/jopt-simple-5.0.4.jar
+Unpacking org/apache/commons/commons-lang3/3.20.0/commons-lang3-3.20.0.jar (libraries:org.apache.commons:commons-lang3:3.20.0) to libraries/org/apache/commons/commons-lang3/3.20.0/commons-lang3-3.20.0.jar
+Unpacking org/apache/logging/log4j/log4j-api/2.26.0/log4j-api-2.26.0.jar (libraries:org.apache.logging.log4j:log4j-api:2.26.0) to libraries/org/apache/logging/log4j/log4j-api/2.26.0/log4j-api-2.26.0.jar
+Unpacking org/apache/logging/log4j/log4j-core/2.26.0/log4j-core-2.26.0.jar (libraries:org.apache.logging.log4j:log4j-core:2.26.0) to libraries/org/apache/logging/log4j/log4j-core/2.26.0/log4j-core-2.26.0.jar
+Unpacking org/apache/logging/log4j/log4j-slf4j2-impl/2.26.0/log4j-slf4j2-impl-2.26.0.jar (libraries:org.apache.logging.log4j:log4j-slf4j2-impl:2.26.0) to libraries/org/apache/logging/log4j/log4j-slf4j2-impl/2.26.0/log4j-slf4j2-impl-2.26.0.jar
+Unpacking org/joml/joml/1.10.9/joml-1.10.9.jar (libraries:org.joml:joml:1.10.9) to libraries/org/joml/joml/1.10.9/joml-1.10.9.jar
+Unpacking org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar (libraries:org.jspecify:jspecify:1.0.0) to libraries/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar
+Unpacking org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar (libraries:org.slf4j:slf4j-api:2.0.17) to libraries/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar
+Starting net.fabricmc.loader.impl.game.minecraft.BundlerClassPathCapture
+[11:42:04] [main/INFO]: Loading Minecraft 26.3 with Fabric Loader 0.19.5
+[11:42:04] [main/INFO]: Mappings not present!
+[11:42:04] [main/INFO]: Loading 52 mods:
+	- fabric-api 0.162.0+26.3
+	   |-- fabric-advancement-api-v1 1.0.0+38c7a2d55d
+	   |-- fabric-api-base 2.0.6+fcdff87f5d
+	   |-- fabric-api-lookup-api-v1 2.0.24+3434d6d95d
+	   |-- fabric-biome-api-v1 20.1.0+c6aa69a85d
+	   |-- fabric-block-api-v1 3.1.0+0ae6f9115d
+	   |-- fabric-block-getter-api-v2 2.0.9+3434d6d95d
+	   |-- fabric-command-api-v2 3.1.2+fcdff87f5d
+	   |-- fabric-content-registries-v0 15.0.4+74ed1ea55d
+	   |-- fabric-convention-tags-v2 4.10.3+6b5b47fd5d
+	   |-- fabric-crash-report-info-v1 1.0.7+fcdff87f5d
+	   |-- fabric-creative-tab-api-v1 5.0.21+fcdff87f5d
+	   |-- fabric-data-attachment-api-v1 2.2.31+b9b88df45d
+	   |-- fabric-data-generation-api-v1 27.3.0+5be2453c5d
+	   |-- fabric-debug-api-v1 1.0.4+3434d6d95d
+	   |-- fabric-dimensions-v1 5.1.19+47f74c985d
+	   |-- fabric-entity-events-v1 6.0.4+3434d6d95d
+	   |-- fabric-events-interaction-v0 5.3.7+b9b88df45d
+	   |-- fabric-game-rule-api-v1 4.0.10+3434d6d95d
+	   |-- fabric-item-api-v1 14.7.0+cf6bc2db5d
+	   |-- fabric-lifecycle-events-v1 4.1.9+ffef5f675d
+	   |-- fabric-loot-api-v3 4.0.8+4068fd645d
+	   |-- fabric-menu-api-v1 2.0.28+ed66f0a35d
+	   |-- fabric-message-api-v1 7.0.10+3434d6d95d
+	   |-- fabric-networking-api-v1 6.3.9+b9b88df45d
+	   |-- fabric-object-builder-api-v1 24.1.10+3434d6d95d
+	   |-- fabric-particles-v1 5.0.25+3434d6d95d
+	   |-- fabric-permission-api-v1 1.0.8+fcdff87f5d
+	   |-- fabric-recipe-api-v1 10.0.9+b9b88df45d
+	   |-- fabric-registry-sync-v0 8.0.2+1ca9f6365d
+	   |-- fabric-rendering-fluids-v1 6.0.6+3434d6d95d
+	   |-- fabric-resource-conditions-api-v1 6.2.0+0d124ae85d
+	   |-- fabric-resource-loader-v0 3.3.26+4fc5413f5d
+	   |-- fabric-resource-loader-v1 3.0.4+ba0d6c0d5d
+	   |-- fabric-serialization-api-v1 2.0.7+74ed1ea55d
+	   |-- fabric-tag-api-v1 2.1.10+fcdff87f5d
+	   |-- fabric-transfer-api-v1 8.0.25+fcdff87f5d
+	   \-- fabric-transitive-access-wideners-v1 8.1.16+52268a0e5d
+	- fabricloader 0.19.5
+	   \-- mixinextras 0.5.5
+	- java 25
+	- minecraft 26.3
+	- mmorpg 0.48.1
+	   |-- polymer-autohost 0.18.7+26.3
+	   |-- polymer-blocks 0.18.7+26.3
+	   |-- polymer-core 0.18.7+26.3
+	   |    |-- polymer-networking 0.18.7+26.3
+	   |    |    \-- polymer-common 0.18.7+26.3
+	   |    \-- polymer-registry-sync-manipulator 0.18.7+26.3
+	   |-- polymer-resource-pack 0.18.7+26.3
+	   |    \-- polymer-common 0.18.7+26.3
+	   |-- polymer-virtual-entity 0.18.7+26.3
+	   |    \-- polymer-common 0.18.7+26.3
+	   \-- sgui 2.2.1+26.3
+[11:42:05] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/tmp/vanilla-server/libraries/net/fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[11:42:05] [main/INFO]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/tmp/vanilla-server/libraries/org/joml/joml/1.10.9/joml-1.10.9.jar)
+WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[11:42:11] [main/INFO]: [vfx] sprites 1634
+[11:42:12] [main/INFO]: [vfx] particle bridge: 338 defs, 244 with glyphs, 38 cards, 28 solid models
+[11:42:12] [main/INFO]: MMO RPG: rune effects 121
+[11:42:12] [main/INFO]: [vanilla] items 858
+[11:42:12] [main/INFO]: [vanilla] blocks 11
+[11:42:12] [main/INFO]: [vanilla] entity types 67
+[11:42:12] [main/INFO]: [vanilla] mob models 66
+[11:42:12] [main/INFO]: [vanilla] server entries {block=11, creative_mode_tab=3, data_component_type=2, entity_type=67, item=858, particle_type=2, worldgen/biome_source=1, worldgen/chunk_generator=1}
+[11:42:12] [main/INFO]: [vanilla] 리소스 팩 자동 전송 켬 (./config/polymer/auto-host.json)
+[11:42:12] [main/INFO]: [vanilla] cosmetics: head 7, rigs 7, weapon skins 11
+[11:42:12] [main/INFO]: [vanilla] rig variants [wide, slim] (vanilla default skins 18, ours true)
+[11:42:12] [main/INFO]: MMO RPG: weapons 275, rules /mmorpg/rules.json
+[11:42:12] [main/INFO]: Environment: Environment[discoveryUrl=https://discovery.minecraftservices.com/minecraft/client, name=PROD]
+[11:42:13] [Worker-Main-3/INFO]: No existing world data, creating new world
+[11:42:13] [Worker-Main-3/ERROR]: No key layers in MapLike[{}]
+[11:42:14] [Worker-Main-3/INFO]: Loaded 1866 advancements
+[11:42:14] [main/INFO]: Applied 0 biome modifications to 0 of 96 new biomes in 1.283 ms
+[11:42:14] [Server thread/INFO]: Starting minecraft server version 26.3
+[11:42:14] [Server thread/INFO]: Loading properties
+[11:42:14] [Server thread/INFO]: Default game type: SURVIVAL
+[11:42:14] [Server thread/INFO]: Generating keypair
+[11:42:14] [Server thread/INFO]: Starting Minecraft server on *:25565
+[11:42:14] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[11:42:14] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[11:42:14] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[11:42:14] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[11:42:14] [Server thread/INFO]: Preparing level "world"
+[11:42:14] [Server thread/INFO]: Selecting global world spawn...
+[11:42:15] [Server thread/INFO]: Loading 0 persistent chunks...
+[11:42:15] [Server thread/INFO]: Preparing spawn area: 100%
+[11:42:15] [Server thread/INFO]: Time elapsed: 556 ms
+[11:42:15] [Server thread/INFO]: Done (0.670s)! For help, type "help"
+[11:42:15] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[11:42:15] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[11:42:15] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[11:42:15] [IO-Worker-6/INFO]: System chat: [Polymer] Starting resource pack generation...
+[11:42:15] [IO-Worker-6/INFO]: [vanilla] job skill icons 181, ui icons 38
+[11:42:15] [IO-Worker-6/INFO]: [vanilla] gui backgrounds 14, line fonts 13 + 11, tiles 4, icons 18, big runes 157
+[11:42:15] [Server thread/INFO]: System chat: Whitelist is already turned off
+[11:42:16] [IO-Worker-6/INFO]: [vanilla] cosmetics: weapon definitions 275, helmet definitions 70, dim icons 42
+[11:42:16] [IO-Worker-6/INFO]: [vanilla] rig default skins in atlas: 18
+[11:42:16] [Server thread/INFO]: System chat: [Polymer] Resource pack created successfully! You can find it in game folder as polymer/resource_pack.zip
+[11:42:50] [Netty Epoll IO #1/INFO]: [vanilla] Probe 는 모드 없는 클라이언트 — 바닐라 것으로 보냄
+[11:42:59] [Server thread/INFO]: Probe[/127.0.0.1:50576] logged in with entity id 1 at (3.5, -60.0, 8.5)
+[11:42:59] [Server thread/INFO]: [vanilla-probe] joined Probe modded=false
+[11:42:59] [Server thread/INFO]: System chat: Probe joined the game
+[11:43:06] [Server thread/INFO]: System chat: Game rule advance_time is now set to false
+[11:43:06] [Server thread/INFO]: System chat: Game rule advance_weather is now set to false
+[11:43:06] [Server thread/INFO]: System chat: Set minecraft:overworld to time marker minecraft:noon
+[11:43:06] [Server thread/INFO]: System chat: Set the weather to clear
+[11:43:06] [Server thread/INFO]: System chat: Teleported Probe to 0.500000, -60.000000, 0.500000
+[11:43:06] [Server thread/INFO]: [vanilla-probe] gave 9 hotbar items, armor set ranger
+[11:43:06] [Netty Epoll IO #1/INFO]: [vanilla] fp swing_animation component true none SwingAnimation[type=NONE, duration=6]  {"type":"none"} → ok using minecraft:attack_animation | minecraft:minimum_attack_charge minecraft:weapon minecraft:attack_animation minecraft:attack_range minecraft:piercing_weapon minecraft:kinetic_weapon minecraft:blocks_attacks minecraft:interact_animation
+[11:43:07] [Server thread/INFO]: [vanilla-probe] say shot 01_hand
+[11:43:09] [Server thread/INFO]: [vanilla-probe] say inv 02_inventory
+[11:43:15] [Server thread/INFO]: [vanilla-probe] say shot 03_world
+[11:43:17] [Server thread/INFO]: [vanilla-probe] say cam back
+[11:43:19] [Server thread/INFO]: [vanilla-probe] say shot 04_third
+[11:43:21] [Server thread/INFO]: [vanilla-probe] say cam first
+[11:43:21] [Server thread/INFO]: [vanilla-probe] skills: runes 4, max health 188.0, health 112.8
+[11:43:22] [Server thread/INFO]: [vanilla-probe] say key f
+[11:43:24] [Server thread/INFO]: [vanilla-probe] check ok: rune mode
+[11:43:24] [Server thread/INFO]: [vanilla-probe] check ok: held slot 9
+[11:43:24] [Server thread/INFO]: [vanilla-probe] check ok: weapon moved to slot 9
+[11:43:24] [Server thread/INFO]: [vanilla-probe] say shot 05_rune_mode
+[11:43:25] [Server thread/INFO]: [vanilla-probe] say key 1
+[11:43:26] [Server thread/INFO]: [vanilla] rig skin Probe: default wide/ari
+[11:43:26] [Server thread/INFO]: [vanilla-probe] check ok: rune 1 cast (cooldown)
+[11:43:26] [Server thread/INFO]: [vanilla-probe] check ok: held slot still 9
+[11:43:26] [Server thread/INFO]: [vanilla-probe] say shot 06_cast
+[11:43:27] [Server thread/INFO]: [vanilla-probe] say key f
+[11:43:29] [Server thread/INFO]: [vanilla-probe] check ok: normal mode (F again)
+[11:43:29] [Server thread/INFO]: [vanilla-probe] check ok: held slot back to 1
+[11:43:29] [Server thread/INFO]: [vanilla-probe] check ok: weapon back in slot 1
+[11:43:29] [Server thread/INFO]: [vanilla-probe] say shot 08_normal
+[11:43:30] [Server thread/INFO]: [vanilla-probe] say now use
+[11:43:30] [Server thread/INFO]: [vanilla] fp use packet 1 (in client cooldown window false)
+[11:43:31] [Server thread/INFO]: [vanilla-probe] check ok: right click = skill key rmb
+[11:43:31] [Server thread/INFO]: [vanilla-probe] check ok: rmb cast job skill 1 (swordsman_flurry locked)
+[11:43:31] [Server thread/INFO]: [vanilla-probe] say now key q
+[11:43:31] [Server thread/INFO]: [vanilla] fp drop key 1 (skill key, slot resent)
+[11:43:31] [Server thread/INFO]: [vanilla-probe] check ok: q = skill key q (weapon not dropped)
+[11:43:31] [Server thread/INFO]: [vanilla-probe] say now shift2
+[11:43:32] [Server thread/INFO]: [vanilla-probe] check ok: shift twice = skill key ss
+[11:43:32] [Server thread/INFO]: [vanilla-probe] say now sneak on
+[11:43:32] [Server thread/INFO]: [vanilla-probe] say now attack
+[11:43:32] [Server thread/INFO]: [vanilla-probe] check ok: shift + left click = skill key slmb
+[11:43:32] [Server thread/INFO]: [vanilla-probe] say now use
+[11:43:32] [Server thread/INFO]: [vanilla] fp use packet 2 (in client cooldown window false)
+[11:43:33] [Server thread/INFO]: [vanilla-probe] check ok: shift + right click = skill key srmb
+[11:43:33] [Server thread/INFO]: [vanilla-probe] say now key q
+[11:43:33] [Server thread/INFO]: [vanilla] fp drop key 2 (skill key, slot resent)
+[11:43:33] [Server thread/INFO]: [vanilla-probe] check ok: shift + q = skill key sq
+[11:43:33] [Server thread/INFO]: [vanilla-probe] check ok: six key presses
+[11:43:33] [Server thread/INFO]: [vanilla-probe] say now sneak off
+[11:43:33] [Server thread/INFO]: [vanilla-probe] say shot 07_skill_keys
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: hud active (vanilla · survival)
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: notify goes to hud message line
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: skill hud knows rune cooldown
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: cooldown seconds fit a slot
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: cooldown digit glyphs in skill fonts
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: skill key label glyphs
+[11:43:34] [Server thread/INFO]: [vanilla-probe] check ok: common skill icon glyphs
+[11:43:35] [Server thread/INFO]: [vanilla-probe] say shot 19_hud_msg
+[11:43:36] [Server thread/INFO]: [vanilla-probe] say shot 19b_hud_low
+[11:43:37] [Server thread/INFO]: [vanilla-probe] say shot 19c_hud_low_later
+[11:43:40] [Server thread/INFO]: [vanilla-probe] check ok: chest form opened as chest menu
+[11:43:40] [Server thread/INFO]: [vanilla-probe] say shot 09_chest
+[11:43:41] [Server thread/INFO]: [vanilla-probe] say close
+[11:43:42] [Server thread/INFO]: [vanilla-probe] check ok: chest closed answers -1
+[11:43:43] [Server thread/INFO]: [vanilla-probe] say shot 10_menu
+[11:43:44] [Server thread/INFO]: [vanilla-probe] say click 2 1
+[11:43:45] [Server thread/INFO]: [vanilla-probe] check ok: menu button answers 1
+[11:43:46] [Server thread/INFO]: [vanilla-probe] say shot 11_modal
+[11:43:47] [Server thread/INFO]: [vanilla-probe] say submit 3
+[11:43:48] [Server thread/INFO]: [vanilla-probe] check ok: modal values {name=abc, pick=2, num=7, on=false}
+[11:43:49] [Server thread/INFO]: [vanilla-probe] held sword rpg:sword_l40_transcend +7
+[11:43:49] [Server thread/INFO]: [vanilla-probe] say shift on
+[11:43:49] [Server thread/INFO]: [vanilla-probe] say key f
+[11:43:50] [Server thread/INFO]: [vanilla-probe] say shift off
+[11:43:50] [Server thread/INFO]: [vanilla-probe] check ok: shift+F opens menu home
+[11:43:50] [Server thread/INFO]: [vanilla-probe] check ok: still normal mode
+[11:43:50] [Server thread/INFO]: [vanilla-probe] say shot 12_menu_home
+[11:43:51] [Server thread/INFO]: [vanilla-probe] say slot 2
+[11:43:52] [Server thread/INFO]: [vanilla-probe] check ok: stats tab (same menu)
+[11:43:52] [Server thread/INFO]: [vanilla-probe] say hover 19
+[11:43:52] [Server thread/INFO]: [vanilla-probe] check ok: str tooltip shows attack +n, not damage % (힘 120 (123)|공격력 +82.8 (1당 +0.67)|칼·도끼·마검·창·망치 · 든 칼 기준|찍은 값 120 + 장비 · 버프 3|남은 포인트 195||좌클릭 +1 · Shift + 좌클릭 +5|)
+[11:43:52] [Server thread/INFO]: [vanilla-probe] say shot 13_stats
+[11:43:53] [Server thread/INFO]: [vanilla-probe] say hover -1
+[11:43:53] [Server thread/INFO]: [vanilla-probe] say slot 19
+[11:43:54] [Server thread/INFO]: [vanilla-probe] check ok: str +1 (left click)
+[11:43:54] [Server thread/INFO]: [vanilla-probe] say shiftslot 28
+[11:43:55] [Server thread/INFO]: [vanilla-probe] check ok: str +5 (shift left click)
+[11:43:55] [Server thread/INFO]: [vanilla-probe] check ok: menu still open (same menu)
+[11:43:55] [Server thread/INFO]: [vanilla-probe] say shot 13b_stats_after
+[11:43:56] [Server thread/INFO]: [vanilla-probe] say slot 49
+[11:43:56] [Server thread/INFO]: [vanilla-probe] check ok: stat tree page from stats button
+[11:43:56] [Server thread/INFO]: [vanilla-probe] check ok: stat tree view shows the first fork (top)
+[11:43:56] [Server thread/INFO]: [vanilla-probe] say shot 13c_tree
+[11:43:57] [Server thread/INFO]: [vanilla-probe] say slot 29
+[11:43:58] [Server thread/INFO]: [vanilla-probe] check ok: stat tree node selected (not picked yet)
+[11:43:58] [Server thread/INFO]: [vanilla-probe] say slot 29
+[11:43:59] [Server thread/INFO]: [vanilla-probe] check ok: stat tree fork picked (second click)
+[11:43:59] [Server thread/INFO]: [vanilla-probe] say shot 13d_tree_pick
+[11:44:00] [Server thread/INFO]: [vanilla-probe] say slot 67
+[11:44:00] [Server thread/INFO]: [vanilla-probe] check ok: stat tree scrolled down (D-pad)
+[11:44:00] [Server thread/INFO]: [vanilla-probe] say shot 13e_tree_down
+[11:44:01] [Server thread/INFO]: [vanilla-probe] say slot 87
+[11:44:02] [Server thread/INFO]: [vanilla-probe] check ok: stat tree sum tab
+[11:44:02] [Server thread/INFO]: [vanilla-probe] say shot 13f_tree_sum
+[11:44:03] [Server thread/INFO]: [vanilla-probe] say slot 6
+[11:44:04] [Server thread/INFO]: [vanilla-probe] check ok: skills tab
+[11:44:04] [Server thread/INFO]: [vanilla-probe] say shot 14_skills
+[11:44:05] [Server thread/INFO]: [vanilla-probe] say slot 9
+[11:44:05] [Server thread/INFO]: [vanilla-probe] say slot 14
+[11:44:06] [Server thread/INFO]: [vanilla-probe] check ok: rune moved 1 -> 6
+[11:44:06] [Server thread/INFO]: [vanilla-probe] say slot 14
+[11:44:07] [Server thread/INFO]: [vanilla-probe] say slot 17
+[11:44:08] [Server thread/INFO]: [vanilla-probe] check ok: rune removed to bag
+[11:44:08] [Server thread/INFO]: [vanilla-probe] say slot 56
+[11:44:08] [Server thread/INFO]: [vanilla-probe] say slot 9
+[11:44:09] [Server thread/INFO]: [vanilla-probe] check ok: bag rune equipped to 1
+[11:44:09] [Server thread/INFO]: [vanilla-probe] say shot 14b_skills_after
+[11:44:10] [Server thread/INFO]: [vanilla-probe] say slot 45
+[11:44:11] [Server thread/INFO]: [vanilla-probe] say slot 29
+[11:44:11] [Server thread/INFO]: [vanilla-probe] check ok: menu binds job 1 to shift+left (moved from rmb)
+[11:44:11] [Server thread/INFO]: [vanilla-probe] say shot 14c_skill_keys
+[11:44:12] [Server thread/INFO]: [vanilla-probe] say slot 4
+[11:44:13] [Server thread/INFO]: [vanilla-probe] check ok: equip tab
+[11:44:13] [Server thread/INFO]: [vanilla-probe] check ok: wearing helmet
+[11:44:13] [Server thread/INFO]: [vanilla-probe] say shot 15_equip
+[11:44:14] [Server thread/INFO]: [vanilla-probe] say hover 45
+[11:44:15] [Server thread/INFO]: [vanilla-probe] check ok: total spec tooltip (총 스펙|전투력 32,410||공격력 152.7|  무기 33.7 · 스탯 +93.6 · 스탯 트리 +25.4|치명타 확률 19%|치명타 피해 ×1.95|최대 체력 308|받는 피해 -6%|방어 7|룬 피해 +8%||든 무기 +7 그람|입은 갑옷 · 낀 아티팩트 · 스탯 트리 포함 · 룬 버프 제외|)
+[11:44:15] [Server thread/INFO]: [vanilla-probe] check ok: combat power follows held weapon (rpg:sword_l40_transcend 32410 / bare 1933)
+[11:44:15] [Server thread/INFO]: [vanilla-probe] check ok: combat power ignores rune buff (32410 / 32410)
+[11:44:15] [Server thread/INFO]: [vanilla-probe] combat power 32410 weapon rpg:sword_l40_transcend +7 spec Spec[attack=152.699904, critChance=0.19, critMult=1.95, rune=8.0, cdr=0.0, maxHp=308.0, reduction=0.06000000000000005, armor=7.0, speed=0.0]
+[11:44:15] [Server thread/INFO]: [vanilla-probe] say shot 15c_equip_spec
+[11:44:15] [Server thread/INFO]: [vanilla-probe] say hover 48
+[11:44:16] [Server thread/INFO]: [vanilla-probe] say shot 15d_equip_weapon
+[11:44:16] [Server thread/INFO]: [vanilla-probe] say hover -1
+[11:44:17] [Server thread/INFO]: [vanilla-probe] say slot 9
+[11:44:17] [Server thread/INFO]: [vanilla-probe] check ok: helmet taken off to bag
+[11:44:17] [Server thread/INFO]: [vanilla-probe] say slot 56
+[11:44:18] [Server thread/INFO]: [vanilla-probe] check ok: helmet worn again from bag
+[11:44:18] [Server thread/INFO]: [vanilla-probe] say slot 67
+[11:44:19] [Server thread/INFO]: [vanilla-probe] check ok: artifact equipped from bag
+[11:44:19] [Server thread/INFO]: [vanilla-probe] say shot 15b_equip_after
+[11:44:20] [Server thread/INFO]: System chat: §6[RPG] §f§d새 한정 뽑기 §6§l불꽃의 축제§r§f 이(가) 열렸습니다! §7초월 픽업 §c얼음 여왕의 분노 §7· 영웅 픽업 §6타이탄 해머, 룬 재블린, 섀도 블리츠 §8(12.02 11:44 까지)
+[11:44:20] [Server thread/INFO]: [vanilla-probe] check ok: limited banner opened 
+[11:44:20] [Server thread/INFO]: [vanilla-probe] say slot 1
+[11:44:21] [Server thread/INFO]: [vanilla-probe] say slot 43
+[11:44:21] [Server thread/INFO]: [vanilla-probe] check ok: gacha page from home card
+[11:44:21] [Server thread/INFO]: [vanilla-probe] check ok: limited banner selected first (top of list)
+[11:44:21] [Server thread/INFO]: [vanilla-probe] say shot 16_gacha
+[11:44:22] [Server thread/INFO]: [vanilla-probe] say slot 17
+[11:44:23] [Server thread/INFO]: [vanilla-probe] check ok: normal banner from list
+[11:44:23] [Server thread/INFO]: [vanilla-probe] say shot 16a_gacha_normal
+[11:44:24] [Server thread/INFO]: [vanilla-probe] say slot 8
+[11:44:25] [Server thread/INFO]: [vanilla-probe] say slot 37
+[11:44:25] [Server thread/INFO]: [vanilla-probe] check ok: pull asks first (confirm 1)
+[11:44:25] [Server thread/INFO]: [vanilla-probe] say shot 16b_gacha_confirm
+[11:44:26] [Server thread/INFO]: [vanilla-probe] say slot 47
+[11:44:27] [Server thread/INFO]: [vanilla-probe] check ok: yes pulls 1 rune
+[11:44:27] [Server thread/INFO]: [vanilla-probe] check ok: cinematic plays (menu closed)
+[11:44:27] [Server thread/INFO]: [vanilla-probe] say shot 16c_cine_intro
+[11:44:28] [Server thread/INFO]: [vanilla-probe] check ok: cinematic sealed
+[11:44:28] [Server thread/INFO]: [vanilla-probe] say shot 16d_cine_sealed
+[11:44:29] [Server thread/INFO]: [vanilla-probe] say key f
+[11:44:29] [Server thread/INFO]: System chat: §6[RPG] §fProbe님이 §d불꽃의 축제§f에서 §6영웅 룬 타이탄 해머 §e[픽업]§r§f을(를) 얻었습니다!
+[11:44:29] [Server thread/INFO]: [vanilla-probe] check ok: left click opens (reveal)
+[11:44:29] [Server thread/INFO]: [vanilla-probe] say shot 16e_cine_reveal
+[11:44:30] [Server thread/INFO]: [vanilla-probe] say key f
+[11:44:31] [Server thread/INFO]: [vanilla-probe] check ok: after cinematic: gacha page again
+[11:44:31] [Server thread/INFO]: [vanilla-probe] say shot 16f_gacha_after
+[11:44:32] [Server thread/INFO]: [vanilla-probe] say slot 42
+[11:44:32] [Server thread/INFO]: [vanilla-probe] check ok: 10 pull asks first
+[11:44:32] [Server thread/INFO]: [vanilla-probe] say slot 47
+[11:44:35] [Server thread/INFO]: [vanilla-probe] check ok: gacha 10 pulls give runes
+[11:44:35] [Server thread/INFO]: [vanilla-probe] check ok: ten cinematic sealed
+[11:44:35] [Server thread/INFO]: [vanilla-probe] say shot 16g_cine_ten_sealed
+[11:44:35] [Server thread/INFO]: [vanilla-probe] say key f
+[11:44:36] [Server thread/INFO]: [vanilla-probe] say shot 16h_cine_ten_opening
+[11:44:38] [Server thread/INFO]: System chat: §6[RPG] §fProbe님이 §d불꽃의 축제§f에서 §c§l초월 룬 루나 엑시큐션§r§f, §6영웅 룬 룬 재블린 §e[픽업]§r§f을(를) 얻었습니다!
+[11:44:38] [Server thread/INFO]: [vanilla-probe] say shot 16i_cine_ten_result
+[11:44:38] [Server thread/INFO]: [vanilla-probe] say shift on
+[11:44:39] [Server thread/INFO]: [vanilla-probe] say shift off
+[11:44:40] [Server thread/INFO]: [vanilla-probe] say shift on
+[11:44:40] [Server thread/INFO]: [vanilla-probe] say shift off
+[11:44:41] [Server thread/INFO]: [vanilla-probe] check ok: shift skips/closes, gacha page again
+[11:44:41] [Server thread/INFO]: [vanilla-probe] say shot 16j_gacha_after_ten
+[11:44:42] [Server thread/INFO]: [vanilla-probe] check ok: gacha window has no top tabs
+[11:44:42] [Server thread/INFO]: [vanilla-probe] say slot 0
+[11:44:43] [Server thread/INFO]: [vanilla-probe] check ok: back button goes home
+[11:44:43] [Server thread/INFO]: [vanilla-probe] say slot 8
+[11:44:43] [Server thread/INFO]: [vanilla-probe] check ok: close button closes menu
+[11:44:44] [Server thread/INFO]: [vanilla-probe] check ok: ticket use opens gacha window (normal)
+[11:44:44] [Server thread/INFO]: [vanilla-probe] say shot 16k_gacha_ticket
+[11:44:45] [Server thread/INFO]: [vanilla-probe] say close
+[11:44:46] [Server thread/INFO]: [vanilla-probe] check ok: storage opens
+[11:44:46] [Server thread/INFO]: [vanilla-probe] check ok: storage menu with navy title
+[11:44:46] [Server thread/INFO]: [vanilla-probe] say shot 17_storage
+[11:44:47] [Server thread/INFO]: [vanilla-probe] say close
+[11:44:48] [Server thread/INFO]: [vanilla-probe] check ok: trash opens
+[11:44:49] [Server thread/INFO]: [vanilla-probe] check ok: trash menu with navy title
+[11:44:49] [Server thread/INFO]: [vanilla-probe] say shot 18_trash
+[11:44:49] [Server thread/INFO]: [vanilla-probe] say close
+[11:44:50] [Server thread/INFO]: System chat: Teleported Probe to 0.500000, -60.000000, 0.500000
+[11:44:50] [Server thread/INFO]: [vanilla-probe] say cam back
+[11:44:51] [Server thread/INFO]: [vanilla-probe] say shot 20a_self_no_armor
+[11:44:51] [Server thread/INFO]: [vanilla-probe] say cam first
+[11:44:52] [Server thread/INFO]: [vanilla-probe] check ok: cosmetic page opens
+[11:44:52] [Server thread/INFO]: [vanilla-probe] say hover 18
+[11:44:52] [Server thread/INFO]: [vanilla-probe] say shot 20_cosmetic
+[11:44:53] [Server thread/INFO]: [vanilla-probe] say slot 18
+[11:44:53] [Server thread/INFO]: [vanilla-probe] check ok: first click arms purchase
+[11:44:53] [Server thread/INFO]: [vanilla-probe] say slot 18
+[11:44:53] [Server thread/INFO]: [vanilla-probe] check ok: bought and wearing sword skin
+[11:44:53] [Server thread/INFO]: [vanilla-probe] say slot 12
+[11:44:54] [Server thread/INFO]: [vanilla-probe] check ok: cosmetic tab switches
+[11:44:54] [Server thread/INFO]: [vanilla-probe] say hover 18
+[11:44:54] [Server thread/INFO]: [vanilla-probe] say shot 20b_cosmetic_head
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: vanilla look cache follows equips
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: crown replaces helmet on head
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: armor hidden by default
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: no armor skin slots
+[11:44:55] [Server thread/INFO]: [vanilla-probe] holder title bones 2
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: title and wings ride the player
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: self motion view off by default
+[11:44:55] [Server thread/INFO]: [vanilla-probe] say slot 52
+[11:44:55] [Server thread/INFO]: [vanilla-probe] check ok: self motion view toggles on
+[11:44:55] [Server thread/INFO]: [vanilla-probe] say slot 51
+[11:44:56] [Server thread/INFO]: [vanilla-probe] check ok: preview mannequin stands
+[11:44:56] [Server thread/INFO]: [vanilla-probe] check ok: preview wears the look
+[11:44:56] [Server thread/INFO]: [vanilla-probe] check ok: equipment rewritten for viewers
+[11:44:56] [Server thread/INFO]: [vanilla-probe] rewrites 3 lastHead crown
+[11:44:56] [Server thread/INFO]: [vanilla-probe] mannequin 378 holder [379, 380, 381] watchers 1 passengers [] passenger attachment (0.0, 1.7999999523162842, 0.0) player attachment (0.0, 1.7999999523162842, 0.0)
+[11:44:56] [Server thread/INFO]: [vanilla-probe] say ents
+[11:44:56] [Server thread/INFO]: [vanilla-probe] say shot 21_preview_front
+[11:44:59] [Server thread/INFO]: [vanilla-probe] say shot 21b_preview_back
+[11:44:59] [Server thread/INFO]: [vanilla-probe] say cam back
+[11:45:00] [Server thread/INFO]: [vanilla-probe] say shot 21c_self_back
+[11:45:00] [Server thread/INFO]: [vanilla-probe] say cam first
+[11:45:01] [Server thread/INFO]: [vanilla-probe] say shot 21d_hand_skin
+[11:45:01] [Server thread/INFO]: [vanilla-probe] say cam back
+[11:45:02] [Server thread/INFO]: [vanilla] rig skin Probe: default wide/ari
+[11:45:02] [Server thread/INFO]: [vanilla-probe] check ok: rig on self with the crown
+[11:45:02] [Server thread/INFO]: [vanilla-probe] check ok: wings follow the rig torso
+[11:45:02] [Server thread/INFO]: [vanilla-probe] say ents
+[11:45:02] [Server thread/INFO]: [vanilla-probe] say shot 22_rig_self
+[11:45:03] [Server thread/INFO]: [vanilla-probe] say shot 22b_rig_self_later
+[11:45:03] [Server thread/INFO]: [vanilla-probe] check ok: self view off removes the rig
+[11:45:04] [Server thread/INFO]: [vanilla-probe] say done
+[11:45:04] [Server thread/INFO]: [vanilla-probe] done
+[11:45:06] [Server thread/INFO]: Probe lost connection: Disconnected
+[11:45:06] [Server thread/INFO]: System chat: Probe left the game
+[11:45:07] [Server thread/INFO]: System chat: Stopping the server
+[11:45:07] [Server thread/INFO]: Stopping server
+[11:45:07] [Server thread/INFO]: Saving players
+[11:45:07] [Server thread/INFO]: Saving worlds
+[11:45:07] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[11:45:07] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[11:45:07] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
