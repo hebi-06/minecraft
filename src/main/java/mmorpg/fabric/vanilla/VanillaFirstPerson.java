@@ -195,25 +195,31 @@ public final class VanillaFirstPerson {
         if (!enabled || !WRAPPED.containsKey(BuiltInRegistries.ITEM.getKey(stack.getItem()))) return;
         if (!swingTried) {
             swingTried = true;
-            // 시범 1차: minecraft:swing_animation 이 26.3 등록부에 없었음 (null) — 이름에 swing 이 든 구성 요소를 찾아 쓰고, 찾은 이름 · 비슷한 이름을 기록
+            // 시범 1차: minecraft:swing_animation 이 26.3 등록부에 없었음 (null). 2차 (CI 44259802101) 기록: 비슷한 이름은 attack_animation ·
+            // interact_animation · weapon · attack_range · minimum_attack_charge … → 좌클릭 휘두르기는 attack_animation 으로 (값 꼴은 몇 가지를 차례로 시도해 기록)
             StringBuilder near = new StringBuilder();
             String err = "";
             try {
-                Identifier found = Identifier.parse("minecraft:swing_animation");
-                swingType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(found);
+                Identifier found = null;
+                for (String name : new String[] {"minecraft:swing_animation", "minecraft:attack_animation"}) {
+                    swingType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(Identifier.parse(name));
+                    if (swingType != null) {
+                        found = Identifier.parse(name);
+                        break;
+                    }
+                }
                 for (Identifier k : BuiltInRegistries.DATA_COMPONENT_TYPE.keySet()) {
                     String path = k.getPath();
                     if (path.contains("swing") || path.contains("anim") || path.contains("attack") || path.contains("weapon")) near.append(' ').append(k);
-                    if (swingType == null && path.contains("swing")) {
-                        swingType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(k);
-                        found = k;
-                    }
                 }
                 com.mojang.serialization.Codec<?> codec = swingType == null ? null : swingType.codec();
                 if (codec != null) {
-                    var r = codec.parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString("{\"type\":\"none\"}"));
-                    swingNone = r.result().orElse(null);
-                    err = r.error().map(e -> e.message()).orElse("");
+                    for (String json : new String[] {"{\"type\":\"none\"}", "\"none\"", "{\"type\":\"minecraft:none\"}", "{\"animation\":\"none\"}"}) {
+                        var r = codec.parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString(json));
+                        swingNone = r.result().orElse(null);
+                        err += " " + json + " → " + r.error().map(e -> e.message()).orElse("ok");
+                        if (swingNone != null) break;
+                    }
                 }
                 near.insert(0, "using " + (swingType == null ? "none" : found) + " |");
             } catch (RuntimeException e) {

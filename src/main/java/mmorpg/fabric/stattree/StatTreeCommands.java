@@ -31,6 +31,7 @@ import net.minecraft.server.permissions.Permissions;
  * <li>/stattree [스탯] — 스탯 트리 창 (모드가 없으면 채팅 요약) · /stattree info — 채팅 요약</li>
  * <li>/stattree pick &lt;스탯&gt; &lt;단계&gt; &lt;갈래 1 · 2&gt; — 갈래 고르기 (채팅의 갈래 이름을 누르면 이 명령)</li>
  * <li>/stattree reset &lt;스탯&gt; — 그 나무의 갈래 초기화 (실버)</li>
+ * <li>/stattree skill &lt;공용 스킬&gt; — 열린 공용 스킬을 끼움 (2026-11-18 축복의 길 — 하나만) · /stattree cast — 끼운 공용 스킬을 씀 (조작 단계 전 시험 키)</li>
  * <li>운영자: /stattree clear [대상] — 나무 넷의 고른 갈래를 모두 지움 (실버 없이 — 받은 뽑기권 기록은 그대로, 다시 주지 않음)</li>
  * </ul>
  * 스탯: str · dex · int · vit 또는 힘 · 민첩 · 마력 · 체력.
@@ -79,7 +80,16 @@ public final class StatTreeCommands {
                         .then(Commands.argument("option", IntegerArgumentType.integer(1, 8)).executes(c -> pick(c, key)))));
                 reset.then(Commands.literal(w[0]).executes(c -> reset(c, key)));
             }
-            cmd.then(pick).then(reset);
+            LiteralArgumentBuilder<CommandSourceStack> skill = Commands.literal("skill");
+            for (String id : StatTree.skillDefs().keySet()) {
+                skill.then(Commands.literal(id).executes(c -> {
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    String err = mmorpg.fabric.job.CommonSkills.equip(sp, id);
+                    if (err != null) Notify.warn(sp, err);
+                    return err == null ? 1 : 0;
+                }));
+            }
+            cmd.then(pick).then(reset).then(skill).then(Commands.literal("cast").executes(c -> mmorpg.fabric.job.CommonSkills.press(c.getSource().getPlayerOrException()) ? 1 : 0));
             d.register(cmd);
         }
     }
@@ -160,9 +170,19 @@ public final class StatTreeCommands {
             }
             List<String> open = StatTree.openSkills(k, v, s.picksOf(k));
             if (!open.isEmpty()) {
-                List<String> names = new java.util.ArrayList<>();
-                for (String id : open) names.add(StatTree.skill(id).name());
-                sp.sendSystemMessage(Component.literal(BedrockText.toJava("   §b공용 스킬: §f" + String.join(" · ", names))));
+                // 공용 스킬: 누르면 끼움 (하나만 — 끼운 것은 금빛)
+                String on = mmorpg.fabric.job.CommonSkills.equipped(sp);
+                MutableComponent line = Component.literal(BedrockText.toJava("   §b공용 스킬: "));
+                for (String id : open) {
+                    StatTree.Skill sk = StatTree.skill(id);
+                    boolean eq = id.equals(on);
+                    String hover = "§b" + sk.name() + " §7(" + ("move".equals(sk.kind()) ? "이동기" : "작은 공격") + " · 재사용 " + (int) sk.cd() + "초)\n§f" + sk.text()
+                            + (eq ? "\n§e끼움" : "\n§a누르면 끼움");
+                    line.append(Component.literal("[" + sk.name() + "]").withStyle(st -> st.withColor(eq ? ChatFormatting.GOLD : ChatFormatting.AQUA)
+                            .withClickEvent(new ClickEvent.RunCommand("/stattree skill " + id)).withHoverEvent(new HoverEvent.ShowText(Component.literal(BedrockText.toJava(hover))))));
+                    line.append(Component.literal(" "));
+                }
+                sp.sendSystemMessage(line);
             }
         }
         String all = StatTree.bonusText(StatTrees.totals(sp));

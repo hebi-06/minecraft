@@ -333,7 +333,14 @@ public final class MotionsTest {
         for (Jobs.Job j : allJobs) for (Jobs.Skill k : j.skills()) jobIds.add(k.id());
         int phases = 0;
         int runePhases = 0;
+        int commons = 0;
         for (String k : Motions.skillKeys()) {
+            // 2026-11-18 축복의 길 공용 스킬 (common:id — CommonSkills.cast): 스탯 트리의 공용 스킬이어야 함 · 룬 동작 (rn_ — 같은 몸짓을 빌림)
+            if (k.startsWith("common:")) {
+                commons++;
+                check(StatTree.skill(k.substring(7)) != null && Motions.runeMotion(Motions.skillMotion(k)), "common skill key " + k + " → " + Motions.skillMotion(k));
+                continue;
+            }
             if (k.contains(":") && !k.startsWith("rune:")) {
                 String base = k.substring(0, k.indexOf(':'));
                 phases++;
@@ -350,6 +357,7 @@ public final class MotionsTest {
             check(want.contains(k) || gradeKeys.contains(k), "no stray key " + k);
         }
         check(runePhases >= 2, "rune phase keys " + runePhases);
+        check(commons == StatTree.skillDefs().size(), "common skill keys " + commons + " / " + StatTree.skillDefs().size());
         check(phases >= 18, "job phase keys " + phases);
         // 0.47.0 직업 스킬마다 그 스킬만의 동작 (jb_)
         Set<String> jobMotionNames = new HashSet<>();

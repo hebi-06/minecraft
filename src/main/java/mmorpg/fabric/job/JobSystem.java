@@ -76,6 +76,7 @@ public final class JobSystem {
         JobTraits.init();
         JobRecast.init(); // 0.51.0 다시 쓰기 (리븐 R · 아트록스 Q)
         ElementSystem.init(); // 2026-11-07 원소 반응 (직업 · 룬의 원소 스킬)
+        CommonSkills.init(); // 2026-11-18 축복의 길 — 스탯 트리 공용 스킬 16
         SwordsmanSkills.register();
         SpellbladeSkills.register();
         WarriorSkills.register(); // 0.28.0

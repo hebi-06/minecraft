@@ -953,6 +953,15 @@ final class VanillaProbe {
                     FILM_FRAMES.add(motionFrames(k.substring(9)));
                     continue;
                 }
+                if (k.startsWith("common:")) {
+                    // 2026-11-18 축복의 길 공용 스킬 (common:<id> · common:all — 3인칭: films/vanilla_common_<id>)
+                    String cid = k.substring(7);
+                    for (String id : cid.equals("all") ? new ArrayList<>(mmorpg.core.StatTree.skillDefs().keySet()) : List.of(cid)) {
+                        FILM_RUNES.add("common:" + id);
+                        FILM_FRAMES.add(COMMON_FRAMES);
+                    }
+                    continue;
+                }
                 if (k.startsWith("fppilot:")) {
                     // 2026-11-18 1인칭 모션 시범 (fppilot:<무기 종류> — 쓴 사람의 눈: films/vanilla_fppilot_<종류>)
                     FILM_RUNES.add(k);
@@ -1131,6 +1140,10 @@ final class VanillaProbe {
         }
         if (FILM_RUNES.get(i).startsWith("fppilot:")) {
             fpPilotFilm(p, step, FILM_RUNES.get(i).substring(8), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("common:")) {
+            commonFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         // 2026-11-17 룬 1인칭 (runefp: — 끝에 :fp)
@@ -1804,6 +1817,74 @@ final class VanillaProbe {
             Tasks.later(9, () -> {
                 if (!fp) check("rig shown " + type + " (" + VanillaRig.lastMotion + ")", VanillaRig.active(p));
                 say(p, "ents");
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /** 공용 스킬 영상의 장 수 (이동기 · 작은 공격 — 쓰고 남은 연출까지 3초 남짓) */
+    static final int COMMON_FRAMES = 64;
+
+    /** 공용 스킬 영상의 카메라 (보는 쪽에서 뒤 125° · 거리 · 높이 · 보는 높이 · 앞을 보는 몫 — jobView 와 같은 뜻): 뛰어오르는 것 · 넓은 것은 멀리 */
+    static double[] commonView(String id) {
+        return switch (id) {
+            case "blaze_leap", "rock_launch", "hailstone" -> new double[] {9.0, 3.4, 2.4, 0.6};
+            case "spark_blink", "ice_slide", "crystal_shift", "flicker_shot", "volt_dagger", "steel_charge", "boulder_roll" -> new double[] {8.0, 3.0, 1.4, 0.7};
+            case "ember_nova", "cryo_pulse", "aftershock" -> new double[] {7.5, 3.0, 1.4, 0.7};
+            default -> new double[] {6.5, 2.4, 1.1, 0.9};
+        };
+    }
+
+    /**
+     * 2026-11-18 축복의 길 공용 스킬 하나 (common:&lt;id&gt; — films/vanilla_common_&lt;id&gt;): 집으로 · 40렙 영웅 칼 · 과녁 여섯 (드라우그 — 직업 영상과 같음,
+     * 쓰러지지 않게) → 30틱 뒤 영상 시작 · 3틱 뒤 CommonSkills.cast (열림 · 재사용 대기를 보지 않음 — 그림 · 움직임 · 원소 · 숫자를 봄)
+     */
+    private static void commonFilm(ServerPlayer p, int step, String id, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        mmorpg.core.StatTree.Skill k = mmorpg.core.StatTree.skill(id);
+        if (k == null || !mmorpg.fabric.job.CommonSkills.implemented().contains(id)) {
+            check("film common " + id, false);
+            Tasks.later(2, () -> film(p, step + 1));
+            return;
+        }
+        run(server, "tick rate 20");
+        mmorpg.fabric.rune.RuneKit.filmReset(p);
+        clearStrays(server);
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
+        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:sword_l40_hero");
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        mmorpg.fabric.job.CommonSkills.resetCooldown(p);
+        mmorpg.fabric.RpgHealth.healFull(p);
+        p.removeAllEffects();
+        for (double[] t : JOB_TARGETS) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                m.addTag(Monsters.FILM_TARGET_TAG);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                m.setHealth(m.getMaxHealth());
+            }
+            SPAWNED.add(e);
+        }
+        run(server, "time set noon");
+        String name = "vanilla_common_" + id;
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+        double[] cam = commonView(id);
+        say(p, String.format(java.util.Locale.ROOT, "cam film 125 %.2f %.2f %.2f 2.5 %.2f", cam[0], cam[1], cam[2], cam[3]));
+        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, cam[0], cam[1], cam[2], 2.5, cam[3]);
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + JOB_FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            Tasks.later(3, () -> {
+                censusWatch(name, frames);
+                boolean ok = mmorpg.fabric.job.CommonSkills.cast(p, id, true);
+                check("film cast " + name, ok);
+                Tasks.later(14, () -> log("film " + name + " " + k.kind() + " dealt " + String.format(java.util.Locale.ROOT, "%.1f", mmorpg.fabric.job.CommonSkills.lastDealt)
+                        + " moved " + String.format(java.util.Locale.ROOT, "%.1f", Math.hypot(p.getX() - 0.5, p.getZ() - 0.5))));
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });

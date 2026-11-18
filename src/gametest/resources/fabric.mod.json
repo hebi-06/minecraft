@@ -39,6 +39,7 @@
       "mmorpg.fabric.test.RpgMountTests",
       "mmorpg.fabric.test.RpgDuelTests",
       "mmorpg.fabric.test.RpgStatTreeTests",
+      "mmorpg.fabric.test.RpgCommonSkillTests",
       "mmorpg.fabric.test.RpgRuneBreakTests",
       "mmorpg.fabric.test.RpgSkillBarTests",
       "mmorpg.fabric.test.RpgWeaponsMoreTests",

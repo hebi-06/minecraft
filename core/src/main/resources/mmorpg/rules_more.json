@@ -1048,6 +1048,10 @@
     "spin": {"ratio": 0.4, "range": 3.0},
     "roll": {"ticks": 10, "distance": 4.0, "cooldown": 20, "doubleTap": 6},
     "skills": {
+      "common:blaze_leap": "rn_leap_slam", "common:steel_charge": "rn_shield_rush", "common:blaze_cross": "rn_flame_slash", "common:ember_nova": "rn_fire_storm",
+      "common:spark_blink": "rn_blink", "common:lightning_sprint": "rn_fighting_spirit", "common:volt_dagger": "rn_thunder_spear", "common:flicker_shot": "rn_backstep",
+      "common:ice_slide": "rn_frost_thrust", "common:crystal_shift": "rn_backstep", "common:cryo_pulse": "rn_frost_nova", "common:hailstone": "rn_meteor",
+      "common:boulder_roll": "rn_shield_rush", "common:rock_launch": "rn_lift_slam", "common:rock_spike": "rn_earth_splitter", "common:aftershock": "rn_ground_slam",
       "swordsman_flurry": "jb_swordsman_flurry", "swordsman_flash": "jb_swordsman_flash", "swordsman_moon": "jb_swordsman_moon", "swordsman_mirror": "jb_swordsman_mirror",
       "swordsman_ult": "jb_swordsman_ult", "warrior_crush": "jb_warrior_crush", "warrior_charge": "jb_warrior_charge", "warrior_charge:slam": "jb_warrior_charge_slam",
       "warrior_whirl": "jb_warrior_whirl", "warrior_spirit": "jb_warrior_spirit", "warrior_ult": "jb_warrior_leap", "warrior_ult:final": "jb_warrior_ult_final",

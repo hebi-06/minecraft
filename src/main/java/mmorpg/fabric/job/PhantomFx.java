@@ -1986,6 +1986,11 @@ final class PhantomFx {
             case "el_maw" -> MAW;
             case "el_rage" -> RAGE;
             case "el_element" -> ELEMENT;
+            // 2026-11-18 축복의 길 공용 스킬 (CommonSkills — 신의 원소 묶음: 번개 · 얼음 · 바위 · 불꽃 혀)
+            case "el_thunder" -> THUNDER;
+            case "el_frost" -> FROST;
+            case "el_bear" -> BEAR;
+            case "el_dragon" -> DRAGONL;
             default -> null;
         };
     }
@@ -2359,6 +2364,15 @@ final class PhantomFx {
             // 2026-11-16 프로스트 레이더의 얼음 · 서리 흰빛 (서리 고리 JobFx15.halo · 얼음 결정)
             m.put(JobTraits16.ICE, FROST);
             m.put(JobTraits16.FROST_WHITE, FROST);
+            // 2026-11-18 축복의 길 공용 스킬 (CommonSkills): 신의 원소 빛 → 그 원소 묶음 (번개 기둥 · 땅의 번개 고리 · 얼음 결정 · 서리 고리 · 돌가시 · 돌진 줄기)
+            m.put(CommonSkills.FIRE, RAGE);
+            m.put(CommonSkills.FIRE_CORE, RAGE);
+            m.put(CommonSkills.VOLT, THUNDER);
+            m.put(CommonSkills.VOLT_CORE, THUNDER);
+            m.put(CommonSkills.ICE, FROST);
+            m.put(CommonSkills.ICE_CORE, FROST);
+            m.put(CommonSkills.ROCK, BEAR);
+            m.put(CommonSkills.ROCK_CORE, BEAR);
             // 2026-11-16 엘리멘탈 블레이드 바위 (돌가시 · 갈라진 땅의 흙빛 · 틈빛) → 곰 묶음
             m.put(ElementalbladeSkills.ROCK_BODY, BEAR);
             m.put(ElementalbladeSkills.ROCK_SEAM, BEAR);

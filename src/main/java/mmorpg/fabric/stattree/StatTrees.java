@@ -118,6 +118,12 @@ public final class StatTrees {
         return sp != null && active.test(sp);
     }
 
+    /** 2026-11-18 축복의 길: 지금 열린 공용 스킬 id (고른 갈래의 40 · 90 칸 — 스탯 트리를 쓸 수 없으면 빈 목록) */
+    public static List<String> openSkills(ServerPlayer sp) {
+        if (!isActive(sp)) return List.of();
+        return StatTree.openSkills(spent(sp), state(sp));
+    }
+
     // ------------------------------------------------------------ 보너스
 
     /** 보너스 합 (나무 넷 + 0.37.0 아티팩트 {@link #extra} — 상한 적용, 스탯 트리를 쓰지 않는 플레이어는 아티팩트 몫만) */
