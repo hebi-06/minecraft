@@ -75,10 +75,23 @@ public final class Probe implements ClientModInitializer {
         float pct = mc.player.getCooldowns().getCooldownPercent(held, 0F);
         switch (cmd) {
             case "key q" -> {
-                // Q 와 같음 (Minecraft.handleKeybinds): 손 칸을 먼저 비우고 버리기 패킷 — 버렸으면 팔을 휘두름
-                boolean dropped = mc.player.drop(false);
-                if (dropped) mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                log("now key q dropped " + dropped + " cooldown " + cd + " pct " + pct + " hand-after " + mc.player.getMainHandItem().getCount());
+                // Q 와 같음 (Minecraft.handleKeybinds 의 든 칸 버리기 — 손 칸을 먼저 비우고 버리기 패킷). 26.3 은 메서드 꼴이 바뀌어 (LivingEntity.drop(ItemStack,
+                // boolean, Prediction)) 이름에 drop 이 든 boolean 하나 받는 공개 메서드를 찾아 부름 — 찾은 이름 · 다른 drop 메서드도 기록
+                java.lang.reflect.Method dm = null;
+                StringBuilder all = new StringBuilder();
+                for (java.lang.reflect.Method m : mc.player.getClass().getMethods()) {
+                    if (!m.getName().toLowerCase(java.util.Locale.ROOT).contains("drop")) continue;
+                    all.append(' ').append(m.getName()).append(java.util.Arrays.toString(m.getParameterTypes()));
+                    if (dm == null && m.getParameterCount() == 1 && m.getParameterTypes()[0] == boolean.class) dm = m;
+                }
+                Object res;
+                try {
+                    res = dm == null ? "no method" : dm.invoke(mc.player, false);
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    res = e.toString();
+                }
+                log("now key q via " + (dm == null ? null : dm.getName()) + " -> " + res + " cooldown " + cd + " pct " + pct + " hand-after "
+                        + mc.player.getMainHandItem().getCount() + " | drop methods:" + all);
             }
             case "use" -> {
                 // 우클릭 (허공) 과 같음 (Minecraft.startUseItem 의 아이템 사용 — 쿨타임이어도 패킷을 보내는지)
