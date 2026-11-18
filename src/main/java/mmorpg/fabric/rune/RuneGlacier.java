@@ -566,11 +566,23 @@ final class RuneGlacier {
     static void freeze(ServerLevel level, LivingEntity e, int ticks, Cast cast) {
         Vec3 body = RuneLimited.body(e);
         if (mmorpg.fabric.boss.Bosses.isBossEntity(e)) {
-            // 2026-11-18 보스는 얼지 않고 파쇄 (피해는 그 얼음에 더함 — 위 cast): 얼음이 몸에 맺혔다 깨지는 조각 · 서리 고리
-            snow(level, body, 28, e.getBbWidth() * 0.55, e.getBbHeight() * 0.45, 0.05);
-            shards(level, body, 34, e.getBbWidth() * 0.5, e.getBbHeight() * 0.4, 0.16);
-            RuneKit.novaRing(level, e.position(), e.getBbWidth() + 0.5, 2.0, ICE, CORE, Opt.of("life", 0.4));
+            // 2026-11-18 보스는 얼지 않고 파쇄 (피해는 그 얼음에 더함 — 위 cast): 얼음이 몸에 맺혔다 깨지는 조각 · 서리 고리.
+            // 2판 (영상 검토 CI 44240946728 — 큰 보스 몸에 조각 · 고리가 작아 앞의 거대한 얼음에 묻힘): 몸에서 고드름이 사방으로 터져 나옴 · 몸 가운데 빛 · 고리 둘
+            double bw = e.getBbWidth();
+            double bh = e.getBbHeight();
+            snow(level, body, 28, bw * 0.55, bh * 0.45, 0.05);
+            shards(level, body, 48, bw * 0.6, bh * 0.45, 0.22);
+            for (int i = 0; i < 12; i++) {
+                double a = Math.PI * 2 * i / 12 + Kit.rand() * 0.3;
+                Vec3 d = V.unit(new Vec3(Math.cos(a), (Kit.rand() - 0.3) * 0.8, Math.sin(a)));
+                Vec3 from = V.add(V.up(e.position(), bh * (0.3 + Kit.rand() * 0.45)), d, bw * 0.4);
+                RuneKit.rfx2(level, "icicle", from, Opt.of("dir", d, "speed", 8.0 + Kit.rand() * 5, "size", 0.5 + Kit.rand() * 0.3, "life", 0.45, "fade", 0.3), ICE, CORE);
+            }
+            RuneKit.skyFlare(level, body, 1.2 + bw * 0.3, ICE, CORE, Opt.of("life", 0.3, "grow", 0.5, "fade", 0.6));
+            RuneKit.novaRing(level, e.position(), bw + 0.5, 2.0, ICE, CORE, Opt.of("life", 0.4));
+            RuneKit.novaRing(level, V.up(e.position(), 0.1), bw * 0.5 + 0.3, 3.0, CORE, RuneKit.WHITE, Opt.of("life", 0.35));
             SkillFx.play(level, "block.glass.break", body, 0.9, 0.8);
+            SkillFx.play(level, "block.amethyst_cluster.break", body, 1.0, 0.8);
             SkillFx.play(level, "block.amethyst_block.break", body, 0.7, 0.9);
             return;
         }
