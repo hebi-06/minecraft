@@ -31,6 +31,7 @@ public final class VanillaSupport {
         VanillaHud.init();
         VanillaCosmetics.init();
         VanillaRig.init();
+        VanillaFirstPerson.init();
         VanillaProbe.init();
     }
 

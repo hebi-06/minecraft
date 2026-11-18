@@ -178,6 +178,8 @@ public final class MotionSystem {
         // 2026-11-13 모드 없는 클라이언트: 뼈 몸이 같은 동작을 함 (VanillaRig — 싸우는 동안)
         try {
             mmorpg.fabric.vanilla.VanillaRig.play(sp, motion, yaw, speed);
+            // 2026-11-18 1인칭 모션 시범: 쓴 사람의 1인칭 무기 프레임 (쿨타임 패킷 — 시범을 켰을 때만)
+            mmorpg.fabric.vanilla.VanillaFirstPerson.play(sp, motion, speed);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] rig motion {}", motion, e);
         }

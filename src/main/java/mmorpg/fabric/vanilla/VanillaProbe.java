@@ -953,6 +953,12 @@ final class VanillaProbe {
                     FILM_FRAMES.add(motionFrames(k.substring(9)));
                     continue;
                 }
+                if (k.startsWith("fppilot:")) {
+                    // 2026-11-18 1인칭 모션 시범 (fppilot:<무기 종류> — 쓴 사람의 눈: films/vanilla_fppilot_<종류>)
+                    FILM_RUNES.add(k);
+                    FILM_FRAMES.add(fpPilotFrames(k.substring(8)));
+                    continue;
+                }
                 if (k.startsWith("boss:") || k.startsWith("bossab:")) {
                     // 2026-11-17 보스 영상 (boss:<보스 key> — 그 보스의 신전을 지어 부르고 싸움을 찍음: films/vanilla_boss_<key>) · bossab: 는 예전 그림 (보스 위르드식
                     // 끔 — films/vanilla_boss_<key>_old) 을 먼저
@@ -1121,6 +1127,10 @@ final class VanillaProbe {
         }
         if (FILM_RUNES.get(i).startsWith("motion:")) {
             motionFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("fppilot:")) {
+            fpPilotFilm(p, step, FILM_RUNES.get(i).substring(8), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         // 2026-11-17 룬 1인칭 (runefp: — 끝에 :fp)
@@ -1794,6 +1804,108 @@ final class VanillaProbe {
             Tasks.later(9, () -> {
                 if (!fp) check("rig shown " + type + " (" + VanillaRig.lastMotion + ")", VanillaRig.active(p));
                 say(p, "ents");
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /** 1인칭 시범 영상의 장 수 (평타 사이 iv: 여섯 · 쉼 · 여섯 · 쉼 · Q 둘 · 평타 + 우클릭 둘 · 끝) */
+    static int fpPilotFrames(String type) {
+        int iv = motionPlan(type)[0][1];
+        return 3 + 6 * iv + 16 + 6 * iv + 16 + 32 + 2 * (iv + 8) + 12;
+    }
+
+    /**
+     * 2026-11-18 1인칭 모션 시범 (VFILM fppilot:&lt;무기 종류&gt; — films/vanilla_fppilot_&lt;종류&gt;, 축복의 길 컨셉 "1인칭 모션"): 쓴 사람의 1인칭 화면 ·
+     * 40렙 영웅 무기 ({@link VanillaFirstPerson} — 모드 1인칭 동작을 구운 프레임 · 쿨타임 패킷으로 재생).
+     * <ol>
+     * <li>동작 이름을 보내지 않고 (switchMotion 끔 — 아이템 구성 요소가 그대로) 평타 여섯: 쿨타임 프레임 · 핫바 덮개</li>
+     * <li>동작 이름을 바꿔 보내며 (연타 단계마다 custom_model_data 글자 1번) 평타 여섯: 바닐라 다시 들기 (무기가 내려갔다 올라옴) 가 보이는지</li>
+     * <li>Q 둘 (사진기가 바닐라 Q 와 같은 길 — 손 칸을 먼저 비움 → 서버가 막고 되돌림): 무기가 깜빡이거나 내려가는지</li>
+     * <li>평타 3틱 뒤 우클릭 둘: 1인칭 쿨타임 중에도 우클릭 패킷이 서버에 닿는지 (VanillaFirstPerson.usesInCooldown)</li>
+     * </ol>
+     */
+    private static void fpPilotFilm(ServerPlayer p, int step, String type, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        run(server, "tick rate 20");
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
+        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:" + type + "_l40_" + motionGrade(type));
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        mmorpg.fabric.RpgHealth.healFull(p);
+        List<net.minecraft.world.entity.LivingEntity> foes = new ArrayList<>();
+        for (double[] t : JOB_TARGETS) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                m.addTag(Monsters.FILM_TARGET_TAG);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                m.setHealth(m.getMaxHealth());
+                foes.add(m);
+            }
+            SPAWNED.add(e);
+        }
+        String name = "vanilla_fppilot_" + type;
+        int[][] plan = motionPlan(type);
+        int iv = plan[0][1];
+        mmorpg.fabric.RpgPlayers.setStat(p, "dex", plan[0][0]);
+        VanillaFirstPerson.enabled = true;
+        VanillaFirstPerson.switchMotion = false;
+        VanillaFirstPerson.blockDrop = true;
+        VanillaFirstPerson.resetCounters();
+        Tasks.later(4, () -> {
+            if (!p.isRemoved()) p.containerMenu.sendAllDataToRemote(); // 켠 뒤의 모습 (휘두르기 끔) 으로 가방을 다시 보냄
+        });
+        log("fp wrapped items " + VanillaFirstPerson.wrappedCount() + " " + VanillaFirstPerson.wrappedItems());
+        check("fp frames wrapped " + type, VanillaFirstPerson.wrappedItems().stream().anyMatch(id -> id.getPath().startsWith(type + "_l40_")));
+        if (VanillaRig.selfView(p)) VanillaRig.selfView(p, false);
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
+        mmorpg.fabric.vfx.PBridge.filmCamOff(p);
+        say(p, "cam off");
+        say(p, "cam first");
+        Runnable swing = () -> {
+            if (p.isRemoved()) return;
+            var e = nearest(p.position(), foes);
+            if (e != null) p.attack(e);
+        };
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            int at = 3;
+            // 1) 동작 이름 없이 (구성 요소 그대로)
+            for (int k = 0; k < 6; k++) Tasks.later(at + k * iv, swing);
+            Tasks.later(at + iv + 2, () -> say(p, "now cd"));
+            at += 6 * iv + 16;
+            // 2) 동작 이름을 바꿔 보냄 (연타 단계마다)
+            Tasks.later(at - 4, () -> {
+                VanillaFirstPerson.switchMotion = true;
+                log("fp switch on (played " + VanillaFirstPerson.played + " resent " + VanillaFirstPerson.resent + ")");
+            });
+            for (int k = 0; k < 6; k++) Tasks.later(at + k * iv, swing);
+            Tasks.later(at + iv + 2, () -> say(p, "now cd"));
+            Tasks.later(at + 2 * iv + 2, () -> say(p, "now cd"));
+            at += 6 * iv + 16;
+            // 3) Q 둘
+            int q = at;
+            Tasks.later(q, () -> say(p, "now key q"));
+            Tasks.later(q + 16, () -> say(p, "now key q"));
+            at += 32;
+            // 4) 평타 3틱 뒤 우클릭 (1인칭 쿨타임 중)
+            for (int r = 0; r < 2; r++) {
+                int s = at + r * (iv + 8);
+                Tasks.later(s, swing);
+                Tasks.later(s + 3, () -> say(p, "now use"));
+            }
+            Tasks.later(frames, () -> {
+                log("fp pilot " + type + ": played " + VanillaFirstPerson.played + " last " + VanillaFirstPerson.lastMotion + " ticks "
+                        + VanillaFirstPerson.lastTicks + " resent " + VanillaFirstPerson.resent + " drops " + VanillaFirstPerson.drops + " uses "
+                        + VanillaFirstPerson.uses + " uses-in-cooldown " + VanillaFirstPerson.usesInCooldown + " hand " + p.getMainHandItem());
+                check("fp played " + type, VanillaFirstPerson.played >= 12);
+                check("fp motion name resent " + type, VanillaFirstPerson.resent >= 3);
+                check("fp drop blocked " + type, VanillaFirstPerson.drops == 2 && p.getMainHandItem().getItem() instanceof mmorpg.fabric.RpgWeaponItem);
+                VanillaFirstPerson.enabled = false;
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });

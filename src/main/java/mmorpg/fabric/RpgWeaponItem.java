@@ -82,6 +82,8 @@ public final class RpgWeaponItem extends Item {
 
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        // 2026-11-18 1인칭 모션 시범: 우클릭 패킷이 1인칭 쿨타임 중에도 닿는지 셈 (시범을 켰을 때만)
+        if (!level.isClientSide() && hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer usp) mmorpg.fabric.vanilla.VanillaFirstPerson.onUse(usp);
         if (!RpgCombat.isRanged(weapon) || hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         if (!level.isClientSide() && player instanceof ServerPlayer sp) RpgCombat.fireRanged(sp, player.getItemInHand(hand), weapon, null);
         return InteractionResult.SUCCESS;

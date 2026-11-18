@@ -411,6 +411,8 @@ final class VanillaPack {
                 continue;
             }
             com.google.gson.JsonElement original = def.get("model");
+            // 2026-11-18 1인칭 모션 시범 (VanillaFirstPerson): 구운 프레임이 있는 손 모델이면 1인칭 오른손에서 프레임 (스킨 · 숨김 글자와 함께 감쌈)
+            if (item instanceof mmorpg.fabric.RpgWeaponItem) original = fpWrap(root, id, item, original);
             if (item instanceof mmorpg.fabric.RpgWeaponItem) {
                 java.util.List<String[]> skins = byType.get(VanillaCosmetics.weaponType(item));
                 if (skins != null) {
@@ -473,6 +475,80 @@ final class VanillaPack {
         o.addProperty("type", "minecraft:model");
         o.addProperty("model", id);
         return o;
+    }
+
+    /** 구운 1인칭 프레임 파일 이름 (&lt;동작&gt;_&lt;k&gt;.json) */
+    private static final java.util.regex.Pattern FRAME = java.util.regex.Pattern.compile("([a-z0-9_]+)_(\\d+)\\.json");
+
+    /**
+     * 2026-11-18 1인칭 모션 시범 (VanillaFirstPerson): 무기의 손 모델 (rpg:item/model/&lt;디자인&gt;) 에 구운 프레임
+     * (assets/rpg/models/item/fp/&lt;디자인&gt;/&lt;동작&gt;_&lt;k&gt;.json — tools/fp_frames.py) 이 있으면, 1인칭 오른손에서
+     * custom_model_data 글자 1번 (동작 이름) → range_dispatch (minecraft:cooldown — 남은 몫 1 → 0 이 프레임 0 → 끝) 로 프레임.
+     * 이름이 없으면 그 종류의 첫 연타 동작. 쿨타임이 없으면 (몫 0) 원래 모델. 프레임이 없으면 그대로
+     */
+    private static com.google.gson.JsonElement fpWrap(Path root, net.minecraft.resources.Identifier id, net.minecraft.world.item.Item item,
+            com.google.gson.JsonElement original) {
+        String design = handDesign(original);
+        if (design == null) return original;
+        Path dir = root.resolve("assets").resolve(Mmorpg.NS).resolve("models").resolve("item").resolve("fp").resolve(design);
+        if (!Files.isDirectory(dir)) return original;
+        Map<String, Integer> motions = new java.util.TreeMap<>();
+        try (java.util.stream.Stream<Path> files = Files.list(dir)) {
+            for (Path f : (Iterable<Path>) files::iterator) {
+                java.util.regex.Matcher m = FRAME.matcher(f.getFileName().toString());
+                if (m.matches()) motions.merge(m.group(1), Integer.parseInt(m.group(2)) + 1, Math::max);
+            }
+        } catch (IOException | RuntimeException e) {
+            Mmorpg.LOG.warn("[vanilla] first-person frames {}: {}", design, e.toString());
+            return original;
+        }
+        if (motions.isEmpty()) return original;
+        String first = null;
+        for (String m : mmorpg.core.Motions.combo(VanillaCosmetics.weaponType(item))) {
+            if (motions.containsKey(m)) {
+                first = m;
+                break;
+            }
+        }
+        if (first == null) first = motions.keySet().iterator().next();
+        com.google.gson.JsonArray cases = new com.google.gson.JsonArray();
+        for (Map.Entry<String, Integer> e : motions.entrySet()) cases.add(when(e.getKey(), fpRange(design, e.getKey(), e.getValue(), original)));
+        com.google.gson.JsonObject sel = new com.google.gson.JsonObject();
+        sel.addProperty("type", "minecraft:select");
+        sel.addProperty("property", "minecraft:custom_model_data");
+        sel.addProperty("index", 1);
+        sel.add("cases", cases);
+        sel.add("fallback", fpRange(design, first, motions.get(first), original));
+        VanillaFirstPerson.wrapped(id, motions);
+        return context(new String[]{"firstperson_righthand"}, sel, original);
+    }
+
+    /** 동작 하나의 프레임 n 개: 쿨타임 남은 몫 [j / n, (j + 1) / n) → 프레임 n − 1 − j (처음 몫 1 = 프레임 0), 0 은 원래 모델 */
+    private static com.google.gson.JsonObject fpRange(String design, String motion, int n, com.google.gson.JsonElement original) {
+        com.google.gson.JsonArray entries = new com.google.gson.JsonArray();
+        for (int j = 0; j < n; j++) {
+            com.google.gson.JsonObject e = new com.google.gson.JsonObject();
+            e.addProperty("threshold", j == 0 ? 0.0001F : (float) j / n);
+            e.add("model", model(Mmorpg.NS + ":item/fp/" + design + "/" + motion + "_" + (n - 1 - j)));
+            entries.add(e);
+        }
+        com.google.gson.JsonObject r = new com.google.gson.JsonObject();
+        r.addProperty("type", "minecraft:range_dispatch");
+        r.addProperty("property", "minecraft:cooldown");
+        r.add("entries", entries);
+        r.add("fallback", original.deepCopy());
+        return r;
+    }
+
+    /** 무기 아이템 정의의 손 모델 디자인 (rpg:item/model/&lt;디자인&gt; — select 의 fallback 또는 모델 하나), 없으면 null */
+    private static String handDesign(com.google.gson.JsonElement def) {
+        if (def == null || !def.isJsonObject()) return null;
+        com.google.gson.JsonObject o = def.getAsJsonObject();
+        com.google.gson.JsonElement target = o.has("fallback") ? o.get("fallback") : o;
+        if (!target.isJsonObject() || !target.getAsJsonObject().has("model") || !target.getAsJsonObject().get("model").isJsonPrimitive()) return null;
+        String m = target.getAsJsonObject().get("model").getAsString();
+        String pre = Mmorpg.NS + ":item/model/";
+        return m.startsWith(pre) ? m.substring(pre.length()) : null;
     }
 
     /** select 의 경우 하나 (when = 글자) */

@@ -1,0 +1,23 @@
+{
+ "credit": "MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)",
+ "parent": "rpg:item/model/sword_hero_lv0",
+ "display": {
+  "firstperson_righthand": {
+   "rotation": [
+    -179.9118,
+    4.1365,
+    -95.1618
+   ],
+   "translation": [
+    21.2016,
+    5.6526,
+    -6.3408
+   ],
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ }
+}

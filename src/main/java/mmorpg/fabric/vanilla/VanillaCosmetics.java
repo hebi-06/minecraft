@@ -347,33 +347,38 @@ public final class VanillaCosmetics {
     /** 모드 없는 클라이언트에 가는 RPG 아이템 하나: 그 모습의 무기 스킨 · 갑옷 그림 (out = 바닐라 것) */
     static void convert(ItemStack out, ItemStack stack, PacketContext ctx, HolderLookup.Provider lookup) {
         View view = OVERRIDE.get();
+        // 2026-11-18 1인칭 모션 시범 (VanillaFirstPerson): 받는 사람 자신의 지금 동작 이름 — custom_model_data 글자 1번 (없으면 null)
+        String fp = null;
         if (view == null) {
             ServerPlayer receiver = receiver(ctx);
             if (receiver == null) return;
+            if (stack.getItem() instanceof RpgWeaponItem) fp = VanillaFirstPerson.motionFor(receiver, stack);
             // 2026-11-13 드라군 변신 (hideHands): 내 무기 — 손 (1 · 3인칭) 에서 빈 그림 (가방 · 핫바 · 땅은 그대로)
             if (stack.getItem() instanceof RpgWeaponItem && HANDS_HIDDEN.contains(receiver.getUUID())) {
-                out.set(DataComponents.CUSTOM_MODEL_DATA, cmd("hide"));
+                out.set(DataComponents.CUSTOM_MODEL_DATA, cmd("hide", fp));
                 return;
             }
             Look own = LOOKS.get(receiver.getUUID());
             // 2026-11-13 뼈 몸 · 내 모션 보기 (hideOwnHands): 3인칭 손에서만 빈 그림 (뼈 몸이 무기를 듦) — 1인칭은 그대로 (스킨이면 스킨)
             if (stack.getItem() instanceof RpgWeaponItem && OWN_HIDDEN.contains(receiver.getUUID())) {
                 String skin = own == null ? null : own.weaponSkin(weaponType(stack.getItem()));
-                out.set(DataComponents.CUSTOM_MODEL_DATA, cmd(skin != null && SKINS.contains(skin) ? "hide3p:" + skin : "hide3p"));
+                out.set(DataComponents.CUSTOM_MODEL_DATA, cmd(skin != null && SKINS.contains(skin) ? "hide3p:" + skin : "hide3p", fp));
                 return;
             }
             // 뼈 몸 · 내 모션 보기 동안은 내 화면의 진짜 머리에도 장식을 그리지 않음 (뼈 몸의 머리가 씀 — 투명할 때와 같게)
             view = new View(own == null ? Look.EMPTY : own, receiver.isInvisible() || OWN_HIDDEN.contains(receiver.getUUID()), true);
         }
         if (!view.person()) return;
-        if (lookup == null) lookup = SERVER_LOOKUP;
-        if (lookup == null) return;
         Item item = stack.getItem();
         if (item instanceof RpgWeaponItem) {
             String skin = view.look().weaponSkin(weaponType(item));
-            if (skin != null && SKINS.contains(skin)) out.set(DataComponents.CUSTOM_MODEL_DATA, cmd(skin));
+            if (skin != null && SKINS.contains(skin)) out.set(DataComponents.CUSTOM_MODEL_DATA, cmd(skin, fp));
+            else if (fp != null) out.set(DataComponents.CUSTOM_MODEL_DATA, cmd("", fp));
+            VanillaFirstPerson.noSwing(out, stack); // 2026-11-18 1인칭 모션 시범: 바닐라 휘두르기 끔 (시범을 켰을 때만)
             return;
         }
+        if (lookup == null) lookup = SERVER_LOOKUP;
+        if (lookup == null) return;
         if (!(item instanceof RpgArmorItem)) return;
         Equippable eq = out.get(DataComponents.EQUIPPABLE);
         if (eq == null) return;
@@ -472,6 +477,11 @@ public final class VanillaCosmetics {
 
     private static CustomModelData cmd(String s) {
         return new CustomModelData(List.of(), List.of(), List.of(s), List.of());
+    }
+
+    /** 글자 둘: 0번 = 모습 (스킨 · 숨김 — 없으면 ""), 1번 = 1인칭 동작 이름 (VanillaFirstPerson — null 이면 글자 하나) */
+    private static CustomModelData cmd(String s, String fp) {
+        return fp == null ? cmd(s) : new CustomModelData(List.of(), List.of(), List.of(s, fp), List.of());
     }
 
     /** 갑옷 그림 (asset_id) 만 바꾼 equippable (null = 그림 없음) — 코덱으로 (판마다 필드가 바뀌어도 그대로) */

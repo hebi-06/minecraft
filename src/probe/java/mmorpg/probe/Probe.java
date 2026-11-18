@@ -56,7 +56,38 @@ public final class Probe implements ClientModInitializer {
     /** 채팅 (서버의 알림 줄) — 메인 스레드 */
     public static void chat(String text) {
         if (!text.startsWith("[probe] ")) return;
-        QUEUE.add(text.substring("[probe] ".length()).trim());
+        String cmd = text.substring("[probe] ".length()).trim();
+        if (cmd.startsWith("now ")) {
+            // 2026-11-18 영상 중에도 바로 (tick 은 영상 동안 신호를 미룸 — 1인칭 시범의 Q · 우클릭): 실행하고 채팅 줄을 지움 (영상에 남지 않게)
+            now(cmd.substring(4).trim());
+            clearChat(Minecraft.getInstance());
+            return;
+        }
+        QUEUE.add(cmd);
+    }
+
+    /** 바로 실행하는 신호 (메인 스레드 — 채팅 패킷 처리 중) */
+    private static void now(String cmd) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.gameMode == null) return;
+        net.minecraft.world.item.ItemStack held = mc.player.getMainHandItem();
+        boolean cd = mc.player.getCooldowns().isOnCooldown(held);
+        float pct = mc.player.getCooldowns().getCooldownPercent(held, 0F);
+        switch (cmd) {
+            case "key q" -> {
+                // Q 와 같음 (Minecraft.handleKeybinds): 손 칸을 먼저 비우고 버리기 패킷 — 버렸으면 팔을 휘두름
+                boolean dropped = mc.player.drop(false);
+                if (dropped) mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                log("now key q dropped " + dropped + " cooldown " + cd + " pct " + pct + " hand-after " + mc.player.getMainHandItem().getCount());
+            }
+            case "use" -> {
+                // 우클릭 (허공) 과 같음 (Minecraft.startUseItem 의 아이템 사용 — 쿨타임이어도 패킷을 보내는지)
+                Object r = mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND);
+                log("now use cooldown " + cd + " pct " + pct + " result " + r);
+            }
+            case "cd" -> log("now cd cooldown " + cd + " pct " + pct + " cmd " + held.get(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA));
+            default -> log("now unknown " + cmd);
+        }
     }
 
     private static boolean skinsLogged;

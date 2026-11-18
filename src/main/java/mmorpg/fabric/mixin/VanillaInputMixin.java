@@ -34,6 +34,15 @@ public abstract class VanillaInputMixin {
         if (VanillaInput.onSwapKey(this.player)) ci.cancel();
     }
 
+    /** 2026-11-18 1인칭 모션 시범 (VanillaFirstPerson): Q · Ctrl + Q — 스킬 키 자리라 버리지 않음 (시범을 켰을 때만) */
+    @Inject(method = "handlePlayerAction", at = @At("HEAD"), cancellable = true)
+    private void mmorpg$dropKey(ServerboundPlayerActionPacket packet, CallbackInfo ci) {
+        ServerboundPlayerActionPacket.Action a = packet.getAction();
+        if (a != ServerboundPlayerActionPacket.Action.DROP_ITEM && a != ServerboundPlayerActionPacket.Action.DROP_ALL_ITEMS) return;
+        if (!mmorpg$serverThread()) return;
+        if (mmorpg.fabric.vanilla.VanillaFirstPerson.onDrop(this.player)) ci.cancel();
+    }
+
     @Inject(method = "handleSetCarriedItem", at = @At("HEAD"), cancellable = true)
     private void mmorpg$slotKey(ServerboundSetCarriedItemPacket packet, CallbackInfo ci) {
         if (!mmorpg$serverThread()) return;
