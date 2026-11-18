@@ -44,6 +44,18 @@ public final class VanillaFirstPerson {
      * 평타 연타도 그 단계의 동작 (칼 둘째 = 반대 가로). 끄면 시범 2차처럼 스킬만 이름을 바꾸고 lead 틱 뒤 (내려가는 3틱)
      */
     public static volatile boolean swapFree = true;
+    /**
+     * 2026-11-18 진단 (CI 44292888089 — 무기 종류 모두 영상에서 이름을 바꾸지 않는 평타 · 활 쏘기의 프레임이 움직이지 않고 이름을 바꾼 직후 1 ~ 2장만 보였음.
+     * 시범 1차 (44256605383) 에서는 움직였음 — 그 뒤 더한 것: 바닐라 휘두르기 끄기 · hand_animation_on_swap): 영상에서 둘을 따로 켜고 꺼 봄.
+     * hand_animation_on_swap false 를 넣는 무기 종류 (단검은 뺌 — 견줌) · 휘두르기 끄기 켬
+     */
+    public static final Set<String> SWAP_FLAG_TYPES = Set.of("sword", "greatsword", "scythe", "axe", "hammer", "lance", "scepter", "shield", "bow", "wand");
+    public static volatile boolean noSwingOn = true;
+
+    /** 이 종류 무기는 이름을 바꿔도 손을 내렸다 올리지 않는지 (아이템 정의 hand_animation_on_swap false) */
+    public static boolean swapFreeFor(String type) {
+        return swapFree && SWAP_FLAG_TYPES.contains(type);
+    }
     /** swapFree 가 아닐 때 스킬 동작 이름을 바꾼 뒤 쿨타임까지 틱 (다시 들기의 내려가는 3틱) */
     public static volatile int lead = 3;
     /** 시범: Q (버리기) 를 막고 손 칸을 되돌려 보냄 (스킬 키 자리 — 버리지 않음) */
@@ -150,7 +162,8 @@ public final class VanillaFirstPerson {
         boolean comboStep = mmorpg.core.Motions.combo(type).contains(motion);
         // 2026-11-18 무기 종류 모두: 구운 동작이 아니면 (직업 · 룬 스킬 동작) 1인칭 움직임이 가장 닮은 대표 동작 (fp_map.json)
         String mapped = shownFor(type, motion, motions);
-        boolean named = skillMotions && mapped != null && !mapped.equals(base) && (asSkill || !comboStep || swapFree);
+        boolean free = swapFreeFor(type);
+        boolean named = skillMotions && mapped != null && !mapped.equals(base) && (asSkill || !comboStep || free);
         String shown = named ? mapped : base;
         String want = named ? mapped : null;
         UUID id = sp.getUUID();
@@ -163,7 +176,7 @@ public final class VanillaFirstPerson {
         }
         int ticks = Math.max(4, Math.round(TICKS.getOrDefault(shown, motions.get(shown)) / Math.max(0.25F, speed)));
         Identifier group = group(st);
-        int delay = change && !swapFree ? Math.max(0, lead) : 0;
+        int delay = change && !free ? Math.max(0, lead) : 0;
         if (delay == 0) {
             sp.connection.send(new ClientboundCooldownPacket(group, ticks));
         } else {
@@ -291,7 +304,7 @@ public final class VanillaFirstPerson {
      * (좌클릭 · Q 의 바닐라 휘두르기). VanillaCosmetics.convert (무기 · 받는 사람 자신)
      */
     static void noSwing(ItemStack out, ItemStack stack) {
-        if (!enabled || !WRAPPED.containsKey(BuiltInRegistries.ITEM.getKey(stack.getItem()))) return;
+        if (!enabled || !noSwingOn || !WRAPPED.containsKey(BuiltInRegistries.ITEM.getKey(stack.getItem()))) return;
         if (!swingTried) {
             swingTried = true;
             // 시범 1차: minecraft:swing_animation 이 26.3 등록부에 없었음 (null). 2차 (CI 44259802101) 기록: 비슷한 이름은 attack_animation ·

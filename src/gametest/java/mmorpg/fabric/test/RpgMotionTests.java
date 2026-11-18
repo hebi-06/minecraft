@@ -308,7 +308,8 @@ public final class RpgMotionTests {
         h.runAfterDelay(4, () -> {
             ItemStack st = sp.getMainHandItem();
             RpgCombat.fireRanged(sp, st, bow, null);
-            h.assertTrue(sp.getCooldowns().isOnCooldown(st), "bow cooldown started");
+            h.assertTrue(RpgCombat.rangedCooldownLeft(sp, bow) > 0 && !sp.getCooldowns().isOnCooldown(st),
+                    "bow cooldown started (server RANGED_READY — item cooldown only on the client, so right click still reaches the server)");
             // 재사용 18틱 (예전 바탕 20틱 · 민첩 0 이면 32틱) — 시험 사람은 아이템 재사용 대기가 흐르지 않아 서버가 정한 값을 봄
             h.assertTrue(RpgCombat.lastRangedCd == 18, "bow cooldown 18 ticks at dex 80 " + RpgCombat.lastRangedCd);
             RpgPlayers.setStat(sp, "dex", 60); // 공속 ×1.6 → 32 ÷ 1.6 = 20 (예전과 같음)

@@ -666,6 +666,19 @@ public final class RpgCombat {
         return true;
     }
 
+    /** 아이템의 쿨타임 묶음 (USE_COOLDOWN 의 묶음, 없으면 아이템 id — 바닐라 ItemCooldowns 와 같음) */
+    public static net.minecraft.resources.Identifier cooldownGroup(ItemStack stack) {
+        net.minecraft.world.item.component.UseCooldown c = stack.get(net.minecraft.core.component.DataComponents.USE_COOLDOWN);
+        net.minecraft.resources.Identifier id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return c != null ? c.cooldownGroup().orElse(id) : id;
+    }
+
+    /** 시험: 활 · 완드 평타를 다시 쏠 수 있을 때까지 남은 틱 (0 = 지금) */
+    public static long rangedCooldownLeft(ServerPlayer sp, Weapon w) {
+        Long ready = sp == null || w == null ? null : RANGED_READY.get(sp.getUUID() + "|" + w.type());
+        return ready == null ? 0 : Math.max(0, ready - Tasks.now());
+    }
+
     /** 나감 */
     public static void forgetPunch(java.util.UUID id) {
         LAST_PUNCH.remove(id);
@@ -689,7 +702,9 @@ public final class RpgCombat {
                 Math.round(cfg.num("cooldownTicks") * rangedCdScale(sp, w) * mmorpg.core.AttackSpeed.rangedSlow() / speed));
         RANGED_READY.put(k, now + cd);
         lastRangedCd = cd;
-        sp.getCooldowns().addCooldown(stack, cd);
+        // 2026-11-18 축복의 길: 쿨타임 덮개는 클라이언트에만 (서버 아이템 쿨타임이면 우클릭 — 스킬 키 우 — 패킷을 서버가 막음: ServerPlayerGameMode.useItem 의
+        // 쿨타임 검사, CI 44292888089 활 · 완드 영상의 우클릭 0). 쏘는 빠르기는 RANGED_READY 가 정함
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundCooldownPacket(cooldownGroup(stack), cd));
         mmorpg.fabric.vanilla.VanillaFirstPerson.basic(sp); // 2026-11-18 모드 없는 클라이언트 1인칭: 활 shoot · 완드 cast 프레임 (쿨타임 패킷이 위를 덮음)
         if (w.type().equals("wand")) {
             if (!CASTING.containsKey(sp.getUUID())) startWandCast(sp, w, forced);

@@ -472,7 +472,7 @@ final class VanillaPack {
             sel.add("cases", cases);
             sel.add("fallback", original);
             def.add("model", sel);
-            if (fpWrapped) def.addProperty("hand_animation_on_swap", false);
+            if (fpWrapped && VanillaFirstPerson.SWAP_FLAG_TYPES.contains(VanillaCosmetics.weaponType(item))) def.addProperty("hand_animation_on_swap", false);
             builder.addStringData("assets/" + Mmorpg.NS + "/items/" + id.getPath() + ".json", gson.toJson(def));
         }
         int dim = 0;

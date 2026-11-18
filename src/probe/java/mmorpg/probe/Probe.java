@@ -128,6 +128,7 @@ public final class Probe implements ClientModInitializer {
                 shift2 = 0;
                 log("now shift2");
             }
+            case "fpdiag noswing-off", "fpdiag noswing-on" -> log("now " + cmd + " components " + held.getComponents());
             default -> log("now unknown " + cmd);
         }
     }
@@ -401,6 +402,7 @@ public final class Probe implements ClientModInitializer {
         }
         Path file = dir.resolve(String.format("f%04d.png", filmIndex++));
         FILM_TICKS.add(ticks);
+        fpDiag(mc, filmIndex - 1);
         // 2026-11-18 1인칭 프레임: 손 높이 (바꿔 들기 — 아이템이 구성 요소까지 바뀌면 바닐라가 손을 내렸다 올림) 가장 낮은 값 · 낮았던 장 수
         float hh = handHeight(mc);
         if (hh >= 0) {
@@ -427,6 +429,44 @@ public final class Probe implements ClientModInitializer {
         if (handMin <= 1F) log(String.format(java.util.Locale.ROOT, "film hand %s min %.2f dips %d", filmName, handMin, handDips));
         filmName = null;
         wait = 5;
+    }
+
+    /**
+     * 2026-11-18 진단 (1인칭 영상 vanilla_fp_* — CI 44292888089 에서 평타 프레임이 움직이지 않음): 장마다 든 아이템의 쿨타임 몫 · custom_model_data 글자 ·
+     * 휘두르기 구성 요소 (attack_animation) 가 있는지 · 손 그림이 쓰는 아이템 (ItemInHandRenderer 의 주 손 아이템) 이 든 것과 같은 것인지 · 손 그림 실수 칸들
+     */
+    private static void fpDiag(Minecraft mc, int n) {
+        if (mc.player == null || filmName == null || !filmName.startsWith("vanilla_fp_") || n > 260) return;
+        try {
+            net.minecraft.world.item.ItemStack held = mc.player.getMainHandItem();
+            float pct = mc.player.getCooldowns().getCooldownPercent(held, 0F);
+            Object cmd = held.get(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA);
+            String strings = cmd == null ? "-" : String.valueOf(((net.minecraft.world.item.component.CustomModelData) cmd).strings());
+            boolean attackAnim = String.valueOf(held.getComponents()).contains("attack_animation");
+            StringBuilder hr = new StringBuilder();
+            Object renderer = null;
+            for (java.lang.reflect.Field f : mc.gameRenderer.getClass().getDeclaredFields()) {
+                if (f.getType().getSimpleName().equals("ItemInHandRenderer")) {
+                    f.setAccessible(true);
+                    renderer = f.get(mc.gameRenderer);
+                }
+            }
+            if (renderer != null) {
+                for (java.lang.reflect.Field f : renderer.getClass().getDeclaredFields()) {
+                    if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                    f.setAccessible(true);
+                    if (f.getType() == float.class) hr.append(' ').append(f.getName()).append('=').append(String.format(java.util.Locale.ROOT, "%.2f", f.getFloat(renderer)));
+                    else if (f.getType().getSimpleName().equals("ItemStack")) {
+                        Object v = f.get(renderer);
+                        hr.append(' ').append(f.getName()).append(v == held ? "=held" : v instanceof net.minecraft.world.item.ItemStack is ? "=other(" + (is.isEmpty() ? "empty" : "same-model " + java.util.Objects.equals(
+                                is.get(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA), cmd)) + ")" : "=null");
+                    }
+                }
+            }
+            log(String.format(java.util.Locale.ROOT, "fpdiag %s %d pct %.2f cmd %s attack-anim %s |%s", filmName, n, pct, strings, attackAnim, hr));
+        } catch (Throwable e) {
+            log("fpdiag failed " + e);
+        }
     }
 
     /** 영상 동안 손 높이 (ItemInHandRenderer 주 손 — 1 = 다 올림) 가장 낮은 값 · 0.98 아래인 장 수 */
