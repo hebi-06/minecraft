@@ -966,6 +966,12 @@ final class VanillaProbe {
                     FILM_FRAMES.add(BOSS_FRAMES);
                     continue;
                 }
+                if (k.startsWith("runeboss:")) {
+                    // 2026-11-18 룬 ↔ 보스 (runeboss:<계열_등급> — 과녁 가운데 보스 하나 (허수아비 킹 — 싸움 밖 · 움직이지 않는 과녁, 보스 모델 · 싸움은 건드리지 않음) ·
+                    // 앞 양옆 드라우그 둘: films/vanilla_runeboss_<계열>_<등급>) — 만년빙하의 보스 파쇄 (보스는 얼지 않고 빙결 차례의 얼음이 더 셈) 와 옆 과녁의 빙결을 한 영상에
+                    keys.add(k.substring(9) + ":boss");
+                    continue;
+                }
                 if (k.startsWith("runefp:")) {
                     // 2026-11-17 룬 1인칭 (runefp:<계열 또는 계열_등급> — 쓴 사람의 눈: films/vanilla_runefp_<계열>_<등급>)
                     String f = k.substring(7);
@@ -995,6 +1001,8 @@ final class VanillaProbe {
         for (String k0 : keys) {
             boolean old = k0.startsWith("old:");
             String k = old ? k0.substring(4) : k0;
+            boolean bossk = k.endsWith(":boss"); // 2026-11-18 runeboss:
+            if (bossk) k = k.substring(0, k.length() - 5);
             boolean fpk = k.endsWith(":fp");
             if (fpk) k = k.substring(0, k.length() - 3);
             int cut = k.lastIndexOf('_');
@@ -1003,7 +1011,7 @@ final class VanillaProbe {
             String g = k.substring(cut + 1);
             String id = mmorpg.core.Runes.runeId(fam, g);
             if (mmorpg.core.Runes.parseRune(id) == null) continue;
-            FILM_RUNES.add((old ? "old:" + id : id) + (fpk ? ":fp" : ""));
+            FILM_RUNES.add((old ? "old:" + id : id) + (fpk ? ":fp" : "") + (bossk ? ":boss" : ""));
             FILM_FRAMES.add(switch (g) {
                 case "transcend" -> 150;
                 case "hero" -> 96;
@@ -1071,7 +1079,8 @@ final class VanillaProbe {
                     log("film warm sprites " + pre + " " + t + " ticks");
                 }
             });
-            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0).replace("old:", "").replace(":fp", ""));
+            mmorpg.core.Runes.Rune warm = FILM_RUNES.isEmpty() || census ? null
+                    : mmorpg.core.Runes.parseRune(FILM_RUNES.get(0).replace("old:", "").replace(":fp", "").replace(":boss", ""));
             if (warm != null) {
                 Tasks.later(10, () -> {
                     if (p.isRemoved()) return;
@@ -1116,6 +1125,8 @@ final class VanillaProbe {
         }
         // 2026-11-17 룬 1인칭 (runefp: — 끝에 :fp)
         String entry = FILM_RUNES.get(i);
+        boolean bossLook = entry.endsWith(":boss"); // 2026-11-18 runeboss: (과녁 가운데 보스)
+        if (bossLook) entry = entry.substring(0, entry.length() - 5);
         boolean fpLook = entry.endsWith(":fp");
         if (fpLook) entry = entry.substring(0, entry.length() - 3);
         boolean oldLook = entry.startsWith("old:"); // 2026-11-16 룬 위르드식 견주기 (예전 그림)
@@ -1132,7 +1143,22 @@ final class VanillaProbe {
         mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
         mmorpg.fabric.RpgHealth.healFull(p);
         // 과녁: 모드 영상 (RpgRuneGallery.TARGETS) 과 같은 여섯 자리 — 앞 무리 넷 · 양옆 둘 (두 영상을 나란히 견주게)
-        double[][] spots = {{0.5, 5.5}, {-1.0, 6.5}, {2.0, 6.0}, {0.5, 8.0}, {-1.8, 2.2}, {2.8, 2.2}};
+        double[][] spots = bossLook ? new double[][] {{-1.8, 2.2}, {2.8, 2.2}} : new double[][] {{0.5, 5.5}, {-1.0, 6.5}, {2.0, 6.0}, {0.5, 8.0}, {-1.8, 2.2}, {2.8, 2.2}};
+        if (bossLook) {
+            // 2026-11-18 보스 과녁 (허수아비 킹 — 싸움 밖이라 보스 엔진 없이 바닐라 피해, 움직이지 않음 · 쓰러지지 않음): 조준한 과녁 = 필드 가운데
+            mmorpg.fabric.mob.BedrockMob b = mmorpg.fabric.mob.RpgEntities.type("rpg:boss_scarecrow_king").create(level, net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+            if (b != null) {
+                b.snapTo(0.5, y, 6.0, 180F, 0F);
+                b.setNoAi(true);
+                b.addTag(Monsters.FILM_TARGET_TAG);
+                var hp = b.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                b.setHealth(b.getMaxHealth());
+                level.addFreshEntity(b);
+                SPAWNED.add(b);
+            }
+            check("film boss target", b != null && mmorpg.fabric.boss.Bosses.isBossEntity(b));
+        }
         for (double[] sp : spots) {
             net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(sp[0], y, sp[1]), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {
@@ -1146,7 +1172,7 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        String name = "vanilla_" + (fpLook ? "runefp_" : "") + r.family() + "_" + r.grade() + (oldLook ? "_old" : "");
+        String name = "vanilla_" + (fpLook ? "runefp_" : "") + (bossLook ? "runeboss_" : "") + r.family() + "_" + r.grade() + (oldLook ? "_old" : "");
         int frames = FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1));
         if (fpLook) {
             // 2026-11-17 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임 · 내 뼈 몸 보기 끔, 직업 jobfp 와 같음) — 룬 그림이 1인칭 화면을 덮는지 보기

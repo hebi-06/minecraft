@@ -511,6 +511,61 @@ public final class RpgLimitedRuneTests {
         });
     }
 
+    /**
+     * 2026-11-18 만년빙하 ↔ 보스 (사용자 "파쇄 피해 넣기"): 보스는 얼지 않음 (기절 · ❄ 없음 · 시전 기록 얼린 수 0) — 대신 빙결 차례 (같은 보스에게 3번째 · 6번째 얼음,
+     * 47 · 89틱) 의 얼음이 파쇄 배율 (Runes.bossShatter — 한 번의 배율 합 × 유틸 ÷ (1 − 유틸) ÷ 차례 수) 만큼 더 셈. 보스에게 들어간 피해
+     * = P × (34 + 파쇄 × 2) = P × 34 ÷ (1 − 유틸), 타격 수 9 그대로 (파쇄는 그 얼음에 더함 — 따로 치지 않음). 보스는 싸움 밖 (보스 엔진의 absorb 를 거치지 않는 바닐라 피해)
+     */
+    @GameTest(environment = "mmorpg:lr_glacier_boss", maxTicks = 220)
+    public void glacierBossShatter(GameTestHelper h) {
+        floor(h, 16);
+        ServerPlayer sp = playerAt(h, 1.5, 1.5);
+        sp.setExperienceLevels(40);
+        RpgPlayers.checkLevelUp(sp);
+        String[] keys = {"str", "dex", "vit", "int"};
+        for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], (int) EVEN[i]);
+        mmorpg.fabric.mob.BedrockMob b = mmorpg.fabric.mob.RpgEntities.type("rpg:boss_scarecrow_king").create(h.getLevel(), net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+        Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 7.5));
+        b.snapTo(at.x, at.y, at.z, 180F, 0F);
+        TestDummies.make(b);
+        h.getLevel().addFreshEntity(b);
+        h.assertTrue(mmorpg.fabric.boss.Bosses.isBossEntity(b), "scarecrow king is a boss entity");
+        Runes.Rune r = Runes.parseRune("rpg:rune_glacier_transcend");
+        h.assertTrue(r != null && Runes.limited("glacier"), "glacier rune");
+        var k = r.def();
+        double sh = Runes.bossShatter(k, Runes.utilCost(r));
+        int turns = Runes.bossShatterTurns(k);
+        h.assertTrue(sh > 4 && turns == 2, "0돌: shatter " + sh + " × " + turns);
+        double mult = k.num("mult");
+        double[] P = {0};
+        h.runAfterDelay(2, () -> {
+            clearStrays(h, b);
+            sp.lookAt(EntityAnchorArgument.Anchor.EYES, b.getEyePosition());
+            P[0] = RuneCast.power(sp, "glacier") * RuneBreak.coef(0) * Runes.damageScale(r);
+            h.assertTrue(RuneCast.castRune(sp, r, false, 0), "glacier cast");
+        });
+        h.runAfterDelay(2 + 49, () -> {
+            MobEffectInstance s = b.getEffect(MobEffects.SLOWNESS);
+            h.assertTrue(s == null || s.getAmplifier() < 10, "boss is not frozen on the third ice");
+            h.assertFalse(mmorpg.fabric.DamageNumbers.victimMark.apply(b).contains("❄"), "no frozen mark on the boss");
+            double[] g = glacierOf(sp);
+            h.assertTrue(g != null && (int) g[0] == 0, "frozen 0: " + (g == null ? "none" : (int) g[0]));
+            near(h, TestDummies.dealt(b), P[0] * (mult * 3 + sh), 1e-2 * P[0], "three ice + shatter on the third");
+        });
+        h.runAfterDelay(2 + 92, () -> near(h, TestDummies.dealt(b), P[0] * (mult * 6 + sh * 2), 1e-2 * P[0], "six ice + two shatters"));
+        h.runAfterDelay(2 + 140, () -> {
+            double want = mult * k.num("hits") + k.num("crush") + sh * turns;
+            near(h, want, 34 / (1 - Runes.utilCost(r)), 1e-6, "total = 34 ÷ (1 − util)");
+            near(h, TestDummies.dealt(b), P[0] * want, 1e-2 * P[0], "boss dealt (34 + shatter × 2) × P");
+            double[] last = lastOf(sp, r.def().str("fn"));
+            h.assertTrue(last != null && (int) last[1] == 9, "hits 9 (shatter rides the ice hit): " + (last == null ? "none" : (int) last[1]));
+            h.assertTrue((int) glacierOf(sp)[0] == 0, "the boss never froze");
+            b.discard();
+            h.getLevel().getServer().getPlayerList().remove(sp);
+            h.succeed();
+        });
+    }
+
     /** 네 스탯을 어떻게 찍어도 같은 위력 (합이 같으면) · 한 스탯만 찍은 사람의 자기 계열 룬과 같은 P */
     @GameTest(maxTicks = 20)
     public void totalStatPower(GameTestHelper h) {
