@@ -84,6 +84,13 @@ public final class BasicFx {
             PhantomFx.cut(level, L, hand, end, finisher ? 5 : 3, finisher, hide);
             PhantomFx.flash(level, L, end, 1.2 * k, hide);
             WyrdKit.sparks(level, L, end, finisher ? 10 : 5, 1.2 * k, hide);
+            // 2026-11-18 주인의 1인칭 (몸 앞 그림은 1인칭에서 숨김 — 영상 vanilla_motion_lance 에서 1인칭 찌르기가 밋밋): 오른쪽 아래 손 자리에서
+            // 화면 가운데 앞으로 곧은 칼빛 · 끝 섬광
+            Vec3 up = JobFx.screenUp(look);
+            Vec3 right = V.rightOf(V.flat(look));
+            Vec3 from = V.add(V.add(V.add(eye, look, 0.9), right, 0.32), up, -0.28);
+            PhantomFx.cut(level, L, from, V.add(eye, look, 1.0 + reach), finisher ? 4 : 2, finisher, PhantomFx.only1p(sp));
+            PhantomFx.flash(level, L, V.add(eye, look, 2.4), 0.8 * k, PhantomFx.only1p(sp));
             if (finisher) PhantomFx.shock(level, L, sp.position(), 3.0, 1, hide);
             return;
         }
