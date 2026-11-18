@@ -145,15 +145,24 @@ public final class StatTreeCommands {
             sp.sendSystemMessage(Component.literal(BedrockText.toJava(head)));
             for (int idx : StatTree.pending(k, v, s.picksOf(k))) {
                 StatTree.Node n = t.nodes().get(idx);
-                MutableComponent line = Component.literal(BedrockText.toJava("   §e" + (idx + 1) + "단계 갈래: "));
+                // 2026-11-18 축복의 길: 갈래 묶음이면 길 이름 · 길 전체 (보너스 합 · 공용 스킬)
+                String which = n.split() == 1 ? "첫 갈래" : n.split() == 2 ? "둘째 갈래" : (idx + 1) + "단계 갈래";
+                MutableComponent line = Component.literal(BedrockText.toJava("   §e" + which + ": "));
                 for (int i = 0; i < n.pick().size(); i++) {
-                    StatTree.Option o = n.pick().get(i);
+                    String label = n.split() > 0 ? t.branchName(n, i) : n.pick().get(i).name();
+                    String hover = n.split() > 0 ? StatTrees.branchText(t, n, i) : StatTrees.optionText(n.pick().get(i));
                     String cmd = "/stattree pick " + k + " " + (idx + 1) + " " + (i + 1);
-                    line.append(Component.literal("[" + o.name() + "]").withStyle(st -> st.withColor(ChatFormatting.AQUA).withClickEvent(new ClickEvent.RunCommand(cmd))
-                            .withHoverEvent(new HoverEvent.ShowText(Component.literal(BedrockText.toJava("§a" + StatTree.bonusText(o.bonus())))))));
+                    line.append(Component.literal("[" + label + "]").withStyle(st -> st.withColor(ChatFormatting.AQUA).withClickEvent(new ClickEvent.RunCommand(cmd))
+                            .withHoverEvent(new HoverEvent.ShowText(Component.literal(BedrockText.toJava(hover))))));
                     line.append(Component.literal(" "));
                 }
                 sp.sendSystemMessage(line);
+            }
+            List<String> open = StatTree.openSkills(k, v, s.picksOf(k));
+            if (!open.isEmpty()) {
+                List<String> names = new java.util.ArrayList<>();
+                for (String id : open) names.add(StatTree.skill(id).name());
+                sp.sendSystemMessage(Component.literal(BedrockText.toJava("   §b공용 스킬: §f" + String.join(" · ", names))));
             }
         }
         String all = StatTree.bonusText(StatTrees.totals(sp));

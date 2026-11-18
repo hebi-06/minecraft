@@ -50,9 +50,10 @@ public final class VanillaTree {
     static int statColor(String stat) {
         return switch (stat) {
             case "str" -> 0xE66056;
-            case "dex" -> 0x68D678;
-            case "vit" -> 0xF080B0;
-            case "int" -> 0x689EF6;
+            // 2026-11-18 축복의 길 (사용자 "바꿔"): 신의 원소 색 — 라에타 번개 노랑 · 그라비스 바위 호박빛 · 니바리아 얼음 하늘빛
+            case "dex" -> 0xFFDB40;
+            case "vit" -> 0xDB9E4C;
+            case "int" -> 0x8CD8FF;
             default -> VanillaGui.legacyColor(Stats.info(stat).str("color"), 0xFFFFFF);
         };
     }
@@ -187,11 +188,11 @@ public final class VanillaTree {
             out.add(new Seg(v, CENTER, "down", openNext ? lit : LDIM));
             return;
         }
-        // 갈래 → 갈래 (데이터에는 없음): 같은 쪽끼리 이음
+        // 갈래 → 갈래 (2026-11-18 축복의 길 — 한 갈래의 칸 넷): 같은 쪽끼리 이음 (안 골랐으면 열린 길은 고를 수 있는 색)
         Integer ch = picks.get(i);
         for (int o = 0; o < 2; o++) {
             int col = o == 0 ? LEFT : RIGHT;
-            int c = ch != null && ch == o && openNext ? lit : LDIM;
+            int c = ch == null ? (openNext ? AVAIL : LDIM) : ch == o && openNext ? lit : LDIM;
             out.add(new Seg(v, col, "up", c));
             out.add(new Seg(v, col, "down", c));
         }
@@ -210,7 +211,26 @@ public final class VanillaTree {
     }
 
     private static String nodeName(StatTree.Node node, int i, int o) {
-        return node.fork() ? (i + 1) + "단계 갈래 · " + node.pick().get(o).name() : (i + 1) + "단계 " + node.name();
+        if (!node.fork()) return (i + 1) + "단계 " + node.name();
+        StatTree.Option opt = node.pick().get(o);
+        return (i + 1) + "단계 " + (opt.skill() != null ? "공용 스킬 · " : "갈래 · ") + opt.name();
+    }
+
+    /** 원소 이름 (공용 스킬 — rules_more ELEMENTS 와 같은 이름) */
+    private static String elementName(String id) {
+        return switch (id) {
+            case "fire" -> "불";
+            case "water" -> "물";
+            case "thunder" -> "전기";
+            case "ice" -> "얼음";
+            case "rock" -> "바위";
+            default -> id;
+        };
+    }
+
+    /** 초 (끝의 0 은 뺌) */
+    private static String sec(double v) {
+        return v == Math.rint(v) ? String.valueOf((long) v) : String.valueOf(v);
     }
 
     private static Map<String, Double> bonusOf(StatTree.Node node, int o) {
@@ -220,12 +240,24 @@ public final class VanillaTree {
     private static ItemStack nodeIcon(String stat, StatTree.Node node, int i, int o, Look look, int tier, Map<Integer, Integer> picks, boolean sel) {
         String statName = Stats.info(stat).str("name");
         List<String> lore = new ArrayList<>();
-        lore.add("§f" + StatTree.bonusText(bonusOf(node, o)));
+        // 2026-11-18 축복의 길: 공용 스킬 칸 (종류 · 재사용 · 풀이 · 피해 합) · 갈래 묶음의 길 이름 · 보상은 문턱 칸 모두
+        StatTree.Skill sk = node.fork() ? StatTree.skill(node.pick().get(o).skill()) : null;
+        if (sk != null) {
+            lore.add("§b" + (sk.attack() ? "작은 공격 · " + elementName(sk.element()) : "이동기") + " · 재사용 " + sec(sk.cd()) + "초");
+            lore.add("§f" + sk.text());
+            if (sk.attack()) lore.add("§7피해 합: " + statName + " 위력 ×" + sk.mult());
+        } else {
+            lore.add("§f" + StatTree.bonusText(bonusOf(node, o)));
+        }
         lore.add("§7" + statName + " " + node.at() + " 이상 " + (look.open ? "§a열림" : "§8닫힘"));
-        if (!node.fork() && !node.reward().isEmpty()) lore.add("§6처음 열면 " + StatTree.rewardText(stat, node.reward()));
+        if (!node.reward().isEmpty()) lore.add("§6처음 열면 " + StatTree.rewardText(stat, node.reward()));
         if (node.fork()) {
+            if (node.split() > 0) {
+                StatTree.Tree tree = StatTree.tree(stat);
+                lore.add("§7길: " + tree.branchName(node, o) + " §8(" + (node.split() == 1 ? "첫" : "둘째") + " 갈래 — 한 번 고르면 길 전체)");
+            }
             lore.add(look.mine ? "§a골랐음" : look.other ? "§8다른 갈래를 골랐음 (초기화하면 다시)"
-                    : look.avail ? (sel ? "§e한 번 더 누르면 이 갈래를 고름" : "§e눌러서 고르기 (두 번)") : "§8열리면 둘 중 하나를 고름");
+                    : look.avail ? (sel ? "§e한 번 더 누르면 이 길을 고름" : "§e눌러서 고르기 (두 번)") : "§8열리면 둘 중 하나를 고름");
         }
         boolean dim = !look.open || look.other;
         String name = (look.mine || (!node.fork() && look.open) ? "§a" : look.avail ? "§e" : "§8") + nodeName(node, i, o);

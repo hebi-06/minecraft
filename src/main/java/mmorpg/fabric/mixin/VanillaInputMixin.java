@@ -49,6 +49,13 @@ public abstract class VanillaInputMixin {
         if (VanillaInput.onSlot(this.player, packet.getSlot())) ci.cancel();
     }
 
+    /** 2026-11-18 1인칭 모션 (VanillaFirstPerson.onSlot): 핫바로 바꿔 든 무기에 지금 동작 이름을 다시 보냄 (켰을 때만) */
+    @Inject(method = "handleSetCarriedItem", at = @At("RETURN"))
+    private void mmorpg$slotChanged(ServerboundSetCarriedItemPacket packet, CallbackInfo ci) {
+        if (!mmorpg$serverThread()) return;
+        mmorpg.fabric.vanilla.VanillaFirstPerson.onSlot(this.player);
+    }
+
     @Inject(method = "handleContainerClick", at = @At("HEAD"), cancellable = true)
     private void mmorpg$click(ServerboundContainerClickPacket packet, CallbackInfo ci) {
         if (!mmorpg$serverThread()) return;

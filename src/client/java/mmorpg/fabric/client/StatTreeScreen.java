@@ -45,7 +45,8 @@ public final class StatTreeScreen extends Screen {
     static final int FORK_DY = 22;
     static final int NODE = 20;
     static final int X0 = 50;
-    static final int DX = 28;
+    /** 2026-11-18 축복의 길: 칸 11 (뿌리 5 · 갈래 묶음 둘) — 28 → 25 (마지막 칸 300 + 10 이 창 안) */
+    static final int DX = 25;
     static final int ROOT_X = 22;
     static final int PANEL_Y = 131;
     static final int BTN_Y = 207;
@@ -360,7 +361,7 @@ public final class StatTreeScreen extends Screen {
             } else tos.add(new int[] {x2 - NODE / 2, cy, -1});
             for (int[] a : froms) {
                 for (int[] b : tos) {
-                    if (froms.size() > 1 && tos.size() > 1) continue; // 갈래 다음 갈래는 없음
+                    if (froms.size() > 1 && tos.size() > 1 && a[2] != b[2]) continue; // 갈래 묶음 (갈래 다음 갈래): 같은 쪽끼리만
                     line(g, a[0], a[1], b[0], b[1], 2, dead);
                     // 자란 줄기: 고른 갈래가 있으면 그 갈래 쪽만, 아직 안 골랐으면 두 쪽 다 밝게
                     boolean fromOk = a[2] < 0 || !picks.containsKey(i - 1) || picks.get(i - 1) == a[2];
@@ -527,9 +528,22 @@ public final class StatTreeScreen extends Screen {
         if (n.fork()) {
             StatTree.Option o = n.pick().get(option);
             StatTree.Option other = n.pick().get(1 - option);
-            out.add(scol + "§l" + (index + 1) + "단계 갈래 §r§7(" + sname + " " + n.at() + ") — 둘 중 하나");
-            out.add("§e「" + o.name() + "」 §a" + StatTree.bonusText(o.bonus()));
-            out.add("§7다른 갈래: 「" + other.name() + "」 " + StatTree.bonusText(other.bonus()));
+            // 2026-11-18 축복의 길: 갈래 묶음이면 길 이름 · 공용 스킬 칸이면 스킬 (종류 · 재사용 · 풀이)
+            String way = n.split() > 0 ? " §7— 길 「" + tree.branchName(n, option) + "」 (" + (n.split() == 1 ? "첫" : "둘째") + " 갈래 · 한 번 고르면 길 전체)" : "";
+            out.add(scol + "§l" + (index + 1) + "단계 갈래 §r§7(" + sname + " " + n.at() + ") — 둘 중 하나" + way);
+            StatTree.Skill sk = StatTree.skill(o.skill());
+            if (sk != null) {
+                out.add("§e「" + o.name() + "」 §b공용 스킬 · " + (sk.attack() ? "작은 공격" : "이동기") + " §7(재사용 " + (int) Math.round(sk.cd()) + "초)");
+                out.add("§f" + sk.text() + (sk.attack() ? " §7(피해 합 " + sname + " 위력 ×" + sk.mult() + ")" : ""));
+            } else {
+                out.add("§e「" + o.name() + "」 §a" + StatTree.bonusText(o.bonus()));
+            }
+            StatTree.Skill osk = StatTree.skill(other.skill());
+            out.add("§7다른 갈래: 「" + other.name() + "」 " + (osk != null ? "공용 스킬 " + osk.name() : StatTree.bonusText(other.bonus())));
+            if (!n.reward().isEmpty()) {
+                boolean got = state().claimedOf(tree.stat()) > index;
+                out.add("§d보상: " + StatTree.rewardText(tree.stat(), n.reward()) + (got ? " §a(받음)" : " §7(처음 열릴 때)"));
+            }
             for (String k : o.bonus().keySet()) {
                 StatTree.Kind kind = StatTree.kind(k);
                 if (kind != null && !kind.desc().isEmpty()) out.add("§8" + kind.name() + ": " + kind.desc());
@@ -559,7 +573,7 @@ public final class StatTreeScreen extends Screen {
     private List<String> summaryLines(StatTree.Tree tree, int value, Map<Integer, Integer> picks) {
         List<String> out = new ArrayList<>();
         String sname = Stats.info(tree.stat()).str("name");
-        out.add("§7" + sname + eul(sname) + " 찍으면 나무가 자랍니다 (" + sname + " 10마다 한 칸 · 장비 · 버프 제외)");
+        out.add("§7" + sname + eul(sname) + " 찍으면 나무가 자랍니다 (" + sname + " 5 · 10 · 20 … 100 에 한 칸 · 장비 · 버프 제외)");
         String b = StatTree.bonusText(StatTree.treeTotals(tree.stat(), value, picks));
         out.add("§7이 나무: " + (b.isEmpty() ? "§8아직 없음" : "§a" + b));
         String all = StatTree.bonusText(ClientRpgState.treeTotals());
@@ -570,6 +584,9 @@ public final class StatTreeScreen extends Screen {
         out.add("§7받은 보상: " + (parts.isEmpty() ? "§8없음" : "§d" + String.join(" · ", parts)));
         List<Integer> pend = StatTree.pending(tree.stat(), value, picks);
         if (!pend.isEmpty()) out.add("§e" + (pend.get(0) + 1) + "단계 갈래를 고르세요 §7(노랗게 깜빡이는 칸을 누름)");
+        List<String> skills = new ArrayList<>();
+        for (String id : StatTree.openSkills(tree.stat(), value, picks)) skills.add(StatTree.skill(id).name());
+        if (!skills.isEmpty()) out.add("§b공용 스킬: §f" + String.join(" · ", skills));
         out.add("§8칸에 마우스를 올리면 설명 · 갈래 초기화 = 고른 갈래 1개당 실버 " + StatTree.perPick());
         return out;
     }

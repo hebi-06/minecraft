@@ -1,11 +1,15 @@
 {
   "_doc": [
-    "스탯 트리 (7단계): 스탯마다 나무 하나 (trees 의 순서 = 창의 탭 순서). 그 스탯에 찍은 포인트 (장비 · 룬 버프 제외) 가 칸의 at 이상이면 칸이 저절로 열림.",
-    "칸: name (이름) · bonus (열리면 늘 붙는 보너스) · reward (처음 열릴 때 한 번만 받는 뽑기권) · pick (갈래 — 둘 중 하나를 골라야 그 보너스가 붙음, 갈래 칸에는 reward 를 두지 않음).",
+    "스탯 트리 (2026-11-18 축복의 길 — 다섯 신의 축복, 세계관 5절): 스탯마다 나무 하나 (trees 의 순서 = 창의 탭 순서). 그 스탯에 찍은 포인트 (장비 · 룬 버프 제외) 가 칸의 at 이상이면 칸이 저절로 열림.",
+    "모양 (칸 11): 뿌리 5 → 첫 갈래 10 · 20 · 30 → 이동기 40 → 합류 50 → 둘째 갈래 60 · 70 · 80 → 작은 공격 90 → 정점 100. 갈래 칸 (split 1 · 2) 은 pick 의 0 = 왼쪽 · 1 = 오른쪽 길 — 한 갈래 (split) 는 한 번만 고름 (그 갈래의 칸 넷이 같은 쪽).",
+    "칸: name (이름) · bonus (열리면 늘 붙는 보너스) · reward (처음 열릴 때 한 번만 받는 뽑기권 — 문턱에 붙음, 어느 길이든 같음) · split + pick (갈래 — 고른 쪽의 bonus · skill 만). skill = 공용 스킬 (skills).",
+    "branches: 갈래 (split) 마다 두 길의 이름. title · god · element: 나무 이름 · 신 · 공용 스킬의 원소 (불 · 전기 · 얼음 · 바위).",
     "보너스 (kinds): atk 공격력 % (평타 · 스킬 · 룬 피해), rune 룬 피해 %, crit 치명타 확률 %p (평타 · 스킬 — 최대 95%), critDmg 치명타 피해 % (치명타 배율에 더함: ×1.5 에 10 → ×1.6),",
     "  hp 최대 체력 (+값), def 받는 피해 % 감소 (방패 · 버프 감소 뒤에 곱함), speed 이동 속도 %, cdr 스킬 · 룬 재사용 대기 % 감소. caps = 나무 넷을 더한 합의 상한.",
-    "reward: rune 룬 뽑기권 · adv 고급 룬 뽑기권 · stat 그 나무 스탯의 룬 뽑기권 (tickets — 이름이 같은 계열 5종만, 등급 확률은 룬 뽑기권과 같음).",
-    "갈래 초기화 (스탯 트리 창): 그 나무에서 고른 갈래를 모두 지움 — 에메랄드 reset.perPick × 고른 갈래 수. 받은 뽑기권은 다시 주지 않음 (나무마다 받은 칸 기록).",
+    "보너스 합: 길 넷 (첫 갈래 × 둘째 갈래) 의 합 = 7단계 나무의 갈래 조합 넷과 같음 (옮기는 법: 10 → 뿌리 · 20 + 30 갈래 → 첫 갈래 · 40 + 50 → 합류 · 60 갈래 + 70 + 90 갈래 → 둘째 갈래 · 80 + 100 → 정점 — StatTreeTest).",
+    "reward: rune 룬 뽑기권 · adv 고급 룬 뽑기권 · stat 그 나무 스탯의 룬 뽑기권 (tickets — 2026-11-17 룬 재개발 뒤로는 룬 뽑기권). 문턱 20 · 40 · 50 · 70 · 80 · 100 (7단계와 같음).",
+    "갈래 초기화 (스탯 트리 창): 그 나무에서 고른 갈래를 모두 지움 — 실버 reset.perPick × 고른 갈래 수. 받은 뽑기권은 다시 주지 않음 (나무마다 받은 칸 기록).",
+    "skills: 공용 스킬 16 (나무마다 이동기 둘 · 작은 공격 둘 — 한 사람이 끼우는 것은 하나, 11-18 사용자). kind move = 이동기 (피해 없음 · 무적 없음), attack = 작은 공격 (그 원소 — 묻힘 · 반응), cd = 재사용 (초), mult = 피해 합 (그 나무 스탯의 룬 위력 P 의 배 — 0.25 × 재사용 × 거리 × 범위 × 원소 0.95 × (1 − 유틸)).",
     "icon: 칸에 그릴 아이템 (minecraft:<아이템> · rpg:<아이템>)."
   ],
   "reset": {"perPick": 12},
@@ -28,104 +32,198 @@
   },
   "trees": {
     "str": {
-      "title": "전사의 나무",
+      "title": "포르티아의 길",
+      "god": "포르티아",
+      "element": "fire",
       "color": [1.0, 0.42, 0.18],
+      "branches": {"1": ["광전사", "강철 피부"], "2": ["파괴자", "불굴"]},
       "nodes": [
-        {"at": 10, "name": "단련", "bonus": {"atk": 2}},
-        {"at": 20, "name": "굳센 손아귀", "bonus": {"critDmg": 10}, "reward": {"stat": 1}},
-        {"at": 30, "pick": [
-          {"name": "광전사", "bonus": {"atk": 4}},
-          {"name": "강철 피부", "bonus": {"def": 4}}
+        {"at": 5, "name": "단련", "bonus": {"atk": 2}},
+        {"at": 10, "split": 1, "pick": [
+          {"name": "광전사 I", "bonus": {"atk": 2}},
+          {"name": "강철 피부 I", "bonus": {"def": 2}}
         ]},
-        {"at": 40, "name": "근력", "bonus": {"hp": 10}, "reward": {"rune": 1}},
-        {"at": 50, "name": "무쇠 팔", "bonus": {"atk": 3}, "reward": {"stat": 1}},
-        {"at": 60, "pick": [
-          {"name": "파괴자", "bonus": {"critDmg": 25}},
-          {"name": "불굴", "bonus": {"hp": 25}}
+        {"at": 20, "split": 1, "reward": {"stat": 1}, "pick": [
+          {"name": "광전사 II", "bonus": {"critDmg": 10}},
+          {"name": "강철 피부 II", "bonus": {"critDmg": 10}}
         ]},
-        {"at": 70, "name": "전장의 기술", "bonus": {"atk": 3}, "reward": {"rune": 1}},
-        {"at": 80, "name": "거인의 숨결", "bonus": {"critDmg": 15}, "reward": {"stat": 1}},
-        {"at": 90, "pick": [
-          {"name": "전쟁광", "bonus": {"atk": 5}},
-          {"name": "처형자", "bonus": {"crit": 5}}
+        {"at": 30, "split": 1, "pick": [
+          {"name": "광전사 III", "bonus": {"atk": 2}},
+          {"name": "강철 피부 III", "bonus": {"def": 2}}
         ]},
-        {"at": 100, "name": "힘의 정점", "bonus": {"atk": 5}, "reward": {"adv": 1, "stat": 1}}
+        {"at": 40, "split": 1, "reward": {"rune": 1}, "pick": [
+          {"name": "블레이즈 리프", "skill": "blaze_leap"},
+          {"name": "스틸 차지", "skill": "steel_charge"}
+        ]},
+        {"at": 50, "name": "무쇠 팔", "bonus": {"hp": 10, "atk": 3}, "reward": {"stat": 1}},
+        {"at": 60, "split": 2, "pick": [
+          {"name": "파괴자 I", "bonus": {"critDmg": 25}},
+          {"name": "불굴 I", "bonus": {"hp": 25}}
+        ]},
+        {"at": 70, "split": 2, "reward": {"rune": 1}, "pick": [
+          {"name": "파괴자 II", "bonus": {"atk": 3}},
+          {"name": "불굴 II", "bonus": {"atk": 3}}
+        ]},
+        {"at": 80, "split": 2, "reward": {"stat": 1}, "pick": [
+          {"name": "파괴자 III", "bonus": {"crit": 5}},
+          {"name": "불굴 III", "bonus": {"atk": 5}}
+        ]},
+        {"at": 90, "split": 2, "pick": [
+          {"name": "블레이즈 크로스", "skill": "blaze_cross"},
+          {"name": "엠버 노바", "skill": "ember_nova"}
+        ]},
+        {"at": 100, "name": "힘의 정점", "bonus": {"critDmg": 15, "atk": 5}, "reward": {"adv": 1, "stat": 1}}
       ]
     },
     "dex": {
-      "title": "사냥꾼의 나무",
-      "color": [0.35, 1.0, 0.55],
+      "title": "라에타의 길",
+      "god": "라에타",
+      "element": "thunder",
+      "color": [1.0, 0.86, 0.25],
+      "branches": {"1": ["급소 노리기", "바람걸음"], "2": ["암살 본능", "흘려보내기"]},
       "nodes": [
-        {"at": 10, "name": "날렵함", "bonus": {"crit": 1}},
-        {"at": 20, "name": "가벼운 발", "bonus": {"speed": 3}, "reward": {"stat": 1}},
-        {"at": 30, "pick": [
-          {"name": "급소 노리기", "bonus": {"crit": 3}},
-          {"name": "바람걸음", "bonus": {"speed": 5}}
+        {"at": 5, "name": "날렵함", "bonus": {"crit": 1}},
+        {"at": 10, "split": 1, "pick": [
+          {"name": "급소 노리기 I", "bonus": {"crit": 1}},
+          {"name": "바람걸음 I", "bonus": {"speed": 2}}
         ]},
-        {"at": 40, "name": "매의 눈", "bonus": {"atk": 2}, "reward": {"rune": 1}},
-        {"at": 50, "name": "쇄도", "bonus": {"crit": 2}, "reward": {"stat": 1}},
-        {"at": 60, "pick": [
-          {"name": "암살 본능", "bonus": {"critDmg": 25}},
-          {"name": "흘려보내기", "bonus": {"def": 5}}
+        {"at": 20, "split": 1, "reward": {"stat": 1}, "pick": [
+          {"name": "급소 노리기 II", "bonus": {"speed": 3}},
+          {"name": "바람걸음 II", "bonus": {"speed": 3}}
         ]},
-        {"at": 70, "name": "연속 사격", "bonus": {"cdr": 4}, "reward": {"rune": 1}},
-        {"at": 80, "name": "그림자 걸음", "bonus": {"crit": 2}, "reward": {"stat": 1}},
-        {"at": 90, "pick": [
-          {"name": "명사수", "bonus": {"atk": 5}},
-          {"name": "질풍", "bonus": {"speed": 6}}
+        {"at": 30, "split": 1, "pick": [
+          {"name": "급소 노리기 III", "bonus": {"crit": 2}},
+          {"name": "바람걸음 III", "bonus": {"speed": 3}}
         ]},
-        {"at": 100, "name": "민첩의 정점", "bonus": {"crit": 3}, "reward": {"adv": 1, "stat": 1}}
+        {"at": 40, "split": 1, "reward": {"rune": 1}, "pick": [
+          {"name": "스파크 블링크", "skill": "spark_blink"},
+          {"name": "라이트닝 스프린트", "skill": "lightning_sprint"}
+        ]},
+        {"at": 50, "name": "쇄도", "bonus": {"atk": 2, "crit": 2}, "reward": {"stat": 1}},
+        {"at": 60, "split": 2, "pick": [
+          {"name": "암살 본능 I", "bonus": {"critDmg": 25}},
+          {"name": "흘려보내기 I", "bonus": {"def": 5}}
+        ]},
+        {"at": 70, "split": 2, "reward": {"rune": 1}, "pick": [
+          {"name": "암살 본능 II", "bonus": {"cdr": 4}},
+          {"name": "흘려보내기 II", "bonus": {"cdr": 4}}
+        ]},
+        {"at": 80, "split": 2, "reward": {"stat": 1}, "pick": [
+          {"name": "암살 본능 III", "bonus": {"atk": 5}},
+          {"name": "흘려보내기 III", "bonus": {"speed": 6}}
+        ]},
+        {"at": 90, "split": 2, "pick": [
+          {"name": "볼트 대거", "skill": "volt_dagger"},
+          {"name": "플리커 샷", "skill": "flicker_shot"}
+        ]},
+        {"at": 100, "name": "민첩의 정점", "bonus": {"crit": 5}, "reward": {"adv": 1, "stat": 1}}
       ]
     },
     "int": {
-      "title": "마법사의 나무",
-      "color": [0.45, 0.62, 1.0],
+      "title": "니바리아의 길",
+      "god": "니바리아",
+      "element": "ice",
+      "color": [0.55, 0.85, 1.0],
+      "branches": {"1": ["원소의 힘", "주문 칼날"], "2": ["시간 왜곡", "마력 폭주"]},
       "nodes": [
-        {"at": 10, "name": "마나의 흐름", "bonus": {"rune": 2}},
-        {"at": 20, "name": "집중", "bonus": {"cdr": 3}, "reward": {"stat": 1}},
-        {"at": 30, "pick": [
-          {"name": "원소의 힘", "bonus": {"rune": 5}},
-          {"name": "주문 칼날", "bonus": {"atk": 3}}
+        {"at": 5, "name": "마나의 흐름", "bonus": {"rune": 2}},
+        {"at": 10, "split": 1, "pick": [
+          {"name": "원소의 힘 I", "bonus": {"rune": 2}},
+          {"name": "주문 칼날 I", "bonus": {"atk": 1}}
         ]},
-        {"at": 40, "name": "깊은 마나", "bonus": {"hp": 10}, "reward": {"rune": 1}},
-        {"at": 50, "name": "고대 문자", "bonus": {"rune": 3}, "reward": {"stat": 1}},
-        {"at": 60, "pick": [
-          {"name": "시간 왜곡", "bonus": {"cdr": 6}},
-          {"name": "마력 폭주", "bonus": {"critDmg": 25}}
+        {"at": 20, "split": 1, "reward": {"stat": 1}, "pick": [
+          {"name": "원소의 힘 II", "bonus": {"cdr": 3}},
+          {"name": "주문 칼날 II", "bonus": {"cdr": 3}}
         ]},
-        {"at": 70, "name": "마나 방벽", "bonus": {"def": 3}, "reward": {"rune": 1}},
-        {"at": 80, "name": "대마법", "bonus": {"rune": 3}, "reward": {"stat": 1}},
-        {"at": 90, "pick": [
-          {"name": "대마법사", "bonus": {"rune": 6}},
-          {"name": "현자", "bonus": {"cdr": 6}}
+        {"at": 30, "split": 1, "pick": [
+          {"name": "원소의 힘 III", "bonus": {"rune": 3}},
+          {"name": "주문 칼날 III", "bonus": {"atk": 2}}
         ]},
-        {"at": 100, "name": "마력의 정점", "bonus": {"atk": 4}, "reward": {"adv": 1, "stat": 1}}
+        {"at": 40, "split": 1, "reward": {"rune": 1}, "pick": [
+          {"name": "아이스 슬라이드", "skill": "ice_slide"},
+          {"name": "크리스털 시프트", "skill": "crystal_shift"}
+        ]},
+        {"at": 50, "name": "고대 문자", "bonus": {"hp": 10, "rune": 3}, "reward": {"stat": 1}},
+        {"at": 60, "split": 2, "pick": [
+          {"name": "시간 왜곡 I", "bonus": {"cdr": 6}},
+          {"name": "마력 폭주 I", "bonus": {"critDmg": 25}}
+        ]},
+        {"at": 70, "split": 2, "reward": {"rune": 1}, "pick": [
+          {"name": "시간 왜곡 II", "bonus": {"def": 3}},
+          {"name": "마력 폭주 II", "bonus": {"def": 3}}
+        ]},
+        {"at": 80, "split": 2, "reward": {"stat": 1}, "pick": [
+          {"name": "시간 왜곡 III", "bonus": {"cdr": 6}},
+          {"name": "마력 폭주 III", "bonus": {"rune": 6}}
+        ]},
+        {"at": 90, "split": 2, "pick": [
+          {"name": "크라이오 펄스", "skill": "cryo_pulse"},
+          {"name": "하일스톤", "skill": "hailstone"}
+        ]},
+        {"at": 100, "name": "마력의 정점", "bonus": {"rune": 3, "atk": 4}, "reward": {"adv": 1, "stat": 1}}
       ]
     },
     "vit": {
-      "title": "수호자의 나무",
-      "color": [1.0, 0.42, 0.68],
+      "title": "그라비스의 길",
+      "god": "그라비스",
+      "element": "rock",
+      "color": [0.86, 0.62, 0.3],
+      "branches": {"1": ["거대한 몸", "반격 자세"], "2": ["수호자", "생명의 샘"]},
       "nodes": [
-        {"at": 10, "name": "강건함", "bonus": {"hp": 5}},
-        {"at": 20, "name": "두꺼운 피부", "bonus": {"def": 2}, "reward": {"stat": 1}},
-        {"at": 30, "pick": [
-          {"name": "거대한 몸", "bonus": {"hp": 10}},
-          {"name": "반격 자세", "bonus": {"atk": 3}}
+        {"at": 5, "name": "강건함", "bonus": {"hp": 5}},
+        {"at": 10, "split": 1, "pick": [
+          {"name": "거대한 몸 I", "bonus": {"hp": 5}},
+          {"name": "반격 자세 I", "bonus": {"atk": 1}}
         ]},
-        {"at": 40, "name": "회복력", "bonus": {"hp": 8}, "reward": {"rune": 1}},
-        {"at": 50, "name": "철벽", "bonus": {"def": 3}, "reward": {"stat": 1}},
-        {"at": 60, "pick": [
-          {"name": "수호자", "bonus": {"def": 5}},
-          {"name": "생명의 샘", "bonus": {"hp": 20}}
+        {"at": 20, "split": 1, "reward": {"stat": 1}, "pick": [
+          {"name": "거대한 몸 II", "bonus": {"def": 2}},
+          {"name": "반격 자세 II", "bonus": {"def": 2}}
         ]},
-        {"at": 70, "name": "단단한 뼈", "bonus": {"hp": 8}, "reward": {"rune": 1}},
-        {"at": 80, "name": "불굴의 의지", "bonus": {"def": 3}, "reward": {"stat": 1}},
-        {"at": 90, "pick": [
-          {"name": "성벽", "bonus": {"def": 6}},
-          {"name": "거인", "bonus": {"hp": 25}}
+        {"at": 30, "split": 1, "pick": [
+          {"name": "거대한 몸 III", "bonus": {"hp": 5}},
+          {"name": "반격 자세 III", "bonus": {"atk": 2}}
         ]},
-        {"at": 100, "name": "체력의 정점", "bonus": {"hp": 15}, "reward": {"adv": 1, "stat": 1}}
+        {"at": 40, "split": 1, "reward": {"rune": 1}, "pick": [
+          {"name": "보울더 롤", "skill": "boulder_roll"},
+          {"name": "록 런치", "skill": "rock_launch"}
+        ]},
+        {"at": 50, "name": "철벽", "bonus": {"hp": 8, "def": 3}, "reward": {"stat": 1}},
+        {"at": 60, "split": 2, "pick": [
+          {"name": "수호자 I", "bonus": {"def": 5}},
+          {"name": "생명의 샘 I", "bonus": {"hp": 20}}
+        ]},
+        {"at": 70, "split": 2, "reward": {"rune": 1}, "pick": [
+          {"name": "수호자 II", "bonus": {"hp": 8}},
+          {"name": "생명의 샘 II", "bonus": {"hp": 8}}
+        ]},
+        {"at": 80, "split": 2, "reward": {"stat": 1}, "pick": [
+          {"name": "수호자 III", "bonus": {"def": 6}},
+          {"name": "생명의 샘 III", "bonus": {"hp": 25}}
+        ]},
+        {"at": 90, "split": 2, "pick": [
+          {"name": "록 스파이크", "skill": "rock_spike"},
+          {"name": "애프터쇼크", "skill": "aftershock"}
+        ]},
+        {"at": 100, "name": "체력의 정점", "bonus": {"def": 3, "hp": 15}, "reward": {"adv": 1, "stat": 1}}
       ]
     }
+  },
+  "skills": {
+    "blaze_leap": {"name": "블레이즈 리프", "stat": "str", "kind": "move", "cd": 8, "text": "보는 쪽으로 7칸 도약 · 착지 둘레 2.5칸 밀침 · 낙하 피해 없음"},
+    "steel_charge": {"name": "스틸 차지", "stat": "str", "kind": "move", "cd": 9, "text": "5칸 돌진 · 부딪힌 적 밀침 · 끝나고 1.5초 받는 피해 -20%"},
+    "blaze_cross": {"name": "블레이즈 크로스", "stat": "str", "kind": "attack", "element": "fire", "cd": 8, "mult": 2.46, "text": "앞 3칸 X자 불꽃 두 번 베기"},
+    "ember_nova": {"name": "엠버 노바", "stat": "str", "kind": "attack", "element": "fire", "cd": 10, "mult": 2.85, "text": "둘레 3칸 불꽃 폭발"},
+    "spark_blink": {"name": "스파크 블링크", "stat": "dex", "kind": "move", "cd": 6, "text": "보는 쪽 6칸 순간 이동 (벽 앞에서 멈춤)"},
+    "lightning_sprint": {"name": "라이트닝 스프린트", "stat": "dex", "kind": "move", "cd": 12, "text": "4초 동안 이동 속도 +40%"},
+    "volt_dagger": {"name": "볼트 대거", "stat": "dex", "kind": "attack", "element": "thunder", "cd": 8, "mult": 2.19, "text": "앞 14칸 번개 단검 — 첫 적"},
+    "flicker_shot": {"name": "플리커 샷", "stat": "dex", "kind": "attack", "element": "thunder", "cd": 10, "mult": 2.54, "text": "뒤로 3칸 물러나며 앞 10칸 번개 줄기 · 둘레 1.5칸"},
+    "ice_slide": {"name": "아이스 슬라이드", "stat": "int", "kind": "move", "cd": 7, "text": "0.6초에 8칸 미끄러짐 · 지나간 자리 얼음 길 3초"},
+    "crystal_shift": {"name": "크리스털 시프트", "stat": "int", "kind": "move", "cd": 9, "text": "뒤로 6칸 순간 이동 · 떠난 자리 결정이 깨져 둘레 2칸 구속 I 1.5초"},
+    "cryo_pulse": {"name": "크라이오 펄스", "stat": "int", "kind": "attack", "element": "ice", "cd": 10, "mult": 2.71, "text": "둘레 3.5칸 냉기 파동 · 구속 I 1초"},
+    "hailstone": {"name": "하일스톤", "stat": "int", "kind": "attack", "element": "ice", "cd": 10, "mult": 2.82, "text": "보는 자리 (16칸 안) 에 0.5초 뒤 큰 우박 · 둘레 2칸"},
+    "boulder_roll": {"name": "보울더 롤", "stat": "vit", "kind": "move", "cd": 6, "text": "누르는 방향으로 5칸 구르기 · 부딪힌 적 밀침 · 구르는 동안 받는 피해 -30%"},
+    "rock_launch": {"name": "록 런치", "stat": "vit", "kind": "move", "cd": 10, "text": "바위 기둥을 타고 위로 7칸 · 낙하 피해 없음 · 착지 둘레 밀침"},
+    "rock_spike": {"name": "록 스파이크", "stat": "vit", "kind": "attack", "element": "rock", "cd": 8, "mult": 2.26, "text": "앞 5칸 바위 가시 셋 · 띄움"},
+    "aftershock": {"name": "애프터쇼크", "stat": "vit", "kind": "attack", "element": "rock", "cd": 10, "mult": 2.85, "text": "둘레 3칸 충격 두 번 (0.6초 간격)"}
   }
 }

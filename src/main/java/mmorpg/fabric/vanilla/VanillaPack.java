@@ -519,7 +519,7 @@ final class VanillaPack {
         sel.addProperty("index", 1);
         sel.add("cases", cases);
         sel.add("fallback", fpRange(design, first, motions.get(first), original));
-        VanillaFirstPerson.wrapped(id, motions);
+        VanillaFirstPerson.wrapped(id, motions, first);
         return context(new String[]{"firstperson_righthand"}, sel, original);
     }
 

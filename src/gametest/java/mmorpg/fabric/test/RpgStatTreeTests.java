@@ -32,10 +32,10 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 
 /**
- * 7단계 스탯 트리 게임 시험 (서버 — 시험 서버는 스탯 트리가 기본으로 꺼져 있어 TestSetup.treeOn 으로 켠 플레이어만):
- * 스탯을 찍으면 칸이 열리고 보상은 칸마다 처음 한 번만 (스탯을 되돌렸다 다시 찍어도 다시 안 줌), 보너스가 실제 수치에 (켠 플레이어 ÷ 끈 플레이어 —
- * 공격력 · 평타 피해 · 치명타 확률 · 치명타 배율 · 최대 체력 · 받는 피해 · 이동 속도 · 룬 재사용 대기 · 룬 피해), 갈래 고르기 · 실버 초기화,
- * 스탯 룬 뽑기권 (등록 · 이름이 같은 계열만 나옴).
+ * 스탯 트리 게임 시험 (2026-11-18 축복의 길 — 칸 11: 뿌리 5 · 첫 갈래 10 ~ 40 · 합류 50 · 둘째 갈래 60 ~ 90 · 정점 100. 서버 — 시험 서버는 스탯 트리가
+ * 기본으로 꺼져 있어 TestSetup.treeOn 으로 켠 플레이어만): 스탯을 찍으면 칸이 열리고 보상은 칸마다 처음 한 번만 (스탯을 되돌렸다 다시 찍어도 다시 안 줌),
+ * 갈래 칸의 보너스는 고른 길만, 보너스가 실제 수치에 (켠 플레이어 ÷ 끈 플레이어 — 공격력 · 평타 피해 · 치명타 확률 · 치명타 배율 · 최대 체력 · 받는 피해 ·
+ * 이동 속도 · 룬 재사용 대기 · 룬 피해), 갈래 고르기 (갈래 하나 = 칸 넷이 같은 길) · 실버 초기화, 스탯 룬 뽑기권 (등록 · 이름이 같은 계열만 나옴).
  */
 public final class RpgStatTreeTests {
     private static final double EPS = 1e-6;
@@ -69,33 +69,37 @@ public final class RpgStatTreeTests {
         ServerPlayer sp = player(h, true);
         TicketItem strTicket = RuneItems.TICKET; // 2026-11-17 룬 재개발 (계열 없음): 스탯 룬 뽑기권 보상 → 룬 뽑기권
         RpgPlayers.addPoints(sp, 300);
-        h.assertTrue(RpgPlayers.spend(sp, "str", 9) == 9, "spend 9");
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 0 && StatTrees.bonus(sp, "atk") == 0, "below 10: nothing");
-        RpgPlayers.spend(sp, "str", 11); // 20 → 1 · 2 단계
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 2, "claimed 2: " + StatTrees.state(sp).claimedOf("str"));
-        h.assertTrue(count(sp, strTicket) == 1 && count(sp, RuneItems.statTicket("str")) == 0, "2단계 → 룬 뽑기권 1: " + count(sp, strTicket));
+        h.assertTrue(RpgPlayers.spend(sp, "str", 4) == 4, "spend 4");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 0 && StatTrees.bonus(sp, "atk") == 0, "below 5: nothing");
+        RpgPlayers.spend(sp, "str", 5); // 9 → 뿌리 (5)
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 1 && count(sp, strTicket) == 0, "뿌리 — 보상 없음");
         near(h, StatTrees.bonus(sp, "atk"), 2, "단련 공격력 +2");
-        near(h, StatTrees.bonus(sp, "critDmg"), 10, "굳센 손아귀 치명타 피해 +10");
-        RpgPlayers.spend(sp, "str", 15); // 35 → 3단계 (갈래 — 보상 없음)
-        h.assertTrue(count(sp, strTicket) == 1, "갈래 칸은 보상 없음");
-        h.assertTrue(StatTree.pending("str", 35, StatTrees.state(sp).picksOf("str")).equals(List.of(2)), "갈래 기다림");
+        RpgPlayers.spend(sp, "str", 11); // 20 → 뿌리 · 첫 갈래 I · II
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3, "claimed 3: " + StatTrees.state(sp).claimedOf("str"));
+        h.assertTrue(count(sp, strTicket) == 1 && count(sp, RuneItems.statTicket("str")) == 0, "20 → 룬 뽑기권 1: " + count(sp, strTicket));
+        near(h, StatTrees.bonus(sp, "atk"), 2, "갈래를 안 고르면 갈래 칸 보너스 없음 (공격력)");
+        near(h, StatTrees.bonus(sp, "critDmg"), 0, "갈래를 안 고르면 갈래 칸 보너스 없음 (치명타 피해)");
+        RpgPlayers.spend(sp, "str", 15); // 35 → 첫 갈래 III (보상 없음)
+        h.assertTrue(count(sp, strTicket) == 1, "30 칸은 보상 없음");
+        h.assertTrue(StatTree.pending("str", 35, StatTrees.state(sp).picksOf("str")).equals(List.of(1)), "첫 갈래 기다림 (갈래의 첫 칸)");
         // 스탯을 되돌렸다 다시 찍어도 보상은 다시 안 줌
         RpgPlayers.reset(sp);
         near(h, StatTrees.bonus(sp, "atk"), 0, "스탯 0 → 보너스 없음");
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3, "받은 칸 기록은 그대로");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 4, "받은 칸 기록은 그대로");
         RpgPlayers.spend(sp, "str", 25);
         h.assertTrue(count(sp, strTicket) == 1, "다시 찍어도 같은 칸 보상 없음: " + count(sp, strTicket));
         near(h, StatTrees.bonus(sp, "atk"), 2, "다시 찍으면 보너스는 다시");
-        // 더 높이: 4 (룬 뽑기권) · 5 (옛 힘 룬 뽑기권 → 룬 뽑기권), 다 키우면 6 ~ 10
+        // 더 높이: 40 (룬 뽑기권) · 50 (옛 힘 룬 뽑기권 → 룬 뽑기권), 다 키우면 70 · 80 · 100
         RpgPlayers.setStat(sp, "str", 50);
-        h.assertTrue(count(sp, RuneItems.TICKET) == 3, "4 · 5단계 보상: " + count(sp, RuneItems.TICKET));
+        h.assertTrue(count(sp, RuneItems.TICKET) == 3, "40 · 50 보상: " + count(sp, RuneItems.TICKET));
         RpgPlayers.setStat(sp, "str", 120);
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 10, "다 자람");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 11, "다 자람: " + StatTrees.state(sp).claimedOf("str"));
         h.assertTrue(count(sp, RuneItems.TICKET) == 6 && count(sp, RuneItems.ADV_TICKET) == 1 && count(sp, RuneItems.statTicket("str")) == 0,
                 "한 나무 보상 7장: " + count(sp, RuneItems.TICKET) + " · " + count(sp, RuneItems.ADV_TICKET));
+        h.assertTrue(StatTree.openSkills("str", 120, StatTrees.state(sp).picksOf("str")).isEmpty(), "갈래를 안 고르면 공용 스킬 없음");
         // 다른 나무는 따로
         RpgPlayers.setStat(sp, "vit", 20);
-        h.assertTrue(count(sp, RuneItems.TICKET) == 7 && count(sp, RuneItems.statTicket("vit")) == 0 && StatTrees.state(sp).claimedOf("vit") == 2, "체력 나무 2단계");
+        h.assertTrue(count(sp, RuneItems.TICKET) == 7 && count(sp, RuneItems.statTicket("vit")) == 0 && StatTrees.state(sp).claimedOf("vit") == 3, "체력 나무 20");
         StatTreeCommands.class.getName(); // 명령 클래스가 서버에 있음
         done(h, sp);
     }
@@ -108,16 +112,20 @@ public final class RpgStatTreeTests {
         ServerPlayer a = player(h, true);
         ServerPlayer b = player(h, false);
         for (ServerPlayer p : List.of(a, b)) {
-            RpgPlayers.setStat(p, "str", 20); // 단련 공격력 2 · 굳센 손아귀 치명타 피해 10
-            RpgPlayers.setStat(p, "dex", 70); // 치명타 1 + 2, 이동 속도 3, 매의 눈 공격력 2, 연속 사격 재사용 대기 4 (갈래 둘은 안 고름)
-            RpgPlayers.setStat(p, "int", 10); // 마나의 흐름 룬 피해 2
-            RpgPlayers.setStat(p, "vit", 20); // 강건함 최대 체력 5 · 두꺼운 피부 받는 피해 2
+            RpgPlayers.setStat(p, "str", 20); // 단련 공격력 2 + 광전사 I 공격력 2 · II 치명타 피해 10
+            RpgPlayers.setStat(p, "dex", 70); // 날렵함 치명타 1 · 쇄도 공격력 2 치명타 2 · 바람걸음 I ~ III 이동 속도 2 + 3 + 3 (둘째 갈래는 안 고름)
+            RpgPlayers.setStat(p, "int", 20); // 마나의 흐름 룬 피해 2 + 원소의 힘 I 룬 피해 2 · II 재사용 대기 3
+            RpgPlayers.setStat(p, "vit", 20); // 강건함 최대 체력 5 + 거대한 몸 I 최대 체력 5 · II 받는 피해 2
         }
-        near(h, StatTrees.atkMult(a), 1.04, "공격력 ×1.04");
+        // 갈래는 켠 플레이어만 (끈 플레이어는 고를 수 없음)
+        h.assertTrue(StatTrees.pick(a, "str", 1, 0) == null && StatTrees.pick(a, "dex", 1, 1) == null && StatTrees.pick(a, "int", 1, 0) == null
+                && StatTrees.pick(a, "vit", 1, 0) == null, "갈래 넷");
+        h.assertTrue(StatTrees.pick(b, "str", 1, 0) != null, "끈 플레이어는 못 고름");
+        near(h, StatTrees.atkMult(a), 1.06, "공격력 ×1.06");
         near(h, StatTrees.atkMult(b), 1, "끈 플레이어 ×1");
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
         for (ServerPlayer p : List.of(a, b)) p.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(w.id())));
-        near(h, RpgCombat.powerOf(a, w) / RpgCombat.powerOf(b, w), 1.04, "무기 피해 배율 비");
+        near(h, RpgCombat.powerOf(a, w) / RpgCombat.powerOf(b, w), 1.06, "무기 피해 배율 비");
         Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 3.5F, 2F, 3.5F));
         RpgCombat.forceCrit = false;
         double da = RpgCombat.meleeDamage(a, z, 1F, 1F);
@@ -128,22 +136,22 @@ public final class RpgStatTreeTests {
         RpgCombat.forceCrit = null;
         RpgCombat.dropMark(z, a);
         RpgCombat.dropMark(z, b);
-        near(h, da / db, 1.04, "평타 피해 비");
-        near(h, ca / cb, 1.04 * (w.critMult() + 0.10) / w.critMult(), "치명타 평타 비 (공격력 · 치명타 배율 +0.1)");
+        near(h, da / db, 1.06, "평타 피해 비");
+        near(h, ca / cb, 1.06 * (w.critMult() + 0.10) / w.critMult(), "치명타 평타 비 (공격력 · 치명타 배율 +0.1)");
         near(h, RpgCombat.critChanceOf(a, w, null) - RpgCombat.critChanceOf(b, w, null), 0.03, "치명타 확률 +3%p");
         near(h, RpgCombat.critMultOf(a, w) - RpgCombat.critMultOf(b, w), 0.10, "치명타 배율 +0.1");
-        near(h, RpgHealth.maxHpOf(a) - RpgHealth.maxHpOf(b), 5, "최대 체력 +5");
+        near(h, RpgHealth.maxHpOf(a) - RpgHealth.maxHpOf(b), 10, "최대 체력 +10");
         h.assertTrue(Math.abs(a.getMaxHealth() - RpgHealth.maxHpOf(a)) < 1e-3, "바닐라 최대 체력도 " + a.getMaxHealth());
         AttributeInstance sa = a.getAttribute(Attributes.MOVEMENT_SPEED);
         AttributeInstance sb = b.getAttribute(Attributes.MOVEMENT_SPEED);
-        near(h, sa.getValue(), sa.getBaseValue() * 1.03, "이동 속도 ×1.03");
+        near(h, sa.getValue(), sa.getBaseValue() * 1.08, "이동 속도 ×1.08");
         near(h, sb.getValue(), sb.getBaseValue(), "끈 플레이어 이동 속도 그대로");
         Runes.Rune r = Runes.parseRune("rpg:rune_str_common");
-        h.assertTrue(RuneCast.cooldownTicks(a, r) == Math.round(r.cd() * 20 * 0.96) && RuneCast.cooldownTicks(b, r) == Math.round(r.cd() * 20),
-                "룬 재사용 대기 -4%: " + RuneCast.cooldownTicks(a, r) + " / " + RuneCast.cooldownTicks(b, r));
-        near(h, StatTrees.runeMult(a), 1.06, "룬 피해 ×(1 + 공격력 4 + 룬 2)");
+        h.assertTrue(RuneCast.cooldownTicks(a, r) == Math.round(r.cd() * 20 * 0.97) && RuneCast.cooldownTicks(b, r) == Math.round(r.cd() * 20),
+                "룬 재사용 대기 -3%: " + RuneCast.cooldownTicks(a, r) + " / " + RuneCast.cooldownTicks(b, r));
+        near(h, StatTrees.runeMult(a), 1.10, "룬 피해 ×(1 + 공격력 6 + 룬 4)");
         double got = RuneKit.runeHit(a, z, 10, 1, "str"); // 새 과녁 (받은 피해 0 에서)
-        h.assertTrue(Math.abs(TestDummies.dealt(z) - 10.6) < 1e-3, "룬 피해 10 → 10.6 (" + TestDummies.dealt(z) + ", " + got + ")");
+        h.assertTrue(Math.abs(TestDummies.dealt(z) - 11.0) < 1e-3, "룬 피해 10 → 11 (" + TestDummies.dealt(z) + ", " + got + ")");
         // 받는 피해 -2% (방패 · 버프 없음)
         a.setHealth(a.getMaxHealth());
         b.setHealth(b.getMaxHealth());
@@ -170,35 +178,41 @@ public final class RpgStatTreeTests {
     public void pickAndReset(GameTestHelper h) {
         ServerPlayer sp = player(h, true);
         RpgPlayers.setStat(sp, "str", 35);
-        h.assertTrue(StatTrees.pick(sp, "str", 5, 0) != null, "아직 안 열린 갈래는 못 고름");
-        h.assertTrue(StatTrees.pick(sp, "str", 1, 0) != null, "갈래가 아닌 칸");
-        h.assertTrue(StatTrees.pick(sp, "str", 2, 2) != null, "없는 갈래");
-        h.assertTrue(StatTrees.pick(sp, "str", 2, 0) == null, "광전사");
-        near(h, StatTrees.bonus(sp, "atk"), 6, "공격력 2 + 4");
-        h.assertTrue(StatTrees.pick(sp, "str", 2, 1) != null, "이미 고름");
+        h.assertTrue(StatTrees.pick(sp, "str", 6, 0) != null, "아직 안 열린 갈래는 못 고름 (둘째 갈래 60)");
+        h.assertTrue(StatTrees.pick(sp, "str", 0, 0) != null, "갈래가 아닌 칸 (뿌리)");
+        h.assertTrue(StatTrees.pick(sp, "str", 5, 0) != null, "갈래가 아닌 칸 (합류)");
+        h.assertTrue(StatTrees.pick(sp, "str", 1, 2) != null, "없는 갈래");
+        h.assertTrue(StatTrees.pick(sp, "str", 1, 0) == null, "광전사");
+        near(h, StatTrees.bonus(sp, "atk"), 6, "공격력 2 + 2 + 2 (뿌리 · 광전사 I · III)");
+        near(h, StatTrees.bonus(sp, "critDmg"), 10, "광전사 II 치명타 피해 10");
+        h.assertTrue(StatTrees.state(sp).picksOf("str").size() == 4 && StatTrees.state(sp).pickCount("str") == 1,
+                "갈래 하나 = 칸 넷이 같은 길: " + StatTrees.state(sp).picksOf("str"));
+        h.assertTrue(StatTrees.pick(sp, "str", 2, 1) != null, "이미 고름 (같은 갈래의 다른 칸)");
         h.assertTrue(StatTrees.resetCost(sp, "str") == StatTree.perPick(), "비용 = 갈래 1개");
         String err = StatTrees.reset(sp, "str", false);
         h.assertTrue(err != null && err.contains("모자랍니다"), "실버 없음: " + err);
-        h.assertTrue(StatTrees.state(sp).picksOf("str").size() == 1, "못 지웠으면 그대로");
+        h.assertTrue(StatTrees.state(sp).pickCount("str") == 1, "못 지웠으면 그대로");
         sp.getInventory().add(new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, 30)); // 0.21.0 가방의 은화로도 냄
         h.assertTrue(StatTrees.reset(sp, "str", false) == null, "초기화");
         h.assertTrue(count(sp, mmorpg.fabric.economy.EconomyItems.SILVER_COIN) == 30 - StatTree.perPick(), "실버 " + StatTree.perPick() + " 냄: " + count(sp, mmorpg.fabric.economy.EconomyItems.SILVER_COIN));
         h.assertTrue(StatTrees.state(sp).picksOf("str").isEmpty(), "갈래 지움");
         near(h, StatTrees.bonus(sp, "atk"), 2, "보너스 원래대로");
         h.assertTrue(StatTrees.reset(sp, "str", false) != null, "고른 갈래가 없으면 초기화 없음");
-        h.assertTrue(StatTrees.pick(sp, "str", 2, 1) == null, "강철 피부");
-        near(h, StatTrees.defMult(sp), 0.96, "받는 피해 ×0.96");
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3 && count(sp, RuneItems.TICKET) == 1, "보상은 다시 안 줌");
+        h.assertTrue(StatTrees.pick(sp, "str", 3, 1) == null, "강철 피부 (갈래의 아무 칸에서 골라도 됨)");
+        near(h, StatTrees.defMult(sp), 0.96, "받는 피해 ×0.96 (강철 피부 I · III)");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 4 && count(sp, RuneItems.TICKET) == 1, "보상은 다시 안 줌");
         // 체력 갈래 (최대 체력이 바로 바뀜)
         RpgPlayers.setStat(sp, "vit", 60);
         double before = RpgHealth.maxHpOf(sp);
-        h.assertTrue(StatTrees.pick(sp, "vit", 5, 1) == null, "생명의 샘");
-        near(h, RpgHealth.maxHpOf(sp) - before, 20, "최대 체력 +20");
+        h.assertTrue(StatTrees.pick(sp, "vit", 6, 1) == null, "생명의 샘");
+        near(h, RpgHealth.maxHpOf(sp) - before, 20, "최대 체력 +20 (생명의 샘 I)");
         h.assertTrue(Math.abs(sp.getMaxHealth() - RpgHealth.maxHpOf(sp)) < 1e-3, "바닐라 최대 체력도");
-        // 명령어: 채팅으로 고르기 (/stattree pick 스탯 단계 갈래 — 1부터) · 요약
+        // 명령어: 채팅으로 고르기 (/stattree pick 스탯 칸 갈래 — 1부터, 채팅 요약은 갈래의 첫 칸) · 요약
         RpgPlayers.setStat(sp, "dex", 30);
-        h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "stattree pick 민첩 3 2");
-        h.assertTrue(Integer.valueOf(1).equals(StatTrees.state(sp).picksOf("dex").get(2)), "명령으로 바람걸음: " + StatTrees.state(sp).picksOf("dex"));
+        h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "stattree pick 민첩 2 2");
+        h.assertTrue(Integer.valueOf(1).equals(StatTrees.state(sp).picksOf("dex").get(1)) && Integer.valueOf(1).equals(StatTrees.state(sp).picksOf("dex").get(4)),
+                "명령으로 바람걸음: " + StatTrees.state(sp).picksOf("dex"));
+        h.assertTrue(StatTree.openSkills("dex", 30, StatTrees.state(sp).picksOf("dex")).isEmpty(), "이동기는 40부터");
         h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "스탯트리 info");
         // 관리자 초기화 (/stattree clear): 갈래만 지우고 받은 칸 기록은 그대로 — 스탯을 다시 찍어도 뽑기권을 다시 주지 않음
         int strTickets = count(sp, RuneItems.statTicket("str"));
@@ -206,7 +220,7 @@ public final class RpgStatTreeTests {
         int runeTickets = count(sp, RuneItems.TICKET);
         h.assertTrue(StatTrees.clear(sp) == 3, "갈래 3개 지움 (힘 · 체력 · 민첩)");
         for (String stat : StatTree.stats()) h.assertTrue(StatTrees.state(sp).picksOf(stat).isEmpty(), stat + " 갈래 없음");
-        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3 && StatTrees.state(sp).claimedOf("vit") == 6, "받은 칸 기록 그대로");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 4 && StatTrees.state(sp).claimedOf("vit") == 7, "받은 칸 기록 그대로");
         RpgPlayers.reset(sp);
         RpgPlayers.setStat(sp, "str", 35);
         RpgPlayers.setStat(sp, "vit", 60);

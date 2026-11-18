@@ -277,8 +277,11 @@ public final class StatTrees {
         save(sp, next);
         recompute(sp, next);
         RpgHealth.refreshMax(sp, false);
-        StatTree.Option o = n.pick().get(option);
-        Notify.say(sp, color(stat) + name + " 나무 §f" + (index + 1) + "단계 갈래: §e「" + o.name() + "」 §a" + StatTree.bonusText(o.bonus()));
+        // 2026-11-18 축복의 길: 갈래 묶음이면 길 이름 · 길 전체 (보너스 합 · 공용 스킬)
+        String which = n.split() == 1 ? "첫 갈래" : n.split() == 2 ? "둘째 갈래" : (index + 1) + "단계 갈래";
+        String what = n.split() > 0 ? "「" + t.branchName(n, option) + "」 길 " + branchText(t, n, option) : "「" + n.pick().get(option).name() + "」 "
+                + optionText(n.pick().get(option));
+        Notify.say(sp, color(stat) + name + " 나무 §f" + which + ": §e" + what);
         pickFx(sp, t.color());
         sync(sp, "");
         return null;
@@ -336,20 +339,56 @@ public final class StatTrees {
         return Stats.info(stat).str("color");
     }
 
+    /** 갈래 하나의 글자: 공용 스킬이면 「스킬」 (종류 · 풀이), 아니면 보너스 */
+    static String optionText(StatTree.Option o) {
+        StatTree.Skill sk = StatTree.skill(o.skill());
+        if (sk != null) return "§b공용 스킬 " + sk.name() + " §7(" + (sk.attack() ? "작은 공격" : "이동기") + " · " + sk.text() + ")";
+        return "§a" + StatTree.bonusText(o.bonus());
+    }
+
+    /** 갈래 묶음의 한 길 전체: 칸 보너스 합 · 공용 스킬 (2026-11-18 축복의 길) */
+    static String branchText(StatTree.Tree t, StatTree.Node n, int option) {
+        Map<String, Double> sum = new LinkedHashMap<>();
+        List<String> skills = new ArrayList<>();
+        for (int i : t.splitOf(n.index())) {
+            StatTree.Node m = t.nodes().get(i);
+            if (option < 0 || option >= m.pick().size()) continue;
+            StatTree.Option o = m.pick().get(option);
+            o.bonus().forEach((k, v) -> sum.merge(k, v, Double::sum));
+            StatTree.Skill sk = StatTree.skill(o.skill());
+            if (sk != null) skills.add(sk.name());
+        }
+        String b = StatTree.bonusText(sum);
+        String sk = skills.isEmpty() ? "" : "§b공용 스킬 " + String.join(" · ", skills);
+        return "§a" + b + (b.isEmpty() || sk.isEmpty() ? "" : " §7· ") + sk;
+    }
+
     /** 새 칸 알림: 큰 글자 (가장 높은 칸 하나) · 채팅 (칸마다) · 보상 · 자라는 연출 */
     private static void announce(ServerPlayer sp, List<Grown> grown) {
         Grown last = grown.get(grown.size() - 1);
         StatTree.Tree lt = StatTree.tree(last.stat());
         StatTree.Node ln = lt.nodes().get(last.index());
+        StatTree.State st = state(sp);
         String title = color(last.stat()) + "§l" + Stats.info(last.stat()).str("name") + " 나무 " + (last.index() + 1) + "단계";
-        String sub = ln.fork() ? "§e갈래를 고르세요 §7(" + StatTree.nodeName(ln) + ")" : "§f" + ln.name() + " §a" + StatTree.bonusText(ln.bonus());
+        Integer lp = st.picksOf(last.stat()).get(last.index());
+        String sub = !ln.fork() ? "§f" + ln.name() + " §a" + StatTree.bonusText(ln.bonus())
+                : lp != null ? "§f" + ln.pick().get(lp).name() + " " + optionText(ln.pick().get(lp))
+                : "§e갈래를 고르세요 §7(" + (ln.split() > 0 ? lt.branchName(ln, 0) + " / " + lt.branchName(ln, 1) : StatTree.nodeName(ln)) + ")";
         Notify.title(sp, title, sub, 6, 50, 14);
         Map<String, Integer> total = new LinkedHashMap<>();
+        java.util.Set<String> asked = new java.util.HashSet<>();
         for (Grown g : grown) {
-            StatTree.Node n = StatTree.tree(g.stat()).nodes().get(g.index());
+            StatTree.Tree t = StatTree.tree(g.stat());
+            StatTree.Node n = t.nodes().get(g.index());
             String head = color(g.stat()) + Stats.info(g.stat()).str("name") + " 나무 §f" + (g.index() + 1) + "단계 ";
-            if (n.fork()) {
-                sp.sendSystemMessage(forkLine(head, g.stat(), n));
+            Integer p = n.fork() ? st.picksOf(g.stat()).get(g.index()) : null;
+            if (n.fork() && p == null) {
+                // 한 번에 여러 칸이 열리면 갈래 묶음마다 고르기 줄은 한 번 (나머지 칸은 같은 길을 따름)
+                if (n.split() == 0 || asked.add(g.stat() + ":" + n.split())) sp.sendSystemMessage(forkLine(head, g.stat(), t, n));
+                else Notify.say(sp, head + "§7(" + (n.split() == 1 ? "첫" : "둘째") + " 갈래 — 고르면 이 칸도 그 길)");
+            } else if (n.fork()) {
+                StatTree.Option o = n.pick().get(p);
+                Notify.say(sp, head + "§e「" + o.name() + "」 " + optionText(o));
             } else {
                 Notify.say(sp, head + "§e「" + n.name() + "」 §a" + StatTree.bonusText(n.bonus()));
             }
@@ -363,14 +402,15 @@ public final class StatTrees {
         growFx(sp, lt.color(), ln.fork(), !total.isEmpty());
     }
 
-    /** 갈래 알림 줄: 갈래 이름을 누르면 그 갈래를 고름 (모드가 없어도 채팅으로) · [스탯 트리] 를 누르면 창 */
-    private static MutableComponent forkLine(String head, String stat, StatTree.Node n) {
+    /** 갈래 알림 줄: 갈래 (묶음이면 길) 이름을 누르면 그 갈래를 고름 (모드가 없어도 채팅으로) · [스탯 트리] 를 누르면 창 */
+    private static MutableComponent forkLine(String head, String stat, StatTree.Tree t, StatTree.Node n) {
         MutableComponent line = Component.literal(BedrockText.toJava(Notify.PREFIX + head + "§e갈래 — 하나를 고르세요: "));
         for (int i = 0; i < n.pick().size(); i++) {
-            StatTree.Option o = n.pick().get(i);
+            String label = n.split() > 0 ? t.branchName(n, i) : n.pick().get(i).name();
+            String hover = n.split() > 0 ? branchText(t, n, i) : optionText(n.pick().get(i));
             String cmd = "/stattree pick " + stat + " " + (n.index() + 1) + " " + (i + 1);
-            line.append(Component.literal("[" + o.name() + "]").withStyle(st -> st.withColor(ChatFormatting.AQUA).withClickEvent(new ClickEvent.RunCommand(cmd))
-                    .withHoverEvent(new HoverEvent.ShowText(Component.literal(BedrockText.toJava("§a" + StatTree.bonusText(o.bonus()) + "\n§7누르면 고름 (바꾸려면 갈래 초기화)"))))));
+            line.append(Component.literal("[" + label + "]").withStyle(st -> st.withColor(ChatFormatting.AQUA).withClickEvent(new ClickEvent.RunCommand(cmd))
+                    .withHoverEvent(new HoverEvent.ShowText(Component.literal(BedrockText.toJava(hover + "\n§7누르면 고름 (바꾸려면 갈래 초기화)"))))));
             line.append(Component.literal(" "));
         }
         line.append(Component.literal("[스탯 트리]").withStyle(st -> st.withColor(ChatFormatting.GOLD).withClickEvent(new ClickEvent.RunCommand("/stattree " + stat))));

@@ -75,23 +75,39 @@ public final class Probe implements ClientModInitializer {
         float pct = mc.player.getCooldowns().getCooldownPercent(held, 0F);
         switch (cmd) {
             case "key q" -> {
-                // Q 와 같음 (Minecraft.handleKeybinds 의 든 칸 버리기 — 손 칸을 먼저 비우고 버리기 패킷). 26.3 은 메서드 꼴이 바뀌어 (LivingEntity.drop(ItemStack,
-                // boolean, Prediction)) 이름에 drop 이 든 boolean 하나 받는 공개 메서드를 찾아 부름 — 찾은 이름 · 다른 drop 메서드도 기록
-                java.lang.reflect.Method dm = null;
-                StringBuilder all = new StringBuilder();
-                for (java.lang.reflect.Method m : mc.player.getClass().getMethods()) {
-                    if (!m.getName().toLowerCase(java.util.Locale.ROOT).contains("drop")) continue;
-                    all.append(' ').append(m.getName()).append(java.util.Arrays.toString(m.getParameterTypes()));
-                    if (dm == null && m.getParameterCount() == 1 && m.getParameterTypes()[0] == boolean.class) dm = m;
-                }
-                Object res;
+                // Q 를 누름: 버리기 키의 누름 수 (KeyMapping.clickCount) 를 하나 올리면 다음 틱 Minecraft.handleKeybinds 가 진짜 Q 와 같은 길로 처리
+                // (손 칸을 먼저 비우고 버리기 패킷). 1차 시범은 26.3 에 공개 drop(boolean) 이 없어 실패 — 이름이 바뀌어도 되게 리플렉션 (int 칸 clickCount,
+                // 없으면 정적 click(Key))
+                String how;
+                net.minecraft.client.KeyMapping drop = mc.options.keyDrop;
                 try {
-                    res = dm == null ? "no method" : dm.invoke(mc.player, false);
+                    java.lang.reflect.Field f = net.minecraft.client.KeyMapping.class.getDeclaredField("clickCount");
+                    f.setAccessible(true);
+                    f.setInt(drop, f.getInt(drop) + 1);
+                    how = "clickCount";
                 } catch (ReflectiveOperationException | RuntimeException e) {
-                    res = e.toString();
+                    how = "no clickCount (" + e + ")";
+                    try {
+                        Object key = null;
+                        for (java.lang.reflect.Field kf : net.minecraft.client.KeyMapping.class.getDeclaredFields()) {
+                            if (java.lang.reflect.Modifier.isStatic(kf.getModifiers()) || !kf.getType().getSimpleName().equals("Key")) continue;
+                            kf.setAccessible(true);
+                            key = kf.get(drop);
+                        }
+                        for (java.lang.reflect.Method m : net.minecraft.client.KeyMapping.class.getDeclaredMethods()) {
+                            if (key != null && m.getName().equals("click") && java.lang.reflect.Modifier.isStatic(m.getModifiers()) && m.getParameterCount() == 1
+                                    && m.getParameterTypes()[0].isInstance(key)) {
+                                m.setAccessible(true);
+                                m.invoke(null, key);
+                                how += " → click(" + key + ")";
+                            }
+                        }
+                    } catch (ReflectiveOperationException | RuntimeException e2) {
+                        how += " → " + e2;
+                    }
                 }
-                log("now key q via " + (dm == null ? null : dm.getName()) + " -> " + res + " cooldown " + cd + " pct " + pct + " hand-after "
-                        + mc.player.getMainHandItem().getCount() + " | drop methods:" + all);
+                qWatch = 0;
+                log("now key q via " + how + " cooldown " + cd + " pct " + pct + " hand " + held.getCount() + " " + held.getItem());
             }
             case "use" -> {
                 // 우클릭 (허공) 과 같음 (Minecraft.startUseItem 의 아이템 사용 — 쿨타임이어도 패킷을 보내는지)
@@ -139,8 +155,16 @@ public final class Probe implements ClientModInitializer {
     }
 
     /** 클라이언트 틱 끝 */
+    /** Q 를 누른 뒤 틱 (−1 = 안 봄): 손 칸의 수를 틱마다 기록 (클라이언트가 먼저 비움 → 서버가 되돌림) */
+    private static int qWatch = -1;
+
     public static void tick(Minecraft mc) {
         ticks++;
+        if (qWatch >= 0 && mc.player != null) {
+            net.minecraft.world.item.ItemStack h = mc.player.getMainHandItem();
+            log("q watch " + qWatch + " hand " + h.getCount() + " " + h.getItem());
+            if (++qWatch > 6) qWatch = -1;
+        }
         if (!skinsLogged && mc.player != null && ticks > 40) {
             skinsLogged = true;
             logSkins(mc);

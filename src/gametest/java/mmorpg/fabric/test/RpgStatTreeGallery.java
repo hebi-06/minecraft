@@ -42,10 +42,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 7단계 스탯 트리 사진첩 (화면 시험 — MMORPG_ONLY=stattree, 실제 마우스 · 키 입력): 스탯 창 줄마다 나무 칸 (풀이), Shift + 힘 줄 두 번 → 힘 10 →
- * 나무가 자람 (3인칭 — 마법진 · 빛기둥 · 잎 · 큰 글자), 나무 칸 누르기 → 스탯 트리 창 (힘 35 — 3단계 갈래 깜빡임), 칸에 마우스 (줄기 · 갈래 · 보상 칸),
- * 갈래 누르기 → 확인 창 → 고름 (서버 기록), 탭 (민첩 · 마력 · 체력 — 다 자란 나무 · 금테), 갈래 초기화 (실버 — 확인 창 → 지움), 힘 룬 뽑기권
- * (풀이 · 우클릭 → 뽑기 창 (힘 탭) → 1회 → 힘 계열 룬), 다시 스탯 창 (나무 칸 · 트리 보너스가 들어간 피해 줄). 사진 이름 t_… → ci-logs 의 shots/.
+ * 스탯 트리 사진첩 (2026-11-18 축복의 길 — 칸 11 · 갈래 둘 · 공용 스킬. 화면 시험 — MMORPG_ONLY=stattree, 실제 마우스 · 키 입력): 스탯 창 줄마다
+ * 나무 칸 (풀이), Shift + 힘 줄 두 번 → 힘 10 → 나무가 자람 (3인칭 — 마법진 · 빛기둥 · 잎 · 큰 글자), 나무 칸 누르기 → 스탯 트리 창 (힘 35 — 첫 갈래
+ * 깜빡임), 칸에 마우스 (뿌리 · 갈래 · 공용 스킬 · 합류 (보상) · 정점), 갈래 누르기 → 확인 창 → 고름 (서버 기록 — 갈래의 칸 넷), 탭 (민첩 · 마력 ·
+ * 체력 — 다 자란 나무 · 금테), 갈래 초기화 (실버 — 확인 창 → 지움), 룬 뽑기권 (풀이 · 우클릭 → 뽑기 창 → 1회 → 새 룬), 다시 스탯 창 (나무 칸 ·
+ * 트리 보너스가 들어간 피해 줄). 사진 이름 t_… → ci-logs 의 shots/.
  * 확인 항목은 로그 [stattree-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -116,7 +117,7 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         ctx.waitTicks(4);
         shot(ctx, "t_grow_window");
         closeScreen(ctx);
-        // 3인칭 앞에서 자라는 연출 (힘 20 — 2단계 · 힘 룬 뽑기권)
+        // 3인칭 앞에서 자라는 연출 (힘 20 — 첫 갈래 II 의 문턱 · 룬 뽑기권)
         camera(ctx, CameraType.THIRD_PERSON_FRONT);
         look(ctx, 0F, 10F);
         ctx.waitTicks(5);
@@ -126,12 +127,12 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         ctx.waitTicks(10);
         shot(ctx, "t_grow_title");
         int tickets = server.computeOnServer(s -> RpgGearTests.countIn(player(s), RuneItems.TICKET));
-        check(tickets == 1, "2단계 → 룬 뽑기권 1 (2026-11-17 스탯 룬 뽑기권 없음 — " + tickets + ")");
+        check(tickets == 1, "힘 20 → 룬 뽑기권 1 (2026-11-17 스탯 룬 뽑기권 없음 — " + tickets + ")");
         camera(ctx, CameraType.FIRST_PERSON);
         ctx.waitTicks(30);
     }
 
-    // ------------------------------------------------------------ 스탯 트리 창 (힘 35 — 갈래)
+    // ------------------------------------------------------------ 스탯 트리 창 (힘 35 — 첫 갈래)
 
     private void tree(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runOnServer(s -> RpgPlayers.setStat(player(s), "str", 35));
@@ -146,22 +147,25 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         shot(ctx, "t_tree_str");
         hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(0, -1));
         shot(ctx, "t_node_trunk");
-        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(1, -1));
-        shot(ctx, "t_node_reward");
-        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(2, 0));
+        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(1, 0));
         shot(ctx, "t_node_fork");
-        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(9, -1));
+        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(4, 1));
+        shot(ctx, "t_node_skill");
+        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(5, -1));
+        shot(ctx, "t_node_reward");
+        hover(ctx, sc -> ((StatTreeScreen) sc).nodeCenter(10, -1));
         shot(ctx, "t_node_capstone");
-        // 갈래 누르기 → 확인 창 → 고르기
-        click(ctx, conn, sc -> ((StatTreeScreen) sc).nodeCenter(2, 0));
+        // 갈래 누르기 → 확인 창 → 고르기 (첫 갈래의 첫 칸 — 칸 넷이 같은 길)
+        click(ctx, conn, sc -> ((StatTreeScreen) sc).nodeCenter(1, 0));
         boolean asking = ctx.computeOnClient(mc -> mc.gui.screen() instanceof StatTreeScreen t && t.confirming());
         check(asking, "fork click → confirm box");
         away(ctx);
         shot(ctx, "t_confirm_pick");
         click(ctx, conn, sc -> ((StatTreeScreen) sc).confirmCenter(true));
         ctx.waitTicks(6);
-        Integer picked = server.computeOnServer(s -> StatTrees.state(player(s)).picksOf("str").get(2));
-        check(Integer.valueOf(0).equals(picked), "광전사 picked on the server (" + picked + ")");
+        Integer picked = server.computeOnServer(s -> StatTrees.state(player(s)).picksOf("str").get(1));
+        Integer pickedSkill = server.computeOnServer(s -> StatTrees.state(player(s)).picksOf("str").get(4));
+        check(Integer.valueOf(0).equals(picked) && Integer.valueOf(0).equals(pickedSkill), "광전사 picked on the server — 칸 넷 (" + picked + ", " + pickedSkill + ")");
         double atk = server.computeOnServer(s -> StatTrees.bonus(player(s), "atk"));
         check(Math.abs(atk - 6) < 1e-9, "공격력 +6 (" + atk + ")");
         away(ctx);
@@ -179,10 +183,9 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
             RpgPlayers.setStat(sp, "dex", 47);
             RpgPlayers.setStat(sp, "int", 64);
             RpgPlayers.setStat(sp, "vit", 100);
-            StatTrees.pick(sp, "int", 2, 0);
-            StatTrees.pick(sp, "vit", 2, 0);
-            StatTrees.pick(sp, "vit", 5, 1);
-            StatTrees.pick(sp, "vit", 8, 0);
+            StatTrees.pick(sp, "int", 1, 0); // 원소의 힘 (둘째 갈래 60 은 안 고름 — 깜빡임)
+            StatTrees.pick(sp, "vit", 1, 0); // 거대한 몸
+            StatTrees.pick(sp, "vit", 6, 1); // 생명의 샘
         });
         ctx.waitTicks(10);
         if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof StatTreeScreen)) {
@@ -203,7 +206,7 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         shot(ctx, "t_tab_tip");
     }
 
-    // ------------------------------------------------------------ 갈래 초기화 (체력 나무 — 갈래 셋 → 실버 36)
+    // ------------------------------------------------------------ 갈래 초기화 (체력 나무 — 갈래 둘 → 실버 24)
 
     private void reset(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runOnServer(s -> {
@@ -226,7 +229,7 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         ctx.waitTicks(6);
         int left = server.computeOnServer(s -> (int) mmorpg.fabric.economy.Wallet.get(player(s), mmorpg.core.Economy.Kind.SILVER));
         int picks = server.computeOnServer(s -> StatTrees.state(player(s)).pickCount("vit"));
-        check(cost == 3 * StatTree.perPick() && left == 50 - cost && picks == 0, "reset: cost " + cost + ", silver left " + left + ", picks " + picks);
+        check(cost == 2 * StatTree.perPick() && left == 50 - cost && picks == 0, "reset: cost " + cost + ", silver left " + left + ", picks " + picks);
         away(ctx);
         ctx.waitTicks(4);
         shot(ctx, "t_reset_done");
@@ -297,7 +300,7 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 다시 스탯 창 (나무 칸 · 보너스가 들어간 피해)
 
     private void after(ClientGameTestContext ctx, TestServerContext server) {
-        server.runOnServer(s -> RpgPlayers.setStat(player(s), "dex", 30)); // 3단계 갈래 (깜빡임)
+        server.runOnServer(s -> RpgPlayers.setStat(player(s), "dex", 30)); // 첫 갈래 (깜빡임)
         ctx.waitTicks(6);
         openStats(ctx);
         away(ctx);

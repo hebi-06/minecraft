@@ -22,23 +22,33 @@ import java.util.concurrent.ConcurrentHashMap;
  * ({@link VanillaPack} fpWrap) 가 1인칭 오른손에서 custom_model_data 글자 1번 (동작 이름) → range_dispatch (minecraft:cooldown) 로 고름.
  * 동작이 나갈 때 (MotionSystem.broadcast) 그 사람에게만 무기의 쿨타임 묶음으로 쿨타임 패킷을 보내 재생 (서버의 쿨타임은 그대로 — 막는 것 없음).
  *
- * <p>시범에서 확인할 것 (CI 영상 fppilot:): 핫바 쿨타임 덮개 · 동작 이름 (아이템 구성 요소) 을 바꿀 때 다시 들기 · Q 의 손 비움 · 쿨타임 중
- * 우클릭 패킷. 시범 동안만 켬 ({@link #enabled} — -Dmmorpg.fp=true 또는 사진기 영상).
+ * <p>시범 결과 (CI 44256605383 · 영상 vanilla_fppilot_sword, 11-18): 쿨타임 프레임은 틱마다 (20장/초) 잘 나오고 평타 뒤 1틱에 시작 (같은 기계).
+ * 동작 이름 (아이템 구성 요소) 을 바꾸면 바닐라 다시 들기 — 손이 3틱 내려갔다 3틱 올라옴 (ItemInHandRenderer: 손의 아이템이 구성 요소까지 같지 않으면
+ * 내려서 바꿈) 이 동작 앞부분과 겹침. 그래서 평타 (그 무기 종류의 연타 동작) 는 이름을 바꾸지 않고 늘 첫 연타 동작 프레임, 스킬 동작만 이름을 바꾸고
+ * {@link #lead} 틱 뒤 (손이 다 내려가 새 아이템으로 바뀐 때) 쿨타임을 보내 올라오며 재생 · 끝나면 이름을 지움 (쉴 때 다시 들기).
+ * 핫바의 그 칸에 쿨타임 덮개 (흰 막) 가 동작 동안 보임. 쿨타임 중 우클릭은 서버에 닿음 (클라이언트는 PASS — 휘두르지 않음).
+ * 시범 동안만 켬 ({@link #enabled} — -Dmmorpg.fp=true 또는 사진기 영상).
  */
 public final class VanillaFirstPerson {
     private VanillaFirstPerson() {}
 
     /** 시범 스위치 (기본 끔 — 켜면 프레임이 있는 무기의 1인칭 모션을 재생) */
     public static volatile boolean enabled = Boolean.getBoolean("mmorpg.fp");
-    /** true = 동작마다 동작 이름 (custom_model_data 글자 1번) 을 바꿔 보냄 (다시 들기 확인), false = 이름 없이 늘 첫 연타 동작 프레임 */
-    public static volatile boolean switchMotion = true;
+    /** true = 스킬 동작은 그 동작의 프레임 (이름을 바꿈 — 다시 들기), false = 스킬도 첫 연타 동작 프레임 (이름을 바꾸지 않음) */
+    public static volatile boolean skillMotions = true;
+    /** 스킬 동작 이름을 바꾼 뒤 쿨타임까지 틱 (다시 들기의 내려가는 3틱) */
+    public static volatile int lead = 3;
     /** 시범: Q (버리기) 를 막고 손 칸을 되돌려 보냄 (스킬 키 자리 — 버리지 않음) */
     public static volatile boolean blockDrop = true;
 
     /** 프레임을 감싼 아이템 (VanillaPack) → 그 디자인의 동작 이름 → 프레임 수 */
     static final Map<Identifier, Map<String, Integer>> WRAPPED = new ConcurrentHashMap<>();
-    /** 사람마다 지금 보낸 동작 이름 (convert 가 custom_model_data 글자 1번으로) */
+    /** 프레임을 감싼 아이템 → 이름이 없을 때의 동작 (VanillaPack fpWrap 의 fallback — 첫 연타 동작) */
+    static final Map<Identifier, String> BASE = new ConcurrentHashMap<>();
+    /** 사람마다 지금 보낸 동작 이름 (convert 가 custom_model_data 글자 1번으로 — 없으면 첫 연타 동작) */
     private static final Map<UUID, String> MOTION = new ConcurrentHashMap<>();
+    /** 사람마다 재생 차례 (늦게 도는 쿨타임 · 이름 지움이 다음 재생을 덮지 않게) */
+    private static final Map<UUID, Integer> SEQ = new ConcurrentHashMap<>();
 
     /** 시험 · 영상 기록 */
     public static int played;
@@ -53,9 +63,10 @@ public final class VanillaFirstPerson {
         net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.player.getUUID()));
     }
 
-    /** 프레임을 감쌀 아이템 (VanillaPack.cosmeticItems — 리소스 팩을 만들 때) */
-    static void wrapped(Identifier item, Map<String, Integer> motions) {
+    /** 프레임을 감쌀 아이템 (VanillaPack.cosmeticItems — 리소스 팩을 만들 때) · base = 이름이 없을 때의 동작 */
+    static void wrapped(Identifier item, Map<String, Integer> motions, String base) {
         WRAPPED.put(item, Map.copyOf(motions));
+        BASE.put(item, base);
     }
 
     /** 감싼 아이템 수 (시험) */
@@ -64,36 +75,71 @@ public final class VanillaFirstPerson {
     }
 
     /**
-     * 동작이 나감 (MotionSystem.broadcast — 평타 · 스킬 · 룬): 모드 없는 클라이언트가 프레임이 있는 무기를 들었으면, 동작 이름을 바꿔 보내고 (switchMotion)
-     * 쿨타임 패킷 (길이 = 동작 틱 ÷ 빠르기) 으로 1인칭 프레임을 재생
+     * 동작이 나감 (MotionSystem.broadcast — 평타 · 스킬 · 룬): 모드 없는 클라이언트가 프레임이 있는 무기를 들었으면 쿨타임 패킷 (길이 = 동작 틱 ÷ 빠르기)
+     * 으로 1인칭 프레임을 재생. 평타 (연타 동작) · 프레임이 없는 동작은 첫 연타 동작 프레임 (이름 그대로 — 다시 들기 없음)
      */
     public static void play(ServerPlayer sp, String motion, float speed) {
+        play(sp, motion, speed, false);
+    }
+
+    /** asSkill = 연타 동작이어도 스킬처럼 (이름을 바꿈 — 시범 영상) */
+    public static void play(ServerPlayer sp, String motion, float speed, boolean asSkill) {
         if (!enabled || sp == null || sp.isRemoved() || motion == null || !VanillaClients.isVanilla(sp)) return;
         ItemStack st = sp.getMainHandItem();
         if (!(st.getItem() instanceof RpgWeaponItem)) return;
-        Map<String, Integer> motions = WRAPPED.get(BuiltInRegistries.ITEM.getKey(st.getItem()));
-        if (motions == null) return;
-        Integer frames = motions.get(motion);
-        if (frames == null) return; // 이 동작의 프레임이 없음 (시범은 칼 평타 둘)
-        if (switchMotion) {
-            String old = MOTION.put(sp.getUUID(), motion);
-            if (!motion.equals(old)) resendHeld(sp);
-        } else if (MOTION.remove(sp.getUUID()) != null) {
+        Identifier item = BuiltInRegistries.ITEM.getKey(st.getItem());
+        Map<String, Integer> motions = WRAPPED.get(item);
+        String base = BASE.get(item);
+        if (motions == null || base == null || !motions.containsKey(base)) return;
+        boolean skill = skillMotions && motions.containsKey(motion)
+                && (asSkill || !mmorpg.core.Motions.combo(VanillaCosmetics.weaponType(st.getItem())).contains(motion));
+        String shown = skill ? motion : base;
+        String want = skill ? motion : null;
+        UUID id = sp.getUUID();
+        int seq = SEQ.merge(id, 1, Integer::sum);
+        boolean change = !java.util.Objects.equals(MOTION.get(id), want);
+        if (change) {
+            if (want == null) MOTION.remove(id);
+            else MOTION.put(id, want);
             resendHeld(sp);
         }
-        int ticks = Math.max(4, Math.round(frames / Math.max(0.25F, speed)));
-        sp.connection.send(new ClientboundCooldownPacket(group(st), ticks));
-        lastPlayTick = mmorpg.fabric.Tasks.now();
+        int ticks = Math.max(4, Math.round(motions.get(shown) / Math.max(0.25F, speed)));
+        Identifier group = group(st);
+        int delay = change ? Math.max(0, lead) : 0;
+        if (delay == 0) {
+            sp.connection.send(new ClientboundCooldownPacket(group, ticks));
+        } else {
+            mmorpg.fabric.Tasks.later(delay, () -> {
+                if (!sp.isRemoved() && SEQ.getOrDefault(id, 0) == seq) sp.connection.send(new ClientboundCooldownPacket(group, ticks));
+            });
+        }
+        if (want != null) {
+            // 끝나면 이름을 지움 — 다음 평타가 곧바로 첫 연타 동작 프레임 (쉬는 동안의 다시 들기)
+            mmorpg.fabric.Tasks.later(delay + ticks + 1, () -> {
+                if (sp.isRemoved() || SEQ.getOrDefault(id, 0) != seq || !want.equals(MOTION.get(id))) return;
+                MOTION.remove(id);
+                resendHeld(sp);
+            });
+        }
+        lastPlayTick = mmorpg.fabric.Tasks.now() + delay;
         played++;
-        lastMotion = motion;
+        lastMotion = shown + (change ? " (lead " + delay + ")" : "");
         lastTicks = ticks;
     }
 
-    /** 모드 없는 클라이언트에 가는 무기의 custom_model_data 글자 1번 (없으면 null — 이름을 보내지 않음) */
+    /** 모드 없는 클라이언트에 가는 무기의 custom_model_data 글자 1번 (없으면 null — 첫 연타 동작) */
     static String motionFor(ServerPlayer receiver, ItemStack stack) {
-        if (!enabled || receiver == null || !switchMotion) return null;
+        if (!enabled || receiver == null) return null;
         if (!WRAPPED.containsKey(BuiltInRegistries.ITEM.getKey(stack.getItem()))) return null;
         return MOTION.get(receiver.getUUID());
+    }
+
+    /** 손 칸을 바꿈 (VanillaInputMixin — 핫바): 새로 든 무기가 지금 이름을 받게 다시 보냄 (스킬 도중 가방이 통째로 간 칸의 옛 이름) */
+    public static void onSlot(ServerPlayer sp) {
+        if (!enabled || sp == null || !VanillaClients.isVanilla(sp)) return;
+        if (!WRAPPED.containsKey(BuiltInRegistries.ITEM.getKey(sp.getMainHandItem().getItem()))) return;
+        int slot = sp.getInventory().getSelectedSlot();
+        sp.connection.send(new ClientboundSetPlayerInventoryPacket(slot, sp.getInventory().getItem(slot).copy())); // resent 에 세지 않음 (시범 영상의 셈)
     }
 
     /**
@@ -126,6 +172,7 @@ public final class VanillaFirstPerson {
     /** 나감 · 죽음 */
     static void forget(UUID id) {
         MOTION.remove(id);
+        SEQ.remove(id);
     }
 
     /** 손 칸을 다시 보냄 (Polymer 가 받는 사람마다 바꿈 — convert 의 동작 이름) */
@@ -148,15 +195,32 @@ public final class VanillaFirstPerson {
         if (!enabled || !WRAPPED.containsKey(BuiltInRegistries.ITEM.getKey(stack.getItem()))) return;
         if (!swingTried) {
             swingTried = true;
+            // 시범 1차: minecraft:swing_animation 이 26.3 등록부에 없었음 (null) — 이름에 swing 이 든 구성 요소를 찾아 쓰고, 찾은 이름 · 비슷한 이름을 기록
+            StringBuilder near = new StringBuilder();
+            String err = "";
             try {
-                swingType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(Identifier.parse("minecraft:swing_animation"));
+                Identifier found = Identifier.parse("minecraft:swing_animation");
+                swingType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(found);
+                for (Identifier k : BuiltInRegistries.DATA_COMPONENT_TYPE.keySet()) {
+                    String path = k.getPath();
+                    if (path.contains("swing") || path.contains("anim") || path.contains("attack") || path.contains("weapon")) near.append(' ').append(k);
+                    if (swingType == null && path.contains("swing")) {
+                        swingType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(k);
+                        found = k;
+                    }
+                }
                 com.mojang.serialization.Codec<?> codec = swingType == null ? null : swingType.codec();
-                swingNone = codec == null ? null
-                        : codec.parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString("{\"type\":\"none\"}")).result().orElse(null);
+                if (codec != null) {
+                    var r = codec.parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString("{\"type\":\"none\"}"));
+                    swingNone = r.result().orElse(null);
+                    err = r.error().map(e -> e.message()).orElse("");
+                }
+                near.insert(0, "using " + (swingType == null ? "none" : found) + " |");
             } catch (RuntimeException e) {
                 swingNone = null;
+                err = e.toString();
             }
-            Mmorpg.LOG.info("[vanilla] fp swing_animation component {} none {}", swingType != null, swingNone);
+            Mmorpg.LOG.info("[vanilla] fp swing_animation component {} none {} {} {}", swingType != null, swingNone, err, near);
         }
         if (swingType != null && swingNone != null) setUnchecked(out, swingType, swingNone);
     }
