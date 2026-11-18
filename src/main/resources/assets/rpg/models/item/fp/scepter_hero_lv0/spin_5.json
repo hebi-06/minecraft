@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scepter_hero_lv0","display":{"firstperson_righthand":{"rotation":[-90.8684,2.9631,94.0651],"translation":[-24.937,4.3267,-7.906],"scale":[0.85,0.85,0.85]}}}

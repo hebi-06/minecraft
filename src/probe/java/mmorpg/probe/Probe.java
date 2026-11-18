@@ -247,7 +247,10 @@ public final class Probe implements ClientModInitializer {
             if (!fontMeasured) {
                 fontMeasured = true;
                 fontMemory(mc);
+                modelMemory(mc);
             }
+            handMin = 2F;
+            handDips = 0;
             // 2026-11-16 자바 힙 (사용자 "8gb 지원" — 런처 기본 -Xmx2G 에서 버티는지: 글꼴 그림은 힙 밖 · 힙은 엔티티 · 청크 · 모델)
             Runtime rt = Runtime.getRuntime();
             log("heap used MB " + (rt.totalMemory() - rt.freeMemory()) / 1_000_000 + " committed MB " + rt.totalMemory() / 1_000_000 + " max MB "
@@ -398,6 +401,12 @@ public final class Probe implements ClientModInitializer {
         }
         Path file = dir.resolve(String.format("f%04d.png", filmIndex++));
         FILM_TICKS.add(ticks);
+        // 2026-11-18 1인칭 프레임: 손 높이 (바꿔 들기 — 아이템이 구성 요소까지 바뀌면 바닐라가 손을 내렸다 올림) 가장 낮은 값 · 낮았던 장 수
+        float hh = handHeight(mc);
+        if (hh >= 0) {
+            handMin = Math.min(handMin, hh);
+            if (hh < 0.98F) handDips++;
+        }
         Screenshot.takeScreenshot(mc.gameRenderer.mainRenderTarget(), (NativeImage image) -> {
             try (image) {
                 image.writeToFile(file);
@@ -415,8 +424,150 @@ public final class Probe implements ClientModInitializer {
             log("film manifest failed " + e);
         }
         log("film done " + filmName + " " + filmIndex);
+        if (handMin <= 1F) log(String.format(java.util.Locale.ROOT, "film hand %s min %.2f dips %d", filmName, handMin, handDips));
         filmName = null;
         wait = 5;
+    }
+
+    /** 영상 동안 손 높이 (ItemInHandRenderer 주 손 — 1 = 다 올림) 가장 낮은 값 · 0.98 아래인 장 수 */
+    private static float handMin = 2F;
+    private static int handDips;
+    private static java.lang.reflect.Field handRendererField;
+    private static java.lang.reflect.Field handHeightField;
+    private static boolean handTried;
+
+    /** 주 손 높이 (리플렉션 — 이름이 판마다 바뀌면 −1) */
+    private static float handHeight(Minecraft mc) {
+        try {
+            if (!handTried) {
+                handTried = true;
+                for (java.lang.reflect.Field f : mc.gameRenderer.getClass().getDeclaredFields()) {
+                    if (f.getType().getSimpleName().equals("ItemInHandRenderer")) {
+                        f.setAccessible(true);
+                        handRendererField = f;
+                    }
+                }
+                if (handRendererField != null) {
+                    java.lang.reflect.Field h = handRendererField.getType().getDeclaredField("mainHandHeight");
+                    h.setAccessible(true);
+                    handHeightField = h;
+                }
+                log("hand height field " + (handHeightField != null));
+            }
+            if (handHeightField == null) return -1;
+            return handHeightField.getFloat(handRendererField.get(mc.gameRenderer));
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            if (handHeightField != null) log("hand height failed " + e);
+            handHeightField = null;
+            return -1;
+        }
+    }
+
+    /**
+     * 2026-11-18 1인칭 프레임 예산 (축복의 길 — 무기 디자인 × 동작 프레임 모델): 구운 아이템 모델의 면 (BakedQuad) 수 · 꼭짓점 자리 (Vector3f) 수 ·
+     * 같은 손 모델을 쓰는 두 무기 (40 · 30렙 영웅 칼 — 아이템 정의는 따로) 가 면을 함께 쓰는지 (모델마다 한 번 굽는지, 정의마다 굽는지) · GC 뒤 힙
+     */
+    private static void modelMemory(Minecraft mc) {
+        try {
+            Object mm = Minecraft.class.getMethod("getModelManager").invoke(mc);
+            long[] all = new long[4];
+            java.util.Set<Object> quads = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+            java.util.Set<Object> pos = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+            walkQuads(mm, quads, pos, all);
+            StringBuilder share = new StringBuilder();
+            java.lang.reflect.Method get = null;
+            for (java.lang.reflect.Method m : mm.getClass().getMethods()) {
+                if (m.getName().equals("getItemModel") && m.getParameterCount() == 1) get = m;
+            }
+            if (get != null) {
+                java.util.List<java.util.Set<Object>> per = new java.util.ArrayList<>();
+                for (String id : new String[] {"rpg:sword_l40_hero", "rpg:sword_l30_hero"}) {
+                    java.util.Set<Object> q = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+                    walkQuads(get.invoke(mm, net.minecraft.resources.Identifier.parse(id)), q, java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>()), new long[4]);
+                    per.add(q);
+                    share.append(id).append(' ').append(q.size()).append(' ');
+                }
+                int both = 0;
+                for (Object q : per.get(0)) if (per.get(1).contains(q)) both++;
+                share.append("shared ").append(both);
+            } else {
+                share.append("no getItemModel");
+            }
+            long quadBytes = all[2];
+            System.gc();
+            System.gc();
+            Runtime rt = Runtime.getRuntime();
+            log("models quads " + quads.size() + " positions " + pos.size() + " int-vertex arrays " + all[1] + " quad shallow bytes ~" + quadBytes + " | " + share
+                    + " | heap after gc MB " + (rt.totalMemory() - rt.freeMemory()) / 1_000_000);
+        } catch (Throwable e) {
+            log("model memory failed " + e);
+        }
+    }
+
+    /** 모델 관리자에서 닿는 BakedQuad (그림판 · 텍스처 · 엔티티 모델은 건너뜀) — all[1] int[] 꼭짓점 배열 수 · all[2] 면 얕은 크기 합 */
+    private static void walkQuads(Object root, java.util.Set<Object> quads, java.util.Set<Object> pos, long[] all) {
+        java.util.Set<Object> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.ArrayDeque<Object> todo = new java.util.ArrayDeque<>();
+        if (root != null) todo.push(root);
+        while (!todo.isEmpty()) {
+            Object o = todo.pop();
+            if (o == null || !seen.add(o)) continue;
+            Class<?> c = o.getClass();
+            if (c.getSimpleName().equals("BakedQuad")) {
+                quads.add(o);
+                long size = 12;
+                for (Class<?> k = c; k != null && k != Object.class; k = k.getSuperclass()) {
+                    for (java.lang.reflect.Field f : k.getDeclaredFields()) {
+                        if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                        Class<?> t = f.getType();
+                        size += t == long.class || t == double.class ? 8 : t == boolean.class || t == byte.class ? 1 : t == short.class || t == char.class ? 2 : 4;
+                        try {
+                            f.setAccessible(true);
+                            Object v = f.get(o);
+                            if (v instanceof int[] arr) {
+                                all[1]++;
+                                all[2] += 16 + 4L * arr.length;
+                            } else if (v != null && v.getClass().getName().startsWith("org.joml")) {
+                                pos.add(v);
+                            }
+                        } catch (RuntimeException | IllegalAccessException ignored) {
+                            // 막힌 칸
+                        }
+                    }
+                }
+                all[2] += (size + 7) / 8 * 8;
+                continue;
+            }
+            if (o instanceof java.util.Map<?, ?> m) {
+                for (Object v : m.values()) if (v != null) todo.push(v);
+                continue;
+            }
+            if (o instanceof Iterable<?> it) {
+                for (Object v : it) if (v != null) todo.push(v);
+                continue;
+            }
+            if (c.isArray()) {
+                if (!c.getComponentType().isPrimitive()) for (Object v : (Object[]) o) if (v != null) todo.push(v);
+                continue;
+            }
+            String n = c.getName();
+            String s = c.getSimpleName();
+            if (!(n.startsWith("net.minecraft.client") || n.startsWith("com.mojang"))) continue;
+            if (s.contains("Texture") || s.contains("Sprite") || s.contains("Atlas") || s.contains("NativeImage") || s.contains("EntityModel") || s.contains("ModelPart")
+                    || s.contains("Font") || s.equals("Minecraft")) continue;
+            for (Class<?> k = c; k != null && k != Object.class; k = k.getSuperclass()) {
+                for (java.lang.reflect.Field f : k.getDeclaredFields()) {
+                    if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive()) continue;
+                    try {
+                        f.setAccessible(true);
+                        Object v = f.get(o);
+                        if (v != null) todo.push(v);
+                    } catch (RuntimeException | IllegalAccessException ignored) {
+                        // 막힌 칸
+                    }
+                }
+            }
+        }
     }
 
     /** 시야 효과 (FOV Effects) 0 — 이름이 판마다 바뀌어도 컴파일되게 리플렉션 (실패하면 기록만) */

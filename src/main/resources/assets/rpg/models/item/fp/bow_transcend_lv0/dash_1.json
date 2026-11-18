@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/bow_transcend_lv0","display":{"firstperson_righthand":{"rotation":[149.9621,-80.5682,-115.1172],"translation":[1.6786,5.3726,-20.7728],"scale":[0.8,0.8,0.8]}}}

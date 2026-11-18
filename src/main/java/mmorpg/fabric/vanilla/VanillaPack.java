@@ -411,13 +411,27 @@ final class VanillaPack {
                 continue;
             }
             com.google.gson.JsonElement original = def.get("model");
-            // 2026-11-18 1인칭 모션 시범 (VanillaFirstPerson): 구운 프레임이 있는 손 모델이면 1인칭 오른손에서 프레임 (스킨 · 숨김 글자와 함께 감쌈)
-            if (item instanceof mmorpg.fabric.RpgWeaponItem) original = fpWrap(root, id, item, original);
+            // 2026-11-18 1인칭 모션 (VanillaFirstPerson): 구운 프레임이 있는 손 모델이면 1인칭 오른손에서 프레임 (스킨 · 숨김 글자와 함께 감쌈) ·
+            // 구성 요소 (동작 이름) 가 바뀌어도 손을 내렸다 올리지 않음 (hand_animation_on_swap — 이름을 바꾼 그 틱에 재생)
+            boolean fpWrapped = false;
             if (item instanceof mmorpg.fabric.RpgWeaponItem) {
-                java.util.List<String[]> skins = byType.get(VanillaCosmetics.weaponType(item));
+                com.google.gson.JsonElement w = fpWrap(root, id, item, original);
+                fpWrapped = w != original;
+                original = w;
+            }
+            if (item instanceof mmorpg.fabric.RpgWeaponItem) {
+                String wtype = VanillaCosmetics.weaponType(item);
+                java.util.List<String[]> skins = byType.get(wtype);
+                // 스킨 손 모델 (1인칭 오른손은 그 스킨 디자인의 프레임 — 구웠으면)
+                Map<String, com.google.gson.JsonElement> skinHands = new java.util.HashMap<>();
                 if (skins != null) {
                     for (String[] s : skins) {
-                        cases.add(when(s[0], context(HANDS, model(Mmorpg.NS + ":item/model/" + s[1]), original)));
+                        com.google.gson.JsonObject plain = model(Mmorpg.NS + ":item/model/" + s[1]);
+                        com.google.gson.JsonObject sel = fpSelect(root, s[1], wtype, plain, null);
+                        skinHands.put(s[0], sel == null ? plain : context(new String[]{"firstperson_righthand"}, sel, plain));
+                    }
+                    for (String[] s : skins) {
+                        cases.add(when(s[0], context(HANDS, skinHands.get(s[0]), original)));
                     }
                 }
                 // 2026-11-13 드라군 변신 (VanillaCosmetics.hideHands — 사람이 용이 된 동안 내 화면): "hide" 면 손 (1 · 3인칭) 에서 빈 그림
@@ -429,7 +443,7 @@ final class VanillaPack {
                 cases.add(when("hide3p", context(THIRD_HANDS, none, original)));
                 if (skins != null) {
                     for (String[] s : skins) {
-                        cases.add(when("hide3p:" + s[0], context(THIRD_HANDS, none, context(FIRST_HANDS, model(Mmorpg.NS + ":item/model/" + s[1]), original))));
+                        cases.add(when("hide3p:" + s[0], context(THIRD_HANDS, none, context(FIRST_HANDS, skinHands.get(s[0]), original))));
                     }
                 }
                 weapons++;
@@ -458,6 +472,7 @@ final class VanillaPack {
             sel.add("cases", cases);
             sel.add("fallback", original);
             def.add("model", sel);
+            if (fpWrapped) def.addProperty("hand_animation_on_swap", false);
             builder.addStringData("assets/" + Mmorpg.NS + "/items/" + id.getPath() + ".json", gson.toJson(def));
         }
         int dim = 0;
@@ -490,8 +505,18 @@ final class VanillaPack {
             com.google.gson.JsonElement original) {
         String design = handDesign(original);
         if (design == null) return original;
+        com.google.gson.JsonObject sel = fpSelect(root, design, VanillaCosmetics.weaponType(item), original, id);
+        return sel == null ? original : context(new String[]{"firstperson_righthand"}, sel, original);
+    }
+
+    /**
+     * 디자인 하나의 1인칭 프레임 고르기: custom_model_data 글자 1번 (동작 이름) → 그 동작의 프레임 (쿨타임), 이름이 없으면 바탕 동작
+     * (VanillaFirstPerson.baseOf — 근접은 첫 연타 동작, 활 shoot · 완드 cast). 프레임이 없으면 null. register 면 그 아이템의 구운 동작을 적어 둠
+     */
+    private static com.google.gson.JsonObject fpSelect(Path root, String design, String type, com.google.gson.JsonElement hand,
+            net.minecraft.resources.Identifier register) {
         Path dir = root.resolve("assets").resolve(Mmorpg.NS).resolve("models").resolve("item").resolve("fp").resolve(design);
-        if (!Files.isDirectory(dir)) return original;
+        if (!Files.isDirectory(dir)) return null;
         Map<String, Integer> motions = new java.util.TreeMap<>();
         try (java.util.stream.Stream<Path> files = Files.list(dir)) {
             for (Path f : (Iterable<Path>) files::iterator) {
@@ -500,27 +525,30 @@ final class VanillaPack {
             }
         } catch (IOException | RuntimeException e) {
             Mmorpg.LOG.warn("[vanilla] first-person frames {}: {}", design, e.toString());
-            return original;
+            return null;
         }
-        if (motions.isEmpty()) return original;
-        String first = null;
-        for (String m : mmorpg.core.Motions.combo(VanillaCosmetics.weaponType(item))) {
-            if (motions.containsKey(m)) {
-                first = m;
-                break;
+        if (motions.isEmpty()) return null;
+        String first = VanillaFirstPerson.baseOf(type);
+        if (first == null || !motions.containsKey(first)) {
+            first = null;
+            for (String m : mmorpg.core.Motions.combo(type)) {
+                if (motions.containsKey(m)) {
+                    first = m;
+                    break;
+                }
             }
         }
         if (first == null) first = motions.keySet().iterator().next();
         com.google.gson.JsonArray cases = new com.google.gson.JsonArray();
-        for (Map.Entry<String, Integer> e : motions.entrySet()) cases.add(when(e.getKey(), fpRange(design, e.getKey(), e.getValue(), original)));
+        for (Map.Entry<String, Integer> e : motions.entrySet()) cases.add(when(e.getKey(), fpRange(design, e.getKey(), e.getValue(), hand)));
         com.google.gson.JsonObject sel = new com.google.gson.JsonObject();
         sel.addProperty("type", "minecraft:select");
         sel.addProperty("property", "minecraft:custom_model_data");
         sel.addProperty("index", 1);
         sel.add("cases", cases);
-        sel.add("fallback", fpRange(design, first, motions.get(first), original));
-        VanillaFirstPerson.wrapped(id, motions, first);
-        return context(new String[]{"firstperson_righthand"}, sel, original);
+        sel.add("fallback", fpRange(design, first, motions.get(first), hand));
+        if (register != null) VanillaFirstPerson.wrapped(register, motions, first);
+        return sel;
     }
 
     /** 동작 하나의 프레임 n 개: 쿨타임 남은 몫 [j / n, (j + 1) / n) → 프레임 n − 1 − j (처음 몫 1 = 프레임 0), 0 은 원래 모델 */

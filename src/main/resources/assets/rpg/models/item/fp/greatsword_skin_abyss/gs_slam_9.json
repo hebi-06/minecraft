@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/greatsword_skin_abyss","display":{"firstperson_righthand":{"rotation":[-163.8179,-0.0335,-2.6163],"translation":[-5.5554,-18.3194,-13.953],"scale":[0.8353,0.8353,0.8353]}}}

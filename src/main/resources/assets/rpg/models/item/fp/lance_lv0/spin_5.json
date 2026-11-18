@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/lance_lv0","display":{"firstperson_righthand":{"rotation":[-179.3568,-3.9914,93.0619],"translation":[-24.5505,4.3063,-7.9332],"scale":[0.9155,0.9155,0.9155]}}}

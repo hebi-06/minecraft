@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/hammer_rare_lv0","display":{"firstperson_righthand":{"rotation":[-21.6999,12.3641,1.0562],"translation":[0.6059,1.2087,-9.9086],"scale":[0.9,0.9,0.9]}}}

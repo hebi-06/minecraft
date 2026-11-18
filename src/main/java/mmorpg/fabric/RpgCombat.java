@@ -690,6 +690,7 @@ public final class RpgCombat {
         RANGED_READY.put(k, now + cd);
         lastRangedCd = cd;
         sp.getCooldowns().addCooldown(stack, cd);
+        mmorpg.fabric.vanilla.VanillaFirstPerson.basic(sp); // 2026-11-18 모드 없는 클라이언트 1인칭: 활 shoot · 완드 cast 프레임 (쿨타임 패킷이 위를 덮음)
         if (w.type().equals("wand")) {
             if (!CASTING.containsKey(sp.getUUID())) startWandCast(sp, w, forced);
             return;

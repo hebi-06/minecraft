@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_skin_wraith","display":{"firstperson_righthand":{"rotation":[-172.5992,-23.0899,91.9923],"translation":[-29.2236,2.5729,0.5495],"scale":[0.8985,0.8985,0.8985]}}}

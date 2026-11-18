@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/sword_skin_sakura","display":{"firstperson_righthand":{"rotation":[-0.6116,0.0001,-2.8666],"translation":[-3.5253,25.7807,-9.002],"scale":[1.0,1.0,1.0]}}}

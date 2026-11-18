@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_rare_lv0","display":{"firstperson_righthand":{"rotation":[-172.5992,-23.0899,91.9923],"translation":[-28.9982,2.7902,-1.3864],"scale":[0.8178,0.8178,0.8178]}}}

@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_noble_lv0","display":{"firstperson_righthand":{"rotation":[-14.1971,20.3465,5.7149],"translation":[1.5448,1.6833,-17.0948],"scale":[0.8985,0.8985,0.8985]}}}

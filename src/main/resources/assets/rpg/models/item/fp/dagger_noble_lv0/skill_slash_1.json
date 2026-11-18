@@ -1,0 +1,1 @@
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/dagger_noble_lv0","display":{"firstperson_righthand":{"rotation":[-0.5629,2.6578,-23.2763],"translation":[7.2645,6.6138,-5.2428],"scale":[1.0,1.0,1.0]}}}

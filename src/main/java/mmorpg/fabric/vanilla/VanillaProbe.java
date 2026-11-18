@@ -1029,10 +1029,13 @@ final class VanillaProbe {
                     }
                     continue;
                 }
-                if (k.startsWith("fppilot:")) {
-                    // 2026-11-18 1인칭 모션 시범 (fppilot:<무기 종류> — 쓴 사람의 눈: films/vanilla_fppilot_<종류>)
-                    FILM_RUNES.add(k);
-                    FILM_FRAMES.add(fpPilotFrames(k.substring(8)));
+                if (k.startsWith("fppilot:") || k.startsWith("fp:")) {
+                    // 2026-11-18 1인칭 모션 (fp:<무기 종류> · fp:all — 쓴 사람의 눈: films/vanilla_fp_<종류>, 예전 fppilot: 도 같음)
+                    String t = k.substring(k.indexOf(':') + 1);
+                    for (String type : t.equals("all") ? FP_TYPES : List.of(t)) {
+                        FILM_RUNES.add("fp:" + type);
+                        FILM_FRAMES.add(fpPilotFrames(type));
+                    }
                     continue;
                 }
                 if (k.startsWith("boss:") || k.startsWith("bossab:")) {
@@ -1205,8 +1208,8 @@ final class VanillaProbe {
             motionFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
-        if (FILM_RUNES.get(i).startsWith("fppilot:")) {
-            fpPilotFilm(p, step, FILM_RUNES.get(i).substring(8), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+        if (FILM_RUNES.get(i).startsWith("fp:")) {
+            fpPilotFilm(p, step, FILM_RUNES.get(i).substring(3), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         if (FILM_RUNES.get(i).startsWith("common:")) {
@@ -1957,26 +1960,45 @@ final class VanillaProbe {
         });
     }
 
-    /** 1인칭 시범 영상의 스킬 하나 사이 (앞 lead 3 · 동작 9 · 이름 지움 뒤 다시 들기 6 · 쉼) */
-    private static final int FP_SKILL_GAP = 32;
+    /** 1인칭 영상의 스킬 하나 사이 (대표 동작 8 ~ 14틱 · 이름 지움 · 쉼) */
+    private static final int FP_SKILL_GAP = 26;
+    /** 1인칭 영상: 활 · 완드 평타 사이 (원거리 재사용 대기보다 넉넉히) */
+    private static final int FP_RANGED_GAP = 36;
+    /** 1인칭 영상을 찍을 무기 종류 (fp:all) */
+    static final List<String> FP_TYPES = List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "scepter", "shield", "bow", "wand");
 
-    /** 1인칭 시범 영상의 장 수 (평타 넷 · 쉼 · 스킬 (그 동작) 둘 · 스킬 (첫 연타 동작) 둘 · Q 둘 · 평타 + 우클릭 · 끝) */
+    private static boolean fpRanged(String type) {
+        return type.equals("bow") || type.equals("wand");
+    }
+
+    private static int fpInterval(String type) {
+        return fpRanged(type) ? FP_RANGED_GAP : motionPlan(type)[0][1];
+    }
+
+    /** 그 종류에 구운 대표 동작 수 (바탕 · 연타 동작 빼고 — fp_map.json baked) */
+    private static int fpSkills(String type) {
+        int n = 0;
+        for (String m : VanillaFirstPerson.bakedFor(type)) if (!m.equals(VanillaFirstPerson.baseOf(type)) && !mmorpg.core.Motions.combo(type).contains(m)) n++;
+        return Math.max(1, n);
+    }
+
+    /** 1인칭 영상의 장 수 (평타 넷 · 쉼 · 대표 동작마다 스킬 하나 · Q 둘 · 평타 + 우클릭 · 끝) */
     static int fpPilotFrames(String type) {
-        int iv = motionPlan(type)[0][1];
-        return 3 + 4 * iv + 16 + 2 * FP_SKILL_GAP + 2 * FP_SKILL_GAP + 32 + (iv + 8) + 12;
+        int iv = fpInterval(type);
+        return 3 + 4 * iv + 16 + fpSkills(type) * FP_SKILL_GAP + 32 + (iv + 8) + 12;
     }
 
     /**
-     * 2026-11-18 1인칭 모션 시범 (VFILM fppilot:&lt;무기 종류&gt; — films/vanilla_fppilot_&lt;종류&gt;, 축복의 길 컨셉 "1인칭 모션"): 쓴 사람의 1인칭 화면 ·
-     * 40렙 영웅 무기 ({@link VanillaFirstPerson} — 모드 1인칭 동작을 구운 프레임 · 쿨타임 패킷으로 재생). 1차 (CI 44256605383) 에서 동작 이름을
-     * 바꾸면 다시 들기가 보여 2차는 정한 꼴:
+     * 2026-11-18 1인칭 모션 (VFILM fp:&lt;무기 종류&gt; · fp:all · 예전 fppilot: — films/vanilla_fp_&lt;종류&gt;, 축복의 길 "1인칭 프레임: 무기 종류 모두"):
+     * 쓴 사람의 1인칭 화면 · 40렙 무기 ({@link VanillaFirstPerson} — 모드 1인칭 동작을 디자인마다 구운 프레임 · 쿨타임 패킷으로 재생).
+     * 시범 (CI 44256605383 · 44286558279) 뒤 정한 꼴:
      * <ol>
-     * <li>평타 넷 (이름 그대로 — 첫 연타 동작): 다시 들기 없음 (다시 보냄 0)</li>
-     * <li>스킬 둘 (그 동작 — 이름을 바꾸고 lead 3틱 뒤 쿨타임 · 끝나면 이름 지움): 내려갔다 올라오며 재생 · 쉴 때 다시 들기</li>
-     * <li>스킬 둘 (skillMotions 끔 — 첫 연타 동작 프레임, 이름 그대로): 비교</li>
-     * <li>Q 둘 (사진기가 Q 키를 누름 — 다음 틱 진짜 Q 와 같은 길: 손 칸을 먼저 비우고 버리기 패킷 → 서버가 막고 되돌림): 무기가 깜빡이는지</li>
-     * <li>평타 3틱 뒤 우클릭: 1인칭 쿨타임 중에도 우클릭 패킷이 서버에 닿는지 (1차에서 닿음 — 다시 확인)</li>
+     * <li>평타 넷 (근접 = 연타 단계마다 그 동작 · 활 shoot · 완드 cast — 좌클릭 길)</li>
+     * <li>구운 대표 동작마다 그것으로 보이는 진짜 스킬 동작 하나 (직업 jb_ · 룬 rn_ — fp_map.json 의 닮은 대표)</li>
+     * <li>Q 둘 (사진기가 Q 키 — 스킬 키 Q: 버리지 않고 손 칸을 되돌림): 무기가 깜빡이는지</li>
+     * <li>평타 3틱 뒤 우클릭: 1인칭 쿨타임 중에도 우클릭 패킷이 서버에 닿는지</li>
      * </ol>
+     * 손이 내려갔다 올라오는지 (hand_animation_on_swap) 는 사진기 기록 "film hand … min · dips".
      */
     private static void fpPilotFilm(ServerPlayer p, int step, String type, int frames, int y) {
         ServerLevel level = p.level();
@@ -2000,19 +2022,37 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        String name = "vanilla_fppilot_" + type;
-        int[][] plan = motionPlan(type);
-        int iv = plan[0][1];
-        mmorpg.fabric.RpgPlayers.setStat(p, "dex", plan[0][0]);
+        String name = "vanilla_fp_" + type;
+        int iv = fpInterval(type);
+        if (!fpRanged(type)) {
+            mmorpg.fabric.RpgPlayers.setStat(p, "dex", motionPlan(type)[0][0]);
+        } else {
+            // 활 · 완드: 요구 스탯을 채움 (모자라면 쏘지 않음 — RpgCombat.fireRanged)
+            mmorpg.core.Weapon rw = mmorpg.core.Weapons.weaponFrom(type, 40, motionGrade(type));
+            if (rw != null && rw.reqs() != null) for (mmorpg.core.Weapons.Req r : rw.reqs()) mmorpg.fabric.RpgPlayers.setStat(p, r.stat(), (int) Math.ceil(r.value()));
+        }
+        boolean wasEnabled = VanillaFirstPerson.enabled;
         VanillaFirstPerson.enabled = true;
         VanillaFirstPerson.skillMotions = true;
-        VanillaFirstPerson.blockDrop = true;
         VanillaFirstPerson.resetCounters();
         Tasks.later(4, () -> {
             if (!p.isRemoved()) p.containerMenu.sendAllDataToRemote(); // 켠 뒤의 모습 (휘두르기 끔) 으로 가방을 다시 보냄
         });
-        log("fp wrapped items " + VanillaFirstPerson.wrappedCount() + " " + VanillaFirstPerson.wrappedItems());
-        check("fp frames wrapped " + type, VanillaFirstPerson.wrappedItems().stream().anyMatch(id -> id.getPath().startsWith(type + "_l40_")));
+        net.minecraft.resources.Identifier held = BuiltInRegistries.ITEM.getKey(p.getMainHandItem().getItem());
+        java.util.Map<String, Integer> baked = VanillaFirstPerson.bakedOf(held);
+        log("fp " + type + " item " + held + " baked " + baked + " (wrapped items " + VanillaFirstPerson.wrappedCount() + ")");
+        check("fp frames wrapped " + type, baked != null && !baked.isEmpty());
+        String base = VanillaFirstPerson.baseOf(type);
+        // 대표 동작마다 그것으로 보이는 진짜 스킬 동작 (없으면 대표 동작 그대로)
+        List<String> plays = new ArrayList<>();
+        if (baked != null) {
+            for (String shown : VanillaFirstPerson.bakedFor(type)) {
+                if (!baked.containsKey(shown) || shown.equals(base) || mmorpg.core.Motions.combo(type).contains(shown)) continue;
+                String ex = VanillaFirstPerson.exampleFor(type, shown);
+                plays.add(ex != null ? ex : shown);
+                log("fp " + type + " " + shown + " ← " + (ex != null ? ex : "(itself)"));
+            }
+        }
         if (VanillaRig.selfView(p)) VanillaRig.selfView(p, false);
         mmorpg.fabric.vfx.PBridge.thirdPerson(p, false);
         mmorpg.fabric.vfx.PBridge.filmCamOff(p);
@@ -2020,65 +2060,54 @@ final class VanillaProbe {
         say(p, "cam first");
         Runnable swing = () -> {
             if (p.isRemoved()) return;
+            if (fpRanged(type)) {
+                mmorpg.fabric.RpgCombat.punchRanged(p);
+                return;
+            }
             var e = nearest(p.position(), foes);
             if (e != null) p.attack(e);
         };
-        // 스킬 자리: 칼의 둘째 연타 동작 (시범은 칼 평타 둘만 구움) 을 스킬처럼
-        List<String> combo = mmorpg.core.Motions.combo(type);
-        String skillMotion = combo.size() > 1 ? combo.get(1) : combo.isEmpty() ? "slash_h" : combo.get(0);
         int[] mark = new int[4];
         Tasks.later(30, () -> {
             run(server, "tick rate " + FILM_RATE);
             say(p, "film " + name + " " + frames);
             VanillaFirstPerson.resetCounters();
             int at = 3;
-            // 1) 평타 넷 (이름 그대로)
+            // 1) 평타 넷
             for (int k = 0; k < 4; k++) Tasks.later(at + k * iv, swing);
             Tasks.later(at + iv + 2, () -> say(p, "now cd"));
             at += 4 * iv + 16;
-            // 2) 스킬 둘 (그 동작 — 이름을 바꿈 · lead)
+            // 2) 대표 동작마다 스킬 하나
             Tasks.later(at - 2, () -> {
-                mark[0] = VanillaFirstPerson.resent;
-                log("fp basic done (played " + VanillaFirstPerson.played + " resent " + VanillaFirstPerson.resent + ")");
+                mark[0] = VanillaFirstPerson.played;
+                log("fp basic done " + type + " (played " + VanillaFirstPerson.played + " resent " + VanillaFirstPerson.resent + ")");
             });
-            for (int k = 0; k < 2; k++) {
+            for (int k = 0; k < plays.size(); k++) {
+                String m = plays.get(k);
                 int s = at + k * FP_SKILL_GAP;
-                Tasks.later(s, () -> VanillaFirstPerson.play(p, skillMotion, 1F, true));
-                Tasks.later(s + VanillaFirstPerson.lead + 3, () -> say(p, "now cd"));
+                Tasks.later(s, () -> VanillaFirstPerson.play(p, m, 1F));
+                Tasks.later(s + 1, () -> log("fp " + type + " asked " + VanillaFirstPerson.lastAsked + " shown " + VanillaFirstPerson.lastMotion));
             }
-            at += 2 * FP_SKILL_GAP;
-            // 3) 스킬 둘 (첫 연타 동작 — 이름 그대로)
-            Tasks.later(at - 2, () -> {
-                mark[1] = VanillaFirstPerson.resent;
-                VanillaFirstPerson.skillMotions = false;
-                log("fp skill switch done (played " + VanillaFirstPerson.played + " resent " + VanillaFirstPerson.resent + " last " + VanillaFirstPerson.lastMotion + ")");
-            });
-            for (int k = 0; k < 2; k++) Tasks.later(at + k * FP_SKILL_GAP, () -> VanillaFirstPerson.play(p, skillMotion, 1F, true));
-            at += 2 * FP_SKILL_GAP;
-            // 4) Q 둘
+            at += Math.max(1, fpSkills(type)) * FP_SKILL_GAP;
+            // 3) Q 둘
             int q = at;
-            Tasks.later(q - 2, () -> {
-                mark[2] = VanillaFirstPerson.resent;
-                VanillaFirstPerson.skillMotions = true;
-            });
+            Tasks.later(q - 2, () -> mark[1] = VanillaFirstPerson.played);
             Tasks.later(q, () -> say(p, "now key q"));
             Tasks.later(q + 16, () -> say(p, "now key q"));
             at += 32;
-            // 5) 평타 3틱 뒤 우클릭 (1인칭 쿨타임 중)
+            // 4) 평타 3틱 뒤 우클릭 (1인칭 쿨타임 중)
             Tasks.later(at, swing);
             Tasks.later(at + 3, () -> say(p, "now use"));
             Tasks.later(frames, () -> {
-                log("fp pilot " + type + ": played " + VanillaFirstPerson.played + " last " + VanillaFirstPerson.lastMotion + " ticks "
-                        + VanillaFirstPerson.lastTicks + " resent " + VanillaFirstPerson.resent + " (basic " + mark[0] + " skill " + (mark[1] - mark[0])
-                        + " generic " + (mark[2] - mark[1]) + ") drops " + VanillaFirstPerson.drops + " uses " + VanillaFirstPerson.uses
-                        + " uses-in-cooldown " + VanillaFirstPerson.usesInCooldown + " hand " + p.getMainHandItem());
-                check("fp played " + type, VanillaFirstPerson.played >= 9);
-                check("fp basic keeps name " + type, mark[0] == 0);
-                check("fp skill switches name and back " + type, mark[1] - mark[0] == 4);
-                check("fp generic skill keeps name " + type, mark[2] == mark[1]);
-                check("fp drop blocked " + type, VanillaFirstPerson.drops == 2 && p.getMainHandItem().getItem() instanceof mmorpg.fabric.RpgWeaponItem);
+                log("fp film " + type + ": played " + VanillaFirstPerson.played + " (basic " + mark[0] + " skills " + (mark[1] - mark[0]) + " mapped "
+                        + VanillaFirstPerson.mappedPlays + ") last " + VanillaFirstPerson.lastMotion + " ticks " + VanillaFirstPerson.lastTicks + " resent "
+                        + VanillaFirstPerson.resent + " drops " + VanillaFirstPerson.drops + " uses " + VanillaFirstPerson.uses + " uses-in-cooldown "
+                        + VanillaFirstPerson.usesInCooldown + " hand " + p.getMainHandItem());
+                check("fp basic plays " + type, mark[0] >= 4);
+                check("fp skill motions play (mapped to baked) " + type, mark[1] - mark[0] >= plays.size() && (plays.isEmpty() || VanillaFirstPerson.mappedPlays >= 1));
+                check("fp drop blocked " + type, VanillaFirstPerson.drops >= 2 && p.getMainHandItem().getItem() instanceof mmorpg.fabric.RpgWeaponItem);
                 check("fp use reaches server in cooldown " + type, VanillaFirstPerson.usesInCooldown >= 1);
-                VanillaFirstPerson.enabled = false;
+                VanillaFirstPerson.enabled = wasEnabled;
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });
