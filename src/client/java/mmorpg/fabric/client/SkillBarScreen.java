@@ -227,7 +227,7 @@ public final class SkillBarScreen extends Screen {
             if (hoverJob == i) g.fill(x - 2, jy - 2, x + SkillBarHud.S + 2, jy + SkillBarHud.S + 2, 0x40FFFFFF);
             SkillBarHud.drawJobSlot(g, font, i, x, jy, SkillBarHud.S, partialTick, now, false, true);
         }
-        String jobNote = ClientJobBar.any() ? "§8Shift + 칸의 키" : "§8직업 교관에게서 전직 · Shift + 키";
+        String jobNote = ClientJobBar.any() ? "§8스킬 키: /skillkey" : "§8직업 교관에게서 전직 · /skillkey";
         g.text(font, jobNote, left + W - 12 - font.width(jobNote), jy + 6, 0xFFFFFFFF, true);
 
         // 가방의 룬
@@ -292,7 +292,7 @@ public final class SkillBarScreen extends Screen {
             String key = ClientJobBar.keyLabel(hoverJob);
             List<Component> lines = new ArrayList<>();
             if (ClientJobBar.empty(hoverJob)) {
-                lines.add(Component.literal(BedrockText.toJava("§7직업 스킬 " + (hoverJob + 1) + "번 칸 §8([" + key + "] — Shift + 키)")));
+                lines.add(Component.literal(BedrockText.toJava("§7직업 스킬 " + (hoverJob + 1) + "번 칸 §8(" + (key.isEmpty() ? "키에 없음" : "[" + key + "] 키") + " — /skillkey)")));
                 lines.add(Component.literal(BedrockText.toJava("§8마을의 직업 교관에게서 직업을 고르면 (10렙부터) 직업 스킬이 들어갑니다")));
             } else {
                 lines.add(Component.literal(ClientJobBar.name(hoverJob)).withColor(ClientJobBar.colorA()));

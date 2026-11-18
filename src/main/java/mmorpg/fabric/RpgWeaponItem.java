@@ -24,7 +24,7 @@ import net.minecraft.world.level.Level;
 /**
  * 애드온 무기 하나 (rpg:<종류>_l<레벨>_<등급>). 이름 · 설명 · 요구 스탯 · 피해는 규칙 코어의 Weapon 그대로.
  * 근접 (칼 · 단검 · 도끼 · 방패 · 마검): 평타 피해는 RpgCombat 이 바꿈 (공격 속도 2.0 = 0.5초마다 꽉 찬 공격 — 베드락의 초당 약 2번과 같게).
- * 활 · 완드: 누르면 (사용) 바라보는 대상에 바로 쏨 (완드는 시전 0.5초 뒤), 몹을 때려도 그 몹에게 쏨.
+ * 활 · 완드: 좌클릭 (휘두르기) 으로 바라보는 대상에 바로 쏨 (완드는 시전 0.5초 뒤), 몹을 때려도 그 몹에게 쏨 — 2026-11-18 전에는 우클릭 (우클릭은 스킬 키로).
  * 2026-11-16 무기 스킬 (초월 · 영웅 무기의 우클릭 스킬 — Transcend) 은 지움 (사용자 "무기 스킬도 빼고 대신 무기 디자인을 늘리건데"): 모든 무기가 같은 조작.
  */
 public final class RpgWeaponItem extends Item {
@@ -80,13 +80,15 @@ public final class RpgWeaponItem extends Item {
         }
     }
 
+    /**
+     * 2026-11-18 축복의 길: 우클릭 · Shift + 우클릭 = 스킬 키 (SkillKeys — 끼운 직업 · 공용 스킬). 활 · 완드는 좌클릭으로 쏨 (RpgCombat.punchRanged ·
+     * 몹을 누르면 그 몹에게) — 우클릭은 모든 무기가 같은 스킬 키. 빈 키면 아무것도 하지 않음 (PASS)
+     */
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        // 2026-11-18 1인칭 모션 시범: 우클릭 패킷이 1인칭 쿨타임 중에도 닿는지 셈 (시범을 켰을 때만)
-        if (!level.isClientSide() && hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer usp) mmorpg.fabric.vanilla.VanillaFirstPerson.onUse(usp);
-        if (!RpgCombat.isRanged(weapon) || hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-        if (!level.isClientSide() && player instanceof ServerPlayer sp) RpgCombat.fireRanged(sp, player.getItemInHand(hand), weapon, null);
-        return InteractionResult.SUCCESS;
+        if (hand != InteractionHand.MAIN_HAND || level.isClientSide() || !(player instanceof ServerPlayer sp)) return InteractionResult.PASS;
+        mmorpg.fabric.vanilla.VanillaFirstPerson.onUse(sp); // 1인칭 시범: 우클릭 패킷이 1인칭 쿨타임 중에도 닿는지 셈
+        return mmorpg.fabric.job.SkillKeys.onUse(sp) ? InteractionResult.CONSUME : InteractionResult.PASS;
     }
 
     @Override

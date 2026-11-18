@@ -647,6 +647,30 @@ public final class RpgCombat {
     /** 시험: 마지막 활 · 완드 재사용 대기 (틱 — 2026-11-14 공속) */
     public static int lastRangedCd;
 
+    /** 2026-11-18 휘두르기 패킷의 마지막 틱 (사람마다 — 블록을 누르고 있으면 틱마다 옴) */
+    private static final Map<java.util.UUID, Long> LAST_PUNCH = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * 2026-11-18 축복의 길: 활 · 완드는 좌클릭으로 쏨 (휘두르기 패킷 — 허공 · 블록, 우클릭은 스킬 키 SkillKeys). 몹을 누르면 공격 패킷 (beforeAttack) 이 그 몹에게 쏨 —
+     * 같은 틱의 휘두르기는 재사용 대기에 걸림. 블록을 누르고 있는 동안 (캐기 — 틱마다 휘두르기) 은 처음 한 번만. 활 · 완드를 들었으면 true (근접 참격 없음)
+     */
+    public static boolean punchRanged(ServerPlayer sp) {
+        if (sp == null) return false;
+        ItemStack stack = sp.getMainHandItem();
+        Weapon w = weaponOf(stack);
+        if (w == null || !isRanged(w)) return false;
+        long now = Tasks.now();
+        Long last = LAST_PUNCH.put(sp.getUUID(), now);
+        if (last != null && now >= last && now - last <= 2) return true;
+        fireRanged(sp, stack, w, null);
+        return true;
+    }
+
+    /** 나감 */
+    public static void forgetPunch(java.util.UUID id) {
+        LAST_PUNCH.remove(id);
+    }
+
     public static void fireRanged(ServerPlayer sp, ItemStack stack, Weapon w, LivingEntity forced) {
         if (mmorpg.fabric.mount.Riding.blocked(sp, "attack")) return; // 탈것에 탄 동안 활 · 완드 평타 없음
         Obj cfg = w.type().equals("bow") ? BOW : WAND;

@@ -155,24 +155,65 @@ final class VanillaProbe {
                 next(p, 12, 30);
             }
             case 12 -> {
-                say(p, "key f"); // 룬 → 직업 스킬
+                say(p, "key f"); // 2026-11-18 룬 → 일반 (직업 스킬 모드는 없앰 — 스킬 키 여섯)
                 next(p, 13, 30);
             }
             case 13 -> {
-                check("job mode", VanillaInput.mode(p) == VanillaInput.Mode.JOB);
-                say(p, "shot 07_job_mode");
-                next(p, 14, 20);
-            }
-            case 14 -> {
-                say(p, "key f"); // 직업 → 일반
-                next(p, 15, 30);
-            }
-            case 15 -> {
-                check("normal mode", VanillaInput.mode(p) == VanillaInput.Mode.NORMAL);
+                check("normal mode (F again)", VanillaInput.mode(p) == VanillaInput.Mode.NORMAL);
                 check("held slot back to 1", p.getInventory().getSelectedSlot() == 0);
                 check("weapon back in slot 1", p.getInventory().getItem(0).getItem() instanceof RpgWeaponItem);
                 say(p, "shot 08_normal");
-                next(p, 160, 40);
+                next(p, 190, 30);
+            }
+            // 2026-11-18 축복의 길 스킬 키 여섯 (SkillKeys — 진짜 모드 없는 클라이언트의 입력): 우 · Q · ⇧⇧ · ⇧좌 · ⇧우 · ⇧Q
+            case 190 -> {
+                mmorpg.fabric.job.SkillKeys.reset(p);
+                mmorpg.fabric.job.JobSkills.resetCooldowns(p);
+                keyMark = mmorpg.fabric.job.SkillKeys.pressedCount(p);
+                say(p, "now use"); // 우클릭 (허공)
+                next(p, 191, 10);
+            }
+            case 191 -> {
+                check("right click = skill key rmb", mmorpg.fabric.job.SkillKeys.lastKey(p) == mmorpg.fabric.job.SkillKeys.Key.RMB
+                        && mmorpg.fabric.job.SkillKeys.pressedCount(p) == keyMark + 1);
+                mmorpg.fabric.job.JobSkills.Skill s = mmorpg.fabric.job.JobSkills.skill(p, 0);
+                boolean locked = s != null && !s.lock(p).isEmpty();
+                check("rmb cast job skill 1 (" + (s == null ? "none" : s.id()) + (locked ? " locked" : "") + ")",
+                        s != null && (locked || mmorpg.fabric.job.JobSkills.cooldownLeft(p, s) > 0));
+                say(p, "now key q");
+                next(p, 192, 10);
+            }
+            case 192 -> {
+                check("q = skill key q (weapon not dropped)", mmorpg.fabric.job.SkillKeys.lastKey(p) == mmorpg.fabric.job.SkillKeys.Key.Q
+                        && p.getMainHandItem().getItem() instanceof RpgWeaponItem);
+                say(p, "now shift2");
+                next(p, 193, 14);
+            }
+            case 193 -> {
+                check("shift twice = skill key ss", mmorpg.fabric.job.SkillKeys.lastKey(p) == mmorpg.fabric.job.SkillKeys.Key.SHIFT2);
+                say(p, "now sneak on");
+                next(p, 194, 5);
+            }
+            case 194 -> {
+                say(p, "now attack"); // 웅크린 좌클릭
+                next(p, 195, 6);
+            }
+            case 195 -> {
+                check("shift + left click = skill key slmb", mmorpg.fabric.job.SkillKeys.lastKey(p) == mmorpg.fabric.job.SkillKeys.Key.SHIFT_LMB);
+                say(p, "now use");
+                next(p, 196, 6);
+            }
+            case 196 -> {
+                check("shift + right click = skill key srmb", mmorpg.fabric.job.SkillKeys.lastKey(p) == mmorpg.fabric.job.SkillKeys.Key.SHIFT_RMB);
+                say(p, "now key q");
+                next(p, 197, 6);
+            }
+            case 197 -> {
+                check("shift + q = skill key sq", mmorpg.fabric.job.SkillKeys.lastKey(p) == mmorpg.fabric.job.SkillKeys.Key.SHIFT_Q);
+                check("six key presses", mmorpg.fabric.job.SkillKeys.pressedCount(p) == keyMark + 6);
+                say(p, "now sneak off");
+                say(p, "shot 07_skill_keys"); // HUD 왼쪽 스킬 키 여섯 (재사용 대기 덮개)
+                next(p, 160, 30);
             }
             case 160 -> { // 2026-11-08 HUD (VanillaHud): 체력 막대 · 배지 + 알림 줄 (액션바 글자를 가로채서 합침)
                 check("hud active (vanilla · survival)", VanillaHud.active(p));
@@ -195,6 +236,13 @@ final class VanillaProbe {
                 boolean digits = true;
                 for (char c : "0123456789m".toCharArray()) digits &= VanillaHud.hasSkillGlyph("sec_" + c);
                 check("cooldown digit glyphs in skill fonts", digits);
+                // 2026-11-18 스킬 키 여섯의 키 그림 · 공용 스킬 그림 (tools/vanilla_hud.py · tools/common_skill_icons.py)
+                boolean keyGlyphs = true;
+                for (mmorpg.fabric.job.SkillKeys.Key k : mmorpg.fabric.job.SkillKeys.Key.values()) keyGlyphs &= VanillaHud.hasSkillGlyph("key_" + k.id);
+                check("skill key label glyphs", keyGlyphs);
+                boolean commonGlyphs = true;
+                for (String id : mmorpg.core.StatTree.skillDefs().keySet()) commonGlyphs &= VanillaHud.hasSkillGlyph("job:" + VanillaHud.commonIcon(id));
+                check("common skill icon glyphs", commonGlyphs);
                 next(p, 161, 15);
             }
             case 161 -> {
@@ -416,22 +464,22 @@ final class VanillaProbe {
                 next(p, 36, 20);
             }
             case 36 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 0)); // 룬 칸 1 고르기
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.RUNE_ROW, 0)); // 룬 칸 1 고르기
                 next(p, 37, 15);
             }
             case 37 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 5)); // 룬 칸 6 (비어 있음) 으로 옮기기
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.RUNE_ROW, 5)); // 룬 칸 6 (비어 있음) 으로 옮기기
                 next(p, 38, 15);
             }
             case 38 -> {
                 check("rune moved 1 -> 6", mmorpg.fabric.rune.SkillBar.get(p, 0).isEmpty()
                         && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 5), movedRune) && !movedRune.isEmpty());
                 bagRunes = countRunes(p);
-                say(p, "slot " + VanillaMenu.idx(2, 5)); // 룬 칸 6 고르기
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.RUNE_ROW, 5)); // 룬 칸 6 고르기
                 next(p, 39, 15);
             }
             case 39 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 8)); // 빼기
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.RUNE_ROW, 8)); // 빼기
                 next(p, 40, 15);
             }
             case 40 -> {
@@ -444,12 +492,29 @@ final class VanillaProbe {
                 next(p, 41, 15);
             }
             case 41 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 0)); // 룬 칸 1 에 올리기
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.RUNE_ROW, 0)); // 룬 칸 1 에 올리기
                 next(p, 42, 15);
             }
             case 42 -> {
                 check("bag rune equipped to 1", bagSlot >= 0 && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 0), movedRune));
                 say(p, "shot 14b_skills_after");
+                mmorpg.fabric.job.SkillKeys.reset(p);
+                next(p, 187, 20);
+            }
+            // 2026-11-18 스킬 키 끼우기 (메뉴 스킬 쪽 — 가진 스킬 줄 → 키 칸): 직업 1 을 ⇧좌 로 (우에서 옮겨 옴)
+            case 187 -> {
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.OWN_ROW, 0)); // 가진 스킬 — 직업 1
+                next(p, 188, 12);
+            }
+            case 188 -> {
+                say(p, "slot " + VanillaMenu.idx(VanillaSkillBar.KEY_ROW, 2)); // 키 칸 — ⇧좌
+                next(p, 189, 12);
+            }
+            case 189 -> {
+                check("menu binds job 1 to shift+left (moved from rmb)", "j1".equals(mmorpg.fabric.job.SkillKeys.bound(p, mmorpg.fabric.job.SkillKeys.Key.SHIFT_LMB))
+                        && mmorpg.fabric.job.SkillKeys.bound(p, mmorpg.fabric.job.SkillKeys.Key.RMB).isEmpty());
+                say(p, "shot 14c_skill_keys");
+                mmorpg.fabric.job.SkillKeys.reset(p);
                 next(p, 43, 20);
             }
             case 43 -> {
@@ -870,6 +935,8 @@ final class VanillaProbe {
 
     /** 뽑기 연출 Shift 시도 수 */
     private static int shiftTries;
+    /** 2026-11-18 스킬 키 시험 전 누른 수 */
+    private static int keyMark;
     /** HUD 사진 전 체력 */
     private static float hpBefore;
 
@@ -1883,7 +1950,7 @@ final class VanillaProbe {
                 censusWatch(name, frames);
                 boolean ok = mmorpg.fabric.job.CommonSkills.cast(p, id, true);
                 check("film cast " + name, ok);
-                Tasks.later(14, () -> log("film " + name + " " + k.kind() + " dealt " + String.format(java.util.Locale.ROOT, "%.1f", mmorpg.fabric.job.CommonSkills.lastDealt)
+                Tasks.later(14, () -> log("film " + name + " " + k.kind() + " dealt " + String.format(java.util.Locale.ROOT, "%.1f", mmorpg.fabric.job.CommonSkills.lastDealt(p))
                         + " moved " + String.format(java.util.Locale.ROOT, "%.1f", Math.hypot(p.getX() - 0.5, p.getZ() - 0.5))));
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));

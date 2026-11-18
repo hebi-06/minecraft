@@ -74,11 +74,12 @@ public final class SkillBarHud {
     static final int JOB_CAPTION = 13;
 
     /**
-     * 0.26.0 직업 스킬 칸 자리 {x0, y0, 한 줄 칸 수}: 룬 칸 바로 위에 같은 칸 수 (5보다 많으면 5) 의 줄들, 오른쪽을 룬 칸에 맞춤
+     * 0.26.0 직업 스킬 칸 자리 {x0, y0, 한 줄 칸 수}: 룬 칸 바로 위에 같은 칸 수 (6보다 많으면 6) 의 줄들, 오른쪽을 룬 칸에 맞춤.
+     * 2026-11-18 축복의 길: 칸 = 스킬 키 여섯 (우 · ⇧우 · ⇧좌 · ⇧⇧ · Q · ⇧Q — 키에 끼운 직업 · 공용 스킬)
      */
     public static int[] jobLayout(int w, int h) {
         int[] l = layout(w, h);
-        int n = ClientJobBar.SIZE;
+        int n = ClientJobBar.KEYS;
         int cols = Math.min(l[2], n);
         int rows = (n + cols - 1) / cols;
         int runeRight = l[0] + l[2] * S + (l[2] - 1) * GAP;
@@ -117,12 +118,12 @@ public final class SkillBarHud {
             int y = l[1] + (i / l[2]) * (S + GAP);
             drawSlot(g, mc.font, i, x, y, S, partial, now, riding, true);
         }
-        // 0.26.0 직업 스킬 칸 (룬 칸 위) + "직업 스킬" 글자
+        // 0.26.0 직업 스킬 칸 (룬 칸 위) + "직업 스킬" 글자 — 2026-11-18 스킬 키 여섯 (키 차례: 끼운 직업 칸 · 공용 스킬 · 빈 키)
         int[] jl = jobLayout(w, h);
-        for (int i = 0; i < ClientJobBar.SIZE; i++) {
-            int x = jl[0] + (i % jl[2]) * (S + GAP);
-            int y = jl[1] + (i / jl[2]) * (S + GAP);
-            drawJobSlot(g, mc.font, i, x, y, S, partial, now, riding, true);
+        for (int k = 0; k < ClientJobBar.KEYS; k++) {
+            int x = jl[0] + (k % jl[2]) * (S + GAP);
+            int y = jl[1] + (k / jl[2]) * (S + GAP);
+            drawKeySlot(g, mc.font, k, x, y, S, partial, now, riding);
         }
         int rowW = jl[2] * S + (jl[2] - 1) * GAP;
         drawJobCaption(g, mc.font, jl[0], jl[1] - JOB_CAPTION, rowW, partial, now);
@@ -219,6 +220,63 @@ public final class SkillBarHud {
                 g.pose().popMatrix();
             }
         }
+    }
+
+    /** 2026-11-18 스킬 키 칸 하나 (HUD): 끼운 직업 칸이면 그 칸 그림 (키 글자 = 이 키), 공용 스킬이면 공용 칸, 빈 키면 흐린 칸 + 키 글자 */
+    static void drawKeySlot(GuiGraphicsExtractor g, Font font, int k, int x, int y, int s, float partial, long now, boolean dim) {
+        String what = ClientJobBar.keyWhat(k);
+        if (what.length() == 2 && what.charAt(0) == 'j') {
+            drawJobSlot(g, font, what.charAt(1) - '1', x, y, s, partial, now, dim, true);
+            return;
+        }
+        boolean common = what.equals(mmorpg.fabric.job.SkillKeys.COMMON) && !ClientJobBar.commonId().isEmpty();
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, JOB_SLOT, x, y, s, s, common ? 0xFFFFFFFF : 0x9CFFFFFF);
+        int cx = x + s / 2;
+        int cy = y + s / 2;
+        if (common) {
+            int in = Math.max(1, s / 10);
+            int is = s - in * 2;
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, jobIcon("common_" + ClientJobBar.commonId()), cx - is / 2, cy - is / 2, is, is, 0xFFFFFFFF);
+            double frac = ClientJobBar.commonCooldownFrac(partial);
+            if (frac > 0) {
+                clockWipe(g, x + in, y + in, s - in * 2, s - in * 2, frac, 0xB8000006);
+                double left = ClientJobBar.commonCooldownLeft(partial);
+                String t = left >= 10 ? String.valueOf((int) Math.ceil(left)) : String.format(Locale.ROOT, "%.1f", left);
+                g.text(font, t, cx - font.width(t) / 2 + 1, y + s - 9, left < 1 ? 0xFFFFE066 : 0xFFFFFFFF, true);
+            }
+            int edge = commonEdge(ClientJobBar.commonStat());
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, JOB_EDGE, x, y, s, s, (frac > 0 ? 0x70000000 : 0xFF000000) | edge);
+            float cast = phase(ClientJobBar.COMMON_FX[0], now, 380);
+            float ready = phase(ClientJobBar.COMMON_FX[1], now, 520);
+            if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), edge, 0.9F * (1 - cast));
+            if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), edge, (float) Math.sin(ready * Math.PI));
+            if (cast >= 0 && cast < 0.5F) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.75F * (1 - cast * 2), 0xFFFFFF));
+        }
+        if (dim) g.fill(x, y, x + s, y + s, 0x88000000);
+        keyCap(g, font, ClientJobBar.keyName(k), x, y, !common);
+    }
+
+    /** 공용 스킬 칸 테: 그 나무 원소 색 (서버 VanillaHud.elementEdge 와 같음) */
+    static int commonEdge(String stat) {
+        return switch (stat == null ? "" : stat) {
+            case "dex" -> 0xFFD84A;
+            case "int" -> 0x7FD4FF;
+            case "vit" -> 0xE0A050;
+            default -> 0xFF7A2E;
+        };
+    }
+
+    /** 키 글자 상자 (칸 왼쪽 위 · 0.75배 — 직업 칸과 같음) */
+    static void keyCap(GuiGraphicsExtractor g, Font font, String label, int x, int y, boolean empty) {
+        if (label.isEmpty()) return;
+        float k = 0.75F;
+        int lw = font.width(label);
+        g.pose().pushMatrix();
+        g.pose().translate(x - 1, y - 1);
+        g.pose().scale(k, k);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, KEY, -2, -2, lw + 5, 11, empty ? 0xB0FFFFFF : 0xFFFFFFFF);
+        g.text(font, label, 1, 0, empty ? 0xFF98A8C0 : 0xFFFFFFFF, true);
+        g.pose().popMatrix();
     }
 
     /** 0.31.0 강화 단계 색 (1 ~ 2 하늘색 · 3 ~ 4 보라 · 5 금빛 — 룬 돌파 배지와 같은 줄) */

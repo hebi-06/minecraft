@@ -15,7 +15,8 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * 0.26.0 직업 스킬 칸 클라이언트 상태 (서버 JobSkills): 칸 5 의 스킬 id · 이름 · 그림, 재사용 대기 (클라이언트 틱으로 셈), 칸마다 연출 시각 (눌림 · 막힘 ·
- * 시전 · 준비). 키 = Shift + 룬 스킬 칸 1 ~ 5 의 키 (MmorpgClient — Shift 를 누른 채면 룬 칸 대신 이쪽).
+ * 시전 · 준비). 2026-11-18 축복의 길: 키 = 스킬 키 여섯 (서버 SkillKeys — 우 · ⇧우 · ⇧좌 · ⇧⇧ · Q · ⇧Q 에 칸 · 공용 스킬을 끼움, 서버가 패킷으로 받음 —
+ * 예전 Shift + 룬 칸 키는 없앰). HUD 는 키 차례로 그림 ({@link #keyWhat} · 끼운 공용 스킬 {@link #commonId}).
  * 0.27.0 직업 (id · 이름 · 두 빛 — 칸 테두리 · 글자), 칸마다 잠김 사유 ("15렙" · "칼 · 마검" · "요구 스탯"), 직업 자원 게이지 (검세 · 마력 각인) · 태세 남은 시간
  * (JobSkills.GaugePayload — 남은 틱은 받은 뒤 클라이언트 틱으로 셈).
  */
@@ -23,6 +24,14 @@ public final class ClientJobBar {
     private ClientJobBar() {}
 
     public static final int SIZE = JobSkills.SIZE;
+    /** 2026-11-18 스킬 키 수 (서버 SkillKeys.Key 차례) */
+    public static final int KEYS = mmorpg.fabric.job.SkillKeys.SIZE;
+    /** 키마다 끼운 것 ("j1" ~ "j5" · "c" · "") · 끼운 공용 스킬 (id · 이름 · 나무 스탯 — 없으면 "") */
+    private static List<String> keys = List.of("", "", "", "", "", "");
+    private static String commonId = "";
+    private static String commonName = "";
+    private static String commonStat = "";
+    static final long[] COMMON_FX = new long[2]; // [시전, 준비] 시각
 
     private static List<String> ids = blank();
     private static List<String> names = blank();
@@ -87,7 +96,9 @@ public final class ClientJobBar {
         stanceEnd = 0;
         stanceTotal = 0;
         COOLDOWNS.clear();
-        for (long[] a : new long[][] {PRESS_AT, DENY_AT, CAST_AT, READY_AT}) java.util.Arrays.fill(a, 0);
+        for (long[] a : new long[][] {PRESS_AT, DENY_AT, CAST_AT, READY_AT, COMMON_FX}) java.util.Arrays.fill(a, 0);
+        keys = List.of("", "", "", "", "", "");
+        commonId = commonName = commonStat = "";
     }
 
     /** 서버가 보낸 칸들 */
@@ -121,6 +132,12 @@ public final class ClientJobBar {
         locks = nl;
         job = p.job();
         jobName = p.jobName();
+        List<String> nk = new ArrayList<>(KEYS);
+        for (int i = 0; i < KEYS; i++) nk.add(i < p.keys().size() ? p.keys().get(i) : "");
+        keys = List.copyOf(nk);
+        commonId = p.common();
+        commonName = p.commonName();
+        commonStat = p.commonStat();
         colorA = job.isEmpty() ? 0x7FD8FF : p.colorA() & 0xFFFFFF;
         colorB = job.isEmpty() ? 0x7FD8FF : p.colorB() & 0xFFFFFF;
         received = true;
@@ -137,18 +154,24 @@ public final class ClientJobBar {
         speed = p.speed(); // 0.51.0 서버의 공격 속도 배율
     }
 
-    /** 재사용 대기 (SkillBarNet.CooldownPayload 의 이름이 "job:" 으로 시작 — ClientSkillBar 가 넘김) */
+    /** 재사용 대기 (SkillBarNet.CooldownPayload 의 이름이 "job:" 으로 시작 — 스킬 id, 2026-11-18 공용 스킬은 "common:&lt;id&gt;" 그대로 — ClientSkillBar 가 넘김) */
     static void cooldown(String id, int left, int total) {
         int i = ids.indexOf(id);
+        boolean common = id.startsWith(mmorpg.fabric.job.CommonSkills.CD_PREFIX);
         if (left <= 0) {
             // 0.28.0 줄어서 끝남 (매지션 주문 연쇄): 준비 연출
-            if (COOLDOWNS.remove(id) != null && i >= 0) READY_AT[i] = Util.getMillis();
+            if (COOLDOWNS.remove(id) != null) {
+                if (i >= 0) READY_AT[i] = Util.getMillis();
+                if (common) COMMON_FX[1] = Util.getMillis();
+            }
             return;
         }
         Cd old = COOLDOWNS.get(id);
         COOLDOWNS.put(id, new Cd(ticks + left, Math.max(left, total)));
         // 시전 연출은 새 재사용 대기일 때만 (줄어든 재사용 대기 — 남은 틱이 짧아짐 — 는 덮개만 걷힘)
-        if (i >= 0 && (old == null || old.end() <= ticks || old.end() < ticks + left)) CAST_AT[i] = Util.getMillis();
+        boolean fresh = old == null || old.end() <= ticks || old.end() < ticks + left;
+        if (i >= 0 && fresh) CAST_AT[i] = Util.getMillis();
+        if (common && fresh) COMMON_FX[0] = Util.getMillis();
     }
 
     static void clearCooldowns() {
@@ -167,6 +190,7 @@ public final class ClientJobBar {
             it.remove();
             int i = ids.indexOf(e.getKey());
             if (i >= 0) READY_AT[i] = now;
+            if (e.getKey().startsWith(mmorpg.fabric.job.CommonSkills.CD_PREFIX)) COMMON_FX[1] = now;
         }
     }
 
@@ -284,23 +308,45 @@ public final class ClientJobBar {
         return Math.max(0, Math.min(1, (c.end() - ticks - partial) / c.total()));
     }
 
-    /** 칸 i 의 키 글자 ("⇧R" — Shift + 룬 칸 i 의 키, 그 키가 지정 안 됨이면 "") */
+    /** 직업 칸 i 의 키 글자 (2026-11-18 — 그 칸을 끼운 스킬 키: "우" · "⇧우" · "⇧좌" · "⇧⇧" · "Q" · "⇧Q", 키에 없으면 "") */
     public static String keyLabel(int i) {
-        String k = ClientSkillBar.keyLabel(i);
-        return k.isEmpty() ? "" : "⇧" + k;
+        int k = keys.indexOf("j" + (i + 1));
+        return k < 0 ? "" : mmorpg.fabric.job.SkillKeys.Key.values()[k].shortLabel;
     }
 
-    // ------------------------------------------------------------ 키
+    // ------------------------------------------------------------ 2026-11-18 스킬 키 여섯
 
-    /** 칸 i 의 키 (Shift + 룬 칸 i 의 키): 서버에 쓰기 + 눌림 연출 (빈 칸 · 재사용 대기 중이면 막힘 연출 · 낮은 소리) */
-    static void press(int i) {
-        if (i < 0 || i >= SIZE) return;
-        long now = Util.getMillis();
-        PRESS_AT[i] = now;
-        if (empty(i) || locked(i) || cooldownLeft(i, 0) > 0.05) {
-            DENY_AT[i] = now;
-            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.7F, 0.4F));
-        }
-        ClientPlayNetworking.send(new SkillBarNet.ActionPayload("job", i, 0));
+    /** 키 k 에 끼운 것 ("j1" ~ "j5" · "c" · "") */
+    public static String keyWhat(int k) {
+        return k < 0 || k >= KEYS ? "" : keys.get(k);
+    }
+
+    /** 키 k 의 글자 (우 · ⇧우 · ⇧좌 · ⇧⇧ · Q · ⇧Q) */
+    public static String keyName(int k) {
+        return k < 0 || k >= KEYS ? "" : mmorpg.fabric.job.SkillKeys.Key.values()[k].shortLabel;
+    }
+
+    /** 끼운 공용 스킬 id · 이름 · 나무 스탯 (없으면 "") */
+    public static String commonId() {
+        return commonId;
+    }
+
+    public static String commonName() {
+        return commonName;
+    }
+
+    public static String commonStat() {
+        return commonStat;
+    }
+
+    public static double commonCooldownLeft(float partial) {
+        Cd c = commonId.isEmpty() ? null : COOLDOWNS.get(mmorpg.fabric.job.CommonSkills.CD_PREFIX + commonId);
+        return c == null ? 0 : Math.max(0, (c.end() - ticks - partial) / 20.0);
+    }
+
+    public static double commonCooldownFrac(float partial) {
+        Cd c = commonId.isEmpty() ? null : COOLDOWNS.get(mmorpg.fabric.job.CommonSkills.CD_PREFIX + commonId);
+        if (c == null || c.total() <= 0) return 0;
+        return Math.max(0, Math.min(1, (c.end() - ticks - partial) / c.total()));
     }
 }

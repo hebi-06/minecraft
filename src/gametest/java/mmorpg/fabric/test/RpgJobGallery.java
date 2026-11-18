@@ -428,6 +428,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
                 .create()) {
             TestServerContext server = world.getServer();
+            SERVER.set(server); // 2026-11-18 다시 쓰기 (againUntil — pressJob)
             TestServerConnection conn = world.getConnection();
             conn.waitForChunksRender();
             server.runCommand("time set 6000");
@@ -604,11 +605,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     ctx.runOnClient(mc -> turn(mc, 180F));
                     ctx.waitTicks(3);
                 }
-                ctx.getInput().holdKey(o -> o.keyShift);
                 ctx.waitTicks(2);
                 server.runOnServer(s -> beforeCast(player(s), k.id()));
-                ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
-                ctx.getInput().releaseKey(o -> o.keyShift);
+                pressJob(server, c.slot());
                 int t = 0;
                 boolean turned = false;
                 for (int shot : shots) {
@@ -838,13 +837,22 @@ public final class RpgJobGallery implements FabricClientGameTest {
         for (int a : AGAIN.getOrDefault(id, new int[0])) {
             if (a <= t || a > upTo) continue;
             if (a - 2 > t) ctx.waitTicks(a - 2 - t);
-            ctx.getInput().holdKey(o -> o.keyShift);
             ctx.waitTicks(Math.min(2, a - t));
-            ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
-            ctx.getInput().releaseKey(o -> o.keyShift);
+            pressJob(SERVER.get(), c.slot());
             t = a;
         }
         return t;
+    }
+
+    /** 사진첩 · 영상의 서버 (againUntil — 다시 쓰기) */
+    private static final java.util.concurrent.atomic.AtomicReference<TestServerContext> SERVER = new java.util.concurrent.atomic.AtomicReference<>();
+
+    /**
+     * 2026-11-18 축복의 길: 직업 칸 slot 을 씀 — 예전 Shift + 칸 키 (모드 클라이언트 직업 키) 는 없앰, 키는 스킬 키 여섯 (SkillKeys — 우 · ⇧좌 · ⇧우 · Q · ⇧Q,
+     * 서버가 패킷으로 받음). 사진첩은 틱을 맞추려고 서버에서 그 칸을 바로 누름 (키 패킷 길은 RpgSkillKeyTests · 모드 없는 클라이언트 시험이 봄)
+     */
+    private static void pressJob(TestServerContext server, int slot) {
+        if (server != null) server.runOnServer(s -> mmorpg.fabric.job.JobSkills.press(player(s), slot));
     }
 
     // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6 · 7 · 8 · 9 · 10)
@@ -1011,21 +1019,15 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 // 과녁이 카메라 앞에 남음 (쓴 뒤 돌아서는 것은 카메라가 돌지 않아 환영이 화면 밖 그대로였음 — 영상 3)
                 ctx.runOnClient(mc -> turn(mc, 180F));
             }
-            ctx.getInput().holdKey(o -> o.keyShift);
             f.frames(2);
             server.runOnServer(s -> beforeCast(player(s), k.id()));
-            ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
+            pressJob(server, c.slot());
             f.cast();
-            ctx.getInput().releaseKey(o -> o.keyShift);
             for (int a : AGAIN.getOrDefault(k.id(), new int[0])) {
-                // 0.51.0 다시 쓰는 스킬: 그 틱에 같은 칸을 다시 누름 (Shift + 칸 키 — 2틱 앞에서 Shift · 영상의 0초는 처음 누른 때 그대로)
-                f.until(a - 2);
-                ctx.getInput().holdKey(o -> o.keyShift);
+                // 0.51.0 다시 쓰는 스킬: 그 틱에 같은 칸을 다시 누름 (영상의 0초는 처음 누른 때 그대로)
                 f.until(a);
-                ctx.getInput().holdKey(MmorpgClient.skillKeys[c.slot()]);
-                ctx.getInput().releaseKey(MmorpgClient.skillKeys[c.slot()]);
+                pressJob(server, c.slot());
                 f.frames(1);
-                ctx.getInput().releaseKey(o -> o.keyShift);
             }
             f.until(c.total());
             if (c.stance() || c.buff()) {

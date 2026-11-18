@@ -345,7 +345,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         shot(ctx, "sb_combo_after");
     }
 
-    // ------------------------------------------------------------ 0.26.0 직업 스킬 칸 (Shift + 룬 칸 1 ~ 5 의 키)
+    // ------------------------------------------------------------ 0.26.0 직업 스킬 칸 (2026-11-18 키 = 스킬 키 여섯 — SkillKeys)
 
     /** 시험용 직업 스킬 (칸 1 — 철 검 그림 · 재사용 대기 3초 · 쓰면 calls 하나 · 둘레 불꽃) */
     private static final java.util.concurrent.atomic.AtomicInteger JOB_CALLS = new java.util.concurrent.atomic.AtomicInteger();
@@ -412,20 +412,20 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
             for (int i = 0; i < ClientJobBar.SIZE; i++) b.append(ClientJobBar.keyLabel(i)).append(' ');
             return b.toString().trim();
         });
-        check(labels.equals("⇧R ⇧Z ⇧V ⇧B ⇧Y"), "job key labels '" + labels + "'");
+        // 2026-11-18 축복의 길: 직업 칸의 키 = 그 칸을 끼운 스킬 키 (처음 값 — 1 우 · 2 ⇧좌 · 3 ⇧우 · 4 Q · 5 ⇧Q)
+        check(labels.equals("우 ⇧좌 ⇧우 Q ⇧Q"), "job key labels (skill keys) '" + labels + "'");
         shot(ctx, "sb_job_hud");
-        // 빈 칸: Shift + R → 룬 칸 1 (대지 강타) 은 쓰지 않음 · 직업 칸 1 은 막힘 (안내)
+        // 빈 칸: 칼을 든 채 우클릭 (스킬 키 우 = 직업 칸 1) → 안내만 · 룬 칸 1 (대지 강타) 은 쓰지 않음
         Runes.Rune slam = Runes.parseRune(Runes.runeId("str", "common"));
-        ctx.getInput().holdKey(o -> o.keyShift);
+        ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
         ctx.waitTicks(3);
-        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
         ctx.waitTicks(2);
         shot(ctx, "sb_job_empty_press");
-        ctx.getInput().releaseKey(o -> o.keyShift);
         conn.waitForServerboundPackets();
         ctx.waitTicks(4);
-        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "Shift + R does not cast rune slot 1");
-        // 시험용 직업 스킬 (칸 1) → Shift + R 로 씀 · 재사용 대기 덮개, 다시 누르면 막힘
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "right click does not cast rune slot 1");
+        // 시험용 직업 스킬 (칸 1) → 우클릭으로 씀 · 재사용 대기 덮개, 다시 누르면 막힘
         JOB_CALLS.set(0);
         // 0.27.0: 직업 칸은 JobSystem 의 것 — 시험용 스킬로 바꿨다가 끝에 되돌림
         java.util.concurrent.atomic.AtomicReference<java.util.function.BiFunction<ServerPlayer, Integer, JobSkills.Skill>> saved = new java.util.concurrent.atomic.AtomicReference<>();
@@ -437,28 +437,29 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         conn.waitForClientboundPackets();
         ctx.waitTicks(3);
         check(ctx.computeOnClient(mc -> ClientJobBar.any() && !ClientJobBar.empty(0) && ClientJobBar.empty(1)), "job slot 1 shows the test skill");
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ctx.waitTicks(2);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(3);
+        shot(ctx, "sb_job_cast");
+        ctx.waitTicks(4); // 떼었다 다시 누름 (5틱 안이면 누르고 있는 것으로 봄)
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ctx.waitTicks(2);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(2);
+        check(JOB_CALLS.get() == 1, "right click casts job slot 1 once, then the cooldown blocks it (" + JOB_CALLS.get() + ")");
+        check(server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), TEST_JOB) > 0), "job skill cooldown on the server");
+        check(ctx.computeOnClient(mc -> ClientJobBar.cooldownFrac(0, 0) > 0.3), "HUD shows the job cooldown");
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "rune slot 1 still not cast");
+        // Shift + R 도 룬 칸 1 (예전 직업 키는 없앰)
         ctx.getInput().holdKey(o -> o.keyShift);
         ctx.waitTicks(3);
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
         ctx.waitTicks(2);
         conn.waitForServerboundPackets();
         ctx.waitTicks(3);
-        shot(ctx, "sb_job_cast");
-        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
-        ctx.waitTicks(2);
-        conn.waitForServerboundPackets();
-        ctx.waitTicks(2);
         ctx.getInput().releaseKey(o -> o.keyShift);
-        check(JOB_CALLS.get() == 1, "Shift + R casts job slot 1 once, then the cooldown blocks it (" + JOB_CALLS.get() + ")");
-        check(server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), TEST_JOB) > 0), "job skill cooldown on the server");
-        check(ctx.computeOnClient(mc -> ClientJobBar.cooldownFrac(0, 0) > 0.3), "HUD shows the job cooldown");
-        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "rune slot 1 still not cast");
-        // R 만 누르면 룬 칸 1
-        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
-        ctx.waitTicks(2);
-        conn.waitForServerboundPackets();
-        ctx.waitTicks(3);
-        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) > 0), "R alone still casts rune slot 1");
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) > 0), "Shift + R casts rune slot 1 (no job key any more)");
         shot(ctx, "sb_job_and_rune");
         // 스킬 칸 창의 직업 줄
         ctx.getInput().pressKey(MmorpgClient.skillBarKey);

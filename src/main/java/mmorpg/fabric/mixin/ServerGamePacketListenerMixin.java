@@ -23,6 +23,9 @@ public abstract class ServerGamePacketListenerMixin {
 
     @Inject(method = "handlePunch", at = @At("TAIL"))
     private void mmorpg$punch(ServerboundPunchPacket packet, CallbackInfo ci) {
+        // 2026-11-18 축복의 길: Shift + 좌클릭 스킬 키 (SkillKeys) · 활 · 완드는 좌클릭으로 쏨 (우클릭은 스킬 키) — 아니면 근접 평타 참격
+        if (mmorpg.fabric.job.SkillKeys.onPunch(this.player)) return;
+        if (mmorpg.fabric.RpgCombat.punchRanged(this.player)) return;
         Slash.onPunch(this.player);
     }
 
@@ -30,6 +33,10 @@ public abstract class ServerGamePacketListenerMixin {
     private void mmorpg$attackGate(ServerboundAttackPacket packet, CallbackInfo ci) {
         ServerPlayer p = this.player;
         if (p == null || Thread.currentThread() != p.level().getServer().getRunningThread()) return;
+        if (mmorpg.fabric.job.SkillKeys.onAttack(p)) { // 웅크린 채 몹을 누름 = Shift + 좌클릭 스킬 (평타 대신)
+            ci.cancel();
+            return;
+        }
         if (!Slash.admit(p, true)) ci.cancel();
     }
 }

@@ -115,6 +115,19 @@ public final class Probe implements ClientModInitializer {
                 log("now use cooldown " + cd + " pct " + pct + " result " + r);
             }
             case "cd" -> log("now cd cooldown " + cd + " pct " + pct + " cmd " + held.get(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA));
+            // 2026-11-18 축복의 길 스킬 키 (SkillKeys): 좌클릭 (공격 키 누름 수 — 다음 틱 startAttack) · 웅크림 켜고 끄기 (움직임 입력) · Shift 두 번 (틱마다 차례로)
+            case "attack" -> {
+                clickKey(mc.options.keyAttack);
+                log("now attack");
+            }
+            case "sneak on", "sneak off" -> {
+                mc.options.keyShift.setDown(cmd.endsWith("on"));
+                log("now " + cmd);
+            }
+            case "shift2" -> {
+                shift2 = 0;
+                log("now shift2");
+            }
             default -> log("now unknown " + cmd);
         }
     }
@@ -157,9 +170,27 @@ public final class Probe implements ClientModInitializer {
     /** 클라이언트 틱 끝 */
     /** Q 를 누른 뒤 틱 (−1 = 안 봄): 손 칸의 수를 틱마다 기록 (클라이언트가 먼저 비움 → 서버가 되돌림) */
     private static int qWatch = -1;
+    /** 2026-11-18 Shift 두 번 차례 (0 켬 · 2 끔 · 4 켬 · 6 끔 — 움직임 입력은 바뀔 때만 감) */
+    private static int shift2 = -1;
+
+    /** 키 한 번 누름 (누름 수를 올림 — 다음 틱 Minecraft.handleKeybinds 가 진짜 키와 같은 길로) */
+    private static void clickKey(net.minecraft.client.KeyMapping k) {
+        try {
+            java.lang.reflect.Field f = net.minecraft.client.KeyMapping.class.getDeclaredField("clickCount");
+            f.setAccessible(true);
+            f.setInt(k, f.getInt(k) + 1);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            log("click " + k.getName() + " failed: " + e);
+        }
+    }
 
     public static void tick(Minecraft mc) {
         ticks++;
+        if (shift2 >= 0) {
+            if (shift2 == 0 || shift2 == 4) mc.options.keyShift.setDown(true);
+            if (shift2 == 2 || shift2 == 6) mc.options.keyShift.setDown(false);
+            if (++shift2 > 6) shift2 = -1;
+        }
         if (qWatch >= 0 && mc.player != null) {
             net.minecraft.world.item.ItemStack h = mc.player.getMainHandItem();
             log("q watch " + qWatch + " hand " + h.getCount() + " " + h.getItem());

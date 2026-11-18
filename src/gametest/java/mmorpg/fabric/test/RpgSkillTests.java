@@ -117,7 +117,7 @@ public final class RpgSkillTests {
         h.succeed();
     }
 
-    // ------------------------------------------------------------ 활 입력 (누르면 바로 평타 — 길게 누르기 없음)
+    // ------------------------------------------------------------ 활 입력 (좌클릭이면 바로 평타 — 길게 누르기 없음)
 
     @GameTest(maxTicks = 60)
     public void bowPressShoots(GameTestHelper h) {
@@ -127,8 +127,8 @@ public final class RpgSkillTests {
         hold(sp, w);
         Husk z = dummy(h, 1.5, 2, 6.5);
         sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
-        ItemStack bow = sp.getMainHandItem();
-        bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
+        // 2026-11-18 축복의 길: 활은 좌클릭 (휘두르기 패킷 → RpgCombat.punchRanged) 으로 쏨 — 우클릭은 스킬 키 (끼운 것이 없으면 아무것도 하지 않음)
+        h.assertTrue(mmorpg.fabric.RpgCombat.punchRanged(sp), "left click with a bow shoots");
         h.assertFalse(sp.isUsingItem(), "no hold (no weapon skill)");
         double shot = base(sp, w);
         h.runAfterDelay(20, () -> {

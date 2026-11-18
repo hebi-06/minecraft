@@ -93,7 +93,8 @@ public final class RpgCommonSkillTests {
             h.assertTrue("ice".equals(ElementSystem.auraOf(z)), "얼음이 묻음: " + ElementSystem.auraOf(z));
             MobEffectInstance slow = z.getEffect(MobEffects.SLOWNESS);
             h.assertTrue(slow != null && slow.getAmplifier() == 0, "구속 I");
-            h.assertTrue(RpgJobTests.near(CommonSkills.lastDealt, want) && "cryo_pulse".equals(CommonSkills.lastCast), "마지막 기록 " + CommonSkills.lastDealt);
+            h.assertTrue(RpgJobTests.near(CommonSkills.lastDealt(sp), want) && "cryo_pulse".equals(CommonSkills.lastCast(sp)),
+                    "마지막 기록 " + CommonSkills.lastCast(sp) + " " + CommonSkills.lastDealt(sp));
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;

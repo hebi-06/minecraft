@@ -131,6 +131,9 @@ public final class VanillaMenu {
         Page page = Page.HOME;
         /** 스킬 쪽: 고른 룬 (룬 칸 또는 가방 칸) */
         VanillaSkillBar.Pick skillPick;
+        /** 스킬 쪽 (2026-11-18 스킬 키): 고른 스킬 ("j1" ~ "j5" · "c:&lt;공용 스킬 id&gt;") · 키 칸에서 고른 것인지 (아니면 가진 스킬 줄) */
+        String keyPick;
+        boolean keyPickFromKey;
         /** 뽑기 쪽: 고른 뽑기 (null = 마지막 뽑기 → 한정 → 일반) */
         String gachaKey;
         /** 뽑기 쪽: 스탯 뽑기의 스탯 · 확인 창 (0 = 없음, 1 · 10 = 그 수로 뽑을지 묻는 중) */
@@ -163,6 +166,7 @@ public final class VanillaMenu {
         void show(Page p) {
             if (p != page) {
                 skillPick = null;
+                keyPick = null;
                 gachaConfirm = 0;
                 cosArm = null;
                 SkillFx.playFor(sp, "ui.button.click", 1.7, 0.3);
@@ -257,7 +261,7 @@ public final class VanillaMenu {
 
         /** 위 탭 (줄 0 · 칸 둘씩) + 닫기 (칸 8) */
         private void tabs() {
-            String[][] tabs = {{"홈", "타일 · 빠른 단추"}, {"스탯", "스탯 올리기 · 스탯 트리"}, {"장비", "갑옷 · 무기 · 아티팩트"}, {"스킬", "룬 스킬 칸 · 직업 스킬"}};
+            String[][] tabs = {{"홈", "타일 · 빠른 단추"}, {"스탯", "스탯 올리기 · 스탯 트리"}, {"장비", "갑옷 · 무기 · 아티팩트"}, {"스킬", "룬 칸 · 스킬 키 (직업 · 공용 스킬)"}};
             Page[] pages = {Page.HOME, Page.STATS, Page.EQUIP, Page.SKILLS};
             for (int i = 0; i < 4; i++) {
                 Page p = pages[i];
@@ -279,7 +283,7 @@ public final class VanillaMenu {
             String who = "§7Lv." + sp.experienceLevel + " · " + (job == null ? "직업 없음" : job.name());
 
             tile(0, 1, "equip", "§b장비", "§7갑옷 · 무기 · 아티팩트 끼고 빼기\n" + who, () -> show(Page.EQUIP));
-            tile(5, 1, "skill", "§a스킬", "§7룬 스킬 칸 · 직업 스킬 (F 로 스킬 모드)", () -> show(Page.SKILLS));
+            tile(5, 1, "skill", "§a스킬", "§7룬 칸 (F → 숫자) · 스킬 키 여섯 (직업 · 공용 스킬)", () -> show(Page.SKILLS));
             tile(0, 3, "market", "§6장터", "§7다른 사람이 올린 물건을 사고 팖", () -> closeThen(p -> RpgNet.statAction(p, "market")));
             tile(5, 3, "gacha", "§d뽑기", "§7룬 뽑기 전용 창 (1회 · " + mmorpg.core.Gacha.multi() + "회)", () -> show(Page.GACHA));
 

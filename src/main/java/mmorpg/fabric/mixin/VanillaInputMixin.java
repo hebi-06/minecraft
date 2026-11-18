@@ -15,7 +15,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 모드 없는 클라이언트의 스킬 입력 (VanillaInput): F (왼손 바꾸기) = 모드 넘김 · 스킬 모드의 칸 바뀜 = 스킬 · 스킬 모드에서 가방 누름 · 고르기 막음.
+ * 모드 없는 클라이언트의 스킬 입력 (VanillaInput): F (왼손 바꾸기) = 룬 모드 켜고 끄기 · 룬 모드의 칸 바뀜 = 룬 스킬 · 룬 모드에서 가방 누름 · 고르기 막음.
+ * 2026-11-18 스킬 키 여섯 (SkillKeys — 모든 클라이언트): 버리기 · 블록 캐기 시작 · 움직임 입력.
  * 서버 스레드에서 처리할 때만 봄 (처음에는 네트워크 스레드에서 한 번 불렸다가 서버 스레드로 다시 옴 — 네트워크 스레드에서 막으면 서버로 넘어가지 않음).
  */
 @Mixin(ServerGamePacketListenerImpl.class)
@@ -34,13 +35,30 @@ public abstract class VanillaInputMixin {
         if (VanillaInput.onSwapKey(this.player)) ci.cancel();
     }
 
-    /** 2026-11-18 1인칭 모션 시범 (VanillaFirstPerson): Q · Ctrl + Q — 스킬 키 자리라 버리지 않음 (시범을 켰을 때만) */
+    /**
+     * 2026-11-18 축복의 길 스킬 키 (SkillKeys — 모드 · 모드 없는 클라이언트 모두): Q · Shift + Q · Ctrl + Q = 끼운 스킬 (버리지 않음 — 손 칸을 되돌림),
+     * Shift + 좌클릭 스킬 키면 블록 캐기 시작을 막음 (클라이언트의 미리 부숨은 확인 패킷으로 되돌림)
+     */
     @Inject(method = "handlePlayerAction", at = @At("HEAD"), cancellable = true)
     private void mmorpg$dropKey(ServerboundPlayerActionPacket packet, CallbackInfo ci) {
         ServerboundPlayerActionPacket.Action a = packet.getAction();
-        if (a != ServerboundPlayerActionPacket.Action.DROP_ITEM && a != ServerboundPlayerActionPacket.Action.DROP_ALL_ITEMS) return;
         if (!mmorpg$serverThread()) return;
-        if (mmorpg.fabric.vanilla.VanillaFirstPerson.onDrop(this.player)) ci.cancel();
+        if (a == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {
+            if (mmorpg.fabric.job.SkillKeys.blocksMining(this.player)) {
+                this.player.connection.send(new net.minecraft.network.protocol.game.ClientboundBlockChangedAckPacket(packet.getSequence()));
+                ci.cancel();
+            }
+            return;
+        }
+        if (a != ServerboundPlayerActionPacket.Action.DROP_ITEM && a != ServerboundPlayerActionPacket.Action.DROP_ALL_ITEMS) return;
+        if (mmorpg.fabric.job.SkillKeys.onDrop(this.player, a == ServerboundPlayerActionPacket.Action.DROP_ALL_ITEMS)) ci.cancel();
+    }
+
+    /** 2026-11-18 스킬 키 Shift 두 번 (SkillKeys.onInput — 움직임 입력의 웅크림 켜짐 · 꺼짐) */
+    @Inject(method = "handlePlayerInput", at = @At("TAIL"))
+    private void mmorpg$input(net.minecraft.network.protocol.game.ServerboundPlayerInputPacket packet, CallbackInfo ci) {
+        if (!mmorpg$serverThread()) return;
+        mmorpg.fabric.job.SkillKeys.onInput(this.player, packet.input().shift());
     }
 
     @Inject(method = "handleSetCarriedItem", at = @At("HEAD"), cancellable = true)

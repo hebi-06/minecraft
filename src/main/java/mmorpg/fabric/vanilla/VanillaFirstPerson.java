@@ -156,6 +156,14 @@ public final class VanillaFirstPerson {
         return true;
     }
 
+    /** 2026-11-18 스킬 키 Q · Shift + Q (SkillKeys.onDrop — 버리지 않고 손 칸을 되돌렸음): 시범 셈 (모드 없는 클라이언트) */
+    public static void noteDrop(ServerPlayer sp) {
+        if (sp == null || !VanillaClients.isVanilla(sp)) return;
+        drops++;
+        resent++;
+        Mmorpg.LOG.info("[vanilla] fp drop key {} (skill key, slot resent)", drops);
+    }
+
     /** 쿨타임 창 안 (마지막 재생 뒤 그 길이 안) 에 닿은 우클릭 수 (시험) */
     public static int usesInCooldown;
     private static long lastPlayTick = -1000;

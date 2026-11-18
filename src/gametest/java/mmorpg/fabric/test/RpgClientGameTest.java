@@ -343,9 +343,9 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.gameMode.attack(mc.player, clientHusk(mc, MELEE)));
     }
 
-    /** 손에 든 무기 쓰기 (마우스 오른쪽과 같은 경로) */
+    /** 손에 든 활 · 완드로 쏨 (2026-11-18 좌클릭 — 우클릭은 스킬 키 SkillKeys) */
     private static void use(ClientGameTestContext ctx) {
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ClientClicks.leftClick(ctx);
     }
 
     /** 클라이언트에 보이는 피해 숫자 글자 */

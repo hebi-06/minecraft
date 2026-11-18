@@ -95,6 +95,10 @@ public final class ClientSkillBar {
             ClientJobBar.cooldown(p.rune().substring(mmorpg.fabric.job.JobSkills.CD_PREFIX.length()), p.left(), p.total());
             return;
         }
+        if (p.rune().startsWith(mmorpg.fabric.job.CommonSkills.CD_PREFIX)) { // 2026-11-18 공용 스킬 (스킬 키 칸)
+            ClientJobBar.cooldown(p.rune(), p.left(), p.total());
+            return;
+        }
         if (p.left() <= 0) {
             COOLDOWNS.remove(p.rune());
             return;

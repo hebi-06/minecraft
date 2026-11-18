@@ -69,9 +69,9 @@ public final class CommonSkills {
     /** 다시 쓸 수 있는 틱 · 대기 전체 틱 */
     private static final Map<UUID, Long> READY = new HashMap<>();
     private static final Map<UUID, Integer> TOTAL = new HashMap<>();
-    /** 시험 · 영상: 마지막으로 쓴 스킬 · 넣은 피해 합 */
-    public static volatile String lastCast;
-    public static volatile double lastDealt;
+    /** 시험 · 영상: 사람마다 마지막으로 쓴 스킬 · 그 스킬이 넣은 피해 합 (시험이 나란히 돌아도 섞이지 않게 사람마다) */
+    private static final Map<UUID, String> LAST_CAST = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<UUID, Double> LAST_DEALT = new java.util.concurrent.ConcurrentHashMap<>();
 
     static void init() {
         IMPL.put("blaze_leap", CommonSkills::blazeLeap);
@@ -93,11 +93,26 @@ public final class CommonSkills {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             READY.clear();
             TOTAL.clear();
+            LAST_CAST.clear();
+            LAST_DEALT.clear();
         });
         ServerPlayConnectionEvents.DISCONNECT.register((h, server) -> {
-            READY.remove(h.player.getUUID());
-            TOTAL.remove(h.player.getUUID());
+            UUID id = h.player.getUUID();
+            READY.remove(id);
+            TOTAL.remove(id);
+            LAST_CAST.remove(id);
+            LAST_DEALT.remove(id);
         });
+    }
+
+    /** 시험 · 영상: 이 사람이 마지막으로 쓴 공용 스킬 (없으면 null) */
+    public static String lastCast(ServerPlayer sp) {
+        return sp == null ? null : LAST_CAST.get(sp.getUUID());
+    }
+
+    /** 시험 · 영상: 이 사람이 마지막으로 쓴 공용 스킬이 지금까지 넣은 피해 합 */
+    public static double lastDealt(ServerPlayer sp) {
+        return sp == null ? 0 : LAST_DEALT.getOrDefault(sp.getUUID(), 0.0);
     }
 
     /** 구현이 있는 공용 스킬 id (시험 — stat_tree.json skills 와 같아야 함) */
@@ -169,7 +184,7 @@ public final class CommonSkills {
         String prevLib = Tasks.lib(libName(k.stat()));
         int prevOwner = RuneKit.enter(sp);
         boolean ok;
-        lastDealt = 0;
+        LAST_DEALT.put(sp.getUUID(), 0.0);
         try {
             ok = impl.cast(sp, k, P);
         } finally {
@@ -178,12 +193,19 @@ public final class CommonSkills {
             ElementSystem.leave(prevEl);
         }
         if (!ok) return false;
-        lastCast = id;
+        LAST_CAST.put(sp.getUUID(), id);
         int ticks = Math.max(1, (int) Math.round(k.cd() * 20 * StatTrees.cdMult(sp)));
         READY.put(sp.getUUID(), Tasks.now() + ticks);
         TOTAL.put(sp.getUUID(), ticks);
         SkillBarNet.cooldown(sp, CD_PREFIX + id, ticks, ticks);
         mmorpg.fabric.motion.MotionSystem.skill(sp, CD_PREFIX + id);
+        if (!k.attack()) { // 2026-11-18 구르기 대신 공용 이동기 (사용자 "구르기 삭제하고 스탯에서 주는 대쉬로 대체") — 구르기 뒤 덤 (아티팩트 스키드블라드니르 「순풍」)
+            try {
+                mmorpg.fabric.motion.MotionSystem.onRoll.accept(sp);
+            } catch (RuntimeException e) {
+                mmorpg.fabric.Mmorpg.LOG.warn("[mmorpg] common move hook", e);
+            }
+        }
         return true;
     }
 
@@ -213,7 +235,7 @@ public final class CommonSkills {
         ElementSystem.onHit(sp, e);
         float after = e.isRemoved() ? 0 : e.getHealth();
         double dealt = before > after ? before - after : dmg;
-        lastDealt += dealt;
+        LAST_DEALT.merge(sp.getUUID(), dealt, Double::sum);
         return dealt;
     }
 

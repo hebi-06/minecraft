@@ -283,13 +283,10 @@ public final class ClientMotions {
             if (!ACTIVE.isEmpty()) ACTIVE.clear();
             return;
         }
-        // 쉬프트 두 번 → 구르기 (창이 열려 있으면 키가 오지 않음)
+        // 2026-11-18 축복의 길 (사용자 "구르기 삭제하고 스탯에서 주는 대쉬로 대체"): 쉬프트 두 번 구르기는 지움 — 쉬프트 두 번은 서버의 스킬 키 ⇧⇧
+        // (SkillKeys — 움직임 입력의 웅크림, 처음 값 = 공용 스킬). 누른 수만 비움 (쌓이지 않게)
         while (mc.options.keyShift.consumeClick()) {
-            if (mc.gui.screen() != null) continue;
-            if (ticks - lastTap <= Motions.doubleTap()) {
-                tryRoll(mc);
-                lastTap = -1000;
-            } else lastTap = ticks;
+            lastTap = ticks;
         }
         // 구르는 동안: 틱마다 빠르기 (다음 틱의 움직임 — 높이 빠르기는 그대로)
         long i = ticks - rollStart;

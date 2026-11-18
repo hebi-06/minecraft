@@ -93,7 +93,7 @@ public final class MmorpgClient implements ClientModInitializer {
         mmorpg.fabric.gear.RelicItem.viewer = () -> ClientRpgState.synced() ? ClientArtifacts.level() : -1;
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.BarPayload.TYPE, (payload, context) -> ClientSkillBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
-        // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
+        // 0.26.0 직업 스킬 칸 5 + 2026-11-18 스킬 키 여섯 (키마다 끼운 것 · 공용 스킬)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.BarPayload.TYPE, (payload, context) -> ClientJobBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.GaugePayload.TYPE, (payload, context) -> ClientJobBar.gauge(payload)); // 0.27.0 직업 자원 · 태세
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobUpgrades.FxPayload.TYPE, (payload, context) -> JobUpgradeHud.start(payload)); // 0.31.0 직업 스킬 강화 연출
@@ -172,9 +172,8 @@ public final class MmorpgClient implements ClientModInitializer {
             for (int i = 0; i < skillKeys.length; i++) {
                 while (skillKeys[i].consumeClick()) {
                     if (client.player == null || client.gui.screen() != null || !ClientSkillBar.received()) continue;
-                    // 0.26.0: Shift 를 누른 채 룬 칸 1 ~ 5 의 키 = 직업 스킬 칸 1 ~ 5 (사용자 "shift 누르고 r 이런 식으로")
-                    if (i < ClientJobBar.SIZE && (client.hasShiftDown() || client.options.keyShift.isDown())) ClientJobBar.press(i);
-                    else ClientSkillBar.press(i);
+                    // 2026-11-18 축복의 길: 직업 · 공용 스킬은 스킬 키 여섯 (서버 SkillKeys — 우 · ⇧우 · ⇧좌 · ⇧⇧ · Q · ⇧Q) — 예전 Shift + 이 키는 없앰
+                    ClientSkillBar.press(i);
                 }
             }
             ClientSkillBar.tick(client);
@@ -185,7 +184,7 @@ public final class MmorpgClient implements ClientModInitializer {
             WeaponAura.tick(client);
             CosmeticAura.tick(client);
             ClientSmith.tick(client); // 0.44.0 망치가 닿는 틱 (모루 소리 · 창의 불꽃)
-            mmorpg.fabric.client.motion.ClientMotions.tick(client); // 0.38.0 동작 · 쉬프트 두 번 구르기
+            mmorpg.fabric.client.motion.ClientMotions.tick(client); // 0.38.0 동작 (2026-11-18 쉬프트 두 번 구르기는 지움 — 스킬 키 ⇧⇧)
         });
         // 체력 줄 자리에 RPG 체력 바 · 갑옷 · 레벨 · 공기, 배고픔 · 갑옷 · 공기 줄 · 바닐라 레벨 숫자는 숨김 (RPG HUD 일 때만)
         HudElementRegistry.replaceElement(VanillaHudElements.HEALTH_BAR, old -> (graphics, delta) -> {

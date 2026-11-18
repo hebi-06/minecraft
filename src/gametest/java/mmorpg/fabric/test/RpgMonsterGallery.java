@@ -165,9 +165,9 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
         });
     }
 
-    /** 손에 든 무기 쓰기 (마우스 오른쪽 — 활은 바라보는 대상에 명중) */
+    /** 손에 든 활 · 완드로 쏨 (2026-11-18 좌클릭 — 우클릭은 스킬 키 SkillKeys) */
     private static void use(ClientGameTestContext ctx) {
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ClientClicks.leftClick(ctx);
     }
 
     private static float playerHp(TestServerContext server) {

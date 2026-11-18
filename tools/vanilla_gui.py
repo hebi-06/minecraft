@@ -18,6 +18,7 @@
   tooltip/menu_background.png · menu_frame.png — 메뉴 아이템 설명 상자 (tooltip_style rpg:menu)
 
 python3 tools/vanilla_gui.py <Galmuri9.ttf>   (같은 폴더에 Galmuri7.ttf · Galmuri11-Bold.ttf)
+python3 tools/vanilla_gui.py <Galmuri9.ttf> --only menu_skills   (쪽 바탕 하나만 — 글자판은 그대로)
 """
 import json
 import math
@@ -896,23 +897,32 @@ def keycap(c, col, row, tint=None):
 
 
 def menu_skills():
-    """룬 줄 (줄 2 · 칸 0 ~ 7 — 아래 숫자 1 ~ 8) · 빼기 (칸 8), 직업 줄 (줄 4 · 칸 0 ~ 4 — 아래 1 ~ 5) · 도움말 (칸 8).
-    머리 글 (Java): 줄 1 (d 35) 룬 · 줄 3 아래 (d 75) 직업 — 앞에 색 보석"""
+    """2026-11-18 축복의 길 (스킬 키 여섯 — SkillKeys): 룬 줄 (줄 1 · 칸 0 ~ 7 — 아래 숫자 1 ~ 8) · 빼기 (칸 8 — 아래 화살표),
+    스킬 키 줄 (줄 3 · 칸 0 ~ 5 — 아래 키 이름 우 · ⇧우 · ⇧좌 · ⇧⇧ · Q · ⇧Q, Shift 와 함께인 키는 금빛) · 도움말 (칸 8),
+    가진 스킬 줄 (줄 5 · 칸 0 ~ 8 — 직업 스킬 다섯 + 연 공용 스킬, 위에 가는 줄). 글자 없음 (사용자 "글자를 최대한 줄여서" — 이름 · 쓰는 법은 칸 설명)"""
     c = frame("skills")
     f7 = font("Galmuri7.ttf", 8)
     for i in range(8):
-        keycap(c, i, 2, tint=(34, 58, 74))
-        c.text(mid_x(i) - 1, cell_y(3), str(i + 1), f7, (150, 220, 230), center=True)
-    button(c, cell_x(8) + 1, cell_y(2) + 1, cell_x(8) + 16, cell_y(2) + 16, tint=(160, 50, 50))
-    icon(c, art.QUICK["remove"], cell_x(8) + 3, cell_y(2) + 3, GOLD_HI)
-    for i in range(5):
-        keycap(c, i, 4, tint=(70, 40, 80))
-        c.text(mid_x(i) - 1, cell_y(5) + 1, str(i + 1), f7, (230, 170, 240), center=True)
-    button(c, cell_x(8) + 1, cell_y(4) + 1, cell_x(8) + 16, cell_y(4) + 16, tint=(50, 90, 150))
-    icon(c, art.QUICK["help"], cell_x(8) + 3, cell_y(4) + 3, GOLD_HI)
-    # 룬 줄 위 가는 줄
-    c.rect(cell_x(0) + 2, cell_y(2) - 2, cell_x(8) + 15, cell_y(2) - 2, (40, 70, 90))
+        keycap(c, i, 1, tint=(34, 58, 74))
+        c.text(mid_x(i) - 1, cell_y(2), str(i + 1), f7, (150, 220, 230), center=True)
+    # 빼기 (가방으로 — 아래 화살표: 바로 위 닫기 X 와 헷갈리지 않게)
+    button(c, cell_x(8) + 1, cell_y(1) + 1, cell_x(8) + 16, cell_y(1) + 16, tint=(120, 70, 50))
+    icon(c, art.QUICK["down"], cell_x(8) + 3, cell_y(1) + 3, GOLD_HI)
+    for i, label in enumerate(SKILL_KEY_LABELS):
+        shift = label.startswith("⇧")
+        keycap(c, i, 3, tint=(84, 64, 34) if shift else (70, 40, 80))
+        c.text(mid_x(i), cell_y(4), label, f7, (255, 204, 90) if shift else (230, 170, 240), center=True)
+    button(c, cell_x(8) + 1, cell_y(3) + 1, cell_x(8) + 16, cell_y(3) + 16, tint=(50, 90, 150))
+    icon(c, art.QUICK["help"], cell_x(8) + 3, cell_y(3) + 3, GOLD_HI)
+    # 가진 스킬 줄 (줄 5): 위 가는 줄 · 칸 아홉
+    c.rect(cell_x(0) + 2, cell_y(5) - 4, cell_x(8) + 15, cell_y(5) - 4, (70, 52, 90))
+    for i in range(9):
+        slot(c, i, 5)
     return c.final()
+
+
+# 스킬 키 여섯 이름 (SkillKeys.Key 차례 — 우클릭 · Shift + 우클릭 · Shift + 좌클릭 · Shift 두 번 · Q · Shift + Q)
+SKILL_KEY_LABELS = ["우", "⇧우", "⇧좌", "⇧⇧", "Q", "⇧Q"]
 
 
 # ------------------------------------------------------------------ 스탯 트리 (3판 — 2026-11-08 사용자 그림: 위 = 갈라지는 나무, 아래 = 방향 키 · 탭)
@@ -1362,6 +1372,14 @@ def main():
         print(__doc__)
         sys.exit(1)
     FONT_DIR = os.path.dirname(os.path.abspath(sys.argv[1]))
+    if "--only" in sys.argv:
+        # 2026-11-18 쪽 바탕 하나만 다시 (글자판 · 아이콘 · 다른 쪽은 그대로 — 글꼴 판이 달라도 글자판이 바뀌지 않게)
+        names = sys.argv[sys.argv.index("--only") + 1].split(",")
+        for name, fn in PAGES:
+            if name in names:
+                fn().save(os.path.join(OUT, name + ".png"))
+                print("page", name)
+        return
     os.makedirs(os.path.join(OUT, "icons"), exist_ok=True)
     os.makedirs(os.path.join(OUT, "tooltip"), exist_ok=True)
     sheet, lines, widths = text_sheet(sys.argv[1])

@@ -205,6 +205,48 @@ def sec_glyph(rows):
     return g
 
 
+# 2026-11-18 축복의 길 스킬 키 여섯 (SkillKeys — HUD 칸 왼쪽 위 키 상자, 룬 키 상자와 같은 9 × 9): 마우스 (누른 단추 금빛) · Q · 겹 위 꺾쇠 (︽ — Shift 두 번).
+# Shift 와 함께 누르는 키는 상자 테가 금빛 (⇧우 · ⇧좌 · ⇧⇧ · ⇧Q — 메뉴 설명 · 첫 접속 안내에 "금빛 테 = Shift").
+KEY_WHITE = (240, 242, 250, 255)
+KEY_GOLD = (255, 204, 82, 255)
+MOUSE = [".###.", "#.#.#", "#.#.#", "#####", "#...#", "#...#", ".###."]
+CHEVRONS = ["..#..", ".#.#.", "#...#", "..#..", ".#.#.", "#...#", "....."]
+LETTER_Q = [".###.", "#...#", "#...#", "#...#", "#.#.#", "#..#.", ".##.#"]
+SKILL_KEYS = {
+    # 이름: (그림, Shift — 금빛 테)
+    "key_rmb": ("mouse_r", False),
+    "key_srmb": ("mouse_r", True),
+    "key_slmb": ("mouse_l", True),
+    "key_ss": ("chevrons", True),
+    "key_q": ("q", False),
+    "key_sq": ("q", True),
+}
+# 룬 키 상자 (skill_key) 의 테 색 → 금빛 (위 밝은 줄 · 옆 · 아래 안쪽 줄)
+GOLD_EDGE = {(0xC4, 0xC8, 0xD6): (255, 226, 140), (0x96, 0x9A, 0xAA): (214, 160, 58), (0x60, 0x64, 0x74): (140, 98, 30)}
+
+
+def key_label(src_box, kind, shift):
+    """스킬 키 상자 하나 (9 × 9): 상자 (Shift 면 금빛 테) + 그림 (안쪽 5 × 7, x 2 · y 1)"""
+    g = nine_slice(src_box, 9, 9, 3)
+    if shift:
+        for y in range(9):
+            for x in range(9):
+                r, gg, b, a = g.getpixel((x, y))
+                c = GOLD_EDGE.get((r, gg, b))
+                if c and a:
+                    g.putpixel((x, y), c + (a,))
+    rows = {"q": LETTER_Q, "chevrons": CHEVRONS}.get(kind, MOUSE)
+    for y, row in enumerate(rows):
+        for x, c in enumerate(row):
+            col = KEY_WHITE if c == "#" else None
+            # 마우스 단추 안 (줄 1 ~ 2, 왼 x 1 · 오른 x 3): 누른 쪽을 금빛으로 채움
+            if kind.startswith("mouse") and 1 <= y <= 2 and x in (1, 3) and ((kind == "mouse_r") == (x == 3)):
+                col = KEY_GOLD
+            if col:
+                g.putpixel((2 + x, 1 + y), col)
+    return g
+
+
 def skill_sheets(chars, src):
     """스킬 칸 글꼴 (줄마다 같은 글자 · 다른 ascent): 칸 틀 · 등급 테 · 직업 칸 틀 · 직업 테 (18 × 18 — 모드 그림 nine_slice), 키 상자 8 × 9,
     재사용 대기 덮개 (위에서 k 줄 — 16 × 16), 남은 초 숫자 sec_0 ~ sec_9 · sec_m (7 × 9 테두리 — 칸 위 + SEC_TOP),
@@ -216,6 +258,8 @@ def skill_sheets(chars, src):
         "job_edge": nine_slice(src("job_edge"), 18, 18, 5),
         "key": nine_slice(src("skill_key"), 8, 9, 3),
     }
+    for name, (kind, shift) in SKILL_KEYS.items():
+        singles[name] = key_label(src("skill_key"), kind, shift)
     glyphs = {}
     single_chars = {}
     for name, img in singles.items():

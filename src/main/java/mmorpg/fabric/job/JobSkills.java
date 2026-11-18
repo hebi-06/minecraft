@@ -24,7 +24,8 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * 0.26.0 직업 스킬 칸 (사용자 "각 무기에 맞는 직업을 추가할 거라서 직업 스킬도 — 룬 스킬 단축키 말고 직업 스킬 단축도, shift 누르고 r 이런 식으로 공간을
- * 5개만 더"): 칸 SIZE 개. 키는 Shift + 룬 스킬 칸 1 ~ 5 의 키 (기본 R · Z · V · B · Y — 클라이언트 MmorpgClient 가 Shift 를 누른 채면 이쪽으로 보냄).
+ * 5개만 더"): 칸 SIZE 개. 2026-11-18 축복의 길: 키는 스킬 키 여섯 (SkillKeys — 우 · ⇧우 · ⇧좌 · ⇧⇧ · Q · ⇧Q 에 칸을 끼움, 모드 · 모드 없는 클라이언트 같음 —
+ * 예전 Shift + 룬 칸 키는 없앰).
  * <ul>
  * <li>칸 i 의 스킬은 {@link #provider} 가 정함 (0.27.0 — JobSystem: 직업의 스킬, 레벨 · 무기가 맞지 않으면 잠김 {@link Skill#lock})</li>
  * <li>누르면 그 스킬을 씀: 잠김 · 재사용 대기 (스킬마다) · 침묵 · 탈것은 룬과 같음, 빈 칸이면 안내만</li>
@@ -79,9 +80,12 @@ public final class JobSkills {
     /** "UUID|스킬 id" → 그 재사용 대기의 전체 틱 (줄일 때 칸의 덮개 비율) */
     private static final Map<String, Integer> TOTALS = new HashMap<>();
 
-    /** 서버 → 클라이언트: 직업 스킬 칸 (늘 SIZE 개 — 빈 칸은 id "", 잠김은 사유 글자, 0.31.0 강화 단계) + 직업 (없으면 job "") */
+    /**
+     * 서버 → 클라이언트: 직업 스킬 칸 (늘 SIZE 개 — 빈 칸은 id "", 잠김은 사유 글자, 0.31.0 강화 단계) + 직업 (없으면 job "") +
+     * 2026-11-18 스킬 키 여섯 (SkillKeys — 키마다 "j1" ~ "j5" · "c" · "") · 끼운 공용 스킬 (id · 이름 · 나무 스탯 — 없으면 "")
+     */
     public record BarPayload(String job, String jobName, int colorA, int colorB, List<String> ids, List<String> names, List<ItemStack> icons,
-            List<String> locks, List<Integer> ups) implements CustomPacketPayload {
+            List<String> locks, List<Integer> ups, List<String> keys, String common, String commonName, String commonStat) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<BarPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("job_bar"));
         public static final StreamCodec<RegistryFriendlyByteBuf, BarPayload> CODEC = CustomPacketPayload.codec(BarPayload::write, BarPayload::read);
 
@@ -103,7 +107,11 @@ public final class JobSkills {
                 locks.add(buf.readUtf(64));
                 ups.add(buf.readVarInt());
             }
-            return new BarPayload(job, jobName, a, b, List.copyOf(ids), List.copyOf(names), List.copyOf(icons), List.copyOf(locks), List.copyOf(ups));
+            int k = Math.min(16, buf.readVarInt());
+            List<String> keys = new ArrayList<>(k);
+            for (int i = 0; i < k; i++) keys.add(buf.readUtf(8));
+            return new BarPayload(job, jobName, a, b, List.copyOf(ids), List.copyOf(names), List.copyOf(icons), List.copyOf(locks), List.copyOf(ups),
+                    List.copyOf(keys), buf.readUtf(64), buf.readUtf(128), buf.readUtf(8));
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -119,6 +127,11 @@ public final class JobSkills {
                 buf.writeUtf(i < locks.size() ? locks.get(i) : "", 64);
                 buf.writeVarInt(i < ups.size() ? Math.max(0, ups.get(i)) : 0);
             }
+            buf.writeVarInt(keys.size());
+            for (String k : keys) buf.writeUtf(k, 8);
+            buf.writeUtf(common, 64);
+            buf.writeUtf(commonName, 128);
+            buf.writeUtf(commonStat, 8);
         }
 
         @Override
@@ -321,7 +334,6 @@ public final class JobSkills {
 
     /** 칸들을 클라이언트에 (모드가 있는 클라이언트만) — 직업 · 레벨 · 무기가 바뀌면 부름 */
     public static void send(ServerPlayer sp) {
-        mmorpg.fabric.vanilla.VanillaInput.onJobBar(sp); // 모드 없는 클라이언트: 직업 스킬 모드 핫바 그림
         if (sp == null || sp.isRemoved() || !ServerPlayNetworking.canSend(sp, BarPayload.TYPE)) return;
         ServerPlayNetworking.send(sp, payload(sp));
     }
@@ -357,8 +369,15 @@ public final class JobSkills {
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] job header", e);
         }
-        return h == null ? new BarPayload("", "", 0, 0, ids, names, icons, locks, ups)
-                : new BarPayload(h.id(), h.name(), h.colorA(), h.colorB(), ids, names, icons, locks, ups);
+        // 2026-11-18 스킬 키 여섯 · 끼운 공용 스킬 (모드 HUD 의 키 칸)
+        List<String> keys = List.of(SkillKeys.binds(sp));
+        String common = CommonSkills.equipped(sp);
+        mmorpg.core.StatTree.Skill ck = common == null ? null : mmorpg.core.StatTree.skill(common);
+        String cid = ck == null ? "" : common;
+        String cname = ck == null ? "" : ck.name();
+        String cstat = ck == null ? "" : ck.stat();
+        return h == null ? new BarPayload("", "", 0, 0, ids, names, icons, locks, ups, keys, cid, cname, cstat)
+                : new BarPayload(h.id(), h.name(), h.colorA(), h.colorB(), ids, names, icons, locks, ups, keys, cid, cname, cstat);
     }
 
     /** 0.27.0 직업 자원 게이지를 클라이언트에 */

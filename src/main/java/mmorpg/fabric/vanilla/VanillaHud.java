@@ -39,10 +39,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * <ul>
  * <li>체력 (하트 줄 자리): 하트 · 체력 막대 ("196 / 316") · 25% 아래 빨간 테 깜박임 · 맞으면 깎인 부분이 잠깐 남았다가 줄어듦 · 흡수 (노란 줄)</li>
  * <li>배지 (배고픔 줄 자리): 방어 · Lv · 남은 스탯 포인트</li>
- * <li>스킬 칸 (핫바 양옆 — 액션바는 화면 가운데 기준이라 오른쪽 끝에 붙일 수 없음): 오른쪽 룬 1 ~ 8 (4 × 2), 왼쪽 직업 1 ~ 5 (3 + 2).
- * 칸마다 모드 그림 (칸 틀 · 등급 / 직업 색 테 · 키 상자 + 번호) · 룬 · 직업 스킬 그림 · 재사용 대기 (위에서 덮는 어두운 덮개 + 남은 초 —
- * 아래쪽 가운데 테두리 숫자, 마지막 1초는 노랑).
- * 지금 모드 (F — 룬 · 직업) 의 키 상자는 금색, 잠긴 직업 스킬 · 탈것에 탄 동안은 그림을 어둡게. 화면 너비 424 (GUI) 이상에서 다 보임</li>
+ * <li>스킬 칸 (핫바 양옆 — 액션바는 화면 가운데 기준이라 오른쪽 끝에 붙일 수 없음): 오른쪽 룬 1 ~ 8 (4 × 2), 왼쪽 스킬 키 여섯 (3 + 3 — 2026-11-18
+ * 축복의 길 SkillKeys: 위 우 · ⇧우 · ⇧좌, 아래 ⇧⇧ · Q · ⇧Q — 키에 끼운 직업 스킬 · 공용 스킬).
+ * 칸마다 모드 그림 (칸 틀 · 등급 / 직업 · 원소 색 테 · 키 상자 — 룬은 번호, 스킬 키는 키 그림: 마우스 · Q · 금빛 화살표 = Shift) · 룬 · 스킬 그림 · 재사용 대기
+ * (위에서 덮는 어두운 덮개 + 남은 초 — 아래쪽 가운데 테두리 숫자, 마지막 1초는 노랑).
+ * 룬 모드 (F) 면 룬 키 상자는 금색, 잠긴 직업 스킬 · 탈것에 탄 동안은 그림을 어둡게. 화면 너비 424 (GUI) 이상에서 다 보임</li>
  * </ul>
  * 바닐라 하트 · 갑옷 · 배고픔 그림은 팩에서 투명 (VanillaPack — 배고픔은 게임에서 꺼져 있음).
  *
@@ -79,7 +80,8 @@ public final class VanillaHud {
     static final int FILL_W = 94;
     static final int WHITE = 0xFFFFFF, GRAY = 0xAAAAAA, GOLD = 0xFFCC52, YELLOW = 0xFFE066, ABSORB = 0xFFD24A,
             TRAIL = 0xD4A86A, // 깎인 부분: 크림색은 흰 글자가 묻힘 (CI 42441254551 사진) → 어두운 살구색
-            KEY_ON = 0xFFD678, KEY_OFF = 0x9A9CB4, DIM = 0x5A5A66, EMPTY_EDGE = 0x4A4C60;
+            KEY_ON = 0xFFD678, KEY_OFF = 0x9A9CB4, DIM = 0x5A5A66, EMPTY_EDGE = 0x4A4C60,
+            KEY_LABEL = 0xE8EAF4; // 스킬 키 그림 (그림에 금빛 화살표가 있어 거의 흰색으로)
 
     private static final Map<UUID, State> STATES = new ConcurrentHashMap<>();
     /** 사람 → 재사용 대기 (이름 → {끝나는 틱, 전체 틱}) — SkillBarNet.cooldown (룬 = 룬 id, 직업 = "job:" + 스킬 id) */
@@ -138,8 +140,8 @@ public final class VanillaHud {
     public static void cooldown(ServerPlayer sp, String name, int left, int total) {
         if (sp == null || name == null || !VanillaClients.isVanilla(sp)) return;
         Map<String, long[]> m = COOLDOWNS.computeIfAbsent(sp.getUUID(), k -> new ConcurrentHashMap<>());
-        if (name.equals("*")) {
-            m.keySet().removeIf(k -> !k.startsWith(JobSkills.CD_PREFIX));
+        if (name.equals("*")) { // 룬 재사용 대기만 (직업 · 공용 스킬은 그대로)
+            m.keySet().removeIf(k -> !k.startsWith(JobSkills.CD_PREFIX) && !k.startsWith(mmorpg.fabric.job.CommonSkills.CD_PREFIX));
             return;
         }
         if (left <= 0) m.remove(name);
@@ -215,7 +217,7 @@ public final class VanillaHud {
         String msg = st.msgUntil > now ? st.msg : "";
         VanillaInput.Mode mode = VanillaInput.mode(sp);
         Slot[] runes = runeSlots(sp, now);
-        Slot[] jobs = jobSlots(sp, now);
+        Slot[] jobs = keySlots(sp, now);
         StringBuilder key = new StringBuilder().append(fill).append('|').append(trailW).append('|').append(absorbW).append('|').append(warn).append('|')
                 .append(hpText).append(maxText).append('|').append(armor).append('|').append(level).append('|').append(points).append('|').append(mode)
                 .append('|').append(msg);
@@ -247,14 +249,31 @@ public final class VanillaHud {
         return out;
     }
 
-    /** 직업 칸 5 (JobSkills): 그림 = 직업 스킬 그림, 테 = 직업 색, 잠긴 칸은 어둡게 (재사용 대기 없음) */
-    static Slot[] jobSlots(ServerPlayer sp, long now) {
-        Slot[] out = new Slot[JobSkills.SIZE];
+    /**
+     * 2026-11-18 스킬 키 여섯 (SkillKeys — 키 차례): 직업 스킬 칸 → 직업 스킬 그림 · 직업 색 테 · 잠기면 어둡게, 공용 스킬 → 공용 스킬 그림 (job_skill/common_&lt;id&gt;) ·
+     * 그 나무 원소 색 테, 빈 키 → 빈 칸
+     */
+    static Slot[] keySlots(ServerPlayer sp, long now) {
+        mmorpg.fabric.job.SkillKeys.Key[] keys = mmorpg.fabric.job.SkillKeys.Key.values();
+        String[] binds = mmorpg.fabric.job.SkillKeys.binds(sp);
+        Slot[] out = new Slot[keys.length];
         JobSkills.Header h = JobSkills.header.apply(sp);
         int color = h == null ? EMPTY_EDGE : h.colorA() & 0xFFFFFF;
         boolean riding = sp.isPassenger();
-        for (int i = 0; i < JobSkills.SIZE; i++) {
-            JobSkills.Skill s = JobSkills.skill(sp, i);
+        for (int i = 0; i < keys.length; i++) {
+            String what = binds[i];
+            if (what.equals(mmorpg.fabric.job.SkillKeys.COMMON)) {
+                String id = mmorpg.fabric.job.CommonSkills.equipped(sp);
+                mmorpg.core.StatTree.Skill k = id == null ? null : mmorpg.core.StatTree.skill(id);
+                if (k == null) {
+                    out[i] = new Slot(null, EMPTY_EDGE, WHITE, 0, 0);
+                    continue;
+                }
+                int[] cd = cover(sp, mmorpg.fabric.job.CommonSkills.CD_PREFIX + id, now);
+                out[i] = new Slot("job:" + commonIcon(id), elementEdge(k.stat()), riding ? DIM : WHITE, cd[0], cd[1]);
+                continue;
+            }
+            JobSkills.Skill s = what.isEmpty() ? null : JobSkills.skill(sp, what.charAt(1) - '1');
             if (s == null) {
                 out[i] = new Slot(null, EMPTY_EDGE, WHITE, 0, 0);
                 continue;
@@ -265,6 +284,21 @@ public final class VanillaHud {
             out[i] = new Slot("job:" + VanillaInput.iconId(s.id()), color, locked || riding ? DIM : WHITE, cd[0], cd[1]);
         }
         return out;
+    }
+
+    /** 공용 스킬 그림 이름 (직업 스킬 그림과 같은 곳 — tools/common_skill_icons.py: job_skill/common_&lt;id&gt;.png) */
+    public static String commonIcon(String id) {
+        return "common_" + VanillaInput.iconId(id);
+    }
+
+    /** 공용 스킬 칸 테: 그 나무 원소 색 (스탯 트리 창 색 — 힘 불 주황 · 민첩 번개 노랑 · 마력 얼음 하늘빛 · 체력 바위 호박빛) */
+    static int elementEdge(String stat) {
+        return switch (stat == null ? "" : stat) {
+            case "dex" -> 0xFFD84A;
+            case "int" -> 0x7FD4FF;
+            case "vit" -> 0xE0A050;
+            default -> 0xFF7A2E;
+        };
     }
 
     /** 재사용 대기 덮개 {줄 수 1 ~ 16 (0 = 없음), 남은 초 (올림)} */
@@ -331,14 +365,13 @@ public final class VanillaHud {
             l.glyph(FONT, qx, "point", WHITE);
             l.text(textFont(BADGE_D), qx + 17, "+" + points, YELLOW);
         }
-        // 스킬 칸: 오른쪽 룬 1 ~ 8 (4 × 2) · 왼쪽 직업 1 ~ 5 (위 3 · 아래 2, 오른쪽 맞춤)
+        // 스킬 칸: 오른쪽 룬 1 ~ 8 (4 × 2) · 왼쪽 스킬 키 여섯 (위 우 · ⇧우 · ⇧좌, 아래 ⇧⇧ · Q · ⇧Q)
         for (int i = 0; i < runes.length; i++) {
-            slot(l, base + RUNE_X + (i % 4) * PITCH, i / 4, i + 1, runes[i], false, mode == VanillaInput.Mode.RUNE);
+            slot(l, base + RUNE_X + (i % 4) * PITCH, i / 4, String.valueOf(i + 1), runes[i], false, mode == VanillaInput.Mode.RUNE);
         }
+        mmorpg.fabric.job.SkillKeys.Key[] keys = mmorpg.fabric.job.SkillKeys.Key.values();
         for (int i = 0; i < jobs.length; i++) {
-            int row = i < 3 ? 0 : 1;
-            int col = i < 3 ? i : i - 2; // 아래 줄 2칸은 오른쪽 둘 자리
-            slot(l, base - JOB_RIGHT - 3 * PITCH + 1 + col * PITCH, row, i + 1, jobs[i], true, mode == VanillaInput.Mode.JOB);
+            slot(l, base - JOB_RIGHT - 3 * PITCH + 1 + (i % 3) * PITCH, i / 3, "key_" + keys[i].id, jobs[i], true, false);
         }
         // 알림 줄 (처음 자리부터 — 가운데 맞춤)
         l.move(0);
@@ -346,8 +379,8 @@ public final class VanillaHud {
         return l.build();
     }
 
-    /** 칸 하나: 틀 · 테 · 그림 · 덮개 · 남은 초 · 키 상자 + 번호 (x = 칸 왼쪽, row 0 = 위 줄) */
-    private static void slot(Line l, int x, int row, int number, Slot s, boolean job, boolean on) {
+    /** 칸 하나: 틀 · 테 · 그림 · 덮개 · 남은 초 · 키 상자 (룬 = 상자 + 번호 label, 스킬 키 = 키 그림 label "key_…") (x = 칸 왼쪽, row 0 = 위 줄) */
+    private static void slot(Line l, int x, int row, String label, Slot s, boolean job, boolean on) {
         Identifier f = Mmorpg.rpg(row == 0 ? "hud_r1" : "hud_r2");
         l.skill(f, x, job ? "job_frame" : "skill_frame", WHITE);
         if (s.icon() != null) l.skill(f, x + 1, s.icon(), s.tint());
@@ -359,8 +392,12 @@ public final class VanillaHud {
             int rgb = s.secs() <= 1 ? YELLOW : WHITE;
             for (int i = 0; i < t.length(); i++) l.skill(f, sx + i * SEC_ADV, "sec_" + t.charAt(i), rgb);
         }
+        if (label.startsWith("key_")) { // 스킬 키: 키 그림 (마우스 · Q · 금빛 화살표 = Shift — tools/vanilla_hud.py)
+            l.skill(f, x - 1, label, KEY_LABEL);
+            return;
+        }
         l.skill(f, x - 1, "key", on ? KEY_ON : KEY_OFF);
-        l.text(numFont(73 - ROW_K[row]), x + 1, String.valueOf(number), on ? KEY_ON : KEY_OFF);
+        l.text(numFont(73 - ROW_K[row]), x + 1, label, on ? KEY_ON : KEY_OFF);
     }
 
     /** 남은 초 글자 (칸에 두 자리까지): 99 초까지 그대로, 그 위는 분 (올림 · "2m" — 9m 까지) */

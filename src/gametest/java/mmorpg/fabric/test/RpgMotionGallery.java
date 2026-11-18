@@ -599,49 +599,25 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         }
     }
 
-    // ------------------------------------------------------------ 4. 쉬프트 두 번 = 구르기
+    // ------------------------------------------------------------ 4. 쉬프트 두 번 = 스킬 키 ⇧⇧ (2026-11-18 축복의 길 — 구르기는 지움: 사용자 "구르기 삭제하고 스탯에서 주는 대쉬로 대체")
 
     private void roll(ClientGameTestContext ctx, TestServerContext server) {
         server.runCommand("tp @a 0.5 -60 0.5 0 0"); // 남쪽 (+z) 을 봄
         ctx.getInput().lookAt(0F, 0F);
-        ctx.runOnClient(mc -> ClientMotions.resetRoll());
         ctx.waitTicks(10);
         int me = ctx.computeOnClient(mc -> mc.player.getId());
         Vec3 p0 = ctx.computeOnClient(mc -> mc.player.position());
+        int n0 = server.computeOnServer(s -> mmorpg.fabric.job.SkillKeys.pressedCount(player(s)));
         ctx.getInput().pressKey(o -> o.keyShift);
         ctx.waitTicks(2);
         ctx.getInput().pressKey(o -> o.keyShift);
-        ctx.waitTicks(3);
-        check("roll".equals(ctx.computeOnClient(mc -> ClientMotions.current(me))), "rolling");
-        ctx.takeScreenshot(TestScreenshotOptions.of("mo_fp_roll").withSize(960, 540));
-        ctx.waitTicks(8); // 구른 지 약 12틱 (구르기 10틱 + 남은 미끄러짐)
+        ctx.waitTicks(5);
+        check(!"roll".equals(ctx.computeOnClient(mc -> ClientMotions.current(me))), "no roll (removed — shift twice is a skill key)");
+        check(server.computeOnServer(s -> mmorpg.fabric.job.SkillKeys.lastKey(player(s)) == mmorpg.fabric.job.SkillKeys.Key.SHIFT2
+                && mmorpg.fabric.job.SkillKeys.pressedCount(player(s)) == n0 + 1), "shift twice = skill key ss on the server");
         Vec3 p1 = ctx.computeOnClient(mc -> mc.player.position());
-        double moved = p1.z - p0.z;
-        check(moved > 3.0 && moved < 5.0 && Math.abs(p1.x - p0.x) < 0.5, "rolled forward " + String.format("%.2f", moved));
-        check(server.computeOnServer(s -> MotionSystem.lastRoll(player(s)) >= 0), "server saw the roll");
-        long left = ctx.computeOnClient(mc -> ClientMotions.rollCooldownLeft());
-        check(left > 3, "cooldown left " + left);
-        // 재사용 대기 안 (구른 지 약 14틱 < 20): 다시 두 번 눌러도 그대로
-        ctx.getInput().pressKey(o -> o.keyShift);
-        ctx.waitTicks(2);
-        ctx.getInput().pressKey(o -> o.keyShift);
-        ctx.waitTicks(8);
-        Vec3 p2 = ctx.computeOnClient(mc -> mc.player.position());
-        check(p2.distanceTo(p1) < 0.3, "cooldown: no second roll " + String.format("%.2f", p2.distanceTo(p1)));
-        // 3인칭 (앞에서 · 시야 40) 구르기
-        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
-        fov(ctx, 40);
-        ctx.waitTicks(25);
-        ctx.getInput().pressKey(o -> o.keyShift);
-        ctx.waitTicks(2);
-        ctx.getInput().pressKey(o -> o.keyShift);
-        ctx.waitTicks(4);
-        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_roll").withSize(960, 540));
-        ctx.waitTicks(2);
-        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_roll_late").withSize(960, 540));
-        fov(ctx, 70);
-        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
-        ctx.waitTicks(15);
+        check(p1.distanceTo(p0) < 0.5, "did not roll forward " + String.format("%.2f", p1.distanceTo(p0)));
+        ctx.waitTicks(10);
     }
 
     // ------------------------------------------------------------ 5. 무기 스킬 (우클릭) → 서버가 보낸 동작
