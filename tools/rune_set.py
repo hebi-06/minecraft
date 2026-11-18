@@ -104,7 +104,8 @@ SET = [
          desc="겨눈 곳 하늘에 구름을 모아 눈보라 · 둔화", use="장판 · 둔화"),
     dict(key="gnome", name="노움", grade="hero", cd=32.5, pair=["necromancer_blight"], r="mid", src="spirit.hero", elem="rock", u=["root"], a="narrow",
          desc="노움을 불러 바위 가시를 일으킴 · 묶음", use="소환 · 묶음 1초"),
-    dict(key="bastion", name="바스티온", grade="hero", cd=32, pair=["guardian_bulwark"], r="melee", src="vit.hero", u=["allyGuard"], look="gladiator:hero",
+    # 2026-11-18 코드 감사 (사용자 "정체성은 값, 덤은 줄임"): 0.5초마다 둘레 적을 밀쳐냄 0.7 (5초 — 방벽 밖으로 밀어냄) 이 표에 없던 유틸 → 밀쳐냄 값
+    dict(key="bastion", name="바스티온", grade="hero", cd=32, pair=["guardian_bulwark"], r="melee", src="vit.hero", u=["allyGuard", "knock"], look="gladiator:hero",
          set={"reduce": 0.2, "ticks": 100, "pulse": 10}, spread={"t": 100, "zone": True},
          desc="방패 벽을 둘러 세워 아군을 지키고 안의 적을 침", use="장판 5초 · 아군 받는 피해 −20%"),
     # ---------------------------------------------------------------- 초월 (초당 89%)
@@ -114,8 +115,10 @@ SET = [
     dict(key="berserker", name="버서커", grade="transcend", cd=32, pair=["bloodknight_frenzy"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
          set={"reduce": 0.2}, guard_sec=6, desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −20%"),
     # 2026-11-17 등급 안 밸런스: 달빛 폭발이 둘레 3칸 적도 침 (splashMult 16 — 대상의 절반) → 단일 (+15%) 이 아니라 좁은 범위 (+8% — π × 3² ≈ 28칸²)
-    dict(key="lunaexec", name="루나 엑시큐션", grade="transcend", cd=50, pair=["assassin_ult"], r="mid", src="assassin.transcend", u=["blink"], a="narrow",
-         desc="달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발", use="대상 + 둘레 3칸 달빛 폭발 (절반) · 순간 이동"),
+    # 2026-11-18 코드 감사 (사용자 "램파트와 같게"): 표식 1초 (선딜) 동안 나는 투명 · 대상은 둔화 IV → 선딜이 위험이 아님 (램파트의 막는 선딜과 같음 — 선딜 보정 없음),
+    # 투명 (은신) · 대상 둔화도 표에 없던 유틸 → 값
+    dict(key="lunaexec", name="루나 엑시큐션", grade="transcend", cd=50, pair=["assassin_ult"], r="mid", src="assassin.transcend", u=["blink", "hide", "slow"], a="narrow",
+         spread={"guard": True}, desc="달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발", use="대상 + 둘레 3칸 달빛 폭발 (절반) · 순간 이동"),
     # 2026-11-17 도감 메모 (메테오 "유틸 띄움 삭제 데미지 소량 증가 및 이에 따른 쿨타임 증가"): 띄움을 뺌 · 쿨 60초 (판 14 — 본 뒤 메모는 마법진 색만) →
     # 등급 범위 (초월 32 ~ 50초) 의 끝 50초 (긴 쿨 큰 한 방 그대로). 매지션의 범위 안 스킬 (프리즘 레이 35초) 은 스피릿 킹의 짝
     dict(key="meteor", name="메테오", grade="transcend", cd=50, r="far", src="int.transcend", elem="fire", u=[], cast=1.0,

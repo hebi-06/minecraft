@@ -596,7 +596,8 @@ final class RuneInt {
             int marks = 0;
             for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
-                    RuneKit.knock(e, V.sub(e.position(), g), 0.6, k.num("lift"));
+                    // 2026-11-18 코드 감사 (사용자 "정체성은 값, 덤은 줄임"): 유틸 값이 없던 밀쳐냄 0.6 → 0.4 (타격 반응 크기 — 바닐라 평타와 같음)
+                    RuneKit.knock(e, V.sub(e.position(), g), 0.4, k.num("lift"));
                     RuneKit.burn(e, k.num("fire"));
                     if (stun > 0) RuneKit.stun(e, stun, glow, marks++ < 12);
                 }

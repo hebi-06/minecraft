@@ -91,7 +91,11 @@ public final class RuneBreakTest {
                     check(base != null || c.base() != null, fn + " " + tier + " key " + c.key() + " is in the rune (or has a base)");
                     check(base == null || c.base() == null, fn + " " + tier + " key " + c.key() + ": base only for new keys");
                     double from = base != null ? base : c.base() != null ? c.base() : Double.NaN;
-                    check(c.to() > from, fn + " " + tier + " " + c.key() + " grows " + from + " → " + c.to());
+                    // 2026-11-18 버서커 (초월 돌파 기준선 — 사용자 "기준선에 맞춤"): 광폭화가 길어지는 (hits) 단계의 한 번의 배율은 작아질 수 있음 — 그 단계의 합은 커짐
+                    int prev = tier == 3 ? 0 : 3;
+                    boolean longer = "mult".equals(c.key()) && cs.stream().anyMatch(o -> "hits".equals(o.key()))
+                            && Runes.runeTotalMult(RuneBreak.def(t, tier)) > Runes.runeTotalMult(RuneBreak.def(t, prev)) + 1e-9;
+                    check(c.to() > from || longer, fn + " " + tier + " " + c.key() + " grows " + from + " → " + c.to());
                     check(c.div() > 0, fn + " div");
                 }
                 for (String s : RuneBreak.changeTexts(t, tier)) check(!s.contains("{") && !s.contains("?"), fn + " text filled: " + s);
@@ -212,17 +216,27 @@ public final class RuneBreakTest {
                 "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("dex", "transcend"), 3).contains("멈춤 1.5 → 2초"), "shadowless sec " + RuneBreak.changeTexts(rune("dex", "transcend"), 3));
-        // 12단계: 정령왕 강림 (spiritKing — 정령 공격 · 원소 마무리 넷 · 원소 붕괴, 합 ×32 → 3돌 ×42 → 6돌 ×50)
+        // 12단계: 정령왕 강림 (spiritKing — 정령 공격 · 원소 마무리 넷 · 원소 붕괴, 합 ×32 → 3돌 ×39 → 6돌 ×50 — 2026-11-18 초월 돌파 기준선 32 · 39 · 50, 전 3돌 ×42)
         Runes.Rune king = rune("spirit", "transcend");
         check(king.def().str("fn").equals("spiritKing") && king.def().str("name").equals("정령왕 강림"), "spirit transcend = 정령왕 강림 " + king.def().str("name"));
-        check(RuneBreak.changeTexts(king, 3).contains("정령 공격 위력 ×2.5 → ×5") && RuneBreak.changeTexts(king, 3).contains("원소 마무리 범위 6 → 7.5칸"),
+        check(RuneBreak.changeTexts(king, 3).contains("정령 공격 위력 ×2.5 → ×4.25") && RuneBreak.changeTexts(king, 3).contains("원소 마무리 범위 6 → 7.5칸"),
                 "spirit king 3 " + RuneBreak.changeTexts(king, 3));
-        check(RuneBreak.changeTexts(king, 6).contains("원소 붕괴 위력 ×8 → ×12") && RuneBreak.changeTexts(king, 6).contains("원소 붕괴에 맞은 적 기절 1.5초"),
+        check(RuneBreak.changeTexts(king, 6).contains("원소 붕괴 위력 ×8 → ×12") && RuneBreak.changeTexts(king, 6).contains("원소 붕괴에 맞은 적 기절 1.5초")
+                && RuneBreak.changeTexts(king, 6).contains("정령 공격 위력 ×4.25 → ×5"),
                 "spirit king 6 " + RuneBreak.changeTexts(king, 6));
         near(Runes.runeTotalMult(king.def()), 32, "spirit king total 32");
-        near(Runes.runeTotalMult(RuneBreak.def(king, 3)), 42, "spirit king 3 total 42");
+        near(Runes.runeTotalMult(RuneBreak.def(king, 3)), 39, "spirit king 3 total 39");
         near(Runes.runeTotalMult(RuneBreak.def(king, 6)), 50, "spirit king 6 total 50");
-        near(RuneBreak.def(king, 6).num("mult"), 5, "spirit king 6 keeps 3's spirit power");
+        near(RuneBreak.def(king, 6).num("mult"), 5, "spirit king 6 spirit power 5");
+        // 2026-11-18 버서커 (광전사의 혼 berserker — 광폭화 6 → 8 → 10초는 그대로, 한 번의 배율 5.33 → 4.875 · 5): 합 31.98 → 39 → 50 (전 42.6 · 53.3)
+        Runes.Rune bers = rune("axe", "transcend");
+        near(Runes.runeTotalMult(RuneBreak.def(bers, 3)), 39, "berserker 3 total 39");
+        near(Runes.runeTotalMult(RuneBreak.def(bers, 6)), 50, "berserker 6 total 50");
+        check(RuneBreak.changeTexts(bers, 3).stream().noneMatch(t -> t.contains("위력")) && RuneBreak.changeTexts(bers, 3).contains("광폭화 6 → 8초"),
+                "berserker 3: per-hit power hidden (총 피해 숫자로) " + RuneBreak.changeTexts(bers, 3));
+        Runes.Rune bersNew = rune("berserker", "transcend");
+        near(Runes.runeTotalMult(RuneBreak.def(bersNew, 3)) / Runes.runeTotalMult(bersNew.def()), 39 / 31.98, "new berserker 3 growth on the line");
+        near(Runes.runeTotalMult(RuneBreak.def(rune("spiritking", "transcend"), 3)), 39, "new spirit king 3 total 39");
         near(RuneBreak.def(king, 6).num("hits"), 4, "spirit king: one attack per spirit at every tier (hits on one target stay 10 ticks apart)");
         check(RuneBreak.changeTexts(rune("str", "transcend"), 6).contains("사거리 22 → 28칸"), "heavenFall 6 range from base");
         check(plain(RuneBreak.summaryLine(3, false)).equals("돌파 ★★★☆☆☆ 3/6 · 계수 ×1.3"), "summary " + plain(RuneBreak.summaryLine(3, false)));

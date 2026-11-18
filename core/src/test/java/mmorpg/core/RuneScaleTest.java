@@ -89,6 +89,18 @@ public final class RuneScaleTest {
             near(Runes.utilCdFactor(lr), 36 / lr.cd(), fam + " limited util cd factor");
         }
         check(!rune("endless", "transcend").def().truthy("knock") && !rune("endless", "transcend").def().truthy("lift"), "endless finish: no free knock · lift");
+        // 2026-11-18 코드 감사 (사용자 "정체성은 값, 덤은 줄임" · "램파트와 같게"): 바스티온의 방벽 밀쳐냄은 값 · 루나 엑시큐션은 막는 선딜 (투명 · 대상 둔화) + 은신 · 둔화 값 ·
+        // 얼음 여왕의 분노 붕괴 띄움은 타격 반응 크기 (0.35 — 밀쳐냄 0.4 · 띄움 0.35 이하는 유틸로 보지 않음)
+        Runes.Rune bastion = rune("bastion", "hero");
+        check(Runes.utils(bastion).equals(List.of("allyGuard", "knock")), "bastion utils " + Runes.utils(bastion));
+        near(Runes.utilCost(bastion), 0.25 * 26 / 32.0, "bastion util (아군 받피 감소 + 밀쳐냄) × 26 / 32");
+        Runes.Rune luna = rune("lunaexec", "transcend");
+        check(Runes.utils(luna).equals(List.of("blink", "hide", "slow")) && Runes.spreadEntry(luna).truthy("guard"), "lunaexec guard · utils " + Runes.utils(luna));
+        near(Runes.windupBonus(luna), 0, "lunaexec: no windup bonus (invisible · target slowed)");
+        near(Runes.timeMult(luna), 1, "lunaexec time ×1");
+        near(Runes.utilCost(luna), 0.25 * 36 / 50.0, "lunaexec util × 36 / 50");
+        near(Runes.damageScale(luna) / Runes.budgetScale(luna), 1.1 * 1.08 * (1 - 0.18), "lunaexec scale: 중거리 × 좁은 범위 × (1 − 유틸 18%) — 선딜 보정 없음");
+        near(rune("glacier", "transcend").def().num("lift"), 0.35, "glacier crush lift: hit reaction size");
     }
 
     /** 배율 합 그대로 두는 룬 (지원 · 버프 — 유틸 값 없음) */
