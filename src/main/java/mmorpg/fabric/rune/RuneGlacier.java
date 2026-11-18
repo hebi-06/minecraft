@@ -270,6 +270,7 @@ final class RuneGlacier {
         int hits = (int) k.num("hits");
         int chill = Math.max(1, (int) k.numOr("chill", 3));
         int frost = (int) k.numOr("frost", 40);
+        double shatter = Runes.bossShatter(k, Runes.utilCost(r)); // 2026-11-18 보스의 빙결 차례에 더하는 배율 (0 = 없음)
         int lastHit = charge + (hits - 1) * gap;
         int crushAt = lastHit + (int) k.numOr("finish", 14);
         int breakAt = crushAt + SHATTER;
@@ -400,7 +401,10 @@ final class RuneGlacier {
             RuneKit.later(at + STRIKE, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 for (LivingEntity e : Kit.around(sp, c, R, 4)) {
-                    RuneLimited.hit(sp, life, e, P, k.num("mult"), DamageNumbers.Style.FROST, tally, x -> chillUp(sp, level, x, cast, chill, frost, gap));
+                    // 2026-11-18 보스 (얼지 않음): 빙결 차례 (같은 적 chill 번째) 의 얼음이 빙결 값만큼 더 셈 — 파쇄 (Runes.bossShatter, 사용자 "파쇄 피해 넣기")
+                    boolean turn = shatter > 0 && mmorpg.fabric.boss.Bosses.isBossEntity(e) && cast.chill.getOrDefault(e.getUUID(), 0) + 1 >= chill;
+                    RuneLimited.hit(sp, life, e, P, k.num("mult") + (turn ? shatter : 0), turn ? DamageNumbers.Style.SHATTER : DamageNumbers.Style.FROST, tally,
+                            x -> chillUp(sp, level, x, cast, chill, frost, gap));
                 }
             });
             RuneKit.later(at + RISE + HOLD, () -> {
@@ -562,9 +566,12 @@ final class RuneGlacier {
     static void freeze(ServerLevel level, LivingEntity e, int ticks, Cast cast) {
         Vec3 body = RuneLimited.body(e);
         if (mmorpg.fabric.boss.Bosses.isBossEntity(e)) {
-            snow(level, body, 20, e.getBbWidth() * 0.5, e.getBbHeight() * 0.4, 0.04);
-            shards(level, body, 16, e.getBbWidth() * 0.4, e.getBbHeight() * 0.3, 0.1);
-            SkillFx.play(level, "block.glass.hit", body, 0.8, 0.8);
+            // 2026-11-18 보스는 얼지 않고 파쇄 (피해는 그 얼음에 더함 — 위 cast): 얼음이 몸에 맺혔다 깨지는 조각 · 서리 고리
+            snow(level, body, 28, e.getBbWidth() * 0.55, e.getBbHeight() * 0.45, 0.05);
+            shards(level, body, 34, e.getBbWidth() * 0.5, e.getBbHeight() * 0.4, 0.16);
+            RuneKit.novaRing(level, e.position(), e.getBbWidth() + 0.5, 2.0, ICE, CORE, Opt.of("life", 0.4));
+            SkillFx.play(level, "block.glass.break", body, 0.9, 0.8);
+            SkillFx.play(level, "block.amethyst_block.break", body, 0.7, 0.9);
             return;
         }
         RuneKit.stun(e, ticks, ICE, false);

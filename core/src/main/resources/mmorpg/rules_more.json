@@ -361,10 +361,10 @@
       "transcend": {"fn": "worldTreeGrace", "cd": 48, "name": "세계수의 가호", "desc": "세계수의 환영이 둘레 아군에게 가호를 내림", "use": "아군 버프 · 가하는 피해 증가 · 받는 피해 감소", "graceUp": 0.1, "graceCut": 0.1, "gracePer": 0.0008, "graceCap": 0.12, "ticks": 240, "radius": 8, "charge": 18, "tree": 2.8, "dist": 12, "side": 6}
     },
     "abyss": {
-      "transcend": {"fn": "abyssBrand", "cd": 42, "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "ticks": 200, "radius": 6, "range": 20, "charge": 14}
+      "transcend": {"fn": "abyssBrand", "cd": 42, "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "brandUpMul": 0.75, "_brandUpMul": "2026-11-18 사용자 (받피증 \"가하는 피해 버프 받고 그 딜에 플러스로 또 뻥튀기\" → 고른 것 \"곱 유지 · 낙인 낮춤\"): 적이 받는 피해 증가만 세기 × 0.75 (0돌 15 · 3돌 19.5 · 6돌 24% — 가호 · 다른 받피증과의 곱연산은 그대로, 적이 주는 피해 감소는 세기 그대로)", "ticks": 200, "radius": 6, "range": 20, "charge": 14}
     },
     "glacier": {
-      "transcend": {"fn": "glacierField", "cd": 32, "_scale": "2026-11-17 한정 룬끼리 밸런스에서 한 번의 예산 × 32/36 (초당 같게) 로 했다가 되돌림 — 사용자 \"얼음 여왕의 분노는 신급 기술을 가져온거여서 다른거보다 유틸이나 딜적으로 살짝 더 좋게\": 예산 34 그대로 (재사용 32초 — 가치/초가 한정 중 가장 높음, 무간참역보다 +7%) · 빙결 2초 (유틸 값 22.5%)", "name": "얼음 여왕의 분노", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
+      "transcend": {"fn": "glacierField", "cd": 32, "_scale": "2026-11-17 한정 룬끼리 밸런스에서 한 번의 예산 × 32/36 (초당 같게) 로 했다가 되돌림 — 사용자 \"얼음 여왕의 분노는 신급 기술을 가져온거여서 다른거보다 유틸이나 딜적으로 살짝 더 좋게\": 예산 34 그대로 (재사용 32초 — 가치/초가 한정 중 가장 높음, 무간참역보다 +7%) · 빙결 2초 (유틸 값 22.5%)", "name": "얼음 여왕의 분노", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5, "shatterBoss": true, "_shatterBoss": "2026-11-18 사용자 (보스는 얼지 않아 빙결 유틸 22.5% 가 보스전에서 비던 것 → \"파쇄 피해 넣기\"): 보스에게 빙결이 걸릴 차례 (같은 적 chill 번째 얼음) 의 얼음이 빙결 값만큼 더 셈 — 한 번의 피해 합 × 유틸 ÷ (1 − 유틸) 을 빙결 차례 수 (얼음 수 ÷ chill) 로 나눔 (Runes.bossShatter) → 보스에게 준 피해 = 가치 그대로"}
     }
   },
   "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike"],
@@ -415,7 +415,7 @@
       "hide": {"name": "은신", "cost": 0.1},
       "taunt": {"name": "도발 · 가둠", "cost": 0.1},
       "stun1": {"name": "기절 1초", "cost": 0.1},
-      "reduce": {"name": "피해 감소", "cost": 0.1},
+      "reduce": {"name": "피해 감소", "cost": 0.1, "_cost": "2026-11-18 사용자 \"비례로 다시 매김\": 기준 = 받는 피해 −30% · 2초 (오록스 차지 — 완전히 막은 시간 0.6초) = 0.1, 룬은 세기 × 시간 비례 (tools/rune_set.py → RUNE_SET.spread.<룬>.uCost.reduce — 램파트 −50% 3초 0.25 · 버서커 −20% 6초 0.2)"},
       "root3": {"name": "묶음 3초", "cost": 0.15},
       "stun15": {"name": "기절 1.5초", "cost": 0.15},
       "vuln5": {"name": "적 받는 피해 +5%", "cost": 0.1, "_cost": "2026-11-17 받는 피해 증가 +5% (사용자 \"받피 5%로 줄이고\" — 홀리 스티그마 · 글리머윙): +10% 0.15 · +15% 0.2 에서 5% 마다 0.05"},

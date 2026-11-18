@@ -268,7 +268,15 @@ public final class Runes {
      * (돌파 계수는 가호처럼 scaleKeys 로 값 넷에)
      */
     public static double brandUp(Obj d, double applied) {
-        return supportOf(d, "brandUp", "brandPer", "brandCap", applied);
+        return supportOf(d, "brandUp", "brandPer", "brandCap", applied) * brandUpMul(d);
+    }
+
+    /**
+     * 2026-11-18 낙인의 받는 피해 증가만 곱하는 값 (rules_more abyss brandUpMul — 없으면 1): 사용자 "가하는 피해 버프 받고 그 딜에 플러스로 또 뻥튀기" →
+     * "곱 유지 · 낙인 낮춤" — 0돌 15 · 3돌 19.5 · 6돌 24% (주는 피해 감소는 세기 그대로)
+     */
+    public static double brandUpMul(Obj d) {
+        return d == null ? 1 : d.numOr("brandUpMul", 1);
     }
 
     /** 0.20.0 심연의 낙인: 낙인 찍힌 적이 주는 피해 감소 비율 = brandCut + min(brandPer × 적용 스탯, brandCap) */
@@ -469,8 +477,36 @@ public final class Runes {
     public static double utilCost(Rune r) {
         if (SPREAD == null) return 0;
         double sum = 0;
-        for (String k : utils(r)) sum += SPREAD.obj("utils").obj(k).num("cost");
+        for (String k : utils(r)) sum += utilValue(r, k);
         return Math.min(SPREAD.numOr("utilMax", 1), sum * utilCdFactor(r));
+    }
+
+    /**
+     * 룬 하나의 유틸 값 (재사용 맞춤 앞): 표 (RUNE_SPREAD.utils) 의 값 — 2026-11-18 룬마다 매긴 값 (RUNE_SET.spread.&lt;룬&gt;.uCost — 받는 피해 감소는 세기 × 시간 비례,
+     * 사용자 "비례로 다시 매김": 기준 −30% · 2초 = 0.1) 이 있으면 그 값
+     */
+    public static double utilValue(Rune r, String util) {
+        Obj e = spreadEntry(r);
+        Obj own = e == null ? null : e.objOrNull("uCost");
+        if (own != null && own.has(util)) return own.num(util);
+        return SPREAD == null ? 0 : SPREAD.obj("utils").obj(util).num("cost");
+    }
+
+    /**
+     * 2026-11-18 얼음 여왕의 분노 (rules_more glacier shatterBoss — 사용자 "파쇄 피해 넣기"): 보스는 얼지 않으므로 빙결 차례의 얼음이 빙결 값만큼 더 셈.
+     * 빙결 차례 한 번의 더하는 배율 = 한 번의 배율 합 (얼음 mult × hits + 붕괴 crush) × 유틸 ÷ (1 − 유틸) ÷ 빙결 차례 수 ({@link #bossShatterTurns}) — 보스에게 준
+     * 피해 합 = 가치 (예산 × 시간 · 원소 보정) 그대로. 단계의 정의 k (돌파 — 얼음 수 · 배율이 바뀜) · 유틸 값 util ({@link #utilCost}). 아니면 0
+     */
+    public static double bossShatter(Obj k, double util) {
+        if (k == null || !k.truthy("shatterBoss") || !(util > 0) || util >= 1) return 0;
+        double total = k.numOr("mult", 0) * k.numOr("hits", 1) + k.numOr("crush", 0);
+        return total * util / (1 - util) / bossShatterTurns(k);
+    }
+
+    /** 한 번 쓸 때 보스에게 빙결 차례가 오는 수 (얼음 수 ÷ chill — 보스는 얼지 않아 냉기가 계속 쌓임, 최소 1) */
+    public static int bossShatterTurns(Obj k) {
+        int chill = Math.max(1, (int) k.numOr("chill", 3));
+        return Math.max(1, (int) k.numOr("hits", 1) / chill);
     }
 
     /**
@@ -760,7 +796,7 @@ public final class Runes {
             // 0.20.0 심연의 낙인: 피해 없음 — 낙인 (스탯 합 125 기준) · 세기 공식 · 범위 (끝 요약 글자는 0.20.1 에서 뺌)
             double up = brandUp(d, GRACE_REF);
             double cut = brandCut(d, GRACE_REF);
-            out.add("§r" + L + "낙인 (스탯 합 " + Js.str(GRACE_REF) + "): " + N + "적이 받는 피해 +" + Js.str(Js.round(up * 100)) + "%");
+            out.add("§r" + L + "낙인 (스탯 합 " + Js.str(GRACE_REF) + "): " + N + "적이 받는 피해 +" + Js.str(Math.round(up * 1000) / 10.0) + "%");
             out.add("§r" + L + "    · " + N + "적이 주는 피해 -" + Js.str(Js.round(cut * 100)) + "%" + L + " (가호와 곱)");
             out.add("§r" + L + brandFormula(d));
             out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 안 적 (보스 포함) · " + sec(d.numOr("ticks", Double.NaN)));

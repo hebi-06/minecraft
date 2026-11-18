@@ -36,6 +36,9 @@ GRADE_KO = {"common": "일반", "rare": "희귀", "noble": "고귀", "hero": "�
 # 등급의 (예산 %, 재사용 초) — 초당 값 = 예산 ÷ 재사용
 GRADE_BASE = {"common": (400, 8), "rare": (700, 12), "noble": (1200, 18), "hero": (2000, 26), "transcend": (3200, 36)}
 # 2026-11-17 등급마다 재사용 범위 (초 — 사용자가 정함, 양 끝 포함)
+# 2026-11-18 받는 피해 감소의 기준 (오록스 차지 −30% · 2초 = 완전히 막은 시간 0.6초 — 표의 값 0.1)
+REDUCE_REF = 0.3 * 2
+
 GRADE_CD = {"common": (6, 15), "rare": (12, 21), "noble": (15, 25), "hero": (27, 38), "transcend": (32, 50)}
 RANGE = {"melee": 1.2, "mid": 1.1, "far": 1.0}
 RANGE_KO = {"melee": "근", "mid": "중", "far": "원"}
@@ -58,7 +61,7 @@ SET = [
          desc="샐러맨더를 불러 4초 동안 불덩이를 뱉게 함", use="소환 · 불덩이 4번"),
     # 2026-11-17 램파트 · 블레이드 헤일 · 아이스 랜스는 새 동작 (RuneSet · RuneInt.iceLance — 옛 동작을 빌리지 않음), look = 그림 묶음 계열 (꼬리표 · 빛)
     dict(key="rampart", name="램파트", grade="common", cd=15, pair=["guardian_throw"], r="melee", src="blade.noble", u=["reduce", "knock"], a="narrow", look="gladiator:common",
-         set={"fn": "rampart", "ticks": 60, "reduce": 0.5, "knock": 0.9}, spread={"t": 60, "w": 60, "guard": True},
+         set={"fn": "rampart", "ticks": 60, "reduce": 0.5, "knock": 0.9}, spread={"t": 60, "w": 60, "guard": True}, guard_sec=3,
          desc="빛의 방패 결계로 3초 버티고 앞으로 밀어 냄", use="받는 피해 −50% 3초 · 끝에 앞을 밀쳐냄"),
     # ---------------------------------------------------------------- 희귀 (초당 58%)
     dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=13, pair=["swordmaster_echo"], r="mid", src="blade.rare", u=[], look="holy:rare",
@@ -70,7 +73,7 @@ SET = [
     dict(key="undine", name="운디네", grade="rare", cd=18, r="mid", src="spirit.rare", elem="water", u=["knock"], a="narrow",
          desc="운디네를 불러 물줄기를 세 번 쏘게 함", use="소환 · 관통 · 밀쳐냄"),
     dict(key="aurochs", name="오록스 차지", grade="rare", cd=12, pair=["darkknight_lunge"], r="melee", src="gladiator.rare", u=["blink", "knock", "reduce"], a="narrow",
-         set={"range": 6, "bison": 1}, desc="들소 영혼과 함께 앞으로 돌진해 부딪힌 적을 밀쳐냄", use="돌진 · 밀쳐냄 · 받는 피해 −30%"),
+         set={"range": 6, "bison": 1}, guard_sec=2, desc="들소 영혼과 함께 앞으로 돌진해 부딪힌 적을 밀쳐냄", use="돌진 · 밀쳐냄 · 받는 피해 −30%"),
     dict(key="grove", name="그로브 블레싱", grade="rare", cd=15, pair=["priest_hymn"], r="mid", src="vit.rare", u=[], support=True,
          # 2026-11-17 쿨 6 → 15초: 회복도 초당 그대로 (0.0667 × 15 ÷ 6)
          set={"heal": 0.1667, "pulses": 4, "gap": 15, "radius": 5, "share": 0.5}, desc="발밑에 새싹이 자라 빛 잎을 흩날리며 나와 둘레 아군을 회복",
@@ -109,7 +112,7 @@ SET = [
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
          set={"lift": 0}, desc="하늘 높이에서 거대한 검이 떨어져 꽂힘", use="원거리 광역 큰 한 방"),
     dict(key="berserker", name="버서커", grade="transcend", cd=32, pair=["bloodknight_frenzy"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
-         set={"reduce": 0.2}, desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −20%"),
+         set={"reduce": 0.2}, guard_sec=6, desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −20%"),
     # 2026-11-17 등급 안 밸런스: 달빛 폭발이 둘레 3칸 적도 침 (splashMult 16 — 대상의 절반) → 단일 (+15%) 이 아니라 좁은 범위 (+8% — π × 3² ≈ 28칸²)
     dict(key="lunaexec", name="루나 엑시큐션", grade="transcend", cd=50, pair=["assassin_ult"], r="mid", src="assassin.transcend", u=["blink"], a="narrow",
          desc="달빛 표식 뒤 대상 등 뒤에 나타나 X 베기 · 달빛 폭발", use="대상 + 둘레 3칸 달빛 폭발 (절반) · 순간 이동"),
@@ -231,6 +234,17 @@ def build():
                 ct = max(int(round(e["cast"] * 20)), w)
                 sp["cast"] = ct / 20.0
                 sp["castAdd"] = ct - w
+            # 2026-11-18 받는 피해 감소 = 세기 × 막는 시간 비례 (사용자 "비례로 다시 매김" — 기준 −30% · 2초 = 표의 값 0.1)
+            if "reduce" in e["u"]:
+                sec = e.get("guard_sec")
+                if not sec or not d.get("reduce"):
+                    raise SystemExit("받는 피해 감소의 세기 · 시간이 없음: " + e["name"])
+                ticks = d.get("ticks") or d.get("hits", 0) * d.get("gap", 0)
+                if abs(ticks / 20.0 - sec) > 1e-9:
+                    raise SystemExit("막는 시간이 정의와 다름: {} {}초 ↔ {}틱".format(e["name"], sec, ticks))
+                sp["uCost"] = {"reduce": round(S["utils"]["reduce"]["cost"] * d["reduce"] * sec / REDUCE_REF, 4)}
+            else:
+                sp.pop("uCost", None)
             key = e["key"]
             lo, hi = GRADE_CD[g]
             if not lo <= e["cd"] <= hi:
@@ -251,7 +265,7 @@ def build():
             spread[key + "." + g] = sp
             order.append(key)
             # 실효 (표 — 원거리 룬은 시전에 선딜 보정 없음)
-            util = min(S["utilMax"], sum(S["utils"][u]["cost"] for u in e["u"]) * base_cd / e["cd"])
+            util = min(S["utilMax"], sum(sp.get("uCost", {}).get(u, S["utils"][u]["cost"]) for u in e["u"]) * base_cd / e["cd"])
             area = 1 + (S["area"][e["a"]]["bonus"] if e.get("a") else 0)
             el = 0.95 if e.get("elem") else 1.0
             tm = time_mult(sp, more, e.get("cast"))

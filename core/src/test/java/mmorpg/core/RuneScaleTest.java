@@ -157,9 +157,14 @@ public final class RuneScaleTest {
                     if (Runes.castSeconds(r) > 0) near(Runes.windupBonus(r), 0, id + " cast → no windup bonus");
                     // 2026-11-17 등급 안 밸런스: 유틸 값 × 등급 기준 재사용 ÷ 룬의 재사용 (쿨이 길면 유틸이 드물게 켜짐) · 막는 선딜 (guard) 은 선딜 보정 없음
                     double raw = 0;
-                    for (String k : Runes.utils(r)) raw += u.obj(k).num("cost");
+                    for (String k : Runes.utils(r)) raw += Runes.utilValue(r, k);
                     near(Runes.utilCdFactor(r), BASE_CD[gi] / r.cd(), id + " util cd factor");
                     near(Runes.utilCost(r), Math.min(0.6, raw * BASE_CD[gi] / r.cd()), id + " util cost × base cd ÷ cd");
+                    // 2026-11-18 받는 피해 감소 = 세기 × 막는 시간 비례 (사용자 "비례로 다시 매김" — 기준 −30% · 2초 = 0.1)
+                    if (Runes.utils(r).contains("reduce")) {
+                        double sec = d.has("ticks") ? d.num("ticks") / 20 : d.num("hits") * d.num("gap") / 20;
+                        near(Runes.utilValue(r, "reduce"), 0.1 * d.num("reduce") * sec / 0.6, id + " reduce value = cut × seconds");
+                    } else check(!Runes.spreadEntry(r).has("uCost"), id + " no own util value");
                     if (e.truthy("guard")) near(Runes.windupBonus(r), 0, id + " guard → no windup bonus");
                     if (total > 0) {
                         double want = BUDGET[gi] / BASE_CD[gi] * r.cd();

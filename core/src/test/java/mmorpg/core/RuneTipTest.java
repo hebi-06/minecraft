@@ -154,27 +154,35 @@ public final class RuneTipTest {
                 && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
                 && gl.contains("유틸 −23% · 시간 보정 +30% 포함")
                 && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
-                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 32초 · 한정 · 원소 얼음 −5%")
+                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초") && gl.get(0).equals("재사용 32초 · 한정 · 원소 얼음 −5%")
                 && glj.contains("띄움"), "glacier: " + gl);
+        // 2026-11-18 보스 파쇄 (사용자 "파쇄 피해 넣기"): 빙결 차례 (8 ÷ 3 = 2번) 마다 34 × 0.225 ÷ 0.775 ÷ 2 — 보스에게 준 피해 = 가치 그대로
+        double sh = Runes.bossShatter(rune("glacier", "transcend").def(), Runes.utilCost(rune("glacier", "transcend")));
+        check(near(sh, 34 * 0.225 / 0.775 / 2) && Runes.bossShatterTurns(rune("glacier", "transcend").def()) == 2
+                && near((34 + sh * 2) * gS, 34 * 1.3 * 0.95) && gl.contains("파쇄: 보스는 얼지 않고 +" + RuneTip.fmt(42 * sh * gS) + " × 2번"), "glacier boss shatter: " + gl);
+        check(Runes.bossShatterTurns(RuneBreak.def(rune("glacier", "transcend"), 6)) == 4
+                && near(Runes.bossShatter(RuneBreak.def(rune("glacier", "transcend"), 6), 0.225), 53 * 0.225 / 0.775 / 4)
+                && near(Runes.bossShatter(rune("endless", "transcend").def(), 0.225), 0), "shatter 6 turns · only glacier");
         check(glj.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 42 * gS)) && glj.contains("얼음 필드 6 → 7칸") && glj.contains("거대한 얼음 8 → 10번")
-                && glj.contains("빙결 2 → 2.5초") && glj.contains("☆6돌 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * gS)) && glj.contains("빙결 2.5 → 3초"), "glacier tiers: " + glj);
+                && glj.contains("빙결 2 → 2.5초") && glj.contains("☆6돌 총 피해 " + RuneTip.fmt(42 * 1.6 * 53 * gS)) && glj.contains("빙결 2.5 → 3초"), "glacier tiers: " + glj);
         String gl6 = joined(RuneTip.lines(rune("glacier", "transcend"), 6, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
-        check(gl6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * gS)) && gl6.contains("얼음 " + RuneTip.fmt(42 * 1.6 * 3.5 * gS) + " × 12번 + 빙하 붕괴 " + RuneTip.fmt(42 * 1.6 * 13 * gS))
+        check(gl6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 53 * gS)) && gl6.contains("얼음 " + RuneTip.fmt(42 * 1.6 * 40.0 / 12 * gS) + " × 12번 + 빙하 붕괴 " + RuneTip.fmt(42 * 1.6 * 13 * gS))
                 && gl6.contains("반지름 8칸 얼음 필드") && gl6.contains("같은 적 3번 → 3초"),
                 "glacier 6: " + gl6);
 
         // 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 적이 받는 피해 + · 주는 피해 − (스탯 합 125: 0돌 20% · 3돌 26% · 6돌 32%)
+        // → 2026-11-18 사용자 "곱 유지 · 낙인 낮춤": 적이 받는 피해만 × 0.75 (15 · 19.5 · 24%)
         Runes.Rune aby = rune("abyss", "transcend");
         String a0 = joined(RuneTip.lines(aby, 0, v));
-        check(a0.contains("✦ 적이 받는 피해 +20%") && a0.contains("◈ 적이 주는 피해 -20%") && !a0.contains("총 피해") && a0.contains(RuneTip.BASIS_SELF), "brand 0: " + a0);
+        check(a0.contains("✦ 적이 받는 피해 +15%") && a0.contains("◈ 적이 주는 피해 -20%") && !a0.contains("총 피해") && a0.contains(RuneTip.BASIS_SELF), "brand 0: " + a0);
         check(a0.contains("조준한 곳 반지름 6칸 안 적 · 10초 (보스 포함)") && a0.contains("세기 = 10% + 스탯 합×0.08% (최대 22%)")
-                && a0.contains("모든 플레이어의 피해에 · 가호와 곱"), "brand flow: " + a0);
-        check(a0.contains("☆3돌 낙인 26% · 지속 10 → 12초") && a0.contains("반지름 6 → 7칸") && a0.contains("☆6돌 낙인 32% · 지속 12 → 14초")
+                && a0.contains("적이 받는 피해는 세기 × 0.75") && a0.contains("모든 플레이어의 피해에 · 가호와 곱"), "brand flow: " + a0);
+        check(a0.contains("☆3돌 낙인 +19.5% · -26% · 지속 10 → 12초") && a0.contains("반지름 6 → 7칸") && a0.contains("☆6돌 낙인 +24% · -32% · 지속 12 → 14초")
                 && a0.contains("사거리 20 → 24칸"), "brand tiers: " + a0);
         String a6 = joined(RuneTip.lines(aby, 6, v));
-        check(a6.contains("✦ 적이 받는 피해 +32%") && a6.contains("◈ 적이 주는 피해 -32%") && a6.contains("반지름 8칸") && a6.contains("14초"), "brand 6: " + a6);
+        check(a6.contains("✦ 적이 받는 피해 +24%") && a6.contains("◈ 적이 주는 피해 -32%") && a6.contains("반지름 8칸") && a6.contains("14초"), "brand 6: " + a6);
         String abn = joined(RuneTip.lines(aby, 0, null));
-        check(abn.contains("적이 받는 피해 +10% + 스탯 비례") && abn.contains("☆3돌 낙인 ×1.3"), "brand without stats: " + abn);
+        check(abn.contains("적이 받는 피해 +7.5% + 스탯 비례") && abn.contains("☆3돌 낙인 ×1.3"), "brand without stats: " + abn);
 
         // 0.19.0 세계수의 가호 (버프 — 피해 없음): 가하는 피해 + · 받는 피해 − (스탯 합 125: 0돌 20% · 3돌 26% · 6돌 32%)
         Runes.Rune ygg = rune("yggdrasil", "transcend");
@@ -220,7 +228,7 @@ public final class RuneTipTest {
         check(plain(RuneTip.lines(rune("yggdrasil", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 48초 · 한정"), "yggdrasil cd 48");
         check(plain(RuneTip.lines(rune("abyss", "transcend"), 0, new RuneTip.Viewer(even, 1, 131))).get(0).startsWith("재사용 42초 · 한정"), "abyss cd 42");
         String en6 = joined(RuneTip.lines(rune("endless", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
-        check(en6.contains("총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * eS)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
+        check(en6.contains("총 피해 " + RuneTip.fmt(42 * 1.6 * 53 * eS)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
         // 0.18.0 대지 가르기: 대검 16 (먼저) + 여진 3 × 6 (P 42 → 672 + 126 × 6번), 균열 줄 (앞으로 14칸 · 폭 5칸), 6돌 20칸 · 폭 7칸 · 기절
         List<String> te = plain(RuneTip.lines(rune("terra", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         String tej = String.join("\n", te);
@@ -230,7 +238,7 @@ public final class RuneTipTest {
                 && te.contains("앞으로 14칸 균열 (폭 5칸) 안 모든 적")
                 && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 40초 · 한정 · 원소 바위 −5%") && !tej.contains("띄움"), "terra: " + te);
         String te6 = joined(RuneTip.lines(rune("terra", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
-        check(te6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * tS)) && te6.contains("기절 1초") && te6.contains("앞으로 20칸 균열 (폭 7칸)") && !te6.contains("지맥 폭발"),
+        check(te6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 53 * tS)) && te6.contains("기절 1초") && te6.contains("앞으로 20칸 균열 (폭 7칸)") && !te6.contains("지맥 폭발"),
                 "terra 6: " + te6);
         // 적월 강림 6돌: 나눔이 길면 다음 줄 (이어지는 줄은 "+ ")
         List<String> cm = plain(RuneTip.lines(rune("reaper", "transcend"), 6, new RuneTip.Viewer(stats(0, 84, 0, 41), 1, 131)));

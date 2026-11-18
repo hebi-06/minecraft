@@ -13,7 +13,7 @@ import java.util.Random;
  * <li>계열: RUNE_LIMITED_ORDER = endless (0.17.0 무간참역) · terra (0.18.0 대지 가르기) · yggdrasil (0.19.0 세계수의 가호 — 버프)
  *     (2026-11-11 처음 셋 arcana · dipper · skyeye 를 뺌 — 사용자 "삭제하고 다른 컨셉의 룬 추가 예정")
  * · abyss (0.20.0 심연의 낙인 — 적 약화) · glacier (0.24.0 만년빙하 — 얼음 필드), 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 25 (뒤에 여덟), 초월 하나씩</li>
- * <li>0.24.0 만년빙하: 배율 합 34 · 42 · 55 (얼음 3 × 8 + 붕괴 10 → 3 × 10 + 12 → 3.5 × 12 + 13), 필드 6 → 7 → 8칸 · 빙결 2 → 2.5 → 3초 (같은 적 3번), 6돌 연출 (빙하의 왕관)</li>
+ * <li>0.24.0 만년빙하: 배율 합 34 · 42 · 53 (얼음 3 × 8 + 붕괴 10 → 3 × 10 + 12 → 3.33 × 12 + 13 — 2026-11-18 6돌 55 → 53), 필드 6 → 7 → 8칸 · 빙결 2 → 2.5 → 3초 (같은 적 3번), 6돌 연출 (빙하의 왕관)</li>
  * <li>0.20.0 심연의 낙인: 피해 없음, 낙인 = brandUp (주는 피해 brandCut) + min(brandPer × 네 스탯의 합, brandCap) × 돌파 계수 (가호와 같은 틀 —
  * 0돌 20% · 3돌 26% · 6돌 32%), 지속 10 → 12 → 14초 · 반지름 6 → 7 → 8칸 · 6돌 사거리 24칸, 6돌 연출 (심연의 문)</li>
  * <li>0.19.0 세계수의 가호: 피해 없음, 가호 = graceUp (받는 피해 graceCut) + min(gracePer × 네 스탯의 합, graceCap), 돌파 계수가 값 넷 모두에
@@ -176,8 +176,8 @@ public final class LimitedRunesTest {
         check(seen.getOrDefault("endless", 0) > 0 && seen.getOrDefault("glacier", 0) > 0 && !seen.containsKey("terra"), "only the picked limited families " + seen);
         check(top > 100 && lostTop > 0 && lostTop < top, "transcend " + top + " lost " + lostTop);
 
-        // 돌파 3 · 6돌 (배율 합: 0돌 34 · 3돌 42 · 6돌 55)
-        double[][] totals = {{34, 42, 55}, {3 * 6 + 16, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 8 + 10, 3 * 10 + 12, 3.5 * 12 + 13}};
+        // 돌파 3 · 6돌 (배율 합: 0돌 34 · 3돌 42 · 6돌 53 — 2026-11-18 사용자 "53으로": 초월 돌파 선 32 · 39 · 50 과 같은 기울기)
+        double[][] totals = {{34, 42, 53}, {3 * 6 + 16, 3 * 7 + 21, 3.25 * 8 + 27}, {3 * 8 + 10, 3 * 10 + 12, 40.0 / 12 * 12 + 13}};
         // 처음 설계 (다른 초월과 같은 줄) — 사용자 요청 '5% ~ 12% 더 쎄게': 0 · 3 · 6돌 모두 이 값의 1.05 ~ 1.12 배
         // (0.17.0 무간참역 · 0.18.0 대지 가르기는 처음부터 이 줄로 — 다른 초월의 기준 32 · 39 · 50 보다 5 ~ 12% 위)
         double[][] first = {{32, 39, 50}, {32, 39, 50}, {32, 39, 50}};
@@ -276,14 +276,16 @@ public final class LimitedRunesTest {
             check(Rules.get().obj("RUNE").obj("color").has("abyss"), "abyss color");
             double S = Runes.runeStat(stats(31, 31, 31, 32), "abyss").value();
             near(S, 125, "abyss applied = four stats");
-            near(Runes.brandUp(aby.def(), S), 0.2, "abyss 0 up 20%");
+            // 2026-11-18 사용자 "곱 유지 · 낙인 낮춤": 적이 받는 피해 증가만 세기 × 0.75 (주는 피해 감소는 세기 그대로)
+            near(Runes.brandUpMul(aby.def()), 0.75, "abyss up mul");
+            near(Runes.brandUp(aby.def(), S), 0.15, "abyss 0 up 15%");
             near(Runes.brandCut(aby.def(), S), 0.2, "abyss 0 cut 20%");
-            near(Runes.brandUp(aby.def(), 0), 0.1, "abyss base 10%");
-            near(Runes.brandUp(aby.def(), 150), 0.22, "abyss cap at 150");
+            near(Runes.brandUp(aby.def(), 0), 0.075, "abyss base 7.5%");
+            near(Runes.brandUp(aby.def(), 150), 0.165, "abyss cap at 150 (22% × 0.75)");
             near(Runes.brandCut(aby.def(), 600), 0.22, "abyss cap 22%");
-            near(Runes.brandUp(RuneBreak.def(aby, 3), S), 0.26, "abyss 3 26%");
+            near(Runes.brandUp(RuneBreak.def(aby, 3), S), 0.195, "abyss 3 up 19.5%");
             near(Runes.brandCut(RuneBreak.def(aby, 6), S), 0.32, "abyss 6 32%");
-            near(Runes.brandUp(RuneBreak.def(aby, 6), 600), 0.22 * 1.6, "abyss 6 cap 35.2%");
+            near(Runes.brandUp(RuneBreak.def(aby, 6), 600), 0.22 * 1.6 * 0.75, "abyss 6 up cap 26.4%");
             double[][] at = {{200, 6, 20}, {240, 7, 20}, {280, 8, 24}};
             for (int i = 0; i < 3; i++) {
                 Obj d = RuneBreak.def(aby, i * 3);
@@ -296,11 +298,11 @@ public final class LimitedRunesTest {
             for (String l : RuneBreak.tierLines(aby, 6, false)) check(l.replaceAll("§.", "").length() <= 40, "abyss tier line short: " + l);
             String lore = plain(Runes.runeLore(aby, false));
             check(lore.contains("한정 룬") && lore.contains("네 스탯의 합 × 1.0"), "abyss lore limited / sum: " + lore);
-            check(lore.contains("적이 받는 피해 +20%") && lore.contains("적이 주는 피해 -20%") && lore.contains("가호와 곱") && lore.contains("반지름 6칸")
+            check(lore.contains("적이 받는 피해 +15%") && lore.contains("적이 주는 피해 -20%") && lore.contains("가호와 곱") && lore.contains("반지름 6칸")
                     && lore.contains("10초"), "abyss lore brand: " + lore);
             check(!lore.contains("더한 피해") && !lore.contains("줄인 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "abyss lore no damage / summary: " + lore);
             String lore6 = plain(RuneBreak.lore(aby, 6, false));
-            check(lore6.contains("적이 받는 피해 +32%") && lore6.contains("반지름 8칸") && lore6.contains("14초"), "abyss 6 lore: " + lore6);
+            check(lore6.contains("적이 받는 피해 +24%") && lore6.contains("반지름 8칸") && lore6.contains("14초"), "abyss 6 lore: " + lore6);
         }
 
         System.out.println("LimitedRunesTest: " + ok + " ok, " + BAD.size() + " bad");

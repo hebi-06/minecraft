@@ -30,13 +30,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 한정 초월 룬 게임 시험 (서버): 실제로 써서 과녁 하나에 들어간 피해 = 위력 P × 배율 합 (0돌 34 · 6돌 55, 몹 무적 시간을 피해 모두),
+ * 한정 초월 룬 게임 시험 (서버): 실제로 써서 과녁 하나에 들어간 피해 = 위력 P × 배율 합 (0돌 34 · 6돌 53 — 2026-11-18 55 → 53, 몹 무적 시간을 피해 모두),
  * P 의 적용 스탯 = 네 스탯의 합 (네 스탯 150 → 600 · 마력만 150 → 150). 2026-11-11 0.16.0 의 셋 (만상귀일 · 칠성 강림 · 천공의 눈) 을 뺌 — 사용자 "삭제".
  * 0.17.0 무간참역: 쓴 자리 영역 (과녁 4.5칸 — 반지름 8 안) 베기 2 × 10 + 마무리 일섬 14 = 34 (6돌 2.5 × 14 + 20 = 55),
  * 타격 = 베기 10 (6돌 14) + 일섬 1.
  * 0.19.0 세계수의 가호 (버프 — 피해 없음): 반지름 안 아군 (나 포함) 만 가하는 피해 × (1 + 가호) · 받는 피해 × (1 − 가호, Guards 감소와는 센 것 하나),
  * 끝나면 그대로 (0.20.1 — 끝에 띄우던 요약 글자는 없음).
- * 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 조준한 곳 반지름 안 적만 받는 피해 × (1 + 낙인) · 그 적이 준 피해 × (1 − 낙인), 가호와 곱 (1.44배),
+ * 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 조준한 곳 반지름 안 적만 받는 피해 × (1 + 낙인 × 0.75 — 2026-11-18) · 그 적이 준 피해 × (1 − 낙인), 가호와 곱 (1.2 × 1.15 = 1.38배),
  * 적이 없으면 재사용 대기 없이 거절.
  * 0.24.0 만년빙하: 조준한 과녁 둘레 얼음 필드 — 거대한 얼음 3 × 8 + 빙하 붕괴 10 = 34 (6돌 3.5 × 12 + 13 = 55), 타격 = 얼음 8 (6돌 12) + 붕괴 1,
  * 빙결 (같은 적이 3번 꿰뚫리면 2초 기절 · ❄ · 풀리면 다시 쌓임 · 붕괴에 부서짐 · 필드 밖은 그대로).
@@ -214,7 +214,7 @@ public final class RpgLimitedRuneTests {
 
     @GameTest(environment = "mmorpg:lr_endless6", maxTicks = 240)
     public void endlessSlashSixStars(GameTestHelper h) {
-        cast(h, "endless", 6, EVEN, 55, 15, 190, false); // 6돌 55 ÷ 15 × 15
+        cast(h, "endless", 6, EVEN, 53, 15, 190, false); // 6돌 53 ÷ 15 × 15 (2026-11-18 55 → 53)
     }
 
     /** 0.18.0 대지 가르기: 대검 내려치기 16 + 갈라진 땅 여진 3 × 6 (과녁은 시전자 앞 4.5칸 — 균열 안), 6돌 27 + 3.5 × 8 */
@@ -225,7 +225,7 @@ public final class RpgLimitedRuneTests {
 
     @GameTest(environment = "mmorpg:lr_terra6", maxTicks = 230)
     public void earthSplitterSixStars(GameTestHelper h) {
-        cast(h, "terra", 6, EVEN, 27 + 3.5 * 8, 9, 165, false);
+        cast(h, "terra", 6, EVEN, 27 + 3.25 * 8, 9, 165, false); // 2026-11-18 여진 3.5 → 3.25 (합 53)
     }
 
     /**
@@ -327,7 +327,7 @@ public final class RpgLimitedRuneTests {
 
     /**
      * 0.20.0 심연의 낙인 0돌 (스탯 31 · 31 · 31 · 32 — 합 125 → 낙인 20%): 조준한 과녁 (5칸 앞) 둘레 반지름 6칸 안 과녁 둘에 낙인, 그 밖 (8칸) 은 없음.
-     * 낙인 찍힌 과녁이 받는 룬 피해 1.2배 · 그 과녁이 준 피해 0.8배 (낙인 없는 몹은 그대로), 세계수의 가호를 더하면 1.2 × 1.2 = 1.44배 (곱연산),
+     * 낙인 찍힌 과녁이 받는 룬 피해 1.15배 (2026-11-18 × 0.75) · 그 과녁이 준 피해 0.8배 (낙인 없는 몹은 그대로), 세계수의 가호를 더하면 1.2 × 1.15 = 1.38배 (곱연산),
      * 시전 기록 (찍은 수 2), 10초 뒤 그대로 (0.20.1 — 요약 글자 없음)
      */
     @GameTest(environment = "mmorpg:lr_abyss", maxTicks = 300)
@@ -359,8 +359,9 @@ public final class RpgLimitedRuneTests {
             h.assertTrue(RuneCast.castRune(sp, r, false, 0), "brand cast");
         });
         h.runAfterDelay(3 + charge + 4, () -> {
-            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1.2, 1e-9, "aimed husk takes ×1.2");
-            near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.2, 1e-9, "husk in radius takes ×1.2");
+            // 2026-11-18 사용자 "곱 유지 · 낙인 낮춤": 받는 피해 증가만 × 0.75 (20 → 15%) — 주는 피해 감소는 20% 그대로
+            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1.15, 1e-9, "aimed husk takes ×1.15");
+            near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.15, 1e-9, "husk in radius takes ×1.15");
             near(h, RpgCombat.takenMult.applyAsDouble(z3), 1, 1e-9, "outside radius: no brand");
             near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0.2, 1e-9, "branded husk deals -20%");
             near(h, RpgHealth.weakenOf.applyAsDouble(z3), 0, 1e-9, "outside: not weakened");
@@ -377,7 +378,7 @@ public final class RpgLimitedRuneTests {
         h.runAfterDelay(36, () -> {
             RuneKit.runeHit(sp, z1, 10, 1, "int");
             double d1 = TestDummies.dealt(z1) - d0[0];
-            near(h, d1 / d0[0], 1.2, 1e-4, "rune damage ×1.2 on the branded husk");
+            near(h, d1 / d0[0], 1.15, 1e-4, "rune damage ×1.15 on the branded husk");
             h.assertTrue(RuneCast.castRune(sp, grace, false, 0), "grace cast");
         });
         h.runAfterDelay(36 + 18 + 8, () -> {
@@ -385,7 +386,7 @@ public final class RpgLimitedRuneTests {
             double before = TestDummies.dealt(z1);
             RuneKit.runeHit(sp, z1, 10, 1, "int");
             double d2 = TestDummies.dealt(z1) - before;
-            near(h, d2 / d0[0], 1.44, 1e-4, "grace × brand = 1.2 × 1.2 (multiplicative)");
+            near(h, d2 / d0[0], 1.2 * 1.15, 1e-4, "grace × brand = 1.2 × 1.15 (multiplicative)");
         });
         h.runAfterDelay(3 + charge + ticks + 6, () -> {
             near(h, RpgCombat.takenMult.applyAsDouble(z1), 1, 1e-9, "brand ended");
@@ -395,7 +396,7 @@ public final class RpgLimitedRuneTests {
         });
     }
 
-    /** 6돌: 낙인 32% · 반지름 8칸 (가운데에서 7.5칸 과녁은 받음 · 9.5칸은 밖) · 14초 */
+    /** 6돌: 낙인 32% (받는 피해는 × 0.75 = 24% — 2026-11-18) · 반지름 8칸 (가운데에서 7.5칸 과녁은 받음 · 9.5칸은 밖) · 14초 */
     @GameTest(environment = "mmorpg:lr_abyss6", maxTicks = 80)
     public void abyssBrandSixStars(GameTestHelper h) {
         floor(h, 16);
@@ -415,8 +416,8 @@ public final class RpgLimitedRuneTests {
             h.assertTrue(RuneCast.castRune(sp, r, false, 6), "brand 6 cast");
         });
         h.runAfterDelay(3 + charge + 4, () -> {
-            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1.32, 1e-9, "6: ×1.32");
-            near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.32, 1e-9, "6: 7.5 from the center (radius 8)");
+            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1.24, 1e-9, "6: ×1.24 (32% × 0.75)");
+            near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.24, 1e-9, "6: 7.5 from the center (radius 8)");
             near(h, RpgCombat.takenMult.applyAsDouble(z3), 1, 1e-9, "6: 9.5 outside");
             near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0.32, 1e-9, "6: deals -32%");
             near(h, brandOf(sp)[1] - Tasks.now(), 280 - 4, 3, "6: 14 s");
@@ -451,7 +452,7 @@ public final class RpgLimitedRuneTests {
 
     @GameTest(environment = "mmorpg:lr_glacier6", maxTicks = 250)
     public void glacierFieldSixStars(GameTestHelper h) {
-        cast(h, "glacier", 6, EVEN, 3.5 * 12 + 13, 13, 205, false);
+        cast(h, "glacier", 6, EVEN, 40.0 / 12 * 12 + 13, 13, 205, false); // 2026-11-18 얼음 3.5 → 3.33 (합 53)
     }
 
     /**

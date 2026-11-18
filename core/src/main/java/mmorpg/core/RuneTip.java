@@ -173,6 +173,11 @@ public final class RuneTip {
         return Js.str(Math.round(frac * 100));
     }
 
+    /** 2026-11-18 소수 한 자리까지의 백분율 (낙인 19.5% — 가호 · 낙인 세기) */
+    private static String pct1(double frac) {
+        return Js.str(Math.round(frac * 1000) / 10.0);
+    }
+
     private static String roman(double i) {
         return i >= 0 && i < ROMAN.length && i == Math.rint(i) ? ROMAN[(int) i] : n(i + 1);
     }
@@ -344,11 +349,11 @@ public final class RuneTip {
         if (Runes.isBrand(d)) {
             // 0.20.0 심연의 낙인: 적이 받는 피해 + · 적이 주는 피해 − (보는 사람의 스탯 합 · 돌파 계수)
             if (Double.isNaN(c.applied())) {
-                out.add("§r§d✦ " + L + "적이 받는 피해 " + N + "+" + pct(d.num("brandUp")) + "%" + L + " + 스탯 비례");
-                out.add("§r§5◈ " + L + "적이 주는 피해 " + N + "-" + pct(d.num("brandCut")) + "%" + L + " + 스탯 비례");
+                out.add("§r§d✦ " + L + "적이 받는 피해 " + N + "+" + pct1(d.num("brandUp") * Runes.brandUpMul(d)) + "%" + L + " + 스탯 비례");
+                out.add("§r§5◈ " + L + "적이 주는 피해 " + N + "-" + pct1(d.num("brandCut")) + "%" + L + " + 스탯 비례");
             } else {
-                out.add("§r§d✦ " + L + "적이 받는 피해 " + N + "§l+" + pct(Runes.brandUp(d, c.applied())) + "%");
-                out.add("§r§5◈ " + L + "적이 주는 피해 " + N + "§l-" + pct(Runes.brandCut(d, c.applied())) + "%");
+                out.add("§r§d✦ " + L + "적이 받는 피해 " + N + "§l+" + pct1(Runes.brandUp(d, c.applied())) + "%");
+                out.add("§r§5◈ " + L + "적이 주는 피해 " + N + "§l-" + pct1(Runes.brandCut(d, c.applied())) + "%");
             }
             return out;
         }
@@ -422,7 +427,10 @@ public final class RuneTip {
             // 0.24.0 만년빙하: 얼음 필드 · 거대한 얼음 · 빙결 (같은 적이 chill 번 맞으면 frost 틱)
             out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 얼음 필드 · " + sec(d.numOr("gap", 14)) + "마다");
             out.add("§r" + L + "필드 안 적마다 발밑에서 거대한 얼음이 솟음");
-            out.add("§r§b빙결" + L + ": 같은 적 " + d.text("chill") + "번 → " + sec(d.numOr("frost", 0)) + " (보스는 얼지 않음)");
+            out.add("§r§b빙결" + L + ": 같은 적 " + d.text("chill") + "번 → " + sec(d.numOr("frost", 0)) + (d.truthy("shatterBoss") ? "" : " (보스는 얼지 않음)"));
+            // 2026-11-18 보스는 얼지 않는 대신 빙결 차례의 얼음이 그 값만큼 더 셈 (Runes.bossShatter — 사용자 "파쇄 피해 넣기")
+            double shatter = Runes.bossShatter(d, Runes.utilCost(c.r()));
+            if (shatter > 0) out.add("§r§b파쇄" + L + ": 보스는 얼지 않고 " + N + "+" + dmg(c, shatter) + L + " × " + Runes.bossShatterTurns(d) + "번");
         }
         if (Runes.isGrace(d)) {
             out.add("§r" + L + "쓴 자리 반지름 " + d.text("radius") + "칸 안 아군 (나 포함) · " + sec(d.numOr("ticks", 0)));
@@ -432,6 +440,7 @@ public final class RuneTip {
         if (Runes.isBrand(d)) {
             out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 안 적 · " + sec(d.numOr("ticks", 0)) + " (보스 포함)");
             out.add("§r" + L + Runes.brandFormula(d));
+            if (Math.abs(Runes.brandUpMul(d) - 1) > 1e-9) out.add("§r" + L + "적이 받는 피해는 세기 × " + Js.str(Runes.brandUpMul(d))); // 2026-11-18
             out.add("§r" + L + "모든 플레이어의 피해에 · 가호와 곱");
         }
         if (fam.equals(COMBO.str("family"))) {
@@ -609,8 +618,8 @@ public final class RuneTip {
     /** 단계의 낙인 세기 (가호와 같은 모양) */
     private static String brandText(Obj dt, double applied, int t) {
         if (Double.isNaN(applied)) return RuneBreak.coefText(t);
-        String up = pct(Runes.brandUp(dt, applied));
-        String cut = pct(Runes.brandCut(dt, applied));
+        String up = pct1(Runes.brandUp(dt, applied));
+        String cut = pct1(Runes.brandCut(dt, applied));
         return up.equals(cut) ? up + "%" : "+" + up + "% · -" + cut + "%";
     }
 

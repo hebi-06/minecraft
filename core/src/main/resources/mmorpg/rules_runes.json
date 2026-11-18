@@ -1070,7 +1070,10 @@
      "knock"
     ],
     "guard": true,
-    "r": "melee"
+    "r": "melee",
+    "uCost": {
+     "reduce": 0.25
+    }
    },
    "solarwave.rare": {
     "t": 2,
@@ -1110,7 +1113,10 @@
      "knock",
      "reduce"
     ],
-    "r": "melee"
+    "r": "melee",
+    "uCost": {
+     "reduce": 0.1
+    }
    },
    "grove.rare": {
     "u": [],
@@ -1237,7 +1243,10 @@
      "lifesteal",
      "reduce"
     ],
-    "r": "melee"
+    "r": "melee",
+    "uCost": {
+     "reduce": 0.2
+    }
    },
    "lunaexec.transcend": {
     "a": "narrow",
