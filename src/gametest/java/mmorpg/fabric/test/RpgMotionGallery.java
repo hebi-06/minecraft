@@ -608,10 +608,15 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         int me = ctx.computeOnClient(mc -> mc.player.getId());
         Vec3 p0 = ctx.computeOnClient(mc -> mc.player.position());
         int n0 = server.computeOnServer(s -> mmorpg.fabric.job.SkillKeys.pressedCount(player(s)));
-        ctx.getInput().pressKey(o -> o.keyShift);
+        // 웅크림은 키가 눌린 채 틱을 넘겨야 움직임 입력 패킷에 실림 (pressKey 는 같은 틱에 누르고 뗌 — 서버에 닿지 않음): 켜짐 0 · 꺼짐 2 · 켜짐 4 · 꺼짐 6
+        ctx.getInput().holdKey(o -> o.keyShift);
         ctx.waitTicks(2);
-        ctx.getInput().pressKey(o -> o.keyShift);
-        ctx.waitTicks(5);
+        ctx.getInput().releaseKey(o -> o.keyShift);
+        ctx.waitTicks(2);
+        ctx.getInput().holdKey(o -> o.keyShift);
+        ctx.waitTicks(2);
+        ctx.getInput().releaseKey(o -> o.keyShift);
+        ctx.waitTicks(4);
         check(!"roll".equals(ctx.computeOnClient(mc -> ClientMotions.current(me))), "no roll (removed — shift twice is a skill key)");
         check(server.computeOnServer(s -> mmorpg.fabric.job.SkillKeys.lastKey(player(s)) == mmorpg.fabric.job.SkillKeys.Key.SHIFT2
                 && mmorpg.fabric.job.SkillKeys.pressedCount(player(s)) == n0 + 1), "shift twice = skill key ss on the server");
@@ -620,14 +625,51 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.waitTicks(10);
     }
 
-    // ------------------------------------------------------------ 5. 무기 스킬 (우클릭) → 서버가 보낸 동작
+    // ------------------------------------------------------------ 5. 우클릭 = 스킬 키 우 (직업 스킬 1) → 서버가 보낸 동작 (2026-11-18 축복의 길 — 무기 스킬은 없앰)
+
+    /** 시험용 직업 스킬 (칸 1): 쓰면 검사 「트리니티 엣지」 의 동작을 보냄 (직업 · 레벨 · 무기 조건과 상관없이 키 → 스킬 → 동작 길만 봄) */
+    private static final String SKILL_MOTION_KEY = "swordsman_flurry";
+    private static final mmorpg.fabric.job.JobSkills.Skill MOTION_JOB = new mmorpg.fabric.job.JobSkills.Skill() {
+        @Override
+        public String id() {
+            return "test_motion";
+        }
+
+        @Override
+        public String name() {
+            return "시험 동작 스킬";
+        }
+
+        @Override
+        public ItemStack icon() {
+            return new ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+        }
+
+        @Override
+        public int cooldown() {
+            return 40;
+        }
+
+        @Override
+        public boolean cast(ServerPlayer sp) {
+            MotionSystem.skill(sp, SKILL_MOTION_KEY);
+            return true;
+        }
+    };
 
     private void skill(ClientGameTestContext ctx, TestServerContext server) {
+        java.util.concurrent.atomic.AtomicReference<java.util.function.BiFunction<ServerPlayer, Integer, mmorpg.fabric.job.JobSkills.Skill>> saved = new java.util.concurrent.atomic.AtomicReference<>();
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             sp.getInventory().setItem(0, weapon("sword"));
             sp.getInventory().setSelectedSlot(0);
+            mmorpg.fabric.job.SkillKeys.reset(sp);
+            mmorpg.fabric.job.JobSkills.resetCooldowns(sp);
+            saved.set(mmorpg.fabric.job.JobSkills.provider);
+            mmorpg.fabric.job.JobSkills.provider = (p, i) -> i == 0 ? MOTION_JOB : null;
+            mmorpg.fabric.job.JobSkills.send(sp);
         });
+        String want = Motions.skillMotion(SKILL_MOTION_KEY);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
         fov(ctx, 40);
         ctx.waitTicks(10);
@@ -637,10 +679,16 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_0").withSize(960, 540));
         ctx.waitTicks(2);
         String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
-        check("wp_balmung_wave".equals(cur), "weapon skill motion " + cur); // 0.48.0 무기 스킬마다 그 스킬만의 동작 (예전 공통 skill_slash)
+        check(want != null && want.equals(cur), "right click = job skill 1 motion " + cur + " (want " + want + ")");
+        check(server.computeOnServer(s -> mmorpg.fabric.job.SkillKeys.lastKey(player(s)) == mmorpg.fabric.job.SkillKeys.Key.RMB), "right click = skill key rmb on the server");
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_1").withSize(960, 540));
         ctx.waitTicks(3);
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_2").withSize(960, 540));
+        server.runOnServer(s -> {
+            mmorpg.fabric.job.JobSkills.provider = saved.get();
+            mmorpg.fabric.job.JobSkills.resetCooldowns(player(s));
+            mmorpg.fabric.job.JobSkills.send(player(s));
+        });
         fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(20);
