@@ -45,16 +45,18 @@ public final class VanillaFirstPerson {
      */
     public static volatile boolean swapFree = true;
     /**
-     * 2026-11-18 진단 (CI 44292888089 — 무기 종류 모두 영상에서 이름을 바꾸지 않는 평타 · 활 쏘기의 프레임이 움직이지 않고 이름을 바꾼 직후 1 ~ 2장만 보였음.
-     * 시범 1차 (44256605383) 에서는 움직였음 — 그 뒤 더한 것: 바닐라 휘두르기 끄기 · hand_animation_on_swap): 영상에서 둘을 따로 켜고 꺼 봄.
-     * hand_animation_on_swap false 를 넣는 무기 종류 (단검은 뺌 — 견줌) · 휘두르기 끄기 켬
+     * 2026-11-18 진단 (CI 44292888089 — 무기 종류 모두 영상에서 이름을 바꾸지 않는 평타 · 활 쏘기의 프레임이 움직이지 않고 이름을 바꾼 직후 1 ~ 2장만 보였음):
+     * 2026-11-25 결과 (CI 44296333035 — 칼 · 단검 · 활 영상을 장마다 견줌): 프레임은 셋 다 재생됨 (칼 평타 둘 · 스킬 넷, 단검 평타 · 스킬 여섯, 활 shoot 은
+     * 뒤로 당기는 3.8 픽셀 — 구운 동작 자체가 작음). 칼 영상 처음 두 휘두르기만 멈춘 것은 재생 문제가 아니라 사진기가 첫 영상 바로 앞에서 글꼴 · 모델 메모리를 재며
+     * (GC 포함) 약 2초 멈춘 동안 서버가 먼저 휘둘렀고, 따라잡는 틱마다 새로 그리지 않은 화면을 찍은 것 (그 장들은 과녁 · 불티까지 그대로). 휘두르기 끄기
+     * (attack_animation none) 를 켜고 꺼도 차이 없음. hand_animation_on_swap false 가 없는 단검은 이름이 바뀔 때마다 (스킬 앞 · 끝) 손이 내려갔다 올라옴 →
+     * 모든 무기 종류에 넣음. 구성 요소가 없는 장 (쿨타임만 도는 장) 은 이름이 없는 바탕 동작 프레임 (fallback) 이라 정상.
      */
-    public static final Set<String> SWAP_FLAG_TYPES = Set.of("sword", "greatsword", "scythe", "axe", "hammer", "lance", "scepter", "shield", "bow", "wand");
     public static volatile boolean noSwingOn = true;
 
-    /** 이 종류 무기는 이름을 바꿔도 손을 내렸다 올리지 않는지 (아이템 정의 hand_animation_on_swap false) */
+    /** 이 종류 무기는 이름을 바꿔도 손을 내렸다 올리지 않는지 (아이템 정의 hand_animation_on_swap false — 2026-11-25 모든 종류) */
     public static boolean swapFreeFor(String type) {
-        return swapFree && SWAP_FLAG_TYPES.contains(type);
+        return swapFree;
     }
     /** swapFree 가 아닐 때 스킬 동작 이름을 바꾼 뒤 쿨타임까지 틱 (다시 들기의 내려가는 3틱) */
     public static volatile int lead = 3;

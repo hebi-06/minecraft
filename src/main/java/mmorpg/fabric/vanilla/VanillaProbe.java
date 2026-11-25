@@ -1982,14 +1982,14 @@ final class VanillaProbe {
         return Math.max(1, n);
     }
 
-    /** 1인칭 영상의 장 수 (평타 넷 · 쉼 · 휘두르기 끄기를 뺀 평타 넷 (진단) · 쉼 · 대표 동작마다 스킬 하나 · Q 둘 · 평타 + 우클릭 · 끝) */
+    /**
+     * 1인칭 영상의 장 수 (평타 넷 · 쉼 · 대표 동작마다 스킬 하나 · Q 둘 · 평타 + 우클릭 · 끝). 2026-11-25 휘두르기 끄기를 뺀 평타 넷 (진단 — CI 44296333035
+     * 에서 차이 없음) 을 뺌
+     */
     static int fpPilotFrames(String type) {
         int iv = fpInterval(type);
-        return 3 + 4 * iv + 16 + FP_DIAG_WAIT + 4 * iv + 16 + fpSkills(type) * FP_SKILL_GAP + 32 + (iv + 8) + 12;
+        return 3 + 4 * iv + 16 + fpSkills(type) * FP_SKILL_GAP + 32 + (iv + 8) + 12;
     }
-
-    /** 진단: 휘두르기 끄기를 바꾼 뒤 가방을 다시 보내고 기다리는 틱 */
-    private static final int FP_DIAG_WAIT = 8;
 
     /**
      * 2026-11-18 1인칭 모션 (VFILM fp:&lt;무기 종류&gt; · fp:all · 예전 fppilot: — films/vanilla_fp_&lt;종류&gt;, 축복의 길 "1인칭 프레임: 무기 종류 모두"):
@@ -2080,22 +2080,10 @@ final class VanillaProbe {
             for (int k = 0; k < 4; k++) Tasks.later(at + k * iv, swing);
             Tasks.later(at + iv + 2, () -> say(p, "now cd"));
             at += 4 * iv + 16;
-            // 1b) 진단 (CI 44292888089 — 평타 프레임이 움직이지 않음): 바닐라 휘두르기 끄기 (attack_animation none) 를 빼고 가방을 다시 보낸 뒤 평타 넷
+            // 2026-11-25 휘두르기 끄기 진단 (끄고 켠 평타 넷) 은 뺌 — CI 44296333035 에서 차이 없음 (VanillaFirstPerson.noSwingOn 기록)
             Tasks.later(at - 2, () -> {
                 mark[0] = VanillaFirstPerson.played;
                 log("fp basic done " + type + " (played " + VanillaFirstPerson.played + " resent " + VanillaFirstPerson.resent + ")");
-                VanillaFirstPerson.noSwingOn = false;
-                if (!p.isRemoved()) p.containerMenu.sendAllDataToRemote();
-                say(p, "now fpdiag noswing-off");
-            });
-            at += FP_DIAG_WAIT;
-            for (int k = 0; k < 4; k++) Tasks.later(at + k * iv, swing);
-            at += 4 * iv + 16;
-            Tasks.later(at - 2, () -> {
-                VanillaFirstPerson.noSwingOn = true;
-                if (!p.isRemoved()) p.containerMenu.sendAllDataToRemote();
-                say(p, "now fpdiag noswing-on");
-                log("fp basic (swing on) done " + type + " (played " + VanillaFirstPerson.played + ")");
             });
             // 2) 대표 동작마다 스킬 하나
             for (int k = 0; k < plays.size(); k++) {
@@ -2121,7 +2109,7 @@ final class VanillaProbe {
                         + VanillaFirstPerson.usesInCooldown + " hand " + p.getMainHandItem());
                 VanillaFirstPerson.noSwingOn = true;
                 check("fp basic plays " + type, mark[0] >= 4);
-                check("fp skill motions play (mapped to baked) " + type, mark[1] - mark[0] >= 4 + plays.size() && (plays.isEmpty() || VanillaFirstPerson.mappedPlays >= 1));
+                check("fp skill motions play (mapped to baked) " + type, mark[1] - mark[0] >= plays.size() && (plays.isEmpty() || VanillaFirstPerson.mappedPlays >= 1));
                 check("fp drop blocked " + type, VanillaFirstPerson.drops >= 2 && p.getMainHandItem().getItem() instanceof mmorpg.fabric.RpgWeaponItem);
                 check("fp use reaches server in cooldown " + type, VanillaFirstPerson.usesInCooldown >= 1);
                 VanillaFirstPerson.enabled = wasEnabled;

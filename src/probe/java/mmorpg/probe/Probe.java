@@ -245,11 +245,8 @@ public final class Probe implements ClientModInitializer {
             // 2026-11-15 시범 2판: 시야 효과 끔 (느려짐의 화면 확대 · 축소 — 팬텀 버스트 1판 영상이 세 번 줌인 · 줌아웃) · 채팅 지움 (1인칭 영상에 [probe] 줄이 보였음)
             fovEffectsOff(mc);
             clearChat(mc);
-            if (!fontMeasured) {
-                fontMeasured = true;
-                fontMemory(mc);
-                modelMemory(mc);
-            }
+            // 글꼴 · 모델 메모리 재기는 첫 영상이 끝난 뒤 (film done) — 2026-11-25 여기서 재면 (GC 포함 약 2초) 그동안 서버가 먼저 영상 일을 해서, 묶음의 첫 영상
+            // 앞부분이 따라잡는 틱마다 새로 그리지 않은 같은 화면으로 찍혔음 (CI 44296333035 vanilla_fp_sword 0 ~ 19장)
             handMin = 2F;
             handDips = 0;
             // 2026-11-16 자바 힙 (사용자 "8gb 지원" — 런처 기본 -Xmx2G 에서 버티는지: 글꼴 그림은 힙 밖 · 힙은 엔티티 · 청크 · 모델)
@@ -429,6 +426,12 @@ public final class Probe implements ClientModInitializer {
         if (handMin <= 1F) log(String.format(java.util.Locale.ROOT, "film hand %s min %.2f dips %d", filmName, handMin, handDips));
         filmName = null;
         wait = 5;
+        if (!fontMeasured) {
+            // 첫 영상이 끝난 뒤 한 번 (다음 영상은 서버가 30틱 넘게 차린 뒤 시작 — 재는 동안 찍는 장이 없음)
+            fontMeasured = true;
+            fontMemory(mc);
+            modelMemory(mc);
+        }
     }
 
     /**
@@ -444,13 +447,7 @@ public final class Probe implements ClientModInitializer {
             String strings = cmd == null ? "-" : String.valueOf(((net.minecraft.world.item.component.CustomModelData) cmd).strings());
             boolean attackAnim = String.valueOf(held.getComponents()).contains("attack_animation");
             StringBuilder hr = new StringBuilder();
-            Object renderer = null;
-            for (java.lang.reflect.Field f : mc.gameRenderer.getClass().getDeclaredFields()) {
-                if (f.getType().getSimpleName().equals("ItemInHandRenderer")) {
-                    f.setAccessible(true);
-                    renderer = f.get(mc.gameRenderer);
-                }
-            }
+            Object renderer = handRenderer(mc);
             if (renderer != null) {
                 for (java.lang.reflect.Field f : renderer.getClass().getDeclaredFields()) {
                     if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
@@ -472,35 +469,100 @@ public final class Probe implements ClientModInitializer {
     /** 영상 동안 손 높이 (ItemInHandRenderer 주 손 — 1 = 다 올림) 가장 낮은 값 · 0.98 아래인 장 수 */
     private static float handMin = 2F;
     private static int handDips;
-    private static java.lang.reflect.Field handRendererField;
     private static java.lang.reflect.Field handHeightField;
     private static boolean handTried;
 
-    /** 주 손 높이 (리플렉션 — 이름이 판마다 바뀌면 −1) */
+    /** 주 손 높이 (리플렉션 — 손 그림을 못 찾거나 이름이 판마다 바뀌면 −1) */
     private static float handHeight(Minecraft mc) {
+        Object r = handRenderer(mc);
+        if (r == null) return -1;
         try {
             if (!handTried) {
                 handTried = true;
-                for (java.lang.reflect.Field f : mc.gameRenderer.getClass().getDeclaredFields()) {
-                    if (f.getType().getSimpleName().equals("ItemInHandRenderer")) {
-                        f.setAccessible(true);
-                        handRendererField = f;
+                java.lang.reflect.Field loose = null;
+                for (Class<?> c = r.getClass(); c != null && c != Object.class && handHeightField == null; c = c.getSuperclass()) {
+                    for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                        if (f.getType() != float.class || java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                        String n = f.getName();
+                        if (n.equals("mainHandHeight")) {
+                            handHeightField = f;
+                            break;
+                        }
+                        String low = n.toLowerCase(java.util.Locale.ROOT);
+                        if (loose == null && low.contains("mainhand") && low.contains("height") && !n.startsWith("oM")) loose = f;
                     }
                 }
-                if (handRendererField != null) {
-                    java.lang.reflect.Field h = handRendererField.getType().getDeclaredField("mainHandHeight");
-                    h.setAccessible(true);
-                    handHeightField = h;
-                }
-                log("hand height field " + (handHeightField != null));
+                if (handHeightField == null) handHeightField = loose;
+                if (handHeightField != null) handHeightField.setAccessible(true);
+                log("hand height field " + (handHeightField == null ? "none" : handHeightField.getName()));
             }
             if (handHeightField == null) return -1;
-            return handHeightField.getFloat(handRendererField.get(mc.gameRenderer));
+            return handHeightField.getFloat(r);
         } catch (ReflectiveOperationException | RuntimeException e) {
             if (handHeightField != null) log("hand height failed " + e);
             handHeightField = null;
             return -1;
         }
+    }
+
+    /**
+     * 2026-11-25 1인칭 손 그림 (ItemInHandRenderer): 26.3 에서는 GameRenderer 의 선언 필드에 없었음 (CI 44296333035 "hand height field false" — 손 높이 ·
+     * fpdiag 손 칸이 비었음) → GameRenderer · Minecraft 의 클라이언트 필드와 그 아래 한 단계에서 형 이름에 ItemInHand 가 든 것을 찾음. 처음 한 번 찾은 길 ·
+     * 실수 필드 이름을 기록
+     */
+    private static Object handRendererObj;
+    private static boolean handRendererTried;
+
+    private static Object handRenderer(Minecraft mc) {
+        if (handRendererTried) return handRendererObj;
+        handRendererTried = true;
+        StringBuilder path = new StringBuilder();
+        try {
+            handRendererObj = findHandRenderer(mc.gameRenderer, "gameRenderer", 0, path);
+            if (handRendererObj == null) handRendererObj = findHandRenderer(mc, "minecraft", 0, path);
+        } catch (RuntimeException e) {
+            log("hand renderer search failed " + e);
+        }
+        if (handRendererObj == null) {
+            log("hand renderer not found");
+            return null;
+        }
+        StringBuilder floats = new StringBuilder();
+        for (Class<?> c = handRendererObj.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) && f.getType() == float.class) floats.append(' ').append(f.getName());
+            }
+        }
+        log("hand renderer " + path + " " + handRendererObj.getClass().getName() + " floats" + floats);
+        return handRendererObj;
+    }
+
+    /** root 의 net.minecraft.client 필드 (depth 1 까지) 가운데 클래스 이름에 ItemInHand 가 든 값 */
+    private static Object findHandRenderer(Object root, String name, int depth, StringBuilder path) {
+        if (root == null) return null;
+        for (Class<?> c = root.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || f.getType().isPrimitive() || f.getType().isArray()) continue;
+                if (!f.getType().getName().startsWith("net.minecraft.client")) continue;
+                Object v;
+                try {
+                    f.setAccessible(true);
+                    v = f.get(root);
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    continue;
+                }
+                if (v == null || v == root) continue;
+                if (v.getClass().getSimpleName().contains("ItemInHand")) {
+                    path.append(name).append('.').append(f.getName());
+                    return v;
+                }
+                if (depth < 1) {
+                    Object r = findHandRenderer(v, name + "." + f.getName(), depth + 1, path);
+                    if (r != null) return r;
+                }
+            }
+        }
+        return null;
     }
 
     /**
