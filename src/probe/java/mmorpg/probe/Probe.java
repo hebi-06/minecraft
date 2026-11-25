@@ -470,6 +470,8 @@ public final class Probe implements ClientModInitializer {
     private static float handMin = 2F;
     private static int handDips;
     private static java.lang.reflect.Field handHeightField;
+    /** 높이 필드를 가진 객체 — 손 그림 자신 또는 그 아래 한 단계 (26.3) */
+    private static Object handHeightHolder;
     private static boolean handTried;
 
     /** 주 손 높이 (리플렉션 — 손 그림을 못 찾거나 이름이 판마다 바뀌면 −1) */
@@ -479,30 +481,64 @@ public final class Probe implements ClientModInitializer {
         try {
             if (!handTried) {
                 handTried = true;
-                java.lang.reflect.Field loose = null;
-                for (Class<?> c = r.getClass(); c != null && c != Object.class && handHeightField == null; c = c.getSuperclass()) {
-                    for (java.lang.reflect.Field f : c.getDeclaredFields()) {
-                        if (f.getType() != float.class || java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
-                        String n = f.getName();
-                        if (n.equals("mainHandHeight")) {
-                            handHeightField = f;
+                handHeightHolder = r;
+                handHeightField = heightField(r);
+                if (handHeightField == null) {
+                    // 2026-11-25 CI 45594830458: 26.3 FirstPersonHandsAndItemsRenderer 에는 실수 필드가 없음 → 그 아래 한 단계 (클라이언트 형 · 그 배열의 첫 칸)
+                    for (Object v : clientChildren(r)) {
+                        java.lang.reflect.Field hf = heightField(v);
+                        if (hf != null) {
+                            handHeightField = hf;
+                            handHeightHolder = v;
                             break;
                         }
-                        String low = n.toLowerCase(java.util.Locale.ROOT);
-                        if (loose == null && low.contains("mainhand") && low.contains("height") && !n.startsWith("oM")) loose = f;
                     }
                 }
-                if (handHeightField == null) handHeightField = loose;
                 if (handHeightField != null) handHeightField.setAccessible(true);
-                log("hand height field " + (handHeightField == null ? "none" : handHeightField.getName()));
+                log("hand height field " + (handHeightField == null ? "none" : handHeightHolder.getClass().getName() + "." + handHeightField.getName()));
             }
             if (handHeightField == null) return -1;
-            return handHeightField.getFloat(r);
+            return handHeightField.getFloat(handHeightHolder);
         } catch (ReflectiveOperationException | RuntimeException e) {
             if (handHeightField != null) log("hand height failed " + e);
             handHeightField = null;
             return -1;
         }
+    }
+
+    /** o 의 실수 필드 가운데 mainHandHeight (없으면 이름에 mainhand · height 가 든 것, 이전 틱 값 oMainHandHeight 는 뺌) */
+    private static java.lang.reflect.Field heightField(Object o) {
+        java.lang.reflect.Field loose = null;
+        for (Class<?> c = o.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                if (f.getType() != float.class || java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                String n = f.getName();
+                if (n.equals("mainHandHeight")) return f;
+                String low = n.toLowerCase(java.util.Locale.ROOT);
+                if (loose == null && low.contains("mainhand") && low.contains("height") && !n.startsWith("oM")) loose = f;
+            }
+        }
+        return loose;
+    }
+
+    /** o 의 net.minecraft.client 형 필드 값 (배열이면 첫 칸) — 읽지 못하는 필드는 건너뜀 */
+    private static java.util.List<Object> clientChildren(Object o) {
+        java.util.List<Object> out = new java.util.ArrayList<>();
+        for (Class<?> c = o.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                Class<?> t = f.getType().isArray() ? f.getType().getComponentType() : f.getType();
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers()) || t.isPrimitive() || !t.getName().startsWith("net.minecraft.client")) continue;
+                try {
+                    f.setAccessible(true);
+                    Object v = f.get(o);
+                    if (v != null && v.getClass().isArray()) v = java.lang.reflect.Array.getLength(v) > 0 ? java.lang.reflect.Array.get(v, 0) : null;
+                    if (v != null && v != o) out.add(v);
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    // 모듈 · 접근 제한 — 건너뜀
+                }
+            }
+        }
+        return out;
     }
 
     /**
@@ -536,13 +572,14 @@ public final class Probe implements ClientModInitializer {
             log("hand renderer not found | gameRenderer fields" + types);
             return null;
         }
-        StringBuilder floats = new StringBuilder();
+        // 2026-11-25 CI 45594830458: 26.3 손 그림에는 실수 필드가 없었음 → 필드 모두 (이름:형) 를 기록
+        StringBuilder fields = new StringBuilder();
         for (Class<?> c = handRendererObj.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
             for (java.lang.reflect.Field f : c.getDeclaredFields()) {
-                if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) && f.getType() == float.class) floats.append(' ').append(f.getName());
+                if (!java.lang.reflect.Modifier.isStatic(f.getModifiers())) fields.append(' ').append(f.getName()).append(':').append(f.getType().getSimpleName());
             }
         }
-        log("hand renderer " + path + " " + handRendererObj.getClass().getName() + " floats" + floats);
+        log("hand renderer " + path + " " + handRendererObj.getClass().getName() + " fields" + fields);
         return handRendererObj;
     }
 
