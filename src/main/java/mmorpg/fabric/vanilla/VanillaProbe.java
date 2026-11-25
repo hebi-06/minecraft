@@ -1928,8 +1928,18 @@ final class VanillaProbe {
         mmorpg.fabric.job.CommonSkills.resetCooldown(p);
         mmorpg.fabric.RpgHealth.healFull(p);
         p.removeAllEffects();
+        // 2026-11-25 앞으로 움직이는 이동기는 과녁 무리를 그 거리만큼 뒤로 (끝에서 가운데 과녁과 1.2칸 — 밀침은 그대로 닿음): 예전 자리에서는 무리 속으로 들어가
+        // 따라가는 카메라와 몸 사이를 과녁이 가렸음 (CI 45586370783 스틸 차지 · 스파크 블링크 · 아이스 슬라이드 · 보울더 롤)
+        double moveLen = switch (id) {
+            case "blaze_leap" -> 7.0;
+            case "spark_blink" -> 6.0;
+            case "ice_slide" -> 8.0;
+            case "steel_charge", "boulder_roll" -> 5.0;
+            default -> 0.0;
+        };
+        double push = Math.max(0.0, moveLen - 1.5);
         for (double[] t : JOB_TARGETS) {
-            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1]), 180F);
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(t[0], y, t[1] + push), 180F);
             if (e instanceof net.minecraft.world.entity.Mob m) {
                 m.setNoAi(true);
                 m.addTag(Monsters.FILM_TARGET_TAG);

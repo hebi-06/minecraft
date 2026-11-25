@@ -524,7 +524,16 @@ public final class Probe implements ClientModInitializer {
             log("hand renderer search failed " + e);
         }
         if (handRendererObj == null) {
-            log("hand renderer not found");
+            // 2026-11-25 CI 45586370783 도 못 찾음 → 다음 판을 위해 GameRenderer 의 클라이언트 필드 형을 기록
+            StringBuilder types = new StringBuilder();
+            for (Class<?> c = mc.gameRenderer.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
+                for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                    if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) && f.getType().getName().startsWith("net.minecraft.client")) {
+                        types.append(' ').append(f.getName()).append(':').append(f.getType().getSimpleName());
+                    }
+                }
+            }
+            log("hand renderer not found | gameRenderer fields" + types);
             return null;
         }
         StringBuilder floats = new StringBuilder();

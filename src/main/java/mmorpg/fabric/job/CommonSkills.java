@@ -708,9 +708,18 @@ public final class CommonSkills {
         PhantomFx.ring(level, L, aim, 2.0, 3, 8, null, 0.8);
         JobFx.halo(level, V.up(aim, 0.05), 2.0, ICE, ICE_CORE, 0.5, Opt.of());
         Vec3 sky = V.up(aim, 9);
-        // 떨어지는 얼음 창 (칠한 icelance — 가는 쪽으로 누움 · 18칸/초)
-        PhantomFx.paintedWith(level, PhantomFx.PAINT.get("jicelance"), L, 0, sky, Opt.of("dir", V.DOWN, "speed", 18.0, "size", 1.6, "life", 0.5, "frames", 4.0, "fps",
-                12.0, "loop", true, "alpha", 1.0));
+        // 2026-11-25 큰 우박 = 3D 얼음 결정 (만년빙하 얼음 가시 모델 · 끝이 아래 · 2.6칸): 하늘에서 9틱에 떨어져 끝이 땅에 닿음 → 깨지며 가라앉음.
+        // 예전 칠한 얼음 창 (icelance 1.6칸) 은 영상 (CI 45586370783) 에서 가는 바늘처럼 보였음 — 꼬리 빛으로만 남김
+        double hh = 2.6;
+        double hs = mmorpg.fabric.rune.RuneProps.scaleFor(hh, mmorpg.fabric.rune.RuneProps.ICE_SPIKE_H);
+        var hailFx = mmorpg.fabric.rune.RuneProps.fx(level, sky, 18);
+        var hail = mmorpg.fabric.rune.RuneProps.prop(hailFx, mmorpg.fabric.rune.RuneProps.ICE_SPIKE, V.up(aim, 9 + hh), new double[] {8, 0, 8},
+                mmorpg.fabric.rune.RuneProps.along(V.DOWN, new Vec3(1, 0, 0)), hs);
+        hailFx.on(1, () -> hail.to(V.up(aim, hh - 0.1), null, hs, 9));
+        hailFx.on(11, () -> hail.to(V.up(aim, hh * 0.2), null, hs * 0.45, 4));
+        hailFx.on(15, hail::remove);
+        PhantomFx.paintedWith(level, PhantomFx.PAINT.get("jicelance"), L, 0, sky, Opt.of("dir", V.DOWN, "speed", 18.0, "size", 0.9, "life", 0.5, "frames", 4.0, "fps",
+                12.0, "loop", true, "alpha", 0.6));
         WyrdKit.trail(level, L, sky, V.up(aim, 0.5), 10, 1.2, null);
         sound(level, "block.powder_snow.fall", aim, 0.6, 1.0);
         RuneKit.later(10, () -> {
@@ -789,7 +798,21 @@ public final class CommonSkills {
         Predicate<ServerPlayer> hide = PhantomFx.hide1p(sp);
         Vec3 start = sp.position();
         double ground = start.y;
-        PhantomFx.pillar(level, L, start, 4.5, 2, hide);
+        // 2026-11-25 바위 기둥 = 3D 바위 가시 (금 사이 호박빛): 끝이 발밑을 따라 7칸 솟음 (8틱 — 몸과 같은 빠르기) → 내려앉는 동안 함께 가라앉음.
+        // 예전 칠한 기둥 (pillar — 주황 빛기둥) 은 영상 (CI 45586370783) 에서 바위가 아니라 불기둥처럼 보였음
+        double ph = 7.6;
+        double ps = mmorpg.fabric.rune.RuneProps.scaleFor(ph, mmorpg.fabric.rune.RuneProps.ROCK_SPIKE_H);
+        var colFx = mmorpg.fabric.rune.RuneProps.fx(level, start, 36);
+        var col = mmorpg.fabric.rune.RuneProps.prop(colFx, mmorpg.fabric.rune.RuneProps.ROCK_SPIKE, V.up(start, -ph), new double[] {8, 0, 8},
+                mmorpg.fabric.rune.RuneProps.along(V.UP, new Vec3(Math.cos(Kit.rand() * 6.3), 0, Math.sin(Kit.rand() * 6.3))), ps, ROCK_CORE);
+        colFx.on(1, () -> col.to(V.up(start, 7.0 - ph + 0.05), null, ps, 8));
+        colFx.on(14, () -> col.to(V.up(start, -ph * 0.95), null, ps * 0.85, 12));
+        colFx.on(27, col::remove);
+        for (int i = 0; i < 3; i++) {
+            double a = Kit.rand() * Math.PI * 2;
+            mmorpg.fabric.rune.RuneProps.rockSpike(level, groundOf(level, new Vec3(start.x + Math.cos(a) * 1.3, start.y + 0.5, start.z + Math.sin(a) * 1.3)),
+                    1.0 + Kit.rand() * 0.5, 10, Math.toDegrees(a), ROCK_CORE);
+        }
         JobFx.spikeLife(level, start, 1.4, 0.1, 0.4, JobFx.hide1p(sp), ROCK, ROCK_CORE);
         PhantomFx.crackS(level, L, start, 2.6);
         PhantomFx.rocks(level, V.up(start, 0.4), 6, 3.0, 0.3);

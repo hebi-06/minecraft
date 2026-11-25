@@ -67,6 +67,37 @@ public final class BasicFx {
         return L != null ? L : PhantomFx.STEEL;
     }
 
+    /**
+     * 2026-11-25 베기 그림 (slash · slashm — 2 × 2 조각) 이 없는 묶음 (사제 성광 · 세인트 꽃잎 · 매지션 비전 · 팬텀 아처 — 그 직업 스킬은 베기를 쓰지 않아 그리지
+     * 않았음) 은 빛이 가까운 묶음의 베기로: 성광 · 꽃잎 → 금빛 (아스널 킹 묶음), 그 밖 → 강철. CI 45586370783 게임 시험에서 사제 평타마다
+     * "vfx sprite el_holy_slashm_00" 경고가 나고 그 평타의 연출이 통째로 빠졌음
+     */
+    static PhantomFx.Lib slashLib(PhantomFx.Lib L) {
+        if (PhantomFx.hasArt(L, "slash_00") && PhantomFx.hasArt(L, "slashm_00")) return L;
+        return L == PhantomFx.HOLY || L == PhantomFx.PETALS ? PhantomFx.GOLD : PhantomFx.STEEL;
+    }
+
+    /** 큰 땅 충격파 (shock — 2 × 2) 가 있는 묶음 (비전 · 혼은 작은 충격파만): 없으면 베기 묶음 → 강철 */
+    static PhantomFx.Lib shockLib(PhantomFx.Lib L) {
+        if (PhantomFx.hasArt(L, "shock_00")) return L;
+        PhantomFx.Lib S = slashLib(L);
+        return PhantomFx.hasArt(S, "shock_00") ? S : PhantomFx.STEEL;
+    }
+
+    /** 곧은 칼빛 (창 찌르기 — 일섬 cut, 없으면 긴 일섬 cutl, 둘 다 없으면 베기 묶음의 것) */
+    private static void cut(ServerLevel level, PhantomFx.Lib L, Vec3 from, Vec3 to, int hold, boolean burst, Predicate<ServerPlayer> who) {
+        for (PhantomFx.Lib C : new PhantomFx.Lib[] {L, slashLib(L), PhantomFx.STEEL}) {
+            if (PhantomFx.hasArt(C, "cut")) {
+                PhantomFx.cut(level, C, from, to, hold, burst, who, "cut");
+                return;
+            }
+            if (PhantomFx.hasArt(C, "cutl")) {
+                PhantomFx.cut(level, C, from, to, hold, burst, who, "cutl");
+                return;
+            }
+        }
+    }
+
     private static void draw(ServerPlayer sp, PhantomFx.Lib L, Obj spec, double radius, boolean finisher) {
         ServerLevel level = sp.level();
         Predicate<ServerPlayer> hide = PhantomFx.hide1p(sp);
@@ -81,7 +112,7 @@ public final class BasicFx {
             Vec3 hand = RuneKit.handOf(sp).hand();
             double reach = spec.numOr("reach", 4.0) * (finisher ? 1.15 : 1.0);
             Vec3 end = V.add(hand, look, reach);
-            PhantomFx.cut(level, L, hand, end, finisher ? 5 : 3, finisher, hide);
+            cut(level, L, hand, end, finisher ? 5 : 3, finisher, hide);
             PhantomFx.flash(level, L, end, 1.2 * k, hide);
             WyrdKit.sparks(level, L, end, finisher ? 10 : 5, 1.2 * k, hide);
             // 2026-11-18 주인의 1인칭 (몸 앞 그림은 1인칭에서 숨김 — 영상 vanilla_motion_lance 에서 1인칭 찌르기가 밋밋): 오른쪽 아래 손 자리에서
@@ -89,9 +120,9 @@ public final class BasicFx {
             Vec3 up = JobFx.screenUp(look);
             Vec3 right = V.rightOf(V.flat(look));
             Vec3 from = V.add(V.add(V.add(eye, look, 0.9), right, 0.32), up, -0.28);
-            PhantomFx.cut(level, L, from, V.add(eye, look, 1.0 + reach), finisher ? 4 : 2, finisher, PhantomFx.only1p(sp));
+            cut(level, L, from, V.add(eye, look, 1.0 + reach), finisher ? 4 : 2, finisher, PhantomFx.only1p(sp));
             PhantomFx.flash(level, L, V.add(eye, look, 2.4), 0.8 * k, PhantomFx.only1p(sp));
-            if (finisher) PhantomFx.shock(level, L, sp.position(), 3.0, 1, hide);
+            if (finisher) PhantomFx.shock(level, shockLib(L), sp.position(), 3.0, 1, hide);
             return;
         }
         if (spec.has("model") && spec.str("model").equals("slash_bash")) {
@@ -109,14 +140,15 @@ public final class BasicFx {
             tilt = spec.truthy("mirror") ? 180 : 0; // 가로 베기 (반대쪽 = 뒤집음)
         }
         double size = (0.62 + radius * 0.16) * k;
-        CommonSkills.eyeSlash(sp, L, 1.45, 0.2, size, tilt, finisher ? 0.42 : 0.32);
+        PhantomFx.Lib S = slashLib(L);
+        CommonSkills.eyeSlash(sp, S, 1.45, 0.2, size, tilt, finisher ? 0.42 : 0.32);
         PhantomFx.embers(level, L, tip, finisher ? 10 : 5, 0.9 * k, 0.3, 12);
         WyrdKit.sparks(level, L, tip, finisher ? 8 : 4, 1.1 * k, hide);
         if (finisher) {
             // 마무리: 반대로 한 번 더 (겹 베기) · 섬광 · 발밑 충격 고리
-            RuneKit.later(2, () -> CommonSkills.eyeSlash(sp, L, 1.6, 0.25, size * 1.12, tilt + 180 + 14, 0.4));
+            RuneKit.later(2, () -> CommonSkills.eyeSlash(sp, S, 1.6, 0.25, size * 1.12, tilt + 180 + 14, 0.4));
             PhantomFx.flash(level, L, tip, 2.0, hide);
-            PhantomFx.shock(level, L, sp.position(), 3.6, 1, hide);
+            PhantomFx.shock(level, shockLib(L), sp.position(), 3.6, 1, hide);
         }
     }
 }
