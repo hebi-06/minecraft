@@ -14,20 +14,24 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 2026-11-07 원소 반응 그림 (ElementSystem): 머리 위 원소 그림 (rfx_jelem — 불꽃 · 물방울 · 번개 · 눈꽃 · 바위, 빛 0 ~ 4 · 심지 5 ~ 9 — 적마다 solo 로 바꿔 끼움),
- * 묻을 때 작은 빛, 반응마다 다른 그림 · 소리 · 이름 (피해 반응은 숫자 앞에 이름 — DamageNumbers REACT_*, 나머지는 이름만 떠오름).
+ * 2026-11-07 원소 반응 그림 (ElementSystem): 머리 위 원소 그림 (도트 원소 표시 el_icon_elem — 불꽃 · 물방울 · 번개 · 눈꽃 · 바위), 묻을 때 작은 빛, 반응마다
+ * 다른 그림 · 소리 · 이름 (피해 반응은 숫자 앞에 이름 — DamageNumbers REACT_*, 나머지는 이름만 떠오름).
+ * 2026-11-25 머리 위 그림은 적마다 하나를 그 적에 태움 (vfx.Badge — 사용자 "속성이 날라다니면서 다른 속성으로 바뀌고 난리도 아니거든"): 묻으면 띄우고, 원소가
+ * 바뀌면 칸만 바꾸고 (잠깐 크게), 반응 · 끝남 · 죽음이면 바로 지움.
  */
 final class ElementFx {
     private ElementFx() {}
 
-    /** 머리 위 원소 그림 (칸 = 원소의 cell · 심지 = cell + 5) */
-    static final String ICON = "jelem";
-    static final int ICON_CELLS = 5;
     /** 2026-11-16 도트 원소 표시 그림판 (불 · 물 · 전기 · 얼음 · 바위 — cell 차례) */
     static final String ICON_ART = "el_icon_elem";
-    /** 적마다 하나 (owner = 그 적) — 빛 · 심지 */
-    private static final double SOLO_GLOW = 7301;
-    private static final double SOLO_CORE = 7302;
+    /** 머리 위 원소 그림 높이 (칸) · 곧 사라질 때 (깜빡임) · 묻거나 바뀔 때 잠깐 */
+    static final double ICON_H = 0.6;
+    static final double ICON_BLINK = 0.44;
+    static final double ICON_POP = 0.84;
+    /** 탄 자리 (머리 꼭대기 — 모드 없는 클라이언트는 대역 갑옷 거치대 꼭대기) 에서 그림 가운데까지: 이름표 두 줄 (약 0.5칸) 위 */
+    static final double ICON_LIFT = 0.85;
+    /** 적마다 머리 위 그림 하나 */
+    private static final java.util.Map<java.util.UUID, mmorpg.fabric.vfx.Badge> BADGE = new java.util.HashMap<>();
     private static final double[] STEAM = {0.86, 0.9, 0.96};
     private static final double[] LAVA_GLOW = {1.0, 0.3, 0.04};
     private static final double[] LAVA_CORE = {1.0, 0.82, 0.32};
@@ -44,27 +48,65 @@ final class ElementFx {
         return e == null ? RuneKit.WHITE : e.core();
     }
 
-    /** 머리 위 원소 그림 (blink = 곧 사라짐 — 작게) */
-    static void icon(LivingEntity e, String el, boolean blink, double life) {
-        if (!(e.level() instanceof ServerLevel level)) return;
+    /**
+     * 머리 위 원소 그림 (적마다 하나 — 그 적에 태움): 없으면 띄우고 (작게 → 크게), 다른 원소면 칸을 바꿈. pop = 잠깐 크게 (새로 묻음 · 바뀜 — 같은 원소가 다시 묻을
+     * 때는 그대로)
+     */
+    static void badge(LivingEntity e, String el, boolean pop) {
         Elements.Element x = Elements.get(el);
-        if (x == null) return;
-        Vec3 at = RuneKit.overHead(e, 1.0);
-        double size = blink && (Tasks.now() / 5) % 2 == 0 ? 0.22 : 0.3;
-        Opt o = Opt.of("size", size, "life", life, "fade", 0.12, "vel", RuneKit.entVel(e), "owner", (double) e.getId());
-        // 2026-11-16 위르드식: 처음부터 도트로 그린 원소 표시 (tools/jobvfx/icons.py — 피해 숫자와 같은 도트, 예전 rfx_jelem 의 빛 · 심지 두 장 대신 한 장)
-        if (mmorpg.fabric.vfx.Vfx.hasSheet(ICON_ART) && x.cell() < mmorpg.fabric.vfx.Vfx.sheet(ICON_ART).frames()) {
-            PhantomFx.rfx(level, ICON_ART, 1, x.cell(), at, Opt.of("size", size, "life", life, "fade", 0.12, "vel", RuneKit.entVel(e), "frames", 1.0), PhantomFx.BILL, 1);
+        if (x == null || !mmorpg.fabric.vfx.Vfx.hasSheet(ICON_ART) || x.cell() >= mmorpg.fabric.vfx.Vfx.sheet(ICON_ART).frames()) return;
+        mmorpg.fabric.vfx.Badge b = BADGE.get(e.getUUID());
+        if (b != null && (b.gone() || b.owner() != e)) {
+            b.remove();
+            BADGE.remove(e.getUUID());
+            b = null;
+        }
+        if (b == null) {
+            b = mmorpg.fabric.vfx.Badge.on(e, ICON_ART, x.cell(), ICON_H, ICON_LIFT);
+            if (b != null) BADGE.put(e.getUUID(), b);
             return;
         }
-        RuneKit.rfx(level, ICON, at, o.with("color", x.glow(), "cell", (double) x.cell(), "alpha", 0.95, "solo", SOLO_GLOW));
-        RuneKit.rfx(level, ICON, at, o.with("color", x.core(), "cell", (double) (ICON_CELLS + x.cell()), "alpha", 1.0, "solo", SOLO_CORE));
+        boolean changed = b.frame() != x.cell();
+        b.frame(x.cell());
+        if (pop || changed) b.pop(ICON_POP, ICON_H);
     }
 
-    /** 원소가 묻음 (fresh = 처음 묻음 — 테가 퍼짐): 몸에 작은 빛 · 머리 위 그림을 바로 */
+    /** 머리 위 원소 그림을 바로 지움 (반응 · 끝남 · 죽음) */
+    static void unbadge(LivingEntity e) {
+        if (e == null) return;
+        mmorpg.fabric.vfx.Badge b = BADGE.remove(e.getUUID());
+        if (b != null) b.remove();
+    }
+
+    /** 모든 원소 그림을 지움 (시험 · 서버 멈춤) */
+    static void unbadgeAll() {
+        for (mmorpg.fabric.vfx.Badge b : BADGE.values()) b.remove();
+        BADGE.clear();
+    }
+
+    /** 틱마다 (ElementSystem.tick): 곧 사라지면 (blink) 5틱마다 작게 ↔ 크게 — 잠깐 크게 한 뒤가 아니면 */
+    static void badgeTick(LivingEntity e, boolean blink) {
+        mmorpg.fabric.vfx.Badge b = BADGE.get(e.getUUID());
+        if (b == null || b.gone() || b.busy()) return;
+        b.size(blink && (Tasks.now() / 5) % 2 == 0 ? ICON_BLINK : ICON_H);
+    }
+
+    /** 시험: e 머리 위 원소 그림의 칸 (원소 cell — 없으면 −1) */
+    static int badgeCell(LivingEntity e) {
+        mmorpg.fabric.vfx.Badge b = e == null ? null : BADGE.get(e.getUUID());
+        return b == null || b.gone() ? -1 : b.frame();
+    }
+
+    /** 시험: 떠 있는 원소 그림 수 */
+    static int badges() {
+        BADGE.values().removeIf(mmorpg.fabric.vfx.Badge::gone);
+        return BADGE.size();
+    }
+
+    /** 원소가 묻음 (fresh = 새로 묻음 · 다른 원소로 바뀜 — 테가 퍼짐): 몸에 작은 빛 · 머리 위 그림 */
     static void applied(LivingEntity e, String el, boolean fresh) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        icon(e, el, false, 0.8);
+        badge(e, el, fresh);
         if (!RuneKit.fxQuota("elemApply", 6)) return;
         Vec3 at = Kit.bodyPoint(e);
         SkillFx.burst(level, at, glow(el), fresh ? 0.75 : 0.5, 0.22);

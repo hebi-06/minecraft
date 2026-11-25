@@ -27,8 +27,9 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 2026-11-07 원소 반응 (core.Elements — rules_more.json ELEMENTS): 원소 스킬 (직업 스킬 jobs.json elem · 룬 RUNE_SPREAD.runes elem) 을 쓰는 동안의 원소 맥락
- * (Tasks.elem — JobSystem · RuneCast 가 정하고 later 가 이어 줌) 에서 들어간 직업 · 룬 피해가 맞은 적에 원소를 묻힘 (6초 · 머리 위 원소 그림). 같은 원소면 다시 6초,
- * 다른 원소가 묻은 적이면 반응 (두 원소를 지움 · 같은 적은 2초에 한 번 — 그동안 묻은 원소는 그대로): 증발 · 쇄빙 (즉시 피해) · 과부하 · 열충격 (둘레 폭발) · 감전 · 빙결
+ * (Tasks.elem — JobSystem · RuneCast 가 정하고 later 가 이어 줌) 에서 들어간 직업 · 룬 피해가 맞은 적에 원소를 묻힘 (6초 · 머리 위 원소 그림 — 그 적에 태움). 같은 원소면
+ * 다시 6초, 다른 원소가 묻은 적이면 반응 (두 원소 · 머리 위 그림을 지움 · 같은 적은 2초에 한 번 — 2026-11-25 그동안 · 반응이 없는 짝이면 마지막에 묻은 원소만 남음):
+ * 증발 · 쇄빙 (즉시 피해) · 과부하 · 열충격 (둘레 폭발) · 감전 · 빙결
  * (기절) · 진흙 (묶음) · 초전도 (둘레 받는 피해 +5%) · 용암 (불타는 땅) · 자력 (끌어모음). 반응의 위력 = 반응을 일으킨 사람의 공격력 (직업 위력 · 룬 위력 — 스킬 배율 · 피해
  * 배율 없이) × 스탯 트리 공격력 · 가호 × power (사용자 "내 공격력의 % (고정)"). 보스는 기절 · 묶음 대신 구속 II · 끌려오지 않음. 플레이어 (결투) 에게는 묻지 않음
  */
@@ -54,10 +55,6 @@ public final class ElementSystem {
     private static final Map<UUID, Long> ICD = new HashMap<>();
     /** 시험 · 사진첩: 터진 반응 (마지막 64 — "id@엔티티 번호") */
     public static final Deque<String> LOG = new ArrayDeque<>();
-    /** 한 틱에 다시 그리는 머리 위 원소 그림 수 (파티클 예산) */
-    private static final int ICONS_PER_TICK = 12;
-    /** 머리 위 원소 그림을 다시 그리는 틱 (수명은 조금 더 길게 — 같은 그림을 solo 로 바꿔 끼움) */
-    private static final int ICON_EVERY = 10;
     private static long ticks;
     /** 게임 시험 · 영상의 과녁 꼬리표 (TestDummies.TAG) — 원소는 {@link #TEST_ELEMENTS} 가 같이 있을 때만 */
     public static final String TEST_DUMMY = "mmorpg_test_dummy";
@@ -152,11 +149,19 @@ public final class ElementSystem {
             ElementFx.applied(e, el, false);
             return null;
         }
-        if (!ignoreIcd && ICD.getOrDefault(id, Long.MIN_VALUE) > now) return null; // 반응을 기다림: 묻은 원소는 그대로
-        Elements.Reaction r = Elements.reaction(a.el, el);
-        if (r == null) return null;
+        // 2026-11-25 사용자 "속성 두개 뭍이면 해당 속성 반응이 터지는 이펙트가 나오고 속성이 사라지게 해줘 서로 반응 안하면 마지막에 뭍인거만 남게":
+        // 반응하지 않으면 (같은 적 2초 대기 · 반응이 없는 짝) 마지막에 묻은 원소만 남음 (예전: 대기 중에는 먼저 묻은 원소가 그대로 · 친 원소는 버림)
+        boolean waiting = !ignoreIcd && ICD.getOrDefault(id, Long.MIN_VALUE) > now;
+        Elements.Reaction r = waiting ? null : Elements.reaction(a.el, el);
+        if (r == null) {
+            AURA.put(id, new Aura(e, el, now + Elements.auraTicks()));
+            ElementFx.applied(e, el, true);
+            return null;
+        }
+        // 반응: 두 원소를 지우고 머리 위 그림도 바로 지운 뒤 터짐
         AURA.remove(id);
         ICD.put(id, now + Elements.icdTicks());
+        ElementFx.unbadge(e);
         react(sp, e, r, a.el, el, power, job);
         return r;
     }
@@ -252,18 +257,16 @@ public final class ElementSystem {
         if (AURA.isEmpty() && ICD.isEmpty()) return;
         long now = Tasks.now();
         long n = ticks++;
-        int drawn = 0;
         for (Iterator<Aura> it = AURA.values().iterator(); it.hasNext(); ) {
             Aura a = it.next();
             LivingEntity e = a.e;
             if (a.until <= now || e.isRemoved() || !e.isAlive()) {
                 it.remove();
+                ElementFx.unbadge(e);
                 continue;
             }
-            if (drawn < ICONS_PER_TICK && (n + e.getId()) % ICON_EVERY == 0) {
-                drawn++;
-                ElementFx.icon(e, a.el, a.until - now <= 20, (ICON_EVERY + 6) / 20.0);
-            }
+            // 2026-11-25 머리 위 그림은 묻을 때 한 번 띄워 그 적에 태움 (ElementFx.badge) — 여기서는 곧 사라질 때 깜빡임만
+            ElementFx.badgeTick(e, a.until - now <= 20);
         }
         if (n % 40 == 0) ICD.values().removeIf(t -> t <= now);
     }
@@ -286,17 +289,35 @@ public final class ElementSystem {
         return t == null ? 0 : Math.max(0, t - Tasks.now());
     }
 
-    /** 시험 · 사진첩: 묻은 원소 · 반응 대기 · 기록을 모두 지움 */
+    /** 시험: e 머리 위 원소 그림이 보이는 원소 (그림 칸 — 없으면 null) */
+    public static String iconOf(LivingEntity e) {
+        int cell = ElementFx.badgeCell(e);
+        if (cell < 0) return null;
+        for (String id : Elements.order()) {
+            Elements.Element x = Elements.get(id);
+            if (x != null && x.cell() == cell) return id;
+        }
+        return null;
+    }
+
+    /** 시험: 떠 있는 머리 위 원소 그림 수 */
+    public static int icons() {
+        return ElementFx.badges();
+    }
+
+    /** 시험 · 사진첩: 묻은 원소 · 반응 대기 · 기록 · 머리 위 그림을 모두 지움 */
     public static void testClear() {
         AURA.clear();
         ICD.clear();
         LOG.clear();
+        ElementFx.unbadgeAll();
     }
 
-    /** 시험: 이 적의 원소 · 반응 대기만 지움 */
+    /** 시험: 이 적의 원소 · 반응 대기 · 머리 위 그림만 지움 */
     public static void clearOf(LivingEntity e) {
         if (e == null) return;
         AURA.remove(e.getUUID());
         ICD.remove(e.getUUID());
+        ElementFx.unbadge(e);
     }
 }

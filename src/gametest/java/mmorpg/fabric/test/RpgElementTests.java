@@ -28,8 +28,9 @@ import net.minecraft.world.phys.AABB;
  * 2026-11-07 원소 반응 게임 시험 (core.Elements · job.ElementSystem — 환경 mmorpg:element):
  * <ul>
  * <li>원소 스킬을 쓰는 동안 들어간 직업 피해가 원소를 묻힘 (피닉스 배시 — 불 · 6초) · 무속성 맥락 · 룬 피해 (맥락의 원소) · 같은 원소면 다시 6초</li>
- * <li>반응: 증발 (즉시 피해 = 공격력 × 2.5 · 숫자 앞 "증발" · 두 원소를 지움) · 같은 적 2초에 한 번 (그동안 묻은 원소는 그대로) · 감전 (기절) · 초전도 (둘레 받는 피해
- * +10%) · 과부하 (둘레 3칸 1.5씩) · 용암 (불타는 땅 0.3 × 6) · 진흙 (묶음) · 자력 (밀 수 있는 적을 끌어모음)</li>
+ * <li>반응: 증발 (즉시 피해 = 공격력 × 2.5 · 숫자 앞 "증발" · 두 원소 · 머리 위 그림을 지움) · 같은 적 2초에 한 번 (2026-11-25 그동안은 마지막에 묻은 원소만 남음 —
+ * 머리 위 그림도 그 원소로 하나) · 감전 (기절) · 초전도 (둘레 받는 피해 +5%) · 과부하 (둘레 3칸 1.5씩) · 용암 (불타는 땅 0.3 × 6) · 진흙 (묶음) · 자력 (밀 수 있는 적을
+ * 끌어모음)</li>
  * <li>시험 과녁은 꼬리표 mmorpg_elements 가 있을 때만 원소가 묻음 (옛 시험의 숫자 그대로)</li>
  * </ul>
  */
@@ -87,32 +88,38 @@ public final class RpgElementTests {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(a), want), "bash " + TestDummies.dealt(a) + " vs " + want);
             h.assertTrue("fire".equals(ElementSystem.auraOf(a)) && ElementSystem.auraLeft(a) > 100 && ElementSystem.auraLeft(a) <= 120, "fire attached: "
                     + ElementSystem.auraOf(a) + " " + ElementSystem.auraLeft(a));
-            h.assertTrue(ElementSystem.auraOf(plain) == null, "plain test dummy: no element");
-            // 물 → 증발 (즉시 피해 2.5 · 두 원소를 지움 · 2초 대기)
+            h.assertTrue("fire".equals(ElementSystem.iconOf(a)), "fire icon over the head: " + ElementSystem.iconOf(a));
+            h.assertTrue(ElementSystem.auraOf(plain) == null && ElementSystem.iconOf(plain) == null, "plain test dummy: no element");
+            // 물 → 증발 (즉시 피해 2.5 · 두 원소 · 머리 위 그림을 지움 · 2초 대기)
             mark[0] = TestDummies.dealt(a);
             Elements.Reaction r = ElementSystem.apply(sp, a, "water", P, true, false);
             h.assertTrue(r == vap, "fire + water = vaporize: " + r);
             double got = TestDummies.dealt(a) - mark[0];
             h.assertTrue(RpgJobTests.near(got, base * 2.5), "vaporize " + got + " vs " + base * 2.5);
             h.assertTrue(ElementSystem.auraOf(a) == null && ElementSystem.icdLeft(a) == 40, "both elements gone · icd 2s " + ElementSystem.icdLeft(a));
+            h.assertTrue(ElementSystem.iconOf(a) == null, "reaction removes the icon at once: " + ElementSystem.iconOf(a));
             h.assertTrue(hasText(h, a, "증발"), "number shows 증발");
-            // 대기 중: 불이 다시 묻고 물은 반응하지 않음 (불은 그대로)
-            h.assertTrue(ElementSystem.apply(sp, a, "fire", P, true, false) == null && "fire".equals(ElementSystem.auraOf(a)), "fire again");
+            // 2026-11-25 대기 중 (반응하지 않음): 마지막에 묻은 원소만 남음 — 불이 묻고 → 물이 묻으면 물 (피해 없음 · 그림도 물로)
+            h.assertTrue(ElementSystem.apply(sp, a, "fire", P, true, false) == null && "fire".equals(ElementSystem.auraOf(a)) && "fire".equals(ElementSystem.iconOf(a)),
+                    "fire again (icon back)");
             mark[0] = TestDummies.dealt(a);
-            h.assertTrue(ElementSystem.apply(sp, a, "water", P, true, false) == null && "fire".equals(ElementSystem.auraOf(a)) && TestDummies.dealt(a) == mark[0],
-                    "no reaction while waiting (fire stays)");
+            h.assertTrue(ElementSystem.apply(sp, a, "water", P, true, false) == null && "water".equals(ElementSystem.auraOf(a)) && TestDummies.dealt(a) == mark[0]
+                    && ElementSystem.auraLeft(a) == 120, "no reaction while waiting → the last element (water) stays: " + ElementSystem.auraOf(a));
+            h.assertTrue("water".equals(ElementSystem.iconOf(a)), "icon switches to water: " + ElementSystem.iconOf(a));
         }));
         steps.add(new RpgJobTests.Step(30, () -> {
-            // 같은 원소: 다시 6초
+            // 같은 원소: 다시 6초 (그림 그대로)
             long left = ElementSystem.auraLeft(a);
-            ElementSystem.apply(sp, a, "fire", P, true, false);
-            h.assertTrue(left < 100 && ElementSystem.auraLeft(a) == 120, "same element refreshes: " + left + " → " + ElementSystem.auraLeft(a));
+            ElementSystem.apply(sp, a, "water", P, true, false);
+            h.assertTrue(left < 100 && ElementSystem.auraLeft(a) == 120 && "water".equals(ElementSystem.iconOf(a)), "same element refreshes: " + left + " → "
+                    + ElementSystem.auraLeft(a));
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
             h.assertTrue(ElementSystem.icdLeft(a) == 0, "wait over");
             mark[0] = TestDummies.dealt(a);
-            h.assertTrue(ElementSystem.apply(sp, a, "water", P, true, false) == vap && RpgJobTests.near(TestDummies.dealt(a) - mark[0], base * 2.5),
-                    "vaporize again after 2s");
+            h.assertTrue(ElementSystem.apply(sp, a, "fire", P, true, false) == vap && RpgJobTests.near(TestDummies.dealt(a) - mark[0], base * 2.5),
+                    "vaporize again after 2s (water + fire)");
+            h.assertTrue(ElementSystem.auraOf(a) == null && ElementSystem.iconOf(a) == null, "icon gone after the second reaction");
             // 감전 (전기 + 물): 기절 1초
             Husk b = target(h, 3, 6, true);
             all.add(b);

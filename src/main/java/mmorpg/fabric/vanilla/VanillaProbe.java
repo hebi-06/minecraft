@@ -1029,6 +1029,12 @@ final class VanillaProbe {
                     }
                     continue;
                 }
+                if (k.startsWith("elem:")) {
+                    // 2026-11-25 원소 표시 · 반응 (elem:react — 3인칭: films/vanilla_elem_react)
+                    FILM_RUNES.add(k);
+                    FILM_FRAMES.add(ELEM_FRAMES);
+                    continue;
+                }
                 if (k.startsWith("fppilot:") || k.startsWith("fp:")) {
                     // 2026-11-18 1인칭 모션 (fp:<무기 종류> · fp:all — 쓴 사람의 눈: films/vanilla_fp_<종류>, 예전 fppilot: 도 같음)
                     String t = k.substring(k.indexOf(':') + 1);
@@ -1214,6 +1220,10 @@ final class VanillaProbe {
         }
         if (FILM_RUNES.get(i).startsWith("common:")) {
             commonFilm(p, step, FILM_RUNES.get(i).substring(7), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("elem:")) {
+            elemFilm(p, step, FILM_RUNES.get(i).substring(5), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         // 2026-11-17 룬 1인칭 (runefp: — 끝에 :fp)
@@ -1965,6 +1975,113 @@ final class VanillaProbe {
                 check("film cast " + name, ok);
                 Tasks.later(14, () -> log("film " + name + " " + k.kind() + " dealt " + String.format(java.util.Locale.ROOT, "%.1f", mmorpg.fabric.job.CommonSkills.lastDealt(p))
                         + " moved " + String.format(java.util.Locale.ROOT, "%.1f", Math.hypot(p.getX() - 0.5, p.getZ() - 0.5))));
+            });
+            Tasks.later(frames + 24, () -> film(p, step + 1));
+        });
+    }
+
+    /** 원소 표시 · 반응 영상 (elem:react) 의 장 수 */
+    static final int ELEM_FRAMES = 100;
+
+    /**
+     * 2026-11-25 원소 표시 · 반응 영상 (elem:react — films/vanilla_elem_react, 사용자 "속성 두개 뭍이면 해당 속성 반응이 터지는 이펙트가 나오고 속성이 사라지게 해줘
+     * 서로 반응 안하면 마지막에 뭍인거만 남게"): 드라우그 다섯 (줄) 에 불 · 물 · 전기 · 얼음 · 바위 → 16 둘째 원소로 반응 다섯 (증발 · 감전 · 초전도 · 쇄빙 · 용암 —
+     * 머리 위 그림이 바로 사라짐) → 34 첫째에 불 · 셋째에 전기 → 44 첫째에 물 (반응 대기 중 — 반응 없이 마지막에 묻은 물만 남음) → 50 첫째 · 셋째를 밀어 냄 (그림이
+     * 몸을 따라감 — 예전에는 맞은 몹의 속도로 날아갔음) → 64 대기 끝: 첫째에 불 (증발) · 셋째에 얼음 (초전도) — 그림이 사라짐. 원소는 ElementSystem.apply 로 바로 묻힘
+     */
+    private static void elemFilm(ServerPlayer p, int step, String id, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        run(server, "tick rate 20");
+        mmorpg.fabric.rune.RuneKit.filmReset(p);
+        clearStrays(server);
+        mmorpg.fabric.job.ElementSystem.testClear();
+        run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 10");
+        run(server, "item replace entity " + NAME + " hotbar.0 with rpg:sword_l40_hero");
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        mmorpg.fabric.RpgHealth.healFull(p);
+        p.removeAllEffects();
+        List<net.minecraft.world.entity.Mob> t = new ArrayList<>();
+        for (int k = 0; k < 5; k++) {
+            net.minecraft.world.entity.Entity e = Monsters.spawnAt(level, "draugr", new Vec3(-3.5 + k * 2.0, y, 6.5), 180F);
+            if (e instanceof net.minecraft.world.entity.Mob m) {
+                m.setNoAi(true);
+                m.addTag(Monsters.FILM_TARGET_TAG);
+                var hp = m.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+                if (hp != null) hp.setBaseValue(200_000);
+                m.setHealth(m.getMaxHealth());
+                t.add(m);
+            }
+            SPAWNED.add(e);
+        }
+        run(server, "time set noon");
+        String name = "vanilla_elem_" + id;
+        if (t.size() < 5) {
+            check("film elem targets " + name, false);
+            Tasks.later(2, () -> film(p, step + 1));
+            return;
+        }
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        if (!VanillaRig.selfView(p)) VanillaRig.selfView(p, true);
+        say(p, "cam film 125 9.50 3.40 1.80 2.5 0.80");
+        mmorpg.fabric.vfx.PBridge.filmCam(p, 125, 9.5, 3.4, 1.8, 2.5, 0.8);
+        double power = mmorpg.fabric.rune.RuneCast.power(p, "str");
+        String[] first = {"fire", "water", "thunder", "ice", "rock"};
+        String[] second = {"water", "thunder", "ice", "rock", "fire"};
+        String[] react = {"vaporize", "shock", "superconduct", "shatter", "lava"};
+        Tasks.later(30, () -> {
+            run(server, "tick rate " + JOB_FILM_RATE);
+            say(p, "film " + name + " " + frames);
+            Tasks.later(3, () -> {
+                censusWatch(name, frames);
+                for (int k = 0; k < 5; k++) mmorpg.fabric.job.ElementSystem.apply(p, t.get(k), first[k], power, false, false);
+                boolean ok = true;
+                for (int k = 0; k < 5; k++) ok &= first[k].equals(mmorpg.fabric.job.ElementSystem.iconOf(t.get(k)));
+                check("elem icons over five " + name, ok);
+            });
+            Tasks.later(3 + 16, () -> {
+                boolean ok = true;
+                StringBuilder got = new StringBuilder();
+                for (int k = 0; k < 5; k++) {
+                    mmorpg.core.Elements.Reaction r = mmorpg.fabric.job.ElementSystem.apply(p, t.get(k), second[k], power, false, false);
+                    got.append(' ').append(r == null ? "-" : r.id());
+                    ok &= r != null && r.id().equals(react[k]) && mmorpg.fabric.job.ElementSystem.iconOf(t.get(k)) == null
+                            && mmorpg.fabric.job.ElementSystem.auraOf(t.get(k)) == null;
+                }
+                log("elem reactions" + got);
+                check("elem reactions clear both elements and the icon " + name, ok);
+            });
+            Tasks.later(3 + 34, () -> {
+                mmorpg.fabric.job.ElementSystem.apply(p, t.get(0), "fire", power, false, false);
+                mmorpg.fabric.job.ElementSystem.apply(p, t.get(2), "thunder", power, false, false);
+            });
+            Tasks.later(3 + 44, () -> {
+                var r = mmorpg.fabric.job.ElementSystem.apply(p, t.get(0), "water", power, false, false);
+                check("elem waiting: no reaction, the last element (water) stays " + name, r == null && "water".equals(mmorpg.fabric.job.ElementSystem.auraOf(t.get(0)))
+                        && "water".equals(mmorpg.fabric.job.ElementSystem.iconOf(t.get(0))));
+            });
+            Tasks.later(3 + 50, () -> {
+                // 밀어 냄 (맞은 몹이 밀려나는 것처럼 — 잠깐 AI 를 켜고 느리게 해 걸어오지 않게)
+                for (int k : new int[] {0, 2}) {
+                    net.minecraft.world.entity.Mob m = t.get(k);
+                    m.setNoAi(false);
+                    m.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.SLOWNESS, 30, 10, false, false));
+                    mmorpg.fabric.rune.RuneKit.knock(m, new Vec3(0, 0, 1), 1.1, 0.45);
+                }
+            });
+            Tasks.later(3 + 62, () -> {
+                for (int k : new int[] {0, 2}) t.get(k).setNoAi(true);
+                boolean follow = "water".equals(mmorpg.fabric.job.ElementSystem.iconOf(t.get(0))) && "thunder".equals(mmorpg.fabric.job.ElementSystem.iconOf(t.get(2)));
+                log(String.format(java.util.Locale.ROOT, "elem pushed %.1f %.1f", t.get(0).getZ() - 6.5, t.get(2).getZ() - 6.5));
+                check("elem icons stay on pushed targets " + name, follow);
+            });
+            Tasks.later(3 + 64, () -> {
+                var r0 = mmorpg.fabric.job.ElementSystem.apply(p, t.get(0), "fire", power, false, false);
+                var r2 = mmorpg.fabric.job.ElementSystem.apply(p, t.get(2), "ice", power, false, false);
+                check("elem after the wait: vaporize · superconduct, icons gone " + name, r0 != null && r0.id().equals("vaporize") && r2 != null
+                        && r2.id().equals("superconduct") && mmorpg.fabric.job.ElementSystem.iconOf(t.get(0)) == null
+                        && mmorpg.fabric.job.ElementSystem.iconOf(t.get(2)) == null);
             });
             Tasks.later(frames + 24, () -> film(p, step + 1));
         });
