@@ -546,7 +546,10 @@ public final class Probe implements ClientModInitializer {
         return handRendererObj;
     }
 
-    /** root 의 net.minecraft.client 필드 (depth 1 까지) 가운데 클래스 이름에 ItemInHand 가 든 값 */
+    /**
+     * root 의 net.minecraft.client 필드 (depth 1 까지) 가운데 클래스 이름에 ItemInHand 또는 HandsAndItems 가 든 값 — 2026-11-25 CI 45590731437:
+     * 26.3 은 GameRenderer.firstPersonHandsAndItemsRenderer (FirstPersonHandsAndItemsRenderer) 로 이름이 바뀌었음
+     */
     private static Object findHandRenderer(Object root, String name, int depth, StringBuilder path) {
         if (root == null) return null;
         for (Class<?> c = root.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
@@ -561,7 +564,8 @@ public final class Probe implements ClientModInitializer {
                     continue;
                 }
                 if (v == null || v == root) continue;
-                if (v.getClass().getSimpleName().contains("ItemInHand")) {
+                String sn = v.getClass().getSimpleName();
+                if (sn.contains("ItemInHand") || sn.contains("HandsAndItems")) {
                     path.append(name).append('.').append(f.getName());
                     return v;
                 }
