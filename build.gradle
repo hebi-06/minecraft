@@ -47,6 +47,14 @@ repositories {
     maven { url = 'https://maven.nucleoid.xyz' }
 }
 
+// 2026-11-25 eu.pb4 (Polymer · sgui) 는 Maven Central 에서 찾지 않음 (nucleoid 에서만): CI 화면 시험 묶음에서 Maven Central 이 429 (Too Many Requests) 를
+// 주면 Gradle 이 다음 저장소로 넘어가지 않고 실패했음 (CI 45586370783 · 45594830458 · 45602547664 — polymer-core 0.18.7+26.3.pom)
+repositories.configureEach { r ->
+    if (r instanceof MavenArtifactRepository && r.url.toString().contains('repo.maven.apache.org')) {
+        r.content { excludeGroup 'eu.pb4' }
+    }
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
