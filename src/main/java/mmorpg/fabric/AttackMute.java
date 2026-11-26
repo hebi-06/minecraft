@@ -53,4 +53,51 @@ public final class AttackMute {
         muted++;
         return true;
     }
+
+    /** 시험: 보내는 패킷에서 막은 수 (ServerLevel.sendParticles 에서 못 막은 것 — 판마다 바닐라가 부르는 쪽이 달라도) */
+    public static int mutedPackets;
+    private static java.lang.reflect.Method particleOf;
+    private static boolean particleOfTried;
+
+    /**
+     * 보내는 패킷 (VanillaSendMixin — 한 사람에게): 근접 공격 안의 바닐라 파티클 패킷 (피해 하트 · 휩쓸기 · 치명타 별 · 마법 치명타) · 치명타 알림이면 막음.
+     * 파티클 패킷의 파티클은 그 형을 돌려주는 인자 없는 메서드로 (이름이 판 · 매핑마다 달라도)
+     */
+    public static boolean blocksPacket(net.minecraft.network.protocol.Packet<?> p) {
+        if (p == null || !active()) return false;
+        if (p instanceof net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket) {
+            if (blocks(particleOf(p))) {
+                mutedPackets++;
+                return true;
+            }
+            return false;
+        }
+        if (p instanceof net.minecraft.network.protocol.game.ClientboundAnimatePacket a) {
+            int k = a.getAction();
+            if (k == net.minecraft.network.protocol.game.ClientboundAnimatePacket.CRITICAL_HIT || k == net.minecraft.network.protocol.game.ClientboundAnimatePacket.MAGIC_CRITICAL_HIT) {
+                muted++;
+                mutedPackets++;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static ParticleOptions particleOf(Object packet) {
+        try {
+            if (!particleOfTried) {
+                particleOfTried = true;
+                for (java.lang.reflect.Method m : packet.getClass().getMethods()) {
+                    if (m.getParameterCount() == 0 && ParticleOptions.class.isAssignableFrom(m.getReturnType())) {
+                        particleOf = m;
+                        break;
+                    }
+                }
+            }
+            Object o = particleOf == null ? null : particleOf.invoke(packet);
+            return o instanceof ParticleOptions po ? po : null;
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            return null;
+        }
+    }
 }

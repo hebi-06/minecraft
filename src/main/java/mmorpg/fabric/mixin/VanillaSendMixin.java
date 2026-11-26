@@ -20,6 +20,12 @@ public abstract class VanillaSendMixin {
         return packet;
     }
 
+    /** 2026-11-26 근접 공격 (평타) 안의 바닐라 파티클 · 치명타 알림은 보내지 않음 (AttackMute — ServerLevel 에서 못 막은 것) */
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", at = @At("HEAD"), cancellable = true)
+    private void mmorpg$muteAttack(Packet<?> packet, ChannelFutureListener listener, CallbackInfo ci) {
+        if (mmorpg.fabric.AttackMute.blocksPacket(packet)) ci.cancel();
+    }
+
     @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", at = @At("TAIL"))
     private void mmorpg$vanillaAfter(Packet<?> packet, ChannelFutureListener listener, CallbackInfo ci) {
         if ((Object) this instanceof ServerGamePacketListenerImpl game) VanillaPackets.after(game.player, packet);

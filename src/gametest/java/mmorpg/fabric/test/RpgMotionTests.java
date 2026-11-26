@@ -390,8 +390,23 @@ public final class RpgMotionTests {
                     + mmorpg.fabric.BasicSlash.lastRadius);
             // 2026-11-26 사용자 "피격시 나오는 이펙트를 지워" (평타): 맞은 자리 섬광 없음 · "마크 파티클은 최소한으로": 바닐라 피해 하트 (Player.attack) 를 막음
             h.assertTrue(TestDummies.dealt(a) > 0 && mmorpg.fabric.BasicSlash.sparks == n0[1], "no hit spark on the thrust hit " + mmorpg.fabric.BasicSlash.sparks);
-            h.assertTrue(mmorpg.fabric.AttackMute.muted > muted[0], "vanilla damage-indicator particles of the melee attack are muted " + mmorpg.fabric.AttackMute.muted);
             h.assertTrue(!mmorpg.fabric.AttackMute.active(), "attack mute ends with the attack");
+            // 바닐라 피해 하트는 깎인 체력만큼이라 체력을 채우는 시험 과녁 (TestDummies) 에는 나오지 않음 → 근접 공격 안처럼 begin 뒤 바닐라와 같은 호출로 막히는지
+            net.minecraft.server.level.ServerLevel lv = h.getLevel();
+            int m0 = mmorpg.fabric.AttackMute.muted;
+            int p0 = mmorpg.fabric.AttackMute.mutedPackets;
+            mmorpg.fabric.AttackMute.begin();
+            try {
+                lv.sendParticles(net.minecraft.core.particles.ParticleTypes.DAMAGE_INDICATOR, a.getX(), a.getY(0.5), a.getZ(), 6, 0.1, 0.0, 0.1, 0.2);
+                lv.sendParticles(net.minecraft.core.particles.ParticleTypes.SWEEP_ATTACK, a.getX(), a.getY(0.5), a.getZ(), 0, 0.0, 0.0, 0.0, 0.0);
+            } finally {
+                mmorpg.fabric.AttackMute.end();
+            }
+            int m1 = mmorpg.fabric.AttackMute.muted;
+            mmorpg.fabric.Mmorpg.LOG.info("[attack-mute] muted {} (packets {}) by the attack {}", m1 - m0, mmorpg.fabric.AttackMute.mutedPackets - p0, m0 - muted[0]);
+            h.assertTrue(m1 >= m0 + 2, "vanilla damage-indicator · sweep particles inside a melee attack are muted " + (m1 - m0));
+            lv.sendParticles(net.minecraft.core.particles.ParticleTypes.DAMAGE_INDICATOR, a.getX(), a.getY(0.5), a.getZ(), 1, 0.1, 0.0, 0.1, 0.2);
+            h.assertTrue(mmorpg.fabric.AttackMute.muted == m1, "outside an attack nothing is muted");
             hold(sp, shield);
         });
         h.runAfterDelay(4 + Motions.attackInterval(1.0) + Motions.comboWindow(), () -> {
