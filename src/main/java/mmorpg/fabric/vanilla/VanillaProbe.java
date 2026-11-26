@@ -1878,7 +1878,9 @@ final class VanillaProbe {
             mmorpg.fabric.vfx.PBridge.filmCam(p, 125, 6.0, 2.1, 1.0, 2.5, 1.0);
         }
         Tasks.later(30, () -> {
-            run(server, "tick rate " + FILM_RATE);
+            // 2026-11-26 평타 3인칭 영상도 JOB_FILM_RATE (2): 5 에서는 CI 렌더러가 따라오지 못해 같은 장이 2 ~ 5장씩 겹쳐 (CI 45608241332 도끼 · 창 — 장 사이 차이 0)
+            // 몸 동작이 멈췄다 뛰어 보였음
+            run(server, "tick rate " + JOB_FILM_RATE);
             say(p, "film " + name + " " + frames);
             int at = 3;
             for (int[] round : plan) {

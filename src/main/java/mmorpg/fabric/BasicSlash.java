@@ -87,7 +87,9 @@ public final class BasicSlash {
             double sweep = Math.max(0.05, (tw[1] - tw[0]) * ticks / 20.0);
             double life = Math.max(c.numOr("minLife", 0.3), sweep / c.numOr("sweepShare", 0.4));
             // 2026-11-14 reach = 판이 정한 거리 (창 찌르기 줄 4칸 · 방패 밀치기 2.6칸 — 궤적 거리 표가 아님)
-            double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1));
+            // 2026-11-26 사용자 "참격은 더 크게": 궤적 거리를 쓰는 휘두름 판만 × scale (찌르기 줄 · 밀치기 판은 정한 거리 그대로 — 범위 피해는 MOTION.area 그대로)
+            double scale = s.has("reach") ? 1 : c.numOr("scale", 1);
+            double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1)) * scale;
             spawn(sp, s, thick, radius, delay, life, glow, core);
             if (s.has("impact")) impact(sp, s, radius, delay + sweep, glow, core);
             if (s == specs.get(0)) mmorpg.fabric.job.BasicFx.swing(sp, s, delay, radius, finisher);
@@ -186,12 +188,14 @@ public final class BasicSlash {
             Vec3 r = V.cross(f, V.UP);
             Vec3 p = V.add(V.add(V.add(sp.position(), r, num(ip, 0)), V.UP, num(ip, 1)), f, num(ip, 2));
             double size = radius * cfg().numOr("impactSize", 0.7);
-            mmorpg.fabric.skill.SkillFx.shock(sp.level(), p, glow, size, 0.42);
-            mmorpg.fabric.skill.SkillFx.shock(sp.level(), p, core, size * 0.6, 0.3);
-            mmorpg.fabric.skill.SkillFx.sparks(sp.level(), V.up(p, 0.2), core, 10, 4.5);
+            // 2026-11-26 사용자 "마크 파티클은 최소한으로": 땅 충격 고리 · 3D 조각만 (튀는 불티 sparks 와 위르드식 바닐라 겹은 뺌 — BasicFx.quiet)
+            mmorpg.fabric.job.BasicFx.quiet(() -> {
+                mmorpg.fabric.skill.SkillFx.shock(sp.level(), p, glow, size, 0.42);
+                mmorpg.fabric.skill.SkillFx.shock(sp.level(), p, core, size * 0.6, 0.3);
+            });
             // 2026-11-14 그림체 "섞음" (3D 는 블록 픽셀): 내려찍은 자리에서 3D 바위 조각이 솟아 앞으로 튐 (RuneSwing.erupt — 틈의 빛 = 무기 색)
             int debris = (int) s.numOr("debris", 0);
-            if (debris > 0) mmorpg.fabric.rune.RuneSwing.erupt(sp.level(), p, f, debris, s.numOr("debrisSpread", 150), 0.3, size * 0.5, 0.3, 0.55, size * 0.6, glow);
+            if (debris > 0) mmorpg.fabric.rune.RuneSwing.erupt(sp.level(), p, f, debris, s.numOr("debrisSpread", 150), 0.3, size * 0.5, 0.3, 0.55, size * 0.6, glow, false);
         });
     }
 

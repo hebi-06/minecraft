@@ -169,12 +169,23 @@ public final class RuneSwing {
      * 구르며 날아가 (out 칸 · 포물선) 떨어져 가라앉음. size = 지름 칸 (s0 ~ s1)
      */
     public static void erupt(ServerLevel level, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out, double[] col) {
-        erupt(level, RuneProps.BOULDER, RuneProps.BOULDER_D, c, f, n, spread, r0, r1, s0, s1, out, col);
+        erupt(level, RuneProps.BOULDER, RuneProps.BOULDER_D, c, f, n, spread, r0, r1, s0, s1, out, col, true);
+    }
+
+    /** 2026-11-26 같은 것 — plume = 떨어진 자리의 바닐라 먼지 (평타 내려찍기는 뺌: 사용자 "마크 파티클은 최소한으로") */
+    public static void erupt(ServerLevel level, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out, double[] col,
+            boolean plume) {
+        erupt(level, RuneProps.BOULDER, RuneProps.BOULDER_D, c, f, n, spread, r0, r1, s0, s1, out, col, plume);
     }
 
     /** 2026-11-13 erupt 와 같고 모델만 다름 (화산 — 달아오른 운석 조각 METEOR) */
     public static void erupt(ServerLevel level, String model, double modelD, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out,
             double[] col) {
+        erupt(level, model, modelD, c, f, n, spread, r0, r1, s0, s1, out, col, true);
+    }
+
+    static void erupt(ServerLevel level, String model, double modelD, Vec3 c, Vec3 f, int n, double spread, double r0, double r1, double s0, double s1, double out,
+            double[] col, boolean plume) {
         Vfx.Fx fx = RuneProps.fx(level, c, 40);
         for (int i = 0; i < n; i++) {
             double a = -spread / 2 + (i + 0.5) / n * spread + (Kit.rand() - 0.5) * (spread / n) * 0.6;
@@ -195,7 +206,7 @@ public final class RuneSwing {
                 final int tt = t;
                 fx.on(3 + t, () -> p.to(V.add(V.lerp(from, V.up(land, 0.2), u), V.UP, arc * 4 * u * (1 - u)), RuneProps.tumble(seed, 4 + tt, 28), -1, 1));
             }
-            fx.on(3 + fly + 1, () -> SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.DUST_PLUME, V.up(land, 0.3), 4, 0.3, 0.05));
+            if (plume) fx.on(3 + fly + 1, () -> SkillFx.particle(level, net.minecraft.core.particles.ParticleTypes.DUST_PLUME, V.up(land, 0.3), 4, 0.3, 0.05));
             fx.on(3 + fly + 5, () -> p.to(V.up(land, -0.5), null, sc * 0.4, 7));
             fx.on(3 + fly + 13, p::remove);
         }

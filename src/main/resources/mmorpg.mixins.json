@@ -13,6 +13,8 @@
     "RangedAttributeAccessor",
     "ServerExplosionMixin",
     "ServerGamePacketListenerMixin",
+    "ServerLevelParticleMixin",
+    "ServerPlayerCritMixin",
     "ServerPlayerDropMixin",
     "ServerPlayerXpMixin",
     "UpdateAttributesInvoker",

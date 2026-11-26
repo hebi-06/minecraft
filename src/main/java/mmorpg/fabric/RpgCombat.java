@@ -860,12 +860,13 @@ public final class RpgCombat {
         if (bonusHitting) return; // 2026-11-07 늑대 정령의 물어뜯기: 맞은 자리 그림 · 소리는 늑대가
         double[][] prevLook = Fx.pushLook(look);
         try {
+            // 2026-11-26 사용자 "피격시 나오는 이펙트를 지워" (평타): 맞은 자리 그림 (활 불꽃 · 완드 번쩍임 · 바닐라 crit) 은 Slash.hitFx 가 켜졌을 때만 — 소리는 그대로
             if (path != null) {
-                Fx.arrowImpact(level, path.aim(), path.dir(), w);
+                if (Slash.hitFx()) Fx.arrowImpact(level, path.aim(), path.dir(), w);
                 Fx.sound(level, path.aim(), SoundEvents.ARROW_HIT, 1.0, 0.7);
             } else {
                 Vec3 at = target.getEyePosition();
-                Fx.wandImpact(level, at, w);
+                if (Slash.hitFx()) Fx.wandImpact(level, at, w);
                 Fx.sound(level, at, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6, 0.5);
             }
         } finally {

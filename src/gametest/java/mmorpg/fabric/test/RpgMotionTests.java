@@ -338,10 +338,13 @@ public final class RpgMotionTests {
                     "slash_hb → a flat card + 2 layers (others · 3rd person) + a flat card (1st person) " + mmorpg.fabric.BasicSlash.lastModel + " "
                     + mmorpg.fabric.BasicSlash.lastCards);
             Double reach = Motions.reach("sword", sword.gradeIndex());
-            h.assertTrue(reach != null && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - reach) < 1e-6, "radius = sword reach " + mmorpg.fabric.BasicSlash.lastRadius);
-            // 공속 ×2 → 동작 ×1.5: 휘두름 구간 (0.3 ~ 0.68 × 6틱) ÷ sweepShare 0.3 (2026-11-15 잔상 조금 천천히 — 예전 0.4)
+            // 2026-11-26 사용자 "참격은 더 크게": 휘두름 판 반지름 = 궤적 거리 × BASIC_SLASH.scale
+            double sc = slashScale();
+            h.assertTrue(sc > 1 && reach != null && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - reach * sc) < 1e-6, "radius = sword reach × scale "
+                    + mmorpg.fabric.BasicSlash.lastRadius);
+            // 공속 ×2 → 동작 ×1.5: 휘두름 구간 (0.3 ~ 0.74 × 6틱 — 2026-11-26 휘두름 끝을 늦춤) ÷ sweepShare 0.3 (2026-11-15 잔상 조금 천천히 — 예전 0.4)
             int ticks = Motions.playTicks(9, Motions.playSpeed(2.0));
-            double life = Math.max(0.42, (0.68 - 0.3) * ticks / 20.0 / 0.3); // 2026-11-15 minLife 0.42초
+            double life = Math.max(0.42, (0.74 - 0.3) * ticks / 20.0 / 0.3); // 2026-11-15 minLife 0.42초
             h.assertTrue(Math.abs(mmorpg.fabric.BasicSlash.lastLife - life) < 1e-3, "life follows the play speed " + mmorpg.fabric.BasicSlash.lastLife + " vs " + life);
             // 2026-11-18 축복의 길: 평타마다 스킬급 연출 (BasicFx) — 칼 1타는 마무리가 아님
             h.assertTrue(Boolean.FALSE.equals(mmorpg.fabric.job.BasicFx.lastFinisher(sp)), "sword step 1 → skill-grade fx, not a finisher");
@@ -357,7 +360,7 @@ public final class RpgMotionTests {
         h.runAfterDelay(4 + 2 * Motions.attackInterval(2.0) + Motions.comboWindow(), () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
             Slash.onPunch(sp); // 마검 가로 베기 — 광역 (두꺼운 띠 · 4.1칸)
-            h.assertTrue(mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_w") && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.1) < 1e-6,
+            h.assertTrue(mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic_w") && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.1 * slashScale()) < 1e-6,
                     "greatsword → thick wide card " + mmorpg.fabric.BasicSlash.lastModel + " " + mmorpg.fabric.BasicSlash.lastRadius);
             done(h, sp);
         });
@@ -375,15 +378,20 @@ public final class RpgMotionTests {
         hold(sp, lance);
         Husk a = dummy(h, 1.5, 2, 3.5);
         int[] n0 = new int[2];
+        int[] muted = new int[1];
         h.runAfterDelay(2, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
             n0[1] = mmorpg.fabric.BasicSlash.sparks;
+            muted[0] = mmorpg.fabric.AttackMute.muted;
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a); // 창 1타 = 찌르기
             h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_thrust")
-                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.0) < 1e-6, "lance thrust → slash_thrust 4 " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.0) < 1e-6, "lance thrust → slash_thrust 4 (no scale) " + mmorpg.fabric.BasicSlash.lastModel + " "
                     + mmorpg.fabric.BasicSlash.lastRadius);
-            h.assertTrue(TestDummies.dealt(a) > 0 && mmorpg.fabric.BasicSlash.sparks > n0[1], "hit spark on the thrust hit " + mmorpg.fabric.BasicSlash.sparks);
+            // 2026-11-26 사용자 "피격시 나오는 이펙트를 지워" (평타): 맞은 자리 섬광 없음 · "마크 파티클은 최소한으로": 바닐라 피해 하트 (Player.attack) 를 막음
+            h.assertTrue(TestDummies.dealt(a) > 0 && mmorpg.fabric.BasicSlash.sparks == n0[1], "no hit spark on the thrust hit " + mmorpg.fabric.BasicSlash.sparks);
+            h.assertTrue(mmorpg.fabric.AttackMute.muted > muted[0], "vanilla damage-indicator particles of the melee attack are muted " + mmorpg.fabric.AttackMute.muted);
+            h.assertTrue(!mmorpg.fabric.AttackMute.active(), "attack mute ends with the attack");
             hold(sp, shield);
         });
         h.runAfterDelay(4 + Motions.attackInterval(1.0) + Motions.comboWindow(), () -> {
@@ -729,5 +737,11 @@ public final class RpgMotionTests {
             mmorpg.fabric.job.JobSystem.setJob(sp, null);
             done(h, sp);
         });
+    }
+
+    /** 2026-11-26 BASIC_SLASH.scale (휘두름 판 반지름 배율) */
+    private static double slashScale() {
+        mmorpg.core.Obj c = mmorpg.core.Rules.get().root().objOrNull("BASIC_SLASH");
+        return c == null ? 1 : c.numOr("scale", 1);
     }
 }

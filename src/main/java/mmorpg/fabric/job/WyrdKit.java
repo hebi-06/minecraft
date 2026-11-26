@@ -146,7 +146,7 @@ final class WyrdKit {
 
     /** 묶음 → 겹 (그리지 않은 직업 · 묶음 없음 = null) */
     static Pal pal(PhantomFx.Lib L) {
-        if (!ON || L == null) return null;
+        if (!ON || mute > 0 || L == null) return null;
         return switch (L.p()) {
             case "el_steel" -> STEEL;
             case "el_blood" -> BLOOD;
@@ -206,6 +206,20 @@ final class WyrdKit {
         return depth == 0;
     }
 
+    /**
+     * 2026-11-26 바닐라 겹을 잠깐 끔 (평타 — 사용자 "마크 파티클은 최소한으로": BasicFx · 기본 참격 판의 땅 충격). mute 안에서는 묶음 겹 (pal) 이 없어 모든 겹 함수가
+     * 그리지 않음 (도트 2D 그림판 · 3D 는 그대로). 서버 틱 한 줄기에서만 불림
+     */
+    private static int mute;
+
+    static void muteIn() {
+        mute++;
+    }
+
+    static void muteOut() {
+        if (mute > 0) mute--;
+    }
+
     /** 먼지 (크기 1.6 까지 — 더 크면 먼지 그림이 얼룩진 네모로 보임) */
     static DustParticleOptions dust(int rgb, double scale) {
         return new DustParticleOptions(rgb, (float) Math.max(0.1, Math.min(1.6, scale)));
@@ -220,7 +234,7 @@ final class WyrdKit {
 
     /** count 개를 상자 (dx, dy, dz) 안에 · 속도 speed (count 0 = 한 알을 속도 (dx, dy, dz) × speed 로) — who 가 있으면 그 사람들에게만 */
     static void p(ServerLevel l, Predicate<ServerPlayer> who, ParticleOptions o, Vec3 at, int n, double dx, double dy, double dz, double speed) {
-        if (o == null || n < 0) return;
+        if (o == null || n < 0 || mute > 0) return;
         double near = NEAR_EYE + (n > 0 ? Math.max(dx, Math.max(dy, dz)) * 1.5 : 0);
         for (ServerPlayer sp : l.players()) {
             if (who != null && !who.test(sp)) continue;
@@ -669,7 +683,7 @@ final class WyrdKit {
      * n 개의 눈송이 (바닐라 snowflake — 천천히 떨어짐)
      */
     static void snow(ServerLevel l, Vec3 at, int n, double spread, Predicate<ServerPlayer> who) {
-        if (!ON || !go("snow", 6)) return;
+        if (!ON || mute > 0 || !go("snow", 6)) return;
         p(l, who, ParticleTypes.SNOWFLAKE, at, n, spread, spread * 0.6, spread, 0.02);
     }
 
@@ -678,7 +692,7 @@ final class WyrdKit {
      * 얼음 = 눈송이 · 바위 = 밀랍 금빛 점. n 개 · 퍼짐 spread 칸
      */
     static void elementMote(ServerLevel l, String el, Vec3 at, int n, double spread, Predicate<ServerPlayer> who) {
-        if (!ON || !go("emote", 6)) return;
+        if (!ON || mute > 0 || !go("emote", 6)) return;
         ParticleOptions o = switch (el == null ? "" : el) {
             case "fire" -> ParticleTypes.SMALL_FLAME;
             case "water" -> ParticleTypes.GLOW;

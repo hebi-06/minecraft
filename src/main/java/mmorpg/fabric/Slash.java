@@ -458,6 +458,12 @@ public final class Slash {
         // 모드 없는 클라이언트에서 흰 네모 원판으로 참격을 덮었음 (영상 CI 43595133077 창 · 홀). 치명타 · 발밑 충격 · 홀 빛 십자 · 소리는 그대로
         MotionSystem.Swing sw = MotionSystem.last(attacker);
         boolean card = sw != null && Tasks.now() - sw.tick() <= 3 && BasicSlash.has(sw.motion());
+        // 2026-11-26 사용자 "피격시 나오는 이펙트를 지워" (평타만): 맞은 적에 그리는 것 (맞은 자리 섬광 · 밀치기 · 찌르기 폭발 · 홀 빛 · 벗어난 자리 참격 · 도끼 ·
+        // 망치 발밑 고리 · 흙먼지 · 마검 룬 불꽃 · 치명타 참격 · 화면 흔들림) 은 SLASH.hitFx 가 켜졌을 때만 — 소리는 그대로. 치명타는 노란 숫자로 보임
+        if (!SLASH.truthy("hitFx")) {
+            hitSounds(level, attacker, mid, victim, w, crit, style);
+            return;
+        }
         // 2026-11-14 2판: 판이 나간 휘두르기가 맞힌 적마다 맞은 자리 섬광 (hit_spark — 고해상도 빛살 · 고리, 예전 흰 도트 고리 대신)
         if (card && style != null) BasicSlash.hitSpark(attacker, victim, style, crit);
         if (style != null && style.truthy("bash")) {
@@ -545,6 +551,26 @@ public final class Slash {
             default -> {}
         }
         sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
+    }
+
+    /** 2026-11-26 평타가 맞은 적에 그림을 그리는지 (SLASH.hitFx — 사용자 "피격시 나오는 이펙트를 지워": 끔) */
+    public static boolean hitFx() {
+        return SLASH.truthy("hitFx");
+    }
+
+    /** 2026-11-26 맞힘 그림 없이 소리만 (hit 의 갈래마다 같은 소리 — 밀치기 · 홀 · 찌르기 · 도끼 · 망치 · 치명타) */
+    private static void hitSounds(ServerLevel level, ServerPlayer attacker, Vec3 mid, LivingEntity victim, Weapon w, boolean crit, Obj style) {
+        if (style != null && style.truthy("bash")) {
+            sound(level, mid, SoundEvents.SHIELD_BLOCK.value(), crit ? 0.7 : 0.85, 0.9);
+            if (style.truthy("holy")) sound(level, mid, SoundEvents.AMETHYST_BLOCK_CHIME, crit ? 0.8 : 1.3, crit ? 1.0 : 0.6);
+        } else if (style != null && style.truthy("thrust")) {
+            sound(level, mid, SoundEvents.TRIDENT_HIT, crit ? 0.8 : 1.1, 0.8);
+        } else if (w.type().equals("axe")) {
+            sound(level, victim.position(), SoundEvents.MACE_SMASH_GROUND, crit ? 0.9 : 1.2, crit ? 0.9 : 0.5);
+        } else if (w.type().equals("hammer") && style != null) {
+            sound(level, victim.position(), SoundEvents.MACE_SMASH_GROUND, crit ? 0.7 : 0.9, crit ? 1.0 : 0.7);
+        }
+        if (crit) sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
     }
 
     /** 방패 치기 맞힘: 대상 몸 앞 (공격자 쪽) 에 가시 달린 충격 폭발 + 흰 고리 + 방패 소리, 치명타는 금빛으로 크고 길게 */

@@ -181,7 +181,8 @@ public final class WeaponTraits {
             if (!Kit.applySkillDamage(sp, e, amount, crit, Kit.Cause.ATTACK, crit ? DamageNumbers.Style.CRIT : DamageNumbers.Style.NORMAL)) continue;
             Vec3 d = V.flat(V.sub(e.position(), c));
             Kit.knockback(e, d.x * 0.2, d.z * 0.2, quake.num("lift"));
-            SkillFx.fx(level, "rpg:dust", V.up(e.position(), 0.2), Opt.of("size", 0.7, "life", 0.5, "color", new double[] {0.62, 0.52, 0.4}, "alpha", 0.7));
+            // 2026-11-26 맞은 적의 흙먼지는 평타 맞힘 그림 (Slash.hitFx — 끔)
+            if (Slash.hitFx()) SkillFx.fx(level, "rpg:dust", V.up(e.position(), 0.2), Opt.of("size", 0.7, "life", 0.5, "color", new double[] {0.62, 0.52, 0.4}, "alpha", 0.7));
         }
         if (crit) Fx.sound(level, c, SoundEvents.MACE_SMASH_GROUND_HEAVY, 0.8, 0.6);
     }

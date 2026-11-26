@@ -15,6 +15,8 @@ import net.minecraft.world.phys.Vec3;
  * 스킬급 연출을 더합니다: 입체 참격 · 빛 · 불티 · 무기 색 잔상, 셋째 타는 더 큰 마무리 참격"): 평타 참격 판 (BasicSlash) 위에 직업 스킬과 같은 위르드식 눈앞 베기
  * (도트 2D + 바닐라 빛 파티클 — CommonSkills.eyeSlash) · 칼끝 불티 · 맞는 자리 반짝임을 그 사람 직업의 그림 묶음으로 (직업이 없으면 강철 묶음).
  * 연타의 마지막 타 (칼 둘째 · 대검 · 낫 셋째 · 창 둘째) 는 크게 + 겹 베기 · 섬광 · 발밑 충격 고리. 연출만 (피해 · 범위는 평타 그대로). 화면 흔들림 없음.
+ * <p>2026-11-26 사용자 "마크 파티클은 최소한으로": 바닐라 파티클 겹 (위르드식 — 불티 · 반짝임 · 섬광 · 충격 고리의 바닐라 겹) 은 그리지 않음 (WyrdKit mute —
+ * 도트 2D 그림판 그림만), "참격은 더 크게": 눈앞 베기 × BASIC_SLASH.eyeScale.
  * <p>모양: 판 (rules_more BASIC_SLASH.motions) 의 face — up (가로 베기: mirror 면 반대쪽) · front (세로 · 대각: start 도 = 휘두름 시작 쪽 — 90 위,
  * 225 왼쪽 아래) · thrust (창 찌르기 — 곧은 칼빛) · 방패 밀치기 (bash — 앞 충격).
  */
@@ -31,6 +33,22 @@ public final class BasicFx {
 
     public static Boolean lastFinisher(ServerPlayer sp) {
         return sp == null ? null : LAST.get(sp.getUUID());
+    }
+
+    /** 2026-11-26 바닐라 파티클 겹 없이 그림 (평타 — BasicSlash 의 땅 충격처럼 이 밖에서 부르는 평타 그림) */
+    public static void quiet(Runnable r) {
+        WyrdKit.muteIn();
+        try {
+            r.run();
+        } finally {
+            WyrdKit.muteOut();
+        }
+    }
+
+    /** 2026-11-26 사용자 "참격은 더 크게": 눈앞 베기 크기 배율 (BASIC_SLASH.eyeScale) */
+    static double eyeScale() {
+        Obj c = mmorpg.core.Rules.get().root().objOrNull("BASIC_SLASH");
+        return c == null ? 1 : c.numOr("eyeScale", 1);
     }
 
     /**
@@ -50,11 +68,13 @@ public final class BasicFx {
             // 그림 주인 (1인칭이면 판 대신 눈앞 그림 — RuneKit.enter) · 칠할 묶음 (예전 rfx 이름으로 부르는 그림도 이 묶음으로) — 안의 later 도 이어 받음
             int prevOwner = RuneKit.enter(sp);
             String prevLib = Tasks.lib(L.p());
+            WyrdKit.muteIn();
             try {
                 draw(sp, L, spec, radius, finisher);
             } catch (RuntimeException e) {
                 mmorpg.fabric.Mmorpg.LOG.warn("[mmorpg] basic fx", e);
             } finally {
+                WyrdKit.muteOut();
                 Tasks.lib(prevLib);
                 RuneKit.leave(prevOwner);
             }
@@ -114,7 +134,6 @@ public final class BasicFx {
             Vec3 end = V.add(hand, look, reach);
             cut(level, L, hand, end, finisher ? 5 : 3, finisher, hide);
             PhantomFx.flash(level, L, end, 1.2 * k, hide);
-            WyrdKit.sparks(level, L, end, finisher ? 10 : 5, 1.2 * k, hide);
             // 2026-11-18 주인의 1인칭 (몸 앞 그림은 1인칭에서 숨김 — 영상 vanilla_motion_lance 에서 1인칭 찌르기가 밋밋): 오른쪽 아래 손 자리에서
             // 화면 가운데 앞으로 곧은 칼빛 · 끝 섬광
             Vec3 up = JobFx.screenUp(look);
@@ -129,7 +148,6 @@ public final class BasicFx {
             // 방패 밀치기: 앞 충격 · 반짝임
             Vec3 at = V.add(V.up(sp.position(), 1.0), f, 1.6);
             PhantomFx.impact(level, L, at, 0.9 * k);
-            WyrdKit.sparks(level, L, at, 6, 1.0, hide);
             return;
         }
         double tilt;
@@ -139,14 +157,13 @@ public final class BasicFx {
         } else {
             tilt = spec.truthy("mirror") ? 180 : 0; // 가로 베기 (반대쪽 = 뒤집음)
         }
-        double size = (0.62 + radius * 0.16) * k;
+        double size = (0.62 + radius * 0.16) * k * eyeScale();
         PhantomFx.Lib S = slashLib(L);
         CommonSkills.eyeSlash(sp, S, 1.45, 0.2, size, tilt, finisher ? 0.42 : 0.32);
         PhantomFx.embers(level, L, tip, finisher ? 10 : 5, 0.9 * k, 0.3, 12);
-        WyrdKit.sparks(level, L, tip, finisher ? 8 : 4, 1.1 * k, hide);
         if (finisher) {
             // 마무리: 반대로 한 번 더 (겹 베기) · 섬광 · 발밑 충격 고리
-            RuneKit.later(2, () -> CommonSkills.eyeSlash(sp, S, 1.6, 0.25, size * 1.12, tilt + 180 + 14, 0.4));
+            RuneKit.later(2, () -> quiet(() -> CommonSkills.eyeSlash(sp, S, 1.6, 0.25, size * 1.12, tilt + 180 + 14, 0.4)));
             PhantomFx.flash(level, L, tip, 2.0, hide);
             PhantomFx.shock(level, shockLib(L), sp.position(), 3.6, 1, hide);
         }

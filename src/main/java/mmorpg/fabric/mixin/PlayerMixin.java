@@ -35,8 +35,18 @@ public abstract class PlayerMixin {
     private void mmorpg$beforeAttack(Entity target, CallbackInfo ci) {
         Player self = (Player) (Object) this;
         this.mmorpg$target = target;
+        // 2026-11-26 이 공격 동안 바닐라 파티클 (피해 하트 · 휩쓸기 · 치명타 별) 을 내지 않음 (AttackMute — 사용자 "마크 파티클은 최소한으로")
+        mmorpg.fabric.AttackMute.begin();
         if (self instanceof ServerPlayer sp) Slash.onAttack(sp, target);
-        if (RpgCombat.beforeAttack(self, target)) ci.cancel();
+        if (RpgCombat.beforeAttack(self, target)) {
+            mmorpg.fabric.AttackMute.end();
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "attack", at = @At("RETURN"))
+    private void mmorpg$afterAttack(Entity target, CallbackInfo ci) {
+        mmorpg.fabric.AttackMute.end();
     }
 
     @ModifyArg(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurtOrSimulate(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)

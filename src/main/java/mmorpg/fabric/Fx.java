@@ -44,11 +44,13 @@ public final class Fx {
         return s != null && gradeIndex >= 0 && gradeIndex < s.size() ? s.get(gradeIndex) : 1;
     }
 
-    /** 치명타 (fx.js critFx): 머리에 치명타 불꽃 + 강한 공격 소리 + 모루 소리 (작게) */
+    /**
+     * 치명타 (fx.js critFx): 강한 공격 소리 + 모루 소리 (작게). 2026-11-26 사용자 "마크 파티클은 최소한으로" · "피격시 나오는 이펙트를 지워" (평타): 머리의 바닐라
+     * 치명타 불꽃 (crit 14) 은 뺌 — 치명타는 노란 숫자로 보임
+     */
     public static void crit(Entity victim) {
         if (!(victim.level() instanceof ServerLevel level)) return;
         Vec3 at = victim.getEyePosition();
-        particle(level, ParticleTypes.CRIT, at, 14, 0.25, 0.35);
         sound(level, at, SoundEvents.PLAYER_ATTACK_STRONG, 1.1, 1);
         sound(level, at, SoundEvents.ANVIL_LAND, 2.0, 0.25);
     }
@@ -204,10 +206,10 @@ public final class Fx {
         double len = d.length();
         Vec3 u = len > 1e-6 ? d.scale(1 / len) : Vec3.ZERO;
         if (cs[1] == null) {
-            ParticleOptions p = wandTrail(w.gradeIndex());
-            for (double s = 0.8; s <= len; s += 0.4) {
-                Vec3 at = from.add(u.scale(s));
-                level.sendParticles(p, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            // 2026-11-26 사용자 "마크 파티클은 최소한으로" (평타): 일반 ~ 고귀 완드의 바닐라 궤적 (end_rod · 혼불 · 마녀 · 불꽃 · 레드스톤 가루) 대신
+            // 영웅 · 초월과 같은 무기 색 빛줄기 조각만 (빛 방울 없이)
+            for (double s = 0.6; s <= len - 0.1; s += SEG_GAP) {
+                fx(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.07F, 0.4F, 0F, 0F, 0F, 1F, argb(cs[0], 0.8)));
             }
             return;
         }
