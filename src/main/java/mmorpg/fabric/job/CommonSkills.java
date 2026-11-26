@@ -257,8 +257,16 @@ public final class CommonSkills {
         return gy == null ? p : new Vec3(p.x, gy, p.z);
     }
 
+    /** 시험: 사람마다 눈앞 큰 베기 수 (2026-11-26 평타는 그리지 않음 — 스킬만. 나란히 도는 시험이 섞이지 않게 사람마다) */
+    private static final java.util.Map<java.util.UUID, Integer> EYE_SLASHES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public static int eyeSlashesOf(ServerPlayer sp) {
+        return sp == null ? 0 : EYE_SLASHES.getOrDefault(sp.getUUID(), 0);
+    }
+
     /** 눈앞 큰 베기 (JobFx.slash 와 같은 짜임 — 묶음을 정함): 1인칭 = 카메라를 보는 칼빛 · 3인칭 · 다른 사람 = 앞을 보는 반달 + 바닐라 겹 */
     static void eyeSlash(ServerPlayer sp, PhantomFx.Lib L, double ahead, double down, double size, double tilt, double life) {
+        EYE_SLASHES.merge(sp.getUUID(), 1, Integer::sum);
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), JobFx.screenUp(look), -down);
         PhantomFx.Moon moon = JobFx.slashMoon(sp, down, size, tilt, 0, 0);

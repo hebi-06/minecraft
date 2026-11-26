@@ -62,6 +62,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"spin", "sword", "0.16,0.45,0.8"},
         {"dagger_x", "dagger", "0.16,0.36,0.72"},
         {"chop", "axe", "0.36,0.56,0.76"},
+        {"axe_sweep", "axe", "0.34,0.52,0.72"},
         {"thrust", "lance", "0.3,0.5,0.7"},
         {"lance_sweep", "lance", "0.3,0.46,0.62"},
         {"bash", "shield", "0.3,0.5,0.72"},
@@ -299,11 +300,11 @@ public final class RpgMotionGallery implements FabricClientGameTest {
      * 동작이 한 틱 일찍 시작해 단검 · 홀 · 창 찌르기가 찍는 틱에 이미 끝났음 (CI 43602133804 "trail swing … (null)"))
      */
     private static final String[][] TRAILS = {
-        {"sword", "rare", "slash_hb:4", "slash_h:4"}, // 2026-11-15 칼 = 왼쪽 → 오른쪽 · 오른쪽 → 왼쪽 가로 베기 2타
+        {"sword", "rare", "slash_h:4", "slash_hb:4", "slash_v:4"}, // 2026-11-26 칼 = 오른쪽 → 왼쪽 · 왼쪽 → 오른쪽 가로 베기 · 세로 베기 3타
         {"scythe", "hero", "slash_h:4", "slash_v:4", "reap_up:4"},
         {"greatsword", "transcend", "slash_h:4", "slash_v:4", "gs_slam:5"},
         {"dagger", "rare", "dagger_x:3"},
-        {"axe", "rare", "chop:5"},
+        {"axe", "rare", "axe_sweep:5", "chop:5"}, // 2026-11-26 도끼 = 가로 휘두르기 → 내려찍기
         {"scepter", "rare", "smite:4"},
         {"lance", "rare", "thrust:3", "lance_sweep:5"}, // 0.42.0 창: 찌르기 (빛줄기 — 궤적 없음) → 가로 휘두르기
     };

@@ -112,15 +112,17 @@ public final class MotionsTest {
         Rules r = Rules.get();
         // 연타 차례
         // 2026-11-14 평타에서 회전을 뺌 (사용자 — 마검 · 낫 = 무기마다 새 마무리). 2026-11-15 칼 = 왼쪽 → 오른쪽 · 오른쪽 → 왼쪽 가로 베기 2타 (사용자
-        // "오른쪽에서 왼쪽으로 가는것도 만들어줘 총 2종의 모션으로")
-        check(Motions.combo("sword").equals(List.of("slash_hb", "slash_h")), "combo sword " + Motions.combo("sword"));
+        // "오른쪽에서 왼쪽으로 가는것도 만들어줘 총 2종의 모션으로"). 2026-11-26 칼 = 오른쪽 → 왼쪽 · 왼쪽 → 오른쪽 가로 베기 → 세로 베기 3타 (사용자 "검 가로
+        // 우에서부터 베기 가로 좌에서부터 베기 세로 베기 순으로")
+        check(Motions.combo("sword").equals(List.of("slash_h", "slash_hb", "slash_v")), "combo sword " + Motions.combo("sword"));
         check(Motions.combo("greatsword").equals(List.of("slash_h", "slash_v", "gs_slam")), "combo greatsword " + Motions.combo("greatsword"));
         check(Motions.combo("scythe").equals(List.of("slash_h", "slash_v", "reap_up")), "combo scythe " + Motions.combo("scythe"));
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             check(!Motions.combo(t).contains("spin") && !Motions.combo(t).contains("spin2"), "no spin in basic combo " + t);
         }
         check(Motions.combo("dagger").equals(List.of("dagger_x")), "dagger");
-        check(Motions.combo("axe").equals(List.of("chop")) && Motions.combo("hammer").equals(List.of("chop")), "axe · hammer chop");
+        // 2026-11-26 도끼 = 가로 휘두르기 (새 동작 axe_sweep) → 내려찍기 2타 (사용자 "도끼는 모션 하나 더 추가하자 너무 밋밋해"), 망치는 내려찍기 그대로
+        check(Motions.combo("axe").equals(List.of("axe_sweep", "chop")) && Motions.combo("hammer").equals(List.of("chop")), "axe sweep → chop · hammer chop");
         check(Motions.combo("lance").equals(List.of("thrust", "lance_sweep")) && Motions.combo("shield").equals(List.of("bash"))
                 && Motions.combo("scepter").equals(List.of("smite")), "lance (0.42.0 찌르기 → 가로 휘두르기) · shield · scepter");
         check(Motions.combo("bow").isEmpty() && Motions.combo("wand").isEmpty() && Motions.combo(null).isEmpty(), "ranged none");
@@ -231,6 +233,12 @@ public final class MotionsTest {
                 "lance sweep reaches both sides (thrust line does not)");
         check(!Motions.inArea(ls, -1.2, 0, -0.6, 0.3) && Motions.inArea(Motions.area("thrust", "lance"), 3.9, 0.3, 0, 0.3) && !Motions.inArea(ls, 3.9, 0, 0, 0.3),
                 "lance sweep: not behind · thrust reaches further ahead (4 vs 3.45)");
+        // 2026-11-26 도끼 가로 휘두르기: 앞 160° · 거리는 도끼 궤적이 닿는 곳 (보통 1.9 · 초월 2.75 — reach 표), 양옆까지 (내려찍기 띠는 옆이 좁음)
+        Motions.Area ax = Motions.area("axe_sweep", "axe");
+        check(ax.shape().equals("arc") && Math.abs(ax.angle() - 160) < 1e-9 && Math.abs(ax.range() - 1.9) < 1e-9
+                && Math.abs(Motions.area("axe_sweep", "axe", 4).range() - 2.75) < 1e-9, "axe sweep arc 160° · 1.9 · 2.75 " + ax);
+        check(Motions.inArea(ax, 0.6, -1.5, 0, 0.3) && Motions.inArea(ax, 0.6, 1.5, 0, 0.3) && !Motions.inArea(Motions.area("chop", "axe"), 0.6, 1.5, 0, 0.3),
+                "axe sweep reaches both sides (chop band does not)");
         Motions.Area v2 = Motions.area("slash_v", "sword");
         check(Motions.inArea(v2, 2.5, 0.5, 1.2, 0.3) && !Motions.inArea(v2, 2.5, 1.5, 0, 0.3), "band narrow sideways · tall");
         Motions.Area ln = Motions.area("thrust", "lance");
@@ -239,7 +247,7 @@ public final class MotionsTest {
         check(Motions.inArea(rg, -1.8, 1, 0.5, 0.3) && !Motions.inArea(rg, 0, 0, 4.5, 0.3) && !Motions.inArea(rg, 3.5, 0, 0.5, 0.3), "ring around · not far · not high");
         // 0.40.0 참격 궤적 규칙: 평타 여섯은 궤적이 참격을 대신 (창 찌르기 · 방패 밀치기는 예전 참격)
         check(Motions.trailEnabled(), "trail on");
-        for (String m : List.of("slash_h", "slash_hb", "slash_v", "spin", "gs_slam", "reap_up", "dagger_x", "chop", "smite", "lance_sweep")) {
+        for (String m : List.of("slash_h", "slash_hb", "slash_v", "spin", "gs_slam", "reap_up", "dagger_x", "chop", "smite", "lance_sweep", "axe_sweep")) {
             check(Motions.trailBasic(m), "trail basic " + m);
         }
         check(!Motions.trailBasic("thrust") && !Motions.trailBasic("bash") && !Motions.trailBasic("cast") && !Motions.trailBasic(null), "no trail for thrust · bash");

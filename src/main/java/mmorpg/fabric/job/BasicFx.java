@@ -16,7 +16,8 @@ import net.minecraft.world.phys.Vec3;
  * (도트 2D + 바닐라 빛 파티클 — CommonSkills.eyeSlash) · 칼끝 불티 · 맞는 자리 반짝임을 그 사람 직업의 그림 묶음으로 (직업이 없으면 강철 묶음).
  * 연타의 마지막 타 (칼 둘째 · 대검 · 낫 셋째 · 창 둘째) 는 크게 + 겹 베기 · 섬광 · 발밑 충격 고리. 연출만 (피해 · 범위는 평타 그대로). 화면 흔들림 없음.
  * <p>2026-11-26 사용자 "마크 파티클은 최소한으로": 바닐라 파티클 겹 (위르드식 — 불티 · 반짝임 · 섬광 · 충격 고리의 바닐라 겹) 은 그리지 않음 (WyrdKit mute —
- * 도트 2D 그림판 그림만), "참격은 더 크게": 눈앞 베기 × BASIC_SLASH.eyeScale.
+ * 도트 2D 그림판 그림만). 같은 날 "모든 평타 때릴때마다 왜 세로 베기 파란색 나오냐 없애고": 눈앞 베기 (eyeSlash — 1인칭 초승달 · 남에게 세운 반달 판) 를 뺌 —
+ * 남은 것은 칼끝 불티 · 마무리 섬광 · 발밑 충격 고리 · 창 찌르기 칼빛 · 방패 밀치기 충격.
  * <p>모양: 판 (rules_more BASIC_SLASH.motions) 의 face — up (가로 베기: mirror 면 반대쪽) · front (세로 · 대각: start 도 = 휘두름 시작 쪽 — 90 위,
  * 225 왼쪽 아래) · thrust (창 찌르기 — 곧은 칼빛) · 방패 밀치기 (bash — 앞 충격).
  */
@@ -43,12 +44,6 @@ public final class BasicFx {
         } finally {
             WyrdKit.muteOut();
         }
-    }
-
-    /** 2026-11-26 사용자 "참격은 더 크게": 눈앞 베기 크기 배율 (BASIC_SLASH.eyeScale) */
-    static double eyeScale() {
-        Obj c = mmorpg.core.Rules.get().root().objOrNull("BASIC_SLASH");
-        return c == null ? 1 : c.numOr("eyeScale", 1);
     }
 
     /**
@@ -150,20 +145,12 @@ public final class BasicFx {
             PhantomFx.impact(level, L, at, 0.9 * k);
             return;
         }
-        double tilt;
-        if ("front".equals(face)) {
-            // 세로 · 대각: 시작 쪽 start (화면 도 — 90 위) → 반대쪽으로. 눈앞 베기의 tilt 는 0 = 왼쪽 → 아래 → 오른쪽
-            tilt = spec.numOr("start", 90) - 180 + (spec.truthy("mirror") ? 180 : 0);
-        } else {
-            tilt = spec.truthy("mirror") ? 180 : 0; // 가로 베기 (반대쪽 = 뒤집음)
-        }
-        double size = (0.62 + radius * 0.16) * k * eyeScale();
-        PhantomFx.Lib S = slashLib(L);
-        CommonSkills.eyeSlash(sp, S, 1.45, 0.2, size, tilt, finisher ? 0.42 : 0.32);
+        // 2026-11-26 사용자 "모든 평타 때릴때마다 왜 세로 베기 파란색 나오냐 없애고": 직업 묶음 눈앞 베기 (CommonSkills.eyeSlash — 1인칭 눈앞 초승달 ·
+        // 남에게는 몸 앞에 세운 반달 판, 강철 묶음이면 파란색) 를 그리지 않음 — 동작과 상관없이 늘 같은 쪽으로 서 있어 가로 베기에도 세로 베기처럼 보였음
+        // (CI 45787275345 · 45790897668 영상). 베기 모양은 무기 색 참격 판 (BasicSlash) 이 동작대로. 마무리의 반대 겹 베기도 뺌
         PhantomFx.embers(level, L, tip, finisher ? 10 : 5, 0.9 * k, 0.3, 12);
         if (finisher) {
-            // 마무리: 반대로 한 번 더 (겹 베기) · 섬광 · 발밑 충격 고리
-            RuneKit.later(2, () -> quiet(() -> CommonSkills.eyeSlash(sp, S, 1.6, 0.25, size * 1.12, tilt + 180 + 14, 0.4)));
+            // 마무리: 섬광 · 발밑 충격 고리
             PhantomFx.flash(level, L, tip, 2.0, hide);
             PhantomFx.shock(level, shockLib(L), sp.position(), 3.6, 1, hide);
         }
