@@ -361,6 +361,24 @@ public final class RpgGameTests {
         });
     }
 
+    /**
+     * 2026-11-26 활 · 완드 평타 그림 (빛줄기 · 지나간 자리 선 · 불꽃 · 마법진 · 마법진 번쩍임) 은 모드 없는 클라이언트에 같은 변수의 애드온 파티클 (글자 표시) 로 —
+     * 다섯 종류 모두 애드온 파티클이 있고 변수가 실림 (이름이 틀리면 모드 없는 클라이언트에 아무것도 안 그려짐)
+     */
+    @GameTest
+    public void bowWandArtHasAddonParticles(GameTestHelper h) {
+        for (int k = 0; k < mmorpg.fabric.Fx.ADDON_KIND.length; k++) {
+            String id = mmorpg.fabric.Fx.ADDON_KIND[k];
+            h.assertTrue(mmorpg.fabric.AddonFxTable.particle(id) >= 0, "add-on particle " + id);
+            mmorpg.fabric.FxOptions o = new mmorpg.fabric.FxOptions(k, -1, new Vec3(0, 0, 1), 1F, 0.3F, 0.08F, 0.4F, 0.1F, 0F, 0F, 0.5F, 0xCCFF8040);
+            mmorpg.fabric.AddonParticleOptions a = mmorpg.fabric.Fx.addonOf(o);
+            h.assertTrue(a != null, "add-on art for kind " + k);
+        }
+        h.assertTrue(mmorpg.fabric.Fx.addonOf(new mmorpg.fabric.FxOptions(mmorpg.fabric.FxOptions.SPRITE, 0, Vec3.ZERO, 0F, 1F, 0F, 0.3F, 0F, 0F, 0F, 1F,
+                -1)) == null, "sprites are not bridged here");
+        h.succeed();
+    }
+
     @GameTest(maxTicks = 60)
     public void damageNumberRisesAndVanishes(GameTestHelper h) {
         Zombie z = dummy(h, 3.5, 2, 3.5);

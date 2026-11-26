@@ -119,6 +119,50 @@ public final class Fx {
         level.sendParticles(o, true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
     }
 
+    /** 그림 파티클 종류 (FxOptions.kind 0 ~ 4) → 같은 변수의 애드온 파티클 (애드온 그림 그대로) */
+    public static final String[] ADDON_KIND = {"rpg:arrow_shot", "rpg:arrow_trail", "rpg:arrow_spark", "rpg:magic_circle", "rpg:magic_circle_flash"};
+    /** 시험: 모드 없는 클라이언트에 애드온 그림 (글자 표시) 으로 보낸 활 · 완드 평타 그림 수 */
+    public static int basicBridged;
+
+    /**
+     * 2026-11-26 사용자 "마크 파티클은 최소한으로" (평타 — 활 · 완드): 활 · 완드 평타의 그림 파티클 (빛줄기 · 지나간 자리 선 · 불꽃 · 마법진 · 마법진 번쩍임) 은
+     * 모드 없는 클라이언트에서 비슷한 바닐라 파티클 (끝막대 · 초록 별 · 혼불 · 마녀 · 치명타 별 — VanillaParticles) 로 바뀌어 보였음 (CI 45787275345 영상 —
+     * 활 · 완드 평타의 초록 별 · 흰 점). 모드 클라이언트에는 그대로, 모드 없는 클라이언트에는 같은 변수의 애드온 파티클 (ADDON_KIND) 을 서버가 계산한 글자 표시로
+     * (vfx.PBridge — 애드온 그림 그대로). plain = 모드 없는 클라이언트에도 그림 (false 면 모드 클라이언트만 — 글자 표시 수를 줄일 때)
+     */
+    static void fxBasic(ServerLevel level, Vec3 at, FxOptions o, boolean plain) {
+        java.util.List<ServerPlayer> vanilla = null;
+        for (ServerPlayer sp : level.players()) {
+            if (mmorpg.fabric.vanilla.VanillaClients.isModded(sp)) {
+                level.sendParticles(sp, o, true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            } else if (plain) {
+                if (vanilla == null) vanilla = new java.util.ArrayList<>(2);
+                vanilla.add(sp);
+            }
+        }
+        if (vanilla == null) return;
+        AddonParticleOptions a = addonOf(o);
+        if (a == null) return;
+        basicBridged++;
+        mmorpg.fabric.vfx.PBridge.spawn(level, a, at, vanilla);
+    }
+
+    static void fxBasic(ServerLevel level, Vec3 at, FxOptions o) {
+        fxBasic(level, at, o, true);
+    }
+
+    /** 그림 파티클 (빛줄기 · 지나간 자리 선 · 불꽃 · 마법진 · 마법진 번쩍임) → 같은 변수의 애드온 파티클 (없으면 null) */
+    public static AddonParticleOptions addonOf(FxOptions o) {
+        if (o == null || o.kind() < 0 || o.kind() >= ADDON_KIND.length) return null;
+        int p = AddonFxTable.particle(ADDON_KIND[o.kind()]);
+        if (p < 0) return null;
+        int c = o.color();
+        double[] rgb = {(c >> 16 & 0xFF) / 255.0, (c >> 8 & 0xFF) / 255.0, (c & 0xFF) / 255.0};
+        return AddonFx.vars().vec("dir", o.dir()).set("speed", o.speed()).set("size", o.size()).set("thick", o.thick()).set("life", o.life())
+                .set("delay", o.delay()).set("grow", o.grow()).set("spin", o.spin()).set("progress", o.progress()).color("color", rgb, (c >>> 24) / 255.0)
+                .options(p);
+    }
+
     // ------------------------------------------------------------ 활 (combat.js arrowFx · arrowImpactFx)
 
     /** 빛줄기 모양 (combat.js SHOT): 반 길이 · 반 두께 · 지나간 자리 선 조각 간격 · 반 길이 · 반 두께 · 사라지는 시간 */
@@ -138,14 +182,14 @@ public final class Fx {
         double[] c = cs[0];
         Vec3 d = path.dir();
         float thick = (float) (SHOT_THICK * (shot.half() / SHOT_HALF));
-        fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(), (float) shot.half(), thick,
+        fxBasic(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(), (float) shot.half(), thick,
                 (float) shot.life(), 0F, 0F, 0F, 1F, argb(c, 1)));
         // 영웅 · 초월: 빛줄기 가운데 흰 심지 한 줄 (뒤에 보냄 — 위에 그려짐)
-        if (cs[1] != null) fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(),
+        if (cs[1] != null) fxBasic(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(),
                 (float) (shot.half() * 0.9), thick * 0.38F, (float) shot.life(), 0F, 0F, 0F, 1F, argb(cs[1], 1)));
         for (double s = SEG_GAP / 2; s <= path.length() - 0.1; s += SEG_GAP) {
             double delay = shot.speed() > 0 ? Math.max(0, (s - shot.half()) / shot.speed()) : 0;
-            fx(level, path.from().add(d.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, d, 0F, (float) SEG_HALF, (float) SEG_THICK,
+            fxBasic(level, path.from().add(d.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, d, 0F, (float) SEG_HALF, (float) SEG_THICK,
                     (float) (delay + SEG_FADE), (float) delay, 0F, 0F, 1F, argb(c, 0.9)));
         }
     }
@@ -174,7 +218,7 @@ public final class Fx {
     /** 마법진 한 틱 (0.1초짜리를 틱마다 새로 — 플레이어를 따라감): 보는 사람 쪽을 향하고, progress 만큼 그려진 그림 (10단계) */
     static void magicCircle(ServerLevel level, Vec3 at, Weapon w, double spinDeg, double progress) {
         Obj circle = WAND.obj("circle");
-        fx(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, -1, Vec3.ZERO, 0F, (float) circleSize(w.gradeIndex()), 0F, 0.1F, 0F, 0F, (float) spinDeg,
+        fxBasic(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, -1, Vec3.ZERO, 0F, (float) circleSize(w.gradeIndex()), 0F, 0.1F, 0F, 0F, (float) spinDeg,
                 (float) progress, argb(shotColors(WAND, w)[0], circle.num("alpha"))));
     }
 
@@ -182,10 +226,10 @@ public final class Fx {
     static void circleFlash(ServerLevel level, Vec3 at, Weapon w, double spinDeg) {
         Obj circle = WAND.obj("circle");
         double[][] cs = shotColors(WAND, w);
-        fx(level, at, new FxOptions(FxOptions.MAGIC_FLASH, -1, Vec3.ZERO, 0F, (float) circleSize(w.gradeIndex()), 0F, (float) circle.num("flashLife"), 0F, 0F,
+        fxBasic(level, at, new FxOptions(FxOptions.MAGIC_FLASH, -1, Vec3.ZERO, 0F, (float) circleSize(w.gradeIndex()), 0F, (float) circle.num("flashLife"), 0F, 0F,
                 (float) spinDeg, 1F, argb(cs[0], 1)));
         // 영웅 · 초월: 가운데 심지 빛 (작게 번쩍)
-        if (cs[1] != null) fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, (float) (circleSize(w.gradeIndex()) * 0.55), 0F, 0.2F, 0F, 2.2F,
+        if (cs[1] != null) fxBasic(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, (float) (circleSize(w.gradeIndex()) * 0.55), 0F, 0.2F, 0F, 2.2F,
                 0F, 1F, argb(cs[1], 0.9)));
     }
 
@@ -207,9 +251,9 @@ public final class Fx {
         Vec3 u = len > 1e-6 ? d.scale(1 / len) : Vec3.ZERO;
         if (cs[1] == null) {
             // 2026-11-26 사용자 "마크 파티클은 최소한으로" (평타): 일반 ~ 고귀 완드의 바닐라 궤적 (end_rod · 혼불 · 마녀 · 불꽃 · 레드스톤 가루) 대신
-            // 영웅 · 초월과 같은 무기 색 빛줄기 조각만 (빛 방울 없이)
+            // 영웅 · 초월과 같은 무기 색 빛줄기 조각만 (빛 방울 없이 — 모드 없는 클라이언트는 애드온 그림 글자 표시, fxBasic)
             for (double s = 0.6; s <= len - 0.1; s += SEG_GAP) {
-                fx(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.07F, 0.4F, 0F, 0F, 0F, 1F, argb(cs[0], 0.8)));
+                fxBasic(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.07F, 0.4F, 0F, 0F, 0F, 1F, argb(cs[0], 0.8)));
             }
             return;
         }
@@ -217,13 +261,14 @@ public final class Fx {
         // 바닐라 궤적 자리 (0.4칸마다) 에 빛 방울 (보는 쪽을 향함 — 1인칭 앞으로 곧게 뻗어도 보임), 셋에 하나는 심지 색 · 조금씩 위로 떠오름
         Vec3[] b = basis(u);
         for (double s = 0.6; s <= len - 0.1; s += SEG_GAP) {
-            fx(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.08F, 0.45F, 0F, 0F, 0F, 1F, argb(cs[0], 0.85)));
+            fxBasic(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.08F, 0.45F, 0F, 0F, 0F, 1F, argb(cs[0], 0.85)));
         }
         int i = 0;
         for (double s = 0.8; s <= len; s += 0.4, i++) {
             Vec3 drift = b[1].scale(0.8).add(b[0].scale(i % 2 == 0 ? 0.5 : -0.5)).normalize();
-            fx(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_SPARK, -1, drift, 0.5F, 0.15F, 0F, 0.6F, 0F, 0.3F, 0F, 1F,
-                    argb(i % 3 == 2 ? cs[1] : cs[0], 0.95)));
+            // 모드 없는 클라이언트는 둘에 하나만 (글자 표시 수 — 빛 방울은 0.4칸마다)
+            fxBasic(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_SPARK, -1, drift, 0.5F, 0.15F, 0F, 0.6F, 0F, 0.3F, 0F, 1F,
+                    argb(i % 3 == 2 ? cs[1] : cs[0], 0.95)), i % 2 == 0);
         }
     }
 
