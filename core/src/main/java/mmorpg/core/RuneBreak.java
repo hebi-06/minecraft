@@ -48,7 +48,7 @@ public final class RuneBreak {
     public record Extra(int at, String type, double mult, int after, Map<String, Object> set, String text) {}
 
     private record Data(int max, double perLevel, List<String> scaleKeys, double grindPerLevel, List<Integer> tiers, Map<Integer, Fx> fx,
-            Map<String, Map<Integer, List<Change>>> transcend, Map<String, Extra> extras) {}
+            Map<String, Map<Integer, List<Change>>> transcend, Map<String, Map<Integer, List<Change>>> family, Map<String, Extra> extras) {}
 
     private static final Data DATA = load();
 
@@ -109,11 +109,32 @@ public final class RuneBreak {
         return List.copyOf(DATA.transcend().keySet());
     }
 
-    /** 룬 효과 fn 의 tier 돌 강화 (없으면 빈 목록) */
+    /** 룬 효과 fn 의 tier 돌 강화 (없으면 빈 목록 — 계열의 덮어쓰기 전: 룬 하나는 {@link #changes(Runes.Rune, int)}) */
     public static List<Change> changes(String fn, int tier) {
         Map<Integer, List<Change>> m = DATA.transcend().get(fn);
         List<Change> l = m == null ? null : m.get(tier);
         return l == null ? List.of() : l;
+    }
+
+    /**
+     * 이 룬의 tier 돌 강화: fn 의 것에 계열의 덮어쓰기 (rune_break.json transcendFamily — 2026-11-28 사용자 "너가 말한대로 하자": 같은 fn 을 쓰는 새 룬의
+     * 단계 값이 옛 룬과 다를 때 — 쿨 32초 &lt; 초월 기준 36초인 이모탈 오스 · 버서커의 지키는 유틸 × 쿨 ÷ 기준). 같은 key 는 그 자리에서 덮고, 없는 key 는 뒤에 붙음
+     */
+    public static List<Change> changes(Runes.Rune r, int tier) {
+        if (r == null) return List.of();
+        List<Change> base = changes(r.def().strOrNull("fn"), tier);
+        Map<Integer, List<Change>> fam = DATA.family().get(r.family());
+        List<Change> over = fam == null ? null : fam.get(tier);
+        if (over == null || over.isEmpty()) return base;
+        Map<String, Change> byKey = new LinkedHashMap<>();
+        for (Change c : base) byKey.put(c.key(), c);
+        for (Change c : over) byKey.put(c.key(), c);
+        return List.copyOf(byKey.values());
+    }
+
+    /** 단계 값을 덮어쓰는 계열 (transcendFamily) */
+    public static List<String> familyOverrides() {
+        return List.copyOf(DATA.family().keySet());
     }
 
     /** 룬 효과 fn 의 단계 효과 (없으면 null) */
@@ -168,10 +189,9 @@ public final class RuneBreak {
         Map<String, Object> m = new LinkedHashMap<>();
         for (String k : base.keys()) m.put(k, base.get(k));
         if (tiered(r)) {
-            String fn = base.str("fn");
             for (int t : DATA.tiers()) {
                 if (lv < t) break;
-                for (Change c : changes(fn, t)) m.put(c.key(), c.to());
+                for (Change c : changes(r, t)) m.put(c.key(), c.to());
             }
         }
         double coef = coef(lv);
@@ -211,14 +231,13 @@ public final class RuneBreak {
     /** 초월 룬의 tier 돌 강화 글자 조각 ("운석 범위 6 → 7.5칸" …) — 앞 단계 값에서 바뀐 값으로 */
     public static List<String> changeTexts(Runes.Rune r, int tier) {
         if (!tiered(r)) return List.of();
-        String fn = r.def().str("fn");
         Map<String, Double> cur = new LinkedHashMap<>();
         for (int t : DATA.tiers()) {
             if (t >= tier) break;
-            for (Change c : changes(fn, t)) cur.put(c.key(), c.to());
+            for (Change c : changes(r, t)) cur.put(c.key(), c.to());
         }
         List<String> out = new ArrayList<>();
-        for (Change c : changes(fn, tier)) {
+        for (Change c : changes(r, tier)) {
             if (c.text() == null || c.text().isEmpty()) continue;
             Double from = cur.containsKey(c.key()) ? cur.get(c.key()) : r.def().numOrNull(c.key());
             if (from == null) from = c.base();
@@ -334,16 +353,12 @@ public final class RuneBreak {
         }
         Map<String, Map<Integer, List<Change>>> tr = new LinkedHashMap<>();
         Obj to = root.obj("transcend");
-        for (String fn : to.keys()) {
-            Obj byTier = to.obj(fn);
-            Map<Integer, List<Change>> m = new TreeMap<>();
-            for (String t : byTier.keys()) {
-                if (t.isEmpty() || !t.chars().allMatch(Character::isDigit)) continue; // "extra" 등
-                List<Change> list = new ArrayList<>();
-                for (Obj c : byTier.objsOrNull(t)) list.add(new Change(c.str("key"), c.num("to"), c.numOr("div", 1), c.strOr("text", ""), c.numOrNull("base")));
-                m.put(Integer.parseInt(t), List.copyOf(list));
-            }
-            tr.put(fn, Collections.unmodifiableMap(m));
+        for (String fn : to.keys()) tr.put(fn, tierChanges(to.obj(fn)));
+        // 2026-11-28 계열의 덮어쓰기 (새 룬 — 옛 룬과 같은 fn · 다른 단계 값)
+        Map<String, Map<Integer, List<Change>>> fam = new LinkedHashMap<>();
+        Obj fo2 = root.objOrNull("transcendFamily");
+        if (fo2 != null) {
+            for (String f : fo2.keys()) if (!f.startsWith("_")) fam.put(f, tierChanges(fo2.obj(f)));
         }
         Map<String, Extra> extras = new LinkedHashMap<>();
         for (String fn : to.keys()) {
@@ -355,6 +370,18 @@ public final class RuneBreak {
             extras.put(fn, new Extra((int) e.num("at"), e.str("type"), e.numOr("mult", 0), (int) e.numOr("after", 0), Collections.unmodifiableMap(set), e.str("text")));
         }
         return new Data((int) root.num("max"), root.num("perLevel"), List.copyOf(scale), root.numOr("grindPerLevel", 1), List.copyOf(tiers),
-                Collections.unmodifiableMap(fx), Collections.unmodifiableMap(tr), Collections.unmodifiableMap(extras));
+                Collections.unmodifiableMap(fx), Collections.unmodifiableMap(tr), Collections.unmodifiableMap(fam), Collections.unmodifiableMap(extras));
+    }
+
+    /** 단계 → 바뀌는 값 ("3" · "6" — "extra" · "_note" 등 숫자가 아닌 키는 건넘) */
+    private static Map<Integer, List<Change>> tierChanges(Obj byTier) {
+        Map<Integer, List<Change>> m = new TreeMap<>();
+        for (String t : byTier.keys()) {
+            if (t.isEmpty() || !t.chars().allMatch(Character::isDigit)) continue; // "extra" 등
+            List<Change> list = new ArrayList<>();
+            for (Obj c : byTier.objsOrNull(t)) list.add(new Change(c.str("key"), c.num("to"), c.numOr("div", 1), c.strOr("text", ""), c.numOrNull("base")));
+            m.put(Integer.parseInt(t), List.copyOf(list));
+        }
+        return Collections.unmodifiableMap(m);
     }
 }

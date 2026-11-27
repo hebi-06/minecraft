@@ -83,7 +83,7 @@ public final class RuneBreakTest {
             fns.add(fn);
             check(RuneBreak.tiered(t), fn + " tiered");
             for (int tier : RuneBreak.tiers()) {
-                List<RuneBreak.Change> cs = RuneBreak.changes(fn, tier);
+                List<RuneBreak.Change> cs = RuneBreak.changes(t, tier); // 2026-11-28 계열의 덮어쓰기 (transcendFamily) 까지
                 check(!cs.isEmpty(), fn + " " + tier + " has changes");
                 check(!RuneBreak.changeTexts(t, tier).isEmpty(), fn + " " + tier + " has text");
                 for (RuneBreak.Change c : cs) {
@@ -93,15 +93,16 @@ public final class RuneBreakTest {
                     double from = base != null ? base : c.base() != null ? c.base() : Double.NaN;
                     // 2026-11-18 버서커 (초월 돌파 기준선 — 사용자 "기준선에 맞춤"): 광폭화가 길어지는 (hits) 단계의 한 번의 배율은 작아질 수 있음 — 그 단계의 합은 커짐
                     int prev = tier == 3 ? 0 : 3;
-                    boolean longer = "mult".equals(c.key()) && cs.stream().anyMatch(o -> "hits".equals(o.key()))
+                    // 2026-11-28 이모탈 오스 (맹약 — 반격 수 = ticks ÷ pulse) 도 같음
+                    boolean longer = "mult".equals(c.key()) && cs.stream().anyMatch(o -> "hits".equals(o.key()) || "ticks".equals(o.key()))
                             && Runes.runeTotalMult(RuneBreak.def(t, tier)) > Runes.runeTotalMult(RuneBreak.def(t, prev)) + 1e-9;
                     check(c.to() > from || longer, fn + " " + tier + " " + c.key() + " grows " + from + " → " + c.to());
                     check(c.div() > 0, fn + " div");
                 }
                 for (String s : RuneBreak.changeTexts(t, tier)) check(!s.contains("{") && !s.contains("?"), fn + " text filled: " + s);
             }
-            for (RuneBreak.Change c6 : RuneBreak.changes(fn, 6)) {
-                for (RuneBreak.Change c3 : RuneBreak.changes(fn, 3)) {
+            for (RuneBreak.Change c6 : RuneBreak.changes(t, 6)) {
+                for (RuneBreak.Change c3 : RuneBreak.changes(t, 3)) {
                     if (c3.key().equals(c6.key())) check(c6.to() > c3.to(), fn + " " + c6.key() + " 6 > 3");
                 }
             }
@@ -237,6 +238,30 @@ public final class RuneBreakTest {
         Runes.Rune bersNew = rune("berserker", "transcend");
         near(Runes.runeTotalMult(RuneBreak.def(bersNew, 3)) / Runes.runeTotalMult(bersNew.def()), 39 / 31.98, "new berserker 3 growth on the line");
         near(Runes.runeTotalMult(RuneBreak.def(rune("spiritking", "transcend"), 3)), 39, "new spirit king 3 total 39");
+        // 2026-11-28 쿨 32초 < 초월 기준 36초인 새 룬 둘 (사용자 "너가 말한대로 하자" — 지키는 유틸 × 쿨 ÷ 기준 0.889 을 돌파 단계에도, rune_break.json
+        // transcendFamily): 이모탈 오스 맹약 7 · 9 · 11초 (3돌 즉시 회복 18% · 반격 한 번 2.37 — 초월 돌파 선) · 버서커 받는 피해 −18 · −27 · −31%. 옛 룬 (vit · axe) 은 그대로
+        check(RuneBreak.familyOverrides().equals(List.of("immortaloath", "berserker")), "family overrides " + RuneBreak.familyOverrides());
+        for (String f : RuneBreak.familyOverrides()) check(RuneBreak.tiered(rune(f, "transcend")) && Runes.isSet(f), f + ": a tiered set rune");
+        Runes.Rune oath = rune("immortaloath", "transcend");
+        near(RuneBreak.def(oath, 3).num("ticks"), 180, "immortal oath 3: 9s");
+        near(RuneBreak.def(oath, 6).num("ticks"), 220, "immortal oath 6: 11s");
+        near(RuneBreak.def(oath, 3).num("instantHeal"), 0.18, "immortal oath 3: instant heal 18%");
+        near(RuneBreak.def(oath, 6).num("radius"), 5.5, "immortal oath 6: radius from the fn table");
+        double oath0 = Runes.runeTotalMult(oath.def());
+        near(oath0, 2.5 * 7, "immortal oath 0: 7 pulses");
+        check(Math.abs(Runes.runeTotalMult(RuneBreak.def(oath, 3)) / oath0 - 39 / 32.0) < 0.01, "immortal oath 3 on the line " + Runes.runeTotalMult(RuneBreak.def(oath, 3)) / oath0);
+        check(Math.abs(Runes.runeTotalMult(RuneBreak.def(oath, 6)) / oath0 - 50 / 32.0) < 0.02, "immortal oath 6 on the line " + Runes.runeTotalMult(RuneBreak.def(oath, 6)) / oath0);
+        check(RuneBreak.changeTexts(oath, 3).equals(List.of("맹약 7 → 9초 (회복 · 반격도 더)", "쓸 때 최대 체력 18% 회복")), "immortal oath 3 text " + RuneBreak.changeTexts(oath, 3));
+        check(RuneBreak.changeTexts(oath, 6).equals(List.of("맹약 9 → 11초", "반격 범위 4 → 5.5칸")), "immortal oath 6 text " + RuneBreak.changeTexts(oath, 6));
+        check(RuneBreak.changeTexts(rune("vit", "transcend"), 3).contains("맹약 8 → 10초 (회복 · 반격도 더)"), "old undying 3 text kept " + RuneBreak.changeTexts(rune("vit", "transcend"), 3));
+        near(Runes.runeTotalMult(RuneBreak.def(rune("vit", "transcend"), 6)), 2.5 * 12, "old undying 6: 12 pulses");
+        near(RuneBreak.def(bersNew, 3).num("reduce"), 0.27, "new berserker 3: −27%");
+        near(RuneBreak.def(bersNew, 6).num("reduce"), 0.31, "new berserker 6: −31%");
+        near(RuneBreak.def(bersNew, 6).num("hits"), 10, "new berserker 6: rage 10s from the fn table");
+        near(RuneBreak.def(bersNew, 6).num("heal"), 0.018 * 1.6, "new berserker 6: lifesteal 1.8% × coef");
+        check(RuneBreak.changeTexts(bersNew, 3).contains("받는 피해 -18 → -27%") && RuneBreak.changeTexts(bersNew, 6).contains("받는 피해 -27 → -31%"),
+                "new berserker % " + RuneBreak.changeTexts(bersNew, 3) + " " + RuneBreak.changeTexts(bersNew, 6));
+        near(RuneBreak.def(bers, 6).num("reduce"), 0.35, "old berserker 6: −35% kept");
         near(RuneBreak.def(king, 6).num("hits"), 4, "spirit king: one attack per spirit at every tier (hits on one target stay 10 ticks apart)");
         check(RuneBreak.changeTexts(rune("str", "transcend"), 6).contains("사거리 22 → 28칸"), "heavenFall 6 range from base");
         check(plain(RuneBreak.summaryLine(3, false)).equals("돌파 ★★★☆☆☆ 3/6 · 계수 ×1.3"), "summary " + plain(RuneBreak.summaryLine(3, false)));

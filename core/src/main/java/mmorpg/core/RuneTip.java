@@ -581,7 +581,7 @@ public final class RuneTip {
             if (tot > 0) parts.add("총 피해 " + num + dmg(c, tot, t) + body);
             if (Runes.isGrace(dt)) parts.add("가호 " + num + graceText(dt, c.applied(), t) + body);
             if (Runes.isBrand(dt)) parts.add("낙인 " + num + brandText(dt, c.applied(), t) + body);
-            for (RuneBreak.Change ch : RuneBreak.changes(fn, t)) {
+            for (RuneBreak.Change ch : RuneBreak.changes(r, t)) {
                 String txt = ch.text();
                 if (txt == null || txt.isEmpty()) continue;
                 Double from = cur.containsKey(ch.key()) ? cur.get(ch.key()) : r.def().numOrNull(ch.key());
@@ -593,7 +593,7 @@ public final class RuneTip {
                 txt = txt.replace("{from}", from == null ? "?" : n(from / ch.div())).replace("{to}", n(ch.to() / ch.div())).replace("위력", "피해");
                 parts.add(txt);
             }
-            for (RuneBreak.Change ch : RuneBreak.changes(fn, t)) cur.put(ch.key(), ch.to());
+            for (RuneBreak.Change ch : RuneBreak.changes(r, t)) cur.put(ch.key(), ch.to());
             RuneBreak.Extra ex = RuneBreak.extra(fn);
             if (ex != null && ex.at() == t && "echo".equals(ex.type())) {
                 parts.add("◆ " + ex.text().replace("위력 {mult}%", num + dmg(c, tot * ex.mult(), t) + body));

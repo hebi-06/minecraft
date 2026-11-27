@@ -101,6 +101,23 @@ public final class RuneScaleTest {
         near(Runes.utilCost(luna), 0.25 * 36 / 50.0, "lunaexec util × 36 / 50");
         near(Runes.damageScale(luna) / Runes.budgetScale(luna), 1.1 * 1.08 * (1 - 0.18), "lunaexec scale: 중거리 × 좁은 범위 × (1 − 유틸 18%) — 선딜 보정 없음");
         near(rune("glacier", "transcend").def().num("lift"), 0.35, "glacier crush lift: hit reaction size");
+        // 2026-11-28 쿨 32초 < 초월 기준 36초인 지키는 룬 둘 (사용자 "너가 말한대로 하자" — 지속 · 세기 × 쿨 ÷ 기준, tools/rune_set.py fit): 이모탈 오스 맹약 8 → 7초
+        // (회복 · 반격 7번 — 한 번의 배율 합은 예산 그대로) · 버서커 받는 피해 −20 → −18% · 흡혈 2 → 1.8% (광폭화 6초 · 난타 6번 그대로)
+        Runes.Rune oath = rune("immortaloath", "transcend");
+        near(oath.def().num("ticks"), 140, "immortal oath 7s");
+        near(Runes.spreadEntry(oath).num("t"), 120, "immortal oath last pulse at 120 ticks");
+        double oathBudget = Runes.runeTotalMult(oath.def()) * Runes.budgetScale(oath);
+        check(Math.abs(oathBudget - 32 / 36.0 * 32) < 1e-3, "immortal oath budget kept (7 pulses × 2.5 × scale — scale 소수 넷째 자리) " + oathBudget);
+        near(Runes.utilValue(oath, "undying"), 0.175, "immortal oath undying 0.2 × 0.875");
+        near(Runes.utilValue(oath, "heal"), 0.1313, "immortal oath heal 0.15 × 0.875");
+        near(Runes.utilCost(oath), (0.175 + 0.1313) * 36 / 32.0, "immortal oath util 39.4 → 34.5%");
+        Runes.Rune bz = rune("berserker", "transcend");
+        near(bz.def().num("reduce"), 0.18, "new berserker −18%");
+        near(bz.def().num("heal"), 0.018, "new berserker lifesteal 1.8%");
+        check(bz.def().num("hits") == 6 && bz.def().num("gap") == 20, "new berserker rage 6s kept");
+        near(Runes.utilValue(bz, "lifesteal"), 0.09, "new berserker lifesteal 0.1 × 0.9");
+        near(Runes.utilCost(bz), (0.18 + 0.09) * 36 / 32.0, "new berserker util 33.8 → 30.4%");
+        near(Runes.utilCost(rune("axe", "transcend")), 0.2, "old berserker (숨김 — 표의 값 · 재사용 맞춤 없음) util kept");
     }
 
     /** 배율 합 그대로 두는 룬 (지원 · 버프 — 유틸 값 없음) */
@@ -108,6 +125,8 @@ public final class RuneScaleTest {
             "holy.transcend", "body.common", "body.rare", "body.noble", "body.hero", "body.transcend", "strike.common", "strike.rare", "strike.noble",
             "strike.transcend", "yggdrasil.transcend", "abyss.transcend");
     private static final double[] BUDGET = {4, 7, 12, 20, 32};
+    /** 2026-11-28 지키는 유틸 (버팀 · 회복 · 흡혈 · 받는 피해 감소 · 보호막 · 아군 보호 — 쿨이 등급 기준보다 짧으면 지속 · 세기를 쿨 ÷ 기준 만큼) */
+    private static final Set<String> GUARD = Set.of("undying", "heal", "lifesteal", "reduce", "shield", "allyGuard");
     /** 등급의 재사용 (초 — 새 룬의 예산 = BUDGET ÷ BASE_CD × 룬의 재사용) */
     private static final double[] BASE_CD = {8, 12, 18, 26, 36};
 
@@ -173,10 +192,26 @@ public final class RuneScaleTest {
                     near(Runes.utilCdFactor(r), BASE_CD[gi] / r.cd(), id + " util cd factor");
                     near(Runes.utilCost(r), Math.min(0.6, raw * BASE_CD[gi] / r.cd()), id + " util cost × base cd ÷ cd");
                     // 2026-11-18 받는 피해 감소 = 세기 × 막는 시간 비례 (사용자 "비례로 다시 매김" — 기준 −30% · 2초 = 0.1)
+                    Set<String> own = new java.util.HashSet<>();
                     if (Runes.utils(r).contains("reduce")) {
                         double sec = d.has("ticks") ? d.num("ticks") / 20 : d.num("hits") * d.num("gap") / 20;
                         near(Runes.utilValue(r, "reduce"), 0.1 * d.num("reduce") * sec / 0.6, id + " reduce value = cut × seconds");
-                    } else check(!Runes.spreadEntry(r).has("uCost"), id + " no own util value");
+                        own.add("reduce");
+                    }
+                    // 2026-11-28 지키는 유틸 · 쿨 (사용자 "너가 말한대로 하자"): 쿨이 등급 기준보다 짧은 룬은 지속 · 세기를 쿨 ÷ 기준 만큼 줄임 → 받는 피해 감소 밖의
+                    // 지키는 유틸은 룬마다 값 (uCost = 표의 값 × 줄인 비율 — 표보다 작고, 재사용 맞춤 뒤 표의 값과 3.5% 안: 켜져 있는 몫 = 등급 기준)
+                    if (r.cd() < BASE_CD[gi]) {
+                        for (String k : Runes.utils(r)) {
+                            if (!GUARD.contains(k) || k.equals("reduce")) continue;
+                            double table = u.obj(k).num("cost");
+                            double fitted = Runes.utilValue(r, k) * Runes.utilCdFactor(r);
+                            check(Runes.utilValue(r, k) < table && Math.abs(fitted - table) <= table * 0.035,
+                                    id + " " + k + " fitted to the cd: " + Runes.utilValue(r, k) + " × " + Runes.utilCdFactor(r) + " ≈ " + table);
+                            own.add(k);
+                        }
+                    }
+                    Obj uc = Runes.spreadEntry(r).objOrNull("uCost");
+                    check(uc == null ? own.isEmpty() : uc.keys().equals(own), id + " own util values " + (uc == null ? "none" : uc.keys()) + " = " + own);
                     if (e.truthy("guard")) near(Runes.windupBonus(r), 0, id + " guard → no windup bonus");
                     if (total > 0) {
                         double want = BUDGET[gi] / BASE_CD[gi] * r.cd();

@@ -15,6 +15,8 @@
 - 실효 = 예산 × 거리 (근 ×1.2 · 중 ×1.1 · 원 ×1.0) × 원소 (−5%) × (1 − 유틸) × 시간 보정 × 범위 보정 — Runes.damageScale (+ 거리 · scale)
 - 시간 보정: 원거리 시전 룬 (cast) 은 선딜 보정 없음 (거리 보정 안) · 막는 선딜 (spread guard — 선딜 동안 피해 감소) 도 선딜 보정 없음
 - 유틸 값 = 표의 값 × 등급 기준 재사용 ÷ 룬의 재사용 (RUNE_SET.baseCd — Runes.utilCdFactor: 한 번에 같은 유틸 → 쿨이 길면 드물게 켜져 초당 값이 작음)
+- 2026-11-28 지키는 유틸 (버팀 · 회복 · 흡혈 · 받는 피해 감소 · 보호막 · 아군 보호) 은 쿨이 등급 기준보다 짧으면 지속 · 세기를 쿨 ÷ 기준 만큼 줄임 (사용자 "너가 말한대로 하자" —
+  더 자주 켜지는 만큼 한 번을 줄여 켜져 있는 몫을 등급 기준 그대로 · FIT: 룬마다 줄인 비율, 그 유틸 값 = 표의 값 × 비율 → uCost)
 - 룬 위력 = 네 스탯의 합 (한정 룬 식 — sum)
 - 받는 피해 증가는 일반 룬에 없음 (한정 룬만)
 - 동작 (fn) 은 처음에 옛 룬의 것을 이어 씀 (look = 옛 계열:등급 — 위르드식 그림 묶음), 새 컨셉 여덟은 비슷한 옛 동작 → 시범 · 등급 묶음에서 전용 동작으로
@@ -38,6 +40,9 @@ GRADE_BASE = {"common": (400, 8), "rare": (700, 12), "noble": (1200, 18), "hero"
 # 2026-11-17 등급마다 재사용 범위 (초 — 사용자가 정함, 양 끝 포함)
 # 2026-11-18 받는 피해 감소의 기준 (오록스 차지 −30% · 2초 = 완전히 막은 시간 0.6초 — 표의 값 0.1)
 REDUCE_REF = 0.3 * 2
+# 2026-11-28 지키는 유틸 — 쿨이 등급 기준보다 짧은 룬은 지속 · 세기를 쿨 ÷ 기준 만큼 (룬의 fit = 줄인 비율 · 기준과 0.03 안)
+GUARD_UTILS = {"undying", "heal", "lifesteal", "reduce", "shield", "allyGuard"}
+FIT_TOL = 0.03
 
 GRADE_CD = {"common": (6, 15), "rare": (12, 21), "noble": (15, 25), "hero": (27, 38), "transcend": (32, 50)}
 RANGE = {"melee": 1.2, "mid": 1.1, "far": 1.0}
@@ -112,8 +117,10 @@ SET = [
     # 2026-11-17 도감 메모 (천붕 → 스카이폴 "유틸 삭제 및 쿨타임 증가, 이에 따른 데미지 소량 증가"): 띄움을 뺌 (유틸 −5% 가 피해로 · 쿨 50초 = 예산 × 50/36)
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
          set={"lift": 0}, desc="하늘 높이에서 거대한 검이 떨어져 꽂힘", use="원거리 광역 큰 한 방"),
+    # 2026-11-28 쿨 32초 < 초월 기준 36초 → 지키는 유틸 세기 × 0.9 (받는 피해 −20 → −18% · 흡혈 2 → 1.8% — 광폭화 6초 · 난타 6번은 그대로)
     dict(key="berserker", name="버서커", grade="transcend", cd=32, pair=["bloodknight_frenzy"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
-         set={"reduce": 0.2}, guard_sec=6, desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −20%"),
+         set={"reduce": 0.18, "heal": 0.018}, guard_sec=6, fit={"lifesteal": 0.9, "reduce": 0.9},
+         desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −18%"),
     # 2026-11-17 등급 안 밸런스: 달빛 폭발이 둘레 3칸 적도 침 (splashMult 16 — 대상의 절반) → 단일 (+15%) 이 아니라 좁은 범위 (+8% — π × 3² ≈ 28칸²)
     # 2026-11-18 코드 감사 (사용자 "램파트와 같게"): 표식 1초 (선딜) 동안 나는 투명 · 대상은 둔화 IV → 선딜이 위험이 아님 (램파트의 막는 선딜과 같음 — 선딜 보정 없음),
     # 투명 (은신) · 대상 둔화도 표에 없던 유틸 → 값
@@ -125,7 +132,10 @@ SET = [
          set={"lift": 0}, desc="각진 운석이 떨어져 폭발 · 불타는 땅", use="원거리 광역 큰 한 방"),
     dict(key="spiritking", name="스피릿 킹", grade="transcend", cd=35, pair=["mage_overload"], r="mid", src="spirit.transcend", elem="multi", u=["pull", "slow", "knock"],
          desc="네 정령이 차례로 공격한 뒤 정령왕이 강림", use="소환 · 원소"),
+    # 2026-11-28 쿨 32초 < 초월 기준 36초 → 맹약 8 → 7초 (× 0.875 — 0.889 에 가까운 1초 단위 · 반격 · 회복 20틱마다 8 → 7번, 마지막 피해 140 → 120틱 ·
+    # 돌파 10 → 9초 · 12 → 11초 — rune_break.json undyingPact)
     dict(key="immortaloath", name="이모탈 오스", grade="transcend", cd=32, pair=["priest_stigma", "saint_bond"], r="melee", src="vit.transcend", u=["undying", "heal"],
+         set={"ticks": 140}, spread={"t": 120}, fit={"undying": 0.875, "heal": 0.875},
          desc="쓰러지지 않는 맹약 — 버티며 회복하고 둘레를 침", use="버팀 · 회복"),
 ]
 
@@ -238,6 +248,7 @@ def build():
                 sp["cast"] = ct / 20.0
                 sp["castAdd"] = ct - w
             # 2026-11-18 받는 피해 감소 = 세기 × 막는 시간 비례 (사용자 "비례로 다시 매김" — 기준 −30% · 2초 = 표의 값 0.1)
+            ucost = {}
             if "reduce" in e["u"]:
                 sec = e.get("guard_sec")
                 if not sec or not d.get("reduce"):
@@ -245,7 +256,26 @@ def build():
                 ticks = d.get("ticks") or d.get("hits", 0) * d.get("gap", 0)
                 if abs(ticks / 20.0 - sec) > 1e-9:
                     raise SystemExit("막는 시간이 정의와 다름: {} {}초 ↔ {}틱".format(e["name"], sec, ticks))
-                sp["uCost"] = {"reduce": round(S["utils"]["reduce"]["cost"] * d["reduce"] * sec / REDUCE_REF, 4)}
+                ucost["reduce"] = round(S["utils"]["reduce"]["cost"] * d["reduce"] * sec / REDUCE_REF, 4)
+            # 2026-11-28 지키는 유틸 · 쿨 (사용자 "너가 말한대로 하자"): 쿨이 등급 기준보다 짧으면 지속 · 세기를 쿨 ÷ 기준 만큼 줄였는지 (fit) 보고, 그 유틸 값 = 표의 값 × 비율
+            # (받는 피해 감소는 줄인 세기 · 시간으로 위에서 셈)
+            guard = sorted(GUARD_UTILS & set(e["u"]))
+            fit = e.get("fit", {})
+            if guard and e["cd"] < base_cd:
+                want = e["cd"] / base_cd
+                for u in guard:
+                    if u not in fit or abs(fit[u] - want) > FIT_TOL:
+                        raise SystemExit("쿨이 등급 기준보다 짧은 룬의 지키는 유틸을 줄이지 않음: {} {} (쿨 {} ÷ 기준 {} = {:.3f}, fit {})".format(
+                            e["name"], u, e["cd"], base_cd, want, fit.get(u)))
+            elif fit:
+                raise SystemExit("쿨이 기준보다 짧지 않은데 fit: " + e["name"])
+            for u, k in fit.items():
+                if u not in e["u"]:
+                    raise SystemExit("fit 의 유틸이 룬에 없음: {} {}".format(e["name"], u))
+                if u != "reduce":
+                    ucost[u] = round(S["utils"][u]["cost"] * k, 4)
+            if ucost:
+                sp["uCost"] = ucost
             else:
                 sp.pop("uCost", None)
             key = e["key"]

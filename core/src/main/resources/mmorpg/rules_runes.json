@@ -811,13 +811,13 @@
     "fn": "berserker",
     "name": "버서커",
     "desc": "광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈",
-    "use": "둘레 연타 · 흡혈 · 받는 피해 −20%",
+    "use": "둘레 연타 · 흡혈 · 받는 피해 −18%",
     "mult": 5.33,
     "hits": 6,
     "gap": 20,
     "radius": 4,
-    "reduce": 0.2,
-    "heal": 0.02,
+    "reduce": 0.18,
+    "heal": 0.018,
     "healMax": 5,
     "cd": 32,
     "look": "axe:transcend",
@@ -902,11 +902,11 @@
     "mult": 2.5,
     "radius": 4,
     "heal": 0.05,
-    "ticks": 160,
+    "ticks": 140,
     "pulse": 20,
     "cd": 32,
     "look": "vit:transcend",
-    "scale": 1.4222
+    "scale": 1.6254
    }
   }
  },
@@ -1246,7 +1246,8 @@
     ],
     "r": "melee",
     "uCost": {
-     "reduce": 0.2
+     "reduce": 0.18,
+     "lifesteal": 0.09
     }
    },
    "lunaexec.transcend": {
@@ -1282,13 +1283,17 @@
     "r": "mid"
    },
    "immortaloath.transcend": {
-    "t": 140,
+    "t": 120,
     "zone": true,
     "u": [
      "undying",
      "heal"
     ],
-    "r": "melee"
+    "r": "melee",
+    "uCost": {
+     "undying": 0.175,
+     "heal": 0.1313
+    }
    }
   },
   "migrateFamilies": [
