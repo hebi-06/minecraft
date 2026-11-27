@@ -226,7 +226,8 @@ public final class RpgMotionTests {
         Weapon w = Weapons.weaponFrom("scythe", 20, "noble");
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5);
-        Husk b = dummy(h, 4.2, 2, 3.0); // 앞 왼쪽 약 61° · 3.1칸 — 칼 궤적 (희귀 2.3칸 + 몸 폭) 밖, 낫 궤적 (고귀 3.3칸) 안
+        // 앞 왼쪽 45° · 3.96칸 — 칼 범위 (희귀 2.3 × 1.35 = 3.1칸 + 몸 반폭 0.3) 밖, 낫 범위 (고귀 3.3 × 1.35 = 4.46칸 + 0.3) 안 (2026-11-27 평타 범위 × 1.35)
+        Husk b = dummy(h, 4.3, 2, 4.3);
         Husk c = dummy(h, 1.5, 2, 0.6); // 뒤
         RpgCombat.forceCrit = false;
         double[] main = new double[1];
@@ -237,11 +238,11 @@ public final class RpgMotionTests {
             h.assertTrue(main[0] > 0, "scythe aimed hit " + main[0]);
         });
         h.runAfterDelay(4, () -> {
-            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "scythe reach 3.3: far side 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
+            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "scythe reach 4.46: far side 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
             h.assertTrue(TestDummies.dealt(c) == 0, "scythe: behind not hit");
-            // 같은 자리의 적은 칼 (희귀 — 궤적 2.3칸) 로는 범위 밖
+            // 같은 자리의 적은 칼 (희귀 — 3.1칸) 로는 범위 밖
             hold(sp, Weapons.weaponFrom("sword", 20, "rare"));
-            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == b), "sword (2.3) does not reach it");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == b), "sword (3.1) does not reach it");
             h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == a), "sword reaches the front one");
             done(h, sp);
         });
@@ -321,6 +322,33 @@ public final class RpgMotionTests {
             h.assertTrue(RpgCombat.lastRangedCd == 20, "bow cooldown 20 ticks at dex 60 " + RpgCombat.lastRangedCd);
             done(h, sp);
         });
+    }
+
+    /**
+     * 2026-11-27 활 · 완드 평타의 3인칭 몸 동작 (사용자 "활하고 완드는 알아서 만들어봐"): 활 = bow_basic (공속 빠르기 — 쏠 때마다), 완드 = wand_basic (시전 틱이
+     * 정해져 빠르기 1 — 시전을 시작할 때 한 번, 시전 중에 다시 눌러도 다시 보내지 않음). 1인칭 무기 프레임은 VanillaFirstPerson.basic 이 따로
+     */
+    @GameTest(environment = ENV, maxTicks = 40)
+    public void rangedBasicMotions(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon bow = Weapons.weaponFrom("bow", 20, "rare");
+        Weapon wand = Weapons.weaponFrom("wand", 20, "rare");
+        for (String s : List.of("dex", "int")) RpgPlayers.setStat(sp, s, 80);
+        sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(bow.id())));
+        h.runAfterDelay(2, () -> {
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), bow, null);
+            float want = (float) Motions.playSpeed(RpgCombat.attackSpeed.applyAsDouble(sp));
+            h.assertTrue("bow_basic".equals(MotionSystem.lastSent(sp)) && Math.abs(MotionSystem.lastSentSpeed(sp) - want) < 1e-6,
+                    "bow → bow_basic at the attack speed " + MotionSystem.lastSent(sp) + " " + MotionSystem.lastSentSpeed(sp) + " vs " + want);
+            sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(wand.id())));
+        });
+        h.runAfterDelay(4, () -> {
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), wand, null);
+            h.assertTrue("wand_basic".equals(MotionSystem.lastSent(sp)) && MotionSystem.lastSentSpeed(sp) == 1F,
+                    "wand → wand_basic at speed 1 " + MotionSystem.lastSent(sp) + " " + MotionSystem.lastSentSpeed(sp));
+        });
+        h.runAfterDelay(4 + 12, () -> done(h, sp));
     }
 
     @GameTest(environment = ENV, maxTicks = 80)
@@ -410,7 +438,7 @@ public final class RpgMotionTests {
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a); // 창 1타 = 찌르기
             h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_thrust")
-                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.0) < 1e-6, "lance thrust → slash_thrust 4 (no scale) " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 4.0 * slashScale()) < 1e-6, "lance thrust → slash_thrust 4 × scale (2026-11-27) " + mmorpg.fabric.BasicSlash.lastModel + " "
                     + mmorpg.fabric.BasicSlash.lastRadius);
             // 2026-11-26 사용자 "피격시 나오는 이펙트를 지워" (평타): 맞은 자리 섬광 없음 · "마크 파티클은 최소한으로": 바닐라 피해 하트 (Player.attack) 를 막음
             h.assertTrue(TestDummies.dealt(a) > 0 && mmorpg.fabric.BasicSlash.sparks == n0[1], "no hit spark on the thrust hit " + mmorpg.fabric.BasicSlash.sparks);
@@ -437,7 +465,7 @@ public final class RpgMotionTests {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
             Slash.onPunch(sp); // 방패 밀치기 (허공 — 누운 판이라 위아래 겹 둘도)
             h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 4 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_bash")
-                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 2.6) < 1e-6, "shield bash → slash_bash 2.6 " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 2.6 * slashScale()) < 1e-6, "shield bash → slash_bash 2.6 × scale " + mmorpg.fabric.BasicSlash.lastModel + " "
                     + mmorpg.fabric.BasicSlash.lastRadius);
             done(h, sp);
         });
@@ -472,8 +500,8 @@ public final class RpgMotionTests {
     // ------------------------------------------------------------ 0.42.0 창: 찌르기 → 가로 휘두르기
 
     /**
-     * 창 연타 = 찌르기 → 가로 휘두르기 (2타 번갈아). 찌르기는 앞 줄 4칸 (옆 적은 못 맞힘 · 4.1칸 앞 적은 맞음), 가로 휘두르기는 앞 160° · 궤적이 닿는 3.55칸
-     * (희귀 — 옆 3칸 적은 맞음 · 4.1칸 앞 적은 못 맞힘)
+     * 창 연타 = 찌르기 → 가로 휘두르기 (2타 번갈아). 찌르기는 앞 줄 5.4칸 (4 × 1.35 — 옆 적은 못 맞힘 · 5.3칸 앞 적은 맞음), 가로 휘두르기는 앞 160° · 궤적이 닿는
+     * 3.55 × 1.35 = 4.79칸 (희귀 — 옆 3칸 적은 맞음 · 5.3칸 앞 적은 못 맞힘)
      */
     @GameTest(environment = ENV, maxTicks = 60)
     public void lanceThrustThenSweep(GameTestHelper h) {
@@ -483,7 +511,7 @@ public final class RpgMotionTests {
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5); // 앞 2칸 (조준)
         Husk side = dummy(h, 4.5, 2, 2.5); // 앞 1칸 · 왼쪽 3칸 — 휘두르기만
-        Husk far = dummy(h, 1.5, 2, 5.6); // 앞 4.1칸 — 찌르기만
+        Husk far = dummy(h, 1.5, 2, 6.8); // 앞 5.3칸 — 찌르기만 (2026-11-27 × 1.35: 찌르기 줄 5.4칸 안, 휘두르기 3.55 × 1.35 = 4.79 + 0.3 밖)
         RpgCombat.forceCrit = false;
         double[] seen = new double[2];
         h.runAfterDelay(2, () -> {
@@ -526,7 +554,7 @@ public final class RpgMotionTests {
     }
 
     /**
-     * 날 세우기 (평타 강화 — 범위 × 1.15 · 평타 3번): 걸기 전에는 2.8칸 적이 범위 밖 → 걸면 안, 한 번 휘둘러 셋을 맞혀도 1번만 씀 (더한 피해는 셋 모두),
+     * 날 세우기 (평타 강화 — 범위 × 1.15 · 평타 3번): 걸기 전에는 3.65칸 적이 범위 밖 → 걸면 안, 한 번 휘둘러 셋을 맞혀도 1번만 씀 (더한 피해는 셋 모두),
      * 마지막 번의 휘두르기는 범위 적 (1틱 뒤) 도 더한 피해, 다 쓰면 모습 · 범위가 돌아옴. 평타 동작 알림에 모습 (빛 색 · 배율) 이 실림
      */
     @GameTest(environment = ENV, maxTicks = 100)
@@ -537,7 +565,7 @@ public final class RpgMotionTests {
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5); // 앞 2칸 (조준)
         Husk e = dummy(h, 3.0, 2, 3.5); // 앞 왼쪽 2.5칸 — 보통 범위 안
-        Husk g = dummy(h, 1.5, 2, 4.3); // 앞 2.8칸 — 보통 (2.3 + 몸 반폭 0.3) 밖, × 1.15 (2.645 + 0.3) 안
+        Husk g = dummy(h, 1.5, 2, 5.15); // 앞 3.65칸 — 보통 (2.3 × 1.35 = 3.105 + 몸 반폭 0.3) 밖, × 1.15 (3.57 + 0.3) 안 (2026-11-27 평타 범위 × 1.35)
         List<Husk> all = List.of(a, e, g);
         RpgCombat.forceCrit = false;
         Runes.Rune r = Runes.parseRune("rpg:rune_strike_common");
@@ -548,12 +576,12 @@ public final class RpgMotionTests {
         };
         java.util.function.IntToDoubleFunction got = i -> TestDummies.dealt(all.get(i)) - seen[i];
         h.runAfterDelay(2, () -> {
-            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == g), "no buff: 2.8 out of reach");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == g), "no buff: 3.65 out of reach");
             h.assertTrue(SwingLook.testKey(sp) == null, "no look yet");
             h.assertTrue(RuneCast.castRune(sp, r, false), "cast 날 세우기");
             bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus") * Runes.damageScale(r); // 0.50.0 범위 보정 (평타에 덧붙임 — 날 세우기 단일 +15% · 가르기 좁은 범위 +8%)
             h.assertTrue("edgeHone".equals(SwingLook.testKey(sp)), "look " + SwingLook.testKey(sp));
-            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == g), "buff: 2.8 within x1.15");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == g), "buff: 3.65 within x1.15");
             h.assertTrue(RuneStrike.testLeft(sp, "common") == 3, "3 left " + RuneStrike.testLeft(sp, "common"));
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
@@ -602,7 +630,7 @@ public final class RpgMotionTests {
         });
     }
 
-    /** 가르기 (범위 × 1.4 · 부채꼴 반지름 4): 같은 휘두르기에 맞은 적 (조준 · 범위) 은 부채꼴이 다시 베지 않음, 범위 밖 부채꼴 안의 적만 부채꼴 피해 */
+    /** 가르기 (범위 × 1.4 · 부채꼴 반지름 5.4): 같은 휘두르기에 맞은 적 (조준 · 범위) 은 부채꼴이 다시 베지 않음, 범위 밖 부채꼴 안의 적만 부채꼴 피해 */
     @GameTest(environment = ENV, maxTicks = 60)
     public void cleaveConeSkipsSwingVictims(GameTestHelper h) {
         floor(h);
@@ -611,14 +639,14 @@ public final class RpgMotionTests {
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5); // 조준
         Husk e = dummy(h, 3.0, 2, 3.5); // 범위
-        Husk f = dummy(h, 1.5, 2, 5.3); // 앞 3.8칸 — 범위 (2.3 × 1.4 = 3.22 + 0.3) 밖, 가르기 부채꼴 (반지름 4) 안
+        Husk f = dummy(h, 1.5, 2, 6.6); // 앞 5.1칸 — 범위 (2.3 × 1.35 × 1.4 = 4.35 + 0.3) 밖, 가르기 부채꼴 (반지름 5.4 — 2026-11-27 4 × 1.35) 안
         RpgCombat.forceCrit = false;
         Runes.Rune r = Runes.parseRune("rpg:rune_strike_noble");
         double[] bonus = new double[1];
         h.runAfterDelay(2, () -> {
             h.assertTrue(RuneCast.castRune(sp, r, false), "cast 가르기");
             bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus") * Runes.damageScale(r); // 0.50.0 범위 보정 (평타에 덧붙임 — 날 세우기 단일 +15% · 가르기 좁은 범위 +8%)
-            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == f), "3.8 beyond the widened reach");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == f), "5.1 beyond the widened reach");
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
         });
@@ -632,19 +660,19 @@ public final class RpgMotionTests {
         });
     }
 
-    /** 직업 평타 태세: 사신 현신 (낫 — 범위 5칸), 명경지수 (칼만), 활 · 완드 색은 평타 강화 룬만 */
+    /** 직업 평타 태세: 사신 현신 (낫 — 범위 6.75칸), 명경지수 (칼만), 활 · 완드 색은 평타 강화 룬만 */
     @GameTest(environment = ENV, maxTicks = 40)
     public void jobStanceLooks(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
         Weapon scythe = Weapons.weaponFrom("scythe", 20, "noble");
         hold(sp, scythe);
-        Husk far = dummy(h, 1.5, 2, 6.0); // 앞 4.5칸 — 낫 고귀 3.3 밖, 사신 현신 5칸 안
+        Husk far = dummy(h, 1.5, 2, 6.6); // 앞 5.1칸 — 낫 고귀 (3.3 × 1.35 = 4.46 + 0.3) 밖, 사신 현신 6.75칸 안 (2026-11-27 × 1.35)
         h.runAfterDelay(2, () -> {
-            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == far), "scythe 3.3: 4.5 out of reach");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == far), "scythe 4.46: 5.1 out of reach");
             h.assertTrue(JobTraits.testStance(sp, "reaper", "reaper_avatar", 100), "reaper avatar on");
             h.assertTrue("reaper_avatar".equals(SwingLook.testKey(sp)), "look " + SwingLook.testKey(sp));
-            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == far), "reaper avatar: 5 blocks");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == far), "reaper avatar: 6.75 blocks");
             h.assertTrue(SwingLook.shotColors(sp, scythe) == null, "job looks: melee only");
             hold(sp, Weapons.weaponFrom("sword", 20, "rare"));
             h.assertTrue(SwingLook.testKey(sp) == null, "reaper look: scythe only");

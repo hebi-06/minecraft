@@ -707,9 +707,13 @@ public final class RpgCombat {
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundCooldownPacket(cooldownGroup(stack), cd));
         mmorpg.fabric.vanilla.VanillaFirstPerson.basic(sp); // 2026-11-18 모드 없는 클라이언트 1인칭: 활 shoot · 완드 cast 프레임 (쿨타임 패킷이 위를 덮음)
         if (w.type().equals("wand")) {
-            if (!CASTING.containsKey(sp.getUUID())) startWandCast(sp, w, forced);
+            if (!CASTING.containsKey(sp.getUUID())) {
+                startWandCast(sp, w, forced);
+                mmorpg.fabric.motion.MotionSystem.ranged(sp, "wand"); // 2026-11-27 3인칭 몸: 끝으로 원을 그리다 시전 끝에 내지름
+            }
             return;
         }
+        mmorpg.fabric.motion.MotionSystem.ranged(sp, "bow"); // 2026-11-27 3인칭 몸: 당겨 바로 놓음
         ServerLevel level = sp.level();
         Vec3 head = sp.getEyePosition();
         Vec3 dir;

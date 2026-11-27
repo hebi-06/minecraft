@@ -79,6 +79,8 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"guard", "shield", "0.3,0.5,0.8"},
         {"shoot", "bow", "0.3,0.55,0.62"},
         {"shoot_up", "bow", "0.3,0.55,0.62"},
+        {"bow_basic", "bow", "0.07,0.13,0.45"}, // 2026-11-27 활 평타 3인칭 (당겨 바로 놓음)
+        {"wand_basic", "wand", "0.36,0.52,0.58"}, // 2026-11-27 완드 평타 3인칭 (끝으로 원 → 내지름)
         {"spin2", "scythe", "0.12,0.4,0.7"},
         {"roll", "sword", "0.22,0.38,0.62"},
     };

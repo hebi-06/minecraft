@@ -2274,7 +2274,7 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(now > mark[0] * 0.95, "speed back: " + now + " vs " + mark[0]);
             for (Husk x : z) x.discard();
             z.clear();
-            // 스펙트럴 사이스 (2026-11-07 3판 — 랜턴 오브 소울즈 대신): 8초 평타 사거리 +1.5 · 낫 넓게 베기 5칸 · 50% · 영혼 낫 모습 (평타 범위 5칸) · 처치마다 +1초
+            // 스펙트럴 사이스 (2026-11-07 3판 — 랜턴 오브 소울즈 대신): 8초 평타 사거리 +1.5 · 낫 넓게 베기 6.75칸 (2026-11-27 평타 범위 × 1.35) · 50% · 영혼 낫 모습 (평타 범위 6.75칸) · 처치마다 +1초
             // (최대 4초)
             home(h, sp);
             z.add(dummy(h, 0, 2.0));
@@ -2285,7 +2285,7 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(JobTraits.stanceOn(sp, "soulreaper_scythe") && JobTraits.stanceTotal(sp) == 160, "scythe stance 8 s: " + JobTraits.stanceTotal(sp));
             h.assertTrue(Math.abs(JobTraits.reachBonus(sp) - 1.5) < 1e-9, "reach +1.5: " + JobTraits.reachBonus(sp));
             double[] sw = WeaponTraits.sweepMod.mod(sp, w);
-            h.assertTrue(sw != null && Math.abs(sw[0] - 5) < 1e-9 && Math.abs(sw[1] - 0.5) < 1e-9, "sweep 5 blocks · 50%: " + java.util.Arrays.toString(sw));
+            h.assertTrue(sw != null && Math.abs(sw[0] - 6.75) < 1e-9 && Math.abs(sw[1] - 0.5) < 1e-9, "sweep 6.75 blocks (2026-11-27 × 1.35) · 50%: " + java.util.Arrays.toString(sw));
             h.assertTrue("soulreaper_scythe".equals(SwingLook.testKey(sp)), "spectral scythe look " + SwingLook.testKey(sp));
             RpgCombat.forceCrit = false;
             sp.attack(z.get(0));

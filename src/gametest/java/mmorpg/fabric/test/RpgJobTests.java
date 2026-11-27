@@ -1139,12 +1139,12 @@ public final class RpgJobTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));
-            z.add(dummy(h, 4.5));
+            z.add(dummy(h, 5.0)); // 2026-11-27 평타 범위 × 1.35: 보통 낫 3.05 × 1.35 = 4.12칸 (+ 몸 반폭 0.3) 밖, 사신 현신 6.75칸 안
             RpgCombat.forceCrit = false;
             sp.attack(z.get(0));
-            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "no avatar: 4.5 blocks is outside the 3-block sweep");
+            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "no avatar: 5 blocks is outside the 4.12-block scythe area");
         }));
-        // 사신 현신: 낫 범위 5칸 (0.39.0 — 참격 범위 피해라 100%, 1틱 뒤)
+        // 사신 현신: 낫 범위 6.75칸 (0.39.0 — 참격 범위 피해라 100%, 1틱 뒤 · 2026-11-27 5 → 6.75)
         double[] avatarMain = new double[1];
         steps.add(new Step(14, () -> {
             h.assertTrue(JobSkills.press(sp, 3), "사신 현신 cast");
@@ -1158,7 +1158,7 @@ public final class RpgJobTests {
             double main = avatarMain[0];
             double far = TestDummies.dealt(z.get(1));
             double cm = w.critMult(); // 함께 도는 시험이 forceCrit 를 풀 수 있어 치명타 차이는 둘 다 맞는 것으로
-            h.assertTrue(near(far, main) || near(far, main * cm) || near(far * cm, main), "avatar area 100% at 4.5 blocks: " + far + " vs " + main);
+            h.assertTrue(near(far, main) || near(far, main * cm) || near(far * cm, main), "avatar area 100% at 5 blocks: " + far + " vs " + main);
             RpgCombat.forceCrit = null;
             JobSystem.setJob(sp, "reaper");
             for (Husk x : z) x.discard();

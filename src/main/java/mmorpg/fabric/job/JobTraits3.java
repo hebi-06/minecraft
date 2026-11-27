@@ -705,7 +705,7 @@ public final class JobTraits3 {
     private static double[] sweepMod(ServerPlayer sp, Weapon w) {
         if (w == null || !"scythe".equals(w.type()) || !JobTraits.stanceOn(sp, "reaper_avatar")) return null;
         Jobs.Skill k = skill(jobIf(sp, "reaper"), "reaper_avatar");
-        return k == null ? null : new double[] {k.num("range", 5), JobUpgrades.num(sp, k, "ratio", 0.6)}; // 0.31.0 강화: 비율
+        return k == null ? null : new double[] {k.num("range", 6.75), JobUpgrades.num(sp, k, "ratio", 0.6)}; // 0.31.0 강화: 비율
     }
 
     // ------------------------------------------------------------ 무기로 맞힘

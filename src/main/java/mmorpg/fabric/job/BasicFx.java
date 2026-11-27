@@ -17,7 +17,8 @@ import net.minecraft.world.phys.Vec3;
  * 연타의 마지막 타 (칼 둘째 · 대검 · 낫 셋째 · 창 둘째) 는 크게 + 겹 베기 · 섬광 · 발밑 충격 고리. 연출만 (피해 · 범위는 평타 그대로). 화면 흔들림 없음.
  * <p>2026-11-26 사용자 "마크 파티클은 최소한으로": 바닐라 파티클 겹 (위르드식 — 불티 · 반짝임 · 섬광 · 충격 고리의 바닐라 겹) 은 그리지 않음 (WyrdKit mute —
  * 도트 2D 그림판 그림만). 같은 날 "모든 평타 때릴때마다 왜 세로 베기 파란색 나오냐 없애고": 눈앞 베기 (eyeSlash — 1인칭 초승달 · 남에게 세운 반달 판) 를 뺌 —
- * 남은 것은 칼끝 불티 · 마무리 섬광 · 발밑 충격 고리 · 창 찌르기 칼빛 · 방패 밀치기 충격.
+ * 남은 것은 칼끝 불티 · 창 찌르기 칼빛 · 방패 밀치기 충격 (2026-11-27 사용자 "연타 마지막에 섬광과 고리 빼버려" — 마무리의 칼끝 섬광 · 발밑
+ * 충격 고리도 뺌, 마무리는 불티가 많고 넓은 것만).
  * <p>모양: 판 (rules_more BASIC_SLASH.motions) 의 face — up (가로 베기: mirror 면 반대쪽) · front (세로 · 대각: start 도 = 휘두름 시작 쪽 — 90 위,
  * 225 왼쪽 아래) · thrust (창 찌르기 — 곧은 칼빛) · 방패 밀치기 (bash — 앞 충격).
  */
@@ -92,13 +93,6 @@ public final class BasicFx {
         return L == PhantomFx.HOLY || L == PhantomFx.PETALS ? PhantomFx.GOLD : PhantomFx.STEEL;
     }
 
-    /** 큰 땅 충격파 (shock — 2 × 2) 가 있는 묶음 (비전 · 혼은 작은 충격파만): 없으면 베기 묶음 → 강철 */
-    static PhantomFx.Lib shockLib(PhantomFx.Lib L) {
-        if (PhantomFx.hasArt(L, "shock_00")) return L;
-        PhantomFx.Lib S = slashLib(L);
-        return PhantomFx.hasArt(S, "shock_00") ? S : PhantomFx.STEEL;
-    }
-
     /** 곧은 칼빛 (창 찌르기 — 일섬 cut, 없으면 긴 일섬 cutl, 둘 다 없으면 베기 묶음의 것) */
     private static void cut(ServerLevel level, PhantomFx.Lib L, Vec3 from, Vec3 to, int hold, boolean burst, Predicate<ServerPlayer> who) {
         for (PhantomFx.Lib C : new PhantomFx.Lib[] {L, slashLib(L), PhantomFx.STEEL}) {
@@ -136,7 +130,6 @@ public final class BasicFx {
             Vec3 from = V.add(V.add(V.add(eye, look, 0.9), right, 0.32), up, -0.28);
             cut(level, L, from, V.add(eye, look, 1.0 + reach), finisher ? 4 : 2, finisher, PhantomFx.only1p(sp));
             PhantomFx.flash(level, L, V.add(eye, look, 2.4), 0.8 * k, PhantomFx.only1p(sp));
-            if (finisher) PhantomFx.shock(level, shockLib(L), sp.position(), 3.0, 1, hide);
             return;
         }
         if (spec.has("model") && spec.str("model").equals("slash_bash")) {
@@ -148,11 +141,8 @@ public final class BasicFx {
         // 2026-11-26 사용자 "모든 평타 때릴때마다 왜 세로 베기 파란색 나오냐 없애고": 직업 묶음 눈앞 베기 (CommonSkills.eyeSlash — 1인칭 눈앞 초승달 ·
         // 남에게는 몸 앞에 세운 반달 판, 강철 묶음이면 파란색) 를 그리지 않음 — 동작과 상관없이 늘 같은 쪽으로 서 있어 가로 베기에도 세로 베기처럼 보였음
         // (CI 45787275345 · 45790897668 영상). 베기 모양은 무기 색 참격 판 (BasicSlash) 이 동작대로. 마무리의 반대 겹 베기도 뺌
+        // 2026-11-27 사용자 "연타 마지막에 섬광과 고리 빼버려": 마무리 (연타 마지막 타) 의 칼끝 섬광 · 발밑 충격 고리 (직업 묶음 색) 를 뺌 —
+        // 마무리는 불티가 많고 넓은 것만 (내려찍기의 땅 충격 · 바위는 무기 색 판 BasicSlash.impact 그대로)
         PhantomFx.embers(level, L, tip, finisher ? 10 : 5, 0.9 * k, 0.3, 12);
-        if (finisher) {
-            // 마무리: 섬광 · 발밑 충격 고리
-            PhantomFx.flash(level, L, tip, 2.0, hide);
-            PhantomFx.shock(level, shockLib(L), sp.position(), 3.6, 1, hide);
-        }
     }
 }

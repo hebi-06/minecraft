@@ -141,6 +141,7 @@
  "types": {
   "axe": {
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "dagger_x": "thrust",
    "gs_slam": "chop",
@@ -517,11 +518,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "chop",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "bow": {
    "axe_sweep": "cast",
    "bash": "shoot",
+   "bow_basic": "shoot",
    "cast_up": "cast",
    "chop": "dash",
    "dagger_x": "dash",
@@ -901,11 +904,13 @@
    "spin2": "dash",
    "throw": "cast",
    "throw_weapon": "cast",
-   "thrust": "dash"
+   "thrust": "dash",
+   "wand_basic": "cast"
   },
   "dagger": {
    "axe_sweep": "skill_slash",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "chop": "slam",
    "gs_slam": "slam",
@@ -1282,11 +1287,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "slam",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "greatsword": {
    "axe_sweep": "slash_h",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "chop": "gs_slam",
    "dagger_x": "slash_v",
@@ -1661,11 +1668,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "gs_slam",
-   "throw_weapon": "gs_slam"
+   "throw_weapon": "gs_slam",
+   "wand_basic": "cast"
   },
   "hammer": {
    "axe_sweep": "skill_slash",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "dagger_x": "thrust",
    "gs_slam": "chop",
@@ -2042,11 +2051,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "chop",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "lance": {
    "axe_sweep": "skill_slash",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "chop": "slam",
    "dagger_x": "thrust",
@@ -2423,11 +2434,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "slam",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "scepter": {
    "axe_sweep": "skill_slash",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "chop": "smite",
    "dagger_x": "thrust",
@@ -2804,11 +2817,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "smite",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "scythe": {
    "axe_sweep": "slash_h",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "chop": "slam",
    "dagger_x": "slash_v",
@@ -3183,10 +3198,12 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "slash_v",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "shield": {
    "axe_sweep": "guard",
+   "bow_basic": "dash",
    "cast_up": "cast",
    "chop": "slam",
    "dagger_x": "guard",
@@ -3565,11 +3582,13 @@
    "spin": "cast",
    "spin2": "cast",
    "throw": "slam",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "sword": {
    "axe_sweep": "slash_h",
    "bash": "cast",
+   "bow_basic": "cast",
    "cast_up": "cast",
    "chop": "slam",
    "dagger_x": "slash_v",
@@ -3944,11 +3963,13 @@
    "smith_hammer": "cast",
    "spin2": "spin",
    "throw": "slash_v",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   },
   "wand": {
    "axe_sweep": "slam",
    "bash": "cast",
+   "bow_basic": "cast",
    "chop": "slam",
    "dagger_x": "thrust",
    "gs_slam": "slam",
@@ -4327,7 +4348,8 @@
    "spin": "thrust",
    "spin2": "thrust",
    "throw": "slam",
-   "throw_weapon": "slam"
+   "throw_weapon": "slam",
+   "wand_basic": "cast"
   }
  }
 }

@@ -305,7 +305,7 @@ public final class JobTraits12 {
         if (w == null || !"scythe".equals(w.type()) || !JobTraits.stanceOn(sp, SCYTHE)) return null;
         Jobs.Job j = jobIf(sp, SR);
         Jobs.Skill k = j == null ? null : j.skill(SCYTHE);
-        return k == null ? null : new double[] {k.num("range", 5), JobUpgrades.num(sp, k, "ratio", 0.5)};
+        return k == null ? null : new double[] {k.num("range", 6.75), JobUpgrades.num(sp, k, "ratio", 0.5)};
     }
 
     /** 스펙트럴 사이스를 걺: 처치로 늘린 틱을 0 으로 */

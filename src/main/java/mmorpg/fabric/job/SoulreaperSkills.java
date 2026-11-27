@@ -428,13 +428,13 @@ final class SoulreaperSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 cc = sp.position();
-            sweep(sp, j, cc, Kit.facingOf(sp), k.num("range", 5), true, 1.2);
+            sweep(sp, j, cc, Kit.facingOf(sp), k.num("range", 6.75), true, 1.2);
             SkillFx.sparks(lv, V.up(cc, 1.0), SOUL, 12, 4.0);
             SkillFx.play(lv, "entity.player.attack.sweep", cc, 0.5, 1.0);
             SkillFx.play(lv, "entity.vex.ambient", cc, 0.6, 0.8);
         });
         JobFx.aura(sp, j, 2.2, 0.8, 0.9);
-        Notify.notify(sp, "§b§l" + k.name() + " §7— 넓게 베기 " + Math.round(k.num("range", 5)) + "칸 · " + Math.round(JobUpgrades.num(sp, k, "ratio", 0.5) * 100)
+        Notify.notify(sp, "§b§l" + k.name() + " §7— 낫 평타 " + mmorpg.core.Js.str(Math.round(k.num("range", 6.75) * 100) / 100.0) + "칸 · " + Math.round(JobUpgrades.num(sp, k, "ratio", 0.5) * 100)
                 + "%", 40);
         return true;
     }

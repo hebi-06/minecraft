@@ -126,6 +126,13 @@ public final class MotionsTest {
         check(Motions.combo("lance").equals(List.of("thrust", "lance_sweep")) && Motions.combo("shield").equals(List.of("bash"))
                 && Motions.combo("scepter").equals(List.of("smite")), "lance (0.42.0 찌르기 → 가로 휘두르기) · shield · scepter");
         check(Motions.combo("bow").isEmpty() && Motions.combo("wand").isEmpty() && Motions.combo(null).isEmpty(), "ranged none");
+        // 2026-11-27 활 · 완드 평타의 3인칭 몸 동작 (연타가 아닌 한 동작): 활 = 당겨 바로 놓음 (놓는 열쇠가 앞 0.2 안 — 화살은 누르는 순간 나감), 완드 = 시전 끝에 내지름
+        check("bow_basic".equals(Motions.rangedMotion("bow")) && "wand_basic".equals(Motions.rangedMotion("wand")) && Motions.rangedMotion("sword") == null
+                && Motions.rangedMotion(null) == null, "ranged motions " + Motions.rangedMotion("bow") + " " + Motions.rangedMotion("wand"));
+        // 가장 빠른 공속 (× 2) 의 재사용 대기 안에 끝남: 활 = 20 × 1.6 ÷ 2 = 16틱 ≥ 14 ÷ 빠르기 1.5, 완드 = 빠르기 1 로 16틱 ≤ max(시전 10 + 1, 16)
+        int fastest = (int) Math.round(20 * AttackSpeed.rangedSlow() / 2.0);
+        check(MOTION_TICKS.get("bow_basic") / Motions.playSpeed(2.0) <= fastest && MOTION_TICKS.get("wand_basic") <= Math.max(11, fastest),
+                "ranged motions end within the fastest cooldown " + fastest + " " + MOTION_TICKS.get("bow_basic") + " " + MOTION_TICKS.get("wand_basic"));
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) check(Motions.KNOWN.contains(m), "known " + m);
         }
@@ -196,7 +203,7 @@ public final class MotionsTest {
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) {
                 Motions.Area a = Motions.area(m, t);
-                check(a != null && List.of("arc", "band", "line", "ring").contains(a.shape()) && a.range() >= 1.4 && a.range() <= 5, "area " + t + " " + m + " " + a);
+                check(a != null && List.of("arc", "band", "line", "ring").contains(a.shape()) && a.range() >= 1.4 && a.range() <= 6, "area " + t + " " + m + " " + a);
                 if (a == null) continue;
                 // 바로 앞 1.2칸 (눈높이보다 조금 아래 — 좀비 가운데) 은 늘 맞음, 바로 뒤 1.2칸은 회전만 (0.40.0: 단검 · 도끼 궤적은 1.5 ~ 1.9칸)
                 check(Motions.inArea(a, 1.2, 0, -0.6, 0.3), "front hit " + m);
@@ -204,9 +211,12 @@ public final class MotionsTest {
                 check(!Motions.inArea(a, a.range() + 1.0, 0, 0, 0.3), "past range " + m);
             }
         }
-        // 0.40.0 가로 베기: 궤적이 덮는 앞쪽 160° · 거리는 칼 궤적이 닿는 곳 (보통 2.3 · 초월 3.45 — reach 표)
+        // 0.40.0 가로 베기: 궤적이 덮는 앞쪽 160° · 거리는 칼 궤적이 닿는 곳 (보통 2.3 · 초월 3.45 — reach 표). 2026-11-27 사용자 "피해 범위를 키우고":
+        // 궤적 거리 × BASIC_SLASH.scale (참격 판 반지름과 같게 — 1.35)
+        double sk = Motions.slashScale();
+        check(Math.abs(sk - 1.35) < 1e-9, "slash scale 1.35 " + sk);
         Motions.Area h = Motions.area("slash_h", "sword");
-        check(Math.abs(h.angle() - 160) < 1e-9 && Math.abs(h.range() - 2.3) < 1e-9, "sword arc 160° · 2.3 " + h);
+        check(Math.abs(h.angle() - 160) < 1e-9 && Math.abs(h.range() - 2.3 * sk) < 1e-9, "sword arc 160° · 2.3 × scale " + h);
         double s45 = Math.sin(Math.toRadians(45)) * 2.0;
         double c45 = Math.cos(Math.toRadians(45)) * 2.0;
         check(Motions.inArea(h, c45, s45, 0, 0), "arc 45° side in");
@@ -215,28 +225,32 @@ public final class MotionsTest {
         check(Motions.inArea(h, c75, s75, 0, 0), "arc 75° side in");
         check(!Motions.inArea(h, 0.17, 1.95, 0, 0), "arc 85° side out");
         check(Motions.inArea(h, 0.17, 1.95, 0, 0.6) == (Math.atan2(1.95, 0.17) <= Math.toRadians(80) + Math.asin(0.6 / Math.hypot(0.17, 1.95))), "arc pad widens");
-        check(!Motions.inArea(h, 2.5, 0, 0, 0.1), "sword arc ends at 2.3 (+ body)");
+        check(!Motions.inArea(h, 2.3 * sk + 0.2, 0, 0, 0.1) && Motions.inArea(h, 2.9, 0, 0, 0.1), "sword arc ends at 2.3 × scale (+ body)");
         Motions.Area top = Motions.area("slash_h", "sword", 4);
-        check(Math.abs(top.range() - 3.45) < 1e-9 && Motions.inArea(top, 3.0, 0, 0, 0.3), "transcend sword reaches 3.45 " + top);
-        check(Math.abs(Motions.area("slash_h", "sword", 9).range() - 3.45) < 1e-9 && Math.abs(Motions.area("slash_h", "sword", -1).range() - 2.3) < 1e-9,
+        check(Math.abs(top.range() - 3.45 * sk) < 1e-9 && Motions.inArea(top, 4.0, 0, 0, 0.3), "transcend sword reaches 3.45 × scale " + top);
+        check(Math.abs(Motions.area("slash_h", "sword", 9).range() - 3.45 * sk) < 1e-9 && Math.abs(Motions.area("slash_h", "sword", -1).range() - 2.3 * sk) < 1e-9,
                 "grade outside the table → nearest");
         Motions.Area sc = Motions.area("slash_h", "scythe");
-        check(Math.abs(sc.angle() - 160) < 1e-9 && Math.abs(sc.range() - 3.05) < 1e-9 && sc.range() > h.range(), "scythe arc 160° · 3.05 (longer than a sword) " + sc);
+        check(Math.abs(sc.angle() - 160) < 1e-9 && Math.abs(sc.range() - 3.05 * sk) < 1e-9 && sc.range() > h.range(), "scythe arc 160° · 3.05 × scale (longer than a sword) "
+                + sc);
         Motions.Area dx = Motions.area("dagger_x", "dagger");
-        check(Math.abs(dx.angle() - 120) < 1e-9 && Math.abs(dx.range() - 1.5) < 1e-9, "dagger X 120° · 1.5 " + dx);
-        // 0.42.0 창: 찌르기는 줄 4칸 그대로 (fixed — reach 표를 쓰지 않음), 가로 휘두르기는 궤적이 닿는 곳 (보통 3.45 · 초월 3.9) · 앞 160°
-        for (int g = 0; g <= 4; g++) check(Math.abs(Motions.area("thrust", "lance", g).range() - 4.0) < 1e-9, "lance thrust fixed 4 (grade " + g + ")");
+        check(Math.abs(dx.angle() - 120) < 1e-9 && Math.abs(dx.range() - 1.5 * sk) < 1e-9, "dagger X 120° · 1.5 × scale " + dx);
+        // 0.42.0 창: 찌르기는 줄 4칸 (fixed — reach 표를 쓰지 않음 · 2026-11-27 부터 × scale = 5.4), 가로 휘두르기는 궤적이 닿는 곳 (보통 3.45 · 초월 3.9 — × scale) · 앞 160°
+        for (int g = 0; g <= 4; g++) check(Math.abs(Motions.area("thrust", "lance", g).range() - 4.0 * sk) < 1e-9, "lance thrust fixed 4 × scale (grade " + g + ")");
+        check(Math.abs(Motions.area("bash", "shield").range() - 2.6 * sk) < 1e-9, "shield bash 2.6 × scale " + Motions.area("bash", "shield"));
         Motions.Area ls = Motions.area("lance_sweep", "lance");
-        check(ls.shape().equals("arc") && Math.abs(ls.angle() - 160) < 1e-9 && Math.abs(ls.range() - 3.45) < 1e-9
-                && Math.abs(Motions.area("lance_sweep", "lance", 4).range() - 3.9) < 1e-9, "lance sweep arc 160° · 3.45 · 3.9 " + ls);
+        check(ls.shape().equals("arc") && Math.abs(ls.angle() - 160) < 1e-9 && Math.abs(ls.range() - 3.45 * sk) < 1e-9
+                && Math.abs(Motions.area("lance_sweep", "lance", 4).range() - 3.9 * sk) < 1e-9, "lance sweep arc 160° · 3.45 · 3.9 (× scale) " + ls);
         check(Motions.inArea(ls, 1.0, -3.0, 0, 0.3) && Motions.inArea(ls, 1.0, 3.0, 0, 0.3) && !Motions.inArea(Motions.area("thrust", "lance"), 1.0, 3.0, 0, 0.3),
                 "lance sweep reaches both sides (thrust line does not)");
-        check(!Motions.inArea(ls, -1.2, 0, -0.6, 0.3) && Motions.inArea(Motions.area("thrust", "lance"), 3.9, 0.3, 0, 0.3) && !Motions.inArea(ls, 3.9, 0, 0, 0.3),
-                "lance sweep: not behind · thrust reaches further ahead (4 vs 3.45)");
+        // 2026-11-27 휘두르기 · 찌르기 모두 × scale (판과 같게) — 찌르기 줄 (5.4) 이 휘두르기 (보통 4.66 · 초월 5.27) 보다 멂 (창의 성격 그대로)
+        check(!Motions.inArea(ls, -1.2, 0, -0.6, 0.3) && Motions.inArea(Motions.area("thrust", "lance"), 3.9, 0.3, 0, 0.3)
+                && !Motions.inArea(ls, 3.45 * sk + 0.5, 0, 0, 0.3), "lance sweep: not behind · ends at 3.45 × scale");
+        for (int g = 0; g <= 4; g++) check(Motions.area("thrust", "lance", g).range() > Motions.area("lance_sweep", "lance", g).range(), "thrust longer than sweep (grade " + g + ")");
         // 2026-11-26 도끼 가로 휘두르기: 앞 160° · 거리는 도끼 궤적이 닿는 곳 (보통 1.9 · 초월 2.75 — reach 표), 양옆까지 (내려찍기 띠는 옆이 좁음)
         Motions.Area ax = Motions.area("axe_sweep", "axe");
-        check(ax.shape().equals("arc") && Math.abs(ax.angle() - 160) < 1e-9 && Math.abs(ax.range() - 1.9) < 1e-9
-                && Math.abs(Motions.area("axe_sweep", "axe", 4).range() - 2.75) < 1e-9, "axe sweep arc 160° · 1.9 · 2.75 " + ax);
+        check(ax.shape().equals("arc") && Math.abs(ax.angle() - 160) < 1e-9 && Math.abs(ax.range() - 1.9 * sk) < 1e-9
+                && Math.abs(Motions.area("axe_sweep", "axe", 4).range() - 2.75 * sk) < 1e-9, "axe sweep arc 160° · 1.9 · 2.75 (× scale) " + ax);
         check(Motions.inArea(ax, 0.6, -1.5, 0, 0.3) && Motions.inArea(ax, 0.6, 1.5, 0, 0.3) && !Motions.inArea(Motions.area("chop", "axe"), 0.6, 1.5, 0, 0.3),
                 "axe sweep reaches both sides (chop band does not)");
         Motions.Area v2 = Motions.area("slash_v", "sword");
@@ -291,16 +305,18 @@ public final class MotionsTest {
         check(SwingLooks.keys().size() == scales.size(), "look keys " + SwingLooks.keys());
         SwingLooks.Look av = SwingLooks.of("reaper_avatar");
         double sb = SwingLooks.baseRange("scythe", 0);
-        check(Math.abs(sb - 3.05) < 1e-9 && Math.abs(av.scaleAt(sb) - 5 / 3.05) < 1e-9 && av.fits("scythe") && !av.fits("sword"), "reaper avatar 5 blocks " + sb);
+        // 2026-11-27 칸으로 정한 범위도 × 1.35 (5 → 6.75칸 — 예전과 같은 비율 × 1.64)
+        check(Math.abs(sb - 3.05 * sk) < 1e-9 && Math.abs(av.range() - 5 * sk) < 1e-9 && Math.abs(av.scaleAt(sb) - 5 / 3.05) < 1e-9 && av.fits("scythe") && !av.fits("sword"),
+                "reaper avatar 6.75 blocks " + sb);
         SwingLooks.Look ss = SwingLooks.of("soulreaper_scythe");
-        check(Math.abs(ss.scaleAt(sb) - 5 / 3.05) < 1e-9 && ss.fits("scythe") && !ss.fits("sword"), "spectral scythe 5 blocks (2026-11-07)");
+        check(Math.abs(ss.scaleAt(sb) - Math.max(1.3, 5 * sk / (3.05 * sk))) < 1e-9 && ss.fits("scythe") && !ss.fits("sword"), "spectral scythe max(× 1.3, 6.75 blocks)");
         check(SwingLooks.of("cleave").fits("sword") && SwingLooks.of("cleave").fits("bow"), "rune looks fit any weapon");
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("swordsman_mirror").fits("sword"), "job look weapons");
         check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("warlord_titan") == null
                 && SwingLooks.of("gladiator_fury") == null && SwingLooks.of("spellblade_awaken") == null && SwingLooks.of("swordmaster_ult") == null, "second-job looks: axe");
         check(SwingLooks.of("arcaneblade_overdrive") == null && SwingLooks.of("elementalblade_tide").fits("sword") && !SwingLooks.of("elementalblade_tide").fits("axe"),
                 "second-job looks: magic sword");
-        check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
+        check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3 * sk) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
         // 스킬 표 (룬 · 직업 스킬 — 2026-11-16 무기 스킬 동작 wp_ 는 무기 스킬과 함께 지움)
         Set<String> want = new HashSet<>();

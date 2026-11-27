@@ -92,8 +92,8 @@ public final class BasicSlash {
             double sweep = Math.max(0.05, (tw[1] - tw[0]) * ticks / 20.0);
             double life = Math.max(c.numOr("minLife", 0.3), sweep / c.numOr("sweepShare", 0.4));
             // 2026-11-14 reach = 판이 정한 거리 (창 찌르기 줄 4칸 · 방패 밀치기 2.6칸 — 궤적 거리 표가 아님)
-            // 2026-11-26 사용자 "참격은 더 크게": 궤적 거리를 쓰는 휘두름 판만 × scale (찌르기 줄 · 밀치기 판은 정한 거리 그대로 — 범위 피해는 MOTION.area 그대로)
-            double scale = s.has("reach") ? 1 : c.numOr("scale", 1);
+            // 2026-11-26 사용자 "참격은 더 크게": 판 × scale. 2026-11-27 "피해 범위를 키우고": 찌르기 줄 · 밀치기 판도 같은 배율 — 범위 피해 (Motions.area) 도 × scale 이라 판 = 범위
+            double scale = c.numOr("scale", 1);
             double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1)) * scale;
             spawn(sp, s, thick, radius, delay, life, glow, core);
             if (s.has("impact")) impact(sp, s, radius, delay + sweep, glow, core);

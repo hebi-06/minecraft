@@ -130,6 +130,21 @@ public final class MotionSystem {
         }
     }
 
+    /**
+     * 2026-11-27 활 · 완드 평타 (RpgCombat.fireRanged — 사용자 "활하고 완드는 알아서 만들어봐"): 3인칭 몸 동작 (Motions.rangedMotion — 뼈 몸 · 모드 화면). 1인칭 무기
+     * 프레임은 VanillaFirstPerson.basic 이 따로. 활은 공속 빠르기, 완드는 시전 틱 (castTicks) 이 정해져 있어 빠르기 1 (내지르는 때 = 광선이 나가는 때)
+     */
+    public static void ranged(ServerPlayer sp, String weaponType) {
+        try {
+            String m = Motions.rangedMotion(weaponType);
+            if (m == null || sp == null || sp.isRemoved()) return;
+            float speed = "wand".equals(weaponType) ? 1F : (float) Motions.playSpeed(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp));
+            broadcast(sp, m, sp.getYRot(), false, MotionNet.Look.NONE, speed, false);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] ranged motion {}", weaponType, e);
+        }
+    }
+
     // ------------------------------------------------------------ 구르기
 
     /** 구를 수 있는지 (서버 확인 — 클라이언트도 같은 조건) */
@@ -175,11 +190,16 @@ public final class MotionSystem {
 
     /** 같은 것 — 2026-11-14 동작 빠르기 speed (평타 공속) */
     static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf, MotionNet.Look look, float speed) {
+        broadcast(sp, motion, yaw, exceptSelf, look, speed, true);
+    }
+
+    /** 같은 것 — fp = 쓴 사람의 1인칭 무기 프레임도 (활 · 완드 평타는 VanillaFirstPerson.basic 이 따로 그려 false) */
+    static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf, MotionNet.Look look, float speed, boolean fp) {
         // 2026-11-13 모드 없는 클라이언트: 뼈 몸이 같은 동작을 함 (VanillaRig — 싸우는 동안)
         try {
             mmorpg.fabric.vanilla.VanillaRig.play(sp, motion, yaw, speed);
             // 2026-11-18 1인칭 모션 시범: 쓴 사람의 1인칭 무기 프레임 (쿨타임 패킷 — 시범을 켰을 때만)
-            mmorpg.fabric.vanilla.VanillaFirstPerson.play(sp, motion, speed);
+            if (fp) mmorpg.fabric.vanilla.VanillaFirstPerson.play(sp, motion, speed);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] rig motion {}", motion, e);
         }

@@ -769,9 +769,10 @@ public final class JobsTest {
         check(near(ec.num("slash", 0) + ec.num("x", 0), 6.25) && near(ec.num("slash", 0), 4.0) && near(es.num("cut", 0), 3.75) && near(eg.num("drop", 0), 8)
                 && near(eu.num("stroke", 0) * eu.num("strokes", 0), 50), "executioner totals 6.25 (4 + X 2.25) · 3.75 · 8 · 50 (25 × 2)");
         // 2026-11-07 3판: 스펙트럴 사이스 · 데스 넬은 강화 (피해 없음 — 8초 · 10초), 스펙트럴 사이스는 넓게 베기 5칸 · 50% (강화 열쇠 ratio) · 처치 1초씩 (최대 4초)
-        check(!Jobs.stanceBudget(sl) && sl.total() == 0 && near(sl.num("dur", 0), 160) && near(sl.num("range", 0), 5) && near(sl.num("ratio", 0), 0.5)
+        // 2026-11-27 평타 범위 × 1.35 (사용자 "피해 범위를 키우고"): 5 → 6.75칸
+        check(!Jobs.stanceBudget(sl) && sl.total() == 0 && near(sl.num("dur", 0), 160) && near(sl.num("range", 0), 6.75) && near(sl.num("ratio", 0), 0.5)
                 && near(sl.num("perKill", 0), 20) && near(sl.num("maxExtra", 0), 80) && Jobs.upKeys(sl).size() == 1 && Jobs.upKey(sl, "ratio") != null
-                && !Jobs.stanceBudget(el) && el.total() == 0 && near(el.num("dur", 0), 200), "스펙트럴 사이스 8초 (넓게 베기 5칸 · 50%) · 데스 넬 10초");
+                && !Jobs.stanceBudget(el) && el.total() == 0 && near(el.num("dur", 0), 200), "스펙트럴 사이스 8초 (넓게 베기 6.75칸 · 50%) · 데스 넬 10초");
         // 초당 피해: 소울 리퍼 1차 × 1.2 · 엑시큐셔너 1차 × 1.0 (처형 덤을 따로 셈 — 직업의 dps)
         check(near(Jobs.advanceDps(sr), 1.2) && near(Jobs.advanceDps(ex), 1.0) && near(dps(sr) / dps(re), 1.2, 0.005) && near(dps(ex) / dps(re), 1.0, 0.005),
                 "soul reaper × 1.2 · executioner × 1.0");

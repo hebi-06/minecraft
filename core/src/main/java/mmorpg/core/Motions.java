@@ -20,7 +20,9 @@ public final class Motions {
             // 2026-11-14 평타 (회전 대신): 칼 반대 가로 베기 · 마검 크게 내려찍기 · 낫 거꾸로 베어 올리기
             "slash_hb", "gs_slam", "reap_up",
             // 2026-11-26 도끼 가로 휘두르기 (사용자 "도끼는 모션 하나 더 추가하자 너무 밋밋해")
-            "axe_sweep");
+            "axe_sweep",
+            // 2026-11-27 활 · 완드 평타 3인칭 (사용자 "활하고 완드는 알아서 만들어봐")
+            "bow_basic", "wand_basic");
 
     /**
      * 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인): BASE + 0.46.0 룬 동작 (rules_more MOTION.runeMotions — tools/rune_motions.py 가 poses.json 과 함께
@@ -169,7 +171,18 @@ public final class Motions {
         double range = a.num("range") * k;
         Double r = a.truthy("fixed") ? null : reach(weaponType, grade);
         if (r != null) range = r;
+        range *= slashScale();
         return new Area(a.str("shape"), range, Math.min(360, a.numOr("angle", 0) * k), a.numOr("width", 0) * k, a.numOr("height", 2));
+    }
+
+    /**
+     * 2026-11-27 사용자 "피해 범위를 키우고": 평타 범위 거리 = 참격 판 크기와 같게 — (궤적 거리 또는 fixed 의 range) × BASIC_SLASH.scale
+     * (2026-11-26 "참격은 더 크게" 때 판만 × 1.35 로 키워 0.39.0 "이펙트 범위만큼 피해" 와 어긋났던 것). 창 찌르기 줄 · 방패 밀치기도 판과 함께 키움
+     * (찌르기 줄이 휘두르기보다 길게 — 창의 성격). 꺼져 있으면 1
+     */
+    public static double slashScale() {
+        Obj b = Rules.get().root().objOrNull("BASIC_SLASH");
+        return b == null || !b.truthy("enabled") ? 1 : b.numOr("scale", 1);
     }
 
     /** 0.40.0 참격 궤적이 닿는 거리 (MOTION.area.reach — 무기 종류마다 [보통 … 초월], 등급이 표 밖이면 가장 가까운 칸). 없으면 null */
@@ -277,6 +290,16 @@ public final class Motions {
         double k = rollDistance() / sum;
         for (int i = 0; i < n; i++) v[i] *= k;
         return v;
+    }
+
+    /**
+     * 2026-11-27 활 · 완드 평타의 3인칭 몸 동작 (MOTION.ranged — 무기 종류 → 동작, 사용자 "활하고 완드는 알아서 만들어봐"). 없거나 모르는 동작이면 null
+     */
+    public static String rangedMotion(String weaponType) {
+        Obj r = cfg().objOrNull("ranged");
+        if (r == null || weaponType == null) return null;
+        String m = r.strOrNull(weaponType);
+        return m != null && KNOWN.contains(m) ? m : null;
     }
 
     /** 스킬 → 동작 (key = 무기 스킬 id · 직업 스킬 id · "rune:" + 룬 fn). 없으면 null */
