@@ -723,7 +723,7 @@ export const RUNES = {
   strike: {
     common: { fn: "edgeHone", name: "날 세우기", desc: "다음 평타 3번이 더 아픔", use: "평타 3번 강화", hits: 3, ticks: 120, bonus: 1.33, accent: [0.86, 0.94, 1.0] },
     rare: { fn: "flurry", name: "연타", desc: "활·완드 빠르게 · 근접 잔상", use: "평타 빠르게 · 잔상", ticks: 140, rangedCd: 0.6, echo: 0.5, echoRange: 3, accent: [0.5, 0.95, 1.0] },
-    noble: { fn: "cleave", name: "가르기", desc: "평타가 앞 부채꼴의 적도 벰", use: "평타 9번 광역", hits: 9, ticks: 180, bonus: 1.33, cleave: 4, cone: 120, splash: 3.5, accent: [0.72, 0.82, 1.0] },
+    noble: { fn: "cleave", name: "가르기", desc: "평타가 앞 부채꼴의 적도 벰", use: "평타 9번 광역", hits: 9, ticks: 180, bonus: 1.33, cleave: 5.4, cone: 120, splash: 3.5, accent: [0.72, 0.82, 1.0] },
     hero: { fn: "bloodBlade", name: "피의 칼날", desc: "평타 추가 피해, 맞히면 회복", use: "평타 12번 강화 · 흡혈", hits: 12, ticks: 240, bonus: 1.67, heal: 0.015, accent: [1.0, 0.16, 0.22] },
     transcend: { fn: "swordGod", name: "검신 강림", desc: "평타마다 거대한 검기 · 치명타", use: "평타 16번 · 관통 검기", hits: 16, ticks: 300, bonus: 2, wave: 10, width: 2.2, speed: 30, crit: 0.2, accent: [1.0, 0.84, 0.36] },
   },
