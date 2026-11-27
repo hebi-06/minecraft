@@ -72,6 +72,10 @@ public final class CommonSkills {
     /** 시험 · 영상: 사람마다 마지막으로 쓴 스킬 · 그 스킬이 넣은 피해 합 (시험이 나란히 돌아도 섞이지 않게 사람마다) */
     private static final Map<UUID, String> LAST_CAST = new java.util.concurrent.ConcurrentHashMap<>();
     private static final Map<UUID, Double> LAST_DEALT = new java.util.concurrent.ConcurrentHashMap<>();
+    /** 2026-11-27 스틸 차지의 강철 몸 (받는 피해 −20%) 이 끝나는 틱 · 마지막으로 쨍 한 틱 (맞을 때마다 그림 — 4틱에 한 번) */
+    private static final Map<UUID, long[]> STEEL = new HashMap<>();
+    /** 시험: 강철 몸 동안 맞아 쨍 한 수 */
+    public static int steelClangs;
 
     static void init() {
         IMPL.put("blaze_leap", CommonSkills::blazeLeap);
@@ -95,6 +99,7 @@ public final class CommonSkills {
             TOTAL.clear();
             LAST_CAST.clear();
             LAST_DEALT.clear();
+            STEEL.clear();
         });
         ServerPlayConnectionEvents.DISCONNECT.register((h, server) -> {
             UUID id = h.player.getUUID();
@@ -102,7 +107,14 @@ public final class CommonSkills {
             TOTAL.remove(id);
             LAST_CAST.remove(id);
             LAST_DEALT.remove(id);
+            STEEL.remove(id);
         });
+        // 2026-11-27 스틸 차지의 강철 몸 동안 맞으면 쨍 (받는 피해 −20% 가 들어가는 것이 보이게)
+        mmorpg.fabric.RpgHealth.LossHook lh = mmorpg.fabric.RpgHealth.lossHook;
+        mmorpg.fabric.RpgHealth.lossHook = (sp, src, loss, before, after) -> {
+            lh.lost(sp, src, loss, before, after);
+            steelClang(sp, src);
+        };
     }
 
     /** 시험 · 영상: 이 사람이 마지막으로 쓴 공용 스킬 (없으면 null) */
@@ -378,15 +390,95 @@ public final class CommonSkills {
         }
         RuneKit.later(T + 1, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            Guards.set(sp, 30, 0.20, null, null);
+            Guards.set(sp, STEEL_TICKS, 0.20, null, null);
             Vec3 g = sp.position();
             // 강철 몸: 발밑 고리 · 솟는 빛 고리 · 반짝임
             PhantomFx.ring(level, L, g, 1.1, 2, 24, hide, 0.85);
             WyrdKit.ringRise(level, L, g, 0.9, 14, 1.8, hide);
             PhantomFx.glint(level, L, V.up(g, 1.2), 0.6, 0.3, null, hide);
             sound(level, "block.anvil.land", g, 1.6, 0.35);
+            // 2026-11-27 피해 감소 표시 (11-25 영상: 표시 없음): 둘레 강철 육각 판 껍질 · 주인은 알림 줄 · 맞으면 쨍
+            steelShell(sp, STEEL_TICKS);
+            STEEL.put(sp.getUUID(), new long[] {Tasks.now() + STEEL_TICKS, -100});
+            Notify.notify(sp, "§6§l강철 몸 §f받는 피해 −20% §7" + String.format(java.util.Locale.ROOT, "%.1f초", STEEL_TICKS / 20.0), STEEL_TICKS);
         });
         return true;
+    }
+
+    /** 스틸 차지 강철 몸 (받는 피해 −20%) 틱 */
+    static final int STEEL_TICKS = 30;
+    /** 강철 판 테 빛 (힘 — 불빛 금) */
+    static final double[] STEEL_RIM = {1.0, 0.62, 0.22};
+
+    /**
+     * 2026-11-27 스틸 차지의 받는 피해 −20% 표시 (사용자 "공용스킬로 넘어가자" — 11-25 영상: 피해 감소 표시 없음): 가슴 높이 둘레 (0.85칸) 에 강철 육각 판 여섯 (0.8칸 —
+     * 두 높이로 엇갈려 벌집 껍질) 이 몸에서 펼쳐져 (3틱) 천천히 돌며 (틱마다 4°) 몸을 따라다니다 (ticks) 번쩍 커진 뒤 몸속으로 작아짐. 주인의 1인칭에는 안 보임 (화면을
+     * 가리지 않게 — 주인은 알림 줄 · 맞을 때의 쨍)
+     */
+    static void steelShell(ServerPlayer sp, int ticks) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(level, sp.position(), ticks + 12, PhantomFx.hide1p(sp));
+        double s = mmorpg.fabric.rune.RuneProps.scaleFor(0.8, mmorpg.fabric.rune.RuneProps.HEX_PANEL_H);
+        int n = 6;
+        double R = 0.85;
+        mmorpg.fabric.vfx.Vfx.Prop[] ps = new mmorpg.fabric.vfx.Vfx.Prop[n];
+        for (int i = 0; i < n; i++) {
+            Vec3 d = V.unit(RuneKit.turn(Kit.facingOf(sp), i * 60.0));
+            ps[i] = mmorpg.fabric.rune.RuneProps.prop(fx, mmorpg.fabric.rune.RuneProps.HEX_PANEL, V.up(V.add(sp.position(), d, R * 0.3), 1.05),
+                    mmorpg.fabric.rune.RuneProps.MID, mmorpg.fabric.rune.RuneProps.facing(d, V.UP), s * 0.2, STEEL_RIM, RuneKit.WHITE);
+        }
+        lastShellPanels = n;
+        for (int t = 1; t <= ticks; t++) {
+            final int tt = t;
+            fx.on(t, () -> {
+                if (sp.isRemoved()) return;
+                double grow = Math.min(1, tt / 3.0);
+                Vec3 base = sp.position();
+                for (int i = 0; i < n; i++) {
+                    Vec3 d = V.unit(RuneKit.turn(Kit.facingOf(sp), i * 60.0 + tt * 4.0));
+                    double y = (i % 2 == 0 ? 0.88 : 1.22) + 0.04 * Math.sin((tt + i * 3) * 0.45);
+                    ps[i].to(V.up(V.add(base, d, R * (0.3 + 0.7 * grow)), y), mmorpg.fabric.rune.RuneProps.facing(d, V.UP), s * (0.2 + 0.8 * grow), 1);
+                }
+            });
+        }
+        fx.on(ticks + 1, () -> {
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.size(s * 1.25, 1);
+        });
+        fx.on(ticks + 2, () -> {
+            Vec3 c = V.up(sp.position(), 1.05);
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.to(c, null, s * 0.1, 5);
+        });
+        fx.on(ticks + 7, () -> {
+            for (mmorpg.fabric.vfx.Vfx.Prop p : ps) p.remove();
+        });
+    }
+
+    /** 시험: 마지막 강철 껍질의 판 수 */
+    public static int lastShellPanels;
+
+    /** 강철 몸 동안 맞음 (RpgHealth.lossHook): 때린 쪽 몸 겉에 쨍 — 육각 빛 번쩍 · 불티 · 모루 소리 (4틱에 한 번) */
+    private static void steelClang(ServerPlayer sp, net.minecraft.world.damagesource.DamageSource src) {
+        long[] st = STEEL.get(sp.getUUID());
+        long now = Tasks.now();
+        if (st == null) return;
+        if (st[0] <= now) {
+            STEEL.remove(sp.getUUID());
+            return;
+        }
+        if (now - st[1] < 4) return;
+        st[1] = now;
+        steelClangs++;
+        ServerLevel level = sp.level();
+        Vec3 c = V.up(sp.position(), 1.05);
+        Vec3 from = src != null && src.getEntity() != null ? src.getEntity().position() : src != null && src.getSourcePosition() != null ? src.getSourcePosition() : null;
+        Vec3 d = from != null ? V.flat(V.sub(from, sp.position())) : Kit.facingOf(sp);
+        if (V.len(d) < 1e-4) d = Kit.facingOf(sp);
+        d = V.unit(d);
+        Vec3 at = V.add(c, d, 0.75);
+        PhantomFx.glint(level, PhantomFx.RAGE, at, 0.5, 0.25, null, null);
+        SkillFx.sparks(level, at, STEEL_RIM, 6, 3.0);
+        sound(level, "block.anvil.place", at, 1.7, 0.35);
+        sound(level, "item.shield.block", at, 1.2, 0.6);
     }
 
     /** 블레이즈 크로스: 앞 3.5칸 (120°) 을 불꽃으로 두 번 벰 (1틱 · 5틱 — 몫 반씩), 끝에 X 자 불꽃 */
@@ -488,30 +580,60 @@ public final class CommonSkills {
         return true;
     }
 
-    /** 라이트닝 스프린트: 4초 동안 이동 속도 +40% (신속 II) — 발밑 번개 고리 · 달리는 동안 불티 */
+    /**
+     * 라이트닝 스프린트: 4초 동안 이동 속도 +40% (신속 II) — 발밑 번개 고리 · 달리는 동안 불티. 2026-11-27 버프 표시 (11-25 영상: 고리 · 흰 반짝임뿐): 쓸 때 하늘에서
+     * 번개가 몸에 내리꽂힘, 4초 동안 몸을 감싸는 번개 기운 (4틱마다 이어 그림 — 몸과 함께 나아감) · 달릴 때 몸 뒤로 번개 잔상 줄 · 주인 1인칭은 화면 가장자리 빠른 줄,
+     * 끝날 때 번개가 흩어짐
+     */
     static boolean lightningSprint(ServerPlayer sp, StatTree.Skill k, double P) {
         ServerLevel level = sp.level();
         PhantomFx.Lib L = PhantomFx.THUNDER;
         Predicate<ServerPlayer> hide = PhantomFx.hide1p(sp);
-        RuneKit.effect(sp, "speed", 80, 1);
+        RuneKit.effect(sp, "speed", SPRINT_TICKS, 1);
         Vec3 g = sp.position();
+        JobFx.thunder(level, g, 7.0, VOLT, VOLT_CORE, 0.32, JobFx.hide1p(sp));
         JobFx.volt(level, V.up(g, 0.05), 1.3, VOLT, VOLT_CORE, 0.5, JobFx.hide1p(sp));
         PhantomFx.flash(level, L, V.up(g, 1.0), 1.6, hide);
         WyrdKit.ringRise(level, L, g, 0.8, 16, 2.0, hide);
+        WyrdKit.sparks(level, L, V.up(g, 1.0), 10, 1.4, hide);
         sound(level, "item.trident.thunder", g, 2.0, 0.3);
         sound(level, "block.respawn_anchor.charge", g, 1.8, 0.5);
+        sound(level, "entity.lightning_bolt.impact", g, 1.6, 0.35);
+        Notify.notify(sp, "§e§l" + k.name() + " §f이동 속도 +40% §7" + (SPRINT_TICKS / 20) + "초", 40);
         String life = RuneKit.lifeToken(sp);
-        for (int t = 3; t < 80; t += 3) {
+        for (int t = 2; t < SPRINT_TICKS; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 p = sp.position();
-                WyrdKit.sparks(level, L, V.up(p, 0.25), 3, 0.7, hide);
+                Vec3 vel = RuneKit.bodyVel(sp);
+                boolean moving = Math.hypot(vel.x, vel.z) > 2.0;
+                if (tt % 3 == 0) WyrdKit.sparks(level, L, V.up(p, 0.25), 3, 0.7, hide);
                 if (tt % 12 == 0) JobFx.volt(level, V.up(p, 0.05), 0.6, VOLT, VOLT_CORE, 0.3, JobFx.hide1p(sp));
+                // 몸을 감싸는 번개 기운 (짧게 이어 그림 — 방향을 바꿔도 몸을 따라감)
+                if (tt % 4 == 2) {
+                    JobFx.aura(sp, VOLT, VOLT_CORE, 2.0, 0.3, 0.8);
+                    sprintAuras++;
+                }
+                // 달리는 동안 몸 뒤로 번개 잔상 줄 · 1인칭 빠른 줄
+                if (moving && tt % 2 == 0) WyrdKit.trail(level, L, V.up(V.add(p, V.flat(vel), -0.09), 0.95), V.flat(vel), 0.55, hide);
+                if (tt % 10 == 2) JobFx.speed(sp, VOLT, VOLT_CORE, 0.55, moving ? 0.55 : 0.3, vel);
             });
         }
+        RuneKit.later(SPRINT_TICKS, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 p = sp.position();
+            WyrdKit.sparks(level, L, V.up(p, 1.0), 8, 1.2, hide);
+            JobFx.volt(level, V.up(p, 0.05), 0.9, VOLT, VOLT_CORE, 0.3, JobFx.hide1p(sp));
+            sound(level, "block.beacon.deactivate", p, 1.6, 0.4);
+        });
         return true;
     }
+
+    /** 라이트닝 스프린트 틱 (신속 II) */
+    static final int SPRINT_TICKS = 80;
+    /** 시험: 번개 기운을 그린 수 */
+    public static int sprintAuras;
 
     /** 볼트 대거: 손에서 번개 단검이 앞 14칸을 날아 첫 적에 꽂힘 (칸/초 40) — 꽂힌 자리 하늘에서 번개 · 땅의 번개 고리 */
     static boolean voltDagger(ServerPlayer sp, StatTree.Skill k, double P) {
@@ -768,6 +890,7 @@ public final class CommonSkills {
         Vec3 end = V.add(start, d, can);
         JobMove.run(sp, JobMove.to(0, T, JobMove.at(end), JobMove.OUT));
         Guards.set(sp, T + 2, 0.30, null, null);
+        boulderBall(sp, d, T); // 2026-11-27 몸을 감싸고 구르는 3D 바위 (11-25 영상: 구르는 바위 그림 없음)
         PhantomFx.dust(level, L, start, 1.6);
         sound(level, "block.stone.break", start, 0.7, 0.9);
         sound(level, "entity.ravager.step", start, 0.8, 0.8);
@@ -797,6 +920,64 @@ public final class CommonSkills {
             PhantomFx.shock(level, L, sp.position(), 2.6, 1, hide);
         });
         return true;
+    }
+
+    /** 보울더 롤 바위 지름 (칸 — 몸 1.8칸을 다 덮음) */
+    static final double BOULDER_D = 2.3;
+    /** 시험: 마지막 구르는 바위가 돈 각 (라디안 — 구른 거리 ÷ 반지름) */
+    public static double lastBoulderTurn;
+
+    /**
+     * 2026-11-27 보울더 롤의 3D 구르는 바위 (사용자 "공용스킬로 넘어가자" — 11-25 영상: 구르는 바위 그림 없음 · 불티 · 땅 갈라짐뿐): 몸을 감싸는 바위 (지름 2.3칸 — 금 사이
+     * 호박빛) 가 몸에서 부풀어 (2틱) 구르는 쪽 축 (위 × 구르는 쪽) 으로 구른 거리만큼 돌며 (구른 거리 ÷ 반지름) 몸을 따라감 (틱마다) → 끝에서 부풀었다 금이 가며
+     * 부서짐 (작은 바위 넷이 바깥으로 튀어 떨어짐). 주인의 1인칭에는 안 보임 (화면을 바위 속이 가리지 않게)
+     */
+    static void boulderBall(ServerPlayer sp, Vec3 d, int T) {
+        ServerLevel level = sp.level();
+        mmorpg.fabric.vfx.Vfx.Fx fx = mmorpg.fabric.vfx.Vfx.at(level, sp.position(), T + 26, PhantomFx.hide1p(sp));
+        double s = mmorpg.fabric.rune.RuneProps.scaleFor(BOULDER_D, mmorpg.fabric.rune.RuneProps.BOULDER_D);
+        double r = BOULDER_D / 2;
+        long seed = (long) (Kit.rand() * 1e9);
+        org.joml.Quaternionf q0 = mmorpg.fabric.rune.RuneProps.tumble(seed, 0, 0);
+        Vec3 axis = V.unit(V.cross(V.UP, d));
+        Vec3 start = sp.position();
+        mmorpg.fabric.vfx.Vfx.Prop p = mmorpg.fabric.rune.RuneProps.prop(fx, mmorpg.fabric.rune.RuneProps.BOULDER, V.up(start, r - 0.1),
+                mmorpg.fabric.rune.RuneProps.MID, q0, s * 0.45, ROCK_CORE);
+        lastBoulderTurn = 0;
+        for (int t = 1; t <= T; t++) {
+            final int tt = t;
+            fx.on(t, () -> {
+                Vec3 pos = sp.position();
+                double ang = Math.max(0, V.dot(V.sub(pos, start), d)) / r;
+                lastBoulderTurn = ang;
+                org.joml.Quaternionf q = new org.joml.Quaternionf().rotateAxis((float) ang, (float) axis.x, (float) axis.y, (float) axis.z).mul(q0);
+                p.to(V.up(pos, r - 0.1), q, s * (tt <= 2 ? 0.45 + 0.55 * tt / 2.0 : 1.0), 1);
+            });
+        }
+        // 부서짐: 부풀었다 (1틱) 금 사이 빛이 번쩍 → 작아지며 땅으로 (5틱), 작은 바위 넷이 바깥으로 튐
+        fx.on(T + 1, () -> p.size(s * 1.1, 1));
+        fx.on(T + 2, () -> {
+            Vec3 c = sp.position();
+            p.to(V.up(c, 0.3), null, s * 0.25, 5);
+            PhantomFx.rocks(level, V.up(c, 0.9), 8, 3.2, 0.35);
+            for (int i = 0; i < 4; i++) {
+                final Vec3 out = V.unit(RuneKit.turn(d, -135 + i * 90 + (Kit.rand() - 0.5) * 30));
+                final long sd = seed + 7 + i;
+                final double cs = s * (0.28 + Kit.rand() * 0.08);
+                final Vec3 from = V.up(V.add(c, out, 0.5), 0.9);
+                final Vec3 land = new Vec3(c.x + out.x * (2.2 + Kit.rand()), groundOf(level, c).y + 0.15, c.z + out.z * (2.2 + Kit.rand()));
+                mmorpg.fabric.vfx.Vfx.Prop q = mmorpg.fabric.rune.RuneProps.prop(fx, mmorpg.fabric.rune.RuneProps.BOULDER, from,
+                        mmorpg.fabric.rune.RuneProps.MID, mmorpg.fabric.rune.RuneProps.tumble(sd, 0, 0), cs, ROCK_CORE);
+                for (int u = 1; u <= 8; u++) {
+                    final double w = u / 8.0;
+                    final int uu = u;
+                    fx.on(T + 2 + u, () -> q.to(V.add(V.lerp(from, land, w), V.UP, 1.3 * 4 * w * (1 - w)), mmorpg.fabric.rune.RuneProps.tumble(sd, uu, 40), -1, 1));
+                }
+                fx.on(T + 14, () -> q.to(V.up(land, -0.4), null, cs * 0.4, 6));
+                fx.on(T + 21, q::remove);
+            }
+        });
+        fx.on(T + 8, p::remove);
     }
 
     /** 록 런치: 발밑 바위 기둥이 솟아 위로 7칸 (8틱) → 떨어져 내려앉음 · 낙하 피해 없음 · 착지 둘레 2.5칸 밀침 */

@@ -1,1 +1,1 @@
-{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/axe_lv0","display":{"firstperson_righthand":{"rotation":[-138.8056,12.4801,88.2222],"translation":[-22.6768,0.9877,-7.2091],"scale":[1.0,1.0,1.0]}}}
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/axe_lv0","display":{"firstperson_righthand":{"rotation":[-140.024,19.5753,88.3256],"translation":[-16.5515,1.0823,-7.903],"scale":[1.0,1.0,1.0]}}}

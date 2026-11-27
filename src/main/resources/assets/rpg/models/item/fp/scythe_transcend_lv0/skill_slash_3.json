@@ -1,1 +1,1 @@
-{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_transcend_lv0","display":{"firstperson_righthand":{"rotation":[0.0628,-34.8613,-67.797],"translation":[19.1698,7.329,-8.9024],"scale":[0.9875,0.9875,0.9875]}}}
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_transcend_lv0","display":{"firstperson_righthand":{"rotation":[0.0628,-34.8613,-67.797],"translation":[18.7228,5.7646,-9.3015],"scale":[0.9875,0.9875,0.9875]}}}

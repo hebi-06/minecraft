@@ -109,7 +109,9 @@ public final class RpgCommonSkillTests {
         ServerPlayer sp = player(h);
         RpgJobAdvanceTests.home(h, sp);
         List<RpgJobTests.Step> steps = new ArrayList<>();
+        int[] seen = new int[2];
         steps.add(new RpgJobTests.Step(1, () -> {
+            seen[0] = CommonSkills.sprintAuras;
             h.assertTrue(CommonSkills.cast(sp, "lightning_sprint", true), "라이트닝 스프린트");
             MobEffectInstance speed = sp.getEffect(MobEffects.SPEED);
             h.assertTrue(speed != null && speed.getAmplifier() == 1 && speed.getDuration() > 70, "신속 II 4초");
@@ -120,7 +122,26 @@ public final class RpgCommonSkillTests {
         steps.add(new RpgJobTests.Step(9, () -> {
             Guards.Guard g = Guards.of(sp);
             h.assertTrue(g != null && Math.abs(g.reduce() - 0.20) < 1e-9, "끝나고 받는 피해 -20%: " + (g == null ? null : g.reduce()));
+            // 2026-11-27 버프 표시: 번개 기운 (4틱마다) · 강철 육각 판 여섯 · 강철 몸 동안 맞으면 쨍 (4틱에 한 번)
+            h.assertTrue(CommonSkills.sprintAuras > seen[0], "lightning aura drawn " + CommonSkills.sprintAuras);
+            h.assertTrue(CommonSkills.lastShellPanels == 6, "steel shell 6 panels " + CommonSkills.lastShellPanels);
+            seen[1] = CommonSkills.steelClangs;
+            mmorpg.fabric.RpgHealth.lossHook.lost(sp, sp.damageSources().generic(), 2, 100, 98);
+            mmorpg.fabric.RpgHealth.lossHook.lost(sp, sp.damageSources().generic(), 2, 98, 96);
+            h.assertTrue(CommonSkills.steelClangs == seen[1] + 1, "hit while steel → one clang (4-tick gap) " + (CommonSkills.steelClangs - seen[1]));
         }));
+        RpgJobTests.chain(h, steps, 0, () -> done(h, sp));
+    }
+
+    /** 2026-11-27 보울더 롤: 몸을 감싸는 3D 바위가 구른 거리만큼 돎 (구른 거리 ÷ 반지름 1.15 — 5칸이면 약 4.3 라디안) */
+    @GameTest(environment = ENV, maxTicks = 40)
+    public void boulderRollTurns(GameTestHelper h) {
+        RpgJobAdvanceTests.floor(h);
+        ServerPlayer sp = player(h);
+        RpgJobAdvanceTests.home(h, sp);
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        steps.add(new RpgJobTests.Step(1, () -> h.assertTrue(CommonSkills.cast(sp, "boulder_roll", true), "보울더 롤")));
+        steps.add(new RpgJobTests.Step(10, () -> h.assertTrue(CommonSkills.lastBoulderTurn > 2.0, "boulder rolled " + CommonSkills.lastBoulderTurn)));
         RpgJobTests.chain(h, steps, 0, () -> done(h, sp));
     }
 }

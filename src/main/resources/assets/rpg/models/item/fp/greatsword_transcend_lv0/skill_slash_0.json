@@ -1,1 +1,1 @@
-{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/greatsword_transcend_lv0","display":{"firstperson_righthand":{"rotation":[-13.5466,19.8852,3.7144],"translation":[3.6465,12.1942,-13.3387],"scale":[0.8353,0.8353,0.8353]}}}
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/greatsword_transcend_lv0","display":{"firstperson_righthand":{"rotation":[-13.5466,19.8852,3.7144],"translation":[3.634,12.1505,-13.3499],"scale":[0.8353,0.8353,0.8353]}}}

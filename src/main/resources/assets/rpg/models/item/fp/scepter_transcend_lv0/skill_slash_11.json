@@ -1,1 +1,1 @@
-{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scepter_transcend_lv0","display":{"firstperson_righthand":{"rotation":[0.7489,-66.3632,15.2505],"translation":[3.3358,5.4061,-12.1106],"scale":[1.0497,1.0497,1.0497]}}}
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scepter_transcend_lv0","display":{"firstperson_righthand":{"rotation":[0.6429,-66.371,15.1163],"translation":[3.386,5.4051,-12.1105],"scale":[1.0497,1.0497,1.0497]}}}

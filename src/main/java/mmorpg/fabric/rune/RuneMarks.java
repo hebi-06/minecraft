@@ -93,10 +93,29 @@ public final class RuneMarks {
         }
         VULN.put(e.getUUID(), new Vuln(e, until, add, glow, core, Tasks.tag(), drawer));
         if (show && e.level() instanceof ServerLevel level) {
-            if (drawer != null) drawer.draw(level, e, false);
-            else drawMark(level, e, glow, core, fresh ? 0.62 : 0.5, 0.7);
+            double size = fresh ? 0.62 : 0.5;
+            Runnable draw = () -> {
+                if (e.isRemoved() || !e.isAlive()) return;
+                if (drawer != null) drawer.draw(level, e, false);
+                else drawMark(level, e, glow, core, size, 0.7);
+            };
+            // 2026-11-27 넉백 중이면 (원소 반응 초전도 — 맞아 밀리는 순간) 밀림이 끝난 뒤 그림 (표식이 넉백 속도로 몸보다 멀리 날아갔음)
+            if (flung(e)) Tasks.later(FLUNG_WAIT, draw);
+            else draw.run();
             if (fresh) SkillFx.play(level, "block.chain.break", RuneKit.overHead(e, 0.6), 1.1, 0.7);
         }
+    }
+
+    /** 넉백이 잦아들 때까지 (틱 — 땅 마찰로 틱마다 × 0.55 → 4틱이면 약 9%) */
+    static final int FLUNG_WAIT = 4;
+
+    /**
+     * 2026-11-27 밀려나는 중인지 (수평 5칸/초 넘게 — 걷거나 뛰는 몹보다 빠름, 넉백은 8 ~ 10칸/초): 표식은 그 순간의 몸 속도로 움직이는 그림이라 (vel), 넉백 (틱마다 줄어듦) 속도를 그대로 쓰면
+     * 그림만 몸보다 몇 칸 멀리 날아감 (사용자 영상 — 초전도 표식)
+     */
+    static boolean flung(LivingEntity e) {
+        Vec3 v = RuneKit.entVel(e);
+        return Math.hypot(v.x, v.z) > 5.0;
     }
 
     /** 이 적의 받는 피해 배율 (1 = 없음) */
@@ -171,7 +190,7 @@ public final class RuneMarks {
                     continue;
                 }
                 // 1초마다 다시 그림 (적마다 다른 틱 — 한 틱에 몰리지 않게), 끝나기 1초 전부터는 작게
-                if (drawn < MARKS_PER_TICK && (n + e.getId()) % 20 == 0 && e.level() instanceof ServerLevel level) {
+                if (drawn < MARKS_PER_TICK && (n + e.getId()) % 20 == 0 && !flung(e) && e.level() instanceof ServerLevel level) {
                     drawn++;
                     String prevTag = Tasks.tag(v.tag());
                     try {

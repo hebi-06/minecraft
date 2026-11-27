@@ -334,14 +334,13 @@ public final class RpgMotionTests {
         ServerPlayer sp = player(h);
         Weapon bow = Weapons.weaponFrom("bow", 20, "rare");
         Weapon wand = Weapons.weaponFrom("wand", 20, "rare");
-        for (String s : List.of("dex", "int")) RpgPlayers.setStat(sp, s, 80);
-        sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(bow.id())));
+        hold(sp, bow); // 레벨 20 · 스탯 150 (요구 레벨 · 스탯 — 모자라면 쏘지 않음)
         h.runAfterDelay(2, () -> {
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), bow, null);
             float want = (float) Motions.playSpeed(RpgCombat.attackSpeed.applyAsDouble(sp));
             h.assertTrue("bow_basic".equals(MotionSystem.lastSent(sp)) && Math.abs(MotionSystem.lastSentSpeed(sp) - want) < 1e-6,
                     "bow → bow_basic at the attack speed " + MotionSystem.lastSent(sp) + " " + MotionSystem.lastSentSpeed(sp) + " vs " + want);
-            sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(wand.id())));
+            hold(sp, wand);
         });
         h.runAfterDelay(4, () -> {
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), wand, null);
@@ -653,7 +652,10 @@ public final class RpgMotionTests {
         h.runAfterDelay(6, () -> {
             h.assertTrue(oneHitPlus(TestDummies.dealt(a), sp, w, bonus[0]), "aimed: one hit + strike (no cone) " + TestDummies.dealt(a) + " vs " + (full(sp, w) + bonus[0]));
             h.assertTrue(oneHitPlus(TestDummies.dealt(e), sp, w, bonus[0]), "area: one hit + strike (no cone) " + TestDummies.dealt(e));
-            h.assertTrue(TestDummies.dealt(f) > 0 && !oneHitPlus(TestDummies.dealt(f), sp, w, bonus[0]), "cone only beyond the area " + TestDummies.dealt(f));
+            h.assertTrue(TestDummies.dealt(f) > 0 && !oneHitPlus(TestDummies.dealt(f), sp, w, bonus[0]), "cone only beyond the area " + TestDummies.dealt(f) + " (cleave "
+                    + r.def().num("cleave") + " · dist " + String.format(java.util.Locale.ROOT, "%.2f", Math.hypot(f.getX() - sp.getX(), f.getZ() - sp.getZ()))
+                    + " · in cone now " + mmorpg.fabric.rune.RuneKit.coneAround(sp, sp.position(), mmorpg.fabric.skill.Kit.facingOf(sp), r.def().num("cleave"),
+                            r.def().num("cone")).contains(f) + " · last cone " + RuneStrike.lastCone + ")");
             h.assertTrue(RuneStrike.testLeft(sp, "noble") == r.def().num("hits") - 1, "one swing = one use " + RuneStrike.testLeft(sp, "noble"));
             RuneStrike.testClear(sp);
             done(h, sp);

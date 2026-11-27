@@ -250,6 +250,9 @@ final class ElementFx {
     }
 
     /** 불타는 땅 한 번 (k 번째 · 모두 n 번): 처음 = 용암이 튀며 퍼짐 · 가운데 = 끓음 (불꽃 · 불티) · 끝 = 식어 사라짐 */
+    /** 용암 땅 불꽃 크기 (2026-11-27 0.9 → 0.6 — 이름표 아래로) */
+    static final double LAVA_FLAME = 0.6;
+
     static void lavaPulse(ServerLevel level, Vec3 c, double radius, int k, int n) {
         double every = 0.5;
         Vec3 g = V.up(c, 0.06);
@@ -257,10 +260,11 @@ final class ElementFx {
         int f = k == n - 1 ? 6 : 2 + (k % 4);
         JobFx14.pool(level, g, radius, f, k == n - 1 ? 2 : 1, k == n - 1 ? 0.6 : every + 0.1, false, Opt.of("spin", 0.0), LAVA_GLOW, LAVA_CORE);
         if (!RuneKit.fxQuota("elemLava", 4)) return;
+        // 2026-11-27 불꽃은 가운데 (몸) 를 비우고 낮게 (0.9 → 0.6 — 몸 위 이름표를 가렸음): 반지름의 0.4 ~ 0.85
         for (int i = 0; i < 3; i++) {
             double a = Kit.rand() * Math.PI * 2;
-            Vec3 p = V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * Math.sqrt(Kit.rand()) * 0.85);
-            SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 0.9, "life", 0.55, "color", LAVA_GLOW, "alpha", 0.9, "spin", Kit.rand() * 360));
+            Vec3 p = V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * (0.4 + 0.45 * Math.sqrt(Kit.rand())));
+            SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", LAVA_FLAME, "life", 0.55, "color", LAVA_GLOW, "alpha", 0.9, "spin", Kit.rand() * 360));
         }
         SkillFx.sparks(level, V.up(c, 0.3), LAVA_CORE, 4, 3);
         if (k % 2 == 0) SkillFx.play(level, "block.lava.pop", c, 0.9 + Kit.rand() * 0.3, 0.7);

@@ -559,6 +559,9 @@ public final class RuneStrike {
         }
     }
 
+    /** 시험: 마지막 가르기 부채꼴 (반지름 · 뺀 적 · 부채꼴 안 적 수) */
+    public static String lastCone = "";
+
     /** 평타 강화가 끝남 (used = 평타를 다 씀, 아니면 시간이 다 됨) */
     private static void strikeEnd(ServerPlayer sp, StrikeBuff st, boolean used) {
         SkillFx.burst(sp.level(), RuneKit.handOf(sp).hand(), accent(st.def), 0.4, 0.25);
@@ -637,10 +640,16 @@ public final class RuneStrike {
                         "life", 0.3, "grow", 0.35, "fade", 0.6), col, white);
                 SkillFx.fx(level, "rpg:light_cut", V.up(V.add(c, f, rad * 0.7), 0.08), Opt.of("dir", V.rightOf(f), "size", rad * 0.55, "thick", 0.22, "life", 0.6,
                         "delay", 0.35, "color", col, "alpha", 0.9));
+                lastCone = "rad " + rad + " · skip " + skip.size();
                 RuneKit.later(1, () -> {
-                    if (!RuneKit.sameLife(sp, life)) return;
+                    if (!RuneKit.sameLife(sp, life)) {
+                        lastCone += " · life changed";
+                        return;
+                    }
                     int shown = 0; // 적이 많으면 칼자국은 12마리까지 (모바일 파티클 예산)
-                    for (LivingEntity e : RuneKit.coneAround(sp, c, f, rad, k.num("cone"))) {
+                    List<LivingEntity> cone = RuneKit.coneAround(sp, c, f, rad, k.num("cone"));
+                    lastCone += " · cone " + cone.size();
+                    for (LivingEntity e : cone) {
                         if (skip.contains(e.getUUID())) continue;
                         if (RuneKit.runeHit(sp, e, st.P, k.num("bonus"), "str") > 0 && shown++ < 12) {
                             Vec3 p = Kit.bodyPoint(e);

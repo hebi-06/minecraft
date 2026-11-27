@@ -480,6 +480,22 @@ final class JobFx {
         RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", inner(j), "cell", (double) SPEED, "alpha", alpha * 0.9));
     }
 
+    /** 같은 것 — 색을 정함 · 묶음 = 그 빛의 묶음 (2026-11-27 공용 스킬 라이트닝 스프린트 — 달리는 동안 1인칭 빠른 줄, vel 로 몸과 함께 나아감) */
+    static void speed(ServerPlayer sp, double[] glow, double[] core, double life, double alpha, Vec3 vel) {
+        Vec3 look = sp.getViewVector(1F);
+        Opt o = only1p(sp).with("size", 1.35, "loop", 1.0, "alpha", alpha, "fade", 0.4, "spin", Kit.rand() * 360, "vel", vel);
+        Opt base = o.with("life", life, "frames", (double) SPEED, "fps", 24.0);
+        Vec3 at = V.add(sp.getEyePosition(), look, 1.4);
+        PhantomFx.Lib L = PhantomFx.painter(glow);
+        if (L != null && PhantomFx.has(L, "speed")) {
+            PhantomFx.rfx(sp.level(), L.n("speed"), 1, 0, at, base.with("frames", (double) mmorpg.fabric.vfx.Vfx.sheet(L.n("speed")).frames(), "fps", 16.0),
+                    PhantomFx.BILL, 1);
+            return;
+        }
+        RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", glow, "cell", 0.0));
+        RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", core, "cell", (double) SPEED, "alpha", alpha * 0.9));
+    }
+
     /**
      * 2026-11-16 분신 (예전 RuneKit.shadeClone — rfx_shade 와 같은 값): 빛 core (없으면 glow) 를 칠하는 묶음에 분신 그림 (tools/jobvfx/clone.py — 같은 틀 · 자세 · 좌우)
      * 이 있으면 그 그림 (트릭스터 거울 유리 · 전사 · 마검사 잔상), 없으면 예전 길. 발 feet = 그림 아래 끝 · 높이 = 반 크기 size × 2 · 세로축만 카메라를 봄
@@ -591,14 +607,19 @@ final class JobFx {
 
     /** 몸에서 솟는 빛 (rfx_jaura — 세워 카메라 쪽으로 돎): 높이 약 height 칸, life 초 동안 이어 돌림. 시전자 1인칭에서는 숨김 */
     static void aura(ServerPlayer sp, Jobs.Job j, double height, double life, double alpha) {
+        aura(sp, outer(j), inner(j), height, life, alpha);
+    }
+
+    /** 같은 것 — 색을 정함 (2026-11-27 공용 스킬 라이트닝 스프린트의 번개 기운) */
+    static void aura(ServerPlayer sp, double[] glow, double[] core, double height, double life, double alpha) {
         // 그림 칸 128 × 256: 반 너비 = 0.3 × 높이 (몸 뒤에 다 가려지지 않게 넓게), 반 높이 = 0.6 × 높이 — 아래 끝이 발밑 조금 아래
         Vec3 c = V.up(sp.position(), height * 0.6 - 0.15);
         Opt o = hide1p(sp).with("size", height * 0.3, "loop", 1.0, "alpha", alpha, "coreAlpha", alpha * 0.8, "vel", RuneKit.bodyVel(sp), "fade", 0.3);
         double fps = AURA / 0.45; // 한 바퀴 0.45초
         Opt base = o.with("life", life, "frames", (double) AURA, "fps", fps);
-        if (PhantomFx.painted(sp.level(), "jaura2", 0, c, base, outer(j))) return; // 2026-11-16 칠한 직업: 솟는 별빛 · 녹색 혼불 띠
-        RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", outer(j), "cell", 0.0));
-        RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", inner(j), "cell", (double) AURA, "alpha", alpha * 0.8));
+        if (PhantomFx.painted(sp.level(), "jaura2", 0, c, base, glow)) return; // 2026-11-16 칠한 직업: 솟는 별빛 · 녹색 혼불 띠
+        RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", glow, "cell", 0.0));
+        RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", core, "cell", (double) AURA, "alpha", alpha * 0.8));
     }
 
     // ------------------------------------------------------------ 0.28.0 전사 · 매지션 · 궁수 그림

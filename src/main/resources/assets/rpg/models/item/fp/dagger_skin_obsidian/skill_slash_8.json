@@ -1,1 +1,1 @@
-{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/dagger_skin_obsidian","display":{"firstperson_righthand":{"rotation":[-172.5992,-23.0899,91.9923],"translation":[-32.9307,4.8729,-1.5061],"scale":[1.0,1.0,1.0]}}}
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/dagger_skin_obsidian","display":{"firstperson_righthand":{"rotation":[-173.3097,-14.4662,94.2351],"translation":[-24.2547,4.6755,-2.4321],"scale":[1.0,1.0,1.0]}}}

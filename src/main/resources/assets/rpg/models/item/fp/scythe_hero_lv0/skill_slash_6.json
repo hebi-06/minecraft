@@ -1,1 +1,1 @@
-{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_hero_lv0","display":{"firstperson_righthand":{"rotation":[-179.03,0.107,94.3842],"translation":[-24.8442,4.7299,-7.2664],"scale":[0.8037,0.8037,0.8037]}}}
+{"credit":"MMO RPG — 1인칭 모션 (tools/fp_frames.py 가 poses.json 의 fp 열쇠로 만듦, 손으로 고치지 않음)","parent":"rpg:item/model/scythe_hero_lv0","display":{"firstperson_righthand":{"rotation":[-179.4897,4.0706,95.6916],"translation":[-20.6354,4.6587,-7.8399],"scale":[0.8037,0.8037,0.8037]}}}
