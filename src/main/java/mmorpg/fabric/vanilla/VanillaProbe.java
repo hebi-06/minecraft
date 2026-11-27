@@ -1075,23 +1075,27 @@ final class VanillaProbe {
                 }
                 // 2026-11-16 룬 위르드식 견주기 (runeab:<계열 또는 계열_등급>): 룬마다 예전 그림 (old: — PhantomFx.RUNE_WYRD 끔 · films/vanilla_<계열>_<등급>_old) 과 새 그림을 차례로
                 boolean ab = k.startsWith("runeab:");
+                // 2026-11-27 runepre:<계열 또는 계열_등급> — 오늘 바꾼 것 (룬 시전 서명 · 평타 강화 판 배율) 을 끈 영상 (pre: — films/vanilla_<계열>_<등급>_pre) 과 켠 영상을 차례로
+                boolean pr = k.startsWith("runepre:");
                 if (ab) k = k.substring(7);
-                String pre = ab ? "old:" : "";
+                if (pr) k = k.substring(8);
+                String pre = ab ? "old:" : pr ? "pre:" : "";
                 if (mmorpg.core.Runes.ALL_FAMILIES.contains(k)) {
                     for (String g : mmorpg.core.Runes.GRADE_ORDER) {
                         if (!mmorpg.core.Runes.hasGrade(k, g)) continue; // 2026-11-17 새 룬은 등급 하나씩
-                        if (ab) keys.add(pre + k + "_" + g);
+                        if (ab || pr) keys.add(pre + k + "_" + g);
                         keys.add(k + "_" + g);
                     }
                 } else {
-                    if (ab) keys.add(pre + k);
+                    if (ab || pr) keys.add(pre + k);
                     keys.add(k);
                 }
             }
         }
         for (String k0 : keys) {
             boolean old = k0.startsWith("old:");
-            String k = old ? k0.substring(4) : k0;
+            boolean preK = k0.startsWith("pre:"); // 2026-11-27 runepre:
+            String k = old || preK ? k0.substring(4) : k0;
             boolean bossk = k.endsWith(":boss"); // 2026-11-18 runeboss:
             if (bossk) k = k.substring(0, k.length() - 5);
             boolean fpk = k.endsWith(":fp");
@@ -1102,7 +1106,7 @@ final class VanillaProbe {
             String g = k.substring(cut + 1);
             String id = mmorpg.core.Runes.runeId(fam, g);
             if (mmorpg.core.Runes.parseRune(id) == null) continue;
-            FILM_RUNES.add((old ? "old:" + id : id) + (fpk ? ":fp" : "") + (bossk ? ":boss" : ""));
+            FILM_RUNES.add((old ? "old:" + id : preK ? "pre:" + id : id) + (fpk ? ":fp" : "") + (bossk ? ":boss" : ""));
             FILM_FRAMES.add(switch (g) {
                 case "transcend" -> 150;
                 case "hero" -> 96;
@@ -1186,6 +1190,8 @@ final class VanillaProbe {
         int i = step - 1;
         for (net.minecraft.world.entity.Entity e : SPAWNED) if (e != null && !e.isRemoved()) e.discard();
         SPAWNED.clear();
+        mmorpg.fabric.BasicSlash.lookCards = true; // 2026-11-27 앞 영상이 runepre: (오늘 바꾼 것 끔) 였어도 되돌림
+        mmorpg.fabric.rune.RuneSign.enabled = true;
         if (i >= FILM_RUNES.size()) {
             mmorpg.fabric.job.JobSystem.RUNE_WYRD = true;
             mmorpg.fabric.job.JobSystem.BOSS_WYRD = false; // 2026-11-17 보스 위르드식 멈춤 (기본 끔)
@@ -1233,8 +1239,11 @@ final class VanillaProbe {
         boolean fpLook = entry.endsWith(":fp");
         if (fpLook) entry = entry.substring(0, entry.length() - 3);
         boolean oldLook = entry.startsWith("old:"); // 2026-11-16 룬 위르드식 견주기 (예전 그림)
+        boolean preLook = entry.startsWith("pre:"); // 2026-11-27 오늘 바꾼 것 (룬 시전 서명 · 평타 강화 판 배율) 을 끈 영상
         mmorpg.fabric.job.JobSystem.RUNE_WYRD = !oldLook;
-        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(oldLook ? entry.substring(4) : entry);
+        mmorpg.fabric.BasicSlash.lookCards = !preLook;
+        mmorpg.fabric.rune.RuneSign.enabled = !preLook;
+        mmorpg.core.Runes.Rune r = mmorpg.core.Runes.parseRune(oldLook || preLook ? entry.substring(4) : entry);
         if (r == null) {
             check("film rune " + FILM_RUNES.get(i), false);
             Tasks.later(2, () -> film(p, step + 1));
@@ -1275,7 +1284,8 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        String name = "vanilla_" + (fpLook ? "runefp_" : "") + (bossLook ? "runeboss_" : "") + r.family() + "_" + r.grade() + (oldLook ? "_old" : "");
+        String name = "vanilla_" + (fpLook ? "runefp_" : "") + (bossLook ? "runeboss_" : "") + r.family() + "_" + r.grade() + (oldLook ? "_old" : "")
+                + (preLook ? "_pre" : "");
         int frames = FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1));
         if (fpLook) {
             // 2026-11-17 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임 · 내 뼈 몸 보기 끔, 직업 jobfp 와 같음) — 룬 그림이 1인칭 화면을 덮는지 보기

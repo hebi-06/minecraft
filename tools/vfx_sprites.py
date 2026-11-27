@@ -261,6 +261,10 @@ SPRITES += _jobvfx_element.sprites()
 from jobvfx import icons as _jobvfx_icons  # noqa: E402
 
 SPRITES += _jobvfx_icons.sprites()
+# 2026-11-27 룬 시전 서명 (사용자 "룬 쓸때 룬 글자 띄울거임" — 룬 아이템 그림과 같은 글자 · 처음부터 도트): tools/jobvfx/runesign.py
+from jobvfx import runesign as _jobvfx_runesign  # noqa: E402
+
+SPRITES += _jobvfx_runesign.sprites()
 
 
 # 2026-11-16 빈 가장자리 자르기 (사용자 "8gb 지원할거고 옛그림이 있으면 그냥 참고만 하게 따로 치우고 용량 확보하자"): 글꼴 그림판은 접속할 때 통째로 풀려 메모리에

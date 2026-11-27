@@ -587,6 +587,11 @@ public final class RpgMotionTests {
             MotionNet.Look sent = MotionSystem.lastSentLook(sp);
             h.assertTrue(sent.glow() == SwingLooks.pack(SwingLooks.of("edgeHone").glow()) && Math.abs(sent.scale() - 1.15F) < 1e-6,
                     "look sent with the swing " + sent);
+            // 2026-11-27 사용자 "평타강화도 배율로 키우자": 참격 판도 범위와 같은 × 1.15
+            Double rch = Motions.reach("sword", w.gradeIndex());
+            h.assertTrue(rch != null && Math.abs(mmorpg.fabric.BasicSlash.lastLookScale - 1.15) < 1e-6
+                    && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - rch * slashScale() * 1.15) < 1e-6,
+                    "card × look 1.15 " + mmorpg.fabric.BasicSlash.lastRadius + " look " + mmorpg.fabric.BasicSlash.lastLookScale);
         });
         h.runAfterDelay(4, () -> {
             for (int i = 0; i < 3; i++) {
@@ -621,6 +626,9 @@ public final class RpgMotionTests {
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
             h.assertTrue(MotionSystem.lastSentLook(sp).none(), "no look on a plain swing " + MotionSystem.lastSentLook(sp));
+            Double rch = Motions.reach("sword", w.gradeIndex());
+            h.assertTrue(rch != null && mmorpg.fabric.BasicSlash.lastLookScale == 1 && Math.abs(mmorpg.fabric.BasicSlash.lastRadius - rch * slashScale()) < 1e-6,
+                    "plain swing: card back to reach × scale " + mmorpg.fabric.BasicSlash.lastRadius);
         });
         h.runAfterDelay(22, () -> {
             h.assertTrue(oneHit(got.applyAsDouble(0), sp, w) && oneHit(got.applyAsDouble(1), sp, w) && got.applyAsDouble(2) == 0,
@@ -675,6 +683,8 @@ public final class RpgMotionTests {
             h.assertTrue(JobTraits.testStance(sp, "reaper", "reaper_avatar", 100), "reaper avatar on");
             h.assertTrue("reaper_avatar".equals(SwingLook.testKey(sp)), "look " + SwingLook.testKey(sp));
             h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == far), "reaper avatar: 6.75 blocks");
+            Slash.onPunch(sp); // 2026-11-27 사용자 "평타강화도 배율로 키우자": 낫 가로 베기 판도 6.75칸
+            h.assertTrue(Math.abs(mmorpg.fabric.BasicSlash.lastRadius - 6.75) < 1e-6, "reaper avatar card 6.75 " + mmorpg.fabric.BasicSlash.lastRadius);
             h.assertTrue(SwingLook.shotColors(sp, scythe) == null, "job looks: melee only");
             hold(sp, Weapons.weaponFrom("sword", 20, "rare"));
             h.assertTrue(SwingLook.testKey(sp) == null, "reaper look: scythe only");

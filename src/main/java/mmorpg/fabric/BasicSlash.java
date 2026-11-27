@@ -44,6 +44,10 @@ public final class BasicSlash {
     /** 시험 (2026-11-27 세로 베기): 둘레 사람 판의 면 방향 · 1인칭 판 가운데의 눈앞 가운데 줄에서 옆 거리 (칸 — 오른쪽 +, 볼록한 왼쪽을 메움) */
     public static Vec3 lastFace = Vec3.ZERO;
     public static double lastFpCenterSide;
+    /** 시험 (2026-11-27): 마지막 휘두름의 평타 강화 모습 배율 (판 반지름에 곱한 값 — 없으면 1) */
+    public static double lastLookScale = 1;
+    /** 2026-11-27 평타 강화 모습 동안 판도 키움 (끄면 예전 — 영상 견주기 runepre:) */
+    public static volatile boolean lookCards = true;
 
     private static Obj cfg() {
         return Rules.get().root().objOrNull("BASIC_SLASH");
@@ -80,6 +84,10 @@ public final class BasicSlash {
         boolean thick = thickTypes != null && thickTypes.contains(w.type());
         List<Obj> specs = c.obj("motions").objsOrNull(motion);
         if (specs == null) return;
+        // 2026-11-27 사용자 "평타강화도 배율로 키우자": 평타 강화 모습 (날 세우기 × 1.15 ~ 검신 강림 × 1.5 · 사신 현신 6.75칸) 동안 판도 피해 범위와 같은 배율
+        // (SwingArea.lookScale — 예전에는 범위만 넓어져 판 밖 적이 맞았음)
+        double look = lookCards ? SwingArea.lookScale(sp, w, motion) : 1;
+        lastLookScale = look;
         for (Obj s : specs) {
             // 휘두름 구간: 궤적 구간 (window) — 2026-11-14 궤적이 없는 동작 (찌르기 · 밀치기) 은 판의 time [시작, 끝] (동작 길이의 몫)
             float[] tw;
@@ -94,7 +102,7 @@ public final class BasicSlash {
             // 2026-11-14 reach = 판이 정한 거리 (창 찌르기 줄 4칸 · 방패 밀치기 2.6칸 — 궤적 거리 표가 아님)
             // 2026-11-26 사용자 "참격은 더 크게": 판 × scale. 2026-11-27 "피해 범위를 키우고": 찌르기 줄 · 밀치기 판도 같은 배율 — 범위 피해 (Motions.area) 도 × scale 이라 판 = 범위
             double scale = c.numOr("scale", 1);
-            double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1)) * scale;
+            double radius = Math.max(c.numOr("minRadius", 1.4), (s.has("reach") ? s.num("reach") : base) * s.numOr("radius", 1)) * scale * look;
             spawn(sp, s, thick, radius, delay, life, glow, core);
             if (s.has("impact")) impact(sp, s, radius, delay + sweep, glow, core);
             if (s == specs.get(0)) mmorpg.fabric.job.BasicFx.swing(sp, s, delay, radius, finisher);

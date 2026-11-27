@@ -274,6 +274,7 @@ public final class RuneCast {
         int castAdd = Runes.castAddTicks(r);
         if (castAdd > 0 && plan == null) {
             startCooldown(sp, r);
+            RuneSign.show(sp, r); // 2026-11-27 시전 서명 (사용자 "룬 쓸때 룬 글자 띄울거임") — 시전을 시작한 틱
             String life = RuneKit.lifeToken(sp);
             final double castP = P;
             Tasks.later(castAdd, () -> {
@@ -290,6 +291,7 @@ public final class RuneCast {
         long now = Tasks.now();
         if (plan != null && plan.start() > now) {
             startCooldown(sp, r);
+            RuneSign.show(sp, r); // 이어 쓰는 룬: 쓴 틱
             Object st = cb.commit(sp, r, plan);
             String life = RuneKit.lifeToken(sp);
             Tasks.later((int) (plan.start() - now), () -> {
@@ -305,6 +307,7 @@ public final class RuneCast {
         }
         if (!run.getAsBoolean()) return false;
         startCooldown(sp, r);
+        RuneSign.show(sp, r); // 룬이 나간 틱 (대상이 없어 취소한 룬은 없음)
         if (plan != null) cb.landed(sp, r, cb.commit(sp, r, plan));
         AfterCast after = AFTER_CAST.get(r.family());
         if (after != null) after.run(sp, r, P);

@@ -16,6 +16,7 @@ import mmorpg.fabric.rune.RuneData;
 import mmorpg.fabric.rune.RuneGacha;
 import mmorpg.fabric.rune.RuneItem;
 import mmorpg.fabric.rune.RuneItems;
+import mmorpg.fabric.rune.RuneSign;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
@@ -140,6 +141,35 @@ public final class RpgRuneTests {
         double dealt = TestDummies.dealt(z);
         h.assertTrue(Math.abs(dealt - (base + bonus)) < 1e-3 || Math.abs(dealt - (base * w.critMult() + bonus)) < 1e-3,
                 "basic " + base + " + strike " + bonus + " vs dealt " + dealt);
+        done(h, sp);
+    }
+
+    /**
+     * 2026-11-27 룬 시전 서명 (사용자 "룬 쓸때 룬 글자 띄울거임"): 룬이 나가면 그 룬의 글자 (그림판 rn_sign — 룬 30 다음 한정 5, 룬마다 5칸) 가 뜸.
+     * 대상이 없어 취소한 룬 · 숨긴 옛 계열은 없음
+     */
+    @GameTest(maxTicks = 40)
+    public void runeSignFlashes(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        h.assertTrue(mmorpg.fabric.vfx.Vfx.hasSheet("rn_sign") && mmorpg.fabric.vfx.Vfx.sheet("rn_sign").frames() == 35 * RuneSign.FRAMES,
+                "sheet rn_sign 35 runes × " + RuneSign.FRAMES);
+        h.assertTrue(RuneSign.cellOf("earthbreaker") == 0 && RuneSign.cellOf("immortaloath") == 29 && RuneSign.cellOf("endless") == 30
+                && RuneSign.cellOf("glacier") == 34 && RuneSign.cellOf("str") == -1, "cells " + RuneSign.cellOf("earthbreaker") + " " + RuneSign.cellOf("glacier"));
+        boolean[] target = {false};
+        RuneCast.register("mmorpgSignRune", (p, r, P, k) -> target[0]);
+        Map<String, Object> m = new HashMap<>();
+        m.put("fn", "mmorpgSignRune");
+        m.put("name", "시험 룬");
+        Runes.Rune base = Runes.parseRune("rpg:rune_earthbreaker_common");
+        Runes.Rune r = new Runes.Rune(base.id(), base.family(), base.stat(), base.famName(), base.grade(), new Obj(m, "test"), base.cd(), base.gradeName(),
+                base.gradeColor());
+        int n0 = RuneSign.shown;
+        h.assertFalse(RuneCast.castRune(sp, r, false), "no target");
+        h.assertTrue(RuneSign.shown == n0, "cancelled cast: no sign");
+        target[0] = true;
+        h.assertTrue(RuneCast.castRune(sp, r, false), "cast");
+        h.assertTrue(RuneSign.shown == n0 + 1 && "earthbreaker".equals(RuneSign.lastFamily) && RuneSign.lastCell == 0,
+                "sign " + RuneSign.shown + " " + RuneSign.lastFamily + " " + RuneSign.lastCell);
         done(h, sp);
     }
 

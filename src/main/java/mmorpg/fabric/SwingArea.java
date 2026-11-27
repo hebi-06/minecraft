@@ -135,9 +135,7 @@ public final class SwingArea {
     static List<LivingEntity> targets(ServerPlayer sp, Weapon w, String motion, Entity primary) {
         Motions.Area a = Motions.area(motion, w.type(), w.gradeIndex());
         if (a == null) return List.of();
-        // 0.41.0 평타 강화 모습 (평타 강화 룬 · 직업 평타 태세 — 사신 현신 5칸 포함): 범위 × 배율. 꺼져 있으면 예전 사신 현신 넓히기
-        Motions.Area wide = mmorpg.fabric.motion.SwingLook.widen(sp, w, a);
-        a = wide != a ? wide : widen(sp, w, a);
+        a = widened(sp, w, a);
         Vec3 eye = sp.getEyePosition();
         Vec3 feet = sp.position();
         // 보는 방향 = 몸의 yaw · pitch (플레이어는 머리와 같음 — 머리 회전 yHeadRot 이 따로 노는 가짜 플레이어 · 시험에서도 같게)
@@ -156,6 +154,23 @@ public final class SwingArea {
         out.sort(Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
         int max = Math.max(0, Motions.areaMax());
         return out.size() > max ? new ArrayList<>(out.subList(0, max)) : out;
+    }
+
+    /** 0.41.0 평타 강화 모습 (평타 강화 룬 · 직업 평타 태세 — 사신 현신 6.75칸 포함): 범위 × 배율. 꺼져 있으면 예전 사신 현신 넓히기 */
+    static Motions.Area widened(ServerPlayer sp, Weapon w, Motions.Area a) {
+        Motions.Area wide = mmorpg.fabric.motion.SwingLook.widen(sp, w, a);
+        return wide != a ? wide : widen(sp, w, a);
+    }
+
+    /**
+     * 2026-11-27 평타 강화 모습 동안 참격 판도 같은 배율 (사용자 "평타강화도 배율로 키우자" — 0.39.0 "이펙트 범위만큼 피해"): 이 평타의 범위 거리가 모습으로
+     * 늘어난 몫 (날 세우기 × 1.15 ~ 검신 강림 × 1.5 · 사신 현신 6.75칸 ÷ 범위). 모습이 없거나 범위가 없는 동작이면 1 (BasicSlash)
+     */
+    static double lookScale(ServerPlayer sp, Weapon w, String motion) {
+        if (sp == null || w == null || motion == null) return 1;
+        Motions.Area a = Motions.area(motion, w.type(), w.gradeIndex());
+        if (a == null || !(a.range() > 0)) return 1;
+        return Math.max(1, widened(sp, w, a).range() / a.range());
     }
 
     /** 사신 현신 (낫 — 넓게 베기 범위를 늘리던 것): 낫 범위의 거리를 그만큼 */
