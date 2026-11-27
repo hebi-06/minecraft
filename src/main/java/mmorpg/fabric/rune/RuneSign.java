@@ -29,11 +29,11 @@ public final class RuneSign {
     public static final int FRAMES = 5;
     /** 끄기 (영상 견주기 · 시험) */
     public static volatile boolean enabled = true;
-    /** 머리 위: 그림 높이 (칸 — 고리 지름은 그 0.8) · 눈에서 그림 가운데까지 (이름표 위) */
-    static final double HEAD_SIZE = 1.0;
-    static final double HEAD_LIFT = 1.2;
+    /** 머리 위: 그림 높이 (칸 — 고리 지름은 그 0.8) · 눈에서 그림 가운데까지 (이름표 위). 첫 영상 (CI 46004602596) 의 1.0 은 먼 영상 카메라에서 작아 1.25 */
+    static final double HEAD_SIZE = 1.25;
+    static final double HEAD_LIFT = 1.3;
     /** 1인칭: 그림 높이 · 눈에서 앞 · 조준점 아래 (칸) */
-    static final double FP_SIZE = 0.36;
+    static final double FP_SIZE = 0.38;
     static final double FP_AHEAD = 2.0;
     static final double FP_DOWN = 0.46;
     /** 틱: 커짐 끝 · 흩어짐 시작 (3) · 흩어짐 둘째 (4) · 끝 */
@@ -99,6 +99,8 @@ public final class RuneSign {
         Vec3 at = spot(sp, fp, 0);
         Vfx.Fx fx = Vfx.at(level, at, LIFE + 2, who);
         Vfx.Sprite sign = fx.sprite(ART, at).frame(base).size(s * 0.72);
+        // 1인칭: 돌진 룬으로 과녁 바로 앞에 서면 2칸 앞 글자가 과녁 몸에 가려졌음 (CI 46004602596 게일 러시) → 가려지지 않는 그림
+        if (fp) sign.seeThrough();
         String life = RuneKit.lifeToken(sp);
         int[] shownFrame = {base};
         fx.each(1, LIFE, 1, t -> {
