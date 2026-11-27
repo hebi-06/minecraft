@@ -511,7 +511,7 @@ final class VanillaPack {
 
     /**
      * 디자인 하나의 1인칭 프레임 고르기: custom_model_data 글자 1번 (동작 이름) → 그 동작의 프레임 (쿨타임), 이름이 없으면 바탕 동작
-     * (VanillaFirstPerson.baseOf — 근접은 첫 연타 동작, 활 shoot · 완드 cast). 프레임이 없으면 null. register 면 그 아이템의 구운 동작을 적어 둠
+     * (VanillaFirstPerson.baseOf — 근접은 첫 연타 동작, 활 bow_basic · 완드 wand_basic). 프레임이 없으면 null. register 면 그 아이템의 구운 동작을 적어 둠
      */
     private static com.google.gson.JsonObject fpSelect(Path root, String design, String type, com.google.gson.JsonElement hand,
             net.minecraft.resources.Identifier register) {

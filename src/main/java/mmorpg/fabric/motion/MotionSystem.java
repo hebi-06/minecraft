@@ -138,11 +138,16 @@ public final class MotionSystem {
         try {
             String m = Motions.rangedMotion(weaponType);
             if (m == null || sp == null || sp.isRemoved()) return;
-            float speed = "wand".equals(weaponType) ? 1F : (float) Motions.playSpeed(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp));
-            broadcast(sp, m, sp.getYRot(), false, MotionNet.Look.NONE, speed, false);
+            broadcast(sp, m, sp.getYRot(), false, MotionNet.Look.NONE, rangedSpeed(sp, weaponType), false);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] ranged motion {}", weaponType, e);
         }
+    }
+
+    /** 활 · 완드 평타 동작 빠르기 (3인칭 몸 · 1인칭 프레임 같음): 활 = 공속 빠르기, 완드 = 1 (시전 틱이 공속과 상관없어 내지르는 때 = 광선이 나가는 때) */
+    public static float rangedSpeed(ServerPlayer sp, String weaponType) {
+        if ("wand".equals(weaponType)) return 1F;
+        return (float) Motions.playSpeed(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp));
     }
 
     // ------------------------------------------------------------ 구르기

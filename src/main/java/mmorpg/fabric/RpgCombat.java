@@ -705,7 +705,7 @@ public final class RpgCombat {
         // 2026-11-18 축복의 길: 쿨타임 덮개는 클라이언트에만 (서버 아이템 쿨타임이면 우클릭 — 스킬 키 우 — 패킷을 서버가 막음: ServerPlayerGameMode.useItem 의
         // 쿨타임 검사, CI 44292888089 활 · 완드 영상의 우클릭 0). 쏘는 빠르기는 RANGED_READY 가 정함
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundCooldownPacket(cooldownGroup(stack), cd));
-        mmorpg.fabric.vanilla.VanillaFirstPerson.basic(sp); // 2026-11-18 모드 없는 클라이언트 1인칭: 활 shoot · 완드 cast 프레임 (쿨타임 패킷이 위를 덮음)
+        mmorpg.fabric.vanilla.VanillaFirstPerson.basic(sp); // 2026-11-18 모드 없는 클라이언트 1인칭: 활 bow_basic · 완드 wand_basic 프레임 (쿨타임 패킷이 위를 덮음)
         if (w.type().equals("wand")) {
             if (!CASTING.containsKey(sp.getUUID())) {
                 startWandCast(sp, w, forced);

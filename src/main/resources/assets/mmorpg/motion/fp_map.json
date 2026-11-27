@@ -12,6 +12,7 @@
    "spin"
   ],
   "bow": [
+   "bow_basic",
    "shoot",
    "shoot_up",
    "cast",
@@ -95,6 +96,7 @@
    "spin"
   ],
   "wand": [
+   "wand_basic",
    "cast",
    "cast_up",
    "thrust",
@@ -104,7 +106,7 @@
  },
  "base": {
   "axe": "axe_sweep",
-  "bow": "shoot",
+  "bow": "bow_basic",
   "dagger": "dagger_x",
   "greatsword": "slash_h",
   "hammer": "chop",
@@ -113,11 +115,12 @@
   "scythe": "slash_h",
   "shield": "bash",
   "sword": "slash_h",
-  "wand": "cast"
+  "wand": "wand_basic"
  },
  "ticks": {
   "axe_sweep": 11,
   "bash": 8,
+  "bow_basic": 14,
   "cast": 12,
   "cast_up": 14,
   "chop": 10,
@@ -136,7 +139,8 @@
   "slash_v": 9,
   "smite": 9,
   "spin": 11,
-  "thrust": 8
+  "thrust": 8,
+  "wand_basic": 16
  },
  "types": {
   "axe": {
@@ -524,7 +528,6 @@
   "bow": {
    "axe_sweep": "cast",
    "bash": "shoot",
-   "bow_basic": "shoot",
    "cast_up": "cast",
    "chop": "dash",
    "dagger_x": "dash",
@@ -4348,8 +4351,7 @@
    "spin": "thrust",
    "spin2": "thrust",
    "throw": "slam",
-   "throw_weapon": "slam",
-   "wand_basic": "cast"
+   "throw_weapon": "slam"
   }
  }
 }

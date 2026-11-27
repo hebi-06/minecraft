@@ -50,9 +50,13 @@ GRIPS = {
 MELEE_SKILLS = ["skill_slash", "slam", "thrust", "cast", "dash", "spin"]
 TYPE_MOTIONS = {
     "shield": ["bash", "slam", "thrust", "cast", "guard", "dash"],
-    "bow": ["shoot", "shoot_up", "cast", "dash"],
-    "wand": ["cast", "cast_up", "thrust", "slam", "dash"],
+    # 2026-11-27 활 · 완드 평타 바탕 = 3인칭과 같은 bow_basic · wand_basic (사용자 "활하고 완드는 알아서 만들어봐" — 예전 바탕 shoot 은 시위를 화살보다
+    # 약 0.35초 늦게 놓았고 cast 는 광선 (시전 10틱) 보다 약 0.23초 일찍 내질렀음). shoot · cast 는 스킬 대표 동작으로 그대로 구움
+    "bow": ["bow_basic", "shoot", "shoot_up", "cast", "dash"],
+    "wand": ["wand_basic", "cast", "cast_up", "thrust", "slam", "dash"],
 }
+# 평타 바탕으로만 쓰는 동작: 스킬 동작의 닮은 대표 (fp_map.json types) 로는 고르지 않음 — 스킬 프레임은 예전 대표 그대로
+BASIC_ONLY = {"bow_basic", "wand_basic"}
 # 프레임 하나가 맡는 틱 (1 = 틱마다 — 초당 20장). 메모리 예산 (구운 면 = 디자인 면 수 × 프레임 수) 을 보고 정함
 FRAME_STEP = 1
 
@@ -366,11 +370,12 @@ def write_map(per_type):
         for c in baked:
             out["ticks"][c] = motion(c)[0]
         shield = typ == "shield"
+        reps = [c for c in baked if c not in BASIC_ONLY] or list(baked)
         m = {}
         for name in names:
             if name in baked:
                 continue
-            best = min(baked, key=lambda c: dtw(T[name], T[c], angle=0.0 if shield else 1.0))
+            best = min(reps, key=lambda c: dtw(T[name], T[c], angle=0.0 if shield else 1.0))
             m[name] = best
         out["types"][typ] = m
     with open(MAP_OUT, "w", encoding="utf-8") as f:

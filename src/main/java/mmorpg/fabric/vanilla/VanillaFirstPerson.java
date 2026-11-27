@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * (minecraft:cooldown) 로 고름. 동작이 나갈 때 (MotionSystem.broadcast · 활 · 완드 평타 {@link #basic}) 그 사람에게만 무기의 쿨타임 묶음으로
  * 쿨타임 패킷을 보내 재생 (서버의 쿨타임은 그대로 — 막는 것 없음).
  *
- * <p>디자인마다 굽는 동작 = 그 종류의 바탕 (근접 평타 연타 · 활 shoot · 완드 cast) + 스킬 대표 동작 (근접: 큰 베기 · 내려찍기 · 찌르기 · 시전 · 돌진 · 회전,
+ * <p>디자인마다 굽는 동작 = 그 종류의 바탕 (근접 평타 연타 · 활 bow_basic · 완드 wand_basic) + 스킬 대표 동작 (근접: 큰 베기 · 내려찍기 · 찌르기 · 시전 · 돌진 · 회전,
  * 방패 · 활 · 완드는 따로). 직업 · 룬 스킬 동작 (380 남짓) 은 구운 대표 가운데 1인칭 움직임이 가장 닮은 것 (fp_map.json — 끝 방향 · 자리의 DTW) 으로 보여 줌.
  *
  * <p>시범 결과 (CI 44256605383 · 44286558279, 칼): 쿨타임 프레임은 틱마다 (20장/초) 잘 나오고 평타 뒤 1틱에 시작. 동작 이름 (아이템 구성 요소) 을 바꾸면
@@ -105,7 +105,7 @@ public final class VanillaFirstPerson {
         }
     }
 
-    /** 무기 종류의 바탕 동작 (이름이 없을 때 · 평타 — 근접은 첫 연타 동작, 활 shoot · 완드 cast). 없으면 null */
+    /** 무기 종류의 바탕 동작 (이름이 없을 때 · 평타 — 근접은 첫 연타 동작, 활 bow_basic · 완드 wand_basic). 없으면 null */
     public static String baseOf(String type) {
         return TYPE_BASE.get(type);
     }
@@ -202,13 +202,17 @@ public final class VanillaFirstPerson {
         lastTicks = ticks;
     }
 
-    /** 활 · 완드 평타 (좌클릭 — RpgCombat.punchRanged 가 쏨): 바탕 동작 (활 shoot · 완드 cast) 프레임 — 근접 평타는 MotionSystem 이 동작을 보냄 */
+    /**
+     * 활 · 완드 평타 (좌클릭 — RpgCombat.fireRanged 가 쏨): 바탕 동작 프레임 — 근접 평타는 MotionSystem 이 동작을 보냄. 2026-11-27 바탕 = 3인칭과 같은
+     * bow_basic (누르는 틱에 화살이 나가 1틱 안에 놓고 되튐 — 공속 빠르기) · wand_basic (시전 10틱 끝에 내지름 — 빠르기 1, MotionSystem.rangedSpeed).
+     * 예전 바탕 shoot 은 화살보다 약 0.35초 늦게 놓았고 cast 는 광선보다 약 0.23초 일찍 내질렀음
+     */
     public static void basic(ServerPlayer sp) {
         if (!enabled || sp == null || !VanillaClients.isVanilla(sp)) return;
-        String base = BASE.get(BuiltInRegistries.ITEM.getKey(sp.getMainHandItem().getItem()));
+        ItemStack st = sp.getMainHandItem();
+        String base = BASE.get(BuiltInRegistries.ITEM.getKey(st.getItem()));
         if (base == null) return;
-        float speed = (float) mmorpg.core.Motions.playSpeed(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp));
-        play(sp, base, speed);
+        play(sp, base, mmorpg.fabric.motion.MotionSystem.rangedSpeed(sp, VanillaCosmetics.weaponType(st.getItem())));
     }
 
     /** 감싼 아이템의 구운 동작 → 프레임 수 (없으면 null — 시험 · 영상) */
