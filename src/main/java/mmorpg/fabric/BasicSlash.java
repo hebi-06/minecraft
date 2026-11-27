@@ -22,7 +22,9 @@ import net.minecraft.world.phys.Vec3;
  *   <li>up (가로 베기 · 반대 가로 · 창 휘두르기 · 방패 밀치기): 몸 둘레에 땅과 나란히 누운 판 — 반지름 = 무기 종류 · 등급의 궤적 거리 (MOTION.area.reach)
  *       × radius, 둘레 사람 · 3인칭에는 위아래 옅은 겹 (layers — 같은 높이 눈에서 가는 옆선이 되지 않게)</li>
  *   <li>front (세로 베기 · 내려찍기 · 올려 베기 · X자): 쓴 사람 쪽을 보는 선 판 — 휘두름 시작 쪽 start (화면 도: 0 오른쪽 · 90 위), 볼록한 쪽은 그 90° 반시계
- *       (mirror 면 시계), squash = 볼록한 쪽 납작하게. 쓴 사람의 1인칭에는 조금 멀리 · 옅게 따로</li>
+ *       (mirror 면 시계), squash = 볼록한 쪽 납작하게. 쓴 사람의 1인칭에는 조금 멀리 · 옅게 따로. 2026-11-27 세로 베기 (plane side — 세로 베기 ·
+ *       내려찍기 · 홀 내려치기) 는 둘레 사람 · 3인칭 = 몸 앞뒤로 선 면 (머리 위 → 앞 → 앞 땅) + 옆 겹, 1인칭 = 화면 가운데를 위 → 아래로 (반달 가운데를 눈앞
+ *       가운데 줄에)</li>
  *   <li>때: 동작의 궤적 구간 (window) 이 시작할 때 나타나 휘두름 동안 머리가 나아가고 (판의 움직임 0 ~ sweepShare) 남은 동안 잔상이 거둬짐 —
  *       공속만큼 빠르게 (Motions.playSpeed — 몸 동작과 같음)</li>
  *   <li>광역 무기 (thick — 마검 · 낫 · 전투 망치 · 창): 두꺼운 띠 (slash_basic_w)</li>
@@ -39,6 +41,9 @@ public final class BasicSlash {
     public static double lastRadius;
     public static double lastLife;
     public static double lastDelay;
+    /** 시험 (2026-11-27 세로 베기): 둘레 사람 판의 면 방향 · 1인칭 판 가운데의 눈앞 가운데 줄에서 옆 거리 (칸 — 오른쪽 +, 볼록한 왼쪽을 메움) */
+    public static Vec3 lastFace = Vec3.ZERO;
+    public static double lastFpCenterSide;
 
     private static Obj cfg() {
         return Rules.get().root().objOrNull("BASIC_SLASH");
@@ -123,9 +128,43 @@ public final class BasicSlash {
             mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", dir, "faceCam", 1.0, "roll", 0.0, "view", 1.0, "owner", (double) owner));
             mmorpg.fabric.Fx3d.spawn(level, model, V.add(p, dir, c.numOr("fpAhead", 0.6)), card.with("dir", dir, "faceCam", 1.0, "roll", 0.0, "view", 2.0, "owner",
                     (double) owner, "alpha", c.numOr("fpAlpha", 0.7)));
+        } else if ("front".equals(kind) && "side".equals(s.strOr("plane", ""))) {
+            // 2026-11-27 사용자 "세로 베기들 다 전방 일자로 베는거 맞음? 왜 1인칭은 왼쪽으로 가 있지?": 세로 베기 (위 → 아래 — slash_v · gs_slam · chop · smite)
+            // 의 선 판은 볼록한 쪽이 왼쪽이라 1인칭에서 반달 가운데가 눈앞 왼쪽 약 2칸 (화면 45° 왼쪽), 둘레 사람 · 3인칭에서도 몸 앞 왼쪽 (turn 40°) 에 떴음 —
+            // 피해 범위 (앞 띠) 와 어긋남. 둘레 사람 · 3인칭: 몸 앞뒤로 선 면 (그림 +X = 위 · +Y = 앞 — 머리 위 → 앞 → 앞 땅, 무기 끝이 지나는 길) + 옆으로
+            // 옅은 겹 (layers — 뒤에서 보면 가는 세로줄이 되지 않게). 쓴 사람 1인칭: 눈을 보는 판을 납작하게 (fpSquash) 하고 반달 가운데를 눈앞 가운데 줄에
+            // 맞춤 (위 → 아래로 화면 가운데를 곧게 지나감)
+            Vec3 stretch = new Vec3(s.numOr("length", 1), s.numOr("squash", 0.45), 1);
+            Vec3 left = V.scale(r, -1);
+            mmorpg.fabric.Fx3d.spawn(level, model, p, card.with("dir", f, "face", left, "roll", 0.0, "stretch", stretch, "view", 1.0, "owner", (double) owner));
+            lastFace = left;
+            List<Object> layers = s.has("layers") ? s.listOrNull("layers") : c.listOrNull("layers");
+            if (layers != null) {
+                for (Object o : layers) {
+                    if (!(o instanceof List<?> l) || l.isEmpty()) continue;
+                    @SuppressWarnings("unchecked")
+                    List<Object> lo = (List<Object>) l;
+                    double al = lo.size() > 1 ? num(lo, 1) : 1;
+                    double rs = lo.size() > 2 ? num(lo, 2) : 1;
+                    mmorpg.fabric.Fx3d.spawn(level, model, V.add(p, r, num(lo, 0)), card.with("dir", f, "face", left, "roll", 0.0, "stretch", stretch, "view", 1.0,
+                            "owner", (double) owner, "alpha", c.numOr("alpha", 0.95) * al, "scale", radius * rs));
+                    extra++;
+                }
+            }
+            // 1인칭: 볼록한 쪽 (시작 쪽 start 에서 반시계 90° — 위에서 내려오면 왼쪽) 으로 반달 가운데가 판 가운데에서 반지름 × fpSquash → 판 가운데를
+            // 그 반대로 (몸통 — 바깥 날의 fpApexIn 몫) 옮겨 반달 가운데가 눈앞 가운데 줄 (눈 높이) 에 오게
+            double sq = s.numOr("fpSquash", c.numOr("fpSquash", 0.3));
+            double b = Math.toRadians(s.numOr("start", 90)) + Math.PI / 2;
+            Vec3 bulge = V.add(V.scale(r, Math.cos(b)), V.UP, Math.sin(b));
+            Vec3 eyeLine = V.add(V.add(feet, V.UP, sp.getEyeHeight()), f, num(at, 2) + c.numOr("fpAhead", 0.6));
+            Vec3 fpc = V.add(eyeLine, bulge, -radius * sq * c.numOr("fpApexIn", 0.85));
+            lastFpCenterSide = V.dot(V.sub(fpc, eyeLine), r);
+            mmorpg.fabric.Fx3d.spawn(level, model, fpc, front(card, f, s, false).with("stretch", new Vec3(s.numOr("length", 1), sq, 1), "view", 2.0, "owner",
+                    (double) owner, "alpha", c.numOr("fpAlpha", 0.7)));
         } else if ("front".equals(kind)) {
             // 쓴 사람 쪽을 보는 선 판: 시작 쪽 start · 볼록한 쪽 (반시계 90° · mirror 면 시계 90°) · 휘두름 쪽 길이 length · 볼록한 쪽 납작하게 squash.
             // 둘레 사람 · 3인칭: 면을 turn 도 왼쪽으로 돌림 (뒤 · 옆 카메라 모두에서 넓은 면) / 쓴 사람 1인칭: 눈을 봄 · 조금 멀리 · 옅게 (화면 가운데를 덜 가림)
+            // (2026-11-27 부터 대각선 — 낫 올려 베기 · 단검 X자 — 만. 세로 베기는 위 plane side)
             Vec3 stretch = new Vec3(s.numOr("length", 1), s.numOr("squash", 0.45), 1);
             double turn = Math.toRadians(s.numOr("turn", c.numOr("turn", 40)));
             Vec3 f2 = V.add(V.scale(f, Math.cos(turn)), r, Math.sin(turn));

@@ -363,10 +363,20 @@ public final class RpgMotionTests {
         });
         h.runAfterDelay(2 + 2 * gap, () -> {
             n0[0] = mmorpg.fabric.BasicSlash.spawned;
-            Slash.onPunch(sp); // 3타 = 세로 베기 (선 판 — 둘레 사람 · 3인칭 + 1인칭)
-            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 2 && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic")
-                    && "slash_v".equals(MotionSystem.lastSent(sp)), "slash_v → a standing card (others) + a 1st person card " + mmorpg.fabric.BasicSlash.lastModel + " "
-                    + MotionSystem.lastSent(sp));
+            Slash.onPunch(sp); // 3타 = 세로 베기
+            // 2026-11-27 사용자 "세로 베기들 다 전방 일자로 베는거 맞음? 왜 1인칭은 왼쪽으로 가 있지?": 둘레 사람 · 3인칭 = 몸 앞뒤로 선 판 (면이 옆을 봄) + 옆 겹 둘,
+            // 1인칭 = 볼록한 왼쪽을 메우게 판 가운데를 오른쪽으로 (반달 가운데가 눈앞 가운데 줄)
+            h.assertTrue(mmorpg.fabric.BasicSlash.spawned == n0[0] + 4 && mmorpg.fabric.BasicSlash.lastCards == 4
+                    && mmorpg.fabric.BasicSlash.lastModel.equals("slash_basic") && "slash_v".equals(MotionSystem.lastSent(sp)),
+                    "slash_v → a side card + 2 side layers (others) + a 1st person card " + mmorpg.fabric.BasicSlash.lastModel + " "
+                    + mmorpg.fabric.BasicSlash.lastCards + " " + MotionSystem.lastSent(sp));
+            double yaw = Math.toRadians(sp.getYRot());
+            net.minecraft.world.phys.Vec3 right = new net.minecraft.world.phys.Vec3(-Math.cos(yaw), 0, -Math.sin(yaw));
+            h.assertTrue(Math.abs(Math.abs(mmorpg.fabric.BasicSlash.lastFace.dot(right)) - 1) < 1e-6, "vertical slash card stands front-to-back (faces sideways) "
+                    + mmorpg.fabric.BasicSlash.lastFace);
+            double want = mmorpg.fabric.BasicSlash.lastRadius * 0.3 * 0.85;
+            h.assertTrue(Math.abs(mmorpg.fabric.BasicSlash.lastFpCenterSide - want) < 1e-6, "1st person card shifted right so the arc runs down the middle "
+                    + mmorpg.fabric.BasicSlash.lastFpCenterSide + " vs " + want);
             h.assertTrue(Boolean.TRUE.equals(mmorpg.fabric.job.BasicFx.lastFinisher(sp)), "sword step 3 (last of the combo) → finisher fx");
             hold(sp, gs);
         });
