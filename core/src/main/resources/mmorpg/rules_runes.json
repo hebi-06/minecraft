@@ -1063,18 +1063,19 @@
   "valkyriesong": {
    "hero": {
     "fn": "valkyrieSong",
-    "buffUp": 0.15,
+    "buffUp": 0.13,
     "buffCut": 0.15,
     "buffTicks": 200,
     "radius": 8,
     "descend": 12,
     "flow": [
      "발키리의 노래 — 나와 둘레 {radius}칸 아군 {t:buffTicks}",
-     "받는 피해 감소는 다른 감소와 겹치지 않음"
+     "받는 피해 감소는 다른 감소와 겹치지 않음",
+     "가하는 피해는 다른 버프와 곱 (세기에 반영)"
     ],
     "name": "발키리 송",
     "desc": "발키리의 노래가 나와 둘레 아군에게 전장의 가호를 내림",
-    "use": "가하는 피해 +15% · 받는 피해 −15% (10초)",
+    "use": "가하는 피해 +13% · 받는 피해 −15% (10초)",
     "cd": 37,
     "look": "gladiator:hero"
    }
@@ -1230,7 +1231,7 @@
   "edenbloom": {
    "transcend": {
     "fn": "edenBloom",
-    "buffUp": 0.18,
+    "buffUp": 0.15,
     "buffTicks": 240,
     "radius": 10,
     "pulses": 5,
@@ -1239,14 +1240,15 @@
     "charge": 14,
     "flow": [
      "둘레 {radius}칸 꽃밭 — 나 · 아군 회복 (아군은 절반)",
-     "나와 아군 가하는 피해 {t:buffTicks}"
+     "나와 아군 가하는 피해 {t:buffTicks}",
+     "가하는 피해는 다른 버프와 곱 (세기에 반영)"
     ],
     "name": "에덴 블룸",
     "desc": "낙원의 꽃이 피어 둘레가 꽃밭으로 — 회복 · 아군을 북돋움",
-    "use": "나 84% · 아군 42% 회복 · 가하는 피해 +18% 12초",
+    "use": "나 86% · 아군 43% 회복 · 가하는 피해 +15% 12초",
     "cd": 45,
     "look": "vit:transcend",
-    "heal": 0.3734
+    "heal": 0.3819
    }
   }
  },
@@ -1650,7 +1652,8 @@
     "r": "mid",
     "sup": {
      "guard": 0.498,
-     "boost": 0.498
+     "boost": 0.511,
+     "stack": 0.185
     }
    },
    "skyfall.transcend": {
@@ -1729,8 +1732,9 @@
     "u": [],
     "r": "mid",
     "sup": {
-     "guard": 0.49,
-     "boost": 0.51
+     "guard": 0.501,
+     "boost": 0.499,
+     "stack": 0.1737
     }
    }
   },

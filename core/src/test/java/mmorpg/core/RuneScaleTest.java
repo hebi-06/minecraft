@@ -41,6 +41,27 @@ public final class RuneScaleTest {
      * 쿨이 같게") → 등급마다 재사용 범위 ("일반은 6~15초 이내에서 만들고 희귀는 12초~21초 사이 고귀는 15초~25초 사이 영웅은 27초~38초 사이 초월은 32초~50초 사이"):
      * 새 룬 30 은 제 등급 범위 안 (RUNE_SET.cdRange) · RUNE_SET.pairs 의 짝 직업 스킬 (숨기지 않은 직업) 과 쿨이 같음 · 직업 스킬 하나에 룬 하나
      */
+    /**
+     * 2026-11-28 다섯째 (사용자 "곱해져서 쌓이면 룬 쿨을 늘리거나 버프 지속 시간을 줄이거나 계수를 줄여"): 아군에게 거는 가하는 피해 + (발키리 송 · 에덴 블룸 · 한정 세계수의
+     * 가호 +20%) 는 서로 곱 → 지원 룬 둘의 세기를 곱해지는 제 몫 (Shapley — tools/rune_set.py stack_premium) 만큼 낮춤. 값 = 세기 × (1 + 제 몫) ≈ 예전 세기 (15 · 18%)
+     */
+    private static void supportStack() {
+        Runes.Rune v = rune("valkyriesong", "hero"), e = rune("edenbloom", "transcend");
+        double a = v.def().num("buffUp"), b = e.def().num("buffUp"), c = 0.2;
+        near(a, 0.13, "valkyrie song dealt +13% (15% → 13%)");
+        near(b, 0.15, "eden bloom dealt +15% (18% → 15%)");
+        double pa = Runes.spreadEntry(v).obj("sup").num("stack"), pb = Runes.spreadEntry(e).obj("sup").num("stack");
+        check(Math.abs(pa - (b / 2 + c / 2 + b * c / 3)) < 1e-4, "valkyrie stack share " + pa);
+        check(Math.abs(pb - (a / 2 + c / 2 + a * c / 3)) < 1e-4, "eden stack share " + pb);
+        check(Math.abs(a * (1 + pa) / 0.15 - 1) <= 0.05 && Math.abs(b * (1 + pb) / 0.18 - 1) <= 0.05, "stacked value ≈ old strength " + a * (1 + pa) + " · " + b * (1 + pb));
+        // 셋을 모두 켠 곱 − 1 = 셋의 몫 합 (세계수의 가호 몫은 한정 룬 그대로)
+        double full = (1 + a) * (1 + b) * (1 + c) - 1, shares = a * (1 + pa) + b * (1 + pb) + c * (1 + a / 2 + b / 2 + a * b / 3);
+        check(Math.abs(full - shares) < 1e-3, "full stack " + full + " = shares " + shares);
+        check((1 + a) * (1 + b) < 1.15 * 1.18 - 0.05, "pair peak down " + (1 + a) * (1 + b));
+        // 다른 지원 룬 (워 드럼 공격 속도 · 회복 룬) 은 곱해지는 몫이 없음
+        check(!Runes.spreadEntry(rune("wardrum", "rare")).obj("sup").has("stack"), "war drum: no stack share (attack speed — no other group haste)");
+    }
+
     private static void pairs() {
         double[][] want = {{6, 15}, {12, 21}, {15, 25}, {27, 38}, {32, 50}};
         Obj range = Rules.get().obj("RUNE_SET").obj("cdRange");
@@ -269,6 +290,7 @@ public final class RuneScaleTest {
         check(runes == 160, "160 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5 · 지원 5) " + runes);
         check(sets == 40, "40 set runes " + sets);
         pairs();
+        supportStack();
         for (String g : Runes.GRADE_ORDER) check(Runes.familiesOf(g).size() == 8, g + ": 8 runes " + Runes.familiesOf(g));
         check(ruled == 99, "99 runes under the rule " + ruled);
         check(leaps == 6, "6 leap runes " + leaps);

@@ -54,6 +54,11 @@ SUPPORT_BUFF = (3400 / 36 * 48 / 100) / ((20 + 20) * 12)
 SUPPORT_HASTE = SUPPORT_BUFF * 0.3
 SUPPORT_MOVE = 1.0 / (20 * 2.5)
 SUPPORT_TOL = 0.05
+# 2026-11-28 다섯째 (사용자 "곱해져서 쌓이면 룬 쿨을 늘리거나 버프 지속 시간을 줄이거나 계수를 줄여"): 아군에게 거는 가하는 피해 + 는 서로 곱해짐 (RuneSupport.dealtMult ·
+# RuneGrove — 나팔은 가호와 센 것 하나) → 같이 켜면 세기 × 세기 만큼 더 셈. 고른 것 = 계수 (세기) — 쿨 · 지속을 바꾸면 켜진 동안의 곱 (한 번의 크기) 은 그대로라서.
+# 가하는 피해 + 1% · 1초의 값 = SUPPORT_BUFF × (1 + 곱해서 늘어나는 몫 중 제 몫): 같이 켜지는 묶음 (지원 룬의 buffUp 들 + 한정 세계수의 가호 — 125포인트 0돌 +20%) 을
+# 모두 켰을 때 늘어나는 몫 (곱 − 합) 을 버프마다 나눔 (Shapley — 다른 버프 묶음 T 마다 Π T ÷ (|T| + 1)). 한정 룬 (세계수의 가호) 은 그대로 (값의 기준)
+STACK_LIMITED = {"세계수의 가호": 0.20}
 # 툴팁 · 설명 글의 기준 회복 배율 (40렙 125포인트 — 네 스탯 합 125 × perPoint 0.02 × 0.5 + 1)
 SUPPORT_REF_SCALE = 2.25
 # 2026-11-28 지키는 유틸 — 쿨이 등급 기준보다 짧은 룬은 지속 · 세기를 쿨 ÷ 기준 만큼 (룬의 fit = 줄인 비율 · 기준과 0.03 안)
@@ -168,9 +173,11 @@ SET = [
          spread={"t": 18, "w": 8}, desc="처형의 검을 한 적에게 내리꽂고 상처를 터뜨림", use="단일 큰 한 방 · 상처 터짐"),
     # 2026-11-28 지원: 발키리 송 = 발키리의 노래 · 나와 둘레 아군 가하는 피해 + · 받는 피해 − (받는 피해 감소는 다른 감소와 겹치지 않음 — 가호와 같음) · 짝 워록 애시본 37초
     dict(key="valkyriesong", name="발키리 송", grade="hero", cd=37, pair=["warlock_ash"], r="mid", stat_fam="vit", look="gladiator:hero", u=[], support=True,
-         set={"fn": "valkyrieSong", "buffUp": 0.15, "buffCut": 0.15, "buffTicks": 200, "radius": 8, "descend": 12,
-              "flow": ["발키리의 노래 — 나와 둘레 {radius}칸 아군 {t:buffTicks}", "받는 피해 감소는 다른 감소와 겹치지 않음"]},
-         desc="발키리의 노래가 나와 둘레 아군에게 전장의 가호를 내림", use="가하는 피해 +15% · 받는 피해 −15% (10초)"),
+         # 2026-11-28 다섯째 가하는 피해 +15 → +13% (에덴 블룸 · 세계수의 가호와 곱해지는 제 몫 +18.5% — stack_premium)
+         set={"fn": "valkyrieSong", "buffUp": 0.13, "buffCut": 0.15, "buffTicks": 200, "radius": 8, "descend": 12,
+              "flow": ["발키리의 노래 — 나와 둘레 {radius}칸 아군 {t:buffTicks}", "받는 피해 감소는 다른 감소와 겹치지 않음",
+                       "가하는 피해는 다른 버프와 곱 (세기에 반영)"]},
+         desc="발키리의 노래가 나와 둘레 아군에게 전장의 가호를 내림", use="가하는 피해 +13% · 받는 피해 −15% (10초)"),
     # ---------------------------------------------------------------- 초월 (초당 89%)
     # 2026-11-17 도감 메모 (천붕 → 스카이폴 "유틸 삭제 및 쿨타임 증가, 이에 따른 데미지 소량 증가"): 띄움을 뺌 (유틸 −5% 가 피해로 · 쿨 50초 = 예산 × 50/36)
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
@@ -211,9 +218,11 @@ SET = [
     # 2026-11-28 지원: 에덴 블룸 = 낙원의 꽃이 피어 둘레가 꽃밭 · 회복 (3초 나눠 — 그로브 블레싱처럼 몸을 따라감) + 가하는 피해 + (나 · 아군) · 짝 없음 (초월 범위의 직업 스킬
     # 중 어울리는 것 없음)
     dict(key="edenbloom", name="에덴 블룸", grade="transcend", cd=45, r="mid", stat_fam="vit", look="vit:transcend", u=[], support=True,
-         set={"fn": "edenBloom", "buffUp": 0.18, "buffTicks": 240, "radius": 10, "pulses": 5, "gap": 15, "share": 0.5, "charge": 14,
-              "flow": ["둘레 {radius}칸 꽃밭 — 나 · 아군 회복 (아군은 절반)", "나와 아군 가하는 피해 {t:buffTicks}"]},
-         desc="낙원의 꽃이 피어 둘레가 꽃밭으로 — 회복 · 아군을 북돋움", use="나 {heal} · 아군 {ally} 회복 · 가하는 피해 +18% 12초"),
+         # 2026-11-28 다섯째 가하는 피해 +18 → +15% (발키리 송 · 세계수의 가호와 곱해지는 제 몫 +17.3% — stack_premium · 회복은 남는 예산 그대로)
+         set={"fn": "edenBloom", "buffUp": 0.15, "buffTicks": 240, "radius": 10, "pulses": 5, "gap": 15, "share": 0.5, "charge": 14,
+              "flow": ["둘레 {radius}칸 꽃밭 — 나 · 아군 회복 (아군은 절반)", "나와 아군 가하는 피해 {t:buffTicks}",
+                       "가하는 피해는 다른 버프와 곱 (세기에 반영)"]},
+         desc="낙원의 꽃이 피어 둘레가 꽃밭으로 — 회복 · 아군을 북돋움", use="나 {heal} · 아군 {ally} 회복 · 가하는 피해 +15% 12초"),
 ]
 
 
@@ -278,11 +287,23 @@ def grade_cap(g):
     return nxt / per(g)
 
 
-def support_split(e, d, budget, S):
+def stack_premium(name, group):
+    """2026-11-28 다섯째: name 의 가하는 피해 + 가 같이 켜진 다른 버프들 (group: 이름 → 세기) 과 곱해져 늘어나는 몫 가운데 제 몫 (세기 1 당) — 다른 버프 묶음 T 마다
+    Π T ÷ (|T| + 1). 셋 (a · b · c) 이면 b / 2 + c / 2 + b × c / 3"""
+    from itertools import combinations
+    others = [v for k, v in group.items() if k != name]
+    total = 0.0
+    for n in range(1, len(others) + 1):
+        for c in combinations(others, n):
+            total += math.prod(c) / (n + 1)
+    return total
+
+
+def support_split(e, d, budget, S, premium=0.0):
     """2026-11-28 지원 룬 (SUPPORT_* 주석): 버프 · 정화 · 회복의 예산 몫. 회복하는 룬 (둘레 아군 몫 share 가 있음) 은 남는 예산이 모두 회복 (heal 을 씀 —
     그로브 블레싱처럼 정의에 있으면 그 값이 맞는지 봄), 회복 없는 룬은 버프가 예산과 맞는지 봄. 돌려줌: {guard: 지키는 몫 (회복 · 받는 피해 − · 정화), boost: 북돋는 몫}"""
     sec = d.get("buffTicks", 0) / 20.0
-    up = d.get("buffUp", 0) * 100 * sec * SUPPORT_BUFF
+    up = d.get("buffUp", 0) * 100 * sec * SUPPORT_BUFF * (1 + premium)  # 2026-11-28 다섯째 곱해지는 몫 (stack_premium)
     cut = d.get("buffCut", 0) * 100 * sec * SUPPORT_BUFF
     haste = d.get("haste", 0) * 100 * sec * SUPPORT_HASTE
     move = (d["speedAmp"] + 1) * 20 * sec * SUPPORT_MOVE if "speedAmp" in d else 0
@@ -305,7 +326,10 @@ def support_split(e, d, budget, S):
             d["heal"] = round(want, 4)
     elif abs(spent / budget - 1) > SUPPORT_TOL:
         raise SystemExit("지원 룬 버프가 예산과 다름: {} {:.2f} ↔ 예산 {:.2f}".format(e["name"], spent, budget))
-    return {"guard": round((heal_units + cut + cleanse) / budget, 3), "boost": round((up + haste + move) / budget, 3)}
+    out = {"guard": round((heal_units + cut + cleanse) / budget, 3), "boost": round((up + haste + move) / budget, 3)}
+    if premium > 0:
+        out["stack"] = round(premium, 4)
+    return out
 
 
 def support_text(t, d):
@@ -336,6 +360,9 @@ def build():
     src_fams.update({k: v for k, v in more.get("RUNE_FAMILIES", {}).items() if not k.startswith("_")})
     fams, defs, spread, rows, migrate = {}, {}, {}, [], {}
     order = []
+    # 2026-11-28 다섯째: 같이 켜져 곱해지는 가하는 피해 + 묶음 (지원 룬 buffUp + 한정 세계수의 가호)
+    stack_group = dict(STACK_LIMITED)
+    stack_group.update({x["name"]: x["set"]["buffUp"] for x in SET if x.get("support") and x.get("set", {}).get("buffUp")})
     for g in GRADES:
         for e in [x for x in SET if x["grade"] == g]:
             if e.get("src"):
@@ -368,7 +395,8 @@ def build():
             if e.get("support"):
                 if old > 0:
                     raise SystemExit("지원 룬에 피해가 있음: " + e["name"])
-                sup = support_split(e, d, budget, S)
+                prem = stack_premium(e["name"], stack_group) if d.get("buffUp") else 0.0
+                sup = support_split(e, d, budget, S, prem)
                 d["use"] = support_text(d["use"], d)
             sp = dict(S["runes"].get(e["src"]) or {}) if e.get("src") else {}
             sp.update(e.get("spread", {}))
