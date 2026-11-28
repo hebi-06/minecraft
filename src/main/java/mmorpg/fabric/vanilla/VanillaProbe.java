@@ -2013,8 +2013,8 @@ final class VanillaProbe {
 
     /**
      * 2026-11-28 원소신 NPC 다섯 (사용자 "그냥 이런 느낌에 npc 넣기만 할래" — GodNpcs): z 6.5 에 한 줄로 세움 (−5.5 · −2.5 · 0.5 · 3.5 · 6.5, 북쪽을 봄) →
-     * 프로브는 투명 · 카메라는 프로브 눈 자리 (cam film 180 0.01 …): 한 줄 앞 · 신마다 앞 · 신마다 뒤 3/4 · 한 줄 뒤 · 한 줄 앞 영상 (북 고리 · 돌이 돎) ·
-     * 한밤 (빛나는 소품). 확인: 프로필 스킨 패치 (texture · model · cape) · 머리 · 손 · 둘레 소품 수
+     * 프로브는 투명 · 카메라는 프로브 눈 자리 (cam film 180 0.01 …): 한 줄 앞 · 신마다 앞 · 뒤 3/4 · 얼굴 · 한 줄 뒤 · 한 줄 앞 영상 (북 고리 · 돌이 돎).
+     * 확인: 프로필 스킨 패치 (texture · model · cape) · 머리 · 손 · 둘레 소품 수
      */
     private static void godsFilm(ServerPlayer p, int step, int frames, int y) {
         ServerLevel level = p.level();
@@ -2068,15 +2068,8 @@ final class VanillaProbe {
                 Tasks.later(10, () -> {
                     say(p, "film vanilla_gods_row " + frames);
                     Tasks.later(frames + 20, () -> {
-                        run(server, "time set midnight");
-                        Tasks.later(12, () -> {
-                            say(p, "shot gods_07_row_night");
-                            Tasks.later(16, () -> {
-                                run(server, "time set noon");
-                                p.removeEffect(net.minecraft.world.effect.MobEffects.INVISIBILITY);
-                                film(p, step + 1);
-                            });
-                        });
+                        p.removeEffect(net.minecraft.world.effect.MobEffects.INVISIBILITY);
+                        film(p, step + 1);
                     });
                 });
             });

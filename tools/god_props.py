@@ -163,14 +163,15 @@ HEAD_DISPLAY = {'head': {'rotation': [0, 0, 0], 'translation': [0, 0, 0], 'scale
 HAND_RX = 72.0
 
 
-def hand_display(grip=(0, 0, 0), fwd=1.0, scale=1.0, out=0.0, rx=HAND_RX):
-    """쥐는 자리 grip (모델 원점 기준) 이 주먹에 오게: T = −R·S·g + (out, fwd, 0) — 단위 = 모델 단위 (1/16 블록)"""
+def hand_display(grip=(0, 0, 0), fwd=1.0, scale=1.0, out=0.0, rx=HAND_RX, rz=0.0):
+    """쥐는 자리 grip (모델 원점 기준) 이 주먹에 오게: T = −R·S·g + (out, fwd, 0) — 단위 = 모델 단위 (1/16 블록).
+    out > 0 = 바깥쪽 (두 손 모두 — 바닐라 ItemTransform.apply 가 왼손이면 x 옮김 · y · z 회전을 뒤집음), rz < 0 = 위 끝이 바깥으로 기욺 (두 손 모두)"""
     a = math.radians(rx)
     gx, gy, gz = (v * scale for v in grip)
-    ry = gy * math.cos(a) - gz * math.sin(a)
-    rz = gy * math.sin(a) + gz * math.cos(a)
-    t = [round(-gx + out, 4), round(-ry + fwd, 4), round(-rz, 4)]
-    d = {'rotation': [rx, 0, 0], 'translation': t, 'scale': [scale] * 3}
+    gy2 = gy * math.cos(a) - gz * math.sin(a)
+    gz2 = gy * math.sin(a) + gz * math.cos(a)
+    t = [round(-gx + out, 4), round(-gy2 + fwd, 4), round(-gz2, 4)]
+    d = {'rotation': [rx, 0, rz], 'translation': t, 'scale': [scale] * 3}
     return {'thirdperson_righthand': d, 'thirdperson_lefthand': dict(d)}
 
 
@@ -517,7 +518,7 @@ def fortia(A):
     sh.box([-2.4, -2.4, -1.4], [2.4, 2.4, -0.8], ember, glow=True)
     sh.box([-1.4, -1.4, -1.9], [1.4, 1.4, -1.4], ember_l, glow=True)
     sh.box([-0.6, -3.0, 0.6], [0.6, 3.0, 1.3], copper_d)
-    sh.display = hand_display(grip=(0, 0, 1.0), fwd=1.5, out=-1.0)
+    sh.display = hand_display(grip=(0, 0, 1.0), fwd=1.5, out=1.0)
     out['fortia_shield'] = sh
 
     # ---- 둘레: 왼쪽 견갑에 박힌 화살 둘 (뽑지 않음)
@@ -575,7 +576,7 @@ def gravis(A):
             s.box([x + dx * 0.9 - 0.1, 13.0, dz * 0.9 - 0.1], [x + dx * 0.9 + 0.1, 17.6, dz * 0.9 + 0.1], gold_l)
         s.box([x - 1.5, 12.4, -1.5], [x + 1.5, 13.0, 1.5], gold)       # 접시
         s.box([x - 1.1, 12.1, -1.1], [x + 1.1, 12.4, 1.1], gold_d)
-    s.display = hand_display(grip=(0, 0, 0), out=-2.5)
+    s.display = hand_display(grip=(0, 0, 0), out=2.5, rz=-8)
     out['gravis_staff'] = s
 
     # ---- 둘레: 떠오르는 돌 셋 (무게 없는 곳)

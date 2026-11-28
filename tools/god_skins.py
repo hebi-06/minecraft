@@ -300,7 +300,7 @@ def marea():
         'S': '#F9E4D8', 's': '#ECC9B9', 'n': '#DAAF9D',
         'E': '#38B8A4', 'e': '#1A6C61', 'w': '#E6FFF9', 'K': '#2E2526', 'm': '#C46F69', 'M': '#F2907E',
         'W': '#F8F6F2', 'X': '#DAD6D0', 'x': '#C2BDB6',
-        'C': '#F6A98E', 'c': '#E07D66',
+        'C': '#E8735A', 'c': '#C2513D',
         'G': '#DDB95D', 'g': '#A8873A',
         'V': '#2F9F79', 'v': '#1F7458', 'D': '#86E6CF', 'd': '#3EAE94',
         'T': '#A5EBD5', 't': '#71D2B7', 'u': '#4BB497',
@@ -348,13 +348,13 @@ def marea():
                             'VvVVVVvV', 'VVVVVVVV', 'TtTTtTTt', 'tTTtTTtT', 'TuTTuTTu', 'uTtuTtuT'], P)
     for f in ('right', 'left'):
         s.grid('body', f, ['WWWW', 'WWWW', 'XWWX', 'WWWW', 'WWWW', 'XWWX', 'VvVV', 'VVvV', 'TtTt', 'tTTt', 'TuTu', 'uTtu'], P)
-    s.grid('body', 'front', ['CCCWWCCC', 'CCC..CCC', '.cC..Cc.', '........', '........', '........',
+    s.grid('body', 'front', ['CCCCCCCC', 'C.CCCC.C', '..cCCc..', '...GG...', '........', '........',
                              '........', '...DD...', '...dD...', '...gG...', '........', 'u.t..t.u'], P, layer=1)
-    s.grid('body', 'back', ['CCCCCCCC', 'CCCCCCCC', '.cCccCc.', '........', '........', '........',
+    s.grid('body', 'back', ['CCCCCCCC', 'C.CCCC.C', '..cCCc..', '........', '........', '........',
                             '........', '........', '........', '........', '........', 't.u..u.t'], P, layer=1)
     for f in ('right', 'left'):
-        s.grid('body', f, ['CCCC', 'CCCC', '.cc.'], P, layer=1)
-    s.grid('body', 'top', ['CCCCCCCC', 'CcCCCCcC', 'CcCCCCcC', 'CCCCCCCC'], P, layer=1)
+        s.grid('body', f, ['CCCC', 'cCCc', '....'], P, layer=1)
+    s.grid('body', 'top', ['CCCCCCCC', 'CCCCCCCC', 'CCCCCCCC', 'CCCCCCCC'], P, layer=1)
     # 팔: 짧은 흰 소매 → 맨팔, 겉 겹 = 반투명 물소매
     for arm in ('rarm', 'larm'):
         s.fill_part(arm, P['S'])
@@ -462,8 +462,8 @@ def fortia():
     s.fill_part('body', P['S'])
     s.grid('body', 'front', [
         'SSSSSSSS',
-        'SQqQQqQS',
-        'SOQOOQOS',
+        'SqQQQQqS',
+        'SSSOOSSS',
         'BYQBBQYB',
         'BRbYYbRB',
         'BBBBBBBB',

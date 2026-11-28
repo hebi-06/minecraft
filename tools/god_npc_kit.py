@@ -411,6 +411,12 @@ def hand_xf(disp, right=True, slim=False, arm_x=-18.0):
     sgn = -1 if right else 1
     ay = 2.5 if slim else 2.0
     px = sgn * 5 + ((-sgn) * 0.5 if slim else 0)
+    if not right:
+        # 바닐라 ItemTransform.apply (왼손): x 옮김 · y · z 회전을 뒤집음 (thirdperson_lefthand 를 따로 적어도)
+        disp = dict(disp)
+        t, r = list(disp.get('translation', [0, 0, 0])), list(disp.get('rotation', [0, 0, 0]))
+        disp['translation'] = [-t[0], t[1], t[2]]
+        disp['rotation'] = [r[0], -r[1], -r[2]]
     D = display_matrix(disp)
     model = m_chain(m_t(px / 16, ay / 16, 0), m_r('x', arm_x), m_r('x', -90), m_r('y', 180),
                     m_t((1 if right else -1) / 16, 2 / 16, -10 / 16), D)

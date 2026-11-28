@@ -229,7 +229,7 @@ public final class RpgEditorTests {
         try {
             NpcEditor.openNpcManager(sp);
             FormNet.MenuPayload m = menu(sp);
-            h.assertTrue(isMenu(sp, "NPC 관리") && m.buttons().size() == 8, "manager window " + what(sp));
+            h.assertTrue(isMenu(sp, "NPC 관리") && m.buttons().size() == 9, "manager window " + what(sp)); // 2026-11-28 원소신 NPC 세우기 (7) · 닫기 (8)
             Forms.answer(sp, 0, null); // NPC 만들기 (대화·퀘스트)
             h.assertTrue(isModal(sp, "NPC 만들기") && inputs(sp).equals(List.of("촌장", "")), "create window " + what(sp));
             Forms.answer(sp, 0, List.of(name, "어서 오게.|반갑네||두 번째 장"));
@@ -396,7 +396,11 @@ public final class RpgEditorTests {
             h.assertTrue(isMenu(sp, "모든 퀘스트"), "all quests " + what(sp));
             Forms.answer(sp, -1, null);
             h.assertTrue(isMenu(sp, "NPC 관리"), "manager again " + what(sp));
-            Forms.answer(sp, 7, null);
+            Forms.answer(sp, 7, null); // 2026-11-28 원소신 NPC 세우기 → 다섯 + 뒤로
+            h.assertTrue(isMenu(sp, "원소신 NPC 세우기") && menu(sp).buttons().size() == 6, "god npc window " + what(sp));
+            Forms.answer(sp, -1, null);
+            h.assertTrue(isMenu(sp, "NPC 관리"), "god window back → manager " + what(sp));
+            Forms.answer(sp, 8, null);
             h.assertFalse(Forms.pending(sp), "manager closed");
         } finally {
             cleanup(server, spawned);
