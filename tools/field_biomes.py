@@ -208,8 +208,9 @@ B = {
                         mobs=spawns(creature=[('minecraft:rabbit', 4, 2, 3)]), music=MUSIC('minecraft:music.overworld.bamboo_jungle')),
     'inae_peak': biome(0.6, 0.8, True, '#3f8fe4', '#4a5a8c', fog='#8f9cc0', grass='#86b862',
                        particles=[('minecraft:electric_spark', 0.006)], music=MUSIC('minecraft:music.overworld.jagged_peaks'), wg_spawn=0.0),
-    # 바위 나라 섬: 맑은 하늘 · 따뜻한 모래빛 안개 · 드문 나무와 꽃 (정원), 무게 없는 곳은 옅은 보랏빛 하늘 · 떠오르는 빛 알갱이
-    'sage_plateau': biome(1.0, 0.2, False, '#3f9fe4', '#78b4f0', fog='#ead9b4', grass='#9fb46a', foliage='#7fa04e',
+    # 바위 나라 섬: 맑은 하늘 · 옅은 푸른 안개 (2026-11-28 CI 46130434263 사진 — 모래빛 안개가 사암 큰 저울을 가려 서늘한 빛으로) · 드문 나무와 꽃 (정원),
+    # 무게 없는 곳은 옅은 보랏빛 하늘 · 떠오르는 빛 알갱이
+    'sage_plateau': biome(1.0, 0.2, False, '#3f9fe4', '#78b4f0', fog='#cfdff0', grass='#9fb46a', foliage='#7fa04e',
                           veg=['minecraft:trees_plains', 'minecraft:flower_plains', 'minecraft:patch_grass_plain'],
                           mobs=spawns(creature=[('minecraft:sheep', 4, 2, 3)]), music=MUSIC('minecraft:music.overworld.desert')),
     'weightless': biome(0.9, 0.0, False, '#7f7fd6', '#b0a8e0', fog='#eae4ff', water_fog='#1a1640',

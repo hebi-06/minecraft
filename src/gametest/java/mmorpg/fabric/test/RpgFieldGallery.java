@@ -123,9 +123,10 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             new Shot("fc_17_torii_path", 4830, 120, 80, 4795, 112, 30),
             new Shot("fc_18_bolt_shrine", 4834, 132, 26, 4800, 128, -8),
             new Shot("fc_19_terraces", 4700, 112, 160, 4760, 100, 80),
-            new Shot("fc_20_great_scale", 2600, 150, 2690, 2600, 150, 2600),
+            new Shot("fc_20_great_scale", 2600, 138, 2668, 2600, 152, 2600),
             new Shot("fc_21_sage_pan", 2548, 116, 2630, 2520, 112, 2600),
-            new Shot("fc_22_weightless", 2740, 120, 2500, 2790, 125, 2450));
+            new Shot("fc_22_weightless", 2740, 120, 2500, 2790, 125, 2450),
+            new Shot("fc_23_scale_deck", 2602, 169, 2604, 2540, 150, 2600));
 
     /** 보이는 거리 (청크) — 12 는 CI 의 소프트웨어 그리기에서 사진마다 45초 안에 다 못 그림 (CI 42356359483) */
     private static final int VIEW = 8;

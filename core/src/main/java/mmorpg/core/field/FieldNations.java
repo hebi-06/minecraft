@@ -28,8 +28,11 @@ final class FieldNations {
     static final String GOLD = "minecraft:gold_block";
     static final String LAPIS = "minecraft:lapis_block";
 
+    /** 흰 회벽 (2026-11-28 CI 사진 — 흰 테라코타는 분홍빛이 돌아 방해석으로) */
+    static final String PLASTER = "minecraft:calcite";
+
     /** 일본풍 민가 (흰 회벽 · 짙은 나무 뼈대 · 검은 기와) */
-    static final FieldTown.Style JAPAN = new FieldTown.Style("minecraft:stripped_dark_oak_log", "minecraft:white_terracotta", "minecraft:spruce_stairs",
+    static final FieldTown.Style JAPAN = new FieldTown.Style("minecraft:stripped_dark_oak_log", PLASTER, "minecraft:spruce_stairs",
             "minecraft:deepslate_tile_stairs", "minecraft:deepslate_tiles", "minecraft:polished_andesite|minecraft:andesite|minecraft:polished_andesite",
             "minecraft:spruce_planks", "minecraft:spruce_door", "minecraft:dark_oak_fence");
 
@@ -246,9 +249,9 @@ final class FieldNations {
         b.fill(-2, 1, -2, W + 1, 1, D + 1, "minecraft:spruce_planks");
         b.fill(c - 2, 1, D + 2, c + 2, 1, D + 2, "minecraft:stone_brick_stairs[facing=north,half=bottom]");
         // 벽 · 기둥
-        b.fill(0, 2, 0, W - 1, yb + 1, 0, "minecraft:white_terracotta");
-        b.fill(0, 2, 0, 0, H + 1, D - 1, "minecraft:white_terracotta");
-        b.fill(W - 1, 2, 0, W - 1, H + 1, D - 1, "minecraft:white_terracotta");
+        b.fill(0, 2, 0, W - 1, yb + 1, 0, PLASTER);
+        b.fill(0, 2, 0, 0, H + 1, D - 1, PLASTER);
+        b.fill(W - 1, 2, 0, W - 1, H + 1, D - 1, PLASTER);
         for (int xx = 0; xx < W; xx += 4) b.fill(xx, 2, 0, xx, H + 1, 0, RED);
         b.fill(W - 1, 2, 0, W - 1, H + 1, 0, RED);
         for (int zz : new int[] {0, D / 2, D - 1}) {
@@ -257,7 +260,7 @@ final class FieldNations {
         }
         for (int xx = 0; xx < W; xx++) if (Math.abs(xx - c) > 1 && xx % 2 == 0) b.fill(xx, 2, D - 1, xx, H + 1, D - 1, RED);
         b.fill(0, H + 1, D - 1, W - 1, H + 1, D - 1, RED);
-        b.fill(0, yb, D - 1, W - 1, yb + 1, D - 1, "minecraft:white_terracotta");
+        b.fill(0, yb, D - 1, W - 1, yb + 1, D - 1, PLASTER);
         b.fill(1, 2, 0, W - 2, 2, 0, "minecraft:stripped_dark_oak_log[axis=x]");
         // 옆 창 (격자)
         for (int zz : new int[] {2, D - 3}) {
@@ -271,8 +274,8 @@ final class FieldNations {
             int za = Math.max(0, z0 + k + 1);
             int zb = Math.min(D - 1, z1 - k - 1);
             if (za <= zb) {
-                b.fill(0, yb + k, za, 0, yb + k, zb, "minecraft:white_terracotta");
-                b.fill(W - 1, yb + k, za, W - 1, yb + k, zb, "minecraft:white_terracotta");
+                b.fill(0, yb + k, za, 0, yb + k, zb, PLASTER);
+                b.fill(W - 1, yb + k, za, W - 1, yb + k, zb, PLASTER);
             }
         }
         b.fill(-2, ridge, z0 + rows, W + 1, ridge, z0 + rows, "minecraft:waxed_oxidized_cut_copper");
