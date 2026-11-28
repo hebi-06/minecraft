@@ -692,8 +692,9 @@ final class RuneAxe {
         Vfx.Fx fx = Vfx.at(level0, c0, windup + rage + 40);
         SkillFx.play(level0, "mob.ravager.roar", c0, 0.8, 1);
         SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.0, 0.5);
-        // 치켜든 거대한 도끼 (쓴 자리 — 손잡이 머리 위 앞 0.4칸 · 오른쪽 0.45칸 · 2.6칸 높이, 머리가 위 · 조금 뒤 · 날이 앞): 작게 나타나 windup − 2 틱 동안 커짐
-        Vec3 grip = V.add(V.add(V.up(c0, 2.6), f, 0.4), right, 0.45);
+        // 치켜든 거대한 도끼 (쓴 자리 — 손잡이 머리 위 앞 0.6칸 · 오른쪽 0.45칸 · 3.4칸 높이, 머리가 위 · 조금 뒤 · 날이 앞): 작게 나타나 windup − 2 틱 동안 커짐.
+        // 손잡이가 머리에 가까우면 (2.6칸 — 2차 영상) 도끼 상자가 눈을 품어 1인칭에서 통째로 거둬졌음 (Vfx eyeCull)
+        Vec3 grip = V.add(V.add(V.up(c0, 3.4), f, 0.6), right, 0.45);
         Vec3 down = V.unit(V.sub(V.up(hit, 0.2), grip));
         double sc = (V.len(V.sub(V.up(hit, 0.2), grip)) + 0.15) / (headReach(r.grade()) / 16.0);
         Vec3 up0 = V.unit(V.add(V.UP, f, -0.45));
@@ -736,7 +737,9 @@ final class RuneAxe {
             // 한 방: 반지름 radius 칸 모두 (예산 전부)
             int n = 0;
             for (LivingEntity e : Kit.around(sp, hit, radius)) {
-                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                double got = RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat());
+                mmorpg.fabric.Mmorpg.LOG.info("[rune] rageSlam hit {} at {} dealt {}", e.getType().toShortString(), e.position(), got);
+                if (got > 0) {
                     n++;
                     if (n <= 8) {
                         VfxKit.xcut(fx, Kit.bodyPoint(e), 1.8, n % 2 == 0 ? BLOOD : glow, 1);
@@ -744,6 +747,13 @@ final class RuneAxe {
                     }
                 }
             }
+            mmorpg.fabric.Mmorpg.LOG.info("[rune] rageSlam hits {} at {} from {} facing {}", n, hit, c0, f);
+            // 쓴 사람 1인칭: 큰 초승달 · 터짐은 눈앞을 덮어 거둬지므로 (Vfx eyeCull) 1인칭 전용으로 조금 작게 — 내려찍힌 자리에 세로 초승달 · 핏빛 터짐
+            int ownerId = sp.getId();
+            Vfx.Fx fp = Vfx.at(level, hit, 30, (Vfx.FirstPerson) p -> p.getId() == ownerId && !mmorpg.fabric.vfx.PBridge.thirdPersonOf(p));
+            VfxKit.slash(fp, V.up(hit, 1.3), V.DOWN, V.scale(f, -1), 3.0, glow, 0);
+            VfxKit.burst(fp, V.up(hit, 0.5), 2.4, BLOOD, 1);
+            VfxKit.sparks(fp, V.up(hit, 0.5), core, 8, 1.6, 1);
             // 내려찍힌 자리
             VfxKit.slash(fx, V.up(hit, 2.0), V.DOWN, V.scale(f, -1), 6.0, glow, 0);
             VfxKit.slash(fx, V.up(hit, 1.8), V.DOWN, V.scale(f, -1), 5.0, BLOOD, 1);
