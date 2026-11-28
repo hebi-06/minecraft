@@ -1035,6 +1035,12 @@ final class VanillaProbe {
                     FILM_FRAMES.add(ELEM_FRAMES);
                     continue;
                 }
+                if (k.startsWith("gods")) {
+                    // 2026-11-28 원소신 NPC 다섯 (gods — 사진 shots/gods_* · 영상 films/vanilla_gods_row)
+                    FILM_RUNES.add("gods:all");
+                    FILM_FRAMES.add(GODS_FRAMES);
+                    continue;
+                }
                 if (k.startsWith("fppilot:") || k.startsWith("fp:")) {
                     // 2026-11-18 1인칭 모션 (fp:<무기 종류> · fp:all — 쓴 사람의 눈: films/vanilla_fp_<종류>, 예전 fppilot: 도 같음)
                     String t = k.substring(k.indexOf(':') + 1);
@@ -1230,6 +1236,10 @@ final class VanillaProbe {
         }
         if (FILM_RUNES.get(i).startsWith("elem:")) {
             elemFilm(p, step, FILM_RUNES.get(i).substring(5), FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
+            return;
+        }
+        if (FILM_RUNES.get(i).startsWith("gods:")) {
+            godsFilm(p, step, FILM_FRAMES.get(Math.min(i, FILM_FRAMES.size() - 1)), y);
             return;
         }
         // 2026-11-17 룬 1인칭 (runefp: — 끝에 :fp)
@@ -1994,6 +2004,102 @@ final class VanillaProbe {
 
     /** 원소 표시 · 반응 영상 (elem:react) 의 장 수 */
     static final int ELEM_FRAMES = 100;
+
+    /** 원소신 NPC 영상 (gods) 의 장 수 — 북 고리 · 떠오르는 돌이 도는 것을 봄 */
+    static final int GODS_FRAMES = 80;
+
+    /** 사진 하나: 이름 · 서는 자리 (x, z) · 보는 쪽 (도) · 카메라 높이 · 보는 높이 · 보는 거리 */
+    private record GodShot(String name, double x, double z, float yaw, double h, double lookY, double ahead) {}
+
+    /**
+     * 2026-11-28 원소신 NPC 다섯 (사용자 "그냥 이런 느낌에 npc 넣기만 할래" — GodNpcs): z 6.5 에 한 줄로 세움 (−5.5 · −2.5 · 0.5 · 3.5 · 6.5, 북쪽을 봄) →
+     * 프로브는 투명 · 카메라는 프로브 눈 자리 (cam film 180 0.01 …): 한 줄 앞 · 신마다 앞 · 신마다 뒤 3/4 · 한 줄 뒤 · 한 줄 앞 영상 (북 고리 · 돌이 돎) ·
+     * 한밤 (빛나는 소품). 확인: 프로필 스킨 패치 (texture · model · cape) · 머리 · 손 · 둘레 소품 수
+     */
+    private static void godsFilm(ServerPlayer p, int step, int frames, int y) {
+        ServerLevel level = p.level();
+        MinecraftServer server = level.getServer();
+        run(server, "tick rate 20");
+        clearStrays(server);
+        run(server, "time set noon");
+        p.getInventory().clearContent();
+        p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.INVISIBILITY, 20 * 600, 0, false, false));
+        String[] ids = {"laeta", "nivaria", "marea", "fortia", "gravis"};
+        List<net.minecraft.world.entity.decoration.Mannequin> gods = new ArrayList<>();
+        for (int k = 0; k < ids.length; k++) {
+            mmorpg.fabric.npc.GodNpcs.God g = mmorpg.fabric.npc.GodNpcs.get(ids[k]);
+            if (g == null) {
+                check("gods def " + ids[k], false);
+                continue;
+            }
+            Vec3 at = new Vec3(-5.5 + k * 3.0, y, 6.5);
+            net.minecraft.world.entity.decoration.Mannequin m = mmorpg.fabric.npc.NpcData.spawnAt(level, at, at.add(0, 1.6, -5));
+            mmorpg.fabric.npc.GodNpcs.dress(m, g);
+            mmorpg.fabric.npc.GodNpcs.attachNow(m);
+            SPAWNED.add(m);
+            gods.add(m);
+            var patch = m.getProfile().skinPatch();
+            boolean skin = patch.body().isPresent() && patch.body().get().id().equals(g.skin());
+            boolean model = patch.model().isPresent() && patch.model().get() == (g.slim() ? net.minecraft.world.entity.player.PlayerModelType.SLIM
+                    : net.minecraft.world.entity.player.PlayerModelType.WIDE);
+            boolean cape = g.cape() == null ? patch.cape().isEmpty() : patch.cape().isPresent() && patch.cape().get().id().equals(g.cape());
+            check("gods profile patch " + ids[k] + " skin " + skin + " model " + model + " cape " + cape, skin && model && cape);
+            boolean head = g.head().equals(m.getItemBySlot(EquipmentSlot.HEAD).get(net.minecraft.core.component.DataComponents.ITEM_MODEL));
+            check("gods head item " + ids[k], head);
+            check("gods props " + ids[k] + " " + mmorpg.fabric.npc.GodNpcs.propCount(m) + "/" + g.props().size(),
+                    mmorpg.fabric.npc.GodNpcs.propCount(m) == g.props().size());
+        }
+        List<GodShot> shots = new ArrayList<>();
+        shots.add(new GodShot("gods_00_row", 0.5, -4.0, 0F, 1.9, 1.3, 10.5));
+        for (int k = 0; k < ids.length; k++) {
+            double gx = -5.5 + k * 3.0;
+            shots.add(new GodShot("gods_" + (1 + k) + "a_" + ids[k] + "_front", gx, 3.35, 0F, 1.2, 1.15, 3.15));
+            shots.add(new GodShot("gods_" + (1 + k) + "b_" + ids[k] + "_back", gx + 2.3, 6.5 + 2.3, 135F, 1.3, 1.15, 3.25));
+            shots.add(new GodShot("gods_" + (1 + k) + "c_" + ids[k] + "_face", gx, 5.25, 0F, 1.75, 1.75, 1.25));
+        }
+        shots.add(new GodShot("gods_06_row_back", 0.5, 17.0, 180F, 1.9, 1.3, 10.5));
+        mmorpg.fabric.vfx.PBridge.thirdPerson(p, true);
+        Tasks.later(50, () -> godShot(p, shots, 0, y, () -> {
+            // 한 줄 앞 영상 (돌고 오르내리는 소품) → 한밤 사진 → 다음
+            GodShot row = shots.get(0);
+            run(server, String.format(java.util.Locale.ROOT, "tp %s %.2f %d %.2f %.1f 0", NAME, row.x(), y, row.z(), row.yaw()));
+            Tasks.later(6, () -> {
+                say(p, String.format(java.util.Locale.ROOT, "cam film 180 0.01 %.2f %.2f %.2f 0", row.h(), row.lookY(), row.ahead()));
+                Tasks.later(10, () -> {
+                    say(p, "film vanilla_gods_row " + frames);
+                    Tasks.later(frames + 20, () -> {
+                        run(server, "time set midnight");
+                        Tasks.later(12, () -> {
+                            say(p, "shot gods_07_row_night");
+                            Tasks.later(16, () -> {
+                                run(server, "time set noon");
+                                p.removeEffect(net.minecraft.world.effect.MobEffects.INVISIBILITY);
+                                film(p, step + 1);
+                            });
+                        });
+                    });
+                });
+            });
+        }));
+    }
+
+    private static void godShot(ServerPlayer p, List<GodShot> shots, int i, int y, Runnable done) {
+        if (p.isRemoved() || p.hasDisconnected()) return;
+        if (i >= shots.size()) {
+            done.run();
+            return;
+        }
+        GodShot s = shots.get(i);
+        MinecraftServer server = p.level().getServer();
+        run(server, String.format(java.util.Locale.ROOT, "tp %s %.2f %d %.2f %.1f 0", NAME, s.x(), y, s.z(), s.yaw()));
+        Tasks.later(6, () -> {
+            say(p, String.format(java.util.Locale.ROOT, "cam film 180 0.01 %.2f %.2f %.2f 0", s.h(), s.lookY(), s.ahead()));
+            Tasks.later(12, () -> {
+                say(p, "shot " + s.name());
+                Tasks.later(10, () -> godShot(p, shots, i + 1, y, done));
+            });
+        });
+    }
 
     /**
      * 2026-11-25 원소 표시 · 반응 영상 (elem:react — films/vanilla_elem_react, 사용자 "속성 두개 뭍이면 해당 속성 반응이 터지는 이펙트가 나오고 속성이 사라지게 해줘

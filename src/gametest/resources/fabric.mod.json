@@ -60,7 +60,8 @@
       "mmorpg.fabric.test.RpgRelicTests",
       "mmorpg.fabric.test.RpgMotionTests",
       "mmorpg.fabric.test.RpgSmithUiTests",
-      "mmorpg.fabric.test.RpgWorkshopUiTests"
+      "mmorpg.fabric.test.RpgWorkshopUiTests",
+      "mmorpg.fabric.test.RpgGodNpcTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",

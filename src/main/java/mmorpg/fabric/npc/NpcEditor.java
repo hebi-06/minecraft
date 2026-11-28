@@ -233,9 +233,10 @@ public final class NpcEditor {
                 .button("가까운 NPC 설정 §8(8칸 안)", Icon.of("textures/items/name_tag"))
                 .button("모든 퀘스트 §8(" + mine.size() + "개)", Icon.of("textures/items/book_writable"))
                 .button("NPC 설정 도구 받기", Icon.of(TOOL_ICON))
+                .button("원소신 NPC 세우기 §8(라에타 · 니바리아 · 마레아 · 포르티아 · 그라비스)", Icon.of("textures/items/nether_star"))
                 .button("닫기", DialogForm.BYE)
                 .show(sp, sel -> {
-                    if (sel < 0 || sel == 7) return;
+                    if (sel < 0 || sel == 8) return;
                     Runnable again = () -> managerLoop(sp, guard + 1);
                     switch (sel) {
                         case 0, 1, 2, 3 -> createNpcFlow(sp, sel == 1, sel == 2, sel == 3, npc -> {
@@ -255,6 +256,7 @@ public final class NpcEditor {
                             say(sp, "NPC 설정 도구를 받았습니다. §7들고 NPC를 누르세요.");
                             again.run();
                         }
+                        case 7 -> godFlow(sp, again);
                         default -> again.run();
                     }
                 });
@@ -417,6 +419,23 @@ public final class NpcEditor {
     }
 
     /** 마네킹 스킨의 플레이어 이름 (기본 스킨이면 "") */
+    /** 2026-11-28 원소신 NPC (GodNpcs): 다섯 가운데 하나를 골라 내 앞 2칸에 세우고 그 NPC 설정 창으로 */
+    private static void godFlow(ServerPlayer sp, Runnable back) {
+        List<GodNpcs.God> list = new ArrayList<>(GodNpcs.all().values());
+        MenuForm f = new MenuForm("원소신 NPC 세우기", "고른 신이 내 앞 2칸에 서서 나를 봅니다.\n§7스킨 · 머리 장식 · 손에 든 것 · 둘레 소품 · 파티클이 함께 붙습니다.");
+        for (GodNpcs.God g : list) f.button(g.name() + " §8(" + g.title() + ")", Icon.of("textures/items/nether_star"));
+        f.button("뒤로", DialogForm.BYE);
+        f.show(sp, sel -> {
+            if (sel < 0 || sel >= list.size()) {
+                back.run();
+                return;
+            }
+            Mannequin npc = GodNpcs.spawn(sp, list.get(sel));
+            say(sp, "§6" + list.get(sel).name() + "§f을(를) 세웠습니다.");
+            settingsLoop(sp, npc, 0, back);
+        });
+    }
+
     public static String skinName(Mannequin m) {
         ResolvableProfile p = m.getProfile();
         return p == null ? "" : p.name().orElse("");
