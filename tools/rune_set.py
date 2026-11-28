@@ -130,8 +130,9 @@ SET = [
          set={"reduce": 0.2, "ticks": 100, "pulse": 10}, spread={"t": 100, "zone": True},
          desc="방패 벽을 둘러 세워 아군을 지키고 안의 적을 침", use="장판 5초 · 아군 받는 피해 −20%"),
     # 2026-11-28 근접 딜 새 룬: 모탈 스트라이크 = 힘 (크게 젖혔다 내려찍는 한 방) · 짝 소드마스터 드래곤 블러드 27초
+    # 2026-11-28 사거리 4.5 → 6칸 (영상 무대의 앞 과녁 5칸 — CI 46099514617 "film cast vanilla_mortalstrike_hero" 대상 없음): 하늘에서 내리꽂는 검이라 손 닿는 거리보다 넉넉히
     dict(key="mortalstrike", name="모탈 스트라이크", grade="hero", cd=27, pair=["swordmaster_blood"], r="melee", stat_fam="str", look="axe:hero", u=[], a="single",
-         set={"fn": "mortalStrike", "mult": 14, "crush": 6.7692, "range": 4.5, "cone": 50, "wound": 10, "multName": "처형 일격 ", "crushName": "상처 터짐",
+         set={"fn": "mortalStrike", "mult": 14, "crush": 6.7692, "range": 6.0, "cone": 50, "wound": 10, "multName": "처형 일격 ", "crushName": "상처 터짐",
               "flow": ["앞 {range}칸의 적 하나에 처형의 검을 내리꽂음", "{t:wound} 뒤 깊은 상처가 터짐"]},
          spread={"t": 18, "w": 8}, desc="처형의 검을 한 적에게 내리꽂고 상처를 터뜨림", use="단일 큰 한 방 · 상처 터짐"),
     # ---------------------------------------------------------------- 초월 (초당 89%)

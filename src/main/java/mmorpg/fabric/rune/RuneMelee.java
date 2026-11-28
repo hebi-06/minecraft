@@ -50,6 +50,12 @@ final class RuneMelee {
         return V.up(V.add(V.add(feet, f, dist), V.rightOf(f), side), h);
     }
 
+    /** 짙은 빛 (빛깔은 그대로 · 어둡게 · 짙게 — 땅 자국의 겉 겹) */
+    private static double[] deep(double[] c) {
+        double m = Math.max(c[0], Math.max(c[1], c[2]));
+        return new double[] {c[0] * 0.9, c[1] * 0.9 * (c[1] < m ? 0.55 : 1), c[2] * 0.9 * (c[2] < m ? 0.45 : 1)};
+    }
+
     // ------------------------------------------------------------ 크로스 컷 (일반)
 
     /**
@@ -77,6 +83,7 @@ final class RuneMelee {
         RuneKit.later(1, () -> crossArc(sp, life, false, glow, core, 1.4));
         RuneKit.later(3, () -> crossArc(sp, life, true, glow, core, 1.25));
         List<LivingEntity> cut = new ArrayList<>();
+        Vfx.Sprite[] hang = new Vfx.Sprite[1];
         RuneKit.later(3, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
@@ -89,17 +96,10 @@ final class RuneMelee {
                     VfxKit.sparks(fx, Kit.bodyPoint(e), core, 4, 1.0, 0);
                 }
             }
-            // 허공의 X: 두 빛줄기 (테 + 흰 심지) 가 hold 틱 걸려 있음
-            double s = 1.15;
-            Vec3 a1 = V.add(V.add(x, right, s), V.UP, s);
-            Vec3 b1 = V.add(V.add(x, right, -s), V.UP, -s);
-            Vec3 a2 = V.add(V.add(x, right, -s), V.UP, s);
-            Vec3 b2 = V.add(V.add(x, right, s), V.UP, -s);
-            double sec = (hold + 2) / 20.0;
-            RuneKit.streak(d, a1, b1, glow, 0.22, sec);
-            RuneKit.streak(d, a2, b2, glow, 0.22, sec);
-            RuneKit.streak(d, a1, b1, core, 0.08, sec);
-            RuneKit.streak(d, a2, b2, core, 0.08, sec);
+            // 허공의 X: 카메라를 보는 X 자국 (xcut 칸 1 — 두 획) 이 hold 틱 동안 조금씩 커지며 걸려 있음. 어느 쪽에서 봐도 X (2026-11-28 CI 46099514617 — 빛줄기
+            // 넷 (RuneKit.streak) 은 칠한 묶음에서 점 몇 개라 3인칭에 X 가 안 보였음). 1인칭: 눈에서 2칸 넘게 · 반지름 1.1 (eyeCull 1.65 안쪽 아님)
+            hang[0] = fx.sprite("xcut", x).color(Vfx.mix(glow, VfxKit.WHITE, 0.25)).size(1.8).frame(1).alpha(0.95);
+            hang[0].to(null, 2.2, hold);
             VfxKit.glow(fx, x, 1.4, glow, 0.55, hold);
             SkillFx.play(d, "entity.player.attack.sweep", c0, 1.3, 0.9);
         });
@@ -118,6 +118,7 @@ final class RuneMelee {
         RuneKit.later(3 + hold, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
+            if (hang[0] != null) hang[0].remove();
             // 크기: 눈 (앞 2.1칸) 에서 반지름 × 1.5 안이면 1인칭에서 거둬지므로 (Vfx eyeCull) 지름 2.6 · 2.4 까지
             VfxKit.xcut(fx, x, 2.6, core, 0);
             VfxKit.burst(fx, x, 2.4, glow, 0);
@@ -176,7 +177,9 @@ final class RuneMelee {
         RuneKit.later(1, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 ff = front(sp);
-            RuneKit.arc(sp.level(), ahead(sp.position(), ff, 1.8, 0, 0.95), ff, Opt.of("shape", "arc", "flip", false, "size", 4.6, "life", 0.28, "speed", 2.0,
+            // 2026-11-28 크기 4.6 → 3.2 · 빠르기 2 → 1.2 (CI 46099514617 3인칭: 칠한 반달은 가로 휘두름도 보는 눈 쪽으로 65° 까지 기울어 세워지고 땅 위로 올려져 —
+            // 반지름 3.1칸이면 옆 카메라에서 6칸 넘게 하늘로 솟은 세로 베기처럼 보였음. 넓게 쓴 자리는 땅의 반달 · 거대한 칼이 보여 줌)
+            RuneKit.arc(sp.level(), ahead(sp.position(), ff, 1.8, 0, 0.95), ff, Opt.of("shape", "arc", "flip", false, "size", 3.2, "life", 0.28, "speed", 1.2,
                     "spin", 6.0, "color", glow, "aura", core));
         });
         RuneKit.later(2, () -> {
@@ -184,8 +187,8 @@ final class RuneMelee {
             ServerLevel d = sp.level();
             Vec3 c = sp.position();
             Vec3 ff = front(sp);
-            // 긁고 지나간 땅: 금빛 반원 · 흙먼지 · 불티
-            RuneKit.groundCrescent(d, V.add(c, ff, radius * 0.45), radius * 1.15, glow, core, Math.toDegrees(Math.atan2(ff.z, ff.x)), 0.9);
+            // 긁고 지나간 땅: 불빛 반원 (겉 겹 = 짙은 불빛 — 옅은 속빛이면 3인칭에서 흐린 모래빛 띠로 보였음) · 흙먼지 · 불티
+            RuneKit.groundCrescent(d, V.add(c, ff, radius * 0.45), radius * 1.15, glow, deep(glow), Math.toDegrees(Math.atan2(ff.z, ff.x)), 0.9);
             for (int i = 0; i < 5; i++) {
                 Vec3 p = VfxKit.ground(d, V.add(c, RuneKit.turn(ff, -80 + i * 40), radius * 0.7));
                 VfxKit.crack(fx, p, 1.6, glow, i, 2 + quake + 8);
@@ -243,9 +246,9 @@ final class RuneMelee {
     // ------------------------------------------------------------ 팬텀 스러스트 (고귀)
 
     /**
-     * 팬텀 스러스트: 1틱 앞을 꿰뚫어 찌름 (3D 환영 칼이 손에서 앞으로 · 칠한 돌진 줄기) — 앞 length 칸 · 폭 width 칸 줄의 적 위력 × mult →
+     * 팬텀 스러스트: 1틱 앞을 꿰뚫어 찌름 (3D 환영 칼이 손에서 앞으로 · 창끝이 뻗는 찌르기 판) — 앞 length 칸 · 폭 width 칸 줄의 적 위력 × mult →
      * 그림자 분신 둘 (앞 0.6칸 · 양옆 1.5칸) 이 나타나 11틱에 함께 찌름 (위력 × mult) → 셋째 분신 (머리 위 뒤) 이 더해 셋이 21틱에 환영 창으로 꿰뚫음
-     * (거대한 3D 환영 칼 · 줄 끝 터짐 — 위력 × crush). hits = 앞의 두 번
+     * (거대한 3D 환영 칼 · 굵은 찌르기 판 + 양옆 가는 판 둘 · 줄 끝 터짐 — 위력 × crush). hits = 앞의 두 번
      */
     static boolean phantomThrust(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -261,7 +264,7 @@ final class RuneMelee {
         Vfx.Fx fx = Vfx.at(level, c0, 2 * gap + 30);
         SkillFx.play(level, "item.trident.throw", c0, 1.4, 0.8);
         // 1: 내 찌르기
-        thrust(sp, fx, life, V.up(c0, 1.2), f, len, 1, 2.2, glow, core);
+        thrust(sp, fx, life, V.up(c0, 1.2), f, len, 1, 2.2, 0.55, true, glow, core);
         RuneKit.later(1, () -> pierce(sp, r, P, k.num("mult"), V.up(c0, 1.2), f, len, width, glow, core, fx));
         // 2: 분신 둘 (양옆 — 1인칭 화면 가장자리)
         List<RuneMob> shades = new ArrayList<>();
@@ -283,7 +286,7 @@ final class RuneMelee {
                 // 분신의 창은 가운데 줄 쪽으로 모임 (앞 length 칸 끝에서 엇갈림)
                 Vec3 to = V.up(V.add(c0, f, len + 0.5), 1.2);
                 Vec3 dd = V.unit(V.sub(to, from));
-                thrust(sp, fx, life, from, dd, V.len(V.sub(to, from)), 0, 1.8, glow, core);
+                thrust(sp, fx, life, from, dd, V.len(V.sub(to, from)), 0, 1.8, 0.5, false, glow, core);
             }
             pierce(sp, r, P, k.num("mult"), V.up(c0, 1.2), f, len, width + 0.4, glow, core, fx);
         });
@@ -302,11 +305,11 @@ final class RuneMelee {
         RuneKit.later(1 + 2 * gap, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            // 거대한 환영 칼 (4.5칸) 이 가운데 줄을 꿰뚫음 + 칠한 돌진 줄기 셋
-            thrust(sp, fx, life, V.up(c0, 1.25), f, len + 0.5, 0, 4.5, glow, core);
-            for (int s : new int[] {-1, 0, 1}) {
-                Vec3 from = V.up(V.add(c0, V.rightOf(f), 0.35 * s), 1.1 + 0.15 * Math.abs(s));
-                RuneKit.flyStreak(d, from, V.add(from, f, len + 1), 40, glow, core, 0.9, 0.3);
+            // 거대한 환영 칼 (4.5칸) 이 가운데 줄을 꿰뚫음 (굵은 찌르기 판) + 양옆 가는 찌르기 판 둘 (둘레 사람 · 3인칭 — 쓴 사람 1인칭은 가운데 판 · 칼)
+            thrust(sp, fx, life, V.up(c0, 1.25), f, len + 0.5, 0, 4.5, 0.9, true, glow, core);
+            for (int s : new int[] {-1, 1}) {
+                Vec3 from = V.up(V.add(c0, V.rightOf(f), 0.45 * s), 1.35);
+                thrustCard(sp, from, f, len + 1, 0.35, 0.4, CARD_OUT, glow, core);
             }
             Vec3 end = V.up(V.add(c0, f, len), 1.2);
             VfxKit.burst(fx, end, 2.8, glow, 0);
@@ -330,14 +333,13 @@ final class RuneMelee {
     }
 
     /**
-     * 찌르기 그림 하나: 3D 환영 칼 (blade 칸) 이 from 에서 dir 쪽으로 2틱에 len 칸 앞까지 밀려 나갔다가 사라짐 + 칠한 돌진 줄기 · 끝의 섬광.
-     * delay 틱 뒤 (0 = 바로)
+     * 찌르기 그림 하나: 3D 환영 칼 (blade 칸) 이 from 에서 dir 쪽으로 2틱에 len 칸 앞까지 밀려 나갔다가 사라짐 + 찌르기 판 (폭 몫 wide — own 이면 쓴 사람의
+     * 찌르기: 1인칭 판도) · 끝의 섬광. delay 틱 뒤 (0 = 바로)
      */
-    private static void thrust(ServerPlayer sp, Vfx.Fx fx, String life, Vec3 from, Vec3 dir, double len, int delay, double blade, double[] glow,
-            double[] core) {
+    private static void thrust(ServerPlayer sp, Vfx.Fx fx, String life, Vec3 from, Vec3 dir, double len, int delay, double blade, double wide, boolean own,
+            double[] glow, double[] core) {
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            ServerLevel d = sp.level();
             Vec3 u = V.unit(dir);
             Vec3 side = V.len(V.cross(u, V.UP)) > 1e-3 ? V.unit(V.cross(u, V.UP)) : new Vec3(1, 0, 0);
             double s = RuneProps.scaleFor(blade, RuneProps.SWORD_LEN);
@@ -348,9 +350,33 @@ final class RuneMelee {
             fx.on(t0 + 1, () -> p.to(b, null, s, 2));
             fx.on(t0 + 5, () -> p.to(V.add(b, u, 0.6), null, s * 0.2, 4));
             fx.on(t0 + 10, p::remove);
-            RuneKit.flyStreak(d, from, V.add(from, u, len), 45, glow, core, 0.6, 0.18);
+            thrustCard(sp, from, u, len, wide, blade > 3 ? 0.4 : 0.3, own ? CARD_OWN : CARD_ALL, glow, core);
             VfxKit.glow(fx, V.add(from, u, len), 1.0, glow, 0.7, 5);
         });
+    }
+
+    /** 찌르기 판을 보는 사람: 모두 · 쓴 사람 1인칭만 빼고 (view 1) · 쓴 사람의 찌르기 (둘레 · 3인칭 판 + 1인칭 판) */
+    private static final int CARD_ALL = 0;
+    private static final int CARD_OUT = 1;
+    private static final int CARD_OWN = 2;
+
+    /**
+     * 찌르기 판 (slash_thrust — 원점 = 출발 · +Y = 찌르는 쪽 · 창끝이 뻗는 그림, 그 축 둘레로 보는 사람을 봄): 길이 len 칸 · 폭 몫 wide (1 = 길이의 0.4) · life 초.
+     * 2026-11-28 CI 46099514617 — 칠한 돌진 줄기 (RuneKit.flyStreak — 묶음의 dash 한 장) 는 3인칭 영상에서 거의 안 보였음. CARD_OWN = 기본 창 찌르기 (BasicSlash
+     * thrust) 처럼 둘레 사람 · 3인칭 판 (view 1) + 쓴 사람 1인칭 판 (0.6칸 앞 · 옅게, view 2)
+     */
+    private static void thrustCard(ServerPlayer sp, Vec3 from, Vec3 dir, double len, double wide, double life, int who, double[] glow, double[] core) {
+        Vec3 u = V.unit(dir);
+        Opt card = Opt.of("dir", u, "faceCam", 1.0, "roll", 0.0, "scale", len, "life", life, "grow", 0.04, "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.0,
+                "fadeOut", life * 0.25, "glowAlpha", 0.0, "color", glow, "glow", core, "alpha", 0.95, "shine", 0.12, "stretch", new Vec3(wide, 1, 1));
+        ServerLevel level = sp.level();
+        double owner = sp.getId();
+        if (who == CARD_ALL) {
+            mmorpg.fabric.Fx3d.spawn(level, "slash_thrust", from, card);
+            return;
+        }
+        mmorpg.fabric.Fx3d.spawn(level, "slash_thrust", from, card.with("view", 1.0, "owner", owner));
+        if (who == CARD_OWN) mmorpg.fabric.Fx3d.spawn(level, "slash_thrust", V.add(from, u, 0.6), card.with("view", 2.0, "owner", owner, "alpha", 0.7));
     }
 
     /** 찌르기 피해 한 번: from 에서 dir 쪽 len 칸 · 폭 w 줄의 적 (적마다 찔린 자국 · 불티) */
@@ -513,6 +539,7 @@ final class RuneMelee {
         int vert = 11; // 가로 베기 (1틱) 와 10틱 띄움 — 몹 무적 시간
         int boom = 24;
         Vfx.Fx fx = Vfx.at(level, cross, boom + 30);
+        List<Vfx.Sprite> bars = new ArrayList<>();
         RuneKit.selfCue(sp, glow, core, true);
         SkillFx.play(level, "beacon.activate", c0, 1.4, 0.8);
         SkillFx.play(level, "item.trident.riptide_1", c0, 1.0, 0.8);
@@ -523,7 +550,8 @@ final class RuneMelee {
             ServerLevel d = sp.level();
             Vec3 c = sp.position();
             Vec3 ff = front(sp);
-            RuneKit.arc(d, ahead(c, ff, 1.8, 0, 1.15), ff, Opt.of("shape", "arc", "flip", false, "size", 4.8, "life", 0.28, "speed", 2.5, "spin", 0.0,
+            // 2026-11-28 반달 크기 4.8 → 3.4 · 세로 4.4 → 3.4 (CI 46099514617 3인칭 — 보는 눈 쪽으로 세워진 반달이 하늘 높이 솟아 보였음)
+            RuneKit.arc(d, ahead(c, ff, 1.8, 0, 1.15), ff, Opt.of("shape", "arc", "flip", false, "size", 3.4, "life", 0.28, "speed", 1.5, "spin", 0.0,
                     "color", glow, "aura", core));
             SkillFx.play(d, "entity.player.attack.sweep", c, 1.0, 1.0);
             SkillFx.play(d, "block.bell.hit", c, 1.4, 0.5);
@@ -531,7 +559,7 @@ final class RuneMelee {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) VfxKit.slash(fx, Kit.bodyPoint(e), V.rightOf(ff), V.scale(ff, -1), 1.8, core, 0);
             }
             // 십자가의 가로 (땅 — 앞 at 칸에서 양옆 arm 칸)
-            groundBar(d, V.add(cross, right, arm), V.add(cross, right, -arm), glow, core, (boom - horiz) / 20.0 + 0.2);
+            bars.add(groundBar(fx, V.add(cross, right, -arm), V.add(cross, right, arm), 0.8, glow));
         });
         // 2: 세로 내려치기 (머리 위 → 앞 아래 · 앞을 지나는 틱 약 10.5)
         RuneSwing.sword(sp, life, 1.2, 0.6, 3.6, 90, 95, -70, vert - 2, 3, 3, "in", glow, core);
@@ -540,7 +568,7 @@ final class RuneMelee {
             ServerLevel d = sp.level();
             Vec3 c = sp.position();
             Vec3 ff = front(sp);
-            RuneKit.arc(d, ahead(c, ff, 2.2, 0, 1.3), ff, Opt.of("shape", "heavy", "flip", false, "size", 4.4, "life", 0.26, "speed", 1.5, "spin", -6.0,
+            RuneKit.arc(d, ahead(c, ff, 2.2, 0, 1.3), ff, Opt.of("shape", "heavy", "flip", false, "size", 3.4, "life", 0.26, "speed", 1.5, "spin", -6.0,
                     "color", glow, "aura", core));
             for (int i = 1; i <= 4; i++) VfxKit.crack(fx, VfxKit.ground(d, V.add(c0, f, len * i / 4.5)), 1.8, glow, i - 1, boom - vert + 12);
             SkillFx.play(d, "mace.heavy_smash_ground", V.add(c, ff, 2), 1.0, 0.9);
@@ -549,7 +577,7 @@ final class RuneMelee {
                 if (RuneKit.runeHit(sp, h.e(), P, k.num("mult"), r.stat()) > 0) VfxKit.slash(fx, Kit.bodyPoint(h.e()), V.DOWN, V.scale(f, -1), 1.8, core, 0);
             }
             // 십자가의 세로 (땅 — 앞 0.8칸에서 length 칸까지)
-            groundBar(d, VfxKit.ground(d, V.add(c0, f, 0.8)), VfxKit.ground(d, V.add(c0, f, len)), glow, core, (boom - vert) / 20.0 + 0.2);
+            bars.add(groundBar(fx, VfxKit.ground(d, V.add(c0, f, 0.8)), VfxKit.ground(d, V.add(c0, f, len)), 0.8, glow));
         });
         // 3: 십자가에 빛이 모임 (가운데 문양 · 둘레 빛 알갱이 · 땅의 고리)
         RuneKit.later(vert + 2, () -> {
@@ -573,6 +601,8 @@ final class RuneMelee {
         RuneKit.later(boom, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
+            // 십자가의 빛줄이 번쩍 굵어졌다가 옅어짐
+            for (Vfx.Sprite b : bars) barFlash(fx, b);
             List<Vec3> spots = new ArrayList<>();
             spots.add(cross);
             spots.add(VfxKit.ground(d, V.add(cross, right, arm)));
@@ -611,11 +641,36 @@ final class RuneMelee {
         return true;
     }
 
-    /** 십자가의 빛줄 (땅 위 0.1칸): 금빛 테 + 흰 심지 — sec 초 */
-    private static void groundBar(ServerLevel level, Vec3 a, Vec3 b, double[] glow, double[] core, double sec) {
-        Vec3 aa = V.up(a, 0.1);
-        Vec3 bb = V.up(b, 0.1);
-        RuneKit.streak(level, aa, bb, glow, 0.55, sec);
-        RuneKit.streak(level, aa, bb, core, 0.18, sec);
+    /** 십자가 빛줄 그림 (성광 묶음의 빛줄기 — 4:1 · 6칸: 가늘게 → 굵게 → 가늘게) · 없으면 흰 빛줄 (streak 8:1 한 칸 — 빛깔을 입힘) */
+    private static final String BAR_SHEET = "el_holy_beam";
+
+    private static boolean beamBars() {
+        return Vfx.hasSheet(BAR_SHEET) && Vfx.sheet(BAR_SHEET).frames() >= 4;
+    }
+
+    /**
+     * 십자가의 빛줄: a → b 땅 위 0.09칸에 눕힌 빛줄기 (앞면 = 하늘 · 굵기 thick 칸) — 2틱에 굵어지고 그 뒤 굵은 칸 셋을 되풀이 (일렁임). 돌려준 그림을 터질 때
+     * barFlash. 2026-11-28 CI 46099514617 — 빛줄 (RuneKit.streak) 은 칠한 묶음에서 점 여섯이라 3인칭에서 십자가가 안 보였음
+     */
+    private static Vfx.Sprite groundBar(Vfx.Fx fx, Vec3 a, Vec3 b, double thick, double[] glow) {
+        Vec3 d = V.sub(V.flat(b), V.flat(a));
+        double len = Math.max(0.5, V.len(d));
+        Vec3 x = V.len(d) > 1e-6 ? V.unit(d) : new Vec3(1, 0, 0);
+        Vec3 z = V.UP;
+        Vec3 y = V.cross(z, x);
+        boolean beam = beamBars();
+        String sheet = beam ? BAR_SHEET : "streak";
+        double aspect = Vfx.sheet(sheet).aspect();
+        Vec3 mid = V.up(V.add(a, V.sub(b, a), 0.5), 0.09);
+        Vfx.Sprite s = fx.sprite(sheet, mid).color(glow).fixed(Vfx.basis(x, y, z)).size(thick).squash(len / (thick * aspect), 1).frame(0);
+        if (beam) s.play(fx.age() + 2, 1, 3, 3, true);
+        return s;
+    }
+
+    /** 십자가 빛줄 터짐: 가장 굵은 칸에 멈춰 다 밝게 → 3틱 뒤부터 8틱에 옅어짐 */
+    private static void barFlash(Vfx.Fx fx, Vfx.Sprite s) {
+        if (beamBars()) s.play(fx.age(), 2, 1, 1, true);
+        s.alpha(1.0);
+        s.fade(fx.age() + 3, 8);
     }
 }

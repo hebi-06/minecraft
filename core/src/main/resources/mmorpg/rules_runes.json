@@ -923,7 +923,7 @@
     "fn": "mortalStrike",
     "mult": 14,
     "crush": 6.7692,
-    "range": 4.5,
+    "range": 6.0,
     "cone": 50,
     "wound": 10,
     "multName": "처형 일격 ",
