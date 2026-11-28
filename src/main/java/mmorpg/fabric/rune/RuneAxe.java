@@ -686,18 +686,19 @@ final class RuneAxe {
         double[] glow = cs[0];
         double[] core = cs[1];
         int alive = RuneKit.deathToken(sp);
-        Vec3 hit = VfxKit.ground(level0, V.add(c0, f, k.num("dist")));
+        // 오른손으로 내려찍음: 날이 앞 dist 칸 · 오른쪽 0.25칸에 박힘 (1인칭에서 자루가 화면 가운데를 가르지 않게 — 첫 영상에서 박힌 자루가 10틱 넘게 과녁을 가렸음)
+        Vec3 right = V.rightOf(f);
+        Vec3 hit = VfxKit.ground(level0, V.add(V.add(c0, f, k.num("dist")), right, 0.25));
         Vfx.Fx fx = Vfx.at(level0, c0, windup + rage + 40);
         SkillFx.play(level0, "mob.ravager.roar", c0, 0.8, 1);
         SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.0, 0.5);
-        // 치켜든 거대한 도끼 (쓴 자리 — 손잡이 머리 위 앞 0.6칸 · 3.4칸 높이, 머리가 위 · 조금 뒤 · 날이 앞): 작게 나타나 windup − 2 틱 동안 커짐
-        Vec3 grip = V.add(V.up(c0, 3.4), f, 0.6);
+        // 치켜든 거대한 도끼 (쓴 자리 — 손잡이 머리 위 앞 0.4칸 · 오른쪽 0.45칸 · 2.6칸 높이, 머리가 위 · 조금 뒤 · 날이 앞): 작게 나타나 windup − 2 틱 동안 커짐
+        Vec3 grip = V.add(V.add(V.up(c0, 2.6), f, 0.4), right, 0.45);
         Vec3 down = V.unit(V.sub(V.up(hit, 0.2), grip));
         double sc = (V.len(V.sub(V.up(hit, 0.2), grip)) + 0.15) / (headReach(r.grade()) / 16.0);
         Vec3 up0 = V.unit(V.add(V.UP, f, -0.45));
         Vec3 edge0 = V.unit(V.add(f, V.UP, 0.45));
         Vec3 mid = V.unit(V.add(V.add(up0, down), f, 0.7));
-        Vec3 right = V.rightOf(f);
         Vec3 edgeMid = V.unit(V.cross(mid, right));
         Vec3 edgeEnd = V.unit(V.cross(down, right));
         double[] g = gripOf(r.grade());
@@ -753,16 +754,16 @@ final class RuneAxe {
             VfxKit.ring(fx, hit, radius, BLOOD, 1, 10);
             VfxKit.ring(fx, hit, radius * 1.3, glow, 3, 12);
             VfxKit.dust(fx, hit, 2.4, 10, VfxKit.DUST, 1);
-            VfxKit.rocks(fx, hit, 12, 7.0, 0.45, new String[] {"minecraft:cobbled_deepslate", "minecraft:deepslate", "minecraft:tuff", "minecraft:cobblestone"}, 1);
             VfxKit.sparks(fx, V.up(hit, 0.4), core, 10, 2.4, 1);
             VfxKit.blood(fx, V.up(hit, 0.6), 1.6, 6, BLOOD, 1);
-            RuneSwing.erupt(level, hit, f, 5, 300, 0.4, 1.3, 0.5, 0.9, 2.6, glow); // 솟아 튀는 3D 바위
+            // 솟아 튀는 3D 바위 — 앞 · 옆으로만 (200°: 첫 영상의 사방 튀는 돌 · 바위가 1인칭 눈앞으로 날아와 화면을 덮었음)
+            RuneSwing.erupt(level, hit, f, 6, 200, 0.6, 1.5, 0.5, 0.9, 2.8, glow);
             RuneKit.zonePulse(level, hit, glow, radius, 0.5);
             SkillFx.play(level, "mace.heavy_smash_ground", hit, 1.0, 0.7);
             SkillFx.play(level, "random.explode", hit, 1.0, 0.6);
-            // 박힌 도끼: 10틱 머문 뒤 가라앉으며 사라짐
-            fx.on(fx.age() + 10, () -> axe.to(V.add(grip, down, 0.9), null, sc * 0.4, 8));
-            fx.on(fx.age() + 19, axe::remove);
+            // 박힌 도끼: 5틱 머문 뒤 가라앉으며 사라짐
+            fx.on(fx.age() + 5, () -> axe.to(V.add(grip, down, 0.9), null, sc * 0.4, 6));
+            fx.on(fx.age() + 12, axe::remove);
             // 광폭화 (내려찍은 때부터 rage 틱)
             Vec3 c = sp.position();
             Guards.set(sp, rage, k.num("reduce"), null, null);

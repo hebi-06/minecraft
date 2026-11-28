@@ -123,7 +123,7 @@ SET = [
     # 도끼로 앞을 한 번 (예산 전부 — mult 32 · 선딜 0.65초 보정 +13%) → 그때부터 광폭화 ticks 틱: 받는 피해 −18% · 모든 공격 (평타 · 직업 스킬 · 룬) 준 피해의
     # leech 회복 (1초에 최대 체력 × heal × 회복 배율까지 — 옛 난타 흡혈의 한 적 몫 1초 1.8% 와 같은 상한). 유틸 값은 그대로 (흡혈 0.1 · 받는 피해 −18% 6초 × 0.9)
     dict(key="berserker", name="버서커", grade="transcend", cd=32, pair=["bloodknight_frenzy"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
-         set={"fn": "rageSlam", "mult": 32, "windup": 13, "dist": 2.2, "radius": 4.5, "ticks": 120, "reduce": 0.18, "heal": 0.018, "leech": 0.05,
+         set={"fn": "rageSlam", "mult": 32, "windup": 13, "dist": 2.8, "radius": 4.5, "ticks": 120, "reduce": 0.18, "heal": 0.018, "leech": 0.05,
               "flow": ["{t:windup} 치켜든 거대한 도끼로 앞 {radius}칸을 내려찍음", "그 뒤 광폭화 {t:ticks} (모든 공격 흡혈)"]},
          drop=["hits", "gap", "healMax"], spread={"t": 13, "w": 13, "zone": None}, guard_sec=6, fit={"lifesteal": 0.9, "reduce": 0.9},
          desc="핏빛 거대한 도끼로 크게 내려찍은 뒤 광폭화 · 모든 공격 흡혈", use="큰 한 방 · 광폭화 6초 (흡혈 · 받는 피해 −18%)"),

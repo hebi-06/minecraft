@@ -817,7 +817,7 @@
     "reduce": 0.18,
     "heal": 0.018,
     "windup": 13,
-    "dist": 2.2,
+    "dist": 2.8,
     "ticks": 120,
     "leech": 0.05,
     "flow": [

@@ -225,7 +225,10 @@ public final class VanillaRig {
 
     /** 모드 없는 다른 사람 (내 모션 보기면 나도) 에게 진짜 몸을 숨기는지 (공유 상태 0번의 투명 칸 · 손 · 머리 장식) */
     static boolean hidesBodyFor(Entity e, ServerPlayer receiver) {
-        return active(e) && VanillaClients.isVanilla(receiver) && (e != receiver || SELF.contains(e.getUUID()));
+        // 2026-11-28 뼈 몸이 보이게 된 뒤 (Rig.reveal — 붙은 지 3틱) 에 숨김: 붙자마자 숨기면 뼈 몸이 보이기 전 3 ~ 7틱 동안 사람이 사라졌음 (모든 평타 · 스킬 · 룬
+        // 동작을 시작할 때 3인칭에서 몸이 깜빡 — 룬 영상 블레이드 헤일 · 버서커, CI 46090588538)
+        Rig r = e instanceof ServerPlayer ? RIGS.get(e.getUUID()) : null;
+        return r != null && r.revealed && VanillaClients.isVanilla(receiver) && (e != receiver || SELF.contains(e.getUUID()));
     }
 
     /** 공유 상태 0번을 다시 보냄 (투명 칸은 VanillaPackets 가 받는 사람마다 넣음) · 장비 다시 */
@@ -292,6 +295,8 @@ public final class VanillaRig {
         double holdUntil;
         long until;
         boolean attached;
+        /** 2026-11-28 뼈가 보이게 됨 (reveal) — 그때부터 진짜 몸을 숨김 (hidesBodyFor) */
+        boolean revealed;
         private final Pose pose = new Pose();
         // 걸음 (WalkAnimationState 와 같은 셈 — 서버 사람의 값에 기대지 않음) · 몸 방향 (머리를 따라감 — 75° 넘게 벌어지지 않게)
         private double lastX = Double.NaN;
@@ -336,6 +341,9 @@ public final class VanillaRig {
             main.setViewRange(1F);
             off.setViewRange(1F);
             hat.setViewRange(1F);
+            if (revealed || sp.isRemoved() || RIGS.get(sp.getUUID()) != this) return;
+            revealed = true;
+            pushBody(sp); // 뼈가 보이는 틱에 진짜 몸을 숨김 (투명 칸 · 손 · 머리 장식)
         }
 
         void attach() {

@@ -417,6 +417,25 @@ public final class Vfx {
             if (age == 0 && !ended) eyeCull();
         }
 
+        /**
+         * 2026-11-28 그림 하나의 거름 (나이 0 이 아니어도 — 시간표 안에서 만든 그림): 만든 틱에 1인칭 눈앞을 덮으면 바로 거둠 (띄움 · 거둠 패킷이 같은 틱에 가서 그려지지
+         * 않음). 예전에는 나이 0 만 같은 틱에 걸러 시간표 안에서 몸 가까이 만든 큰 그림이 다음 틱 eyeCull 전 한 틱 화면을 덮었음 (새 버서커 광폭화 터짐 — 1인칭
+         * 영상 한 장이 붉게, CI 46090588538). 거두기만 함 (다시 보이기는 틱마다의 eyeCull)
+         */
+        void eyeCheck(Sprite s) {
+            if (ended) return;
+            if (age == 0) {
+                eyeCull();
+                return;
+            }
+            if (viewers instanceof FirstPerson || s.removed) return;
+            for (ServerPlayer p : level.players()) {
+                Vec3 eye = p.getEyePosition();
+                if (eye.distanceToSqr(origin) >= 48 * 48 || PBridge.thirdPersonOf(p) || s.eyeOff.contains(p.getId())) continue;
+                if (s.covers(eye, 1.5)) eyeShow(s.e, s.eyeOff, p, false);
+            }
+        }
+
         @Override
         protected void onTick() {
             if (ended) return;
@@ -1074,7 +1093,7 @@ public final class Vfx {
             facing = new Quaternionf(q);
             e.setBillboardMode(Display.BillboardConstraints.FIXED);
             transform();
-            fx.eyeCheck();
+            fx.eyeCheck(this);
             return this;
         }
 
@@ -1083,7 +1102,7 @@ public final class Vfx {
             facing = null;
             e.setBillboardMode(Display.BillboardConstraints.VERTICAL);
             transform();
-            fx.eyeCheck();
+            fx.eyeCheck(this);
             return this;
         }
 
@@ -1115,7 +1134,7 @@ public final class Vfx {
             e.setInterpolationDuration(Math.max(0, ticks));
             transform();
             e.startInterpolationIfDirty();
-            fx.eyeCheck();
+            fx.eyeCheck(this);
             return this;
         }
 
@@ -1123,7 +1142,7 @@ public final class Vfx {
             size = blocks;
             SIZE_MAX.merge(sheet.name(), blocks, Math::max);
             transform();
-            fx.eyeCheck();
+            fx.eyeCheck(this);
             return this;
         }
 
@@ -1142,7 +1161,7 @@ public final class Vfx {
             e.setInterpolationDuration(Math.max(0, ticks));
             transform();
             e.startInterpolationIfDirty();
-            fx.eyeCheck();
+            fx.eyeCheck(this);
             return this;
         }
 
@@ -1192,7 +1211,7 @@ public final class Vfx {
             sx = x;
             sy = y;
             transform();
-            fx.eyeCheck();
+            fx.eyeCheck(this);
             return this;
         }
 
