@@ -184,8 +184,9 @@ B = {
     # 눈꽃성 섬: 얼음 나라 수도 — 어스름 같은 낮은 하늘 · 눈발 · 드문 가문비 (호수는 freeze_top_layer 로 얼음)
     'snowcrown': biome(-0.9, 0.7, True, '#3938c9', '#5c6fb0', fog='#b8c4e6', veg=['minecraft:trees_snowy'],
                        particles=[('minecraft:snowflake', 0.02)], music=MUSIC('minecraft:music.overworld.frozen_peaks'), wg_spawn=0.0),
-    # 균열 곶: 북쪽 끝 눈 덮인 바위 곶 — 보랏빛 잿빛 하늘 · 재 · 드문 공허 빛
-    'rift_cape': biome(-0.3, 0.3, True, '#2a2f6a', '#4a4470', fog='#8a84a8', water_fog='#120a22',
+    # 균열 곶: 북쪽 끝 바위 곶 — 보랏빛 잿빛 하늘 · 재 · 드문 공허 빛. 눈 · 비는 내리지 않음 (눈이 쌓이면 북쪽 끝의 공허에 물든 땅이
+    # 하얗게 덮임 — CI 46121652796 사진), 눈은 겉흙 (눈 블록 조각) 으로만
+    'rift_cape': biome(0.6, 0.0, False, '#2a2f6a', '#4a4470', fog='#8a84a8', water_fog='#120a22',
                        particles=[('minecraft:white_ash', 0.01), ('minecraft:reverse_portal', 0.002)], music=MUSIC('minecraft:music.overworld.deep_dark'),
                        ores=False, wg_spawn=0.0),
     # 불 나라 섬: 붉은 노을빛 하늘 · 재 입자 · 마른 풀

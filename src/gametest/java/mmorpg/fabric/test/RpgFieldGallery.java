@@ -79,7 +79,7 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             new Shot("fd_15_volcano", -143, 140, 6567, -243, 100, 6509),
             new Shot("fd_16_muspel", -1, 100, 6492, -1, 77, 6592),
             new Shot("fd_17_cape_pass", 0, 112, -2970, 0, 78, -3160),
-            new Shot("fd_18_cape_tip", 70, 96, -3200, 0, 84, -3380));
+            new Shot("fd_18_cape_tip", 60, 114, -3220, 0, 80, -3420));
 
     /**
      * only=fieldb: 다시 지은 마을 (2026-11-07 — 사용자 "건물들이 촘촘히 있는 변화한 곳과 성당, 마탑, 여신상, 커다란 분수" ·
@@ -282,7 +282,9 @@ public final class RpgFieldGallery implements FabricClientGameTest {
      */
     static boolean sameGround(BlockState got, BlockState want, boolean underWater) {
         if (got.getBlock() == want.getBlock()) return true;
-        if (want.is(Blocks.GRASS_BLOCK) && (got.is(Blocks.DIRT) || got.is(Blocks.PODZOL) || got.is(Blocks.MOSS_BLOCK) || got.is(Blocks.SNOW_BLOCK))) return true;
+        // 이끼 낀 조약돌 = 바닐라 장식 forest_rock 의 바위 (CI 46121652796: 갈매기 바위 확인 칸에 바위가 앉음)
+        if (want.is(Blocks.GRASS_BLOCK) && (got.is(Blocks.DIRT) || got.is(Blocks.PODZOL) || got.is(Blocks.MOSS_BLOCK) || got.is(Blocks.SNOW_BLOCK)
+                || got.is(Blocks.MOSSY_COBBLESTONE))) return true;
         boolean solid = !got.isAir() && got.getFluidState().isEmpty();
         if (underWater) return solid;
         return want.is(BlockTags.BASE_STONE_OVERWORLD) && solid && (got.is(BlockTags.BASE_STONE_OVERWORLD) || got.getBlock().getDescriptionId().contains("ore"));
