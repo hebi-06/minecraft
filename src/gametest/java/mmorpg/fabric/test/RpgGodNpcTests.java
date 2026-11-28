@@ -5,7 +5,7 @@ import java.util.Set;
 import mmorpg.fabric.npc.GodNpcs;
 import mmorpg.fabric.npc.NpcData;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.gametest.framework.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
