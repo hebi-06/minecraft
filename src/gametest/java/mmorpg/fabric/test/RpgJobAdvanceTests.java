@@ -1814,22 +1814,21 @@ public final class RpgJobAdvanceTests {
             float bh = b.getHealth();
             b.hurtServer(h.getLevel(), sp.damageSources().playerAttack(sp), 5F);
             h.assertTrue(b.getHealth() == bh, "players cannot hurt the box");
-            // 쇼타임: 받을 피해의 20% 를 12칸 안의 가장 가까운 상자가 나눠 받음 (상자는 다음 틱에)
+            // 2026-11-28 쇼타임 나눠 받기 (받을 피해의 20% 를 상자가) 는 뺌 (사용자 "받피증을 없애고") → 상자가 서 있어도 내가 다 받고 상자는 그대로 (다음 틱에 봄)
             float hp = sp.getHealth();
             mark[0] = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
             mark[1] = bh;
         }));
         steps.add(new RpgJobTests.Step(2, () -> {
             PierrotSummon b = PierrotSummons.bodies(sp, PierrotSummons.BOX).get(0);
-            double moved = mark[0] / 0.8 * 0.2;
-            h.assertTrue(Math.abs(b.getHealth() - (mark[1] - moved)) < 0.02, "the box took 20%: " + b.getHealth() + " vs " + (mark[1] - moved));
+            h.assertTrue(b.getHealth() == mark[1], "no share — the box takes nothing: " + b.getHealth() + " vs " + mark[1]);
             b.discard();
         }));
         steps.add(new RpgJobTests.Step(2, () -> {
             h.assertTrue(JobTraits10.summons(sp) == 0, "box gone: " + PierrotSummons.testState(sp));
             float hp = sp.getHealth();
             double loss = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
-            h.assertTrue(loss > 0 && Math.abs(mark[0] - loss * 0.8) < 1e-3, "share 20% while a box stands: " + mark[0] + " vs " + loss * 0.8);
+            h.assertTrue(loss > 0 && Math.abs(mark[0] - loss) < 1e-3, "no share — the same loss with or without a box: " + mark[0] + " vs " + loss);
             // 몬스터가 상자를 노림: 허수아비 앞에 상자 → 열린 뒤 10틱마다 끌어들임 → 허수아비가 걸음 없이 (제자리) 상자를 침 · 나는 맞지 않음
             z.get(0).discard();
             z.clear();
