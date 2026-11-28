@@ -334,7 +334,9 @@ final class RuneSupport {
         Vec3 f = Kit.facingOf(sp);
         Vec3 a = V.up(V.add(V.add(sp.position(), f, 0.6), V.rightOf(f), 0.32), 1.3);
         Vec3 b0 = chest(to);
-        Vec3 ctrl = self ? V.up(V.add(sp.position(), f, 1.8), 2.8) : V.up(V.lerp(a, b0, 0.5), 0.6 + V.len(V.sub(b0, a)) * 0.18);
+        // 2026-11-28 나에게: 앞 위로 높이 솟았다 가슴 앞 (0.5칸) 으로 — 예전 (앞 1.8 · 위 2.8) 은 머리 둘레에 머물러 3인칭에서 날아가는 게 안 보였고, 가슴까지 오면
+        // 1인칭 눈앞을 큰 빛 공이 덮었음 (CI 46114720685). 끝 40% 동안 작아짐
+        Vec3 ctrl = self ? V.up(V.add(sp.position(), f, 2.4), 4.4) : V.up(V.lerp(a, b0, 0.5), 0.6 + V.len(V.sub(b0, a)) * 0.18);
         SkillFx.play(level, "block.amethyst_block.chime", a, 1.6, 1.0);
         SkillFx.play(level, "item.bone_meal.use", a, 1.2, 0.9);
         SkillFx.play(level, "entity.allay.item_thrown", a, 1.3, 0.9);
@@ -350,9 +352,11 @@ final class RuneSupport {
         Vfx.Sprite[] leaves = {fx.sprite("el_gale_feather", a).size(0.42), fx.sprite("el_gale_feather", a).size(0.42)};
         fx.each(1, flight, 1, t -> {
             double u = t / (double) flight;
-            Vec3 p = bez(a, ctrl, chest(to), u);
-            orb.to(p, 0.85 + 0.2 * Math.sin(t * 1.3), 1);
-            heart.to(p, -1, 1).roll(t * 45, 1);
+            Vec3 end = self ? V.add(chest(to), Kit.facingOf(to), 0.5) : chest(to);
+            Vec3 p = bez(a, ctrl, end, u);
+            double shrink = self && u > 0.6 ? 1 - (u - 0.6) / 0.4 * 0.65 : 1;
+            orb.to(p, (0.85 + 0.2 * Math.sin(t * 1.3)) * shrink, 1);
+            heart.to(p, 0.62 * shrink, 1).roll(t * 45, 1);
             for (int i = 0; i < 2; i++) {
                 double ang = t * 1.5 + i * Math.PI;
                 Vec3 off = new Vec3(Math.cos(ang) * 0.38, Math.sin(ang * 0.7) * 0.22, Math.sin(ang) * 0.38);
@@ -407,7 +411,9 @@ final class RuneSupport {
             pe.to(V.up(V.add(ch, d, 1.3 + Kit.rand() * 0.5), -0.2 + Kit.rand() * 0.6), -1, 12).roll(Kit.rand() * 360, 12).fade(10, 8);
         }
         RuneKit.zonePulse(lv, c, LIFE, splash, 0.5);
-        for (int i = 0; i < 3; i++) SkillFx.vanilla(lv, "minecraft:heart_particle", V.up(c, 2.0 + i * 0.25));
+        // 하트 셋: 머리 위에 옆으로 벌려 (예전 한 줄로 겹쳐 붉은 덩어리로 보였음 — CI 46114720685)
+        Vec3 hr = V.rightOf(Kit.facingOf(to));
+        for (int i = 0; i < 3; i++) SkillFx.vanilla(lv, "minecraft:heart_particle", V.up(V.add(c, hr, (i - 1) * 0.55), 2.1 + (i == 1 ? 0.22 : 0)));
         SkillFx.play(lv, "block.amethyst_block.resonate", c, 1.5, 0.9);
         SkillFx.play(lv, "random.orb", c, 1.3, 0.7);
         SkillFx.play(lv, "block.cherry_leaves.place", c, 1.2, 1.0);
@@ -418,9 +424,9 @@ final class RuneSupport {
     // ------------------------------------------------------------ 워 드럼
 
     /**
-     * 워 드럼: 머리 위 뒤 (몸을 따라옴) 에 전쟁 북이 떠오름 — 테 둘 (빛 고리 halo) · 북면 (빛) · 둘레를 도는 불티. beats 번 (beatGap 틱마다) 울림: 북면 번쩍 · 테가 튐 ·
-     * 불빛 충격 (el_rage_quake) · 땅의 충격파 (반지름 radius) · 흙먼지 · 둥 (낮은 북) 소리. 마지막 울림에 나와 둘레 radius 칸 아군 buffTicks 틱 공격 속도 + haste ·
-     * 이동 속도 (신속 speedAmp) — 받은 사람마다 불빛 질주 · 불꽃 기운
+     * 워 드럼: 머리 위 뒤 (몸을 따라옴) 에 전쟁 북이 떠오름 — 테 둘 (빛 고리 halo) · 북면 (빛) · 몸통 안 불꽃 · 양옆 북채 둘 · 둘레를 도는 불티. beats 번 (beatGap 틱마다)
+     * 울림: 북채가 번갈아 내려침 (마지막은 둘 다) · 북면 번쩍 · 테가 튐 · 북면의 눕힌 불빛 충격 · 땅의 충격파 (반지름 radius) · 흙먼지 · 둥 (낮은 북) 소리.
+     * 마지막 울림에 나와 둘레 radius 칸 아군 buffTicks 틱 공격 속도 + haste · 이동 속도 (신속 speedAmp) — 받은 사람마다 불빛 질주 · 불꽃 기운
      */
     static boolean warDrum(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -441,8 +447,38 @@ final class RuneSupport {
         Vfx.Prop bottom = RuneProps.prop(fx, RuneProps.HALO, V.up(d0, -0.3), RuneProps.MID, RuneProps.along(V.UP, new Vec3(0, 0, 1)), rimS * 0.1, WAR, WAR_CORE);
         Vfx.Sprite head = fx.sprite("glow", V.up(d0, 0.3)).color(WAR_CORE).fixed(Vfx.flat(0)).size(0.2).alpha(0.8);
         Vfx.Sprite body = fx.sprite("glow", d0).color(WAR).size(0.2).alpha(0.45);
-        Vfx.Sprite aura = fx.sprite("el_rage_aura", V.up(d0, -0.1)).size(1.6).alpha(0.75).play(0, 0, 8, 2, true);
+        // 2026-11-28 불꽃은 북 몸통 안 (테 사이) 에서 타오름 — 예전 (아래 0.1 · 크기 1.6) 은 북 밑에 다리처럼 보였음 (CI 46114720685)
+        Vfx.Sprite aura = fx.sprite("el_rage_aura", d0).size(1.15).alpha(0.7).play(0, 0, 8, 2, true);
         aura.vertical();
+        // 북채 둘 (북 양옆 위 — 울림마다 번갈아 내려침 · 마지막은 둘 다): 칼자루 = 북 옆 위 · 머리가 북면에 닿음
+        double malletS = RuneProps.scaleFor(0.95, RuneProps.HAMMER_LEN);
+        Vfx.Prop[] mallets = new Vfx.Prop[2];
+        for (int i = 0; i < 2; i++) {
+            int s = i == 0 ? 1 : -1;
+            Vec3 f0 = Kit.facingOf(sp);
+            mallets[i] = RuneProps.prop(fx, RuneProps.HAMMER, malletGrip(d0, f0, s), RuneProps.HAMMER_GRIP, RuneProps.along(malletDir(f0, s, 0), f0), malletS * 0.1,
+                    WAR, WAR_CORE);
+        }
+        int[] beatTicks = new int[beats];
+        for (int i = 0; i < beats; i++) beatTicks[i] = 2 + i * gap;
+        fx.each(1, last + 7, 1, t -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 d = drumAt.apply(t);
+            Vec3 f = Kit.facingOf(sp);
+            double grow = Math.min(1, (t + 1) / 3.0);
+            for (int i = 0; i < 2; i++) {
+                int s = i == 0 ? 1 : -1;
+                double hit = 0;
+                for (int b = 0; b < beats; b++) {
+                    boolean mine = b == beats - 1 || (b % 2 == 0) == (s > 0);
+                    if (!mine) continue;
+                    int dt = t - beatTicks[b];
+                    if (dt >= -2 && dt <= 0) hit = Math.max(hit, (dt + 2) / 2.0);
+                    else if (dt > 0 && dt <= 3) hit = Math.max(hit, 1 - dt / 3.0);
+                }
+                mallets[i].to(malletGrip(d, f, s), RuneProps.along(malletDir(f, s, hit), f), malletS * grow, 1);
+            }
+        });
         // 떠오름 (3틱) → 몸을 따라옴 · 울림마다 튐
         fx.on(1, () -> {
             Vec3 d = drumAt.apply(1);
@@ -461,7 +497,7 @@ final class RuneSupport {
             bottom.to(V.up(d, -0.3), RuneProps.along(V.UP, RuneKit.turn(new Vec3(1, 0, 0), -t * 9.0)), rimS * pop, 1);
             head.to(V.up(d, 0.3), 1.45 * pop, 1);
             body.to(d, 1.25 * pop, 1);
-            aura.to(V.up(d, -0.1), -1, 1);
+            aura.to(d, -1, 1);
             if (t % 3 == 0) {
                 double ang = t * 0.7;
                 Vec3 p = V.add(d, new Vec3(Math.cos(ang) * 0.95, -0.2, Math.sin(ang) * 0.95));
@@ -483,8 +519,11 @@ final class RuneSupport {
                 Vec3 g = VfxKit.ground(lv, sp.position());
                 head.alpha(1.0);
                 fx.on(fx.age() + 3, () -> head.alpha(0.8));
-                Vfx.Sprite q = fx.sprite("el_rage_quake", V.up(d, 0.35)).size(fin ? 3.0 : 2.3).play(fx.age(), 0, 12, 1, false);
-                q.fade(fx.age() + 9, 4);
+                // 북면의 울림: 눕힌 불빛 충격 (북면 위) · 번쩍 — 예전 세운 땅 금 (el_rage_quake) 은 북 위에 나뭇가지처럼 보였음 (CI 46114720685)
+                Vfx.Sprite hs = fx.sprite("el_rage_shock_s", V.up(d, 0.34)).fixed(Vfx.flat(Kit.rand() * 360)).size(fin ? 2.8 : 2.1).play(fx.age(), 0, 10, 1, false);
+                hs.fade(fx.age() + 8, 3);
+                Vfx.Sprite fl = fx.sprite("el_rage_flash", V.up(d, 0.42)).size(fin ? 2.2 : 1.5).play(fx.age(), 0, 8, 1, false);
+                fl.fade(fx.age() + 6, 2);
                 fx.sprite("el_rage_shock_s", V.up(g, 0.08)).fixed(Vfx.flat(Kit.rand() * 360)).size(fin ? radius * 2 : radius * 1.4).play(fx.age(), 0, 10, 1, false)
                         .fade(fx.age() + 8, 4);
                 VfxKit.ring(fx, g, fin ? radius : radius * 0.7, WAR, 0, 10);
@@ -511,6 +550,7 @@ final class RuneSupport {
             head.to(V.up(d, 0.6), 0.1, 5);
             body.to(d, 0.1, 5);
             aura.fade(fx.age(), 5);
+            for (Vfx.Prop m : mallets) m.to(V.up(d, 0.4), null, malletS * 0.1, 5);
         });
         fx.on(last + 14, () -> {
             top.remove();
@@ -518,8 +558,22 @@ final class RuneSupport {
             head.remove();
             body.remove();
             aura.remove();
+            for (Vfx.Prop m : mallets) m.remove();
         });
         return true;
+    }
+
+    /** 워 드럼 북채의 칼자루 자리: 북 가운데 d 에서 s 쪽 (오른쪽 +1) 1칸 · 위 0.62 */
+    private static Vec3 malletGrip(Vec3 d, Vec3 f, int s) {
+        return V.up(V.add(d, V.rightOf(f), s * 1.0), 0.62);
+    }
+
+    /** 북채 자루 방향: hit 0 = 들어 올림 (거의 위 · 조금 바깥) → 1 = 북면을 침 (안쪽 · 조금 아래 — 머리가 북면 위 0.43 에 닿음) */
+    private static Vec3 malletDir(Vec3 f, int s, double hit) {
+        Vec3 r = V.rightOf(f);
+        Vec3 up = V.add(V.scale(r, s * 0.25), V.UP, 0.97);
+        Vec3 down = V.add(V.scale(r, -s * 0.944), V.UP, -0.33);
+        return V.unit(V.add(V.scale(up, 1 - hit), down, hit));
     }
 
     /** 워 드럼 마지막 울림: 둘레 아군 (나 포함) 에게 버프 · 받은 사람마다 불빛 질주 · 불꽃 기운 (그 사람의 1인칭에는 화면 아래 작은 질주 빛) */
@@ -575,12 +629,15 @@ final class RuneSupport {
             for (Vfx.Sprite s : halo) s.face(q, 10).frame(2);
             stig.face(Vfx.flat(yaw0 - t * 4.0), 10);
         });
-        // 가장자리 빛기둥 여섯 (세운 빛줄기 — 세로축만 카메라를 봄)
+        // 가장자리 빛기둥 여섯 (세운 빛줄기 — 세로축만 카메라를 봄): 보는 쪽 ±30° · ±90° · ±150° — 바로 앞은 비움 (예전 아무 각이라 1인칭 조준점 위에 기둥이
+        // 서서 앞 적을 가렸음, CI 46114720685)
+        Vec3 fc = Kit.facingOf(sp);
+        double front = Math.toDegrees(Math.atan2(fc.z, fc.x));
         Vfx.Sprite[] pillars = new Vfx.Sprite[6];
         for (int i = 0; i < 6; i++) {
-            double a = Math.toRadians(yaw0 + i * 60);
+            double a = Math.toRadians(front + 30 + i * 60);
             Vec3 p = new Vec3(c.x + Math.cos(a) * radius, c.y + 1.35, c.z + Math.sin(a) * radius);
-            Vfx.Sprite s = fx.sprite("el_holy_beam", V.up(p, -1.2)).size(0.1).alpha(0.85);
+            Vfx.Sprite s = fx.sprite("el_holy_beam", V.up(p, -1.2)).size(0.1).alpha(0.72);
             s.vertical();
             s.roll(90, 0).play(i, 1, 4, 3, true);
             s.to(p, 0.62, 5 + i);
@@ -599,7 +656,8 @@ final class RuneSupport {
         SkillFx.play(level, "beacon.activate", c, 1.4, 0.9);
         SkillFx.play(level, "block.bell.resonate", c, 1.2, 0.8);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 1.0, 0.8);
-        RuneKit.selfCue(sp, HOLY, HOLY_CORE, true);
+        // 고리 없는 쓰는 신호 — 겨누는 룬이 아님 (눈앞 세운 고리는 3인칭에서 "(" 베기처럼 보였음, CI 46114720685)
+        RuneKit.selfCue(sp, HOLY, HOLY_CORE, false);
         RuneBoost.bloom(level, c, HOLY, HOLY_CORE, radius * 0.7);
         for (int i = 0; i < pulses; i++) {
             final int pi = i;
@@ -667,8 +725,8 @@ final class RuneSupport {
     }
 
     /**
-     * 발키리 송: 하늘 높이에서 발키리가 머리 위 뒤로 내려옴 (descend 틱 — 몸을 따라옴): 3D 빛의 날개 한 쌍 (크게 펴고 천천히 날갯짓) · 머리 위 빛 고리 · 오른쪽에 세운 은빛 창 ·
-     * 빛 무리 · 금빛 기운 → 노래 (SONG 틱): 음표가 사방으로 퍼짐 · 노래 물결 셋 (세운 빛 고리 · 땅의 충격파) · 깃털이 흩날림 · 노래 소리. 내려온 뒤 2틱에 나와 둘레
+     * 발키리 송: 하늘 높이에서 발키리가 머리 위 뒤로 내려옴 (descend 틱 — 몸을 따라옴): 3D 빛의 날개 한 쌍 (뒤로 40° 펴고 천천히 날갯짓) · 머리 위 빛 고리 · 오른쪽에 세운 은빛 창 ·
+     * 빛 무리 · 도는 흰 섬광 (몸) · 지나간 자리의 빛 알갱이 (쓴 사람 1인칭: 화면 위쪽 은빛 날개 · 떨어지는 깃털) → 노래 (SONG 틱): 음표가 사방으로 퍼짐 · 노래 물결 셋 (세운 빛 고리 · 땅의 충격파) · 깃털이 흩날림 · 노래 소리. 내려온 뒤 2틱에 나와 둘레
      * radius 칸 아군 buffTicks 틱 가하는 피해 + buffUp · 받는 피해 − buffCut — 받은 사람마다 등 뒤 은빛 날개 (el_steel_wings) · 발밑 고리 · 음표 터짐
      */
     static boolean valkyrieSong(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -702,8 +760,8 @@ final class RuneSupport {
         Vfx.Prop spear = RuneProps.prop(fx, RuneProps.THUNDER_SPEAR, V.add(v0, V.rightOf(f0), 0.55), RuneProps.THUNDER_SPEAR_GRIP, RuneProps.along(V.UP, f0), spearS,
                 VALK_CORE, VALK);
         Vfx.Sprite glow = fx.sprite("glow", v0).color(VALK_CORE).size(1.7).alpha(0.8);
-        Vfx.Sprite aura = fx.sprite("el_holy_aura", V.up(v0, -0.1)).size(2.0).alpha(0.85).play(0, 0, 8, 2, true);
-        aura.vertical();
+        // 2026-11-28 몸 = 도는 흰 섬광 (예전 금빛 기운 el_holy_aura 는 세운 금빛 판처럼 보였음 — CI 46114720685)
+        Vfx.Sprite aura = fx.sprite("flare", v0).color(VALK_CORE).size(1.25).alpha(0.95);
         boolean[] gone = {false};
         fx.each(1, span + 12, 1, t -> {
             if (gone[0]) return;
@@ -716,7 +774,8 @@ final class RuneSupport {
             Vec3 f = Kit.facingOf(sp);
             double open = Math.min(1, t / (double) descend);
             double ph = 2 * Math.PI * (t % 20) / 20.0;
-            double sweep = 70 - 55 * open + 6 * Math.cos(ph) * open;
+            // 펼친 날개는 뒤로 40° (예전 15° — 옆에서 보면 날개 면이 거의 선으로 보였음: 40° 면 옆 · 뒤 어디서나 날개 면이 보임)
+            double sweep = 70 - 30 * open + 6 * Math.cos(ph) * open;
             double flap = 50 - 32 * open - 14 * Math.cos(ph) * open;
             boolean end = t > span;
             for (int i = 0; i < 2; i++) {
@@ -727,8 +786,14 @@ final class RuneSupport {
             halo.to(V.up(v, 0.95), RuneProps.along(V.UP, RuneKit.turn(V.rightOf(f), t * 6.0)), end ? hs * 0.1 : hs, 1);
             spear.to(V.add(v, V.rightOf(f), 0.55), RuneProps.along(V.UP, f), end ? spearS * 0.1 : spearS, 1);
             glow.to(v, end ? 0.2 : 1.7 + 0.15 * Math.sin(t * 0.6), 1);
-            aura.to(V.up(v, -0.1), -1, 1);
-            if (end) aura.alpha(Math.max(0, 0.85 - (t - span) * 0.1));
+            aura.to(v, end ? 0.15 : 1.25 + 0.12 * Math.sin(t * 0.9), 1).roll(t * 7.0, 1);
+            if (end) aura.alpha(Math.max(0, 0.95 - (t - span) * 0.1));
+            // 내려오는 동안: 지나간 자리에 빛 알갱이가 남아 위로 흩어짐 (예전 하늘의 빛줄기 판 대신)
+            if (t <= descend && !end) {
+                Vec3 p = V.add(v, new Vec3((Kit.rand() - 0.5) * 0.9, (Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.5) * 0.9));
+                Vfx.Sprite tr = fx.sprite("burst2", p).color(Vfx.mix(VALK, VfxKit.WHITE, 0.45)).size(0.3 + Kit.rand() * 0.14).frame(8 + (t & 1));
+                tr.to(V.up(p, 0.9), -1, 10).fade(fx.age() + 5, 5);
+            }
         });
         fx.on(span + 13, () -> {
             for (Vfx.Group g : wings) g.remove();
@@ -737,14 +802,31 @@ final class RuneSupport {
             glow.remove();
             aura.remove();
         });
-        // 내려올 때: 빛줄기 · 소리
+        // 내려올 때: 소리
         SkillFx.play(level, "item.trident.riptide_1", sp.position(), 1.6, 0.6);
         SkillFx.play(level, "block.beacon.power_select", sp.position(), 1.3, 0.8);
-        RuneKit.selfCue(sp, VALK, VALK_CORE, true);
-        Vfx.Fx sky = Vfx.at(level, v0, descend + 10, others(sp));
-        Vfx.Sprite beam = sky.sprite("el_holy_beam", V.up(v0, 4)).size(0.9).alpha(0.75).play(0, 1, 4, 2, true);
-        beam.vertical();
-        beam.roll(90, 0).to(V.up(v0, 2), 1.1, descend).fade(descend, 6);
+        RuneKit.selfCue(sp, VALK, VALK_CORE, false); // 고리 없음 (새크리드 서클과 같은 까닭)
+        // 쓴 사람의 1인칭: 발키리는 머리 위 뒤라 안 보임 → 내려올 즈음 화면 위쪽에 은빛 날개가 펼쳐지고 (빛 · 섬광), 노래 동안 눈앞에 깃털이 떨어짐
+        fx.on(Math.max(1, descend - 4), () -> {
+            if (!RuneKit.sameLife(sp, life) || PBridge.thirdPersonOf(sp)) return;
+            Vec3 wAt = fpAt(sp, 3.2, -1.2, 0);
+            Vfx.Fx wf = Vfx.at(sp.level(), wAt, 44, eye(sp));
+            for (Vfx.Sprite s : tiled(wf, "el_steel_wings", wAt, 2.5, null)) {
+                s.alpha(0.88).play(0, 0, 6, 2, false);
+                s.fade(28, 12);
+            }
+            Vfx.Sprite wg = wf.sprite("glow", wAt).color(VALK_CORE).size(0.3).alpha(0.75);
+            wg.to(null, 1.3, 6).fade(26, 12);
+            Vfx.Sprite wl = wf.sprite("flare", wAt).color(VALK_CORE).size(0.2);
+            wl.to(null, 0.9, 6).roll(160, 30).fade(24, 10);
+        });
+        Vfx.Fx feathers = Vfx.at(level, sp.getEyePosition(), span + 30, eye(sp));
+        feathers.each(descend, span - 6, 4, t -> {
+            if (!RuneKit.sameLife(sp, life) || PBridge.thirdPersonOf(sp)) return;
+            Vec3 p = fpAt(sp, 2.3 + Kit.rand() * 0.9, -1.25 - Kit.rand() * 0.35, (Kit.rand() - 0.5) * 2.6);
+            Vfx.Sprite fe = feathers.sprite("el_holy_feather", p).size(0.3).play(feathers.age(), (int) (Kit.rand() * 8), 8, 3, true).roll(Kit.rand() * 360, 0);
+            fe.to(V.add(V.up(p, -2.3), new Vec3((Kit.rand() - 0.5) * 0.8, 0, (Kit.rand() - 0.5) * 0.8)), -1, 28).fade(feathers.age() + 20, 8);
+        });
         // 노래 (descend 틱부터)
         fx.on(descend, () -> {
             SkillFx.play(fx.level(), "item.goat_horn.sound.1", sp.position(), 1.25, 1.1);
@@ -864,7 +946,7 @@ final class RuneSupport {
         bloom.to(null, 2.6, charge);
         SkillFx.play(level, "block.chorus_flower.grow", c, 1.0, 1.0);
         SkillFx.play(level, "block.cherry_leaves.place", c, 1.1, 1.0);
-        RuneKit.selfCue(sp, EDEN, EDEN_CORE, true);
+        RuneKit.selfCue(sp, EDEN, EDEN_CORE, false); // 고리 없음 (새크리드 서클과 같은 까닭)
         for (int i = 0; i < 5; i++) {
             final int hi = i;
             fx.on(i * Math.max(1, charge / 5), () -> SkillFx.play(fx.level(), "block.note_block.harp", c, 0.8 + hi * 0.2, 0.9));
