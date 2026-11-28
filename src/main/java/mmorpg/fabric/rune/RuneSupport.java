@@ -563,16 +563,16 @@ final class RuneSupport {
         return true;
     }
 
-    /** 워 드럼 북채의 칼자루 자리: 북 가운데 d 에서 s 쪽 (오른쪽 +1) 1칸 · 위 0.62 */
+    /** 워 드럼 북채의 칼자루 자리: 북 가운데 d 에서 s 쪽 (오른쪽 +1) 0.95칸 · 위 0.45 (윗테 바로 위 — 예전 0.62 · 곧추선 북채는 북 위로 장대처럼 솟아 보였음) */
     private static Vec3 malletGrip(Vec3 d, Vec3 f, int s) {
-        return V.up(V.add(d, V.rightOf(f), s * 1.0), 0.62);
+        return V.up(V.add(d, V.rightOf(f), s * 0.95), 0.45);
     }
 
-    /** 북채 자루 방향: hit 0 = 들어 올림 (거의 위 · 조금 바깥) → 1 = 북면을 침 (안쪽 · 조금 아래 — 머리가 북면 위 0.43 에 닿음) */
+    /** 북채 자루 방향: hit 0 = 들어 올림 (바깥으로 33° 누운 V) → 1 = 북면을 침 (안쪽 · 조금 아래 — 머리가 북면 위 0.36 에 닿음) */
     private static Vec3 malletDir(Vec3 f, int s, double hit) {
         Vec3 r = V.rightOf(f);
-        Vec3 up = V.add(V.scale(r, s * 0.25), V.UP, 0.97);
-        Vec3 down = V.add(V.scale(r, -s * 0.944), V.UP, -0.33);
+        Vec3 up = V.add(V.scale(r, s * 0.55), V.UP, 0.84);
+        Vec3 down = V.add(V.scale(r, -s * 0.986), V.UP, -0.165);
         return V.unit(V.add(V.scale(up, 1 - hit), down, hit));
     }
 
@@ -806,19 +806,26 @@ final class RuneSupport {
         SkillFx.play(level, "item.trident.riptide_1", sp.position(), 1.6, 0.6);
         SkillFx.play(level, "block.beacon.power_select", sp.position(), 1.3, 0.8);
         RuneKit.selfCue(sp, VALK, VALK_CORE, false); // 고리 없음 (새크리드 서클과 같은 까닭)
-        // 쓴 사람의 1인칭: 발키리는 머리 위 뒤라 안 보임 → 내려올 즈음 화면 위쪽에 은빛 날개가 펼쳐지고 (빛 · 섬광), 노래 동안 눈앞에 깃털이 떨어짐
+        // 쓴 사람의 1인칭: 발키리는 머리 위 뒤라 안 보임 → 내려올 즈음 화면 위 양쪽 모서리에 은빛 날개가 펼쳐지고 (왼 날개 · 오른 날개를 벌려 가운데는 비움 — 예전
+        // 한 쌍을 가운데에 두어 앞 적의 머리를 2초 가렸음, CI 46116414178) 위 가운데에 작은 빛, 노래 동안 눈앞에 깃털이 떨어짐
         fx.on(Math.max(1, descend - 4), () -> {
             if (!RuneKit.sameLife(sp, life) || PBridge.thirdPersonOf(sp)) return;
-            Vec3 wAt = fpAt(sp, 3.2, -1.2, 0);
-            Vfx.Fx wf = Vfx.at(sp.level(), wAt, 44, eye(sp));
-            for (Vfx.Sprite s : tiled(wf, "el_steel_wings", wAt, 2.5, null)) {
-                s.alpha(0.88).play(0, 0, 6, 2, false);
-                s.fade(28, 12);
+            Vec3 wAt = fpAt(sp, 3.2, -1.3, 0);
+            Vfx.Fx wf = Vfx.at(sp.level(), wAt, 36, eye(sp));
+            double tile = 1.2;
+            double gap = 1.0;
+            for (int rr = 0; rr < 2; rr++) {
+                for (int cc = 0; cc < 2; cc++) {
+                    Vfx.Sprite s = wf.sprite("el_steel_wings_" + rr + cc, wAt).size(tile).offset((cc - 0.5) * tile + (cc == 0 ? -gap : gap), (0.5 - rr) * tile);
+                    s.alpha(0.82).play(0, 0, 6, 2, false);
+                    s.fade(20, 10);
+                }
             }
-            Vfx.Sprite wg = wf.sprite("glow", wAt).color(VALK_CORE).size(0.3).alpha(0.75);
-            wg.to(null, 1.3, 6).fade(26, 12);
-            Vfx.Sprite wl = wf.sprite("flare", wAt).color(VALK_CORE).size(0.2);
-            wl.to(null, 0.9, 6).roll(160, 30).fade(24, 10);
+            Vec3 top = fpAt(sp, 3.2, -1.95, 0);
+            Vfx.Sprite wg = wf.sprite("glow", top).color(VALK_CORE).size(0.2).alpha(0.7);
+            wg.to(null, 0.75, 6).fade(20, 10);
+            Vfx.Sprite wl = wf.sprite("flare", top).color(VALK_CORE).size(0.15);
+            wl.to(null, 0.55, 6).roll(160, 26).fade(18, 8);
         });
         Vfx.Fx feathers = Vfx.at(level, sp.getEyePosition(), span + 30, eye(sp));
         feathers.each(descend, span - 6, 4, t -> {
