@@ -1,0 +1,190 @@
+[1/4] rules.json
+rules.json: 상수 71개 (함수 22개 제외) → /home/runner/work/minecraft/minecraft/core/src/main/resources/mmorpg/rules.json
+[2/4] parity.json
+parity.json: 케이스 27807개 (함수 80개, JS 예외 케이스 78개) → /home/runner/work/minecraft/minecraft/core/src/test/resources/parity.json
+[3/4] javac
+[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · RuneLoadoutTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest · ElementsTest · FieldTest · CombatPowerTest
+parity.json: 27807 cases, 80 functions
+  function                        pass   fail
+  JSON.parse                        81      0
+  armor.armorFrom                   60      0
+  armor.armorInfo                  240      0
+  armor.armorLack                  480      0
+  armor.armorLevelFor               59      0
+  armor.armorPrice                 120      0
+  armor.armorReqText               120      0
+  armor.bonusText                  248      0
+  armor.parseArmor                 549      0
+  armor.setPrice                    45      0
+  combat.critChanceOf              964      0
+  combat.isMeleeWeapon             242      0
+  combat.powerMultiplier           600      0
+  combat.reqText                   941      0
+  combat.statMultiplier           1200      0
+  config.altarId                    18      0
+  config.armorId                   136      0
+  config.bossId                     18      0
+  config.bossUnitKeys               18      0
+  config.craftMaterials             12      0
+  config.craftUseLines              23      0
+  config.damagePerPoint              6      0
+  config.damageScaling               9      0
+  config.enhanceBonus               38      0
+  config.enhanceCost               102      0
+  config.gradeLevelsText             7      0
+  config.isValidWeapon            1330      0
+  config.monsterId                  18      0
+  config.nearestGradeLevel         372      0
+  config.reqUnit                   343      0
+  config.requiredStat              616      0
+  config.requiredStats            1840      0
+  config.runeId                    102      0
+  config.skillTotalMult             95      0
+  config.splitReq                  780      0
+  config.tyrfingHpFactor            12      0
+  config.unitHomeRadius             62      0
+  duel.duelDamage                  400      0
+  hp.healBy                        250      0
+  hp.hpNumber                       26      0
+  hp.levelHpOf                      84      0
+  hp.maxHpOf                       250      0
+  hp.onPlayerHealBefore            250      0
+  hp.payHp                         250      0
+  hp.refreshMaxHp                  500      0
+  hp.revive                        125      0
+  hp.saveHp                        250      0
+  js.Math.round                    528      0
+  js.String                       2053      0
+  js.toFixed                       320      0
+  runes.gradeWeights                 2      0
+  runes.mixBonus                   300      0
+  runes.parseRune                   89      0
+  runes.rollRune                   486      0
+  runes.runeLevelBase              116      0
+  runes.runeLore                   160      0
+  runes.runePower                  800      0
+  runes.runeStat                  2400      0
+  runes.runeStatLabel              600      0
+  runes.runeTotalMult              116      0
+  runes.supportScale               480      0
+  runes.utf8Length                  13      0
+  runesmith.grindValue              88      0
+  smith.nextLevelOf                242      0
+  stats.checkLevelUp               150      0
+  stats.getStatsCached             400      0
+  stats.reqLevelOf                 150      0
+  weapons.currentWeapon            241      0
+  weapons.enhanceOf                 15      0
+  weapons.enhancedName             102      0
+  weapons.levelNote                921      0
+  weapons.needsLevel               242      0
+  weapons.parseWeapon              589      0
+  weapons.pct                       16      0
+  weapons.reqsText                  60      0
+  weapons.round1                    16      0
+  weapons.shopPrice                241      0
+  weapons.skillLines                14      0
+  weapons.weaponFrom               120      0
+  weapons.weaponLack              1446      0
+RESULT: PASS (27807/27807 cases passed, 0 problems)
+MolangTest: 1109 ok, 5 parse-only, 0 bad
+StatTreeTest: 674 ok, 0 failed
+RuneBreakTest: 2003 ok, 0 failed
+MonstersMoreTest: 449 ok, 0 failed
+WeaponsMoreTest: 1355 ok, 0 failed
+ArmorMoreTest: 1038 ok, 0 bad
+RunesMoreTest: 530 ok, 0 bad
+GachaTest: 101 ok, 0 bad
+LimitedRunesTest: 20828 ok, 0 bad
+RuneTipTest: 44904 ok, 0 bad (lines max 20 · width max 36)
+  등급 상한에 걸린 룬 (2026-11-28): [boomerangaxe.common, galerush.common, salamander.common, crosscut.common, undine.rare, brutalcleave.rare, bladehail.noble, phantomthrust.noble, shadowblitz.hero, gnome.hero, mortalstrike.hero, grandcross.transcend]
+RuneScaleTest: 2086 ok, 0 bad
+== 룬 (P/s = 과녁 하나 초당 배율 · 지킴 = 지키는 유틸의 예산 몫/초)
+  common    어스 브레이커    melee 시전 0.0  P/s 0.580  지킴 0.000  [stun05]
+  common    부메랑 액스     mid   시전 0.0  P/s 0.583  지킴 0.000  []
+  common    게일 러시      melee 시전 0.0  P/s 0.583  지킴 0.000  [blink]
+  common    아이스 랜스     far   시전 0.5  P/s 0.479  지킴 0.000  [slow]
+  common    샐러맨더       mid   시전 0.0  P/s 0.583  지킴 0.000  []
+  common    램파트        melee 시전 0.0  P/s 0.544  지킴 0.067  [reduce, knock]
+  common    크로스 컷      melee 시전 0.0  P/s 0.583  지킴 0.000  []
+  common    라이프 볼트     far   시전 0.0  P/s 0.000  지킴 0.500  []
+  rare      솔라 웨이브     mid   시전 0.0  P/s 0.642  지킴 0.000  []
+  rare      체인 애로      far   시전 0.5  P/s 0.604  지킴 0.000  [root]
+  rare      섀도 스트라이크   mid   시전 0.0  P/s 0.642  지킴 0.000  []
+  rare      운디네        mid   시전 0.0  P/s 0.667  지킴 0.000  [knock]
+  rare      오록스 차지     melee 시전 0.0  P/s 0.595  지킴 0.058  [blink, knock, reduce]
+  rare      그로브 블레싱    mid   시전 0.0  P/s 0.000  지킴 0.583  []
+  rare      브루탈 클리브    melee 시전 0.0  P/s 0.667  지킴 0.000  [knock]
+  rare      워 드럼       mid   시전 0.0  P/s 0.000  지킴 0.000  []
+  noble     피셔 슬램      mid   시전 0.0  P/s 0.747  지킴 0.000  [lift]
+  noble     블레이드 헤일    melee 시전 0.0  P/s 0.769  지킴 0.000  []
+  noble     썬더 볼리      far   시전 0.5  P/s 0.557  지킴 0.000  [leap]
+  noble     프로스트 버스트   melee 시전 0.0  P/s 0.669  지킴 0.000  [stun1]
+  noble     파이어 스톰     far   시전 0.7  P/s 0.627  지킴 0.000  [pull]
+  noble     포트리스 슬램    melee 시전 0.0  P/s 0.737  지킴 0.082  [shield]
+  noble     팬텀 스러스트    melee 시전 0.0  P/s 0.769  지킴 0.000  []
+  noble     새크리드 서클    mid   시전 0.0  P/s 0.000  지킴 0.667  []
+  hero      타이탄 해머     melee 시전 0.0  P/s 0.889  지킴 0.000  [leap, stun1]
+  hero      룬 재블린      far   시전 1.1  P/s 0.885  지킴 0.000  []
+  hero      섀도 블리츠     mid   시전 0.0  P/s 0.889  지킴 0.000  [blink]
+  hero      블리자드       far   시전 0.8  P/s 0.774  지킴 0.000  [slow]
+  hero      노움         mid   시전 0.0  P/s 0.889  지킴 0.000  [root]
+  hero      바스티온       melee 시전 0.0  P/s 0.846  지킴 0.125  [allyGuard, knock]
+  hero      모탈 스트라이크   melee 시전 0.0  P/s 0.889  지킴 0.000  []
+  hero      발키리 송      mid   시전 0.0  P/s 0.000  지킴 0.383  []
+  transcend 스카이폴       far   시전 1.2  P/s 0.889  지킴 0.000  []
+  transcend 버서커        melee 시전 0.0  P/s 0.839  지킴 0.270  [lifesteal, reduce]
+  transcend 루나 엑시큐션    mid   시전 0.0  P/s 0.866  지킴 0.000  [blink, hide, slow]
+  transcend 메테오        far   시전 1.5  P/s 0.844  지킴 0.000  []
+  transcend 스피릿 킹      mid   시전 0.0  P/s 0.868  지킴 0.000  [pull, slow, knock]
+  transcend 이모탈 오스     melee 시전 0.0  P/s 0.804  지킴 0.306  [undying, heal]
+  transcend 그랜드 크로스    melee 시전 0.0  P/s 0.944  지킴 0.000  []
+  transcend 에덴 블룸      mid   시전 0.0  P/s 0.000  지킴 0.445  []
+  common    P/s 최소 0.479 · 가운데 0.583 · 최대 0.583 (예산/초 0.500)
+  rare      P/s 최소 0.595 · 가운데 0.642 · 최대 0.667 (예산/초 0.583)
+  noble     P/s 최소 0.557 · 가운데 0.737 · 최대 0.769 (예산/초 0.667)
+  hero      P/s 최소 0.774 · 가운데 0.889 · 최대 0.889 (예산/초 0.769)
+  transcend P/s 최소 0.804 · 가운데 0.866 · 최대 0.944 (예산/초 0.889)
+== 직업 (피해/초 — 40렙 125포인트 · 초월 무기 · 과녁 하나 · 0돌)
+  swordsman     평타  123.9  직업  107.1  룬  297.4  합  528.3 (검사 ×1.00 · 룬 56%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  swordmaster   평타  123.9  직업  127.9  룬  297.4  합  549.2 (검사 ×1.04 · 룬 54%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  bloodknight   평타  123.9  직업  133.4  룬  297.4  합  554.7 (검사 ×1.05 · 룬 54%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  warrior       평타   93.1  직업  145.5  룬  297.4  합  535.9 (검사 ×1.01 · 룬 55%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  frostraider   평타   93.1  직업  176.0  룬  297.4  합  566.5 (검사 ×1.07 · 룬 52%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  mage          평타   62.3  직업  176.3  룬  283.1  합  521.7 (검사 ×0.99 · 룬 54%)  버팀 조합: 룬  111.1 (×0.39) 지킴 2.58  [노움, 섀도 블리츠, 스피릿 킹, 루나 엑시큐션, 스카이폴, 룬 재블린, 메테오, 피셔 슬램]
+  arcmage       평타   62.3  직업  211.0  룬  283.1  합  556.5 (검사 ×1.05 · 룬 51%)  버팀 조합: 룬  111.1 (×0.39) 지킴 2.58  [노움, 섀도 블리츠, 스피릿 킹, 루나 엑시큐션, 스카이폴, 룬 재블린, 메테오, 피셔 슬램]
+  necromancer   평타   62.3  직업  217.8  룬  283.1  합  563.3 (검사 ×1.07 · 룬 50%)  버팀 조합: 룬  111.1 (×0.39) 지킴 2.58  [노움, 섀도 블리츠, 스피릿 킹, 루나 엑시큐션, 스카이폴, 룬 재블린, 메테오, 피셔 슬램]
+  archer        평타  119.9  직업  182.1  룬  277.8  합  579.7 (검사 ×1.10 · 룬 48%)  버팀 조합: 룬  111.1 (×0.40) 지킴 2.58  [노움, 섀도 블리츠, 스피릿 킹, 루나 엑시큐션, 스카이폴, 룬 재블린, 메테오, 피셔 슬램]
+  arsenalking   평타  119.9  직업  217.7  룬  277.8  합  615.4 (검사 ×1.16 · 룬 45%)  버팀 조합: 룬  111.1 (×0.40) 지킴 2.58  [노움, 섀도 블리츠, 스피릿 킹, 루나 엑시큐션, 스카이폴, 룬 재블린, 메테오, 피셔 슬램]
+  bladeranger   평타  119.9  직업  214.9  룬  297.4  합  632.1 (검사 ×1.20 · 룬 47%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  assassin      평타  240.3  직업  106.2  룬  297.4  합  643.8 (검사 ×1.22 · 룬 46%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  trickster     평타  240.3  직업  134.4  룬  297.4  합  672.1 (검사 ×1.27 · 룬 44%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  pierrot       평타  240.3  직업  150.3  룬  297.4  합  687.9 (검사 ×1.30 · 룬 43%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  priest        평타   88.7  직업   35.7  룬  297.4  합  421.8 (검사 ×0.80 · 룬 71%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  saint         평타   88.7  직업   42.9  룬  297.4  합  428.9 (검사 ×0.81 · 룬 69%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스피릿 킹, 루나 엑시큐션, 바스티온]
+  warlock       평타   88.7  직업  120.9  룬  280.7  합  490.2 (검사 ×0.93 · 룬 57%)  버팀 조합: 룬  111.1 (×0.40) 지킴 2.58  [노움, 섀도 블리츠, 스피릿 킹, 루나 엑시큐션, 스카이폴, 룬 재블린, 메테오, 피셔 슬램]
+  guardian      평타   35.6  직업   83.8  룬  298.3  합  417.7 (검사 ×0.79 · 룬 71%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스카이폴, 스피릿 킹, 루나 엑시큐션]
+  darkknight    평타   35.6  직업  140.9  룬  298.3  합  474.8 (검사 ×0.90 · 룬 63%)  버팀 조합: 룬  104.5 (×0.35) 지킴 3.28  [그랜드 크로스, 노움, 모탈 스트라이크, 섀도 블리츠, 타이탄 해머, 스카이폴, 스피릿 킹, 루나 엑시큐션]
+  근접 ÷ 원거리 피해 조합 (룬) ×1.074
+RuneLoadoutTest: 46 ok, 0 failed
+EconomyTest: 63 ok, 0 bad
+StorageTest: 22 ok, 0 failed
+JobsTest: 2634 ok, 0 failed
+[artifacts-test] checks ok 174, bad 0
+[motions-test] checks ok 14604, bad 0
+RelicsTest: 410 ok, 0 bad
+ElementsTest: 364 ok, 0 failed (runes 47/160 · job skills 32/165)
+FieldTest: 658 ok, 0 bad (0.78 ms/chunk)
+  sword      공격   130.3  생존  140.0  전투력 13,506
+  dagger     공격   119.6  생존  140.0  전투력 12,940
+  bow        공격   119.4  생존  140.0  전투력 12,926
+  wand       공격   131.0  생존  140.0  전투력 13,545
+  axe        공격    96.0  생존  200.0  전투력 13,856
+  greatsword 공격   113.3  생존  140.0  전투력 12,594
+  shield     공격    33.3  생존  426.7  전투력 11,913
+  lance      공격   116.2  생존  140.0  전투력 12,754
+  scythe     공격   114.2  생존  140.0  전투력 12,642
+  hammer     공격    78.4  생존  260.0  전투력 14,273
+  scepter    공격    91.5  생존  200.0  전투력 13,524
+  처음 1414 · 끝 85330
+CombatPowerTest: 27 ok, 0 bad

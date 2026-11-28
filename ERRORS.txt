@@ -1,0 +1,30 @@
+ci-out/build.txt:30:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgSkillTests.java:42: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:33:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgLimitedRuneTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:36:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgWeaponsMoreTests.java:49: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:39:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgSupportRuneTests.java:36: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:42:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGameTests.java:56: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:45:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgRuneTests.java:39: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:48:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgRuneTimingTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:51:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgPairRuneTests.java:29: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:54:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGearTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:57:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgMotionTests.java:54: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/core.txt:91:StatTreeTest: 674 ok, 0 failed
+ci-out/core.txt:92:RuneBreakTest: 2003 ok, 0 failed
+ci-out/core.txt:93:MonstersMoreTest: 449 ok, 0 failed
+ci-out/core.txt:94:WeaponsMoreTest: 1355 ok, 0 failed
+ci-out/core.txt:169:RuneLoadoutTest: 46 ok, 0 failed
+ci-out/core.txt:171:StorageTest: 22 ok, 0 failed
+ci-out/core.txt:172:JobsTest: 2634 ok, 0 failed
+ci-out/core.txt:176:ElementsTest: 364 ok, 0 failed (runes 47/160 · job skills 32/165)
+ci-out/gametest.txt:12:> Task :deleteGameTestRunDir UP-TO-DATE
+ci-out/gametest.txt:13:> Task :acceptGameTestEula
+ci-out/gametest.txt:20:> Task :runGameTest
+ci-out/gametest.txt:92:[10:27:13] [main/ERROR] (Minecraft) Failed to load properties from file: server.properties
+ci-out/gametest.txt:94:java.nio.file.NoSuchFileException: server.properties
+ci-out/gametest.txt:95:	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+ci-out/gametest.txt:96:	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)
+ci-out/gametest.txt:97:	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+ci-out/gametest.txt:112:[10:27:13] [main/WARN] (Minecraft) Failed to load eula.txt
+ci-out/gametest.txt:114:[10:27:13] [main/INFO] (FabricGameTestRunner) Starting test server
+ci-out/gametest.txt:164:java.lang.IllegalStateException
+ci-out/gametest.txt:184:	at knot//net.minecraft.gametest.framework.GameTestServer.tickServer(GameTestServer.java:227)
