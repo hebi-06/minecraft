@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * 생명체 공통.
  * - heal: 플레이어 회복량을 최대 체력 비율로 (회복 1 = 최대 체력의 1/20)
  * - actuallyHurt: 실제로 깎인 양 (방어구 · 흡수 뒤) 으로 피해 숫자, 피해를 받은 틱 (스킬이 몹 무적 시간을 피하려고)
- * - hurtServer 앞: 플레이어가 준 피해 × 맞는 쪽 배율 (0.20.0 심연의 낙인)
+ * - hurtServer 앞: 플레이어가 준 피해 × 맞는 쪽 배율 (0.20.0 심연의 낙인) · 2026-11-28 플레이어가 피함 (RpgHealth.dodge — 피에로 펑!)
  * - 불사의 토템이 막으면 최대 체력의 10%
  * - 플레이어의 방어구는 베드락 계산 (getDamageAfterArmorAbsorb): 방어 1포인트 = 4%, 20포인트 (80%) 까지, 단단함 없음 — 애드온의 갑옷 ·
  *   몬스터 · 보스 수치가 이 계산을 기준으로 맞춰져 있음 (사양: "1포인트 = 약 4%, 실제 감소는 최대 80%"). 자바 계산은 큰 한 방을 덜 막아
@@ -45,6 +45,12 @@ public abstract class LivingEntityMixin {
         if (self.level().isClientSide() || !(source.getEntity() instanceof ServerPlayer)) return amount;
         double m = RpgCombat.takenMult.applyAsDouble(self);
         return m == 1 || !(m > 0) ? amount : (float) (amount * m);
+    }
+
+    /** 2026-11-28 맞기 전에 피함 (RpgHealth.dodge — 피에로 펑!): 플레이어가 받을 피해를 통째로 막음 (넉백 · 맞는 동작 · 숫자 없음) */
+    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
+    private void mmorpg$dodge(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this instanceof ServerPlayer sp && RpgHealth.dodge.dodge(sp, source, amount)) cir.setReturnValue(false);
     }
 
     @Inject(method = "actuallyHurt", at = @At("HEAD"))

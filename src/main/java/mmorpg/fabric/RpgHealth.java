@@ -86,6 +86,13 @@ public final class RpgHealth {
      */
     public static java.util.function.ToDoubleBiFunction<ServerPlayer, DamageSource> sourceReduce = (p, src) -> 0;
 
+    /** 2026-11-28 맞기 전에 피함 (피에로 쇼타임의 펑! — LivingEntityMixin 이 hurtServer 앞에서 부름): true 면 이 피해를 통째로 막음 (넉백 · 맞는 동작 없음) */
+    public interface Dodge {
+        boolean dodge(ServerPlayer p, DamageSource src, float amount);
+    }
+
+    public static Dodge dodge = (p, src, amount) -> false;
+
     /**
      * 0.30.0 받을 피해를 다른 사람이 나눠 받음 (수호기사 수호 돌입 — 지켜 주는 아군이 받을 피해의 몫): 깎일 양 loss 중 이 사람에게서 덜어 낼 양 (0 = 없음).
      * 덜어 낸 몫은 훅이 다른 사람에게 ({@link #takeShared}) — 보호막 · 쓰러짐 판정 앞

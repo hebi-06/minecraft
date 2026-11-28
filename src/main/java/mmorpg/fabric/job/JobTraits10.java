@@ -35,7 +35,7 @@ import net.minecraft.world.phys.Vec3;
  * <li>트릭스터 미러 월드: 거울 세계에 가둔 동안 그 적에게 준 다른 피해 (평타 · 다른 스킬 · 룬 — 궁극기 자신의 타격은 빼고) 를 쌓음 (AFTER_DAMAGE)</li>
  * <li>피에로 「쇼타임」 (1차 표식과 거꾸로 — 숨어서 노리던 눈길 대신 모두의 눈길을 끌어모음): 소환물이 둘레 몬스터를 끌어들여 대신 맞음 (PierrotSummons) · 부서지면
  * 색종이 폭죽. 게이지 = 소환물 수, 할루시네이트의 남은 시간은 태세 줄에. 2026-11-28 소환수 딜러 (사용자 "탱커에서 딜러로 변경 … 소환수 딜러" · "받피증을 없애고 스타레일의
- * 에이언즈 아하처럼 맞을려고 할때 폭죽 같은 느낌으로 터지고 투명화"): 받는 피해 나눠 받기 · 핸드스프링 받는 피해 감소는 뺌 → 펑! ({@link #popDodge} — ALLOW_DAMAGE):
+ * 에이언즈 아하처럼 맞을려고 할때 폭죽 같은 느낌으로 터지고 투명화"): 받는 피해 나눠 받기 · 핸드스프링 받는 피해 감소는 뺌 → 펑! ({@link #popDodge} — RpgHealth.dodge, hurtServer 앞):
  * 몬스터 · 보스의 공격이 닿으려는 순간 그 공격을 막고 폭죽처럼 터져 popFor 틱 투명 (몹이 놓침 · 그동안 오는 공격도 피함) → 짠 하고 나타남, popCd 틱에 한 번</li>
  * </ul>
  */
@@ -84,8 +84,10 @@ public final class JobTraits10 {
     static void init() {
         RpgCombat.addScaledBonusHook(JobTraits10::waltzBonus);
         RpgCombat.addWeaponHitHook(JobTraits10::onWeaponHit);
-        // 2026-11-28 피에로 펑!: 몬스터 · 보스의 공격이 닿으려는 순간 (받는 피해 나눠 받기 · 핸드스프링 감소 대신)
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !popDodge(entity, source, amount));
+        // 2026-11-28 피에로 펑!: 몬스터 · 보스의 공격이 닿으려는 순간 (받는 피해 나눠 받기 · 핸드스프링 감소 대신 — hurtServer 앞, RpgHealth.dodge. Fabric 의
+        // ALLOW_DAMAGE 는 플레이어가 맞을 때 불리지 않았음 — CI 46131283912)
+        RpgHealth.Dodge dg = RpgHealth.dodge;
+        RpgHealth.dodge = (p, src, amount) -> dg.dodge(p, src, amount) || popDodge(p, src, amount);
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, taken, blocked) -> storeMirror(entity, source, taken));
         ServerTickEvents.END_SERVER_TICK.register(JobTraits10::waltzTick);
         PierrotSummons.init();
@@ -277,9 +279,9 @@ public final class JobTraits10 {
 
     // ------------------------------------------------------------ 피에로 쇼타임
 
-    /** 펑!: 이번 피해를 막는지 (ALLOW_DAMAGE — true 면 막음) */
-    private static boolean popDodge(LivingEntity entity, DamageSource source, float amount) {
-        if (!(entity instanceof ServerPlayer sp) || !(amount > 0) || sp.isSpectator() || sp.isCreative()) return false;
+    /** 펑!: 이번 피해를 막는지 (RpgHealth.dodge — true 면 막음) */
+    private static boolean popDodge(ServerPlayer sp, DamageSource source, float amount) {
+        if (sp == null || !(amount > 0) || sp.isSpectator() || sp.isCreative()) return false;
         Jobs.Job j = jobIf(sp, PR);
         if (j == null || !RpgHealth.isRpgMode(sp) || !hostile(sp, source)) return false;
         State st = of(sp);
