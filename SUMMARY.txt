@@ -1,0 +1,9 @@
+run: 46133028909  attempt: 1
+commit: 702cb2484e649c7cbbdb2ffc1e6f7e38320dcd09
+versions: success
+core: success
+build: success
+prod: success
+gametest: success
+client g1 (fieldc): success
+client (all groups): success
