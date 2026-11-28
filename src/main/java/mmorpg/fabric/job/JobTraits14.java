@@ -41,6 +41,9 @@ import net.minecraft.world.phys.Vec3;
  * <li>워록 「생명 착취」 (1차와 거꾸로 — 아군에게 체력을 주는 대신 빼앗아 씀): 피해 직업 스킬을 쓸 때 둘레 radius 칸 아군 (나 포함) 의 체력 take 씩 (floor 아래는 빼지
  * 않음 · 다른 아군이 없으면 나 solo) — 빼앗은 몫 (take 하나) 하나당 위력 + bonus (최대 max 몫 — {@link #castMult} · 빼앗는 것은 나간 뒤 {@link #afterCast}). 애시본 동안은
  * 내 체력만 (self — 체력 1 에서 멈춤) · 위력 + power. 블러드 뱅큇 피의 역병 (표식 — 2026-11-17 받는 피해 증가는 뺌: 딜러), 크림슨 마이어 이동 속도 (Attributes.MOVEMENT_SPEED)</li>
+ * <li>2026-11-28 피의 대가 (워록 · 다크 나이트 — 사용자 "워록은 피를 대가로 쓰기 때문에 하이리스크 하이리턴으로 만들고 다크 나이트도 비슷한 이유로 버프"): 잃은 체력 비율
+ * (priceCap 까지) × price 만큼 주는 피해 + (평타 · 직업 스킬 · 룬 — RpgCombat.dealtMult, {@link #bloodPrice}). 잃은 체력 40% 부터 몸에 핏빛 기운 · 75% 부터 심장 고동
+ * ({@link #bloodAura})</li>
  * </ul>
  */
 public final class JobTraits14 {
@@ -138,6 +141,9 @@ public final class JobTraits14 {
             recordLoss(sp, before - after); // 실제로 깎인 체력 (쓰러지지 않음이 체력 1 에서 버틴 큰 피해는 깎인 만큼만 — 되돌림이 그 피해 전부가 아니게)
         };
         ServerTickEvents.END_SERVER_TICK.register(JobTraits14::tickGlobal);
+        // 2026-11-28 피의 대가 (워록 · 다크 나이트): 잃은 체력만큼 주는 피해 +
+        java.util.function.ToDoubleFunction<ServerPlayer> dm = mmorpg.fabric.RpgCombat.dealtMult;
+        mmorpg.fabric.RpgCombat.dealtMult = p -> dm.applyAsDouble(p) * bloodPrice(p);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             STATES.clear();
             VEILS.clear();
@@ -370,6 +376,63 @@ public final class JobTraits14 {
         Notify.notify(p, "§d§l에버블룸 §r§7— 쓰러지지 않았습니다", 30);
     }
 
+    // ------------------------------------------------------------ 피의 대가 (워록 · 다크 나이트 — 2026-11-28)
+
+    /** 피의 대가가 있는 직업 (trait.price) 이면 그 직업 — 아니면 null */
+    private static Jobs.Job priceJob(ServerPlayer p) {
+        Jobs.Job j = JobSystem.job(p);
+        return j != null && (WK.equals(j.id()) || JobTraits15.DK.equals(j.id())) && trait(j, "price", 0) > 0 ? j : null;
+    }
+
+    /** 잃은 체력 비율 (0 ~ 1) */
+    static double lostFrac(ServerPlayer p) {
+        double max = Math.max(1, p.getMaxHealth());
+        return Math.max(0, Math.min(1, 1 - p.getHealth() / max));
+    }
+
+    /** RpgCombat.dealtMult: 1 + price × min(잃은 체력, priceCap) — 평타 · 직업 스킬 · 룬 */
+    public static double bloodPrice(ServerPlayer p) {
+        Jobs.Job j = priceJob(p);
+        if (j == null || !RpgHealth.isRpgMode(p)) return 1;
+        return 1 + trait(j, "price", 0.4) * Math.min(lostFrac(p), trait(j, "priceCap", 0.9));
+    }
+
+    /** 알림 줄에 덧붙임 (" · 피의 대가 +N%" — 1% 아래면 빈 말) */
+    static String priceNote(ServerPlayer p) {
+        long n = Math.round((bloodPrice(p) - 1) * 100);
+        return n >= 1 ? " §c· 피의 대가 +" + n + "%" : "";
+    }
+
+    /**
+     * 핏빛 기운 (4틱마다 — JobTraits14 · 15 의 tick): 잃은 체력 40% 부터 8틱마다 몸에서 피어오르는 검붉은 연기 · 핏방울 불티 (잃을수록 짙고 많음), 75% 부터 40틱마다 가슴의
+     * 심장 고동 (붉은 고리 · 낮은 고동 소리). 주인 1인칭에는 손 둘레의 붉은 불티만
+     */
+    static void bloodAura(ServerPlayer sp, Jobs.Job j, long now) {
+        if (now % 8 != 0 || sp.isSpectator() || trait(j, "price", 0) <= 0 || !RpgHealth.isRpgMode(sp)) return;
+        double lost = lostFrac(sp);
+        if (lost < 0.4) return;
+        double k = Math.min(1, (lost - 0.4) / 0.5);
+        ServerLevel level = sp.level();
+        Vec3 c = chest(sp);
+        JobFx.smoke(level, V.up(sp.position(), 0.8), 0.6 + 0.5 * k, BLOOD, BLOOD_CORE, 0.6, JobFx.hide1p(sp).with("dir", V.UP, "speed", 0.5, "alpha", 0.3 + 0.4 * k, "vel",
+                RuneKit.bodyVel(sp)));
+        int n = 1 + (int) Math.round(3 * k);
+        for (int i = 0; i < n; i++) {
+            double a = Kit.rand() * TAU;
+            Vec3 at = V.up(V.add(sp.position(), new Vec3(Math.cos(a), 0, Math.sin(a)), 0.45), 0.3 + Kit.rand() * 1.4);
+            SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 0.8, "size", 0.12, "grow", 0.5, "life", 0.45, "color", i % 2 == 0 ? BLOOD : BLOOD_CORE,
+                    "alpha", 0.95));
+        }
+        RuneKit.Hand h = RuneKit.handOf(sp);
+        SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), JobFx.only1p(sp).with("dir", V.UP, "speed", 0.6, "size", 0.08, "grow", 0.4, "life", 0.35, "color",
+                BLOOD_CORE, "alpha", 0.9));
+        if (lost >= 0.75 && now % 40 == 0) {
+            SkillFx.shock(level, c, BLOOD_CORE, 0.9, 0.35);
+            JobFx.burst(level, c, 0.6, BLOOD, BLOOD_CORE, 0.25, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
+            SkillFx.play(level, "entity.warden.heartbeat", sp.position(), 1.0, 0.7);
+        }
+    }
+
     // ------------------------------------------------------------ 워록 — 생명 착취
 
     /** 빼앗을 수 있는 사람 (RPG 체력 · 살아 있음 · 체력이 floor 이상) */
@@ -459,7 +522,7 @@ public final class JobTraits14 {
         SkillFx.play(sp.level(), "entity.warden.heartbeat", sp.position(), 1.2, 0.8);
         String who = done.size() == 1 && done.get(0).who().equals(sp.getUUID()) ? "나" : done.size() + "명";
         return "§4생명 착취 " + who + " · 위력 +" + Math.round(u * trait(j, "bonus", 0.1) * 100) + "%" + (ash ? " §6· 애시본 +" + Math.round(
-                (j.skill(ASH) == null ? 0.4 : j.skill(ASH).num("power", 0.4)) * 100) + "%" : "");
+                (j.skill(ASH) == null ? 0.4 : j.skill(ASH).num("power", 0.4)) * 100) + "%" : "") + priceNote(sp);
     }
 
     /** 빼앗음: 그 사람 몸에서 핏방울이 쓴 사람의 홀로 날아감 · 핏빛 숫자 · 튀는 피 */
@@ -583,6 +646,7 @@ public final class JobTraits14 {
     /** 4틱마다 (JobTraits.tick): 워록 — 게이지 (빼앗을 몫) · 애시본 불길 (8틱마다) */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
         if (!WK.equals(j.id())) return;
+        bloodAura(sp, j, now);
         State st = of(sp);
         int u = unitsOf(sp, j, plan(sp, j));
         if (u != st.units) {

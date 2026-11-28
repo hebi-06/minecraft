@@ -542,7 +542,7 @@ public final class JobTrainer {
         out.add("§7" + Jobs.advanceLevel() + "렙부터 2차 전직 (직업 교관)");
         out.add("§6각성 §7— 1차 컨셉 그대로, 더 크고 센 스킬");
         out.add("§4반전 §7— 새 스킬 다섯 · 뒤집힌 특성 · 새 색");
-        out.add("§71차보다 초당 피해 +" + Math.round((Jobs.advanceDps() - 1) * 100) + "% §8(탱커 피에로는 1차와 같음)");
+        out.add("§71차보다 초당 피해 +" + Math.round((Jobs.advanceDps() - 1) * 100) + "% §8(힐러 · 탱커에서 딜러가 되는 워록 · 다크 나이트는 더 큼)");
         out.add("§7처음 2차 전직 무료 · 각성 ↔ 반전 " + Math.round(Jobs.switchSilver()) + " " + Inv.CURRENCY_NAME);
         out.add("§71차 직업을 바꾸면 2차 직업도 풀림");
         out.add("§7직업 스킬 강화 단계는 같은 칸으로 이어짐");

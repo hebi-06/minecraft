@@ -82,7 +82,7 @@ public final class JobTraits {
         JobTraits17.init(); // 2026-11-07 마검사 반전 엘리멘탈 블레이드 (원소의 칼 · 프로스트타이드 — 소드 콜러 대신, 아케인 블레이드 각인 번짐 · 대검은 JobTraits7)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 헌터스 마크 · 배틀 아처 난사 · 스톰 스트라이드 · 팰컨 다이브 초기화)
-        JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 팬텀 왈츠 · 미러 월드 — 2026-11-07 3판 · 피에로 쇼타임 — 소환물 · 나눠 받음 · 핸드스프링 — 트릭스터의 표식은 JobTraits3)
+        JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 팬텀 왈츠 · 미러 월드 — 2026-11-07 3판 · 피에로 쇼타임 — 소환물 · 2026-11-28 펑! — 트릭스터의 표식은 JobTraits3)
         JobTraits12.init(); // 0.51.0 사신 2차 (소울 리퍼 영혼 해방 · 엑시큐셔너 처형 — 소울 리퍼의 영혼은 JobTraits3)
         JobTraits11.init(); // 0.51.0 창술사 2차 (스톰 랜서 바람 · 질풍 창 · 렌딩 게일 · 드라군 비상 — 스톰 랜서의 창끝은 JobTraits3)
         JobTraits14.init(); // 0.51.0 사제 2차 (세인트 넘치는 빛 · 페탈 베일 · 소울본드 · 에버블룸 · 워록 생명 착취 · 피의 역병 — 세인트의 신앙은 JobTraits4)
@@ -516,7 +516,7 @@ public final class JobTraits {
                 JobTraits17.tick(sp, j, now); // 2026-11-07 엘리멘탈 블레이드 칼의 원소 빛
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 무덤 · 표식
                 JobTraits9.tick(sp, j, now); // 0.51.0 배틀 아처 갈래 게이지 · 스톰 스트라이드 이동 속도
-                JobTraits10.tick(sp, j, now); // 0.51.0 피에로 (가장 가까운 소환물로 금빛 실)
+                JobTraits10.tick(sp, j, now); // 0.51.0 피에로 (2026-11-28 나눠 받기를 빼며 금빛 실도 뺌 — 할 일 없음)
                 JobTraits11.tick(sp, j, now); // 0.51.0 스톰 랜서 바람이 사라짐 · 가득이면 창끝 소용돌이
                 JobTraits12.tick(sp, j, now); // 0.51.0 엑시큐셔너 선고 · 처형할 수 있는 적 해골 · 처형 뒤 이동 속도
                 JobTraits13.tick(sp, j, now); // 0.51.0 썬더헤드 먹구름 · 타이런트 강탈이 사라짐 · 콜로서스 왕관

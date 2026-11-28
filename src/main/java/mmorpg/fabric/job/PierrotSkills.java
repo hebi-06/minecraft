@@ -6,6 +6,7 @@ import java.util.List;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.mob.Monsters;
 import mmorpg.fabric.mob.PierrotSummon;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.Ult;
@@ -20,6 +21,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -209,7 +211,7 @@ final class PierrotSkills {
 
     /**
      * 핸드스프링: 앞으로 dist 칸 재주를 넘음 (land 틱 — lift 칸 솟는 포물선 · 몸을 뒤집는 동작) → 내려서며 둘레 radius 칸을 내리침 (total) · 맞은 적을 taunt 틱 도발
-     * (보스도 나를 — Taunts.tauntFor) · guardFor 틱 받는 피해 − guard. 묶였거나 타고 있으면 제자리에서 (피해 · 도발은 그대로)
+     * (보스도 나를 — Taunts.tauntFor). 묶였거나 타고 있으면 제자리에서 (피해 · 도발은 그대로). 2026-11-28 받는 피해 −30% (guard) 는 뺌 — 소환수 딜러 (쇼타임의 펑!)
      */
     static boolean spring(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
@@ -249,7 +251,6 @@ final class PierrotSkills {
             SkillFx.play(lv, "entity.player.attack.knockback", c, 0.8, 1.0);
             SkillFx.play(lv, "block.note_block.bell", c, 1.2, 0.6);
             giggle(lv, c, 1.3);
-            JobTraits10.guardFor(sp, (int) k.num("guardFor", 40), JobUpgrades.num(sp, k, "guard", k.num("guard", 0.3)));
             int taunt = (int) k.num("taunt", 60);
             for (LivingEntity e : Kit.around(sp, c, R, 2.5)) {
                 JobKit.strike(sp, e, j, P, k.total(), false, false, life, 0, d -> {
@@ -259,10 +260,71 @@ final class PierrotSkills {
                 });
                 Taunts.tauntFor(sp, e, taunt, true);
             }
-            // 받는 피해 감소: 몸 둘레 금빛 고리 (3인칭)
-            JobFx.halo(lv, V.up(c, 0.9), 0.9, j, 0.5, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
         });
         return true;
+    }
+
+    // ------------------------------------------------------------ 펑! (쇼타임 — 2026-11-28)
+
+    /**
+     * 펑! (쇼타임 — 사용자 "받피증을 없애고 스타레일의 에이언즈 아하처럼 맞을려고 할때 폭죽 같은 느낌으로 터지고 투명화 되는 느낌" · 느낌만, 이름 · 고유 디자인은 쓰지 않음):
+     * 공격이 닿으려는 순간 몸 자리에서 폭죽이 터짐 (번쩍 · 색종이 · 작은 불꽃놀이 셋 · 흰 연기 · 땅 고리 · 웃는 가면이 튀어나와 떠오르며 깔깔 웃고 금이 가 흩어짐) →
+     * popFor 틱 투명 (몹이 놓침 — JobTraits3 암영과 같은 길) → 짠 (색종이 · 반짝임 · 윙크하는 가면) → popCd 틱 뒤 준비 알림. 주인 1인칭에는 눈앞 색종이만 (섬광 · 가면이
+     * 화면을 덮지 않게)
+     */
+    static void pop(ServerPlayer sp, Jobs.Job j, int popFor, int popCd) {
+        ServerLevel level = sp.level();
+        Vec3 feet = sp.position();
+        Vec3 c = V.up(feet, 1.0);
+        Vec3 head = V.up(feet, sp.getBbHeight() + 0.4);
+        JobFx.burst(level, c, 1.4, GOLD, WHITE, 0.3, JobFx.hide1p(sp));
+        JobFx.confetti(level, c, 1.5, 1.1, JobFx.hide1p(sp));
+        for (int i = 0; i < 3; i++) {
+            double a = i * Math.PI * 2 / 3 + Kit.rand() * 0.6;
+            double[][] col = JobFx.CIRCUS[(i * 2 + (int) (Kit.rand() * JobFx.CIRCUS.length)) % JobFx.CIRCUS.length];
+            Vec3 at = new Vec3(c.x + Math.cos(a) * 0.75, c.y + 0.35 + Kit.rand() * 0.6, c.z + Math.sin(a) * 0.75);
+            RuneKit.later(i * 2, () -> JobFx.firework(sp.level(), at, 0.75, 0.6, JobFx.hide1p(sp), col[0], col[1]));
+        }
+        JobFx.smoke(level, V.up(feet, 0.6), 1.1, WHITE, GOLD, 0.55, JobFx.hide1p(sp).with("alpha", 0.75));
+        JobFx.mask(level, head, 0.5, 1.0, JobFx.hide1p(sp).with("vel", new Vec3(0, 0.7, 0)));
+        SkillFx.shock(level, V.up(feet, 0.06), GOLD, 1.2, 0.35);
+        Vec3 look = sp.getViewVector(1F);
+        JobFx.confetti(level, V.add(sp.getEyePosition(), look, 1.8), 0.6, 0.7, JobFx.only1p(sp));
+        SkillFx.play(level, "entity.firework_rocket.blast", c, 1.5, 0.9);
+        SkillFx.play(level, "entity.firework_rocket.twinkle", c, 1.3, 0.6);
+        SkillFx.play(level, "entity.chicken.egg", c, 1.6, 0.8);
+        giggle(level, c, 1.4);
+        JobSystem.note(sp, "§d§l펑! §7— 공격을 피하고 " + String.format("%.1f", popFor / 20.0) + "초 사라짐");
+        String life = RuneKit.lifeToken(sp);
+        // 투명 · 몹이 놓침 (둘레 몬스터는 소환물이 끌어들임 — 쇼타임). 다음 틱에: 이 피해는 몬스터의 공격 처리 (싸움 기록) 안에서 왔으므로 그 안에서 싸움을 지우지 않음
+        sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, popFor + 1, 0, false, false, true));
+        RuneKit.later(1, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Monsters.forgetMonsterFights(sp.getUUID());
+            for (Mob m : sp.level().getEntitiesOfClass(Mob.class, sp.getBoundingBox().inflate(32), x -> x.getTarget() == sp)) m.setTarget(null);
+        });
+        RuneKit.later(popFor, () -> {
+            if (RuneKit.sameLife(sp, life)) reappear(sp, popFor);
+        });
+        RuneKit.later(popCd, () -> {
+            if (!RuneKit.sameLife(sp, life) || JobTraits10.jobIf(sp, JobTraits10.PR) == null || JobTraits10.popLeft(sp) > 0) return;
+            JobFx.glint(sp.level(), V.up(sp.position(), sp.getBbHeight() + 0.35), 0.3, GOLD, WHITE, 0.35, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
+            JobSystem.note(sp, "§d쇼타임 §7— 펑! 준비");
+        });
+    }
+
+    /** 짠: 투명을 거두고 (펑! 이 건 짧은 투명만) 색종이 · 반짝임 · 윙크하는 가면 · 종소리 */
+    private static void reappear(ServerPlayer sp, int popFor) {
+        MobEffectInstance e = sp.getEffect(MobEffects.INVISIBILITY);
+        if (e != null && !e.isInfiniteDuration() && e.getDuration() <= popFor + 2) sp.removeEffect(MobEffects.INVISIBILITY);
+        ServerLevel level = sp.level();
+        Vec3 c = V.up(sp.position(), 1.0);
+        JobFx.confetti(level, c, 0.8, 0.8, JobFx.hide1p(sp));
+        JobFx.glint(level, V.up(c, 0.6), 0.5, GOLD, WHITE, 0.3, JobFx.hide1p(sp));
+        JobFx.mask(level, V.up(sp.position(), sp.getBbHeight() + 0.45), 0.35, 0.7, 6, 2, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
+        SkillFx.shock(level, V.up(sp.position(), 0.06), GOLD, 0.8, 0.3);
+        SkillFx.play(level, "block.note_block.chime", c, 1.6, 0.6);
+        SkillFx.play(level, "entity.player.levelup", c, 1.9, 0.35);
     }
 
     /** 도발 표시: 머리 위 작은 색종이 · 빨간 느낌표 빛 */
@@ -494,6 +556,19 @@ final class PierrotSkills {
         // 조명 넷: 앞쪽 무대 (상자 너머) 를 좌우로 흔들며 비춤 — 뒤 (3인칭 카메라 자리) 에 두면 카메라가 빛기둥 속에 들어가 화면이 한 빛으로 덮였음 (영상 1)
         Vec3 f = Kit.facingOf(sp);
         double base = Math.atan2(f.z, f.x);
+        // 2026-11-28 하늘의 웃는 가면 (사용자 "스타레일의 아하 느낌" — 느낌만): 앞 위 하늘에 거대한 광대 가면이 튀어나와 (0 → 1) 불꽃놀이 동안 깔깔 웃다가 (2 ~ 5 되풀이)
+        // 대폭죽 앞에서 윙크하고 (6) 금이 가며 흩어짐 (7). 모두에게 보임 · 주인 1인칭에도 (하늘이라 화면을 덮지 않음)
+        // 앞 12칸 · 6칸 위 (키 약 5칸 — 앞을 보는 눈의 위쪽 30° 안 · 상자 넷 너머 무대 뒤)
+        Vec3 skyMask = V.up(V.add(c, f, 12), 6.0);
+        JobFx.mask(level0, skyMask, 2.6, 0.35, 0, 2, false, Opt.of("alpha", 0.97));
+        RuneKit.later(7, () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx.mask(sp.level(), skyMask, 2.6, Math.max(0.5, (finaleAt - 7 - 10) / 20.0), 2, 4, true, Opt.of("alpha", 0.97));
+        });
+        RuneKit.later(Math.max(8, finaleAt - 10), () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            JobFx.mask(sp.level(), skyMask, 2.6, 1.0, 6, 2, false, Opt.of("alpha", 0.97));
+            giggle(sp.level(), c, 0.8);
+        });
         for (int t = 0; t < finaleAt + 6; t += 6) {
             int tt = t;
             RuneKit.later(t, () -> {

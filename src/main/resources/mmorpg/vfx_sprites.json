@@ -15344,6 +15344,16 @@
    "frames": 225,
    "aspect": 1.0,
    "colored": true
+  },
+  "el_circus_mask": {
+   "chars": "󱱃󱱄󱱅󱱆󱱇󱱈󱱉󱱊",
+   "frames": 8,
+   "aspect": 1.0,
+   "colored": true,
+   "crop": [
+    0.0,
+    0.007812
+   ]
   }
  }
 }

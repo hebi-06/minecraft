@@ -1001,6 +1001,13 @@ final class VanillaProbe {
                     jobList(k.substring(4)); // 2026-11-12 직업 스킬 (job:<직업> = 다섯 칸 · job:<스킬 id> = 하나)
                     continue;
                 }
+                if (k.startsWith("jobpop:") || k.startsWith("jobpopfp:")) {
+                    // 2026-11-28 피에로 펑! (쇼타임 — 맞으려는 순간 폭죽처럼 터져 사라짐): 과녁 몬스터가 한 번 때림 (films/vanilla_job_pierrot_pop · vanilla_jobfp_pierrot_pop)
+                    boolean pfp = k.startsWith("jobpopfp:");
+                    FILM_RUNES.add("job:" + k.substring(pfp ? 9 : 7) + ":pop" + (pfp ? ":fp" : ""));
+                    FILM_FRAMES.add(POP_FRAMES);
+                    continue;
+                }
                 if (k.startsWith("jobfp:")) {
                     // 2026-11-14 1인칭 화면 (곰 · 용 변신 — 쓴 사람의 눈): job:<…> 과 같고 사진기 카메라를 끔 (films/vanilla_jobfp_<스킬 id>)
                     int before = FILM_RUNES.size();
@@ -1580,6 +1587,8 @@ final class VanillaProbe {
             java.util.Map.entry("warlock", "26 54 54 24a3 90"),
             java.util.Map.entry("phoenix", "22 32 46 28a3 64"),
             java.util.Map.entry("darkknight", "30 26 30 22a3 70"));
+    /** 2026-11-28 피에로 펑! 영상의 장 수 (맞음 → 30틱 투명 → 짠 → 남은 색종이) */
+    static final int POP_FRAMES = 64;
     /** 다시 쓰는 스킬 (RpgJobGallery.AGAIN — JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 */
     private static final java.util.Map<String, int[]> JOB_AGAIN = java.util.Map.ofEntries(java.util.Map.entry("bloodknight_cleave", new int[] {12, 24}),
             java.util.Map.entry("necromancer_call", new int[] {16}),
@@ -1681,6 +1690,9 @@ final class VanillaProbe {
             case "executioner_knell" -> new double[] {7.0, 2.8, 2.0, 0.6};
             case "soulreaper_scythe" -> new double[] {8.0, 3.0, 1.8, 0.6};
             case "warlock_ult" -> new double[] {12.0, 3.4, 4.2, 0.4};
+            // 2026-11-28 그랜드 피날레의 하늘 가면 (앞 12칸 · 6칸 위) · 펑! (몸 둘레 폭죽 · 머리 위로 떠오르는 가면)
+            case "pierrot_ult" -> new double[] {12.0, 3.4, 3.8, 0.4};
+            case "pierrot_pop" -> new double[] {6.0, 2.4, 1.6, 0.6};
             // 2026-11-13 3D 검: 왕의 보물고 (몸 뒤 하늘의 금빛 문 아치 — 좌우 6.5칸 · 높이 7칸 · 과녁 위 8.8칸 대검) · 아스트랄 클레이모어 (6.9칸 거검 — 3칸 떠오름) ·
             // 월드 클리버 (머리 위 8.8칸 대검)
             case "elementalblade_ult" -> new double[] {13.5, 3.8, 4.4, 0.4};
@@ -1733,7 +1745,8 @@ final class VanillaProbe {
         MinecraftServer server = level.getServer();
         String[] a = entry.split(":");
         mmorpg.core.Jobs.Job j = a.length < 3 ? null : mmorpg.core.Jobs.job(a[1]);
-        int slot = a.length < 3 ? -1 : Integer.parseInt(a[2]);
+        boolean pop = a.length >= 3 && a[2].equals("pop"); // 2026-11-28 피에로 펑! (스킬이 아니라 맞는 순간 — 과녁이 한 번 때림)
+        int slot = a.length < 3 ? -1 : pop ? 0 : Integer.parseInt(a[2]);
         mmorpg.core.Jobs.Skill k = j == null ? null : j.skill(slot);
         if (k == null) {
             check("film job " + entry, false);
@@ -1766,13 +1779,13 @@ final class VanillaProbe {
             }
             SPAWNED.add(e);
         }
-        String id = k.id();
+        String id = pop ? j.id() + "_pop" : k.id();
         // 2026-11-15 시범 (팬텀 버스트 — 사용자 "너가 추천한거 다 넣어서 시범으로"): 해 질 녘 (빛 효과가 어두운 땅 · 노을 하늘에 또렷), 다른 영상은 한낮.
         // 2판: 찍기 30틱 전에 (1판은 찍기 시작과 같은 틱이라 첫 세 장이 한낮이었음)
         run(server, id.equals("archer_burst") ? "time set 12850" : "time set noon");
         boolean fp = a.length > 3 && a[3].equals("fp");
         String name = (fp ? "vanilla_jobfp_" : "vanilla_job_") + id;
-        int[] time = jobTime(j.id(), slot);
+        int[] time = pop ? new int[] {POP_FRAMES - 11, 0, 3} : jobTime(j.id(), slot);
         if (fp) {
             // 1인칭: 쓴 사람의 눈 (사진기 카메라 끔 — 눈앞 그림도 보임). 2026-11-14 내 뼈 몸 보기는 끔 (기본값)
             if (VanillaRig.selfView(p)) VanillaRig.selfView(p, false);
@@ -1798,6 +1811,17 @@ final class VanillaProbe {
                 // 2026-11-14 파티클 다리 셈 (이 영상이 보낸 파티클 ID · 글자 표시 · 가루 · 버림 · 카드 · 가장 많이 떠 있던 수 · 칠한 그림판) — 2026-11-17 룬 영상과 같은
                 // censusWatch (남은 예전 그림의 빛 · 맥락 jobmiss 줄도)
                 censusWatch(name, frames);
+                if (pop) {
+                    // 펑!: 앞 과녁 몬스터가 때림 (영상 과녁은 스스로 공격하지 않음) → 쇼타임이 그 공격을 막고 터져 사라짐 → 30틱 뒤 짠
+                    mmorpg.fabric.job.JobTraits10.popReset(p);
+                    p.setInvulnerableTime(0);
+                    boolean inv = p.getAbilities().invulnerable; // 영상 플레이어는 무적 능력 — 그동안은 피해 처리 (ALLOW_DAMAGE) 까지 가지 않음
+                    p.getAbilities().invulnerable = false;
+                    boolean hurt = !foes.isEmpty() && p.hurtServer(level, p.damageSources().mobAttack(foes.get(0)), 6F);
+                    p.getAbilities().invulnerable = inv;
+                    check("film pop " + name, !hurt && mmorpg.fabric.job.JobTraits10.popped(p));
+                    return; // 다음 영상은 바깥 (frames + 24 틱 뒤)
+                }
                 boolean ok = mmorpg.fabric.job.JobSkills.press(p, slot);
                 check("film cast " + name, ok);
                 log("film " + name + " vfx " + mmorpg.fabric.vfx.Vfx.active() + " fx · props " + mmorpg.fabric.vfx.Vfx.propsMade + " · sprites "

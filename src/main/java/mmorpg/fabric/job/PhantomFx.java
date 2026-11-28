@@ -1666,6 +1666,8 @@ final class PhantomFx {
             java.util.Map.entry("jballoon", new Paint("balloon", 1, BILL, 1, 1)),
             java.util.Map.entry("jfirework", new Paint("firework", 1, BILL, 1, 1)),
             java.util.Map.entry("jspot", new Paint("spot", 1, VERT, 384 / 128.0, 1)),
+            // 2026-11-28 웃는 광대 가면 (피에로 펑! · 그랜드 피날레 — tools/jobvfx/circus.py mask: 칠한 그림만, 예전 rfx 없음)
+            java.util.Map.entry("jmask", new Paint("mask", 1, BILL, 1, 1)),
             // 2026-11-16 전사 라인 (tools/jobvfx/beast.py — 예전 rfx 와 같은 칸 수 · 가로세로 비 · 머리 자리 · 땅 자리 · 도는 쪽)
             java.util.Map.entry("jwolf", new Paint("wolf", 1, LOOK_DIR, 0.5, 1)),
             java.util.Map.entry("jtwister2", new Paint("twister", 1, VERT, 2, 1)),

@@ -38,7 +38,7 @@ import net.minecraft.world.phys.Vec3;
  * 곁으로 옮겨 옴). 뿅망치는 스킬이 정한 틱에 (PierrotSkills — 동작은 그 틱의 HAMMER_AT 틱 전)</li>
  * <li>부서짐 (체력이 다함): 색종이 폭죽 — 둘레 trait.burstRadius 칸 위력 × trait.burst · 보스 아닌 적 trait.stun 틱 기절 (특성 피해 — 직업 색 숫자).
  * 시간이 다 되거나 주인이 죽음 · 차원을 옮김 · 직업이 바뀜 · 나감 → 펑 연기로 사라짐 (폭죽 없음)</li>
- * <li>나눠 받음 (RpgHealth.lossShare — JobTraits10): 주인이 받을 피해의 trait.share 를 shareRange 칸 안의 가장 가까운 소환물이 받음</li>
+ * <li>2026-11-28 나눠 받음 (주인이 받을 피해의 몫을 소환물이 받음) 은 뺌 — 피에로가 소환수 딜러가 되며 쇼타임의 펑! (JobTraits10) 으로</li>
  * </ul>
  */
 public final class PierrotSummons {
@@ -341,38 +341,5 @@ public final class PierrotSummons {
             });
         }
         JobTraits.sendGauge(sp, false);
-    }
-
-    /**
-     * 나눠 받음 (JobTraits10 — RpgHealth.lossShare): 주인이 받을 피해 loss 의 frac 을 range 칸 안의 가장 가까운 소환물이 받음 (그 소환물에 금빛 실 · 숫자) — 덜어 낸 양
-     */
-    static double share(ServerPlayer sp, double loss, double frac, double range) {
-        if (!(loss > 0) || !(frac > 0)) return 0;
-        Member best = null;
-        double bd = range * range;
-        for (Member m : members(sp)) {
-            if (!m.alive() || m.x.level() != sp.level()) continue;
-            double d = m.x.distanceToSqr(sp);
-            if (d <= bd) {
-                bd = d;
-                best = m;
-            }
-        }
-        if (best == null) return 0;
-        double moved = Math.min(loss * frac, best.x.getHealth() + 1);
-        ServerLevel level = sp.level();
-        PierrotSummon x = best.x;
-        if (RuneKit.fxQuota("pierrotShare" + sp.getId(), 2)) {
-            Vec3 from = V.up(sp.position(), 1.1);
-            Vec3 to = V.up(x.position(), x.getBbHeight() * 0.7);
-            SkillFx.beam(level, from, to, PierrotSkills.GOLD, Opt.of("half", 0.08, "thick", 0.04, "life", 0.25, "alpha", 0.85));
-            SkillFx.sparks(level, to, PierrotSkills.GOLD, 3, 2);
-        }
-        // 다음 틱에 (주인의 피해 처리 안에서 다른 몹의 체력을 바꾸지 않게)
-        float amt = (float) moved;
-        Tasks.later(1, () -> {
-            if (!x.isRemoved() && x.isAlive() && x.level() instanceof ServerLevel lv) x.hurtServer(lv, x.damageSources().generic(), amt);
-        });
-        return moved;
     }
 }

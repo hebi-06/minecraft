@@ -368,7 +368,7 @@ public final class JobTraits15 {
         ServerLevel level = sp.level();
         JobFx.burst(level, chest(sp), 1.0, CRIMSON, CRIMSON_CORE, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
         SkillFx.sparks(level, chest(sp), CRIMSON_CORE, 8, 2.5);
-        JobSystem.note(sp, "§4탐식 §7— 통째로 삼킴 +" + Math.round(flat) + (healed >= 0.5 ? " · 회복 " + Math.round(healed) : ""));
+        JobSystem.note(sp, "§4탐식 §7— 통째로 삼킴 +" + Math.round(flat) + (healed >= 0.5 ? " · 회복 " + Math.round(healed) : "") + JobTraits14.priceNote(sp));
     }
 
     /** 언홀리 프렌지: 방패 평타가 물어뜯기 (평타 + 위력 × bite) */
@@ -410,6 +410,7 @@ public final class JobTraits15 {
     /** 사람마다 (JobTraits 가 4틱마다): 굶주림이 줄어듦 · 가득 찬 방패의 핏빛 숨 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
         if (!j.id().equals(DK)) return;
+        JobTraits14.bloodAura(sp, j, now); // 2026-11-28 피의 대가 — 잃은 체력 40% 부터 핏빛 기운
         State st = STATES.get(sp.getUUID());
         if (st == null) return;
         int keep = (int) trait(j, "keep", 160);

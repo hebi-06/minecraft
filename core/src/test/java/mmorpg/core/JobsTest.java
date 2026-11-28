@@ -569,9 +569,9 @@ public final class JobsTest {
         // 4번 칸: 이그니션 · 언홀리 프렌지 8초 강화 태세 (피해 칸 몫 아님)
         check(!Jobs.stanceBudget(pg) && pg.total() == 0 && near(pg.num("dur", 0), 160) && !Jobs.stanceBudget(dz) && dz.total() == 0 && near(dz.num("dur", 0), 180),
                 "이그니션 8초 · 언홀리 프렌지 9초 태세 (2026-11-17 쿨 34.5초 — 궁극기 65 ÷ 2 + 2)");
-        // 초당 피해: 피닉스 가드 = 1차 × 1.2 · 다크 나이트 = 1차 × 1.3 (역할이 바뀜 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈ 1.565 ÷ 삼킴 덤 1.2)
-        check(near(Jobs.advanceDps(ph), 1.2) && near(Jobs.advanceDps(dk), 1.3) && near(dps(ph) / dps(gu), 1.2, 0.005) && near(dps(dk) / dps(gu), 1.3, 0.005),
-                "phoenix × 1.2 · darkknight × 1.3");
+        // 초당 피해: 피닉스 가드 = 1차 × 1.2 · 다크 나이트 = 1차 × 1.6 (2026-11-28 피의 대가 — 특성 포함 체력 90% ×0.99 · 60% ×1.11 · 25% ×1.24, claude/job-trait-balance.md)
+        check(near(Jobs.advanceDps(ph), 1.2) && near(Jobs.advanceDps(dk), 1.6) && near(dps(ph) / dps(gu), 1.2, 0.005) && near(dps(dk) / dps(gu), 1.6, 0.005),
+                "phoenix × 1.2 · darkknight × 1.6");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (블루 인페르노 솟음 → 터짐 · 디센트 불기둥 → 내리꽂힘 · 크런치 물기 → 찢기 (다시 누름 gap) · 피스트 감기 → 물기 · 메이 삼킴 → 터뜨림)
         check(pi.num("burstAt", 0) - pi.num("riseAt", 0) >= 10 && pu.num("diveAt", 0) - pu.num("pillarAt", 0) >= 10
                 && dc.num("gap", 0) + dc.num("tearAt", 0) - dc.num("biteAt", 0) >= 10 && df.num("biteAt", 0) - df.num("pullAt", 0) >= 10
@@ -591,8 +591,10 @@ public final class JobsTest {
                 && near(pg.num("cut", 0), 0.2), "반격 + 불사조의 재 (막아 준 피해 20% → 가장 위험한 아군 보호막 · 이그니션 두 배 · −20%)");
         check(dk.trait().name().equals("탐식") && dk.trait().max() == 100 && near(dk.trait().def().numOr("bite", 0), 12) && near(dk.trait().def().numOr("basic", 0), 4)
                 && near(dk.trait().def().numOr("keep", 0), 160) && near(dk.trait().def().numOr("decay", 0), 10) && near(dk.trait().def().numOr("devour", 0), 0.08)
-                && near(dk.trait().def().numOr("devourCap", 0), 6) && near(dk.trait().def().numOr("heal", 0), 0.06) && near(dz.num("bite", 0), 0.5)
-                && near(dz.num("speed", 0), 0.2) && near(dz.num("hunger", 0), 2), "탐식 +12 · 평타 +4 · 8초 뒤 10 씩 · 삼킴 8% (× 6) · 회복 6% · 프렌지 × 0.5 · +20% · 두 배");
+                && near(dk.trait().def().numOr("devourCap", 0), 6) && near(dk.trait().def().numOr("heal", 0), 0.06) && near(dz.num("bite", 0), 0.8)
+                && near(dz.num("speed", 0), 0.3) && near(dz.num("hunger", 0), 3) && near(dz.num("cost", 0), 0.15) && near(dk.trait().def().numOr("price", 0), 0.4)
+                && near(dk.trait().def().numOr("priceCap", 0), 0.9),
+                "탐식 +12 · 평타 +4 · 8초 뒤 10 씩 · 삼킴 8% (× 6) · 회복 6% · 프렌지 피 15% · × 0.8 · +30% · 세 배 · 피의 대가 0.4 (90% 까지)");
         // 유틸 · 범위 · 선딜
         check("narrow".equals(Jobs.areaKind(pb)) && "narrow".equals(Jobs.areaKind(pw)) && Jobs.areaKind(pi) == null && Jobs.areaKind(pu) == null
                 && Jobs.utils(pb).equals(List.of("taunt", "lift")) && Jobs.utils(pw).equals(List.of("leap", "shield"))
@@ -704,9 +706,9 @@ public final class JobsTest {
         // 4번 칸: 소울본드 · 애시본 둘 다 강화 태세 (피해 없음 · 2026-11-17 쿨 ÷ 30 만큼 — 10.5초 · 12.5초)
         check(!Jobs.stanceBudget(sb) && sb.total() == 0 && near(sb.num("dur", 0), 210) && !Jobs.stanceBudget(wa) && wa.total() == 0 && near(wa.num("dur", 0), 250),
                 "소울본드 10.5초 · 애시본 12.5초 태세 (2026-11-17 쿨 32 · 37초 — 궁극기 ÷ 2 + 2)");
-        // 초당 피해: 세인트 = 1차 × 1.2 · 워록 = 1차 × 1.425 (역할이 바뀜 — 원거리 딜러 목표 1.14 ÷ 힐러 0.96 × 1.2 · 팀 체력 몫 +20% 는 생명 착취 덤)
-        check(near(Jobs.advanceDps(sa), 1.2) && near(Jobs.advanceDps(wk), 1.425) && near(dps(sa) / dps(pr), 1.2, 0.005) && near(dps(wk) / dps(pr), 1.425, 0.005),
-                "saint × 1.2 · warlock × 1.425");
+        // 초당 피해: 세인트 = 1차 × 1.2 · 워록 = 1차 × 3.1 (2026-11-28 피의 대가 — 특성 포함 체력 90% ×1.00 · 60% ×1.11 · 25% ×1.25, claude/job-trait-balance.md)
+        check(near(Jobs.advanceDps(sa), 1.2) && near(Jobs.advanceDps(wk), 3.1) && near(dps(sa) / dps(pr), 1.2, 0.005) && near(dps(wk) / dps(pr), 3.1, 0.005)
+                && near(wk.trait().def().numOr("price", 0), 0.4) && near(wk.trait().def().numOr("priceCap", 0), 0.9), "saint × 1.2 · warlock × 3.1 · 피의 대가 0.4");
         // 같은 적을 여러 번 치는 것은 10틱 넘게
         check(sw.num("every", 0) * 2 >= 10 && su.num("every", 0) >= 10 && su.num("bloomAt", 0) - su.num("first", 0) - (su.num("storms", 0) - 1) * su.num("every", 0) >= 10
                 && wm.num("every", 0) >= 10 && wn.num("every", 0) >= 10 && wn.num("burstAt", 0) - wn.num("first", 0) - (wn.num("drains", 0) - 1) * wn.num("every", 0) >= 10
@@ -915,9 +917,9 @@ public final class JobsTest {
         check(near(tm.num("reflect", 0), 0.5) && Jobs.upKey(tm, "reflect") != null && tm.num("spinAt", 0) >= 2 && near(tm.num("dur", 0), 160), "팬텀 왈츠 50% · 8초");
         check(near(tp.num("passAt", 0) + 6, tp.num("xAt", 0)) && tp.num("passAt", 0) > tp.num("first", 0) + (tp.num("packets", 0) - 1) * tp.num("every", 0)
                 && near(tu.num("mirrors", 0), 12) && tu.num("ring", 0) > 3, "트윈 리플렉션 28 엇갈림 → 34 X · 미러 월드 거울 12");
-        // 초당 피해: 트릭스터 = 1차 × 1.2, 피에로 = 1차와 같음 (직업의 dps 1.0 — 탱커)
-        check(near(Jobs.advanceDps(tr), 1.2) && near(Jobs.advanceDps(pr), 1.0) && near(Jobs.advanceDps(as), 1) && near(Jobs.advanceDps(), 1.2), "advance dps 1.2 · pierrot 1.0");
-        check(near(dps(pr) / dps(as), 1.0, 0.005) && near(dps(tr) / dps(as), 1.2, 0.005), "pierrot dps = assassin · trickster ×1.2");
+        // 초당 피해: 트릭스터 · 피에로 = 1차 × 1.2 (2026-11-28 피에로 탱커 → 소환수 딜러 — 전에는 직업의 dps 1.0)
+        check(near(Jobs.advanceDps(tr), 1.2) && near(Jobs.advanceDps(pr), 1.2) && near(Jobs.advanceDps(as), 1) && near(Jobs.advanceDps(), 1.2), "advance dps 1.2 · pierrot 1.2");
+        check(near(dps(pr) / dps(as), 1.2, 0.005) && near(dps(tr) / dps(as), 1.2, 0.005), "pierrot · trickster ×1.2");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (다시 누르는 찌르기는 지나간 환영의 벰 뒤 10틱 — 서버가 미룸 · 칼 · 불꽃놀이 · 꿰뚫기는 10틱마다)
         check(ts.num("gap", 0) + ts.num("stabAt", 0) >= ts.num("cutAt", 0) && ts.num("t", 0) - ts.num("cutAt", 0) >= 10 && tp.num("every", 0) >= 10
                 && tp.num("xAt", 0) - tp.num("first", 0) - (tp.num("packets", 0) - 1) * tp.num("every", 0) >= 10 && tu.num("first", 0) - tu.num("slashAt", 0) >= 10
@@ -937,9 +939,10 @@ public final class JobsTest {
         check(tr.trait().name().equals(as.trait().name()) && near(tr.trait().def().numOr("back", 0), as.trait().def().numOr("back", -1))
                 && near(tr.trait().def().numOr("markFor", 0), as.trait().def().numOr("markFor", -1)) && near(tr.trait().def().numOr("shift", 0), 5)
                 && near(tr.trait().def().numOr("shiftRange", 0), 6), "표식 7 · 옮겨감");
-        check(pr.trait().name().equals("쇼타임") && pr.trait().max() == 4 && near(pr.trait().def().numOr("lure", 0), 6) && near(pr.trait().def().numOr("share", 0), 0.2)
-                && near(pr.trait().def().numOr("shareRange", 0), 12) && near(pr.trait().def().numOr("burst", 0), 0.8) && near(pr.trait().def().numOr("burstRadius", 0), 3)
-                && near(pr.trait().def().numOr("stun", 0), 10), "쇼타임 6칸 · 20% · 폭죽 0.8");
+        check(pr.trait().name().equals("쇼타임") && pr.trait().max() == 4 && near(pr.trait().def().numOr("lure", 0), 6) && !pr.trait().def().has("share")
+                && near(pr.trait().def().numOr("popCd", 0), 240) && near(pr.trait().def().numOr("popFor", 0), 30) && near(pr.trait().def().numOr("burst", 0), 0.8)
+                && near(pr.trait().def().numOr("burstRadius", 0), 3) && near(pr.trait().def().numOr("stun", 0), 10) && pr.role().startsWith("근접 딜러"),
+                "쇼타임 6칸 · 펑! 12초에 한 번 1.5초 (나눠 받기 없음) · 폭죽 0.8 · 딜러");
         // 소환물 체력 (내 최대 체력의 몫): 상자 35% · 인형 80% · 피날레 상자 40%, 상자는 둘까지
         check(near(pb.num("hp", 0), 0.35) && near(pd.num("hp", 0), 0.8) && near(pu.num("hp", 0), 0.4) && near(pb.num("boxes", 0), 2) && near(pu.num("boxes", 0), 4),
                 "summon hp 35% · 80% · 40%");
@@ -949,7 +952,7 @@ public final class JobsTest {
                 && Jobs.utils(td).equals(List.of("blink")) && Jobs.utils(tp).equals(List.of("blink")) && Jobs.utils(tu).equals(List.of("blink")) && Jobs.utils(ts).isEmpty(),
                 "trickster utils · area");
         check("single".equals(Jobs.areaKind(pb)) && "narrow".equals(Jobs.areaKind(ps)) && Jobs.areaKind(pl) == null && "narrow".equals(Jobs.areaKind(pd)) && Jobs.areaKind(pu) == null
-                && Jobs.utils(pb).equals(List.of("taunt")) && Jobs.utils(ps).equals(List.of("leap", "taunt", "reduce")) && near(Jobs.utilCost(ps), 0.3)
+                && Jobs.utils(pb).equals(List.of("taunt")) && Jobs.utils(ps).equals(List.of("leap", "taunt")) && !ps.def().has("guard")
                 && Jobs.utils(pl).equals(List.of("slow", "taunt")) && Jobs.utils(pu).equals(List.of("taunt", "knock")), "pierrot utils · area");
         check(Jobs.windupTicks(ts) == 0 && Jobs.windupTicks(tu) == 0 && Jobs.windupTicks(pb) == 10 && Jobs.windupTicks(ps) == 8 && Jobs.windupTicks(pl) == 14
                 && Jobs.windupTicks(pu) == 10, "windups 0 · 0 · 10 · 8 · 14 · 10");

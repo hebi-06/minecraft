@@ -2011,6 +2011,21 @@ final class JobFx {
         cells(level, "jfirework", FIREWORK, 0, FIREWORK, at, life, 0, false, o.with("size", size, "spin", Kit.rand() * 360, "fade", o.num("fade", 0.3)), glow, core);
     }
 
+    static final int MASK = 8;
+
+    /**
+     * 2026-11-28 웃는 광대 가면 (el_circus_mask — 카메라를 봄, 칠한 그림만: 사용자 "스타레일의 아하 느낌" — 느낌만, 이름 · 고유 디자인은 쓰지 않음): 0 튀어나옴 (번쩍) ·
+     * 1 웃음 · 2 ~ 5 깔깔 (입이 벌어졌다 닫힘 · 좌우로 기울며 들썩) · 6 윙크 · 7 금이 가며 흩어짐. first 장부터 count 장 (loop 면 되풀이). 키 약 size × 2 칸
+     */
+    static void mask(ServerLevel level, Vec3 at, double size, double life, int first, int count, boolean loop, Opt o) {
+        cells(level, "jmask", MASK, first, count, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), CIRCUS[0][0], CIRCUS[0][1]);
+    }
+
+    /** 가면이 한 번 나타나 깔깔 웃고 터짐 (0 → 7 장, life 초) */
+    static void mask(ServerLevel level, Vec3 at, double size, double life, Opt o) {
+        mask(level, at, size, life, 0, MASK, false, o);
+    }
+
     /** 조명 (rfx_jspot — 세워 카메라 쪽으로 돎, 이어 돌림): 위에서 내리비추는 빛 원뿔 · 바닥의 밝은 웅덩이 · 떠도는 먼지. 바닥 가운데 at · 높이 height 칸 */
     static void spotlight(ServerLevel level, Vec3 at, double height, double life, Opt o, double[] glow, double[] core) {
         cells(level, "jspot", SPOT, 0, SPOT, V.up(at, height * 0.5), life, 6, true, o.with("size", height / 6, "fade", o.num("fade", 0.3)), glow, core);

@@ -33,9 +33,10 @@ import net.minecraft.world.phys.Vec3;
  * — RpgCombat.addScaledBonusHook, spinAt 틱 뒤 그림) · 표식 +1 더. 화면은 움직이지 않음 (사용자 "화면 흔들림은 넣지마 멀미나" — 내가 매번 등 뒤로 옮겨 가면 화면이 180° 씩
  * 돎)</li>
  * <li>트릭스터 미러 월드: 거울 세계에 가둔 동안 그 적에게 준 다른 피해 (평타 · 다른 스킬 · 룬 — 궁극기 자신의 타격은 빼고) 를 쌓음 (AFTER_DAMAGE)</li>
- * <li>피에로 「쇼타임」 (1차 표식과 거꾸로 — 숨어서 노리던 눈길 대신 모두의 눈길을 끌어모음): 소환물이 둘레 몬스터를 끌어들여 대신 맞음 (PierrotSummons) · 받는 피해의
- * share 를 가장 가까운 소환물이 나눠 받음 (RpgHealth.lossShare) · 부서지면 색종이 폭죽. 게이지 = 소환물 수, 할루시네이트의 남은 시간은 태세 줄에. 핸드스프링: guardFor
- * 틱 받는 피해 − guard (RpgHealth.sourceReduce). 몸에서 가장 가까운 소환물로 금빛 실 (8틱마다 — 나눠 받는 줄)</li>
+ * <li>피에로 「쇼타임」 (1차 표식과 거꾸로 — 숨어서 노리던 눈길 대신 모두의 눈길을 끌어모음): 소환물이 둘레 몬스터를 끌어들여 대신 맞음 (PierrotSummons) · 부서지면
+ * 색종이 폭죽. 게이지 = 소환물 수, 할루시네이트의 남은 시간은 태세 줄에. 2026-11-28 소환수 딜러 (사용자 "탱커에서 딜러로 변경 … 소환수 딜러" · "받피증을 없애고 스타레일의
+ * 에이언즈 아하처럼 맞을려고 할때 폭죽 같은 느낌으로 터지고 투명화"): 받는 피해 나눠 받기 · 핸드스프링 받는 피해 감소는 뺌 → 펑! ({@link #popDodge} — ALLOW_DAMAGE):
+ * 몬스터 · 보스의 공격이 닿으려는 순간 그 공격을 막고 폭죽처럼 터져 popFor 틱 투명 (몹이 놓침 · 그동안 오는 공격도 피함) → 짠 하고 나타남, popCd 틱에 한 번</li>
  * </ul>
  */
 public final class JobTraits10 {
@@ -49,9 +50,10 @@ public final class JobTraits10 {
     static final String DOLL = "pierrot_doll";
 
     static final class State {
-        /** 핸드스프링: 받는 피해 − guard · 끝나는 틱 */
-        long guardUntil;
-        double guard;
+        /** 펑!: 다시 터질 수 있는 틱 · 투명이 끝나는 틱 · 터진 수 (시험) */
+        long popReady;
+        long popUntil;
+        int pops;
     }
 
     /** 거울 세계 하나: 가둔 사람 · 끝나는 틱 · 쌓인 피해 */
@@ -82,13 +84,8 @@ public final class JobTraits10 {
     static void init() {
         RpgCombat.addScaledBonusHook(JobTraits10::waltzBonus);
         RpgCombat.addWeaponHitHook(JobTraits10::onWeaponHit);
-        RpgHealth.LossShare ls = RpgHealth.lossShare;
-        RpgHealth.lossShare = (p, src, loss) -> {
-            double a = ls.share(p, src, loss);
-            return a + showShare(p, loss - a);
-        };
-        java.util.function.ToDoubleBiFunction<ServerPlayer, DamageSource> sr = RpgHealth.sourceReduce;
-        RpgHealth.sourceReduce = (p, src) -> Math.max(sr.applyAsDouble(p, src), springGuard(p));
+        // 2026-11-28 피에로 펑!: 몬스터 · 보스의 공격이 닿으려는 순간 (받는 피해 나눠 받기 · 핸드스프링 감소 대신)
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !popDodge(entity, source, amount));
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, taken, blocked) -> storeMirror(entity, source, taken));
         ServerTickEvents.END_SERVER_TICK.register(JobTraits10::waltzTick);
         PierrotSummons.init();
@@ -128,7 +125,7 @@ public final class JobTraits10 {
 
     static void lifeEnded(UUID id) {
         State st = STATES.get(id);
-        if (st != null) st.guardUntil = 0;
+        if (st != null) st.popUntil = 0;
         WALTZES.remove(id);
         PierrotSummons.dismissAll(id, true);
         MIRRORS.values().removeIf(f -> f.owner.equals(id));
@@ -280,28 +277,53 @@ public final class JobTraits10 {
 
     // ------------------------------------------------------------ 피에로 쇼타임
 
-    /** 핸드스프링: ticks 틱 동안 받는 피해 − frac */
-    static void guardFor(ServerPlayer sp, int ticks, double frac) {
-        State st = of(sp);
-        st.guardUntil = Tasks.now() + ticks;
-        st.guard = Math.max(0, Math.min(0.9, frac));
-    }
-
-    /** 시험: 핸드스프링 받는 피해 감소 (없으면 0) */
-    public static double guarding(ServerPlayer sp) {
-        return springGuard(sp);
-    }
-
-    private static double springGuard(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st != null && st.guardUntil > Tasks.now() && jobIf(sp, PR) != null ? st.guard : 0;
-    }
-
-    /** 나눠 받음 (RpgHealth.lossShare): 피에로가 받을 피해 loss 의 share 를 shareRange 칸 안의 가장 가까운 소환물이 받음 */
-    private static double showShare(ServerPlayer sp, double loss) {
+    /** 펑!: 이번 피해를 막는지 (ALLOW_DAMAGE — true 면 막음) */
+    private static boolean popDodge(LivingEntity entity, DamageSource source, float amount) {
+        if (!(entity instanceof ServerPlayer sp) || !(amount > 0) || sp.isSpectator() || sp.isCreative()) return false;
         Jobs.Job j = jobIf(sp, PR);
-        if (j == null || !(loss > 0)) return 0;
-        return PierrotSummons.share(sp, loss, trait(j, "share", 0.2), trait(j, "shareRange", 12));
+        if (j == null || !RpgHealth.isRpgMode(sp) || !hostile(sp, source)) return false;
+        State st = of(sp);
+        long now = Tasks.now();
+        if (st.popUntil > now) return true; // 사라진 동안 오는 공격도 피함
+        if (now < st.popReady) return false;
+        int popFor = Math.max(1, (int) trait(j, "popFor", 30));
+        int popCd = Math.max(popFor + 20, (int) trait(j, "popCd", 240));
+        st.popReady = now + popCd;
+        st.popUntil = now + popFor;
+        st.pops++;
+        PierrotSkills.pop(sp, j, popFor, popCd);
+        return true;
+    }
+
+    /** 몬스터 · 보스가 때린 것 (쏜 것 포함 — 주인이 플레이어가 아닌 살아 있는 것). 무적을 꿰뚫는 피해 (공허 · 명령) 는 아님 */
+    private static boolean hostile(ServerPlayer sp, DamageSource source) {
+        if (source == null || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return false;
+        net.minecraft.world.entity.Entity e = source.getEntity();
+        return e instanceof LivingEntity le && le != sp && !(le instanceof net.minecraft.world.entity.player.Player) && le.isAlive();
+    }
+
+    /** 시험 · 사진첩: 펑! 을 처음부터 (바로 터질 수 있게) */
+    public static void popReset(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        if (st == null) return;
+        st.popReady = 0;
+        st.popUntil = 0;
+    }
+
+    /** 시험: 터진 수 · 사라져 있는지 · 다시 터질 때까지 남은 틱 */
+    public static int pops(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        return st == null ? 0 : st.pops;
+    }
+
+    public static boolean popped(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        return st != null && st.popUntil > Tasks.now();
+    }
+
+    public static long popLeft(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        return st == null ? 0 : Math.max(0, st.popReady - Tasks.now());
     }
 
     /** 시험: 소환물 수 (게이지와 같음) */
@@ -311,26 +333,8 @@ public final class JobTraits10 {
 
     // ------------------------------------------------------------ 틱 · 태세 · 게이지
 
-    /** 4틱마다 (JobTraits.tick): 피에로 — 8틱마다 몸에서 가장 가까운 소환물 (나눠 받는 것) 로 금빛 실 (3인칭 · 다른 사람) */
-    static void tick(ServerPlayer sp, Jobs.Job j, long now) {
-        if (!PR.equals(j.id()) || now % 8 != 0 || sp.isSpectator()) return;
-        double range = trait(j, "shareRange", 12);
-        PierrotSummons.Member best = null;
-        double bd = range * range;
-        for (PierrotSummons.Member m : PierrotSummons.members(sp)) {
-            if (!m.alive()) continue;
-            double d = m.x.distanceToSqr(sp);
-            if (d < bd) {
-                bd = d;
-                best = m;
-            }
-        }
-        if (best == null) return;
-        ServerLevel level = sp.level();
-        Vec3 from = V.up(RuneKit.handOf(sp).hand(), 0.1);
-        Vec3 to = V.up(best.x.position(), best.x.getBbHeight() * 0.85);
-        SkillFx.beam(level, from, to, PierrotSkills.GOLD, JobFx.hide1p(sp).with("half", 0.05, "thick", 0.025, "life", 0.42, "alpha", 0.45, "vel", RuneKit.bodyVel(sp)));
-    }
+    /** 4틱마다 (JobTraits.tick): 피에로 — 2026-11-28 나눠 받기를 빼며 소환물로 잇던 금빛 실도 뺌 (할 일 없음) */
+    static void tick(ServerPlayer sp, Jobs.Job j, long now) {}
 
     /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 팬텀 왈츠 = 손의 청록 섬광 (춤 상대는 waltzTick). 그렸으면 true */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {

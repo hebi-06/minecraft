@@ -6,6 +6,7 @@ import java.util.List;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.RuneMob;
 import mmorpg.fabric.rune.Ult;
@@ -393,9 +394,24 @@ final class DarkknightSkills {
      */
     static boolean frenzy(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int dur = (int) JobUpgrades.num(sp, k, "dur", 160);
+        // 2026-11-28 피의 대가 (사용자 "다크 나이트도 비슷한 이유로 버프"): 아가리에 내 피를 먹여 깨움 — 최대 체력 × cost (체력 1 에서 멈춤)
+        double paid = RpgHealth.payHp(sp, Math.min(RpgHealth.maxOf(sp) * k.num("cost", 0.15), sp.getHealth() - 1));
         JobTraits.startStance(sp, k, dur);
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
+        if (paid > 0) {
+            // 가슴에서 터진 피가 방패의 아가리로 빨려 듦
+            RuneKit.Hand hh = RuneKit.handOf(sp);
+            Vec3 chest = V.up(c, 1.1);
+            Vec3 maw = V.up(V.add(hh.hand(), hh.f(), 0.5), 0.25);
+            JobFx.burst(level, chest, 0.8, JobTraits15.CRIMSON, JobTraits15.CRIMSON_CORE, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
+            for (int i = 0; i < 6; i++) {
+                Vec3 from = V.add(chest, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.6);
+                SkillFx.fx(level, "rpg:arrow_spark", from, Opt.of("dir", V.unit(V.sub(maw, from)), "speed", 3.0, "size", 0.14, "grow", 0.6, "life", 0.3, "color",
+                        JobTraits15.BLOOD, "alpha", 0.95));
+            }
+            SkillFx.play(level, "entity.warden.heartbeat", c, 0.9, 1.0);
+        }
         Vec3 g = ThunderlordSkills.ground(level, c);
         RuneKit.Hand h = RuneKit.handOf(sp);
         // 깨어남: 방패의 아가리가 포효 (고리) · 발밑에서 솟는 검붉은 불 · 붉은 금 · 연기
@@ -410,8 +426,9 @@ final class DarkknightSkills {
         SkillFx.play(level, "entity.ravager.roar", c, 0.8, 0.9);
         SkillFx.play(level, "entity.wolf.growl", c, 0.6, 1.0);
         JobTraits.sendGauge(sp, false);
-        Notify.notify(sp, "§4§l" + k.name() + " §7— 방패 평타가 물어뜯기 (+위력 × " + k.num("bite", 0.5) + ") · 공격 속도 +" + Math.round(k.num("speed", 0.2) * 100)
-                + "% · 굶주림 × " + Math.round(k.num("hunger", 2)) + " · " + dur / 20 + "초", 40);
+        Notify.notify(sp, "§4§l" + k.name() + " §7— " + (paid > 0 ? "피 " + Math.round(paid) + " 을 먹임 · " : "") + "방패 평타가 물어뜯기 (+위력 × "
+                + k.num("bite", 0.5) + ") · 공격 속도 +" + Math.round(k.num("speed", 0.2) * 100) + "% · 굶주림 × " + Math.round(k.num("hunger", 2)) + " · " + dur / 20
+                + "초" + JobTraits14.priceNote(sp), 40);
         return true;
     }
 

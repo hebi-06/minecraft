@@ -1727,7 +1727,7 @@ public final class RpgJobAdvanceTests {
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
         RpgMonster[] mob = {null};
-        // 핸드스프링: 앞 5칸 재주넘기 → 8틱 내려서며 둘레 3칸 2.85 · 맞은 몬스터 도발 (허수아비가 나를 노림) · 2초 받는 피해 −30%
+        // 핸드스프링: 앞 5칸 재주넘기 → 8틱 내려서며 둘레 3칸 2.85 · 맞은 몬스터 도발 (허수아비가 나를 노림). 2026-11-28 받는 피해 −30% 대신 쇼타임의 펑!
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             mob[0] = scarecrow(h, 1.2, 5.0);
@@ -1743,15 +1743,25 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(sp.position().z - mark[0] > 3.5, "flipped ahead: " + (sp.position().z - mark[0]));
             Monsters.Fight tf = Monsters.fightOf(mob[0]);
             h.assertTrue(tf != null && sp.getUUID().equals(tf.tauntId()), "the landing taunts the monster (it targets me)");
-            h.assertTrue(Math.abs(JobTraits10.guarding(sp) - 0.3) < 1e-9, "spring guard 0.3: " + JobTraits10.guarding(sp));
+            // 펑!: 몬스터의 공격이 닿으려는 순간 막음 (체력 그대로 · 넉백 없음) → 30틱 투명 · 그동안 오는 공격도 피함
+            JobTraits10.popReset(sp);
+            RpgMonsterTests.fresh(sp);
             float hp = sp.getHealth();
-            mark[1] = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
+            boolean hurt = sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
+            h.assertTrue(!hurt && sp.getHealth() == hp && JobTraits10.pops(sp) == 1 && JobTraits10.popped(sp) && sp.hasEffect(MobEffects.INVISIBILITY),
+                    "pop dodges the hit: hurt " + hurt + " · hp " + sp.getHealth() + " / " + hp + " · pops " + JobTraits10.pops(sp));
+            RpgMonsterTests.fresh(sp);
+            h.assertTrue(!sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F) && sp.getHealth() == hp && JobTraits10.pops(sp) == 1,
+                    "hidden: the next hit misses too (no second pop)");
+            h.assertTrue(JobTraits10.popLeft(sp) > 200 && JobTraits10.popLeft(sp) <= 240, "pop again in 12s: " + JobTraits10.popLeft(sp));
+            mark[1] = hp;
         }));
         steps.add(new RpgJobTests.Step(40, () -> {
-            h.assertTrue(JobTraits10.guarding(sp) == 0, "guard ends after 2s");
+            h.assertTrue(!JobTraits10.popped(sp) && !sp.hasEffect(MobEffects.INVISIBILITY), "reappears after 1.5s");
+            RpgMonsterTests.fresh(sp);
             float hp = sp.getHealth();
-            double loss = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
-            h.assertTrue(loss > 0 && Math.abs(mark[1] - loss * 0.7) < 1e-3, "spring guard −30%: " + mark[1] + " vs " + loss * 0.7);
+            boolean hurt = sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
+            h.assertTrue(hurt && sp.getHealth() < hp && JobTraits10.pops(sp) == 1, "on cooldown: the hit lands: " + sp.getHealth() + " / " + hp);
             // 벌룬 퍼레이드: 둘레 7칸 과녁 둘 · 허수아비 (풍선 여섯이 나눠 붙음) — 14틱 감음 2.55 (둔화) → 24틱 펑 6.0 (= 8.55) · 도발
             z.get(0).discard();
             home(h, sp);
@@ -3062,8 +3072,9 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.close(JobTraits14.lastPaid(sp, sp), RpgHealth.maxOf(sp) * 0.08, 0.05), "the drain is remembered: " + JobTraits14.lastPaid(sp, sp));
         }));
         steps.add(new RpgJobTests.Step(13, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.2;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "생귄 랜스 (몫 둘 — +20%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 2026-11-28 피의 대가: 랜스는 빼앗은 뒤 (체력 92%) 맞고 되돌림 (+4%) 은 맞은 뒤 — 맞을 때의 배율 (1 + 0.4 × 8%)
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.2 / JobTraits14.bloodPrice(sp) * (1 + 0.4 * 0.08);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "생귄 랜스 (몫 둘 — +20% · 피의 대가 +3.2%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(RpgJobTests.ruleNumber(h, z.get(0), j), "warlock rule-colored number");
             mark[1] = sp.getHealth();
         }));
@@ -3140,7 +3151,7 @@ public final class RpgJobAdvanceTests {
                     "ashborn: only my HP (8%), the ally keeps it: " + (mark[0] - sp.getHealth()) + " / " + (mark[1] - ally[0].getHealth()));
         }));
         steps.add(new RpgJobTests.Step(13, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.6;
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.6 / JobTraits14.bloodPrice(sp) * (1 + 0.4 * 0.08); // 맞을 때 체력 92%
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "생귄 랜스 (애시본 — +20% +40%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             JobSystem.setJob(sp, "warlock");
             h.assertTrue(!JobTraits.stanceOn(sp, "warlock_ash"), "job reset ends the ashborn");
@@ -3169,6 +3180,16 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(8, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 6 + 18 * 1.15) * 1.2;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 뱅큇 (2 × 3 + 18 × 1.15) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 2026-11-28 피의 대가: 잃은 체력 1%당 주는 피해 +0.4% (평타 · 직업 스킬 · 룬 — RpgCombat.dealtMult) · 체력 10% 아래는 같음 (+36%)
+            sp.setHealth(sp.getMaxHealth());
+            h.assertTrue(Math.abs(JobTraits14.bloodPrice(sp) - 1) < 1e-9, "full HP: no price " + JobTraits14.bloodPrice(sp));
+            double full = RpgCombat.dealtMult.applyAsDouble(sp);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            h.assertTrue(Math.abs(JobTraits14.bloodPrice(sp) - 1.2) < 1e-4 && Math.abs(RpgCombat.dealtMult.applyAsDouble(sp) / full - 1.2) < 1e-4,
+                    "half HP: dealt ×1.2 " + JobTraits14.bloodPrice(sp));
+            sp.setHealth(sp.getMaxHealth() * 0.05F);
+            h.assertTrue(Math.abs(JobTraits14.bloodPrice(sp) - 1.36) < 1e-4, "5% HP: capped at 90% lost → ×1.36 " + JobTraits14.bloodPrice(sp));
+            sp.setHealth(sp.getMaxHealth());
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
@@ -3417,7 +3438,7 @@ public final class RpgJobAdvanceTests {
             Jobs.Skill k = j.skill(1);
             double P = JobSystem.power(sp, j) * Jobs.damageScale(k);
             double flat = Math.min(z.get(0).getMaxHealth() * 0.08, P * 6);
-            double want = RpgJobTests.expected(sp, j, k, 2.4) + flat;
+            double want = RpgJobTests.expected(sp, j, k, 2.4) / JobTraits14.bloodPrice(sp) * (1 + 0.4 * 0.5) + flat; // 2026-11-28 피의 대가: 맞을 때 체력 50% (회복은 뒤)
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "헝거 런지 2.4 + 통째로 삼킴 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits15.devoured(sp) == 1 && RpgJobTests.close(JobTraits15.hunger(sp), 12, 1e-9), "devoured once · hunger 0 + 12: " + JobTraits15.hunger(sp));
             h.assertTrue(RpgJobTests.close(sp.getHealth() - mark[0], RpgHealth.maxOf(sp) * 0.06, 0.05), "devour heals 6%: " + (sp.getHealth() - mark[0]));
@@ -3449,7 +3470,7 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(2)), far), "the far one is not bitten " + TestDummies.dealt(z.get(2)));
             h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 24, 1e-9), "two bitten → hunger 24: " + JobTraits15.hunger(sp));
         }));
-        // 언홀리 프렌지: 태세 — 공격 속도 × 1.2 → 방패 평타 = 평타 + 위력 × 0.5 · 굶주림 4 × 2
+        // 언홀리 프렌지: 2026-11-28 피 15% 를 먹여 깨움 → 태세 — 공격 속도 × 1.3 → 방패 평타 = 평타 + 위력 × 0.8 · 굶주림 4 × 3
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
@@ -3458,19 +3479,23 @@ public final class RpgJobAdvanceTests {
             RpgJobTests.clearStrays(h, z.get(0));
             JobTraits15.setHunger(sp, 0);
             mark[1] = RpgCombat.attackSpeed.applyAsDouble(sp);
+            sp.setHealth(sp.getMaxHealth());
+            mark[0] = sp.getHealth();
             h.assertTrue(JobSkills.press(sp, 3), "언홀리 프렌지 cast");
             h.assertTrue(JobTraits.stanceOn(sp, "darkknight_frenzy"), "frenzy: stance");
+            h.assertTrue(RpgJobTests.close(mark[0] - sp.getHealth(), RpgHealth.maxOf(sp) * 0.15, 0.05), "frenzy feeds 15% of my HP: " + (mark[0] - sp.getHealth()));
             double after = RpgCombat.attackSpeed.applyAsDouble(sp);
-            h.assertTrue(Math.abs(after / mark[1] - 1.2) < 1e-6, "frenzy attack speed ×1.2: " + mark[1] + " → " + after);
+            h.assertTrue(Math.abs(after / mark[1] - 1.3) < 1e-6, "frenzy attack speed ×1.3: " + mark[1] + " → " + after);
         }));
         steps.add(new RpgJobTests.Step(4, () -> {
             RpgCombat.forceCrit = false;
             mark[2] = TestDummies.dealt(z.get(0));
             sp.attack(z.get(0));
             double got = TestDummies.dealt(z.get(0)) - mark[2];
-            double want = RpgJobTests.basic(sp, w) + raw(sp, j, 0.5);
-            h.assertTrue(RpgJobTests.near(got, want), "frenzy bite: basic + power × 0.5 " + got + " vs " + want);
-            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 8, 1e-9), "frenzy basic hunger 4 × 2: " + JobTraits15.hunger(sp));
+            double want = RpgJobTests.basic(sp, w) + raw(sp, j, 0.8);
+            h.assertTrue(RpgJobTests.near(got, want), "frenzy bite: basic + power × 0.8 " + got + " vs " + want);
+            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 12, 1e-9), "frenzy basic hunger 4 × 3: " + JobTraits15.hunger(sp));
+            h.assertTrue(JobTraits14.bloodPrice(sp) > 1.05, "the paid blood raises the price: " + JobTraits14.bloodPrice(sp));
         }));
         // 어비설 메이: 3칸 앞 과녁 (겨눔 — 가운데) · 그 왼쪽 앞 과녁 (둘레 4칸 안) · 왼쪽 뒤 멀리 과녁 (가운데에서 5.7칸 — 혀가 닿는 6칸 안 · 터뜨림 4.5칸 (+ 0.5) 밖, 밀 수
         // 없어 끌려오지 못함 · 벽 안) → 26 에 8 · 기절 → 44 에 24
