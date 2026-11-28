@@ -357,7 +357,10 @@ public final class RuneTip {
             }
             return out;
         }
-        if (d.truthy("heal") && d.truthy("healMax")) {
+        if (d.truthy("leech") && d.truthy("heal")) {
+            // 2026-11-28 새 버서커 (rageSlam): 광폭화 동안 모든 공격 흡혈 — 준 피해의 leech, 1초에 최대 체력 × heal × 회복 배율까지
+            out.add("§r§a✚ " + L + "흡혈 " + N + "준 피해의 " + pct(d.num("leech")) + "%" + L + " (1초에 " + hp(c, d.num("heal")) + "까지)");
+        } else if (d.truthy("heal") && d.truthy("healMax")) {
             out.add("§r§a✚ " + L + "흡혈 " + N + "적마다 " + hp(c, d.num("heal")) + L + " (" + d.text("healMax") + "명까지)");
         } else if (d.truthy("heal")) {
             boolean pact = "undyingPact".equals(c.fn());

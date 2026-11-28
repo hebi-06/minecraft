@@ -114,7 +114,18 @@ public final class RuneScaleTest {
         Runes.Rune bz = rune("berserker", "transcend");
         near(bz.def().num("reduce"), 0.18, "new berserker −18%");
         near(bz.def().num("heal"), 0.018, "new berserker lifesteal 1.8%");
-        check(bz.def().num("hits") == 6 && bz.def().num("gap") == 20, "new berserker rage 6s kept");
+        // 2026-11-28 사용자 메모 (룬 도감 판 15 — "처음에 한번 크게 내려치고 그 이후에는 버프만"): 새 동작 rageSlam — 한 방 (배율 32 = 예산 전부 · 0.65초 선딜 +13%) +
+        // 광폭화 6초 (받는 피해 −18% · 모든 공격 흡혈 — 준 피해의 5%, 1초에 최대 체력 1.8% × 회복 배율까지). 난타 (hits · gap · healMax) 는 없음
+        check("rageSlam".equals(bz.def().str("fn")) && bz.def().numOrNull("hits") == null && bz.def().numOrNull("gap") == null
+                && bz.def().numOrNull("healMax") == null, "new berserker: one slam (no barrage)");
+        near(Runes.runeTotalMult(bz.def()), 32, "new berserker one hit × 32");
+        near(bz.def().num("ticks"), 120, "new berserker rage 6s kept");
+        near(bz.def().num("leech"), 0.05, "new berserker leech 5% of dealt");
+        check(Runes.windupTicks(bz) == 13 && Runes.spreadKind(bz) == null && (int) Runes.spreadEntry(bz).num("t") == 13, "new berserker: windup 13 · one hit");
+        near(Runes.timeMult(bz), 1.13, "new berserker windup +13%");
+        double bzBudget = Runes.runeTotalMult(bz.def()) * Runes.budgetScale(bz);
+        check(Math.abs(bzBudget - 32 / 36.0 * 32) < 1e-3, "new berserker budget (32 × scale) " + bzBudget);
+        check("berserker".equals(rune("axe", "transcend").def().str("fn")) && rune("axe", "transcend").def().num("hits") == 6, "old berserker (숨김) barrage kept");
         near(Runes.utilValue(bz, "lifesteal"), 0.09, "new berserker lifesteal 0.1 × 0.9");
         near(Runes.utilCost(bz), (0.18 + 0.09) * 36 / 32.0, "new berserker util 33.8 → 30.4%");
         near(Runes.utilCost(rune("axe", "transcend")), 0.2, "old berserker (숨김 — 표의 값 · 재사용 맞춤 없음) util kept");

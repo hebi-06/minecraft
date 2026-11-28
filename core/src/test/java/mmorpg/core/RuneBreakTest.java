@@ -236,11 +236,19 @@ public final class RuneBreakTest {
         check(RuneBreak.changeTexts(bers, 3).stream().noneMatch(t -> t.contains("위력")) && RuneBreak.changeTexts(bers, 3).contains("광폭화 6 → 8초"),
                 "berserker 3: per-hit power hidden (총 피해 숫자로) " + RuneBreak.changeTexts(bers, 3));
         Runes.Rune bersNew = rune("berserker", "transcend");
-        near(Runes.runeTotalMult(RuneBreak.def(bersNew, 3)) / Runes.runeTotalMult(bersNew.def()), 39 / 31.98, "new berserker 3 growth on the line");
+        // 2026-11-28 새 버서커 rageSlam (한 방 + 광폭화 — rune_break.json transcend.rageSlam): 한 방 배율 32 → 39 → 50 (초월 돌파 선) · 광폭화 6 → 8 → 10초
+        near(Runes.runeTotalMult(bersNew.def()), 32, "new berserker 0 total 32 (one slam)");
+        near(Runes.runeTotalMult(RuneBreak.def(bersNew, 3)), 39, "new berserker 3 total 39");
+        near(Runes.runeTotalMult(RuneBreak.def(bersNew, 6)), 50, "new berserker 6 total 50");
+        check(RuneBreak.changeTexts(bersNew, 3).equals(List.of("광폭화 6 → 8초", "받는 피해 -18 → -27%", "광폭화 동안 밀려나지 않음")),
+                "new berserker 3 text " + RuneBreak.changeTexts(bersNew, 3));
+        check(RuneBreak.changeTexts(bersNew, 6).equals(List.of("광폭화 8 → 10초", "받는 피해 -27 → -31%", "내려찍기 범위 4.5 → 5.5칸")),
+                "new berserker 6 text " + RuneBreak.changeTexts(bersNew, 6));
         near(Runes.runeTotalMult(RuneBreak.def(rune("spiritking", "transcend"), 3)), 39, "new spirit king 3 total 39");
         // 2026-11-28 쿨 32초 < 초월 기준 36초인 새 룬 둘 (사용자 "너가 말한대로 하자" — 지키는 유틸 × 쿨 ÷ 기준 0.889 을 돌파 단계에도, rune_break.json
         // transcendFamily): 이모탈 오스 맹약 7 · 9 · 11초 (3돌 즉시 회복 18% · 반격 한 번 2.37 — 초월 돌파 선) · 버서커 받는 피해 −18 · −27 · −31%. 옛 룬 (vit · axe) 은 그대로
-        check(RuneBreak.familyOverrides().equals(List.of("immortaloath", "berserker")), "family overrides " + RuneBreak.familyOverrides());
+        // 같은 날 버서커는 새 동작 rageSlam 이 되어 단계 값이 transcend.rageSlam 에 — 계열 덮어쓰기는 이모탈 오스만
+        check(RuneBreak.familyOverrides().equals(List.of("immortaloath")), "family overrides " + RuneBreak.familyOverrides());
         for (String f : RuneBreak.familyOverrides()) check(RuneBreak.tiered(rune(f, "transcend")) && Runes.isSet(f), f + ": a tiered set rune");
         Runes.Rune oath = rune("immortaloath", "transcend");
         near(RuneBreak.def(oath, 3).num("ticks"), 180, "immortal oath 3: 9s");
@@ -257,7 +265,9 @@ public final class RuneBreakTest {
         near(Runes.runeTotalMult(RuneBreak.def(rune("vit", "transcend"), 6)), 2.5 * 12, "old undying 6: 12 pulses");
         near(RuneBreak.def(bersNew, 3).num("reduce"), 0.27, "new berserker 3: −27%");
         near(RuneBreak.def(bersNew, 6).num("reduce"), 0.31, "new berserker 6: −31%");
-        near(RuneBreak.def(bersNew, 6).num("hits"), 10, "new berserker 6: rage 10s from the fn table");
+        near(RuneBreak.def(bersNew, 6).num("ticks"), 200, "new berserker 6: rage 10s");
+        near(RuneBreak.def(bersNew, 6).num("radius"), 5.5, "new berserker 6: slam radius 5.5");
+        check(RuneBreak.def(bersNew, 6).numOrNull("hits") == null, "new berserker 6: still one slam");
         near(RuneBreak.def(bersNew, 6).num("heal"), 0.018 * 1.6, "new berserker 6: lifesteal 1.8% × coef");
         check(RuneBreak.changeTexts(bersNew, 3).contains("받는 피해 -18 → -27%") && RuneBreak.changeTexts(bersNew, 6).contains("받는 피해 -27 → -31%"),
                 "new berserker % " + RuneBreak.changeTexts(bersNew, 3) + " " + RuneBreak.changeTexts(bersNew, 6));

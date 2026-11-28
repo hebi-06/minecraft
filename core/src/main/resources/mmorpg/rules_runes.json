@@ -808,20 +808,25 @@
   },
   "berserker": {
    "transcend": {
-    "fn": "berserker",
+    "fn": "rageSlam",
     "name": "버서커",
-    "desc": "광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈",
-    "use": "둘레 연타 · 흡혈 · 받는 피해 −18%",
-    "mult": 5.33,
-    "hits": 6,
-    "gap": 20,
-    "radius": 4,
+    "desc": "핏빛 거대한 도끼로 크게 내려찍은 뒤 광폭화 · 모든 공격 흡혈",
+    "use": "큰 한 방 · 광폭화 6초 (흡혈 · 받는 피해 −18%)",
+    "mult": 32,
+    "radius": 4.5,
     "reduce": 0.18,
     "heal": 0.018,
-    "healMax": 5,
+    "windup": 13,
+    "dist": 2.2,
+    "ticks": 120,
+    "leech": 0.05,
+    "flow": [
+     "{t:windup} 치켜든 거대한 도끼로 앞 {radius}칸을 내려찍음",
+     "그 뒤 광폭화 {t:ticks} (모든 공격 흡혈)"
+    ],
     "cd": 32,
     "look": "axe:transcend",
-    "scale": 0.8894
+    "scale": 0.8889
    }
   },
   "lunaexec": {
@@ -1238,12 +1243,12 @@
     "castAdd": 0
    },
    "berserker.transcend": {
-    "t": 100,
-    "zone": true,
+    "t": 13,
     "u": [
      "lifesteal",
      "reduce"
     ],
+    "w": 13,
     "r": "melee",
     "uCost": {
      "reduce": 0.18,

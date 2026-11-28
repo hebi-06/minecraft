@@ -117,10 +117,16 @@ SET = [
     # 2026-11-17 도감 메모 (천붕 → 스카이폴 "유틸 삭제 및 쿨타임 증가, 이에 따른 데미지 소량 증가"): 띄움을 뺌 (유틸 −5% 가 피해로 · 쿨 50초 = 예산 × 50/36)
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
          set={"lift": 0}, desc="하늘 높이에서 거대한 검이 떨어져 꽂힘", use="원거리 광역 큰 한 방"),
-    # 2026-11-28 쿨 32초 < 초월 기준 36초 → 지키는 유틸 세기 × 0.9 (받는 피해 −20 → −18% · 흡혈 2 → 1.8% — 광폭화 6초 · 난타 6번은 그대로)
+    # 2026-11-28 쿨 32초 < 초월 기준 36초 → 지키는 유틸 세기 × 0.9 (받는 피해 −20 → −18% · 흡혈 2 → 1.8%)
+    # 2026-11-28 사용자 메모 (룬 도감 판 15 — "도끼를 그냥 처음에 한번 크게 내려치고 그이후에는 버프만 받는걸로 지속딜 삭제 및 한방딜로 변경, 버프는 유지") ·
+    # 흡혈 (사용자 고른 것 "광폭화 동안 모든 공격 흡혈"): 새 동작 rageSlam (옛 광전사의 혼 berserker 의 난타는 숨긴 옛 룬에 그대로) — windup 틱 치켜든 거대한
+    # 도끼로 앞을 한 번 (예산 전부 — mult 32 · 선딜 0.65초 보정 +13%) → 그때부터 광폭화 ticks 틱: 받는 피해 −18% · 모든 공격 (평타 · 직업 스킬 · 룬) 준 피해의
+    # leech 회복 (1초에 최대 체력 × heal × 회복 배율까지 — 옛 난타 흡혈의 한 적 몫 1초 1.8% 와 같은 상한). 유틸 값은 그대로 (흡혈 0.1 · 받는 피해 −18% 6초 × 0.9)
     dict(key="berserker", name="버서커", grade="transcend", cd=32, pair=["bloodknight_frenzy"], r="melee", src="axe.transcend", u=["lifesteal", "reduce"],
-         set={"reduce": 0.18, "heal": 0.018}, guard_sec=6, fit={"lifesteal": 0.9, "reduce": 0.9},
-         desc="광폭화 — 핏빛 거대한 룬 도끼가 둘레를 거듭 내려찍음 · 흡혈", use="둘레 연타 · 흡혈 · 받는 피해 −18%"),
+         set={"fn": "rageSlam", "mult": 32, "windup": 13, "dist": 2.2, "radius": 4.5, "ticks": 120, "reduce": 0.18, "heal": 0.018, "leech": 0.05,
+              "flow": ["{t:windup} 치켜든 거대한 도끼로 앞 {radius}칸을 내려찍음", "그 뒤 광폭화 {t:ticks} (모든 공격 흡혈)"]},
+         drop=["hits", "gap", "healMax"], spread={"t": 13, "w": 13, "zone": None}, guard_sec=6, fit={"lifesteal": 0.9, "reduce": 0.9},
+         desc="핏빛 거대한 도끼로 크게 내려찍은 뒤 광폭화 · 모든 공격 흡혈", use="큰 한 방 · 광폭화 6초 (흡혈 · 받는 피해 −18%)"),
     # 2026-11-17 등급 안 밸런스: 달빛 폭발이 둘레 3칸 적도 침 (splashMult 16 — 대상의 절반) → 단일 (+15%) 이 아니라 좁은 범위 (+8% — π × 3² ≈ 28칸²)
     # 2026-11-18 코드 감사 (사용자 "램파트와 같게"): 표식 1초 (선딜) 동안 나는 투명 · 대상은 둔화 IV → 선딜이 위험이 아님 (램파트의 막는 선딜과 같음 — 선딜 보정 없음),
     # 투명 (은신) · 대상 둔화도 표에 없던 유틸 → 값
@@ -219,6 +225,11 @@ def build():
             src = dict(runes[fam][grade])
             d = dict(src)
             d.update(e.get("set", {}))
+            # 2026-11-28 옛 동작에서 이어받은 값 중 새 동작에 없는 것 (버서커 rageSlam — 난타 hits · gap · 흡혈 명수 healMax)
+            for k in e.get("drop", []):
+                if k not in d:
+                    raise SystemExit("drop 할 값이 없음: {} {}".format(e["name"], k))
+                d.pop(k)
             d["name"] = e["name"]
             d["desc"] = e["desc"]
             d["use"] = e["use"]
@@ -231,6 +242,8 @@ def build():
                 d["scale"] = round(budget / old, 4)
             sp = dict(S["runes"].get(e["src"]) or {})
             sp.update(e.get("spread", {}))
+            for k in [k for k, v in sp.items() if v is None]:
+                sp.pop(k)  # 2026-11-28 옛 표의 값을 뺌 (None — 버서커: 장판 zone)
             sp["u"] = list(e["u"])
             if e.get("a"):
                 sp["a"] = e["a"]

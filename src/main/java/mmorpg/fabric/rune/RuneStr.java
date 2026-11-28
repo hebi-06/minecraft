@@ -211,9 +211,11 @@ final class RuneStr {
         SkillFx.play(level, "mace.heavy_smash_ground", start, 0.8, 1);
         SkillFx.shake(sp, 0.2, 0.25);
         // 2026-11-13 사용자 메모 (룬 도감 — 대지 균열 "애 왜 위에서 아래로 안내려찍어?"): 가로로 누운 초승달 (spin 6) → 위에서 아래로 내리긋는 세로 초승달
-        // (삼원소 연격의 얼음 세로 베기와 같은 세움) · 동작도 머리 위에서 곧장 내려찍음 (rn_fissure)
-        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.5), -0.3), f, Opt.of("shape", "heavy", "flip", true, "size", 2.3, "life", 0.24, "speed", 2.0,
-                "spin", 84.0, "color", glow, "aura", core));
+        // (삼원소 연격의 얼음 세로 베기와 같은 세움) · 동작도 머리 위에서 곧장 내려찍음 (rn_fissure).
+        // 2026-11-28 사용자 메모 (룬 도감 판 15 — "1인칭에서 참격이 일자로 안나가고 v자로 나감"): 칠한 반달 (PhantomFx arc — 기울기 = spin + 90) 에서 flip · spin 84 는
+        // 기울기 174 (누운 반달 — 1인칭은 아래로 불룩한 V) 였음 → spin −6 (기울기 84 — 3인칭 선 반달 내리침 · 1인칭 화면 가운데를 곧게: PhantomFx.waveStraight)
+        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.5), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.3, "life", 0.24, "speed", 2.0,
+                "spin", -6.0, "color", glow, "aura", core));
         Vec3 side = V.rightOf(f);
         int length = (int) k.num("length");
         double width = k.num("width");

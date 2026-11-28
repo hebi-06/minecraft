@@ -293,6 +293,12 @@ final class PhantomFx {
      */
     static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every, boolean twoSided,
             String back, Predicate<ServerPlayer> who, double alpha) {
+        return tiled(level, base, k, at, size, facing, roll, from, every, twoSided, back, who, alpha, 1.0);
+    }
+
+    /** 2026-11-28 같은 것 — 그림 세로 (돌림 전 그림 면의 위아래) 를 squash 배로 납작하게 (조각 자리도 같이 — {@link Vfx.Sprite#squash}) */
+    static Vfx.Fx tiled(ServerLevel level, String base, int k, Vec3 at, double size, Quaternionf facing, double roll, int from, int every, boolean twoSided,
+            String back, Predicate<ServerPlayer> who, double alpha, double squash) {
         Vfx.Sheet s0 = Vfx.sheet(base + "_00");
         int frames = s0.frames();
         int life = from + frames * every + 4;
@@ -309,6 +315,7 @@ final class PhantomFx {
                         if (side == 1) sp.mirror();
                         if (roll != 0) sp.roll(roll, 0);
                         if (alpha < 0.999) sp.alpha(alpha);
+                        if (squash != 1.0) sp.squash(1, squash);
                         sp.size(t);
                         sp.offset((c - (k - 1) / 2.0) * t, ((k - 1) / 2.0 - r) * t);
                         sp.play(fx.age(), 0, frames, every, false);
@@ -1067,6 +1074,33 @@ final class PhantomFx {
         int every = Math.max(1, (int) Math.round(ticks / (double) frames));
         // +waveTilt (화면에서 반시계 — 예전 rfx_jwave 의 spin: 0 = 위로 불룩 · 90 = 왼쪽으로 불룩). 2026-11-15 −waveTilt 는 좌우 거울이었음
         Vfx.Fx fx = tiled(level, L.n("slashm"), 2, at, half * 2, null, waveTilt, 0, every, false, null, who, alpha);
+        if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
+    }
+
+    /** 1인칭 세로 베기 판의 납작함 (불룩한 쪽 — BasicSlash fpSquash 와 같은 값) · 반달 가운데를 눈앞 가운데 줄에 맞추는 몫 (바깥 날에서 안쪽 — fpApexIn) */
+    static final double FP_STRAIGHT_SQUASH = 0.3;
+    static final double FP_STRAIGHT_APEX_IN = 0.85;
+    /** 세로 베기로 볼 기울기 (|cos tilt| 이 이 값 아래 — 90 · 270 에서 ±20° 안) */
+    static final double FP_STRAIGHT_COS = 0.342;
+
+    /**
+     * 2026-11-28 사용자 메모 (룬 도감 — 어스 브레이커 "1인칭 참격 방향이 왼쪽으로 가는거처럼 보임 정면으로 보이게", 피셔 슬램 "1인칭에서 참격이 일자로 안나가고 v자로
+     * 나감"): 세로 베기 (위 → 아래 내리침 · 아래 → 위 올려 베기) 의 쓴 사람 1인칭 칼빛 — 카메라를 보는 초승달을 세로로 세우되 (내리침 = 왼쪽으로 불룩 · 올려 베기 =
+     * 오른쪽) 불룩한 쪽을 FP_STRAIGHT_SQUASH 배로 납작하게 하고 반달 가운데 (호 꼭대기 — 그림 가운데에서 (SLASH_R − SLASH_CY) × 반 변) 를 눈앞 가운데 줄에 맞춤 →
+     * 화면 가운데를 위에서 아래로 곧게 지나 앞으로 날아감 (평타 세로 베기 BasicSlash plane side 의 1인칭과 같은 틀). at = 눈앞 가운데 줄 위의 자리
+     */
+    static void waveStraight(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double speed, double half, boolean down, double life, Predicate<ServerPlayer> who,
+            double alpha) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        Vec3 h = V.len(V.flat(d)) > 1e-6 ? V.flat(d) : new Vec3(0, 0, 1);
+        Vec3 right = V.rightOf(h);
+        int ticks = Math.max(2, (int) Math.round(life * 20));
+        int frames = Vfx.sheet(L.n("slashm_00")).frames();
+        int every = Math.max(1, (int) Math.round(ticks / (double) frames));
+        // 내리침은 왼쪽으로 불룩 (돌림 90) → 그림 가운데를 오른쪽으로 · 올려 베기는 그 반대
+        double apex = (SLASH_R - SLASH_CY) * half * FP_STRAIGHT_SQUASH * FP_STRAIGHT_APEX_IN;
+        Vec3 c = V.add(at, right, down ? apex : -apex);
+        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, c, half * 2, null, down ? 90 : 270, 0, every, false, null, who, alpha, FP_STRAIGHT_SQUASH);
         if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
     }
 
@@ -2293,7 +2327,12 @@ final class PhantomFx {
                 m = m.above(ground(level, at).y);
                 double alpha = Math.min(1, o.num("alpha", 1));
                 moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
-                if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+                // 2026-11-28 세로 베기 (3인칭 반달이 선 반달 — 90 · 270 에서 ±20°) 의 1인칭은 화면 가운데를 곧게 (waveStraight): 예전 카메라를 보는 초승달은
+                // 왼쪽으로 불룩한 채 눈앞 왼쪽에 (어스 브레이커) · 아래로 불룩한 V 자 (피셔 슬램 — 기울기 174) 로 보였음
+                double tc = Math.cos(Math.toRadians(tilt));
+                if (owner != null && Math.abs(tc) < FP_STRAIGHT_COS)
+                    waveStraight(level, L, at, d, speed, R / SLASH_R, Math.sin(Math.toRadians(tilt)) > 0, life, only1p(owner), alpha);
+                else if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
             }
             case "flystreak" -> {
                 // 2026-11-17 날아가는 빛 (RuneKit.flyStreak — 예전 arrow_shot 빛 · 심지 두 줄): 묶음의 돌진 줄기 한 장 (dash — 같은 길 · 빠르기 · 반 길이 size)

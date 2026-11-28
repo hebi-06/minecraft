@@ -37,6 +37,12 @@ final class RuneAxe {
         RuneCast.register("leapSlam", RuneAxe::leapSlam);
         RuneCast.register("execute", RuneAxe::execute);
         RuneCast.register("berserker", RuneAxe::berserker);
+        RuneCast.register("rageSlam", RuneAxe::rageSlam); // 2026-11-28 새 버서커 (한 방 + 광폭화 · 모든 공격 흡혈)
+        DamageNumbers.DealtHook dh = DamageNumbers.dealtHook;
+        DamageNumbers.dealtHook = (a, v, d) -> {
+            dh.dealt(a, v, d);
+            rageLeech(a, v, d);
+        };
     }
 
     // ------------------------------------------------------------ 2026-11-11 Vfx (모드 없는 클라이언트도 보는 입체 도끼 + 2D 연출)
@@ -598,6 +604,225 @@ final class RuneAxe {
             if (p != null) SkillFx.play(p.level(), "mob.zombie.unfect", p.position(), 0.8, 0.5);
         });
         return true;
+    }
+
+    // ------------------------------------------------------------ 2026-11-28 새 버서커 (rageSlam)
+
+    /** 광폭화 흡혈 (모든 공격 — DamageNumbers.dealtHook): 플레이어 uuid → 광폭화 */
+    private static final Map<UUID, Rage> RAGES = new HashMap<>();
+
+    /**
+     * 광폭화 하나: 걸 때의 죽음 표 alive · 끝 틱 until · 준 피해의 rate 만큼 회복 · 1초 (20틱 칸) 상한 = 최대 체력 × capFrac — 지금 칸의 처음 winStart · 그 칸에서
+     * 회복하려 한 양 winHealed · 띄울 숫자 pending (모아서 10틱마다) · 마지막으로 맞은 자리 lastHit (피가 흘러드는 줄기)
+     */
+    private static final class Rage {
+        final int alive;
+        final long until;
+        final double rate;
+        final double capFrac;
+        long winStart;
+        double winHealed;
+        double pending;
+        Vec3 lastHit;
+
+        Rage(int alive, long until, double rate, double capFrac, long now) {
+            this.alive = alive;
+            this.until = until;
+            this.rate = rate;
+            this.capFrac = capFrac;
+            this.winStart = now;
+        }
+    }
+
+    /** 광폭화 동안 준 피해 (평타 · 직업 스킬 · 룬 — 들어간 피해 그대로): × rate 회복, 20틱 칸마다 최대 체력 × capFrac 까지 */
+    static void rageLeech(ServerPlayer sp, LivingEntity victim, double dealt) {
+        if (RAGES.isEmpty() || sp == null || !(dealt > 0)) return;
+        Rage g = RAGES.get(sp.getUUID());
+        if (g == null) return;
+        long now = mmorpg.fabric.Tasks.now();
+        if (now > g.until || !RuneKit.aliveSince(sp, g.alive)) {
+            RAGES.remove(sp.getUUID());
+            return;
+        }
+        if (now - g.winStart >= 20) {
+            g.winStart = now;
+            g.winHealed = 0;
+        }
+        double want = Math.min(dealt * g.rate, RpgHealth.maxOf(sp) * g.capFrac - g.winHealed);
+        if (!(want > 0)) return;
+        g.winHealed += want;
+        double got = RpgHealth.healBy(sp, want);
+        if (got > 0) g.pending += got;
+        if (victim != null) g.lastHit = Kit.bodyPoint(victim);
+    }
+
+    /** 시험용: 광폭화 흡혈이 걸려 있는지 */
+    public static boolean rageOn(ServerPlayer sp) {
+        Rage g = RAGES.get(sp.getUUID());
+        return g != null && mmorpg.fabric.Tasks.now() <= g.until;
+    }
+
+    /**
+     * 2026-11-28 새 버서커 (사용자 메모 — 룬 도감 판 15 "도끼를 그냥 처음에 한번 크게 내려치고 그이후에는 버프만 받는걸로 지속딜 삭제 및 한방딜로 변경, 버프는 유지" ·
+     * 흡혈은 사용자 고른 것 "광폭화 동안 모든 공격 흡혈"). 옛 광전사의 혼 (숨김 — berserker 난타) 은 그대로.
+     * <ol>
+     * <li>치켜듦 (windup 틱): 쓴 자리 머리 위 뒤로 거대한 핏빛 룬 도끼가 커지며 나타나 젖혀짐 · 내려찍을 자리 (앞 dist 칸) 에 핏빛 고리가 반지름 radius 까지 퍼짐 (예고)</li>
+     * <li>내려찍기 (windup − 2 → windup): 2틱 동안 내리찍어 날이 땅에 박힘 → 반지름 radius 칸 모두 위력 × mult 한 번 (예산 전부) · 큰 핏빛 초승달 둘 · 갈라진 땅 ·
+     * 터짐 · 충격 고리 셋 · 솟는 바위 (3D) · 흙먼지 · 튀는 돌 · 피 · 화면 번쩍임 (3돌 이상) · 맞은 적마다 X 베기</li>
+     * <li>광폭화 (ticks 틱 — 내려찍은 때부터): 받는 피해 − reduce · 모든 공격이 준 피해의 leech 만큼 회복 (1초에 최대 체력 × heal × 회복 배율까지 — rageLeech) ·
+     * 몸의 핏빛 불꽃 셋 · 핏빛 하늘 · 회복은 10틱마다 모아 숫자 · 맞힌 적에게서 피가 흘러듦. 3돌: 밀려나지 않음. 죽으면 끝</li>
+     * </ol>
+     */
+    static boolean rageSlam(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
+        ServerLevel level0 = sp.level();
+        Vec3 c0 = sp.position();
+        Vec3 d = V.flat(sp.getViewVector(1F));
+        if (V.len(d) < 1e-6) d = Kit.facingOf(sp);
+        final Vec3 f = V.unit(d);
+        int windup = Math.max(4, (int) k.num("windup"));
+        int rage = (int) k.num("ticks");
+        double radius = k.num("radius");
+        double[][] cs = RuneKit.colorOf("axe");
+        double[] glow = cs[0];
+        double[] core = cs[1];
+        int alive = RuneKit.deathToken(sp);
+        Vec3 hit = VfxKit.ground(level0, V.add(c0, f, k.num("dist")));
+        Vfx.Fx fx = Vfx.at(level0, c0, windup + rage + 40);
+        SkillFx.play(level0, "mob.ravager.roar", c0, 0.8, 1);
+        SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.0, 0.5);
+        // 치켜든 거대한 도끼 (쓴 자리 — 손잡이 머리 위 앞 0.6칸 · 3.4칸 높이, 머리가 위 · 조금 뒤 · 날이 앞): 작게 나타나 windup − 2 틱 동안 커짐
+        Vec3 grip = V.add(V.up(c0, 3.4), f, 0.6);
+        Vec3 down = V.unit(V.sub(V.up(hit, 0.2), grip));
+        double sc = (V.len(V.sub(V.up(hit, 0.2), grip)) + 0.15) / (headReach(r.grade()) / 16.0);
+        Vec3 up0 = V.unit(V.add(V.UP, f, -0.45));
+        Vec3 edge0 = V.unit(V.add(f, V.UP, 0.45));
+        Vec3 mid = V.unit(V.add(V.add(up0, down), f, 0.7));
+        Vec3 right = V.rightOf(f);
+        Vec3 edgeMid = V.unit(V.cross(mid, right));
+        Vec3 edgeEnd = V.unit(V.cross(down, right));
+        double[] g = gripOf(r.grade());
+        Vfx.Prop axe = fx.prop(axeModel(r), grip).grip(g[0], g[1], g[2]).bright();
+        axe.to(null, axeRot(up0, edge0), sc * 0.3, 0);
+        axe.to(null, null, sc, Math.max(1, windup - 3));
+        Vec3 head0 = V.add(grip, up0, sc * headReach(r.grade()) / 16.0);
+        Vfx.Sprite halo = fx.sprite("glow", head0).color(BLOOD).size(1.2).alpha(0.6);
+        halo.to(null, 3.4, Math.max(1, windup - 3));
+        fx.sprite("cinder", V.up(c0, 1.6)).color(BLOOD).size(3.6).alpha(0.85).play(0, 0, 8, 2, false);
+        VfxKit.ring(fx, hit, radius, BLOOD, 0, windup); // 내려찍을 자리 예고 (맞는 범위까지 퍼짐)
+        VfxKit.crack(fx, hit, 1.6, BLOOD, 0, windup + 6);
+        for (int t = 2; t < windup - 2; t += 3) {
+            final int tt = t;
+            fx.on(tt, () -> {
+                // 도끼 머리에 모여드는 핏빛 불티
+                Vec3 h = V.add(grip, up0, sc * headReach(r.grade()) / 16.0 * Math.min(1, 0.3 + 0.7 * tt / (windup - 3.0)));
+                VfxKit.sparks(fx, h, Kit.rand() < 0.5 ? BLOOD : glow, 3, 1.4, 0);
+            });
+        }
+        int swing = windup - 2;
+        fx.on(swing, () -> {
+            axe.to(grip, axeRot(mid, edgeMid), sc, 1);
+            halo.remove();
+            SkillFx.play(level0, "item.trident.riptide_1", grip, 0.8, 0.5);
+        });
+        fx.on(swing + 1, () -> axe.to(grip, axeRot(down, edgeEnd), sc, 1));
+        // 피해 · 광폭화는 시간표 (Tasks) 로 — 그림 (fx) 이 먼저 끝나도 그대로
+        RuneKit.later(windup, () -> {
+            if (!RuneKit.aliveSince(sp, alive) || sp.isRemoved()) {
+                fx.end();
+                return;
+            }
+            ServerLevel level = sp.level();
+            // 한 방: 반지름 radius 칸 모두 (예산 전부)
+            int n = 0;
+            for (LivingEntity e : Kit.around(sp, hit, radius)) {
+                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                    n++;
+                    if (n <= 8) {
+                        VfxKit.xcut(fx, Kit.bodyPoint(e), 1.8, n % 2 == 0 ? BLOOD : glow, 1);
+                        VfxKit.blood(fx, Kit.bodyPoint(e), 0.9, 2, BLOOD, 1);
+                    }
+                }
+            }
+            // 내려찍힌 자리
+            VfxKit.slash(fx, V.up(hit, 2.0), V.DOWN, V.scale(f, -1), 6.0, glow, 0);
+            VfxKit.slash(fx, V.up(hit, 1.8), V.DOWN, V.scale(f, -1), 5.0, BLOOD, 1);
+            VfxKit.crack(fx, hit, radius * 1.7, BLOOD, 0, 60);
+            VfxKit.burst(fx, V.up(hit, 0.6), 4.8, glow, 0);
+            VfxKit.burst(fx, V.up(hit, 0.9), 3.4, BLOOD, 2);
+            VfxKit.ring(fx, hit, radius * 0.6, core, 0, 8);
+            VfxKit.ring(fx, hit, radius, BLOOD, 1, 10);
+            VfxKit.ring(fx, hit, radius * 1.3, glow, 3, 12);
+            VfxKit.dust(fx, hit, 2.4, 10, VfxKit.DUST, 1);
+            VfxKit.rocks(fx, hit, 12, 7.0, 0.45, new String[] {"minecraft:cobbled_deepslate", "minecraft:deepslate", "minecraft:tuff", "minecraft:cobblestone"}, 1);
+            VfxKit.sparks(fx, V.up(hit, 0.4), core, 10, 2.4, 1);
+            VfxKit.blood(fx, V.up(hit, 0.6), 1.6, 6, BLOOD, 1);
+            RuneSwing.erupt(level, hit, f, 5, 300, 0.4, 1.3, 0.5, 0.9, 2.6, glow); // 솟아 튀는 3D 바위
+            RuneKit.zonePulse(level, hit, glow, radius, 0.5);
+            SkillFx.play(level, "mace.heavy_smash_ground", hit, 1.0, 0.7);
+            SkillFx.play(level, "random.explode", hit, 1.0, 0.6);
+            // 박힌 도끼: 10틱 머문 뒤 가라앉으며 사라짐
+            fx.on(fx.age() + 10, () -> axe.to(V.add(grip, down, 0.9), null, sc * 0.4, 8));
+            fx.on(fx.age() + 19, axe::remove);
+            // 광폭화 (내려찍은 때부터 rage 틱)
+            Vec3 c = sp.position();
+            Guards.set(sp, rage, k.num("reduce"), null, null);
+            if (k.truthy("steadfast")) mmorpg.fabric.RpgCombat.setSteadfast(sp, rage); // 3돌: 광폭화 동안 밀려나지 않음
+            double cap = k.num("heal") * Runes.supportScale(RpgStats.effective(sp), r.family());
+            RAGES.put(sp.getUUID(), new Rage(alive, mmorpg.fabric.Tasks.now() + rage, k.num("leech"), cap, mmorpg.fabric.Tasks.now()));
+            RuneKit.ultSkyFor(sp, level, c, "rageSlam", rage + 10, null);
+            RuneKit.ultFlashFor(sp, level, c, "rageSlam", "flash", Opt.empty());
+            SkillFx.play(level, "mob.ravager.roar", c, 0.7, 0.9);
+            VfxKit.burst(fx, V.up(c, 1.1), 3.0, BLOOD, 2);
+            VfxKit.ring(fx, c, 2.2, BLOOD, 2, 10);
+            rageAura(fx, sp, level0, alive, rage, glow);
+        });
+        return true;
+    }
+
+    /** 광폭화 동안 (지금부터 rage 틱): 몸의 핏빛 불꽃 셋 (양옆 · 뒤 — 1인칭 화면을 덮지 않게 앞은 비움) · 회복 숫자 (10틱마다 모아서) · 맞힌 적에게서 피가 흘러듦 */
+    private static void rageAura(Vfx.Fx fx, ServerPlayer sp, ServerLevel level0, int alive, int rage, double[] glow) {
+        int t0 = fx.age();
+        Vfx.Sprite[] flames = new Vfx.Sprite[3];
+        for (int i = 0; i < 3; i++) {
+            flames[i] = fx.sprite("aura", V.up(sp.position(), 1.0)).color(i == 1 ? glow : BLOOD).size(2.0).alpha(0.75);
+            flames[i].play(t0, i * 3, 8, 2, true);
+        }
+        fx.each(t0, t0 + rage + 6, 1, t -> {
+            Rage g = RAGES.get(sp.getUUID());
+            if (!RuneKit.aliveSince(sp, alive) || sp.isRemoved()) {
+                RAGES.remove(sp.getUUID());
+                endRageSky(sp, level0);
+                fx.end();
+                return;
+            }
+            Vec3 c = sp.position();
+            Vec3 facing = Kit.facingOf(sp);
+            for (int i = 0; i < 3; i++) flames[i].to(V.add(V.up(c, 1.0), V.turnY(facing, 100 + i * 80), 0.55), -1, 1);
+            if ((t - t0) % 10 == 0 && g != null && g.pending >= 0.05) {
+                DamageNumbers.show(sp, g.pending, DamageNumbers.Style.HEAL, "", 0);
+                if (g.lastHit != null && g.lastHit.distanceTo(c) < 12) {
+                    Vec3 to = V.up(c, 1.0);
+                    for (int j = 0; j < 3; j++) {
+                        Vec3 p = V.add(g.lastHit, new Vec3((Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.3) * 0.6, (Kit.rand() - 0.5) * 0.6));
+                        Vec3 dd = V.sub(to, p);
+                        SkillFx.fx(sp.level(), "rpg:arrow_spark", p, Opt.of("dir", V.unit(dd), "speed", V.len(dd) / 0.4, "size", 0.16, "grow", 0.5, "life", 0.4,
+                                "color", BLOOD, "alpha", 1.0));
+                    }
+                }
+                g.pending = 0;
+            }
+            if (t == t0 + rage) {
+                for (Vfx.Sprite fl : flames) fl.fade(t, 6);
+                RAGES.remove(sp.getUUID());
+                SkillFx.play(sp.level(), "mob.zombie.unfect", c, 0.8, 0.5);
+            }
+        });
+    }
+
+    /** 새 버서커의 광폭화가 죽음으로 끝남: 핏빛 하늘을 걷음 */
+    private static void endRageSky(ServerPlayer sp, ServerLevel level) {
+        ServerPlayer cur = RuneKit.player(level, sp.getUUID());
+        Ult.endSky(List.of(cur != null ? cur : sp), RuneKit.ultOf("rageSlam").strOrNull("fog"));
     }
 
     /** 거대한 도끼가 나타나 내려찍기까지 (틱) — 치는 틱 (난타) 에 날이 땅에 닿음 */

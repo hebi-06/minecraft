@@ -701,7 +701,11 @@ public final class Runes {
         if (total > 0 && r.family().equals("holy")) lines.add("§r" + L + "신성 피해 · 언데드 " + N + RUNE.text("undeadBonus") + "배");
         if (d.truthy("reduce")) lines.add("§r" + L + "받는 피해 " + N + "-" + Js.str(Js.round(d.num("reduce") * 100)) + "%");
         boolean buff = r.family().equals(RUNE_BODY.str("family")) || r.family().equals(RUNE_STRIKE.str("family"));
-        if (!buff && d.truthy("heal") && d.truthy("healMax")) {
+        if (!buff && d.truthy("leech") && d.truthy("heal")) {
+            // 2026-11-28 새 버서커 (rageSlam): 광폭화 동안 모든 공격 흡혈 — 준 피해의 leech, 1초에 최대 체력 × heal × 회복 배율까지
+            lines.add("§r" + L + "흡혈 " + N + "준 피해의 " + Js.str(Js.round(d.num("leech") * 100)) + "%" + L + " (1초에 최대 체력 " + Js.str(round1(d.num("heal") * 100))
+                    + "%+까지)");
+        } else if (!buff && d.truthy("heal") && d.truthy("healMax")) {
             lines.add("§r" + L + "흡혈 " + N + "적마다 최대 체력 " + Js.str(Js.round(d.num("heal") * 100)) + "%+");
         } else if (!buff && d.truthy("heal")) {
             double times = "undyingPact".equals(d.strOrNull("fn")) ? d.numOr("ticks", Double.NaN) / d.numOr("pulse", Double.NaN) : d.numOr("hits", 1);

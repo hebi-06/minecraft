@@ -1020,6 +1020,9 @@ public final class Vfx {
         double fadeStart = 1;
         /** 2026-11-15 좌우 거울 (크기 x 를 뒤집음 — 꼭짓점이 거울 자리로 가 삼각형 감김이 뒤집혀 뒷면에서 보임) */
         boolean mirrored;
+        /** 2026-11-28 그림 면 안의 납작함 (돌림 전 가로 sx · 세로 sy 배 — 조각 자리도 같이): 1인칭 세로 베기의 반달을 일자에 가깝게 (PhantomFx.waveStraight) */
+        double sx = 1;
+        double sy = 1;
         /** 2026-11-17 1인칭 눈 거름으로 이 그림을 거둔 사람 (id — Fx.eyeCull) */
         final java.util.Set<Integer> eyeOff = new java.util.HashSet<>();
 
@@ -1184,6 +1187,15 @@ public final class Vfx {
             return this;
         }
 
+        /** 2026-11-28 그림 면 안에서 납작하게 (돌림 전 가로 x · 세로 y 배 — 조각 자리 offset 도 같은 배로: 조각 그림 전체가 한 장처럼 눌림) */
+        public Sprite squash(double x, double y) {
+            sx = x;
+            sy = y;
+            transform();
+            fx.eyeCheck();
+            return this;
+        }
+
         /** 2026-11-15 그림 면 안의 자리 옮김 (칸 — 조각 그림: 오른쪽 x · 위 y) */
         public Sprite offset(double x, double y) {
             offset = new Vector3f((float) x, (float) y, 0F);
@@ -1245,9 +1257,11 @@ public final class Vfx {
             if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
             // 자른 칸 자리 (그림판 cx · cy — 크기 몫): 거울이면 글자가 엔티티 자리를 축으로 뒤집히므로 가로를 반대로
             Vector3f at = new Vector3f(offset).add((float) ((mirrored ? -sheet.cx() : sheet.cx()) * size), (float) (sheet.cy() * size), 0F);
+            // 납작함은 돌림 전 그림 면 안에서 (크기 · 조각 자리 모두 — 변환 = 옮김 · 돌림 · 크기 차례라 크기가 먼저 걸림)
+            at.mul((float) sx, (float) sy, 1F);
             e.setTranslation(hidden ? new Vector3f() : q.transform(at));
             e.setLeftRotation(q);
-            e.setScale(new Vector3f(mirrored ? -s : s, s, s));
+            e.setScale(new Vector3f((float) ((mirrored ? -s : s) * sx), (float) (s * sy), s));
             e.setRightRotation(new Quaternionf());
         }
 
@@ -1263,8 +1277,8 @@ public final class Vfx {
          */
         boolean covers(Vec3 eye, double k) {
             if (removed || hidden || alpha < 0.12) return false;
-            double hw = 0.5 * size * sheet.aspect();
-            double hh = 0.5 * size;
+            double hw = 0.5 * size * sheet.aspect() * sx;
+            double hh = 0.5 * size * sy;
             if (facing != null) {
                 Quaternionf q = new Quaternionf(facing);
                 if (roll != 0) q.rotateZ((float) Math.toRadians(roll));
@@ -1280,7 +1294,7 @@ public final class Vfx {
                     hw = Math.max(hh, hw * Math.sqrt(Math.max(0, 1 - cx * cx)));
                 }
             }
-            double half = Math.max(hw, hh) + offset.length();
+            double half = Math.max(hw, hh) + new Vector3f(offset).mul((float) sx, (float) sy, 1F).length();
             if (half < 0.6) return false;
             return eye.distanceTo(pos) < k * half;
         }
