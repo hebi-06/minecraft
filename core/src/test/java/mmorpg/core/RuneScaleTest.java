@@ -162,6 +162,7 @@ public final class RuneScaleTest {
 
         int runes = 0;
         int ruled = 0;
+        List<String> capped = new ArrayList<>();
         int leaps = 0;
         int singles = 0;
         int narrows = 0;
@@ -187,8 +188,20 @@ public final class RuneScaleTest {
                 check(a == null || a.equals("single") || a.equals("narrow"), id + " area kind " + a);
                 double am = a == null ? 1 : a.equals("single") ? 1.15 : 1.08;
                 near(Runes.areaMult(r), am, id + " area mult");
-                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm * am * Elements.mult(Runes.element(r)) * Runes.rangeMult(r) * Runes.budgetScale(r),
-                        id + " scale = util × time × area × element × range × budget");
+                double mods = (1 - Runes.utilCost(r)) * tm * am * Elements.mult(Runes.element(r)) * Runes.rangeMult(r);
+                near(Runes.scaleMods(r), mods, id + " mods = util × time × area × element × range");
+                // 2026-11-28 등급 상한 (사용자 "다음 등급을 못 넘게 상한"): 새 룬 (초월 밖) 의 보정 곱 ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값
+                double cap = Runes.isSet(fam) && gi + 1 < BUDGET.length ? BUDGET[gi + 1] / BASE_CD[gi + 1] / (BUDGET[gi] / BASE_CD[gi]) : Double.POSITIVE_INFINITY;
+                check(Double.isInfinite(cap) ? Double.isInfinite(Runes.gradeCap(r)) : Math.abs(Runes.gradeCap(r) - cap) < 1e-9, id + " grade cap " + Runes.gradeCap(r));
+                near(Runes.damageScale(r), Math.min(mods, cap) * Runes.budgetScale(r), id + " scale = min(mods, grade cap) × budget");
+                if (Runes.isSet(fam) && total > 0 && gi + 1 < BUDGET.length) {
+                    double perSec = total * Runes.damageScale(r) / r.cd();
+                    check(perSec <= BUDGET[gi + 1] / BASE_CD[gi + 1] + 1e-9, id + " 0돌 피해/초 " + perSec + " ≤ 다음 등급 " + BUDGET[gi + 1] / BASE_CD[gi + 1]);
+                    if (mods > cap + 1e-12) {
+                        capped.add(id);
+                        near(Runes.gradeCapCut(r), 1 - cap / mods, id + " grade cap cut");
+                    } else near(Runes.gradeCapCut(r), 0, id + " no grade cap cut");
+                }
                 // 2026-11-17 룬 재개발 (계열 없는 새 룬 30): 예산 = 등급 초당 값 × 재사용 · 거리 (근 1.2 · 중 1.1 · 원 1.0) · 받는 피해 증가 없음 · 시전 룬은 선딜 보정 없음
                 if (Runes.isSet(fam)) {
                     sets++;
@@ -243,6 +256,8 @@ public final class RuneScaleTest {
                 check(Math.abs(total - budget) <= budget * 0.01, id + " total " + total + " = budget " + budget);
             }
         }
+        System.out.println("  등급 상한에 걸린 룬 (2026-11-28): " + capped);
+        check(!capped.isEmpty(), "grade cap bites somewhere (노움 · 블레이드 헤일 …)");
         check(runes == 150, "150 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30) " + runes);
         check(sets == 30, "30 set runes " + sets);
         pairs();

@@ -199,6 +199,15 @@ def time_mult(sp, more, cast):
     return min(S["cap"], (1 + wb) * (1 + sb))
 
 
+def grade_cap(g):
+    """Runes.gradeCap — 2026-11-28 보정 곱 상한 = 다음 등급 초당 값 ÷ 이 등급 초당 값 (초월은 없음)"""
+    i = GRADES.index(g)
+    if i + 1 >= len(GRADES):
+        return float("inf")
+    per = lambda x: GRADE_BASE[x][0] / GRADE_BASE[x][1]
+    return per(GRADES[i + 1]) / per(g)
+
+
 def job_skills():
     """jobs.json 의 직업 스킬 id → (이름, 쿨) — 1차 · 2차 모두"""
     j = load_json(os.path.join(RES, "jobs.json"))
@@ -315,7 +324,9 @@ def build():
             area = 1 + (S["area"][e["a"]]["bonus"] if e.get("a") else 0)
             el = 0.95 if e.get("elem") else 1.0
             tm = time_mult(sp, more, e.get("cast"))
-            eff = 0 if e.get("support") else budget * 100 * RANGE[e["r"]] * el * (1 - util) * tm * area
+            mods = RANGE[e["r"]] * el * (1 - util) * tm * area
+            cap = grade_cap(g)
+            eff = 0 if e.get("support") else budget * 100 * min(mods, cap)
             rows.append(dict(grade=g, key=key, name=e["name"], cd=e["cd"], r=e["r"], elem=e.get("elem"), u=[S["utils"][u]["name"] for u in e["u"]],
                              budget=budget * 100, tm=tm, area=area, eff=eff, cast=sp.get("cast"), look=d["look"],
                              pair=[skills[x][0] for x in e.get("pair", [])], kind="필러" if e["cd"] <= 13 else "중간" if e["cd"] <= 25 else "딜타임"))
@@ -338,6 +349,9 @@ def build():
             "cdRange": {g: list(GRADE_CD[g]) for g in GRADES},
             "_baseCd": "2026-11-17 유틸 값의 기준 재사용 (등급 · 한정 — Runes.utilCdFactor: 유틸 값 × 기준 ÷ 룬의 재사용)",
             "baseCd": dict({g: GRADE_BASE[g][1] for g in GRADES}, limited=36),
+            "_budget": "2026-11-28 등급의 배율 합 (기준 재사용 baseCd 의 예산 — 초당 값 = budget ÷ baseCd). 등급 상한 (사용자 \"다음 등급을 못 넘게 상한\" — Runes.gradeCap): "
+                       "보정 곱 (유틸 · 시간 · 범위 · 원소 · 거리) ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값 → 0돌 피해/초가 다음 등급 기준을 넘지 않음 (초월 · 한정은 없음)",
+            "budget": {g: GRADE_BASE[g][0] / 100 for g in GRADES},
             "spread": spread,
             "migrateFamilies": OLD_VISIBLE,
             "migrate": migrate,

@@ -556,7 +556,39 @@ public final class Runes {
      * 대조 시험 (표 없음) 이면 1
      */
     public static double damageScale(Rune r) {
-        return (1 - utilCost(r)) * timeMult(r) * areaMult(r) * Elements.mult(element(r)) * rangeMult(r) * budgetScale(r); // 2026-11-17 거리 · 예산 맞춤 (새 룬)
+        // 2026-11-17 거리 · 예산 맞춤 (새 룬) · 2026-11-28 등급 상한
+        return Math.min(scaleMods(r), gradeCap(r)) * budgetScale(r);
+    }
+
+    /** 등급 상한 앞의 보정 곱 = (1 − 유틸 값 합) × 시간 보정 × 범위 보정 × 원소 × 거리 */
+    public static double scaleMods(Rune r) {
+        return (1 - utilCost(r)) * timeMult(r) * areaMult(r) * Elements.mult(element(r)) * rangeMult(r);
+    }
+
+    /**
+     * 2026-11-28 등급 상한 (사용자 "다음 등급을 못 넘게 상한" — 0 ~ 2돌 한 대상 피해/초 가운데가 영웅 0.889 · 초월 0.866 으로 거꾸로였음 · 노움 1.037):
+     * 보정 곱 ({@link #scaleMods}) 의 상한 = 다음 등급 초당 값 ÷ 이 등급 초당 값 (RUNE_SET.budget ÷ baseCd — 일반 ×1.167 · 희귀 ×1.143 · 고귀 ×1.154 ·
+     * 영웅 ×1.156) → 0돌 피해/초 (위력 P 의 몇 배) 가 다음 등급의 기준 초당 값을 넘지 않음. 초월 · 한정 · 옛 룬 · 대조 시험 (표 없음) 은 상한 없음 (무한)
+     */
+    public static double gradeCap(Rune r) {
+        if (r == null || SET == null || !SET.has("budget") || !SET.has("baseCd") || !isSet(r.family())) return Double.POSITIVE_INFINITY;
+        int i = GRADE_ORDER.indexOf(r.grade());
+        if (i < 0 || i + 1 >= GRADE_ORDER.size()) return Double.POSITIVE_INFINITY;
+        double here = gradePerSec(r.grade()), next = gradePerSec(GRADE_ORDER.get(i + 1));
+        return here > 0 && next > 0 ? next / here : Double.POSITIVE_INFINITY;
+    }
+
+    /** 등급의 기준 초당 값 (배율 합 ÷ 기준 재사용 — 일반 0.5 · 희귀 0.583 · 고귀 0.667 · 영웅 0.769 · 초월 0.889) — 표에 없으면 0 */
+    public static double gradePerSec(String grade) {
+        if (SET == null || !SET.has("budget") || !SET.has("baseCd")) return 0;
+        double cd = SET.obj("baseCd").numOr(grade, 0);
+        return cd > 0 ? SET.obj("budget").numOr(grade, 0) / cd : 0;
+    }
+
+    /** 등급 상한으로 깎인 몫 (0.14 = −14% — 상한 아래면 0) */
+    public static double gradeCapCut(Rune r) {
+        double m = scaleMods(r), cap = gradeCap(r);
+        return m > cap + 1e-12 ? 1 - cap / m : 0;
     }
 
     /** 2026-11-07 이 룬의 원소 (RUNE_SPREAD.runes 의 elem — 불 · 물 · 전기 · 얼음 · 바위 · multi, 무속성이면 null) */

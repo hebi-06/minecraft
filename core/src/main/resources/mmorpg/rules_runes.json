@@ -1023,6 +1023,14 @@
    "transcend": 36,
    "limited": 36
   },
+  "_budget": "2026-11-28 등급의 배율 합 (기준 재사용 baseCd 의 예산 — 초당 값 = budget ÷ baseCd). 등급 상한 (사용자 \"다음 등급을 못 넘게 상한\" — Runes.gradeCap): 보정 곱 (유틸 · 시간 · 범위 · 원소 · 거리) ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값 → 0돌 피해/초가 다음 등급 기준을 넘지 않음 (초월 · 한정은 없음)",
+  "budget": {
+   "common": 4.0,
+   "rare": 7.0,
+   "noble": 12.0,
+   "hero": 20.0,
+   "transcend": 32.0
+  },
   "spread": {
    "earthbreaker.common": {
     "a": "narrow",

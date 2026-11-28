@@ -220,6 +220,16 @@ public final class RuneTip {
      * 다른 보정과 함께면 한 줄 "유틸 −5% · 시간 보정 +17% · 단일 +15% 포함"). 피해 없는 룬 · 보정 없는 룬은 없음. 평타 강화는 유틸 · 범위 줄만
      */
     private static List<String> scaleLines(Ctx c) {
+        List<String> out = modLines(c);
+        // 2026-11-28 등급 상한 (사용자 "다음 등급을 못 넘게 상한" — Runes.gradeCap): 위 보정을 곱한 값이 다음 등급 초당 값을 넘은 몫을 깎음
+        double cut = dealsDamage(c) && !c.strike() ? Runes.gradeCapCut(c.r()) : 0;
+        if (!(cut > 0.005)) return out;
+        List<String> all = new ArrayList<>(out);
+        all.addAll(noteLine("등급 상한 ", "−" + pct(cut) + "%", "다음 등급 초당 피해까지"));
+        return all;
+    }
+
+    private static List<String> modLines(Ctx c) {
         if (!dealsDamage(c)) return List.of();
         Runes.Rune r = c.r();
         double cost = Runes.utilCost(r);
