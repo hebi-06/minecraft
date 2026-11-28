@@ -737,9 +737,7 @@ final class RuneAxe {
             // 한 방: 반지름 radius 칸 모두 (예산 전부)
             int n = 0;
             for (LivingEntity e : Kit.around(sp, hit, radius)) {
-                double got = RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat());
-                mmorpg.fabric.Mmorpg.LOG.info("[rune] rageSlam hit {} at {} dealt {}", e.getType().toShortString(), e.position(), got);
-                if (got > 0) {
+                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     n++;
                     if (n <= 8) {
                         VfxKit.xcut(fx, Kit.bodyPoint(e), 1.8, n % 2 == 0 ? BLOOD : glow, 1);
@@ -747,7 +745,6 @@ final class RuneAxe {
                     }
                 }
             }
-            mmorpg.fabric.Mmorpg.LOG.info("[rune] rageSlam hits {} at {} from {} facing {}", n, hit, c0, f);
             // 쓴 사람 1인칭: 큰 초승달 · 터짐은 눈앞을 덮어 거둬지므로 (Vfx eyeCull) 1인칭 전용으로 조금 작게 — 내려찍힌 자리에 세로 초승달 · 핏빛 터짐
             int ownerId = sp.getId();
             Vfx.Fx fp = Vfx.at(level, hit, 30, (Vfx.FirstPerson) p -> p.getId() == ownerId && !mmorpg.fabric.vfx.PBridge.thirdPersonOf(p));
