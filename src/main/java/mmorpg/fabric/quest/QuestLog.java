@@ -123,6 +123,10 @@ public final class QuestLog {
         if (q.main) kind = "§6메인 퀘스트" + (q.path.isEmpty() ? "" : " · " + MainQuests.MAIN_PATHS.get(q.path).name());
         else if (q.side.equals("repeat")) kind = "§b반복 의뢰 §7(보고하면 바로 다시 받을 수 있음)";
         else if (q.side.equals("royal")) kind = "§d왕실 퀘스트";
+        else if (q.side.equals(SideQuests.NATION)) {
+            SideQuests.Nation n = SideQuests.nationOfQuest(q.id);
+            kind = "§6나라 의뢰 §7(" + (n != null ? n.name() + " · " : "") + q.step + "/" + (n != null ? n.steps().size() : q.step) + ")";
+        }
         else if (q.side.equals("legend")) {
             MainQuests.MainPath p = MainQuests.MAIN_PATHS.get(q.path);
             kind = "§c전설 퀘스트 §7(" + (q.path.isEmpty() ? "초월 보스" : p != null ? p.name() : "") + ", 한 번)";

@@ -82,7 +82,9 @@ public final class FieldSetup {
         List<Blueprint.Mark> marks = FieldBuild.build(t).marks();
         for (Blueprint.Mark m : marks) {
             Vec3 at = new Vec3(m.x(), m.y(), m.z());
-            if (m.id().startsWith("waystone") || !todo.contains(islandOf(t, m.x(), m.z()))) continue;
+            // 세우는 자리표만 (이동 지점 · 오르내림 발판 · 벼락 자리는 다른 곳이 씀)
+            boolean place = m.id().equals("dummy") || m.id().startsWith("npc_") || m.id().startsWith("shop_") || m.id().equals("job");
+            if (!place || !todo.contains(islandOf(t, m.x(), m.z()))) continue;
             level.getChunk(BlockPos.containing(at));
             Vec3 face = at.add(dir(m.facing()).scale(5)).add(0, 1.6, 0);
             if (m.id().equals("dummy")) {

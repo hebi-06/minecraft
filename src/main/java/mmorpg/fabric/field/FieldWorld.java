@@ -36,6 +36,8 @@ public final class FieldWorld {
         FieldPieces.init();
         FieldWaystones.init();
         FieldFog.init(); // 2026-11-28 다리 없음: 섬 사이는 이동 지점 돌로만 (먼 바다는 안개가 밀어냄)
+        FieldLifts.init(); // 2026-11-28 나라 섬: 큰 저울 오르내림 발판
+        FieldShrines.init(); // 2026-11-28 나라 섬: 벼락받이 사당의 밤 벼락
     }
 
     /** 지형 (field.json 한 벌 — 처음 쓸 때 만듦) */

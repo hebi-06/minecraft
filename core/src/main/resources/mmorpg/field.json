@@ -21,7 +21,9 @@
     {"id": "muspel", "name": "무스펠 섬", "terrain": "muspel", "region": "muspel", "x": 0, "z": 6600, "radius": 470, "coast": 0.13, "level": [50, 50], "shapeAt": [0, 2530]},
     {"id": "snowcrown", "name": "눈꽃성 섬", "terrain": "snowcrown", "region": "ice", "x": -2400, "z": -2400, "radius": 420, "coast": 0.11, "level": [31, 33]},
     {"id": "cape", "name": "균열 곶", "terrain": "cape", "region": "void", "x": 0, "z": -3200, "radius": 260, "coast": 0.12, "level": [50, 55], "with": "frost"},
-    {"id": "shieldwall", "name": "불 나라 섬", "terrain": "shieldwall", "region": "fire", "x": 0, "z": 4500, "radius": 380, "coast": 0.1, "level": [40, 50]}
+    {"id": "shieldwall", "name": "불 나라 섬", "terrain": "shieldwall", "region": "fire", "x": 0, "z": 4500, "radius": 380, "coast": 0.1, "level": [40, 50]},
+    {"id": "thunder", "name": "번개 나라 섬", "terrain": "thunder", "region": "thunder", "x": 4800, "z": 0, "radius": 480, "coast": 0.13, "level": [20, 30]},
+    {"id": "sage", "name": "바위 나라 섬", "terrain": "sage", "region": "sage", "x": 2600, "z": 2600, "radius": 460, "coast": 0.1, "level": [55, 60]}
   ],
   "bridges": [],
   "rivers": [
@@ -37,7 +39,9 @@
     {"id": "oasis", "island": "sands", "x": 40, "z": 2043, "r": 20},
     {"id": "frost_tarn", "island": "frost", "x": 230, "z": -2150, "r": 30},
     {"id": "midgard_pond", "island": "midgard", "x": 170, "z": 230, "r": 18},
-    {"id": "snow_lake", "island": "snowcrown", "x": -2250, "z": -2530, "r": 46}
+    {"id": "snow_lake", "island": "snowcrown", "x": -2250, "z": -2530, "r": 46},
+    {"id": "thunder_pond_w", "island": "thunder", "x": 4625, "z": -175, "r": 22},
+    {"id": "thunder_pond_e", "island": "thunder", "x": 4975, "z": -185, "r": 22}
   ],
   "sites": [
     {"id": "town", "kind": "town", "island": "midgard", "x": 0, "z": 60, "r": 150, "name": "마을"},
@@ -98,7 +102,24 @@
     {"id": "snow_gate", "kind": "camp", "island": "snowcrown", "x": -2400, "z": -2170, "r": 16, "name": "눈꽃성 남쪽 광장"},
     {"id": "shield_gate", "kind": "camp", "island": "shieldwall", "x": 0, "z": 4250, "r": 16, "name": "방패 성벽 북문"},
     {"id": "z_void_leaper", "kind": "zone", "island": "shieldwall", "x": -215, "z": 4470, "mob": "void_leaper"},
-    {"id": "z_void_stalker", "kind": "zone", "island": "shieldwall", "x": 220, "z": 4520, "mob": "void_stalker"}
+    {"id": "z_void_stalker", "kind": "zone", "island": "shieldwall", "x": 220, "z": 4520, "mob": "void_stalker"},
+    {"id": "thunder_village", "kind": "camp", "island": "thunder", "x": 4800, "z": 350, "r": 34, "name": "이나에 마을"},
+    {"id": "thunder_shrine", "kind": "landmark", "island": "thunder", "x": 4800, "z": -10, "r": 22, "name": "벼락받이 사당"},
+    {"id": "z_worm_larva_t1", "kind": "zone", "island": "thunder", "x": 4625, "z": 175, "mob": "worm_larva"},
+    {"id": "z_worm_larva_t2", "kind": "zone", "island": "thunder", "x": 4975, "z": 185, "mob": "worm_larva"},
+    {"id": "z_nix_t1", "kind": "zone", "island": "thunder", "x": 4640, "z": -140, "mob": "nix"},
+    {"id": "z_nix_t2", "kind": "zone", "island": "thunder", "x": 4960, "z": -150, "mob": "nix"},
+    {"id": "z_grendel_t1", "kind": "zone", "island": "thunder", "x": 4560, "z": 30, "mob": "grendel"},
+    {"id": "z_grendel_t2", "kind": "zone", "island": "thunder", "x": 5045, "z": 20, "mob": "grendel"},
+    {"id": "sage_scale", "kind": "landmark", "island": "sage", "x": 2600, "z": 2600, "r": 30, "name": "큰 저울"},
+    {"id": "sage_west", "kind": "camp", "island": "sage", "x": 2520, "z": 2600, "r": 20, "name": "서쪽 접시"},
+    {"id": "sage_east", "kind": "camp", "island": "sage", "x": 2680, "z": 2600, "r": 20, "name": "동쪽 접시"},
+    {"id": "z_void_jelly_s1", "kind": "zone", "island": "sage", "x": 2745, "z": 2445, "mob": "void_jelly"},
+    {"id": "z_void_jelly_s2", "kind": "zone", "island": "sage", "x": 2840, "z": 2510, "mob": "void_jelly"},
+    {"id": "z_void_behemoth_s1", "kind": "zone", "island": "sage", "x": 2810, "z": 2395, "mob": "void_behemoth"},
+    {"id": "z_void_behemoth_s2", "kind": "zone", "island": "sage", "x": 2880, "z": 2440, "mob": "void_behemoth"},
+    {"id": "z_void_borer_s1", "kind": "zone", "island": "sage", "x": 2470, "z": 2760, "mob": "void_borer"},
+    {"id": "z_void_borer_s2", "kind": "zone", "island": "sage", "x": 2700, "z": 2770, "mob": "void_borer"}
   ],
   "fog": {"push": 280, "back": 340}
 }

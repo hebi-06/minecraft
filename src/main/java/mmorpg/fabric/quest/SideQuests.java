@@ -17,6 +17,8 @@ import mmorpg.core.Rules;
  * - 왕실 퀘스트 (side "royal", 왕녀 시그리드 main_11): 35렙부터, 무기의 길을 고른 사람만. 7단계, 마지막 (이미르) 을 마치면 무기의 길에 맞는 초월 갑옷 한 벌
  * - 전설 퀘스트 (side "legend", 그 길의 스승): 전설 무기 4개는 이 퀘스트로만. 메인의 그 보스 단계를 끝내면 열림, 목표 종류 "trial" (처치 · 보스 목표 여럿)
  * - 초월 보스 전설 퀘스트 (side "legend", 왕녀, 길과 무관): 왕실 퀘스트를 모두 마치고 40렙부터 초월 보스 (수르트) 를 잡음
+ * - 나라 의뢰 (side "nation", 2026-11-28 사용자 "번개의 나라 … 거기 가서 퀘스트 받게"): 나라 섬마다 아홉 단계 — 번개 나라 (20 ~ 28렙 · 고헤이 · 히비키 · 도도로키 —
+ *   빈 이삭) · 바위 나라 (55 ~ 59렙 · 세베린 · 오르도 · 리브라 — 무게 없는 곳). 말 걸기 · 그 섬 몬스터 처치 · 전리품 · 보스 (나라의 몬스터 · 보스는 일반 몹을 만들 때)
  * 마인크래프트 클래스를 쓰지 않음 (규칙 코어 · Gson 만).
  */
 public final class SideQuests {
@@ -140,6 +142,123 @@ public final class SideQuests {
     /** 왕실 퀘스트 단계 수 */
     public static final int ROYAL_STEPS = ROYAL.size();
 
+    // ------------------------------------------------------------ 나라 의뢰 (2026-11-28)
+
+    public static final String NATION = "nation";
+
+    public static String nationId(String nation, int step) {
+        return SIDE_PREFIX + "nation_" + nation + "_" + (step < 10 ? "0" : "") + step;
+    }
+
+    /**
+     * 나라 의뢰 한 단계: giver = NPC 키 (main_17 …), goal: talk (what = 찾아갈 NPC 키) · kill (what = 몬스터, count) · collect (what = 전리품 몬스터, count) · boss (what = 보스),
+     * items = [아이템 키, 개수] 쌍 (MainQuests.rewardItemId), finale = 마지막 단계
+     */
+    public record NationStep(int lv, String giver, String goal, String what, int count, int emerald, Object[] items, boolean finale, String title, String offer,
+            String progress, String done) {}
+
+    /** 나라 의뢰 줄기: id (퀘스트 ID 의 나라 이름) · 이름 · 단계 · NPC 인사말 (키 → [평소, 줄기를 끝낸 뒤]) */
+    public record Nation(String id, String name, List<NationStep> steps, Map<String, String[]> greet) {}
+
+    private static NationStep ns(int lv, String giver, String goal, String what, int count, int emerald, Object[] items, String title, String offer, String progress,
+            String done) {
+        return new NationStep(lv, giver, goal, what, count, emerald, items, false, title, offer, progress, done);
+    }
+
+    public static final List<Nation> NATIONS = List.of(
+            new Nation("thunder", "번개 나라", List.of(
+                    ns(20, "main_17", "talk", "main_18", 0, 16, new Object[] {"ticket", 1}, "빈 이삭",
+                            "어서 오시오, 바람의 나라 손님. 여기는 이나에 마을이오.||저 논을 보시오. 벼가 지붕보다 높이 자랐는데, 이삭을 까 보면 속이 비었소.|올해만 그런 게 아니라오. 해마다 더 비어 가오.||이 빈 이삭을 산꼭대기 벼락받이 사당의 히비키에게 갖다주겠소?|북쪽 큰 도리이를 지나 붉은 도리이 길을 따라 오르면 되오.",
+                            "산꼭대기 사당의 히비키에게 빈 이삭을 전해 주시오. 붉은 도리이 길을 따라 오르면 되오.",
+                            "고헤이 촌장님이 보내셨군요. 이삭을… 아, 또 비었네요.||이나에 님은 번개로 벼를 여물게 해 주시는 분이에요. 요즘은 오히려 넘치게 내려 주시는데,|벼는 크기만 하고 속이 차지 않아요. 무언가가 땅의 힘을 갉아 먹고 있는 것 같아요.||마침 잘 오셨어요. 손을 좀 빌려주실래요?"),
+                    ns(20, "main_18", "kill", "worm_larva", 12, 20, new Object[] {"stone", 2}, "무너지는 논둑",
+                            "요즘 논둑이 밤새 무너져서 물이 아래 논으로 다 새어 나가요.||둑 밑을 파 보니 웜 유충이 굴을 뚫어 놨더라고요. 사막에서나 보던 벌레가 왜 여기까지 왔을까요.||산허리 논에 유충이 들끓어요. 열두 마리만 물리쳐 주세요.",
+                            "산허리 논의 웜 유충 열두 마리예요. 둑 밑에서 튀어나오니 발밑을 조심하세요.",
+                            "둑이 다시 물을 머금기 시작했어요! 고마워요.||그런데 이상해요. 유충이 판 굴이 모두 산 위, 이 사당 쪽을 향하고 있었어요.|꼭 무언가를 찾아 올라오는 것처럼요."),
+                    ns(21, "main_18", "collect", "worm_larva", 8, 22, new Object[] {"ticket", 1}, "벼락맞이 등롱",
+                            "밤마다 사당 기둥에 벼락이 떨어져요. 이나에 님이 논에 힘을 내려 주시는 거예요.||그런데 요즘은 벼락이 자꾸 길을 잃고 엉뚱한 데 떨어진대요.|도리이마다 등롱을 걸어 길을 밝히려는데, 유충 허물에 불을 비추면 호박빛이 은은하게 번져요.||허물 여덟 개만 모아 주실래요?",
+                            "유충 허물 여덟 개예요. 웜 유충이 떨어뜨려요.",
+                            "와, 등롱마다 노을빛이 도네요. 오늘 밤엔 벼락이 길을 잃지 않을 거예요.||아, 번개 왕 도도로키 님께서 당신을 보자고 하셨어요. 사당 본전에 계세요."),
+                    ns(22, "main_19", "kill", "nix", 10, 24, new Object[] {"stone", 2}, "밤마다 줄어드는 물",
+                            "그대가 바람의 나라에서 온 모험가인가. 짐은 이 나라의 왕, 도도로키다.||논물이 밤마다 줄어든다는 보고가 올라왔다. 둑이 아니라 물 자체가 사라진다 하더군.|산허리 못에 닉스가 들어앉아 밤마다 논물을 끌어간다.||닉스 열을 물리쳐라. 이 나라의 물은 벼의 것이다.",
+                            "산허리 못의 닉스 열이다. 물가에서 노래가 들리면 귀를 막고 칼을 뽑아라.",
+                            "수고했다. 물이 다시 논에 머문다는 보고가 왔다.||허나 닉스가 이 산까지 올라온 것은 처음이다. 바다가 이상하다는 소문과 무관하지 않겠지."),
+                    ns(23, "main_19", "collect", "nix", 8, 26, new Object[] {"ticket", 1}, "물꼬 비늘",
+                            "닉스의 비늘은 물을 한 방울도 새게 하지 않는다 들었다.||논마다 물꼬에 그 비늘을 덧대면, 닉스가 다시 와도 물을 빼 가지 못할 것이다.|닉스 비늘 여덟을 가져오라.",
+                            "닉스 비늘 여덟이다. 닉스가 떨어뜨린다.",
+                            "좋다. 물꼬마다 비늘을 덧대라 일러 두겠다.||…그대 덕에 논은 숨을 돌렸다. 허나 짐에게는 더 큰 걱정이 있다."),
+                    ns(25, "main_19", "boss", "kraken", 0, 40, new Object[] {"ticket", 1, "kraken_ink", 1}, "쌀배의 뱃길",
+                            "이 나라의 남는 쌀은 배에 실려 바람의 나라로 간다. 쌀이 오가야 여러 나라가 배를 곯지 않는다.||그런데 크라켄이 바다 섬 앞 뱃길에 자리를 잡고 쌀배를 끌어내리고 있다.|벌써 세 척이다. 뱃사람들이 바다에 나가기를 두려워한다.||크라켄을 쓰러뜨려 뱃길을 열어라. 바다 섬 서쪽 물목의 제단에서 불러낼 수 있다.",
+                            "크라켄은 바다 섬 서쪽 물목의 보스 제단에서 불러낸다. 다리를 조심하라.",
+                            "뱃길이 열렸다는 소식이 벌써 닿았다. 쌀배가 다시 돛을 올렸다.||짐이 그대에게 빚을 졌구나.|고헤이가 곳간 일로 그대를 찾더군. 마을에 내려가 보라."),
+                    ns(26, "main_17", "kill", "grendel", 10, 28, new Object[] {"stone", 3}, "곳간의 그림자",
+                            "왕께 들었소. 쌀배를 지켜 주셨다지. 고맙소.||헌데 곳간에도 일이 생겼소. 밤마다 그렌델이 내려와 곳간 문을 부수고 볏섬을 끌고 가오.|서쪽과 동쪽 숲에 놈들의 굴이 있소.||그렌델 열을 물리쳐 주시오.",
+                            "서쪽 · 동쪽 숲의 그렌델 열이오. 놈들은 해가 지면 더 사나워지오.",
+                            "이제 곳간지기들이 발 뻗고 자겠소.||헌데 놈들이 끌고 간 볏섬을 찾아보니 다 비어 있었다오. 놈들도 굶주렸던 게지."),
+                    ns(27, "main_17", "collect", "grendel", 6, 30, new Object[] {"ticket", 1, "scroll", 1}, "발톱 낫",
+                            "벼가 이렇게 높이 자라니 낫이 들지 않소. 줄기가 쇠처럼 질기다오.||그렌델 발톱은 쇠보다 단단하다 들었소. 발톱으로 낫을 벼리면 이 벼도 베어지겠지.|그렌델의 발톱 여섯 개를 구해 주시오.",
+                            "그렌델의 발톱 여섯 개요. 그렌델이 떨어뜨리오.",
+                            "허허, 낫이 줄기를 쓱쓱 베는구려!||…왕께서 사당에서 기다리신다 하오. 마지막으로 크게 부탁하실 일이 있으시다오."),
+                    new NationStep(28, "main_19", "boss", "great_worm", 0, 56, new Object[] {"ticket_adv", 1, "worm_heart", 1}, true, "유충의 어미",
+                            "히비키가 유충 굴의 방향을 일러 주었다. 굴은 모두 이 산, 사당의 벼락 기둥을 향해 있었다.||유충은 땅의 힘을, 벼락이 내린 힘을 찾아 오른 것이다. 그 어미는 사막 섬의 거대 웜이다.|어미가 살아 있는 한 유충은 끝없이 바다를 건너올 것이다.||거대 웜을 쓰러뜨려라. 그대가 돌아오면 오늘 밤 벼락맞이를 함께 보리라.",
+                            "거대 웜은 사막 섬 남서쪽 신전의 보스 제단에서 불러낸다. 땅이 울리면 바로 피하라.",
+                            "…들리는가. 벼락이 기둥에 떨어지는 소리가.||오늘 밤 벼락은 길을 잃지 않았다. 등롱을 따라 곧장 기둥에 내려앉았다.|히비키가 그러더군. 벼락을 맞은 논에서 속이 찬 이삭이 몇 나왔다고. 아직 몇뿐이지만, 시작이다.||번개 왕의 이름으로 그대를 이 나라의 벗으로 삼는다. 이나에의 은혜가 그대와 함께하기를.")),
+                    Map.of("main_17", new String[] {"어서 오시오. 이나에 마을이오. 벼가 지붕보다 높다고 놀라지 마시오.", "우리 마을의 은인이 오셨구려! 햅쌀로 지은 밥 한 그릇 드시고 가오."},
+                            "main_18", new String[] {"벼락받이 사당에 오신 걸 환영해요. 밤에 오시면 기둥에 벼락이 떨어지는 걸 볼 수 있어요.", "등롱 덕분에 요즘 벼락이 길을 잃지 않아요. 고마워요!"},
+                            "main_19", new String[] {"짐은 번개 왕 도도로키다. 이나에의 은혜가 그대에게도 닿기를.", "이 나라의 벗이 왔구나. 오늘 밤 벼락맞이를 함께 보겠는가."})),
+            new Nation("sage", "바위 나라", List.of(
+                    ns(55, "main_20", "talk", "main_21", 0, 40, new Object[] {"ticket", 1}, "저울의 섬",
+                            "바위 나라 현자 회의의 사절, 세베린입니다. 붉은 모래땅에서 징조를 재다 돌아왔지요.||저 위를 보십시오. 큰 저울입니다.|두 접시가 이 섬의 두 구역이고, 받침점에 현자 회의가 있습니다. 저울은 300년째 수평으로 멈춰 있지요.||의장께서 당신을 뵙고 싶어 하십니다. 받침점 아래 회의장으로 가 주십시오.",
+                            "큰 저울 받침점 아래 회의장의 오르도 의장께 가 주십시오. 접시 계단을 내려가 동쪽 길을 따라가면 됩니다.",
+                            "세베린이 보낸 분이군요. 현자 회의 의장, 오르도입니다.||본론을 말하겠습니다. 이 섬 동북쪽에 돌과 물건이 무게를 잃고 떠오르는 곳이 생겼습니다. 우리는 그곳을 '무게 없는 곳'이라 부릅니다.|회의는 까닭을 재고 있으나, 아직 아무것도 정하지 못했습니다."),
+                    ns(55, "main_21", "talk", "main_22", 0, 40, new Object[] {"stone", 3}, "300년의 안건",
+                            "이 섬의 모든 무게는 그라비스 님이 정하신 것입니다. 회의는 그 무게를 재고, 정해지지 않은 안건은 결코 넘기지 않습니다.|그래서 저울은 300년째 수평입니다.||무게 없는 곳은 새 안건입니다. 안건을 올리려면 먼저 무게를 재야 합니다.|동쪽 접시의 저울지기 리브라를 찾아가십시오. 이 나라에서 가장 정확한 저울을 가진 사람입니다.",
+                            "동쪽 접시의 저울지기 리브라를 찾아가십시오.",
+                            "의장님이 보내셨다고요? 잘됐어요, 일손이 모자랐거든요.||무게는 거짓말을 하지 않아요. 그런데 요즘 동북쪽에서 잰 것들은 하나같이 거짓말을 해요.|돌을 올리면 저울이 위로 올라가요. 아래가 아니라요."),
+                    ns(55, "main_22", "kill", "void_jelly", 12, 44, new Object[] {"stone", 3}, "떠오르는 해파리",
+                            "무게 없는 곳 위로 공허 해파리가 떠다녀요.||해파리가 떠다니는 자리일수록 땅이 더 가벼워져요. 원인인지 결과인지는 아직 몰라요.|재려면 일단 치워야 해요. 열두 마리만 물리쳐 주세요.",
+                            "동북쪽 무게 없는 곳의 공허 해파리 열둘이에요. 날아오는 구체는 터지기 전에 피하세요.",
+                            "해파리를 치우니 떠 있던 돌 몇 개가 내려앉았어요. 몇 개만요.||나머지는 여전히 떠 있어요. 해파리가 원인은 아니었네요. 기록해 둘게요."),
+                    ns(56, "main_22", "collect", "void_jelly", 8, 46, new Object[] {"ticket", 1}, "무게가 없는 핵",
+                            "해파리 몸속의 핵을 재 보고 싶어요.||제 생각이 맞다면… 아니, 재기 전엔 말하지 않을래요. 재지 않은 말은 소문일 뿐이니까요.|공허 핵 여덟 개를 가져다주세요.",
+                            "공허 핵 여덟 개예요. 공허 해파리가 떨어뜨려요.",
+                            "재 봤어요. 핵 여덟 개를 접시에 올리니까… 저울이 빈 접시보다 더 위로 올라갔어요.||무게가 없는 게 아니라, 무게가 모자라요. 0보다 작아요.|이건 이 세상의 물건이 아니에요. 세베린 님께 알려야겠어요."),
+                    ns(56, "main_20", "kill", "void_borer", 10, 46, new Object[] {"stone", 3}, "땅 밑을 갉는 것",
+                            "리브라의 측정을 들었습니다. 0보다 작은 무게라니, 기록에 없는 값입니다.||재 둔 것이 하나 더 있습니다. 남쪽 들의 땅이 해마다 조금씩 가라앉고 있습니다. 밑에서 공허 굴착자가 갉고 있기 때문입니다.|굴착자 열을 물리쳐 주십시오.",
+                            "남쪽 들의 공허 굴착자 열입니다. 발밑이 빛나면 바로 뛰십시오.",
+                            "가라앉던 땅이 멈췄습니다. 수치로 확인했습니다.||그런데 굴착자가 판 굴 벽에 이상한 것이 있었습니다. 글자 같은 무늬입니다."),
+                    ns(57, "main_20", "collect", "void_borer", 6, 48, new Object[] {"ticket", 1, "scroll", 1}, "턱에 묻은 글자",
+                            "굴착자의 턱에 굴 벽의 가루가 묻어 있다고 들었습니다.||그 무늬가 첫 말과 닮았습니다. 신들의 진명을 적는 글자 말입니다.|땅 밑에 왜 첫 말이 있는지 알아야 합니다. 굴착자의 턱 여섯 개를 가져와 주십시오.",
+                            "굴착자의 턱 여섯 개입니다. 공허 굴착자가 떨어뜨립니다.",
+                            "…틀림없습니다. 첫 말입니다. 아주 오래된 글자라 다 읽지는 못하겠습니다.||읽을 수 있는 것은 한 낱말뿐입니다. '받치다.'|땅 밑에 무언가를 받치라는 글이 있다는 뜻일까요. 의장께 보고하겠습니다."),
+                    ns(58, "main_21", "kill", "void_behemoth", 8, 52, new Object[] {"bright", 1}, "무게 없는 곳의 거수",
+                            "세베린의 보고를 들었습니다. 회의는 이 안건을 서둘러 다루기로 했습니다. 300년 만의 일입니다.||무게 없는 곳 한가운데에 공허 거수들이 자리를 잡았습니다. 거수가 있는 한 아무도 그곳을 잴 수 없습니다.|거수 여덟을 물리쳐 주십시오.",
+                            "무게 없는 곳 한가운데의 공허 거수 여덟입니다. 땅에서 솟는 가시 줄을 조심하십시오.",
+                            "거수가 물러나자 리브라가 한가운데까지 들어가 쟀습니다.||그곳의 무게는 0보다 훨씬 작았습니다. 그리고 리브라가 그러더군요. 균열 곶 쪽을 향할수록 더 작아진다고."),
+                    ns(58, "main_21", "boss", "void_knight", 0, 64, new Object[] {"ticket", 1, "rift_shard", 1}, "무거운 맹세",
+                            "그런데 이상한 기록이 하나 있습니다. 균열 곶 끝, 공허의 기사가 선 자리만은 무게가 그대로라는 것입니다.||공허 바로 앞인데도 말입니다. 회의는 그것을 '맹세의 무게'라 부르기로 했습니다.|그 기사와 겨루어 주십시오. 그가 지키는 무게가 무엇인지, 칼끝으로 재어 와 주십시오.",
+                            "공허의 기사는 균열 곶 끝 신전의 보스 제단에서 불러냅니다. 그의 칼은 무겁습니다.",
+                            "…돌아오셨군요. 칼이 부딪칠 때마다 땅이 무거워졌다는 리브라의 기록이 먼저 닿았습니다.||맹세는 무게를 가집니다. 회의는 이것을 첫 번째 사실로 적었습니다.|이제 마지막 측정만 남았습니다. 리브라에게 가 주십시오."),
+                    new NationStep(59, "main_22", "collect", "void_behemoth", 6, 72, new Object[] {"ticket_adv", 1, "void_heart", 1}, true, "떨리는 저울",
+                            "마지막 측정이에요. 큰 저울로 재야 해요.||한쪽 접시에 거수의 공허 수정을, 다른 쪽에 이 섬의 돌을 올릴 거예요.|300년 동안 아무것도 저울을 움직이지 못했어요. 공허라면… 움직일지도 몰라요.||공허 수정 여섯 개를 가져다주세요.",
+                            "공허 수정 여섯 개예요. 공허 거수가 떨어뜨려요.",
+                            "올렸어요. 보세요…||…떨렸어요. 300년 동안 꿈쩍도 않던 큰 저울이, 아주 조금이지만 떨렸어요.|공허 수정 쪽이 위로요. 공허는 무게를 빼앗아 가는 거예요.||회의가 300년 만에 새 안건을 올렸대요. '무게 없는 곳의 무게를 되찾는다.'|기록 맨 앞에 당신 이름이 적힐 거예요. 고마워요, 정확한 사람.")),
+                    Map.of("main_20", new String[] {"바위 나라에 오신 것을 환영합니다. 이곳에서는 모든 것을 잽니다. 말도, 걸음도.", "당신의 측정은 정확했습니다. 회의의 기록이 그것을 증명합니다."},
+                            "main_21", new String[] {"현자 회의 의장 오르도입니다. 정해지지 않은 일은 정해지지 않은 채로 둡니다. 그것이 규칙입니다.", "300년 만에 안건을 올리게 해 준 분이군요. 회의는 당신을 기억할 것입니다."},
+                            "main_22", new String[] {"저울지기 리브라예요. 무게는 거짓말을 하지 않아요. 요즘은 빼고요.", "저울이 떨리던 그날을 잊지 못할 거예요. 당신 덕분이에요."})));
+
+    /** 이 NPC 가 나오는 나라 (없으면 null) */
+    public static Nation nationOfNpc(String key) {
+        for (Nation n : NATIONS) if (n.greet().containsKey(key)) return n;
+        return null;
+    }
+
+    /** 퀘스트 ID 의 나라 (나라 의뢰가 아니면 null) */
+    public static Nation nationOfQuest(String questId) {
+        for (Nation n : NATIONS) if (questId.startsWith(SIDE_PREFIX + "nation_" + n.id() + "_")) return n;
+        return null;
+    }
+
     /** 전설 퀘스트 목표 (kind: kill = mobs 중 어느 것이든 · boss = 그 보스) */
     private static JsonObject goalKill(int count, String label, String... mobs) {
         return J.o("kind", "kill", "mobs", List.of(mobs), "count", count, "label", label);
@@ -209,7 +328,7 @@ public final class SideQuests {
     }
 
     /**
-     * 들어 있는 퀘스트 전체 (반복 의뢰 14 (9단계 새 몬스터 8 포함) + 왕실 7 + 전설 4 + 초월 보스 전설 1 — 정의 그대로, Quest.normalizeBuiltin 이 다듬어 씀).
+     * 들어 있는 퀘스트 전체 (반복 의뢰 19 + 왕실 7 + 전설 4 + 나라 의뢰 18 (2026-11-28 — 나라마다 9) + 초월 보스 전설 1 — 정의 그대로, Quest.normalizeBuiltin 이 다듬어 씀).
      * 추가 필드: side, ord (순서), afterStep (이 메인 단계를 끝내면 열림), xpMob (경험치 제한 몬스터), reward.xpPoints, reward.armor ("path"),
      * finale (왕실 마지막), honor (초월 보스 전설: 끝낼 때 큰 글자)
      */
@@ -263,6 +382,33 @@ public final class SideQuests {
                     "type", "trial", "target", "", "targetName", l.title(), "goals", l.goals(), "count", count, "title", l.title(), "offer", l.offer(), "progress", l.progress(),
                     "done", l.done(), "reward", withGold(reward(0, l.weapon(), new Object[0]), true), "legend", true, "repeat", false, "requires", "",
                     "afterStep", MainQuests.mainBossStep(l.after()), "minLevel", l.lv()));
+        }
+        // 나라 의뢰 (나라마다 아홉 단계 — 차례대로)
+        for (int ni = 0; ni < NATIONS.size(); ni++) {
+            Nation nat = NATIONS.get(ni);
+            String before = "";
+            for (int i = 0; i < nat.steps().size(); i++) {
+                NationStep st = nat.steps().get(i);
+                int step = i + 1;
+                JsonObject reward = withGold(J.o("emerald", st.emerald(), "xp", 0, "points", 0, "weapon", "", "item", JsonNull.INSTANCE, "items", MainQuests.items(st.items())),
+                        st.goal().equals("boss"));
+                JsonObject q = J.o("id", nationId(nat.id(), step), "side", NATION, "ord", 400 + ni * 20 + step, "step", step, "giver", st.giver(), "title", st.title(),
+                        "offer", st.offer(), "progress", st.progress(), "done", st.done(), "count", 1, "target", "", "targetName", "", "reward", reward, "repeat", false,
+                        "requires", before, "minLevel", st.lv(), "finale", st.finale());
+                switch (st.goal()) {
+                    case "talk" -> J.put(q, "type", "talk", "target", st.what(), "targetName", MainQuests.mainNpcCall(st.what()));
+                    case "collect" -> J.put(q, "type", "collect", "target", MONSTER_DROPS.obj(st.what()).str("item"), "targetName", MONSTER_DROPS.obj(st.what()).str("name"),
+                            "count", st.count());
+                    case "kill" -> J.put(q, "type", "kill", "target", "rpg:" + st.what(), "targetName",
+                            MONSTERS.obj(st.what()).str("name") + "(Lv." + Js.str(MONSTERS.obj(st.what()).num("level")) + ")", "count", st.count());
+                    default -> {
+                        Obj b = BOSSES.objOrNull(st.what());
+                        J.put(q, "type", "boss", "target", st.what(), "targetName", b != null ? b.str("name") : st.what());
+                    }
+                }
+                out.add(q);
+                before = nationId(nat.id(), step);
+            }
         }
         // 초월 보스 전설 퀘스트 (왕녀, 왕실 퀘스트 마지막 단계 뒤)
         for (int i = 0; i < TRANSCEND_LEGENDS.size(); i++) {

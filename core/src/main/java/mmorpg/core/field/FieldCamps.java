@@ -238,7 +238,13 @@ public final class FieldCamps {
         }
     }
 
-    /** 거점 모두 (field.json camp 자리 · 평평한 높이) · 작은 마을 (hamlet) */
+    /** 자리 (field.json id) 의 평평한 높이 (없으면 def) */
+    static int plotY(FieldTerrain t, String id, int def) {
+        for (FieldTerrain.Plot p : t.plots()) if (p.id().equals(id)) return p.y();
+        return def;
+    }
+
+    /** 거점 모두 (field.json camp 자리 · 평평한 높이) · 작은 마을 (hamlet) · 2026-11-28 나라 섬의 상징 건물 (landmark — FieldNations) */
     public static void build(FieldTerrain t, List<FieldBuild.Piece> pieces, List<Blueprint.Mark> marks) {
         int hs = 0;
         for (FieldPlan.Site s : t.plan().sites("hamlet")) {
@@ -264,6 +270,25 @@ public final class FieldCamps {
                 case "snow_gate" -> gate(bps, x, g, z, "snow", "waystone_snow");
                 case "shield_gate" -> gate(bps, x, g, z, "shield", "waystone_shield");
                 case "rift_gate" -> gate(bps, x, g, z, "rift", "waystone_rift");
+                case "thunder_village" -> FieldNations.village(bps, x, g, z);
+                case "sage_west" -> FieldNations.pan(bps, x, g, z, true);
+                case "sage_east" -> FieldNations.pan(bps, x, g, z, false);
+                default -> {
+                }
+            }
+            for (Blueprint b : bps) {
+                pieces.add(b.piece(s.id()));
+                marks.addAll(b.marks());
+            }
+        }
+        for (FieldPlan.Site s : t.plan().sites("landmark")) {
+            int g = plotY(t, s.id(), t.plan().sea + 3);
+            int x = (int) Math.round(s.x());
+            int z = (int) Math.round(s.z());
+            List<Blueprint> bps = new ArrayList<>();
+            switch (s.id()) {
+                case "thunder_shrine" -> FieldNations.shrine(bps, t, x, g, z);
+                case "sage_scale" -> FieldNations.scale(bps, t, x, g, z);
                 default -> {
                 }
             }

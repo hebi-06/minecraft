@@ -45,21 +45,23 @@ public final class FieldWaystones {
     /** 이동 지점: 번호 · 이름 · 돌 자리 · 섬 · 열리는 레벨 (마을 광장 0) */
     public record Stone(String id, String name, BlockPos pos, String island, int level) {}
 
-    /** 이름 (이야기 차례 — 창의 차례) */
-    static final List<String> ORDER = List.of("waystone_midgard", "waystone_farm", "waystone_desert", "waystone_sea", "waystone_snow", "waystone_north",
-            "waystone_shield", "waystone_muspel", "waystone_void", "waystone_rift");
+    /** 이름 (이야기 차례 — 창의 차례 · 2026-11-28 나라 섬 둘: 번개 나라 (20렙 — 바다 다음) · 바위 나라 (55렙 — 끝)) */
+    static final List<String> ORDER = List.of("waystone_midgard", "waystone_farm", "waystone_desert", "waystone_sea", "waystone_thunder", "waystone_snow",
+            "waystone_north", "waystone_shield", "waystone_muspel", "waystone_void", "waystone_rift", "waystone_sage");
 
-    static final Map<String, String> NAMES = Map.of(
-            "waystone_midgard", "마을 광장",
-            "waystone_farm", "올라프의 농가 (농장 섬)",
-            "waystone_desert", "라그나르의 오아시스 (사막 섬)",
-            "waystone_sea", "비요른의 항구 (바다 섬)",
-            "waystone_snow", "눈꽃성 남쪽 광장 (눈꽃성 섬)",
-            "waystone_north", "스카디의 사냥막 (북쪽 섬)",
-            "waystone_shield", "방패 성벽 북문 (불 나라 섬)",
-            "waystone_muspel", "불꽃 전초기지 (무스펠 섬)",
-            "waystone_void", "균열 전초기지 (균열 곶)",
-            "waystone_rift", "공허 섬 어귀 (공허 섬)");
+    static final Map<String, String> NAMES = Map.ofEntries(
+            Map.entry("waystone_midgard", "마을 광장"),
+            Map.entry("waystone_farm", "올라프의 농가 (농장 섬)"),
+            Map.entry("waystone_desert", "라그나르의 오아시스 (사막 섬)"),
+            Map.entry("waystone_sea", "비요른의 항구 (바다 섬)"),
+            Map.entry("waystone_thunder", "이나에 마을 (번개 나라 섬)"),
+            Map.entry("waystone_snow", "눈꽃성 남쪽 광장 (눈꽃성 섬)"),
+            Map.entry("waystone_north", "스카디의 사냥막 (북쪽 섬)"),
+            Map.entry("waystone_shield", "방패 성벽 북문 (불 나라 섬)"),
+            Map.entry("waystone_muspel", "불꽃 전초기지 (무스펠 섬)"),
+            Map.entry("waystone_void", "균열 전초기지 (균열 곶)"),
+            Map.entry("waystone_rift", "공허 섬 어귀 (공허 섬)"),
+            Map.entry("waystone_sage", "서쪽 접시 (바위 나라 섬)"));
 
     private static volatile List<Stone> stones;
 

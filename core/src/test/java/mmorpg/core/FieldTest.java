@@ -29,7 +29,8 @@ public final class FieldTest {
             "mmorpg:mire", "mmorpg:frost_taiga", "mmorpg:frost_peaks", "mmorpg:glacier", "mmorpg:void_rift", "mmorpg:helheim", "mmorpg:muspelheim",
             "mmorpg:harvest_clearing", "mmorpg:dune_clearing", "mmorpg:oasis_clearing", "mmorpg:fjord_clearing", "mmorpg:mire_clearing", "mmorpg:frost_clearing",
             "mmorpg:glacier_clearing", "mmorpg:muspel_clearing", "mmorpg:snowcrown", "mmorpg:snowcrown_clearing", "mmorpg:rift_cape", "mmorpg:rift_cape_clearing",
-            "mmorpg:shieldwall", "mmorpg:shieldwall_clearing", "mmorpg:black_fissures");
+            "mmorpg:shieldwall", "mmorpg:shieldwall_clearing", "mmorpg:black_fissures", "mmorpg:inae_fields", "mmorpg:inae_grove", "mmorpg:inae_peak",
+            "mmorpg:inae_clearing", "mmorpg:sage_plateau", "mmorpg:weightless", "mmorpg:sage_clearing");
 
     private static final List<String> BAD = new ArrayList<>();
     private static int ok;

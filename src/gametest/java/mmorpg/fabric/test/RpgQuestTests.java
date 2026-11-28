@@ -682,6 +682,70 @@ public final class RpgQuestTests {
         done(h, sp);
     }
 
+    /**
+     * 2026-11-28 나라 의뢰 (사용자 "번개의 나라 … 거기 가서 퀘스트 받게 하게 해도 됨"): 나라 둘 × 아홉 단계 — 앞 단계를 끝내야 열림 · 레벨이 줄지 않음 ·
+     * 주는 NPC 와 말 걸기 대상이 메인 NPC (17 ~ 22) · 처치 · 전리품 대상이 몬스터 · 보스는 보스 표에 있음 · 마지막 단계 하나. 대화: 10렙이면 고헤이 대화창에 인사와
+     * "(레벨 20)", 20렙에 받아 히비키에게 전하면 끝나고 둘째 단계가 열림.
+     */
+    @GameTest(maxTicks = 60)
+    public void nationQuests(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        long count = Quests.sideQuests().stream().filter(q -> q.side.equals(SideQuests.NATION)).count();
+        h.assertTrue(count == 18 && SideQuests.NATIONS.size() == 2, "nation quests " + count);
+        for (SideQuests.Nation n : SideQuests.NATIONS) {
+            String prev = "";
+            int lv = 0;
+            int finales = 0;
+            for (int i = 1; i <= n.steps().size(); i++) {
+                Quest q = Quests.getQuest(SideQuests.nationId(n.id(), i));
+                h.assertTrue(q != null, n.id() + " step " + i + " exists");
+                h.assertTrue(q.requires.equals(prev) && q.minLevel >= lv && MainQuests.mainNpcByKey(q.giver) != null && q.reward.emerald > 0,
+                        n.id() + " step " + i + ": requires " + q.requires + " · level " + q.minLevel + " · giver " + q.giver);
+                switch (q.type) {
+                    case "talk" -> h.assertTrue(MainQuests.mainNpcByKey(q.target) != null && !q.target.equals(q.giver), "talk target " + q.target);
+                    case "kill", "collect" -> h.assertTrue(!q.targetName.isEmpty() && q.count > 0, q.id + " target " + q.target + " " + q.targetName);
+                    case "boss" -> h.assertTrue(!q.targetName.equals(q.target), q.id + " boss " + q.target);
+                    default -> h.fail(q.id + " type " + q.type);
+                }
+                if (q.finale) finales++;
+                h.assertTrue(n.greet().containsKey(q.giver), q.id + " giver greets " + q.giver);
+                prev = q.id;
+                lv = q.minLevel;
+            }
+            h.assertTrue(finales == 1, n.id() + " one finale");
+        }
+        Mannequin kohei = mainNpc(h, "main_17", new Vec3(3.5, 2, 3.5));
+        Mannequin hibiki = mainNpc(h, "main_18", new Vec3(5.5, 2, 3.5));
+        Forms.HEADLESS.add(sp.getUUID());
+        try {
+            String first = SideQuests.nationId("thunder", 1);
+            sp.setExperienceLevels(10);
+            h.assertTrue(status(sp, first).equals("locked"), "level 10: locked (" + status(sp, first) + ")");
+            QuestTalk.talkLoop(sp, kohei, null);
+            String cs = String.join(" / ", choices(sp));
+            h.assertTrue(dialogText(sp).contains("이나에 마을") && cs.contains("빈 이삭") && cs.contains("레벨 20"), "greeting · wait (" + dialogText(sp) + " — " + cs + ")");
+            pick(h, sp, "대화 끝내기");
+            sp.setExperienceLevels(20);
+            h.assertTrue(status(sp, first).equals("available"), "level 20: available");
+            QuestTalk.talkLoop(sp, kohei, null);
+            pick(h, sp, "빈 이삭");
+            nextPages(sp);
+            pick(h, sp, "수락하기");
+            h.assertTrue(status(sp, first).equals("active"), "accepted");
+            QuestTalk.talkLoop(sp, hibiki, null);
+            pick(h, sp, "전달");
+            nextPages(sp);
+            pick(h, sp, "확인");
+            h.assertTrue(status(sp, first).equals("done") && status(sp, SideQuests.nationId("thunder", 2)).equals("available"), "delivered → step 2 ("
+                    + status(sp, first) + " · " + status(sp, SideQuests.nationId("thunder", 2)) + ")");
+        } finally {
+            Forms.HEADLESS.remove(sp.getUUID());
+            kohei.discard();
+            hibiki.discard();
+        }
+        done(h, sp);
+    }
+
     /** 전리품 · 사냥 추천 (loot.js 의 일부 — 5단계 몬스터가 씀) */
     @GameTest(maxTicks = 20)
     public void lootHelpers(GameTestHelper h) {
@@ -693,9 +757,9 @@ public final class RpgQuestTests {
                 "drop ids (9단계 14종 + 0.32.0 공허 5종) " + Loot.dropItemIds());
         h.assertTrue(Loot.huntKind(0).equals("scarecrow") && Loot.huntKind(9).equals("gulon"), "hunt kind");
         h.assertTrue(Loot.monsterXp(sp, "scarecrow") > 0 && !Loot.xpCapped(sp, "scarecrow"), "xp at level 0");
-        // 들어 있는 퀘스트 수 · 순서 (메인 3 + 6 × 46, 반복 19 (0.32.0 공허 5 포함) · 왕실 7 · 전설 5)
+        // 들어 있는 퀘스트 수 · 순서 (메인 3 + 6 × 46, 반복 19 (0.32.0 공허 5 포함) · 왕실 7 · 전설 5 · 2026-11-28 나라 의뢰 18 (나라 둘 × 9))
         h.assertTrue(Quests.allQuests().stream().filter(q -> q.main).count() == 3 + 6L * MainQuests.PATH_STEPS, "main count");
-        h.assertTrue(Quests.sideQuests().size() == 31, "side count " + Quests.sideQuests().size());
+        h.assertTrue(Quests.sideQuests().size() == 49, "side count " + Quests.sideQuests().size());
         h.assertTrue(Quests.allQuests().get(0).id.equals(MainQuests.MAIN_START), "order");
         // 9단계 새 몬스터도 레벨 순서로 추천 (2렙 → 니세 Lv.4, 37렙 → 서리 거인 Lv.39)
         h.assertTrue(Loot.huntKind(2).equals("nisse") && Loot.huntKind(37).equals("frost_giant"), "hunt kind (new monsters) " + Loot.huntKind(2) + " " + Loot.huntKind(37));

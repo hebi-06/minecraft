@@ -54,6 +54,16 @@ public final class CommonSkills {
     public static final double[] FIRE_CORE = {1.0, 0.86, 0.5};
     public static final double[] VOLT = {1.0, 0.84, 0.3};
     public static final double[] VOLT_CORE = {0.82, 0.94, 1.0};
+
+    /**
+     * 2026-11-28 벼락받이 사당 (field.FieldShrines — 세계관 2-6 "볏짚 금줄을 두른 큰 기둥에 밤마다 벼락이 떨어진다"): 기둥 꼭대기 top 에서 하늘로 height 칸
+     * 번개 (공용 스킬 번개 색 — 라이트닝 스프린트와 같은 그림) · 꼭대기 번개 고리 · 받침 둘레 번개 고리 (ground — 없으면 생략). 모두에게 보임 (그림만 — 불 · 피해 없음).
+     */
+    public static void shrineBolt(ServerLevel level, Vec3 top, double height, Vec3 ground) {
+        JobFx.thunder(level, top, height, VOLT, VOLT_CORE, 0.45, Opt.of("fade", 0.3));
+        JobFx.volt(level, V.up(top, 0.2), 1.8, VOLT, VOLT_CORE, 0.6, Opt.of());
+        if (ground != null) JobFx.volt(level, V.up(ground, 0.08), 3.4, VOLT, VOLT_CORE, 0.8, Opt.of());
+    }
     public static final double[] ICE = {0.5, 0.84, 1.0};
     public static final double[] ICE_CORE = {0.9, 0.98, 1.0};
     public static final double[] ROCK = {0.7, 0.45, 0.2};

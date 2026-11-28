@@ -32,6 +32,11 @@
             "mmorpg:rift_cape",
             "mmorpg:shieldwall",
             "mmorpg:black_fissures",
+            "mmorpg:inae_fields",
+            "mmorpg:inae_grove",
+            "mmorpg:inae_peak",
+            "mmorpg:sage_plateau",
+            "mmorpg:weightless",
             "mmorpg:harvest_clearing",
             "mmorpg:dune_clearing",
             "mmorpg:oasis_clearing",
@@ -42,7 +47,9 @@
             "mmorpg:muspel_clearing",
             "mmorpg:snowcrown_clearing",
             "mmorpg:rift_cape_clearing",
-            "mmorpg:shieldwall_clearing"
+            "mmorpg:shieldwall_clearing",
+            "mmorpg:inae_clearing",
+            "mmorpg:sage_clearing"
           ]
         }
       }

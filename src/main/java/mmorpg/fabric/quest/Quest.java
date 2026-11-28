@@ -74,7 +74,7 @@ public final class Quest {
     // 애드온에 들어 있는 퀘스트만 (만든 퀘스트는 기본값)
     /** 메인 퀘스트 */
     public boolean main;
-    /** "repeat" (반복 의뢰) · "royal" (왕실) · "legend" (전설) · "" */
+    /** "repeat" (반복 의뢰) · "royal" (왕실) · "legend" (전설) · "nation" (나라 의뢰 — 2026-11-28) · "" */
     public String side = "";
     /** 그 무기의 길에서만 ("" = 모두) */
     public String path = "";
@@ -529,7 +529,7 @@ public final class Quest {
             }
         }
         String side = str(q, "side", "");
-        if (!side.equals("repeat") && !side.equals("royal") && !side.equals("legend")) side = "";
+        if (!side.equals("repeat") && !side.equals("royal") && !side.equals("legend") && !side.equals(SideQuests.NATION)) side = "";
         n.repeat = side.equals("repeat") && (n.type.equals("kill") || n.type.equals("collect"));
         n.reward.xpPoints = clampInt(r == null ? null : r.get("xpPoints"), 100000);
         n.reward.armor = r != null && "path".equals(str(r, "armor", "")) && isString(r.get("armor")) ? "path" : "";

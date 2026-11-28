@@ -40,7 +40,7 @@ public final class QuestText {
     /** "[메인] " 폭 (이름 폭은 그대로 두고 앞에 붙임) — "[반복] " · "[왕실] " · "[전설] " 도 같은 폭 */
     static final int MAIN_TAG_WIDTH = 34;
     /** 반복 의뢰 · 왕실 · 전설 머리표 (선택지 · 목록 · 알림) */
-    static final Map<String, String> SIDE_TAG = Map.of("repeat", "§b[반복] ", "royal", "§d[왕실] ", "legend", "§c[전설] ");
+    static final Map<String, String> SIDE_TAG = Map.of("repeat", "§b[반복] ", "royal", "§d[왕실] ", "legend", "§c[전설] ", SideQuests.NATION, "§6[나라] ");
 
     /** 퀘스트 머리표 ("" = 만든 퀘스트) */
     public static String tagOf(Quest q) {
@@ -204,6 +204,10 @@ public final class QuestText {
         if (q.main) parts.add(!q.path.isEmpty() ? "메인 퀘스트 · " + MainQuests.MAIN_PATHS.get(q.path).name() : "메인 퀘스트");
         if (q.side.equals("repeat")) parts.add(q.afterStep > 0 ? "반복 의뢰 · 메인 퀘스트 " + q.afterStep + "단계 (그 몬스터 처치) 뒤" : "반복 의뢰");
         if (q.side.equals("royal")) parts.add("왕실 퀘스트 · 무기의 길을 고른 뒤");
+        if (q.side.equals(SideQuests.NATION)) {
+            SideQuests.Nation n = SideQuests.nationOfQuest(q.id);
+            parts.add("나라 의뢰 · " + (n != null ? n.name() : "") + " " + q.step + "단계");
+        }
         if (q.side.equals("legend")) {
             MainQuests.MainPath p = MainQuests.MAIN_PATHS.get(q.path);
             parts.add(!q.path.isEmpty() ? "전설 퀘스트 · " + (p != null ? p.name() : "") + " · 메인 퀘스트 " + q.afterStep + "단계 (보스) 뒤" : "전설 퀘스트 · 초월 보스 (무기의 길과 무관)");

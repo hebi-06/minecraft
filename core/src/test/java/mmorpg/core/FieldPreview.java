@@ -67,6 +67,7 @@ public final class FieldPreview {
             case PATH -> 0xb39463;
             case DIRT -> 0x86603e;
             case DEEPSLATE -> 0x48484f;
+            case CALCITE -> 0xe6e4dc;
         };
     }
 

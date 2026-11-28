@@ -197,6 +197,24 @@ B = {
     'black_fissures': biome(2.0, 0.0, False, '#2a1f5a', '#7a4a52', fog='#6a4a5c', water_fog='#120a22',
                             particles=[('minecraft:reverse_portal', 0.004), ('minecraft:ash', 0.006)], music=MUSIC('minecraft:music.overworld.badlands'),
                             ores=False, wg_spawn=0.0),
+    # ---- 2026-11-28 나라 섬 둘 (사용자 "불의 나라나 땅의 나라 번개의 나라 같은거 추가 하고 싶으면 추가해도 됨")
+    # 번개 나라 섬: 계단식 논 (논물에 해초 = 벼 싹 · 개구리) · 벚꽃 잎 · 대숲과 벚나무 · 산꼭대기는 먹구름 하늘과 전기 불꽃
+    'inae_fields': biome(0.8, 0.8, True, '#3f8fe4', '#6f9ee6', fog='#c6d8ee', grass='#8fd05a', foliage='#62b83a',
+                         veg=['minecraft:seagrass_swamp', 'minecraft:patch_tall_grass_2', 'minecraft:flower_cherry', 'minecraft:patch_sugar_cane'],
+                         mobs=spawns(creature=[('minecraft:frog', 8, 2, 4), ('minecraft:chicken', 6, 2, 3)]),
+                         music=MUSIC('minecraft:music.overworld.cherry_grove')),
+    'inae_grove': biome(0.7, 0.8, True, '#3f8fe4', '#6f9ee6', fog='#c6d8ee', grass='#7fc455', foliage='#5aae36',
+                        veg=['minecraft:bamboo_light', 'minecraft:trees_cherry', 'minecraft:flower_cherry', 'minecraft:patch_grass_forest'],
+                        mobs=spawns(creature=[('minecraft:rabbit', 4, 2, 3)]), music=MUSIC('minecraft:music.overworld.bamboo_jungle')),
+    'inae_peak': biome(0.6, 0.8, True, '#3f8fe4', '#4a5a8c', fog='#8f9cc0', grass='#86b862',
+                       particles=[('minecraft:electric_spark', 0.006)], music=MUSIC('minecraft:music.overworld.jagged_peaks'), wg_spawn=0.0),
+    # 바위 나라 섬: 맑은 하늘 · 따뜻한 모래빛 안개 · 드문 나무와 꽃 (정원), 무게 없는 곳은 옅은 보랏빛 하늘 · 떠오르는 빛 알갱이
+    'sage_plateau': biome(1.0, 0.2, False, '#3f9fe4', '#78b4f0', fog='#ead9b4', grass='#9fb46a', foliage='#7fa04e',
+                          veg=['minecraft:trees_plains', 'minecraft:flower_plains', 'minecraft:patch_grass_plain'],
+                          mobs=spawns(creature=[('minecraft:sheep', 4, 2, 3)]), music=MUSIC('minecraft:music.overworld.desert')),
+    'weightless': biome(0.9, 0.0, False, '#7f7fd6', '#b0a8e0', fog='#eae4ff', water_fog='#1a1640',
+                        particles=[('minecraft:end_rod', 0.004), ('minecraft:reverse_portal', 0.002)], music=MUSIC('minecraft:music.overworld.deep_dark'),
+                        ores=False, wg_spawn=0.0),
 }
 
 
@@ -204,7 +222,8 @@ B = {
 # 덤불 · 버섯 · 바위 · 현무암 기둥 · 삼각주 · 얼음 가시 · 빙산 · 수련만 뺌 (CI 42359496849 사진: 항구 · 사냥막이 숲에, 불꽃 전초기지가 현무암 기둥에 묻힘)
 CLEAR = {'harvest_clearing': 'harvest_fields', 'dune_clearing': 'dune_sea', 'oasis_clearing': 'oasis', 'fjord_clearing': 'fjord_coast',
          'mire_clearing': 'mire', 'frost_clearing': 'frost_taiga', 'glacier_clearing': 'glacier', 'muspel_clearing': 'muspelheim',
-         'snowcrown_clearing': 'snowcrown', 'rift_cape_clearing': 'rift_cape', 'shieldwall_clearing': 'shieldwall'}
+         'snowcrown_clearing': 'snowcrown', 'rift_cape_clearing': 'rift_cape', 'shieldwall_clearing': 'shieldwall',
+         'inae_clearing': 'inae_fields', 'sage_clearing': 'sage_plateau'}
 BANNED = ('trees', 'cactus', 'pumpkin', 'sugar_cane', 'berry', 'large_fern', 'forest_rock', 'basalt', 'delta', 'ice_spike', 'ice_patch', 'iceberg',
           'waterlily', 'bush', 'mushroom')
 

@@ -87,7 +87,7 @@ public final class NpcEditor {
     /** 마네킹 스킨으로 쓸 플레이어 이름 */
     private static final Pattern PLAYER_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
     /** 들어 있는 퀘스트 종류 이름 (builtinCountText — 순서대로) */
-    private static final String[][] BUILTIN_SIDE_NAMES = {{"repeat", "반복 의뢰"}, {"royal", "왕실 퀘스트"}, {"legend", "전설 퀘스트"}};
+    private static final String[][] BUILTIN_SIDE_NAMES = {{"repeat", "반복 의뢰"}, {"royal", "왕실 퀘스트"}, {"legend", "전설 퀘스트"}, {"nation", "나라 의뢰"}};
 
     /** NPC 설정 훅 (Npcs.openSettings · openManager) 과 /npc 명령어 */
     public static void init() {

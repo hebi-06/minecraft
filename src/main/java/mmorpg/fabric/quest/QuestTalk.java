@@ -59,8 +59,9 @@ public final class QuestTalk {
             if (s.equals("ready")) opts.add(new Option("turnin", q, QuestText.titleOf(q, "§a") + " §7(완료 보고)", DialogForm.READY));
             else if (s.equals("available")) opts.add(new Option("offer", q, QuestText.titleOf(q, "§e"), DialogForm.NEW));
             else if (s.equals("active")) opts.add(new Option("progress", q, QuestText.titleOf(q, "§f") + " §7(진행 중)", DialogForm.ACTIVE));
-            // 메인 · 왕실 · 전설: 레벨만 모자란 다음 이야기는 필요한 레벨과 함께 보여 줌
-            else if (s.equals("locked") && (q.main || q.side.equals("royal") || q.side.equals("legend")) && Quests.lockReason(sp, q).equals("level")) {
+            // 메인 · 왕실 · 전설 · 나라 의뢰: 레벨만 모자란 다음 이야기는 필요한 레벨과 함께 보여 줌
+            else if (s.equals("locked") && (q.main || q.side.equals("royal") || q.side.equals("legend") || q.side.equals(SideQuests.NATION))
+                    && Quests.lockReason(sp, q).equals("level")) {
                 opts.add(new Option("wait", q, QuestText.titleOf(q, "§7") + " §8(레벨 " + q.minLevel + ")", Icon.of(Quest.TYPES.get("level").icon())));
             }
         }
@@ -93,7 +94,7 @@ public final class QuestTalk {
         Quest q = o.q();
         if (q == null) return 9;
         if (q.main) return 0;
-        if (q.side.equals("royal") || q.side.equals("legend")) return 1;
+        if (q.side.equals("royal") || q.side.equals("legend") || q.side.equals(SideQuests.NATION)) return 1;
         return q.side.equals("repeat") ? 3 : 2;
     }
 
@@ -508,7 +509,12 @@ public final class QuestTalk {
                 return "룬은 돌고 도는 법이지. 겹친 룬이나 쓰지 않는 룬이 있으면 가져오게. 갈아서 조각으로 만들어 주지.";
             }
             default -> {
-                return "";
+                // 2026-11-28 나라 섬의 NPC: 나라 의뢰를 끝까지 마쳤으면 끝낸 뒤 인사, 아니면 평소 인사
+                SideQuests.Nation nat = SideQuests.nationOfNpc(key);
+                if (nat == null) return "";
+                String[] g = nat.greet().get(key);
+                Quest last = Quests.getQuest(SideQuests.nationId(nat.id(), nat.steps().size()));
+                return last != null && status(sp, last).equals("done") ? g[1] : g[0];
             }
         }
     }

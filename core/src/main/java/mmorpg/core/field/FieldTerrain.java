@@ -21,7 +21,7 @@ public final class FieldTerrain {
     /** 겉흙 (게임은 블록으로, 배치도는 색으로) */
     public enum Surface {
         GRASS, SAND, SANDSTONE, RED_SAND, TERRACOTTA, GRAVEL, STONE, SNOW, PACKED_ICE, BLUE_ICE, PODZOL, MUD, COARSE, CLAY,
-        VOID, VOID_DARK, SCULK, OBSIDIAN, SOUL, BONE, BASALT, BLACKSTONE, MAGMA, PATH, DIRT, DEEPSLATE
+        VOID, VOID_DARK, SCULK, OBSIDIAN, SOUL, BONE, BASALT, BLACKSTONE, MAGMA, PATH, DIRT, DEEPSLATE, CALCITE
     }
 
     /** 칸 하나 (다시 써서 할당을 줄임) */
@@ -45,6 +45,10 @@ public final class FieldTerrain {
         public int floatTop;
         /** 길 (ROAD) · 다리 끝 (LANDING) · 자리 (PLOT) · 물가 (SHORE) */
         public int flags;
+        /** 계단식 논의 물 높이 (번개 나라 섬 — 이 칸이 논이면 땅 = 이것 − 1, 물 = 이것) · 없으면 {@link Integer#MIN_VALUE} */
+        public int paddyTop = Integer.MIN_VALUE;
+        /** 계단식 논 칸 종류: 0 아님 · 1 둑 (단 아래쪽 가장자리 — 벼랑 면이 돌담) · 2 물 논 · 3 마른 단 */
+        public int terrace;
 
         public boolean land() {
             return coast >= 0;
@@ -62,7 +66,7 @@ public final class FieldTerrain {
     public static final int RIVER = 16;
 
     /** 빈터를 두는 자리 종류 */
-    static final java.util.Set<String> CLEARED = java.util.Set.of("camp", "hamlet", "boss");
+    static final java.util.Set<String> CLEARED = java.util.Set.of("camp", "hamlet", "boss", "landmark");
     /** 바이옴 → 같은 지역의 빈터 바이옴 (tools/field_biomes.py CLEAR — 하늘 · 안개 · 색은 같고 나무 · 큰 장식만 없음) */
     static final java.util.Map<String, String> CLEARING = java.util.Map.ofEntries(
             java.util.Map.entry("mmorpg:midgard", "mmorpg:midgard_town"), java.util.Map.entry("mmorpg:midgard_grove", "mmorpg:midgard_town"),
@@ -72,7 +76,9 @@ public final class FieldTerrain {
             java.util.Map.entry("mmorpg:mire", "mmorpg:mire_clearing"), java.util.Map.entry("mmorpg:frost_taiga", "mmorpg:frost_clearing"),
             java.util.Map.entry("mmorpg:glacier", "mmorpg:glacier_clearing"), java.util.Map.entry("mmorpg:muspelheim", "mmorpg:muspel_clearing"),
             java.util.Map.entry("mmorpg:snowcrown", "mmorpg:snowcrown_clearing"), java.util.Map.entry("mmorpg:rift_cape", "mmorpg:rift_cape_clearing"),
-            java.util.Map.entry("mmorpg:shieldwall", "mmorpg:shieldwall_clearing"), java.util.Map.entry("mmorpg:black_fissures", "mmorpg:shieldwall_clearing"));
+            java.util.Map.entry("mmorpg:shieldwall", "mmorpg:shieldwall_clearing"), java.util.Map.entry("mmorpg:black_fissures", "mmorpg:shieldwall_clearing"),
+            java.util.Map.entry("mmorpg:inae_fields", "mmorpg:inae_clearing"), java.util.Map.entry("mmorpg:inae_grove", "mmorpg:inae_clearing"),
+            java.util.Map.entry("mmorpg:sage_plateau", "mmorpg:sage_clearing"));
 
     /** 평평하게 고를 자리: 가운데 · 평평한 반지름 · 이어지는 반지름 · 높이 */
     public record Plot(String id, String kind, double x, double z, double flat, double blend, int y) {}
@@ -102,6 +108,8 @@ public final class FieldTerrain {
     private final int sea;
     private final List<Plot> plots = new ArrayList<>();
     private final List<Span> spans = new ArrayList<>();
+    /** 상징 건물로 가는 길 (거점 → 건물 — 토막 차례) */
+    private final java.util.Map<String, List<Segment>> roadTo = new java.util.HashMap<>();
     private final List<Segment> roads = new ArrayList<>();
     private final List<RiverPath> rivers = new ArrayList<>();
     private final List<LakeAt> lakes = new ArrayList<>();
@@ -127,7 +135,7 @@ public final class FieldTerrain {
         for (FieldPlan.Site s : plan.sites) {
             double flat;
             switch (s.kind()) {
-                case "town", "camp", "hamlet" -> flat = s.r();
+                case "town", "camp", "hamlet", "landmark" -> flat = s.r();
                 case "tree" -> flat = Math.max(24, s.r() * 0.5);
                 case "boss" -> {
                     Obj b = s.boss() == null ? null : bosses.objOrNull(s.boss());
@@ -231,6 +239,11 @@ public final class FieldTerrain {
 
     public List<Span> spans() {
         return spans;
+    }
+
+    /** 거점에서 이 상징 건물 (landmark 자리) 로 가는 길 토막 (없으면 빈 목록) */
+    public List<Segment> roadTo(String siteId) {
+        return roadTo.getOrDefault(siteId, List.of());
     }
 
     public List<Segment> roads() {
@@ -531,12 +544,90 @@ public final class FieldTerrain {
                 if (fissure) h -= 9 * smoothstep(0.07, 0.03, crack) * side;
                 if (out != null) out.biome = side > 0.45 ? "mmorpg:black_fissures" : "mmorpg:shieldwall";
             }
+            case "thunder" -> {
+                // 번개 나라 섬 (2026-11-28 · 사용자 "번개의 나라 … 추가해도 됨"): 가운데 산 꼭대기 = 벼락받이 사당, 산허리 = 계단식 논 (세 칸 단 · 물 한 칸 ·
+                // 아래쪽 가장자리 둑), 동서 산허리 = 대숲 · 벚나무, 낮은 들 · 남쪽 마을. 사당으로 가는 길 둘레는 단을 풀어 오르막 (계단 벼랑이 없게)
+                double hc = thunderHeight(is, x, z, d);
+                double rr = Math.hypot(u, v);
+                double grove = smoothstep(0.02, 0.22, noise.fbm(X / 210 + 4, Z / 210 - 6, 2)) * smoothstep(0.18, 0.42, rr);
+                double band = smoothstep(sea + 6, sea + 10, hc) * smoothstep(sea + 54, sea + 48, hc) * (1 - grove) * smooth((d - 10) / 40);
+                h = hc;
+                if (band > 0.5) {
+                    double rd = roads.isEmpty() ? 1e9 : roadDistance(x, z);
+                    double ramp = smoothstep(9, 5, rd);
+                    double rel = hc - sea - 1;
+                    double k = Math.floor(rel / TERRACE);
+                    double f = rel / TERRACE - k;
+                    double ht = sea + 1 + k * TERRACE;
+                    h = lerp(ht, hc, ramp);
+                    if (out != null && ramp < 0.5) {
+                        out.terrace = f < BUND ? 1 : 3;
+                        // 논 한 배미: 단을 둘레로 약 24 칸씩 나눔 (단마다 나눈 수가 같음 — 단의 대략 반지름에서), 배미 사이 한 칸은 마른 두렁.
+                        // 배미마다 물을 대거나 마른 채 (조각보), 기울기가 가파르면 마른 단 (둑이 좁아 물이 아래 단으로 넘침)
+                        double ringR = 0.72 * (1 - Math.pow(clamp01((ht - sea - 6) / 50), 1 / 1.35)) * is.radius();
+                        int cells = Math.max(6, (int) Math.round(2 * Math.PI * ringR / 24));
+                        double a = (Math.atan2(v, u) + Math.PI) / (2 * Math.PI) * cells;
+                        int cell = (int) Math.floor(a);
+                        double edge = Math.min(a - cell, cell + 1 - a) * 2 * Math.PI / cells * rr * is.radius();
+                        boolean wet = edge >= 0.7 && FieldNoise.hash((int) k, cell, 47) < 0.6;
+                        if (wet && band > 0.85 && ramp == 0 && f >= BUND) {
+                            double gx = thunderHeight(is, x + 1, z, d) - hc;
+                            double gz = thunderHeight(is, x, z + 1, d) - hc;
+                            if (Math.hypot(gx, gz) < TERRACE * BUND) {
+                                out.paddyTop = (int) Math.floor(ht);
+                                out.terrace = 2;
+                            }
+                        }
+                    }
+                }
+                if (out != null) out.biome = rr < 0.13 ? "mmorpg:inae_peak" : grove > 0.5 ? "mmorpg:inae_grove" : "mmorpg:inae_fields";
+            }
+            case "sage" -> {
+                // 바위 나라 섬 (2026-11-28 · 사용자 "땅의 나라 … 추가해도 됨"): 사암 절벽으로 둘린 높은 고원 · 가운데 언덕 (큰 저울의 받침점) ·
+                // 동북의 무게 없는 곳 (땅이 갈라지고 위로 바위가 뜸 — 나라의 징조, 세계관 2-6)
+                double rr = Math.hypot(u, v);
+                double plateau = sea + 28 + 3 * noise.fbm(X / 160, Z / 160, 3) + 1.2 * noise.fbm(X / 36, Z / 36, 2);
+                double rise = smoothstep(1, 16, d);
+                h = sea + 1 + (plateau - sea - 1) * rise;
+                h += 24 * Math.pow(Math.max(0, 1 - rr / 0.36), 1.25) * rise;
+                double w = weightless(is, x, z);
+                if (w > 0) {
+                    double c = Math.abs(noise.fbm(X / 46 + 2, Z / 46 - 5, 2));
+                    if (c < 0.09) h -= 14 * w * smoothstep(0.09, 0.03, c);
+                    h -= 3 * w;
+                }
+                if (out != null) out.biome = w > 0.45 ? "mmorpg:weightless" : "mmorpg:sage_plateau";
+            }
             default -> {
                 h = sea + 1 + smooth(d / 20) * 4;
                 if (out != null) out.biome = "mmorpg:midgard";
             }
         }
         return h;
+    }
+
+    /** 계단식 논 한 단의 높이 · 둑 (단의 아래쪽 몫) */
+    static final int TERRACE = 3;
+    static final double BUND = 0.22;
+
+    /** 번개 나라 섬의 이어진 땅 높이 (단으로 자르기 전) */
+    private double thunderHeight(FieldPlan.Island is, double x, double z, double d) {
+        double X = x + is.dx();
+        double Z = z + is.dz();
+        double rr = Math.hypot((x - is.x()) / is.radius(), (z - is.z()) / is.radius());
+        double base = sea + 2 + smooth(d / 26) * 5 + 3 * noise.fbm(X / 150, Z / 150, 3) + 1.2 * noise.fbm(X / 40, Z / 40, 2);
+        double mt = Math.pow(Math.max(0, 1 - rr / 0.72), 1.35) * 50 * (0.88 + 0.12 * noise.fbm(X / 90, Z / 90, 2));
+        double ridge = 9 * Math.pow(noise.ridged(X / 110, Z / 110, 3), 2) * smoothstep(0.75, 0.25, rr);
+        return base + (mt + ridge) * smooth(d / 50);
+    }
+
+    /** 바위 나라 섬의 무게 없는 곳 (동북 — 0 바깥 · 1 한가운데) */
+    public double weightless(FieldPlan.Island is, double x, double z) {
+        double R = 0.30 * is.radius();
+        double cx = is.x() + 0.42 * is.radius();
+        double cz = is.z() - 0.30 * is.radius();
+        double q = Math.hypot(x - cx, z - cz) / R + 0.18 * noise.fbm((x + is.dx()) / 90 + 11, (z + is.dz()) / 90 - 3, 2);
+        return smoothstep(1.0, 0.55, q);
     }
 
     // ------------------------------------------------------------------ 길
@@ -546,9 +637,17 @@ public final class FieldTerrain {
             List<double[]> nodes = new ArrayList<>();
             List<double[]> landings = new ArrayList<>();
             double[] hub = null;
+            // 2026-11-28 상징 건물 (landmark) 은 거점에서 곧장 (사당으로 오르는 길 — 그 길에 도리이를 세움, roadTo)
+            List<FieldPlan.Site> marks = new ArrayList<>();
+            for (FieldPlan.Site s : plan.sites) if (s.island().equals(is.id()) && s.kind().equals("landmark")) marks.add(s);
+            // 거점 = 섬의 첫 거점 · 마을 (2026-11-28 바위 나라 섬은 접시 둘 — 둘째부터는 길로 이을 자리)
+            List<double[]> camps = new ArrayList<>();
             for (FieldPlan.Site s : plan.sites) {
                 if (!s.island().equals(is.id())) continue;
-                if (s.kind().equals("camp") || s.kind().equals("town")) hub = new double[] {s.x(), s.z()};
+                if (s.kind().equals("camp") || s.kind().equals("town")) {
+                    if (hub == null) hub = new double[] {s.x(), s.z()};
+                    else camps.add(new double[] {s.x(), s.z()});
+                }
             }
             for (Span sp : spans) {
                 if (sp.bridge().from().equals(is.id())) landings.add(new double[] {sp.ax(), sp.az()});
@@ -558,6 +657,7 @@ public final class FieldTerrain {
                 if (!s.island().equals(is.id())) continue;
                 if (s.kind().equals("zone") || s.kind().equals("boss") || s.kind().equals("tree") || s.kind().equals("hamlet")) nodes.add(new double[] {s.x(), s.z()});
             }
+            nodes.addAll(0, camps);
             if (hub == null && !landings.isEmpty()) hub = landings.remove(0);
             if (hub == null && !nodes.isEmpty()) hub = nodes.remove(0);
             if (hub == null) continue;
@@ -566,6 +666,13 @@ public final class FieldTerrain {
             done.add(hub);
             for (double[] l : landings) {
                 curve(hub, l, 3.0, 0.07, is.dx(), is.dz(), roads);
+                done.add(l);
+            }
+            for (FieldPlan.Site m : marks) {
+                double[] l = {m.x(), m.z()};
+                int before = roads.size();
+                curve(hub, l, 3.0, 0.07, is.dx(), is.dz(), roads);
+                roadTo.put(m.id(), List.copyOf(roads.subList(before, roads.size())));
                 done.add(l);
             }
             List<double[]> left = new ArrayList<>(nodes);
@@ -653,6 +760,8 @@ public final class FieldTerrain {
     /** 칸 (x, z) — out 을 채워 돌려줌 */
     public Column sample(int x, int z, Column out) {
         out.flags = 0;
+        out.paddyTop = Integer.MIN_VALUE;
+        out.terrace = 0;
         out.water = Integer.MIN_VALUE;
         out.lava = false;
         out.floatBottom = 0;
@@ -738,7 +847,16 @@ public final class FieldTerrain {
         } else if (out.ground < sea && !out.hasWater() && !best.terrain().equals("void")) {
             out.water = sea;
         }
+        // 계단식 논 (번개 나라 섬): 자리 · 길 · 강이 아니고 높이가 그대로인 칸만 — 한 칸 파고 물 (둑은 땅 그대로)
+        if (out.paddyTop != Integer.MIN_VALUE && out.paddyTop == out.ground && (out.flags & (PLOT | ROAD | ROAD_EDGE | RIVER)) == 0 && !out.hasWater()) {
+            out.ground = out.paddyTop - 1;
+            out.water = out.paddyTop;
+            out.top = Surface.MUD;
+            out.under = Surface.DIRT;
+            out.depth = 2;
+        }
         if (best.terrain().equals("void")) floating(best, x, z, d, out);
+        else if (best.terrain().equals("sage")) floatingSage(best, x, z, out);
         return out;
     }
 
@@ -887,12 +1005,45 @@ public final class FieldTerrain {
                 if (fissures && g < sea + 3) out.top = Surface.BLACKSTONE;
                 if (g < sea) out.top = Surface.RED_SAND;
             }
+            case "thunder" -> {
+                out.top = Surface.GRASS;
+                // 단의 둑: 벼랑 면 (아래 단에서 보이는 세 칸) 이 돌담
+                if (out.terrace == 1) {
+                    out.under = Surface.STONE;
+                    out.depth = 4;
+                }
+                if (out.biome.equals("mmorpg:inae_grove") && n > 0.3) out.top = Surface.PODZOL;
+                if (out.biome.equals("mmorpg:inae_peak")) out.top = n > 0.35 ? Surface.STONE : n > -0.2 ? Surface.GRASS : Surface.GRAVEL;
+                if (d < 5 && g <= sea + 2) {
+                    out.top = Surface.SAND;
+                    out.under = Surface.SANDSTONE;
+                }
+                if (g < sea) out.top = d < 12 ? Surface.SAND : Surface.DIRT;
+            }
+            case "sage" -> {
+                // 고원은 풀 · 거친 흙, 해안 절벽 (16칸 안) 은 사암 (절벽 면이 사암 띠), 무게 없는 곳은 방해석 · 돌 · 자갈, 틈 바닥은 심층암 · 흑요석
+                double w = weightless(is, x, z);
+                out.top = n > 0.62 ? Surface.COARSE : Surface.GRASS;
+                if (d < 16) {
+                    out.under = Surface.SANDSTONE;
+                    out.depth = 8;
+                    if (d < 6 && n > 0) out.top = Surface.SANDSTONE;
+                }
+                if (w > 0.35) {
+                    double m = noise.noise(X / 18.0 + 3, Z / 18.0 - 8);
+                    out.top = m > 0.25 ? Surface.CALCITE : m > -0.25 ? Surface.STONE : Surface.GRAVEL;
+                    out.under = Surface.STONE;
+                    if (g < sea + 22) out.top = n > 0 ? Surface.DEEPSLATE : Surface.OBSIDIAN;
+                }
+                if (g < sea) out.top = Surface.SAND;
+            }
             default -> out.top = Surface.GRASS;
         }
         if ((out.flags & (ROAD | LANDING)) != 0) {
             out.top = switch (is.terrain()) {
                 case "desert" -> Surface.SANDSTONE;
                 case "north", "snowcrown", "cape" -> Surface.GRAVEL;
+                case "sage" -> Surface.SANDSTONE;
                 case "void" -> Surface.DEEPSLATE;
                 case "muspel" -> Surface.BASALT;
                 case "shieldwall" -> Surface.COARSE;
@@ -924,6 +1075,40 @@ public final class FieldTerrain {
                 int top = (int) Math.floor(sea + 44 + FieldNoise.hash(gx, gz, 81) * 26 + 2 * k);
                 int bottom = (int) Math.floor(top - 2 - rad * 1.3 * Math.pow(k, 1.6));
                 if (top > out.ground + 12) {
+                    out.floatTop = top;
+                    out.floatBottom = bottom;
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * 바위 나라 섬 무게 없는 곳의 떠 있는 바위 (2026-11-28): 36칸 칸마다 하나 (있으면 — 바위 가운데가 무게 없는 곳 안일 때만), 땅에서 10칸 넘게 위.
+     * 블록은 생성기가 방해석 · 사암으로 (FieldBlocks).
+     */
+    private void floatingSage(FieldPlan.Island is, int wx, int wz, Column out) {
+        int x = wx + is.dx();
+        int z = wz + is.dz();
+        int cell = 36;
+        int cx = Math.floorDiv(x, cell);
+        int cz = Math.floorDiv(z, cell);
+        for (int ox = -1; ox <= 1; ox++) {
+            for (int oz = -1; oz <= 1; oz++) {
+                int gx = cx + ox;
+                int gz = cz + oz;
+                if (FieldNoise.hash(gx, gz, 91) > 0.6) continue;
+                double px = gx * cell + 6 + FieldNoise.hash(gx, gz, 92) * 24;
+                double pz = gz * cell + 6 + FieldNoise.hash(gx, gz, 93) * 24;
+                double wc = weightless(is, px - is.dx(), pz - is.dz());
+                if (wc < 0.4) continue;
+                double rad = 3 + FieldNoise.hash(gx, gz, 94) * 7 * (0.6 + 0.4 * wc);
+                double r = Math.hypot(x - px, z - pz);
+                if (r >= rad) continue;
+                double k = 1 - (r / rad) * (r / rad);
+                int top = (int) Math.floor(sea + 46 + FieldNoise.hash(gx, gz, 95) * 34 + 2 * k);
+                int bottom = (int) Math.floor(top - 1 - rad * 1.1 * Math.pow(k, 1.5));
+                if (top > out.ground + 10) {
                     out.floatTop = top;
                     out.floatBottom = bottom;
                     return;

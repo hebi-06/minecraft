@@ -59,7 +59,20 @@ public final class FieldBlocks {
             case PATH -> Blocks.DIRT_PATH.defaultBlockState();
             case DIRT -> Blocks.DIRT.defaultBlockState();
             case DEEPSLATE -> DEEPSLATE;
+            case CALCITE -> Blocks.CALCITE.defaultBlockState();
         };
+    }
+
+    /**
+     * 떠 있는 바위 (2026-11-28): 공허 섬 · 균열 곶은 엔드 돌, 바위 나라 섬 (무게 없는 곳 — 땅이 떨어져 떠오름) 은 윗면 풀 · 그 아래 흙 · 사암 몸 (방해석 줄) ·
+     * 밑면 방해석.
+     */
+    static BlockState floating(String terrain, int x, int y, int z, int top, int bottom) {
+        if (!terrain.equals("sage")) return END_STONE;
+        if (y == top) return Blocks.GRASS_BLOCK.defaultBlockState();
+        if (y >= top - 1) return Blocks.DIRT.defaultBlockState();
+        if (y <= bottom + 1) return Blocks.CALCITE.defaultBlockState();
+        return FieldNoise.hash(x, y * 7 + z, 41) < 0.22 ? Blocks.CALCITE.defaultBlockState() : Blocks.SANDSTONE.defaultBlockState();
     }
 
     /** 겉흙 아래 몸 (지형 종류마다) */

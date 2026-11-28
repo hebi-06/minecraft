@@ -13,6 +13,8 @@ import mmorpg.fabric.field.FieldBlocks;
 import mmorpg.fabric.field.FieldChunkGenerator;
 import mmorpg.fabric.field.FieldExtras;
 import mmorpg.fabric.field.FieldFog;
+import mmorpg.fabric.field.FieldLifts;
+import mmorpg.fabric.field.FieldShrines;
 import mmorpg.fabric.field.FieldWaystones;
 import mmorpg.fabric.field.FieldPieces;
 import mmorpg.fabric.field.FieldWorld;
@@ -121,8 +123,8 @@ public final class RpgFieldTests {
         List<FieldWaystones.Stone> stones = FieldWaystones.stones();
         List<String> ids = new ArrayList<>();
         for (FieldWaystones.Stone s : stones) ids.add(s.id());
-        h.assertTrue(ids.equals(List.of("waystone_midgard", "waystone_farm", "waystone_desert", "waystone_sea", "waystone_snow", "waystone_north",
-                "waystone_shield", "waystone_muspel", "waystone_void", "waystone_rift")), "stones in story order " + ids);
+        h.assertTrue(ids.equals(List.of("waystone_midgard", "waystone_farm", "waystone_desert", "waystone_sea", "waystone_thunder", "waystone_snow", "waystone_north",
+                "waystone_shield", "waystone_muspel", "waystone_void", "waystone_rift", "waystone_sage")), "stones in story order " + ids);
         Set<String> groups = new HashSet<>();
         for (FieldWaystones.Stone s : stones) {
             FieldPlan.Island is = plan.island(s.island());
@@ -161,6 +163,40 @@ public final class RpgFieldTests {
         sp.setPos(0, 80, 60);
         h.assertTrue(FieldFog.check(sp, h.getLevel(), t) == 0, "on the island: untouched");
         LOG.info("[field-test] OK stones {} · fog push at x {} · back at x {}", ids.size(), xPush, xBack);
+        h.succeed();
+    }
+
+    /**
+     * 2026-11-28 나라 섬 (사용자 "번개의 나라 … 추가해도 됨"): 큰 저울 오르내림 발판 한 쌍 (탑 아래 → 꼭대기 — 1초 서면 짝으로, 옮겨 온 발판에서는 내려섰다
+     * 다시 서야 돌아감) · 벼락받이 사당의 벼락 자리 하나 (기둥 꼭대기 — 사당 마당보다 25칸 넘게 높음) · 나라 NPC 자리표 (17 ~ 22).
+     */
+    @GameTest(maxTicks = 40)
+    public void nationLiftsAndShrine(GameTestHelper h) {
+        FieldTerrain t = FieldWorld.terrain();
+        List<FieldLifts.Pad> pads = FieldLifts.pads();
+        h.assertTrue(pads.size() == 2 && pads.get(0).id().equals("lift_scale_a") && pads.get(0).pair().equals("lift_scale_b"), "lift pads " + pads);
+        FieldLifts.Pad a = pads.get(0);
+        FieldLifts.Pad b = pads.get(1);
+        h.assertTrue(b.at().y - a.at().y > 40, "pad b on the top deck (" + a.at() + " → " + b.at() + ")");
+        List<net.minecraft.world.phys.Vec3> bolts = FieldShrines.bolts();
+        FieldPlan.Site shrine = t.plan().site("thunder_shrine");
+        h.assertTrue(bolts.size() == 1 && shrine != null && bolts.get(0).y > t.surfaceAt((int) shrine.x(), (int) shrine.z()) + 25, "bolt mark on the pillar " + bolts);
+        Set<String> npcs = new HashSet<>();
+        for (Blueprint.Mark m : FieldBuild.build(t).marks()) if (m.id().startsWith("npc_")) npcs.add(m.id());
+        for (int n = 17; n <= 22; n++) h.assertTrue(npcs.contains("npc_" + n), "nation npc mark npc_" + n);
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+        sp.setPos(a.at().x, a.at().y, a.at().z);
+        h.assertTrue(FieldLifts.step(sp, h.getLevel(), 10) == null, "half a second on pad a: stays");
+        String went = FieldLifts.step(sp, h.getLevel(), 10);
+        h.assertTrue("lift_scale_b".equals(went) && sp.position().distanceTo(b.at()) < 1.0, "1 s on pad a → pad b (" + went + ", " + sp.position() + ")");
+        h.assertTrue(FieldLifts.step(sp, h.getLevel(), 20) == null, "arrived on pad b: stays until stepping off");
+        sp.setPos(b.at().x + 3, b.at().y, b.at().z);
+        FieldLifts.step(sp, h.getLevel(), 2);
+        sp.setPos(b.at().x, b.at().y, b.at().z);
+        FieldLifts.step(sp, h.getLevel(), 10);
+        String back = FieldLifts.step(sp, h.getLevel(), 10);
+        h.assertTrue("lift_scale_a".equals(back) && sp.position().distanceTo(a.at()) < 1.0, "off and on again → back down (" + back + ")");
+        LOG.info("[field-test] OK nation lifts {} · bolts {} · npcs {}", pads.size(), bolts.size(), npcs.size());
         h.succeed();
     }
 }

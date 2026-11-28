@@ -117,7 +117,15 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             new Shot("fc_12_snow_gate", -2400, 105, -2142, -2400, 94, -2170),
             new Shot("fc_13_shield_gate", 0, 86, 4278, 0, 75, 4250),
             new Shot("fc_14_rift_gate", 0, 94, -4762, 0, 83, -4790),
-            new Shot("fc_15_knight_temple", 0, 96, -3320, 0, 84, -3360));
+            new Shot("fc_15_knight_temple", 0, 96, -3320, 0, 84, -3360),
+            // 2026-11-28 나라 섬 둘: 이나에 마을 · 도리이 길 · 벼락받이 사당 · 계단식 논 / 큰 저울 · 서쪽 접시 · 무게 없는 곳
+            new Shot("fc_16_inae_village", 4800, 90, 398, 4800, 76, 345),
+            new Shot("fc_17_torii_path", 4830, 120, 80, 4795, 112, 30),
+            new Shot("fc_18_bolt_shrine", 4834, 132, 26, 4800, 128, -8),
+            new Shot("fc_19_terraces", 4700, 112, 160, 4760, 100, 80),
+            new Shot("fc_20_great_scale", 2600, 150, 2690, 2600, 150, 2600),
+            new Shot("fc_21_sage_pan", 2548, 116, 2630, 2520, 112, 2600),
+            new Shot("fc_22_weightless", 2740, 120, 2500, 2790, 125, 2450));
 
     /** 보이는 거리 (청크) — 12 는 CI 의 소프트웨어 그리기에서 사진마다 45초 안에 다 못 그림 (CI 42356359483) */
     private static final int VIEW = 8;
@@ -225,12 +233,14 @@ public final class RpgFieldGallery implements FabricClientGameTest {
         }
         check(built == FieldExtras.altars().size() && built == plan.sites("boss").size(), "temples registered as built " + built + "/" + plan.sites("boss").size());
         check(HuntZones.zoneList().size() >= plan.sites("zone").size(), "hunt zones " + HuntZones.zoneList().size() + "/" + plan.sites("zone").size());
+        // 메인 NPC 모두 (2026-11-28 나라 섬 17 ~ 22 포함)
         int recorded = 0;
-        for (int n = 1; n <= 16; n++) {
-            MainQuests.MainNpc def = MainQuests.mainNpcByNumber(n);
-            if (def != null && NpcData.mainRecord(s, def.key()) != null) recorded++;
+        List<Integer> missing = new ArrayList<>();
+        for (MainQuests.MainNpc def : MainQuests.MAIN_NPCS) {
+            if (NpcData.mainRecord(s, def.key()) != null) recorded++;
+            else missing.add(def.n());
         }
-        check(recorded == 16, "main quest NPCs 1~16 placed (" + recorded + ")");
+        check(recorded == MainQuests.MAIN_NPCS.size(), "main quest NPCs placed (" + recorded + "/" + MainQuests.MAIN_NPCS.size() + ", missing " + missing + ")");
         for (Blueprint.Mark m : FieldBuild.build(t).marks()) {
             if (!m.id().startsWith("waystone")) continue;
             BlockPos at = BlockPos.containing(m.x(), m.y(), m.z());

@@ -79,7 +79,8 @@ public final class FieldChunkGenerator extends ChunkGenerator {
             for (int y = g + 1; y <= Math.min(c.water, maxY); y++) out.put(y, fluid);
         }
         if (c.floatTop > c.floatBottom) {
-            for (int y = Math.max(c.floatBottom, g + 2); y <= Math.min(c.floatTop, maxY); y++) out.put(y, FieldBlocks.END_STONE);
+            String ft = c.island == null ? "" : c.island.terrain();
+            for (int y = Math.max(c.floatBottom, g + 2); y <= Math.min(c.floatTop, maxY); y++) out.put(y, FieldBlocks.floating(ft, x, y, z, c.floatTop, c.floatBottom));
         }
     }
 
