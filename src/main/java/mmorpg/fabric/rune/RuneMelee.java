@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 
 /**
  * 2026-11-28 근접 딜 새 룬 다섯 (사용자 "지금 룬 스킬이 전체적으로 마법사한테 좋은거 같음 그래서 근접 및 힐러 등 같은 애들의 룬 추가가 필요할듯" → 고른 것
@@ -48,6 +49,16 @@ final class RuneMelee {
     /** 몸 높이 h 의 자리에서 f 쪽 dist 칸 · 오른쪽 side 칸 */
     private static Vec3 ahead(Vec3 feet, Vec3 f, double dist, double side, double h) {
         return V.up(V.add(V.add(feet, f, dist), V.rightOf(f), side), h);
+    }
+
+    /**
+     * 앞을 보는 고정 그림의 돌림 (그림 앞면이 쓴 사람 쪽 — 뒤 · 앞 f 의 반대 — 를 보고 왼쪽으로 turn 도 · 그림 위 = 하늘): 2026-11-28 전방 참격 (평타 대각선 판
+     * BasicSlash front 의 turn 40 과 같은 틀 — 뒤 · 옆 카메라 모두에서 넓은 면)
+     */
+    private static Quaternionf frontFace(Vec3 f, double turn) {
+        double t = Math.toRadians(turn);
+        Vec3 n = V.unit(V.add(V.scale(f, -Math.cos(t)), V.rightOf(f), -Math.sin(t)));
+        return Vfx.basis(V.unit(V.cross(V.UP, n)), V.UP, n);
     }
 
     /** 땅 자국 판의 크기 몫 (RuneKit.ARC_CARD 와 같음 — 예전 판 모델 반너비) */
@@ -92,6 +103,12 @@ final class RuneMelee {
         Vec3 c0 = sp.position();
         Vec3 x = ahead(c0, f, 2.1, 0, 1.15); // 허공의 X 가운데
         Vfx.Fx fx = Vfx.at(level, x, 3 + hold + 18);
+        // 2026-11-28 판 18 표시 (전방 참격): 허공의 X 는 둘레 사람 · 3인칭에는 앞을 보는 고정 판 (면을 왼쪽으로 40° — 평타 대각선 판 BasicSlash front 와 같은 틀:
+        // 뒤 · 옆 카메라 모두에서 넓은 면), 쓴 사람 1인칭에는 눈을 보는 X (눈은 뒤에서 앞을 봄 — 앞을 보는 면과 같은 쪽)
+        int ownerId = sp.getId();
+        Vfx.Fx fxOut = Vfx.at(level, x, 3 + hold + 18, p -> !(p.getId() == ownerId && !mmorpg.fabric.vfx.PBridge.thirdPersonOf(p)));
+        Vfx.Fx fxEye = Vfx.at(level, x, 3 + hold + 18, (Vfx.FirstPerson) p -> p.getId() == ownerId && !mmorpg.fabric.vfx.PBridge.thirdPersonOf(p));
+        Quaternionf xFace = frontFace(f, 40);
         SkillFx.play(level, "item.trident.riptide_1", c0, 1.6, 0.6);
         // 두 번 벰 (3D 칼: tilt 45 = 오른쪽 위 ↔ 왼쪽 아래 · −45 = 왼쪽 위 ↔ 오른쪽 아래, 앞 (0) 을 지나는 틱 = 1 · 3)
         RuneSwing.sword(sp, life, 1.25, 0.5, 2.2, 45, 75, -75, 0, 2, 1, "out", glow, core);
@@ -99,7 +116,7 @@ final class RuneMelee {
         RuneKit.later(1, () -> crossArc(sp, life, false, glow, core, 1.4));
         RuneKit.later(3, () -> crossArc(sp, life, true, glow, core, 1.25));
         List<LivingEntity> cut = new ArrayList<>();
-        Vfx.Sprite[] hang = new Vfx.Sprite[1];
+        Vfx.Sprite[] hang = new Vfx.Sprite[2];
         RuneKit.later(3, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
@@ -114,8 +131,10 @@ final class RuneMelee {
             }
             // 허공의 X: 카메라를 보는 X 자국 (xcut 칸 1 — 두 획) 이 hold 틱 동안 조금씩 커지며 걸려 있음. 어느 쪽에서 봐도 X (2026-11-28 CI 46099514617 — 빛줄기
             // 넷 (RuneKit.streak) 은 칠한 묶음에서 점 몇 개라 3인칭에 X 가 안 보였음). 1인칭: 눈에서 2칸 넘게 · 반지름 1.1 (eyeCull 1.65 안쪽 아님)
-            hang[0] = fx.sprite("xcut", x).color(Vfx.mix(glow, VfxKit.WHITE, 0.25)).size(1.8).frame(1).alpha(0.95);
-            hang[0].to(null, 2.2, hold);
+            double[] xc = Vfx.mix(glow, VfxKit.WHITE, 0.25);
+            hang[0] = fxOut.sprite("xcut", x).color(xc).fixed(xFace).size(1.8).frame(1).alpha(0.95);
+            hang[1] = fxEye.sprite("xcut", x).color(xc).size(1.8).frame(1).alpha(0.95);
+            for (Vfx.Sprite h : hang) h.to(null, 2.2, hold);
             VfxKit.glow(fx, x, 1.4, glow, 0.55, hold);
             SkillFx.play(d, "entity.player.attack.sweep", c0, 1.3, 0.9);
         });
@@ -134,9 +153,10 @@ final class RuneMelee {
         RuneKit.later(3 + hold, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            if (hang[0] != null) hang[0].remove();
-            // 크기: 눈 (앞 2.1칸) 에서 반지름 × 1.5 안이면 1인칭에서 거둬지므로 (Vfx eyeCull) 지름 2.6 · 2.4 까지
-            VfxKit.xcut(fx, x, 2.6, core, 0);
+            for (Vfx.Sprite h : hang) if (h != null) h.remove();
+            // 크기: 눈 (앞 2.1칸) 에서 반지름 × 1.5 안이면 1인칭에서 거둬지므로 (Vfx eyeCull) 지름 2.6 · 2.4 까지. 터지는 X 도 허공의 X 와 같은 면
+            fxOut.sprite("xcut", x).color(core).fixed(xFace).size(2.6).play(fxOut.age(), 0, 4, 2, false);
+            VfxKit.xcut(fxEye, x, 2.6, core, 0);
             VfxKit.burst(fx, x, 2.4, glow, 0);
             VfxKit.sparks(fx, x, core, 12, 2.2, 0);
             RuneKit.hitFlash(d, x, f, glow, core, 1.6);
@@ -157,12 +177,17 @@ final class RuneMelee {
         return true;
     }
 
-    /** 크로스 컷의 칠한 반달 하나 (가는 반달 — flip = 두 번째 · 반대쪽 대각선), 눈앞 dist 칸 · 가슴 높이 */
+    /**
+     * 크로스 컷의 칠한 반달 하나 (가는 반달), 눈앞 dist 칸 · 가슴 높이 — 전방 참격 (front: 앞을 보는 휘두름 면 · 1인칭은 화면 가운데를 지나는 곧은 칼빛).
+     * 3D 칼과 같은 쪽으로 그어짐: 첫째 = 오른쪽 위 → 왼쪽 아래 "/" (기울기 225 = spin 180 + 가는 반달 45), 둘째 = 왼쪽 위 → 오른쪽 아래 (flip — 315).
+     * 2026-11-28 판 18 표시 "앞으로 참격 쓸때 내가 따로 말 안하면 참격 방향이 앞을 보게 하기 (1인칭 포함)" — 전에는 반달이 보는 눈 쪽으로 세워지고 (3인칭) 1인칭은
+     * 카메라를 보는 초승달이었음
+     */
     private static void crossArc(ServerPlayer sp, String life, boolean second, double[] glow, double[] core, double dist) {
         if (!RuneKit.sameLife(sp, life)) return;
         Vec3 f = front(sp);
         RuneKit.arc(sp.level(), ahead(sp.position(), f, dist, 0, 1.15), f, Opt.of("shape", "thin", "flip", second, "size", 2.5, "life", 0.22, "speed", 3.0,
-                "spin", 0.0, "color", glow, "aura", core));
+                "spin", 180.0, "front", true, "color", glow, "aura", core));
         SkillFx.play(sp.level(), "entity.player.attack.sweep", sp.position(), second ? 1.5 : 1.7, 0.7);
     }
 
@@ -195,8 +220,10 @@ final class RuneMelee {
             Vec3 ff = front(sp);
             // 2026-11-28 크기 4.6 → 3.2 · 빠르기 2 → 1.2 (CI 46099514617 3인칭: 칠한 반달은 가로 휘두름도 보는 눈 쪽으로 65° 까지 기울어 세워지고 땅 위로 올려져 —
             // 반지름 3.1칸이면 옆 카메라에서 6칸 넘게 하늘로 솟은 세로 베기처럼 보였음. 넓게 쓴 자리는 땅의 반달 · 거대한 칼이 보여 줌)
-            RuneKit.arc(sp.level(), ahead(sp.position(), ff, 1.8, 0, 0.95), ff, Opt.of("shape", "arc", "flip", false, "size", 3.2, "life", 0.28, "speed", 1.2,
-                    "spin", 6.0, "color", glow, "aura", core));
+            // 2026-11-28 판 18 표시: 전방 참격 (front — 앞을 보는 누운 반달 · 1인칭도 눈 아래 앞으로 불룩) · 칼과 같은 쪽 오른쪽 → 왼쪽 (flip) · 오른쪽이 조금 낮게
+            // (spin −8 = 칼 tilt −8)
+            RuneKit.arc(sp.level(), ahead(sp.position(), ff, 1.8, 0, 0.95), ff, Opt.of("shape", "arc", "flip", true, "size", 3.2, "life", 0.28, "speed", 1.2,
+                    "spin", -8.0, "front", true, "color", glow, "aura", core));
         });
         RuneKit.later(2, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -573,8 +600,9 @@ final class RuneMelee {
             Vec3 c = sp.position();
             Vec3 ff = front(sp);
             // 2026-11-28 반달 크기 4.8 → 3.4 · 세로 4.4 → 3.4 (CI 46099514617 3인칭 — 보는 눈 쪽으로 세워진 반달이 하늘 높이 솟아 보였음)
-            RuneKit.arc(d, ahead(c, ff, 1.8, 0, 1.15), ff, Opt.of("shape", "arc", "flip", false, "size", 3.4, "life", 0.28, "speed", 1.5, "spin", 0.0,
-                    "color", glow, "aura", core));
+            // 2026-11-28 판 18 표시: 전방 참격 (front) · 칼과 같은 쪽 오른쪽 → 왼쪽 (flip)
+            RuneKit.arc(d, ahead(c, ff, 1.8, 0, 1.15), ff, Opt.of("shape", "arc", "flip", true, "size", 3.4, "life", 0.28, "speed", 1.5, "spin", 0.0,
+                    "front", true, "color", glow, "aura", core));
             SkillFx.play(d, "entity.player.attack.sweep", c, 1.0, 1.0);
             SkillFx.play(d, "block.bell.hit", c, 1.4, 0.5);
             for (LivingEntity e : RuneKit.coneAround(sp, c, ff, radius, 180)) {
@@ -590,7 +618,7 @@ final class RuneMelee {
             ServerLevel d = sp.level();
             Vec3 c = sp.position();
             Vec3 ff = front(sp);
-            RuneKit.arc(d, ahead(c, ff, 2.2, 0, 1.3), ff, Opt.of("shape", "heavy", "flip", false, "size", 3.4, "life", 0.26, "speed", 1.5, "spin", -6.0,
+            RuneKit.arc(d, ahead(c, ff, 2.2, 0, 1.3), ff, Opt.of("shape", "heavy", "flip", false, "size", 3.4, "life", 0.26, "speed", 1.5, "spin", -6.0, "front", true,
                     "color", glow, "aura", core));
             for (int i = 1; i <= 4; i++) VfxKit.crack(fx, VfxKit.ground(d, V.add(c0, f, len * i / 4.5)), 1.8, glow, i - 1, boom - vert + 12);
             SkillFx.play(d, "mace.heavy_smash_ground", V.add(c, ff, 2), 1.0, 0.9);

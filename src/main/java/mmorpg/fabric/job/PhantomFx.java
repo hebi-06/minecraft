@@ -961,6 +961,14 @@ final class PhantomFx {
      * 더 세워 앞으로 불룩한 "(" 에 가깝게) · 세로 반달 · 앞 날을 드는 각
      */
     static final double MOON_ROLL = 65;
+    /**
+     * 2026-11-28 전방 참격 (사용자 "앞으로 참격 쓸때 내가 따로 말 안하면 참격 방향이 앞을 보게 하기 (1인칭 포함)" — 룬 도감 판 18 크로스 컷 · 브루탈 클리브 ·
+     * 그랜드 크로스 표시): 가로 반달이 보는 눈 쪽으로 도는 끝 (65 면 옆 카메라에서 하늘로 솟은 세로 베기처럼 보였음) · 1인칭 누운 반달로 볼 기울기 (|cos| — 가로에서
+     * ±20° 안) · 1인칭 누운 반달 높이 (발 위 칸 — 평타 가로 베기 fpHeight 와 같음: 화면 아래로 띠가 지나감)
+     */
+    static final double FRONT_ROLL = 20;
+    static final double FRONT_FLAT_COS = 0.94;
+    static final double FRONT_FP_HEIGHT = 0.95;
     static final double MOON_ROLL_V = 30;
     static final double MOON_LIFT = 18;
 
@@ -972,6 +980,11 @@ final class PhantomFx {
      * 보이지 않게). extraRoll = 앞 축 둘레로 더 기울임 (잔상 겹)
      */
     static Moon moon(Vec3 C, Vec3 fwd, double tilt, double R, Vec3 eye, double lift, double extraRoll) {
+        return moon(C, fwd, tilt, R, eye, lift, extraRoll, MOON_ROLL);
+    }
+
+    /** 같은 것 — 가로 반달이 보는 눈 쪽으로 도는 끝 rollMax (도 — 전방 참격 FRONT_ROLL: 앞을 보는 판이 카메라 쪽으로 세워지지 않게) */
+    static Moon moon(Vec3 C, Vec3 fwd, double tilt, double R, Vec3 eye, double lift, double extraRoll, double rollMax) {
         Vec3 h = V.flat(fwd);
         Vec3 r = V.cross(h, V.UP); // 오른쪽
         double c = Math.cos(Math.toRadians(tilt));
@@ -979,7 +992,7 @@ final class PhantomFx {
         if (Math.abs(c) >= 0.5) {
             double dev = wrap180(c >= 0 ? tilt : tilt - 180);
             double beta = 0;
-            if (e != null) beta = clamp(wrap90(Math.toDegrees(Math.atan2(-V.dot(e, r), V.dot(e, V.UP)))), MOON_ROLL);
+            if (e != null) beta = clamp(wrap90(Math.toDegrees(Math.atan2(-V.dot(e, r), V.dot(e, V.UP)))), rollMax);
             double g = Math.toRadians(clamp(dev + beta + extraRoll, MOON_ROLL + 15));
             Vec3 r1 = V.add(V.scale(r, Math.cos(g)), V.UP, Math.sin(g));
             Vec3 n1 = V.add(V.scale(V.UP, Math.cos(g)), r, -Math.sin(g));
@@ -1091,6 +1104,16 @@ final class PhantomFx {
      */
     static void waveStraight(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double speed, double half, boolean down, double life, Predicate<ServerPlayer> who,
             double alpha) {
+        waveStraight(level, L, at, dir, speed, half, down ? 90 : 270, true, life, who, alpha);
+    }
+
+    /**
+     * 같은 것 — 돌림 roll (도 · 화면에서 반시계) · 그림판 (mirror = 미리 뒤집은 slashm: 돌림 0 이면 위로 불룩 · 오른쪽 → 왼쪽으로 그어짐 — 90 = 세로 내리침 (왼쪽으로
+     * 불룩) · 270 = 올려 베기 · 45 = 오른쪽 위 → 왼쪽 아래 "/", 아니면 slash: 왼쪽 → 오른쪽 — −45 = 왼쪽 위 → 오른쪽 아래, 2026-11-28 전방 대각선 베기).
+     * 불룩한 쪽 (−sin roll, cos roll) 의 반대로 그림 가운데를 옮겨 칼빛이 눈앞 가운데를 지나게
+     */
+    static void waveStraight(ServerLevel level, Lib L, Vec3 at, Vec3 dir, double speed, double half, double roll, boolean mirror, double life,
+            Predicate<ServerPlayer> who, double alpha) {
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
         Vec3 h = V.len(V.flat(d)) > 1e-6 ? V.flat(d) : new Vec3(0, 0, 1);
         Vec3 right = V.rightOf(h);
@@ -1099,8 +1122,9 @@ final class PhantomFx {
         int every = Math.max(1, (int) Math.round(ticks / (double) frames));
         // 내리침은 왼쪽으로 불룩 (돌림 90) → 그림 가운데를 오른쪽으로 · 올려 베기는 그 반대
         double apex = (SLASH_R - SLASH_CY) * half * FP_STRAIGHT_SQUASH * FP_STRAIGHT_APEX_IN;
-        Vec3 c = V.add(at, right, down ? apex : -apex);
-        Vfx.Fx fx = tiled(level, L.n("slashm"), 2, c, half * 2, null, down ? 90 : 270, 0, every, false, null, who, alpha, FP_STRAIGHT_SQUASH);
+        double rr = Math.toRadians(roll);
+        Vec3 c = V.add(V.add(at, right, apex * Math.sin(rr)), V.UP, -apex * Math.cos(rr));
+        Vfx.Fx fx = tiled(level, L.n(mirror ? "slashm" : "slash"), 2, c, half * 2, null, roll, 0, every, false, null, who, alpha, FP_STRAIGHT_SQUASH);
         if (speed > 0) fx.shift(V.scale(d, speed * ticks / 20.0), ticks);
     }
 
@@ -2323,7 +2347,9 @@ final class PhantomFx {
                 double speed = arc ? o.num("speed", 0) / 5.0 * (1 - Math.exp(-5 * life)) / life : o.num("speed", 0);
                 int own = mmorpg.fabric.Tasks.owner();
                 ServerPlayer owner = own != 0 && level.getEntity(own) instanceof ServerPlayer sp ? sp : null;
-                Moon m = moon(at, d, tilt, R, viewEye(owner, level, at), MOON_LIFT, 0).centered(at);
+                // 2026-11-28 전방 참격 (o.front — FRONT_ROLL 주석): 둘레 사람 · 3인칭 반달은 앞을 보는 휘두름 면에 (눈 쪽으로 FRONT_ROLL 까지만), 1인칭은 아래
+                boolean front = arc && o.truthy("front");
+                Moon m = moon(at, d, tilt, R, viewEye(owner, level, at), MOON_LIFT, 0, front ? FRONT_ROLL : MOON_ROLL).centered(at);
                 m = m.above(ground(level, at).y);
                 double alpha = Math.min(1, o.num("alpha", 1));
                 moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
@@ -2332,7 +2358,16 @@ final class PhantomFx {
                 double tc = Math.cos(Math.toRadians(tilt));
                 if (owner != null && Math.abs(tc) < FP_STRAIGHT_COS)
                     waveStraight(level, L, at, d, speed, R / SLASH_R, Math.sin(Math.toRadians(tilt)) > 0, life, only1p(owner), alpha);
-                else if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+                else if (owner != null && front && Math.abs(tc) >= FRONT_FLAT_COS) {
+                    // 전방 가로 베기의 1인칭: 앞으로 불룩한 누운 반달 (눈 아래 FRONT_FP_HEIGHT — 들지 않고 눈 쪽으로 돌리지 않음)
+                    Vec3 at1 = new Vec3(at.x, Math.min(at.y, owner.getY() + FRONT_FP_HEIGHT), at.z);
+                    moonFly(level, L, moon(at1, d, tilt, R, null, 0, 0).centered(at1), d, speed, life, only1p(owner), alpha);
+                } else if (owner != null && front) {
+                    // 전방 대각선 베기의 1인칭: 화면 가운데를 지나는 곧은 칼빛 — 3인칭 반달과 같은 기울기 (가로에서 dev · 오른쪽이 올라가면 +) · 같은 그림판
+                    // (180 근처 = 미리 뒤집은 slashm — 오른쪽 → 왼쪽) 이라 같은 쪽으로 그어지고, 불룩한 쪽이 위 (앞으로 불룩한 반달을 뒤에서 본 쪽)
+                    boolean mir = tc < 0;
+                    waveStraight(level, L, at, d, speed, R / SLASH_R, wrap180(mir ? tilt - 180 : tilt), mir, life, only1p(owner), alpha);
+                } else if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
             }
             case "flystreak" -> {
                 // 2026-11-17 날아가는 빛 (RuneKit.flyStreak — 예전 arrow_shot 빛 · 심지 두 줄): 묶음의 돌진 줄기 한 장 (dash — 같은 길 · 빠르기 · 반 길이 size)
