@@ -40,6 +40,20 @@ GRADE_BASE = {"common": (400, 8), "rare": (700, 12), "noble": (1200, 18), "hero"
 # 2026-11-17 등급마다 재사용 범위 (초 — 사용자가 정함, 양 끝 포함)
 # 2026-11-18 받는 피해 감소의 기준 (오록스 차지 −30% · 2초 = 완전히 막은 시간 0.6초 — 표의 값 0.1)
 REDUCE_REF = 0.3 * 2
+# 2026-11-28 지원 룬 (사용자 "근접 및 힐러 등 같은 애들의 룬 추가가 필요할듯" → 고른 것 "회복 + 아군 버프 반반"): 피해 없음 — 예산 (등급 초당 값 × 쿨, 1 = 위력 P 의 100%)
+# 을 모두 회복 · 버프로 (claude/rune-job-synergy.md "지원 룬의 회복 · 버프는 유틸 값으로 피해 몫을 치름 (그로브 블레싱처럼)"). 값의 기준:
+#   회복 (최대 체력 × 회복 배율 — 쓴 사람 몫, 둘레 아군은 share): 그로브 블레싱 (희귀 15초 · 예산 8.75 → 0.1667)
+#   가하는 피해 + · 받는 피해 − (나 · 아군 모두 같은 세기) 1% · 1초: 세계수의 가호 (한정 48초 · 예산 34 ÷ 36 × 48 = 45.3 → 40렙 125포인트 0돌 +20% · −20% 12초)
+#   공격 속도 + 1% · 1초 = 가하는 피해 × 평타 몫 0.3 (claude/balance-check.md — 칼 지속 피해의 평타 몫 37%: 공격 속도는 평타만 빠르게 함)
+#   이동 속도 + 1% · 1초: 칼바람 폭풍 (이동 속도 유틸 0.05 × 영웅 예산 20 = 1 ↔ 신속 I (+20%) 2.5초)
+#   나쁜 효과 제거 하나 = 유틸 값 cleanse 0.05 × 예산 · 장판 회복 (자리에 남아야 받음) = 시간 보정의 장판과 같게 4초 안 +10% · 넘으면 +15%
+SUPPORT_HEAL = 0.1667 / 8.75
+SUPPORT_BUFF = (3400 / 36 * 48 / 100) / ((20 + 20) * 12)
+SUPPORT_HASTE = SUPPORT_BUFF * 0.3
+SUPPORT_MOVE = 1.0 / (20 * 2.5)
+SUPPORT_TOL = 0.05
+# 툴팁 · 설명 글의 기준 회복 배율 (40렙 125포인트 — 네 스탯 합 125 × perPoint 0.02 × 0.5 + 1)
+SUPPORT_REF_SCALE = 2.25
 # 2026-11-28 지키는 유틸 — 쿨이 등급 기준보다 짧은 룬은 지속 · 세기를 쿨 ÷ 기준 만큼 (룬의 fit = 줄인 비율 · 기준과 0.03 안)
 GUARD_UTILS = {"undying", "heal", "lifesteal", "reduce", "shield", "allyGuard"}
 FIT_TOL = 0.03
@@ -74,6 +88,11 @@ SET = [
          set={"fn": "crossCut", "mult": 1.6, "crush": 2.4, "range": 3.8, "cone": 120, "hold": 10, "multName": "X 베기 ", "crushName": "X 폭발",
               "flow": ["칼날을 X 자로 두 번 그어 앞 {range}칸을 벰", "{t:hold} 뒤 허공의 X 가 터짐"]},
          spread={"t": 13, "w": 3}, desc="칼날을 X 자로 두 번 그은 뒤 터뜨림", use="근접 X 베기 · 0.5초 뒤 폭발"),
+    # 2026-11-28 지원 룬 다섯 (SUPPORT_* — 회복은 예산의 남는 몫 전부): 라이프 볼트 = 겨눈 아군 (없으면 나) 에게 생명의 빛살 · 짝 사제 루미너스 터치 6초
+    dict(key="lifebolt", name="라이프 볼트", grade="common", cd=6, pair=["priest_heal"], r="far", stat_fam="vit", look="spirit:common", u=[], support=True,
+         set={"fn": "lifeBolt", "range": 16, "splash": 3, "share": 0.5, "flight": 6,
+              "flow": ["겨눈 아군 ({range}칸 — 없으면 나) 에게 생명의 빛살", "닿은 자리 둘레 {splash}칸 아군은 절반"]},
+         desc="생명의 빛살로 겨눈 아군 (없으면 나) 을 회복 · 빛 꽃이 핌", use="회복 — 대상 {heal} · 둘레 아군 {ally}"),
     # ---------------------------------------------------------------- 희귀 (초당 58%)
     dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=13, pair=["swordmaster_echo"], r="mid", src="blade.rare", u=[], look="holy:rare",
          desc="크게 감아 가로로 베어 태양빛 검기를 날림", use="직선 관통 검기"),
@@ -94,6 +113,11 @@ SET = [
          set={"fn": "brutalCleave", "mult": 4.2, "crush": 2.8, "radius": 5.0, "cone": 200, "knock": 0.8, "quake": 10, "multName": "휩쓸기 ", "crushName": "땅 터짐",
               "flow": ["거대한 칼로 앞 {radius}칸 반원을 쓸어 벰 · 밀쳐냄", "{t:quake} 뒤 벤 자리를 따라 땅이 터짐"]},
          spread={"t": 12, "w": 2}, desc="거대한 칼로 앞을 크게 쓸어 벤 뒤 땅이 터짐", use="앞 반원 · 밀쳐냄 · 땅 터짐"),
+    # 2026-11-28 지원: 워 드럼 = 전쟁 북 세 번 · 나와 둘레 아군 공격 속도 + 이동 속도 (신속 I) · 짝 세인트 페탈 베일 12초 (이동 속도 +40% 3초)
+    dict(key="wardrum", name="워 드럼", grade="rare", cd=12, pair=["saint_veil"], r="mid", stat_fam="vit", look="str:rare", u=[], support=True,
+         set={"fn": "warDrum", "haste": 0.35, "speedAmp": 0, "buffTicks": 100, "radius": 8, "beats": 3, "beatGap": 6,
+              "flow": ["전쟁 북을 {beats}번 울림 — 나와 둘레 {radius}칸 아군 {t:buffTicks}"]},
+         desc="전쟁 북을 세 번 울려 나와 둘레 아군을 북돋움", use="공격 속도 +35% · 이동 속도 +20% (5초)"),
     # ---------------------------------------------------------------- 고귀 (초당 67%)
     dict(key="fissureslam", name="피셔 슬램", grade="noble", cd=16, r="mid", src="str.noble", u=["lift"], a="narrow",
          set={"vuln": 0, "vulnTicks": 0}, desc="위에서 아래로 내려찍어 앞 땅을 가름 · 띄움", use="직선 관통 · 띄움"),
@@ -112,6 +136,11 @@ SET = [
          set={"fn": "phantomThrust", "mult": 3.0, "hits": 2, "crush": 4.0, "length": 5.5, "width": 1.3, "gap": 10, "multName": "분신 찌르기 ", "crushName": "환영 창",
               "flow": ["앞 {length}칸을 꿰뚫어 찌름", "그림자 분신 둘이 함께 찌름 → 셋이 환영 창으로"]},
          spread={"t": 21, "w": 1}, desc="그림자 분신들과 함께 앞을 세 번 꿰뚫음", use="직선 관통 3연타"),
+    # 2026-11-28 지원: 새크리드 서클 = 발밑 성스러운 원 (자리에 남음 · 5초 — 장판 4초 넘게 +15%) · 처음에 나쁜 효과 하나 제거 · 짝 세인트 글리머윙 15초
+    dict(key="sacredcircle", name="새크리드 서클", grade="noble", cd=15, pair=["saint_wing"], r="mid", stat_fam="vit", look="holy:noble", u=[], support=True,
+         zone=True, set={"fn": "sacredCircle", "radius": 4.5, "pulses": 6, "gap": 20, "share": 0.5, "cleanse": 1, "zoneTicks": 100,
+                         "flow": ["발밑 반지름 {radius}칸 성스러운 원 {t:zoneTicks}", "안의 나 · 아군 회복 (아군은 절반)", "처음에 나쁜 효과 {cleanse}개 제거"]},
+         desc="발밑에 성스러운 원 — 안의 아군 회복 · 나쁜 기운을 걷음", use="장판 5초 — 나 {heal} · 아군 {ally} · 나쁜 효과 하나 제거"),
     # ---------------------------------------------------------------- 영웅 (초당 77%)
     dict(key="titanhammer", name="타이탄 해머", grade="hero", cd=37, pair=["warrior_spirit"], r="melee", src="str.hero", u=["leap", "stun1"],
          set={"range": 12}, desc="겨눈 곳으로 높이 뛰어 거대한 망치와 함께 내려찍음 · 기절", use="도약 · 기절 1초"),
@@ -135,6 +164,11 @@ SET = [
          set={"fn": "mortalStrike", "mult": 14, "crush": 6.7692, "range": 6.0, "cone": 50, "wound": 10, "multName": "처형 일격 ", "crushName": "상처 터짐",
               "flow": ["앞 {range}칸의 적 하나에 처형의 검을 내리꽂음", "{t:wound} 뒤 깊은 상처가 터짐"]},
          spread={"t": 18, "w": 8}, desc="처형의 검을 한 적에게 내리꽂고 상처를 터뜨림", use="단일 큰 한 방 · 상처 터짐"),
+    # 2026-11-28 지원: 발키리 송 = 발키리의 노래 · 나와 둘레 아군 가하는 피해 + · 받는 피해 − (받는 피해 감소는 다른 감소와 겹치지 않음 — 가호와 같음) · 짝 워록 애시본 37초
+    dict(key="valkyriesong", name="발키리 송", grade="hero", cd=37, pair=["warlock_ash"], r="mid", stat_fam="vit", look="gladiator:hero", u=[], support=True,
+         set={"fn": "valkyrieSong", "buffUp": 0.15, "buffCut": 0.15, "buffTicks": 200, "radius": 8, "descend": 12,
+              "flow": ["발키리의 노래 — 나와 둘레 {radius}칸 아군 {t:buffTicks}", "받는 피해 감소는 다른 감소와 겹치지 않음"]},
+         desc="발키리의 노래가 나와 둘레 아군에게 전장의 가호를 내림", use="가하는 피해 +15% · 받는 피해 −15% (10초)"),
     # ---------------------------------------------------------------- 초월 (초당 89%)
     # 2026-11-17 도감 메모 (천붕 → 스카이폴 "유틸 삭제 및 쿨타임 증가, 이에 따른 데미지 소량 증가"): 띄움을 뺌 (유틸 −5% 가 피해로 · 쿨 50초 = 예산 × 50/36)
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
@@ -172,6 +206,12 @@ SET = [
               "crushName": "그랜드 크로스",
               "flow": ["가로로 앞 {radius}칸을 휩쓸고 세로로 내려침", "벤 자리에 빛의 십자가가 솟아 터짐"]},
          spread={"t": 24, "w": 1}, desc="가로 · 세로로 벤 자리에 빛의 십자가가 솟아 터짐", use="광역 2연타 · 십자 폭발"),
+    # 2026-11-28 지원: 에덴 블룸 = 낙원의 꽃이 피어 둘레가 꽃밭 · 회복 (3초 나눠 — 그로브 블레싱처럼 몸을 따라감) + 가하는 피해 + (나 · 아군) · 짝 없음 (초월 범위의 직업 스킬
+    # 중 어울리는 것 없음)
+    dict(key="edenbloom", name="에덴 블룸", grade="transcend", cd=45, r="mid", stat_fam="vit", look="vit:transcend", u=[], support=True,
+         set={"fn": "edenBloom", "buffUp": 0.18, "buffTicks": 240, "radius": 10, "pulses": 5, "gap": 15, "share": 0.5, "charge": 14,
+              "flow": ["둘레 {radius}칸 꽃밭 — 나 · 아군 회복 (아군은 절반)", "나와 아군 가하는 피해 {t:buffTicks}"]},
+         desc="낙원의 꽃이 피어 둘레가 꽃밭으로 — 회복 · 아군을 북돋움", use="나 {heal} · 아군 {ally} 회복 · 가하는 피해 +18% 12초"),
 ]
 
 
@@ -237,6 +277,44 @@ def grade_cap(g):
     return per(GRADES[i + 1]) / per(g)
 
 
+def support_split(e, d, budget, S):
+    """2026-11-28 지원 룬 (SUPPORT_* 주석): 버프 · 정화 · 회복의 예산 몫. 회복하는 룬 (둘레 아군 몫 share 가 있음) 은 남는 예산이 모두 회복 (heal 을 씀 —
+    그로브 블레싱처럼 정의에 있으면 그 값이 맞는지 봄), 회복 없는 룬은 버프가 예산과 맞는지 봄. 돌려줌: {guard: 지키는 몫 (회복 · 받는 피해 − · 정화), boost: 북돋는 몫}"""
+    sec = d.get("buffTicks", 0) / 20.0
+    up = d.get("buffUp", 0) * 100 * sec * SUPPORT_BUFF
+    cut = d.get("buffCut", 0) * 100 * sec * SUPPORT_BUFF
+    haste = d.get("haste", 0) * 100 * sec * SUPPORT_HASTE
+    move = (d["speedAmp"] + 1) * 20 * sec * SUPPORT_MOVE if "speedAmp" in d else 0
+    cleanse = d.get("cleanse", 0) * S["utils"]["cleanse"]["cost"] * budget
+    spent = up + cut + haste + move + cleanse
+    heal_units = 0
+    if "share" in d:
+        zone = 1.0
+        if e.get("zone"):
+            t = (d["pulses"] - 1) * d["gap"]
+            zone = 1 + S["bonus"]["zoneLong" if t > S["zoneLong"] else "zone"]
+        heal_units = budget - spent
+        if heal_units <= 0:
+            raise SystemExit("지원 룬의 버프가 예산을 다 씀 (회복 몫 없음): " + e["name"])
+        want = heal_units * SUPPORT_HEAL * zone
+        if "heal" in d:
+            if abs(d["heal"] / want - 1) > SUPPORT_TOL:
+                raise SystemExit("지원 룬 회복이 예산과 다름: {} {} ↔ {:.4f}".format(e["name"], d["heal"], want))
+        else:
+            d["heal"] = round(want, 4)
+    elif abs(spent / budget - 1) > SUPPORT_TOL:
+        raise SystemExit("지원 룬 버프가 예산과 다름: {} {:.2f} ↔ 예산 {:.2f}".format(e["name"], spent, budget))
+    return {"guard": round((heal_units + cut + cleanse) / budget, 3), "boost": round((up + haste + move) / budget, 3)}
+
+
+def support_text(t, d):
+    """설명 글의 {heal} · {ally} = 기준 회복 배율 (SUPPORT_REF_SCALE) 의 회복 % (쓴 사람 · 둘레 아군)"""
+    if "{heal}" not in t:
+        return t
+    pct = lambda f: "{:.0f}%".format(f * SUPPORT_REF_SCALE * 100)
+    return t.replace("{heal}", pct(d["heal"])).replace("{ally}", pct(d["heal"] * d.get("share", 0)))
+
+
 def job_skills():
     """jobs.json 의 직업 스킬 id → (이름, 쿨) — 1차 · 2차 모두"""
     j = load_json(os.path.join(RES, "jobs.json"))
@@ -285,6 +363,12 @@ def build():
             old = total_mult(d)
             if not e.get("support") and old > 0:
                 d["scale"] = round(budget / old, 4)
+            sup = None
+            if e.get("support"):
+                if old > 0:
+                    raise SystemExit("지원 룬에 피해가 있음: " + e["name"])
+                sup = support_split(e, d, budget, S)
+                d["use"] = support_text(d["use"], d)
             sp = dict(S["runes"].get(e["src"]) or {}) if e.get("src") else {}
             sp.update(e.get("spread", {}))
             for k in [k for k, v in sp.items() if v is None]:
@@ -299,6 +383,10 @@ def build():
             else:
                 sp.pop("elem", None)
             sp["r"] = e["r"]
+            if sup is not None:
+                sp["sup"] = sup
+            else:
+                sp.pop("sup", None)
             if e.get("cast"):
                 # 시전: 동작 안의 선딜 (w) 이 시전보다 짧으면 그만큼 먼저 기다림 (castAdd 틱 — 느리게 걷기), 시전 = 둘 중 긴 쪽
                 w = int(sp.get("w", 0))
@@ -363,7 +451,7 @@ def build():
             mods = RANGE[e["r"]] * el * (1 - util) * tm * area
             cap = grade_cap(g)
             eff = 0 if e.get("support") else budget * 100 * min(mods, cap)
-            rows.append(dict(grade=g, key=key, name=e["name"], cd=e["cd"], r=e["r"], elem=e.get("elem"), u=[S["utils"][u]["name"] for u in e["u"]],
+            rows.append(dict(grade=g, key=key, name=e["name"], cd=e["cd"], r=e["r"], elem=e.get("elem"), u=[S["utils"][u]["name"] for u in e["u"]], sup=sup,
                              budget=budget * 100, tm=tm, area=area, eff=eff, cast=sp.get("cast"), look=d["look"],
                              pair=[skills[x][0] for x in e.get("pair", [])], kind="필러" if e["cd"] <= 13 else "중간" if e["cd"] <= 25 else "딜타임"))
     hidden = list(more.get("RUNE_HIDDEN", []))
@@ -371,14 +459,14 @@ def build():
         if f not in hidden:
             hidden.insert(0, f)
     out = {
-        "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30) · 룬마다 재사용 (등급 범위 안 — 일반 6 ~ 15 · 희귀 12 ~ 21 · 고귀 15 ~ 25 · 영웅 27 ~ 38 · 초월 32 ~ 50초, 예산 = 등급 초당 값 × 재사용) · "
+        "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30 → 2026-11-28 근접 딜 · 지원 다섯씩 더해 8 = 40 — 지원 룬은 피해 없이 예산을 회복 · 버프로: RUNE_SET.spread 의 sup) · 룬마다 재사용 (등급 범위 안 — 일반 6 ~ 15 · 희귀 12 ~ 21 · 고귀 15 ~ 25 · 영웅 27 ~ 38 · 초월 32 ~ 50초, 예산 = 등급 초당 값 × 재사용) · "
                     "룬 위력 = 네 스탯의 합 · 거리 보정 (RUNE_SET.range) · 원거리 시전 (cast — 선딜 보정 없음) · 받는 피해 증가 없음 (한정 룬만). 옛 계열 9 는 숨김 (아이템은 접속 때 새 룬으로).",
         "RUNE_FAMILIES": fams,
         "RUNES": defs,
         "RUNE_FAMILY_ORDER": order,
         "RUNE_HIDDEN": hidden,
         "RUNE": {"ticketLore": ["§r§7보스·퀘스트·룬술사에게서 얻음", "§r§7들고 누르면 룬 하나를 뽑습니다", "§r§7일반 50% · 희귀 28% · 고귀 14%",
-                                "§r§7영웅 6.5% · 초월 1.5%", "§r§7등급마다 룬 7개 중 하나 (같은 확률)"]},
+                                "§r§7영웅 6.5% · 초월 1.5%", "§r§7등급마다 룬 8개 중 하나 (같은 확률)"]},
         "RUNE_SET": {
             "range": RANGE,
             "rangeName": {"melee": "근거리", "mid": "중거리", "far": "원거리"},
@@ -398,13 +486,24 @@ def build():
     return out, rows
 
 
+def support_label(x):
+    """표의 실효 칸 — 지원 룬: 지키는 몫 · 북돋는 몫"""
+    sup = x.get("sup") or {}
+    parts = []
+    if sup.get("guard"):
+        parts.append("지킴 {:.0f}%".format(sup["guard"] * 100))
+    if sup.get("boost"):
+        parts.append("북돋움 {:.0f}%".format(sup["boost"] * 100))
+    return "지원 (" + " · ".join(parts) + ")" if parts else "지원"
+
+
 def md(rows):
     lines = ["| 등급 | 룬 | 쓰임 | 재사용 | 같은 쿨 직업 스킬 | 거리 | 원소 | 유틸 | 예산 | 시간 · 범위 | 실효 |", "|---|---|---|---|---|---|---|---|---|---|---|"]
     for x in rows:
         tb = "×" + format(x["tm"], ".2f") + (" · 단일 +15%" if x["area"] > 1.1 else " · 좁은 +8%" if x["area"] > 1.01 else "")
         lines.append("| {} | {} | {} | {}초 | {} | {}{} | {} | {} | {:.0f}% | {} | {} |".format(
             GRADE_KO[x["grade"]], x["name"], x["kind"], x["cd"], " · ".join(x["pair"]) or "—", RANGE_KO[x["r"]], " · 시전 " + str(x["cast"]) + "초" if x["cast"] else "",
-            ELEM_KO.get(x["elem"], "—"), " · ".join(x["u"]) or "—", x["budget"], tb, "회복" if x["eff"] == 0 else "{:.0f}%".format(x["eff"])))
+            ELEM_KO.get(x["elem"], "—"), " · ".join(x["u"]) or "—", x["budget"], tb, support_label(x) if x["eff"] == 0 else "{:.0f}%".format(x["eff"])))
     return "\n".join(lines)
 
 

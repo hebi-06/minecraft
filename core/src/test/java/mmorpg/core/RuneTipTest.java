@@ -142,7 +142,7 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 155, "155 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5) " + runes);
+        check(runes == 160, "160 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5 · 지원 5) " + runes);
 
         // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));

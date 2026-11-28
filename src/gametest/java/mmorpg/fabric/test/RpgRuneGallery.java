@@ -56,7 +56,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
     /** 쓰면 피해가 바로 들지 않는 룬 (버프 · 회복 · 보호막 · 정령 — 피해 0 이어도 됨) */
     private static final Set<String> SUPPORT = Set.of("guardShout", "lifeSpring", "ironSkin", "lightBarrier", "purify", "fightingSpirit", "steelBody",
             "regenBody", "warGod", "awakening", "edgeHone", "flurry", "cleave", "bloodBlade", "swordGod", "summonSpirits", "counterStance", "backstep",
-            "blink", "smokeBomb", "undyingPact", "berserker", "archangel");
+            "blink", "smokeBomb", "undyingPact", "berserker", "archangel", "lifeBolt", "warDrum", "sacredCircle", "valkyrieSong", "edenBloom");
 
     private final List<String> failures = new ArrayList<>();
 

@@ -38,7 +38,9 @@ public final class RuneBreakTest {
         check(RuneBreak.max() == 6, "max 6");
         near(RuneBreak.perLevel(), 0.1, "perLevel");
         check(RuneBreak.tiers().equals(List.of(3, 6)), "tiers " + RuneBreak.tiers());
-        check(RuneBreak.scaleKeys().equals(List.of("heal", "shield", "graceUp", "graceCut", "gracePer", "graceCap", "brandUp", "brandCut", "brandPer", "brandCap")), "scale keys " + RuneBreak.scaleKeys());
+        // 2026-11-28 지원 룬 다섯: 가하는 피해 buffUp · 받는 피해 buffCut · 공격 속도 haste 도 돌파 계수
+        check(RuneBreak.scaleKeys().equals(List.of("heal", "shield", "graceUp", "graceCut", "gracePer", "graceCap", "brandUp", "brandCut", "brandPer", "brandCap", "buffUp",
+                "buffCut", "haste")), "scale keys " + RuneBreak.scaleKeys());
 
         // 계수
         near(RuneBreak.coef(0), 1, "coef 0");

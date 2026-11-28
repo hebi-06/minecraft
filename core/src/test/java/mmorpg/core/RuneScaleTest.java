@@ -57,7 +57,7 @@ public final class RuneScaleTest {
                 check(cd >= want[gi][0] - 1e-9 && cd <= want[gi][1] + 1e-9, fam + " cd " + cd + " in the " + g + " range " + want[gi][0] + " ~ " + want[gi][1]);
             }
         }
-        check(sets == 35, "35 set runes in grade ranges (2026-11-28 근접 딜 다섯) " + sets);
+        check(sets == 40, "40 set runes in grade ranges (2026-11-28 근접 딜 · 지원 다섯씩) " + sets);
         Obj p = Rules.get().obj("RUNE_SET").obj("pairs");
         Set<String> skills = new java.util.HashSet<>();
         int n = 0;
@@ -76,7 +76,7 @@ public final class RuneScaleTest {
                 n++;
             }
         }
-        check(n == 32, "32 rune ↔ job skill pairs (2026-11-28 근접 딜 다섯 더함) " + n);
+        check(n == 36, "36 rune ↔ job skill pairs (2026-11-28 근접 딜 다섯 · 지원 넷 더함 — 에덴 블룸은 짝 없음) " + n);
         // 2026-11-17 등급 안 밸런스 (사용자 "각 등급끼리만 봤을때 밸런스"): 램파트는 막는 선딜 (선딜 보정 없음) · 루나 엑시큐션은 달빛 폭발이 둘레도 쳐 좁은 범위
         check(Rules.get().obj("RUNE_SET").obj("spread").obj("rampart.common").truthy("guard") && Runes.windupBonus(rune("rampart", "common")) == 0, "rampart guard");
         check("narrow".equals(Runes.areaKind(rune("lunaexec", "transcend"))), "lunaexec narrow (splash)");
@@ -258,10 +258,10 @@ public final class RuneScaleTest {
         }
         System.out.println("  등급 상한에 걸린 룬 (2026-11-28): " + capped);
         check(!capped.isEmpty(), "grade cap bites somewhere (노움 · 블레이드 헤일 …)");
-        check(runes == 155, "155 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5) " + runes);
-        check(sets == 35, "35 set runes " + sets);
+        check(runes == 160, "160 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5 · 지원 5) " + runes);
+        check(sets == 40, "40 set runes " + sets);
         pairs();
-        for (String g : Runes.GRADE_ORDER) check(Runes.familiesOf(g).size() == 7, g + ": 7 runes " + Runes.familiesOf(g));
+        for (String g : Runes.GRADE_ORDER) check(Runes.familiesOf(g).size() == 8, g + ": 8 runes " + Runes.familiesOf(g));
         check(ruled == 99, "99 runes under the rule " + ruled);
         check(leaps == 6, "6 leap runes " + leaps);
         check(singles == 10 && narrows == 35, "area kinds 10 single · 35 narrow: " + singles + " · " + narrows);

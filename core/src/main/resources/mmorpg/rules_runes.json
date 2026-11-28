@@ -1,5 +1,5 @@
 {
- "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30) · 룬마다 재사용 (등급 범위 안 — 일반 6 ~ 15 · 희귀 12 ~ 21 · 고귀 15 ~ 25 · 영웅 27 ~ 38 · 초월 32 ~ 50초, 예산 = 등급 초당 값 × 재사용) · 룬 위력 = 네 스탯의 합 · 거리 보정 (RUNE_SET.range) · 원거리 시전 (cast — 선딜 보정 없음) · 받는 피해 증가 없음 (한정 룬만). 옛 계열 9 는 숨김 (아이템은 접속 때 새 룬으로).",
+ "_comment": "2026-11-17 룬 재개발 (tools/rune_set.py 가 씀 — 손으로 고치지 말 것). 계열 없이 등급만 (등급마다 6 = 30 → 2026-11-28 근접 딜 · 지원 다섯씩 더해 8 = 40 — 지원 룬은 피해 없이 예산을 회복 · 버프로: RUNE_SET.spread 의 sup) · 룬마다 재사용 (등급 범위 안 — 일반 6 ~ 15 · 희귀 12 ~ 21 · 고귀 15 ~ 25 · 영웅 27 ~ 38 · 초월 32 ~ 50초, 예산 = 등급 초당 값 × 재사용) · 룬 위력 = 네 스탯의 합 · 거리 보정 (RUNE_SET.range) · 원거리 시전 (cast — 선딜 보정 없음) · 받는 피해 증가 없음 (한정 룬만). 옛 계열 9 는 숨김 (아이템은 접속 때 새 룬으로).",
  "RUNE_FAMILIES": {
   "earthbreaker": {
    "stat": "str",
@@ -76,6 +76,18 @@
   "crosscut": {
    "stat": "dex",
    "name": "크로스 컷",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "lifebolt": {
+   "stat": "vit",
+   "name": "라이프 볼트",
    "coef": {
     "str": 1,
     "dex": 1,
@@ -169,6 +181,18 @@
    "sum": true,
    "set": true
   },
+  "wardrum": {
+   "stat": "vit",
+   "name": "워 드럼",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
   "fissureslam": {
    "stat": "str",
    "name": "피셔 슬램",
@@ -244,6 +268,18 @@
   "phantomthrust": {
    "stat": "dex",
    "name": "팬텀 스러스트",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "sacredcircle": {
+   "stat": "vit",
+   "name": "새크리드 서클",
    "coef": {
     "str": 1,
     "dex": 1,
@@ -337,6 +373,18 @@
    "sum": true,
    "set": true
   },
+  "valkyriesong": {
+   "stat": "vit",
+   "name": "발키리 송",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
   "skyfall": {
    "stat": "str",
    "name": "스카이폴",
@@ -412,6 +460,18 @@
   "grandcross": {
    "stat": "str",
    "name": "그랜드 크로스",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "edenbloom": {
+   "stat": "vit",
+   "name": "에덴 블룸",
    "coef": {
     "str": 1,
     "dex": 1,
@@ -549,6 +609,25 @@
     "scale": 1.0
    }
   },
+  "lifebolt": {
+   "common": {
+    "fn": "lifeBolt",
+    "range": 16,
+    "splash": 3,
+    "share": 0.5,
+    "flight": 6,
+    "flow": [
+     "겨눈 아군 ({range}칸 — 없으면 나) 에게 생명의 빛살",
+     "닿은 자리 둘레 {splash}칸 아군은 절반"
+    ],
+    "name": "라이프 볼트",
+    "desc": "생명의 빛살로 겨눈 아군 (없으면 나) 을 회복 · 빛 꽃이 핌",
+    "use": "회복 — 대상 13% · 둘레 아군 6%",
+    "cd": 6,
+    "look": "spirit:common",
+    "heal": 0.0572
+   }
+  },
   "solarwave": {
    "rare": {
     "fn": "swordWave",
@@ -681,6 +760,25 @@
     "scale": 1.0
    }
   },
+  "wardrum": {
+   "rare": {
+    "fn": "warDrum",
+    "haste": 0.35,
+    "speedAmp": 0,
+    "buffTicks": 100,
+    "radius": 8,
+    "beats": 3,
+    "beatGap": 6,
+    "flow": [
+     "전쟁 북을 {beats}번 울림 — 나와 둘레 {radius}칸 아군 {t:buffTicks}"
+    ],
+    "name": "워 드럼",
+    "desc": "전쟁 북을 세 번 울려 나와 둘레 아군을 북돋움",
+    "use": "공격 속도 +35% · 이동 속도 +20% (5초)",
+    "cd": 12,
+    "look": "str:rare"
+   }
+  },
   "fissureslam": {
    "noble": {
     "fn": "fissure",
@@ -807,6 +905,28 @@
     "cd": 15,
     "look": "assassin:noble",
     "scale": 1.0
+   }
+  },
+  "sacredcircle": {
+   "noble": {
+    "fn": "sacredCircle",
+    "radius": 4.5,
+    "pulses": 6,
+    "gap": 20,
+    "share": 0.5,
+    "cleanse": 1,
+    "zoneTicks": 100,
+    "flow": [
+     "발밑 반지름 {radius}칸 성스러운 원 {t:zoneTicks}",
+     "안의 나 · 아군 회복 (아군은 절반)",
+     "처음에 나쁜 효과 {cleanse}개 제거"
+    ],
+    "name": "새크리드 서클",
+    "desc": "발밑에 성스러운 원 — 안의 아군 회복 · 나쁜 기운을 걷음",
+    "use": "장판 5초 — 나 47% · 아군 23% · 나쁜 효과 하나 제거",
+    "cd": 15,
+    "look": "holy:noble",
+    "heal": 0.2081
    }
   },
   "titanhammer": {
@@ -938,6 +1058,25 @@
     "cd": 27,
     "look": "axe:hero",
     "scale": 1.0
+   }
+  },
+  "valkyriesong": {
+   "hero": {
+    "fn": "valkyrieSong",
+    "buffUp": 0.15,
+    "buffCut": 0.15,
+    "buffTicks": 200,
+    "radius": 8,
+    "descend": 12,
+    "flow": [
+     "발키리의 노래 — 나와 둘레 {radius}칸 아군 {t:buffTicks}",
+     "받는 피해 감소는 다른 감소와 겹치지 않음"
+    ],
+    "name": "발키리 송",
+    "desc": "발키리의 노래가 나와 둘레 아군에게 전장의 가호를 내림",
+    "use": "가하는 피해 +15% · 받는 피해 −15% (10초)",
+    "cd": 37,
+    "look": "gladiator:hero"
    }
   },
   "skyfall": {
@@ -1087,6 +1226,28 @@
     "look": "holy:transcend",
     "scale": 0.9583
    }
+  },
+  "edenbloom": {
+   "transcend": {
+    "fn": "edenBloom",
+    "buffUp": 0.18,
+    "buffTicks": 240,
+    "radius": 10,
+    "pulses": 5,
+    "gap": 15,
+    "share": 0.5,
+    "charge": 14,
+    "flow": [
+     "둘레 {radius}칸 꽃밭 — 나 · 아군 회복 (아군은 절반)",
+     "나와 아군 가하는 피해 {t:buffTicks}"
+    ],
+    "name": "에덴 블룸",
+    "desc": "낙원의 꽃이 피어 둘레가 꽃밭으로 — 회복 · 아군을 북돋움",
+    "use": "나 84% · 아군 42% 회복 · 가하는 피해 +18% 12초",
+    "cd": 45,
+    "look": "vit:transcend",
+    "heal": 0.3734
+   }
   }
  },
  "RUNE_FAMILY_ORDER": [
@@ -1097,6 +1258,7 @@
   "salamander",
   "rampart",
   "crosscut",
+  "lifebolt",
   "solarwave",
   "chainarrow",
   "shadowstrike",
@@ -1104,6 +1266,7 @@
   "aurochs",
   "grove",
   "brutalcleave",
+  "wardrum",
   "fissureslam",
   "bladehail",
   "thundervolley",
@@ -1111,6 +1274,7 @@
   "firestorm",
   "fortress",
   "phantomthrust",
+  "sacredcircle",
   "titanhammer",
   "runejavelin",
   "shadowblitz",
@@ -1118,13 +1282,15 @@
   "gnome",
   "bastion",
   "mortalstrike",
+  "valkyriesong",
   "skyfall",
   "berserker",
   "lunaexec",
   "meteor",
   "spiritking",
   "immortaloath",
-  "grandcross"
+  "grandcross",
+  "edenbloom"
  ],
  "RUNE_HIDDEN": [
   "spirit",
@@ -1157,7 +1323,7 @@
    "§r§7들고 누르면 룬 하나를 뽑습니다",
    "§r§7일반 50% · 희귀 28% · 고귀 14%",
    "§r§7영웅 6.5% · 초월 1.5%",
-   "§r§7등급마다 룬 7개 중 하나 (같은 확률)"
+   "§r§7등급마다 룬 8개 중 하나 (같은 확률)"
   ]
  },
  "RUNE_SET": {
@@ -1274,6 +1440,14 @@
     "a": "narrow",
     "r": "melee"
    },
+   "lifebolt.common": {
+    "u": [],
+    "r": "far",
+    "sup": {
+     "guard": 1.0,
+     "boost": 0.0
+    }
+   },
    "solarwave.rare": {
     "t": 2,
     "u": [],
@@ -1319,7 +1493,11 @@
    },
    "grove.rare": {
     "u": [],
-    "r": "mid"
+    "r": "mid",
+    "sup": {
+     "guard": 1.0,
+     "boost": 0.0
+    }
    },
    "brutalcleave.rare": {
     "t": 12,
@@ -1328,6 +1506,14 @@
      "knock"
     ],
     "r": "melee"
+   },
+   "wardrum.rare": {
+    "u": [],
+    "r": "mid",
+    "sup": {
+     "guard": 0.0,
+     "boost": 0.994
+    }
    },
    "fissureslam.noble": {
     "a": "narrow",
@@ -1386,6 +1572,14 @@
     "u": [],
     "a": "narrow",
     "r": "melee"
+   },
+   "sacredcircle.noble": {
+    "u": [],
+    "r": "mid",
+    "sup": {
+     "guard": 1.0,
+     "boost": 0.0
+    }
    },
    "titanhammer.hero": {
     "t": 12,
@@ -1449,6 +1643,14 @@
     "u": [],
     "a": "single",
     "r": "melee"
+   },
+   "valkyriesong.hero": {
+    "u": [],
+    "r": "mid",
+    "sup": {
+     "guard": 0.498,
+     "boost": 0.498
+    }
    },
    "skyfall.transcend": {
     "t": 24,
@@ -1521,6 +1723,14 @@
     "w": 1,
     "u": [],
     "r": "melee"
+   },
+   "edenbloom.transcend": {
+    "u": [],
+    "r": "mid",
+    "sup": {
+     "guard": 0.49,
+     "boost": 0.51
+    }
    }
   },
   "migrateFamilies": [
@@ -1581,6 +1791,9 @@
    "crosscut": [
     "assassin_bloom"
    ],
+   "lifebolt": [
+    "priest_heal"
+   ],
    "solarwave": [
     "swordmaster_echo"
    ],
@@ -1599,6 +1812,9 @@
    "brutalcleave": [
     "warrior_charge"
    ],
+   "wardrum": [
+    "saint_veil"
+   ],
    "bladehail": [
     "bloodknight_chains"
    ],
@@ -1613,6 +1829,9 @@
    ],
    "phantomthrust": [
     "pierrot_balloon"
+   ],
+   "sacredcircle": [
+    "saint_wing"
    ],
    "titanhammer": [
     "warrior_spirit"
@@ -1634,6 +1853,9 @@
    ],
    "mortalstrike": [
     "swordmaster_blood"
+   ],
+   "valkyriesong": [
+    "warlock_ash"
    ],
    "skyfall": [
     "swordmaster_ult"

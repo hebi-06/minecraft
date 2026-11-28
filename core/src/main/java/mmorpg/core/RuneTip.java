@@ -380,7 +380,14 @@ public final class RuneTip {
             else if (d.truthy("pulses")) detail = sec(d.numOr("gap", 10)) + "마다 " + d.text("pulses") + "번 나눠";
             else if (times > 1) detail = hp(c, d.num("heal")) + " × " + n(times) + "번";
             out.add("§r§a✚ " + L + "회복 " + N + "§l" + hp(c, d.num("heal") * times) + (detail.isEmpty() ? "" : "§r" + L + " (" + detail + ")"));
+            // 2026-11-28 둘레 아군 몫 (share — 그로브 블레싱 · 지원 룬): 같은 회복 × share
+            if (d.truthy("share")) out.add("§r§a✚ " + L + "아군 회복 " + N + hp(c, d.num("heal") * times * d.num("share")));
         }
+        // 2026-11-28 지원 룬 (피해 없음): 나와 둘레 아군에게 같은 세기의 버프 — 가하는 피해 · 받는 피해 · 공격 속도 · 이동 속도 (돌파 계수는 이동 속도 빼고)
+        if (d.truthy("buffUp")) out.add("§r§6✦ " + L + "가하는 피해 " + N + "§l+" + pct(d.num("buffUp")) + "%");
+        if (d.truthy("buffCut")) out.add("§r§b◈ " + L + "받는 피해 " + N + "§l-" + pct(d.num("buffCut")) + "%");
+        if (d.truthy("haste")) out.add("§r§e» " + L + "공격 속도 " + N + "§l+" + pct(d.num("haste")) + "%");
+        if (d.has("speedAmp")) out.add("§r§f» " + L + "이동 속도 " + N + "+" + Js.str(Math.round((d.num("speedAmp") + 1) * 20)) + "%" + L + " (신속 " + roman(d.num("speedAmp")) + ")");
         if (d.truthy("shield") && d.truthy("cap")) {
             out.add("§r§b◈ " + L + "보호막 " + N + hp(c, d.num("shield")) + "씩" + L + " (최대 " + hpRaw(c, d.num("cap")) + ")");
         } else if (d.truthy("shield")) {

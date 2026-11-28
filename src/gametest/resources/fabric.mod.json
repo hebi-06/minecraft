@@ -47,6 +47,7 @@
       "mmorpg.fabric.test.RpgCosmeticTests",
       "mmorpg.fabric.test.RpgGachaTests",
       "mmorpg.fabric.test.RpgLimitedRuneTests",
+      "mmorpg.fabric.test.RpgSupportRuneTests",
       "mmorpg.fabric.test.RpgPairRuneTests",
       "mmorpg.fabric.test.RpgRuneTimingTests",
       "mmorpg.fabric.test.RpgJobTimingTests",

@@ -74,6 +74,9 @@ public final class RuneLoadoutTest {
                 double guard = 0;
                 for (String u : Runes.utils(r)) if (GUARD.contains(u)) guard += Runes.utilValue(r, u) * Runes.utilCdFactor(r);
                 Obj e = Runes.spreadEntry(r);
+                // 2026-11-28 지원 룬 (피해 없음 — 예산 전부가 회복 · 버프): 지키는 몫 (회복 · 받는 피해 − · 정화 — tools/rune_set.py support_split 의 sup.guard)
+                Obj sup = e == null ? null : e.objOrNull("sup");
+                if (sup != null) guard += sup.numOr("guard", 0);
                 out.add(new RV(r, r.famName(), g, e == null ? "?" : e.strOr("r", "?"), Runes.castSeconds(r), dmg, guard * gradePerSec(g), Runes.utils(r)));
             }
         }
@@ -170,10 +173,11 @@ public final class RuneLoadoutTest {
         double ratio = meleeMax / farMin;
         System.out.printf(Locale.ROOT, "  근접 ÷ 원거리 피해 조합 (룬) ×%.3f%n", ratio);
         check(ratio >= 0.95 && ratio <= 1.12, "melee ÷ ranged rune loadout " + ratio);
-        // ② 버팀 조합은 피해를 내줌 (지키는 룬을 쓸 수 있는 직업 — 2026-11-28 지키는 룬 여섯이 모두 근거리라 원거리 직업은 버팀 조합 = 피해 조합: 표에 찍음)
+        // ② 버팀 조합은 피해를 내줌 (지키는 룬을 쓸 수 있는 직업 — 2026-11-28 지키는 룬 여섯이 모두 근거리라 원거리 직업은 버팀 조합 = 피해 조합이었음 →
+        // 2026-11-28 지원 룬 (그로브 블레싱 · 라이프 볼트 · 새크리드 서클 · 발키리 송 · 에덴 블룸 — 중 · 원거리) 로 모든 직업이 지키는 룬을 씀)
         for (JV v : jobs.values()) {
+            check(v.guard() > 0, v.id() + " has guard runes (2026-11-28 지원 룬 — 원거리 직업도)");
             if (v.guard() > 0) check(v.guardRunes() <= v.dmgRunes() * 0.93, v.id() + " guard loadout costs damage " + v.guardRunes() / v.dmgRunes());
-            else System.out.println("  " + v.id() + ": 쓸 수 있는 지키는 룬 없음 (원거리 — 지키는 룬은 모두 근거리)");
         }
         // ③ 지키는 유틸이 있는 룬이 P/s 맨 위 셋에 없음
         List<RV> top = new ArrayList<>(runes);

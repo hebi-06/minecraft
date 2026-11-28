@@ -63,10 +63,10 @@ public final class LimitedRunesTest {
         for (String gone : List.of("arcana", "dipper", "skyeye")) {
             check(Runes.parseRune(Runes.runeId(gone, "transcend")) == null && !Runes.ALL_FAMILIES.contains(gone), gone + " removed (2026-11-11)");
         }
-        check(Runes.FAMILY_ORDER.size() == 35, "draw families 35 (2026-11-17 새 룬 — 옛 계열 스물셋 숨김) " + Runes.FAMILY_ORDER.size());
+        check(Runes.FAMILY_ORDER.size() == 40, "draw families 40 (2026-11-17 새 룬 — 옛 계열 스물셋 숨김 · 2026-11-28 근접 딜 · 지원 다섯씩) " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 63 && Runes.ALL_FAMILIES.subList(58, 63).equals(lim), "all families (2026-11-28 근접 딜 다섯 더함) " + Runes.ALL_FAMILIES);
-        check(Runes.ACTIVE_FAMILIES.size() == 40 && Runes.ACTIVE_FAMILIES.subList(35, 40).equals(lim), "active families " + Runes.ACTIVE_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 68 && Runes.ALL_FAMILIES.subList(63, 68).equals(lim), "all families (2026-11-28 근접 딜 · 지원 다섯씩 더함) " + Runes.ALL_FAMILIES);
+        check(Runes.ACTIVE_FAMILIES.size() == 45 && Runes.ACTIVE_FAMILIES.subList(40, 45).equals(lim), "active families " + Runes.ACTIVE_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("endless"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 (36초, 2026-11-11 만년빙하 32초 — 룬의 cd)

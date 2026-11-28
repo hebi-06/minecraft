@@ -1254,6 +1254,8 @@ final class VanillaProbe {
         run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 12");
         mmorpg.fabric.rune.RuneCast.resetCooldowns(p);
         mmorpg.fabric.RpgHealth.healFull(p);
+        // 2026-11-28 회복하는 지원 룬 (그로브 블레싱 · 라이프 볼트 · 새크리드 서클 · 에덴 블룸 — 둘레 아군 몫 share): 체력을 40% 로 내려 회복 숫자가 보이게
+        if (r.def().truthy("share")) p.setHealth(Math.max(1F, p.getMaxHealth() * 0.4F));
         // 과녁: 모드 영상 (RpgRuneGallery.TARGETS) 과 같은 여섯 자리 — 앞 무리 넷 · 양옆 둘 (두 영상을 나란히 견주게)
         double[][] spots = bossLook ? new double[][] {{-1.8, 2.2}, {2.8, 2.2}} : new double[][] {{0.5, 5.5}, {-1.0, 6.5}, {2.0, 6.0}, {0.5, 8.0}, {-1.8, 2.2}, {2.8, 2.2}};
         if (bossLook) {

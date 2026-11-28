@@ -47,7 +47,7 @@ public final class RunesMoreTest {
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         // 2026-11-17 룬 재개발: 데이터 순서 = 새 룬 30 (등급 순), 옛 계열 스물셋 (2026-11-14 숨긴 열넷 + 남겨 쓰던 아홉) 은 모두 숨김 — 정의 · 아이템은 남김 (접속 때 새 룬으로)
-        check(Runes.DATA_ORDER.size() == 35 && Runes.DATA_ORDER.stream().allMatch(Runes::isSet), "family order (data) = 35 set runes (2026-11-28 근접 딜 다섯) " + Runes.DATA_ORDER);
+        check(Runes.DATA_ORDER.size() == 40 && Runes.DATA_ORDER.stream().allMatch(Runes::isSet), "family order (data) = 40 set runes (2026-11-28 근접 딜 다섯 · 지원 다섯) " + Runes.DATA_ORDER);
         check(Runes.HIDDEN.size() == 23 && Runes.HIDDEN.containsAll(List.of("str", "dex", "vit", "int", "axe", "bow", "assassin", "blade", "spirit", "holy", "storm",
                 "spellblade", "element", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike")), "hidden families " + Runes.HIDDEN);
         check(Runes.FAMILY_ORDER.equals(Runes.DATA_ORDER), "draw families = set runes " + Runes.FAMILY_ORDER);
@@ -105,15 +105,15 @@ public final class RunesMoreTest {
 
         // 뽑기 (2026-11-17 룬 재개발): 등급 → 그 등급의 룬 여섯 중 같은 확률 — 샐러맨더 자리
         List<String> draw = Runes.familiesOf("common");
-        check(draw.size() == 7 && draw.contains("salamander") && draw.contains("crosscut") && !draw.contains("spirit"), "common pool 7 " + draw);
+        check(draw.size() == 8 && draw.contains("salamander") && draw.contains("crosscut") && draw.contains("lifebolt") && !draw.contains("spirit"), "common pool 8 " + draw);
         int at = draw.indexOf("salamander");
         double[] seq = {0.0, (at + 0.5) / draw.size()};
         int[] k = {0};
         Runes.Roll roll = Runes.rollRune(() -> seq[k[0]++], false);
         check(roll.family().equals("salamander") && roll.grade().equals("common"), "roll salamander " + roll);
         check(Runes.parseRune(Runes.runeId(roll.family(), roll.grade())) != null, "rolled rune exists");
-        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("등급마다 룬 7개"), "ticket lore 7");
-        check(Runes.drawCount() == 35, "draw count 35 " + Runes.drawCount());
+        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("등급마다 룬 8개"), "ticket lore 8");
+        check(Runes.drawCount() == 40, "draw count 40 " + Runes.drawCount());
         check(Rules.get().obj("RUNE").obj("color").has("reaper"), "reaper color");
 
         // 적월 강림 돌파

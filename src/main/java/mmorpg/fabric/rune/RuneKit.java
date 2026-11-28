@@ -812,7 +812,7 @@ public final class RuneKit {
      * 한정: 0.18.0 대지 가르기 = 메테오의 노을 하늘 · 0.19.0 세계수의 가호 = 하늘의 활의 새벽빛 · 0.20.0 심연의 낙인 = 블랙홀의 공허 하늘 · 0.24.0 만년빙하 = 하늘 가르기의
      * 얼음빛 번쩍임 (하늘빛은 룬이 rpg:ult_glacier 를 직접 줌)). 0.17.0 무간참역은 0.25.2 부터 블랙홀의 공허 하늘 대신 자기 검붉은 하늘 (ULT_RUNES_MORE)
      */
-    private static final Map<String, String> ULT_ALIAS = Map.ofEntries(Map.entry("spiritKing", "summonSpirits"), Map.entry("crimsonMoon", "berserker"), Map.entry("rageSlam", "berserker"), Map.entry("grandCross", "archangel"),
+    private static final Map<String, String> ULT_ALIAS = Map.ofEntries(Map.entry("spiritKing", "summonSpirits"), Map.entry("crimsonMoon", "berserker"), Map.entry("rageSlam", "berserker"), Map.entry("grandCross", "archangel"), Map.entry("edenBloom", "skyBow"),
             Map.entry("earthSplitter", "meteor"), Map.entry("worldTreeGrace", "skyBow"), Map.entry("abyssBrand", "blackHole"),
             Map.entry("glacierField", "heavenSplit"));
 

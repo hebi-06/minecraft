@@ -2182,6 +2182,34 @@ final class PhantomFx {
     }
 
     /** 2026-11-17 묶음 L 의 두 빛 (glow · trace) 중 하나와 색조 40° 안 (채도 0.3 · 밝기 0.2 넘게) */
+    /** 휘두른 자국 판 그림 (slash · slashm) 이 있는 묶음인지 */
+    static boolean hasSlash(Lib L) {
+        return L != null && Vfx.hasSheet(L.n("slash_00")) && Vfx.hasSheet(L.n("slashm_00"));
+    }
+
+    /** 2026-11-28 휘두른 자국 판 그림이 있는 묶음 (전방 참격의 대신 — slashStandIn) */
+    private static final Lib[] SLASH_LIBS = {LANCE, EXEC, RAGE, GALE, REAP, BLOOD, SHADOW, WARD, FROST, DRAGONL, BEAR, TYRANT, MAW, SOUL, SOULREAP, PHOENIXL, ILLUSION,
+            CIRCUS, HEX, ELEMENT, RUNE, STEEL, ABYSS, THUNDER};
+
+    /** 그림이 없는 묶음 L 의 대신: 빛 (glow) 의 색조 · 채도가 가장 가까운, 휘두른 자국 판 그림이 있는 묶음 (성광 금빛 → 창 금빛) — 없으면 null */
+    static Lib slashStandIn(Lib L) {
+        if (L == null) return null;
+        double[] h = hsv(new double[] {(L.glow() >> 16 & 255) / 255.0, (L.glow() >> 8 & 255) / 255.0, (L.glow() & 255) / 255.0});
+        Lib best = null;
+        double bd = Double.MAX_VALUE;
+        for (Lib c : SLASH_LIBS) {
+            if (!hasSlash(c)) continue;
+            double[] k = hsv(new double[] {(c.glow() >> 16 & 255) / 255.0, (c.glow() >> 8 & 255) / 255.0, (c.glow() & 255) / 255.0});
+            double dh = Math.abs(h[0] - k[0]);
+            double d = Math.min(dh, 360 - dh) + Math.abs(h[1] - k[1]) * 60;
+            if (d < bd) {
+                bd = d;
+                best = c;
+            }
+        }
+        return best;
+    }
+
     static boolean libNear(double[] glow, Lib L) {
         double[] h = hsv(glow);
         if (h[1] < 0.3 || h[2] < 0.2) return false;
@@ -2339,7 +2367,11 @@ final class PhantomFx {
                 // 휘두른 자국 판 (RuneKit.arc — 판 모양 arc · heavy · thin, 불룩한 날 = dir) · 날아가는 검기 판 (waveCard — 눕힌 판): 그 묶음의 반달 (moon — JobFx.slash 의 3인칭
                 // 반달과 같은 틀: 가로 휘두름은 눕고 보는 눈 쪽으로 기욺) 이 dir 쪽으로 날아감. 기울기 = 판의 돌림 (arc: flip ? 180 + β − spin : −(β + spin) · waveCard: roll)
                 // 의 반대. 반지름 = 판 크기 (예전 판 모델 반너비 arc 1.06 · thin 0.56 × ARC_CARD 0.7 · 날아가는 판 1) 의 0.9. 주인의 1인칭은 카메라를 보는 칼빛 (예전 원래 파티클 자리)
-                if (!Vfx.hasSheet(L.n("slash_00")) || !Vfx.hasSheet(L.n("slashm_00"))) return false;
+                // 2026-11-28 전방 참격 (o.front) 인데 묶음에 휘두른 자국 판 그림이 없으면 (성광 · 꽃잎 — 그랜드 크로스가 예전 카메라를 보는 판으로 가 3인칭에서 세운 "(" 로
+                // 남았음, CI 46112536004) 빛 색조가 가장 가까운, 그림이 있는 묶음으로 (slashStandIn). 전방이 아닌 판은 그대로 (예전 길)
+                boolean front = name.equals("arc") && o.truthy("front");
+                Lib Ls = hasSlash(L) ? L : front ? slashStandIn(L) : null;
+                if (Ls == null) return false;
                 if (V.len(dir) < 1e-6 || Math.abs(V.unit(dir).y) > 0.9) return false;
                 Vec3 d = V.unit(dir);
                 boolean arc = name.equals("arc");
@@ -2353,28 +2385,27 @@ final class PhantomFx {
                 int own = mmorpg.fabric.Tasks.owner();
                 ServerPlayer owner = own != 0 && level.getEntity(own) instanceof ServerPlayer sp ? sp : null;
                 // 2026-11-28 전방 참격 (o.front — FRONT_LIFT 주석): 둘레 사람 · 3인칭 반달은 휘두름 면 그대로 (보는 눈 쪽으로 돌리지 않음 · 앞 날만 조금 듦), 1인칭은 아래
-                boolean front = arc && o.truthy("front");
                 Moon m = (front ? moon(at, d, tilt, R, null, FRONT_LIFT, 0) : moon(at, d, tilt, R, viewEye(owner, level, at), MOON_LIFT, 0)).centered(at);
                 m = m.above(ground(level, at).y);
                 double alpha = Math.min(1, o.num("alpha", 1));
-                moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
+                moonFly(level, Ls, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
                 // 2026-11-28 세로 베기 (3인칭 반달이 선 반달 — 90 · 270 에서 ±20°) 의 1인칭은 화면 가운데를 곧게 (waveStraight): 예전 카메라를 보는 초승달은
                 // 왼쪽으로 불룩한 채 눈앞 왼쪽에 (어스 브레이커) · 아래로 불룩한 V 자 (피셔 슬램 — 기울기 174) 로 보였음
                 double tc = Math.cos(Math.toRadians(tilt));
                 // 전방 곧은 칼빛 (세로 · 대각선) 의 1인칭 자리: 눈에서 반 변 ÷ FRONT_FP_FIT 보다 가까우면 앞으로 밀어 화면 안에 곧게
                 Vec3 atFp = owner != null && front ? fpFit(owner, at, d, R / SLASH_R) : at;
                 if (owner != null && Math.abs(tc) < FP_STRAIGHT_COS)
-                    waveStraight(level, L, atFp, d, speed, R / SLASH_R, Math.sin(Math.toRadians(tilt)) > 0, life, only1p(owner), alpha);
+                    waveStraight(level, Ls, atFp, d, speed, R / SLASH_R, Math.sin(Math.toRadians(tilt)) > 0, life, only1p(owner), alpha);
                 else if (owner != null && front && Math.abs(tc) >= FRONT_FLAT_COS) {
                     // 전방 가로 베기의 1인칭: 앞으로 불룩한 누운 반달 (눈 아래 FRONT_FP_HEIGHT — 들지 않고 눈 쪽으로 돌리지 않음)
                     Vec3 at1 = new Vec3(at.x, Math.min(at.y, owner.getY() + FRONT_FP_HEIGHT), at.z);
-                    moonFly(level, L, moon(at1, d, tilt, R, null, 0, 0).centered(at1), d, speed, life, only1p(owner), alpha);
+                    moonFly(level, Ls, moon(at1, d, tilt, R, null, 0, 0).centered(at1), d, speed, life, only1p(owner), alpha);
                 } else if (owner != null && front) {
                     // 전방 대각선 베기의 1인칭: 화면 가운데를 지나는 곧은 칼빛 — 3인칭 반달과 같은 기울기 (가로에서 dev · 오른쪽이 올라가면 +) · 같은 그림판
                     // (180 근처 = 미리 뒤집은 slashm — 오른쪽 → 왼쪽) 이라 같은 쪽으로 그어지고, 불룩한 쪽이 위 (앞으로 불룩한 반달을 뒤에서 본 쪽)
                     boolean mir = tc < 0;
-                    waveStraight(level, L, atFp, d, speed, R / SLASH_R, wrap180(mir ? tilt - 180 : tilt), mir, life, only1p(owner), alpha);
-                } else if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
+                    waveStraight(level, Ls, atFp, d, speed, R / SLASH_R, wrap180(mir ? tilt - 180 : tilt), mir, life, only1p(owner), alpha);
+                } else if (owner != null) wave(level, Ls, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
             }
             case "flystreak" -> {
                 // 2026-11-17 날아가는 빛 (RuneKit.flyStreak — 예전 arrow_shot 빛 · 심지 두 줄): 묶음의 돌진 줄기 한 장 (dash — 같은 길 · 빠르기 · 반 길이 size)
