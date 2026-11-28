@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest · ElementsTest · FieldTest · CombatPowerTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · RuneLoadoutTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest · ElementsTest · FieldTest · CombatPowerTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -68,6 +68,8 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.LimitedRunesT
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneTipTest
 # 0.49.0 룬 재설계 (RUNE_SPREAD: 유틸 값 — 기절 1초당 10% · 선딜 1틱 +1% (6틱 미만 0 · 최대 +30%) · 시간 보정 상한 ×1.3 · 규칙을 따르는 피해 룬 102 = 예산 · 도약 11)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneScaleTest
+# 2026-11-28 룬 8칸 교차 사용 (직업마다 피해 · 버팀 조합 — 근접 ÷ 원거리 · 지키는 유틸 값 · 탱커 · 힐러가 딜 룬을 껴도 검사보다 낮음)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneLoadoutTest
 # 0.21.0 화폐 (골드 · 실버 지갑) · 유저 장터 (수수료 · 개수 · 기간 · 정렬) · 골드 보상
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.EconomyTest
 # 0.22.0 엔더 창고 (상자 5개 · 기본 1개 · 54칸 · 2번 실버 · 3번부터 골드 · 차례로)
