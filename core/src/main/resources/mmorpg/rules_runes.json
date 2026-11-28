@@ -73,6 +73,18 @@
    "sum": true,
    "set": true
   },
+  "crosscut": {
+   "stat": "dex",
+   "name": "크로스 컷",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
   "solarwave": {
    "stat": "str",
    "name": "솔라 웨이브",
@@ -136,6 +148,18 @@
   "grove": {
    "stat": "vit",
    "name": "그로브 블레싱",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "brutalcleave": {
+   "stat": "str",
+   "name": "브루탈 클리브",
    "coef": {
     "str": 1,
     "dex": 1,
@@ -217,6 +241,18 @@
    "sum": true,
    "set": true
   },
+  "phantomthrust": {
+   "stat": "dex",
+   "name": "팬텀 스러스트",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
   "titanhammer": {
    "stat": "str",
    "name": "타이탄 해머",
@@ -289,6 +325,18 @@
    "sum": true,
    "set": true
   },
+  "mortalstrike": {
+   "stat": "str",
+   "name": "모탈 스트라이크",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
   "skyfall": {
    "stat": "str",
    "name": "스카이폴",
@@ -352,6 +400,18 @@
   "immortaloath": {
    "stat": "vit",
    "name": "이모탈 오스",
+   "coef": {
+    "str": 1,
+    "dex": 1,
+    "vit": 1,
+    "int": 1
+   },
+   "sum": true,
+   "set": true
+  },
+  "grandcross": {
+   "stat": "str",
+   "name": "그랜드 크로스",
    "coef": {
     "str": 1,
     "dex": 1,
@@ -467,6 +527,28 @@
     "scale": 0.625
    }
   },
+  "crosscut": {
+   "common": {
+    "fn": "crossCut",
+    "mult": 1.6,
+    "crush": 2.4,
+    "range": 3.8,
+    "cone": 120,
+    "hold": 10,
+    "multName": "X 베기 ",
+    "crushName": "X 폭발",
+    "flow": [
+     "칼날을 X 자로 두 번 그어 앞 {range}칸을 벰",
+     "{t:hold} 뒤 허공의 X 가 터짐"
+    ],
+    "name": "크로스 컷",
+    "desc": "칼날을 X 자로 두 번 그은 뒤 터뜨림",
+    "use": "근접 X 베기 · 0.5초 뒤 폭발",
+    "cd": 8,
+    "look": "blade:common",
+    "scale": 1.0
+   }
+  },
   "solarwave": {
    "rare": {
     "fn": "swordWave",
@@ -576,6 +658,29 @@
     "look": "vit:rare"
    }
   },
+  "brutalcleave": {
+   "rare": {
+    "fn": "brutalCleave",
+    "mult": 4.2,
+    "crush": 2.8,
+    "radius": 5.0,
+    "cone": 200,
+    "knock": 0.8,
+    "quake": 10,
+    "multName": "휩쓸기 ",
+    "crushName": "땅 터짐",
+    "flow": [
+     "거대한 칼로 앞 {radius}칸 반원을 쓸어 벰 · 밀쳐냄",
+     "{t:quake} 뒤 벤 자리를 따라 땅이 터짐"
+    ],
+    "name": "브루탈 클리브",
+    "desc": "거대한 칼로 앞을 크게 쓸어 벤 뒤 땅이 터짐",
+    "use": "앞 반원 · 밀쳐냄 · 땅 터짐",
+    "cd": 12,
+    "look": "str:rare",
+    "scale": 1.0
+   }
+  },
   "fissureslam": {
    "noble": {
     "fn": "fissure",
@@ -679,6 +784,29 @@
     "cd": 22,
     "look": "golem:rare",
     "scale": 2.0952
+   }
+  },
+  "phantomthrust": {
+   "noble": {
+    "fn": "phantomThrust",
+    "mult": 3.0,
+    "hits": 2,
+    "crush": 4.0,
+    "length": 5.5,
+    "width": 1.3,
+    "gap": 10,
+    "multName": "분신 찌르기 ",
+    "crushName": "환영 창",
+    "flow": [
+     "앞 {length}칸을 꿰뚫어 찌름",
+     "그림자 분신 둘이 함께 찌름 → 셋이 환영 창으로"
+    ],
+    "name": "팬텀 스러스트",
+    "desc": "그림자 분신들과 함께 앞을 세 번 꿰뚫음",
+    "use": "직선 관통 3연타",
+    "cd": 15,
+    "look": "assassin:noble",
+    "scale": 1.0
    }
   },
   "titanhammer": {
@@ -788,6 +916,28 @@
     "cd": 32,
     "look": "gladiator:hero",
     "scale": 1.1189
+   }
+  },
+  "mortalstrike": {
+   "hero": {
+    "fn": "mortalStrike",
+    "mult": 14,
+    "crush": 6.7692,
+    "range": 4.5,
+    "cone": 50,
+    "wound": 10,
+    "multName": "처형 일격 ",
+    "crushName": "상처 터짐",
+    "flow": [
+     "앞 {range}칸의 적 하나에 처형의 검을 내리꽂음",
+     "{t:wound} 뒤 깊은 상처가 터짐"
+    ],
+    "name": "모탈 스트라이크",
+    "desc": "처형의 검을 한 적에게 내리꽂고 상처를 터뜨림",
+    "use": "단일 큰 한 방 · 상처 터짐",
+    "cd": 27,
+    "look": "axe:hero",
+    "scale": 1.0
    }
   },
   "skyfall": {
@@ -913,6 +1063,30 @@
     "look": "vit:transcend",
     "scale": 1.6254
    }
+  },
+  "grandcross": {
+   "transcend": {
+    "fn": "grandCross",
+    "mult": 8,
+    "hits": 2,
+    "crush": 16,
+    "radius": 5.0,
+    "length": 7.5,
+    "width": 2.0,
+    "at": 3.0,
+    "multName": "베기 ",
+    "crushName": "그랜드 크로스",
+    "flow": [
+     "가로로 앞 {radius}칸을 휩쓸고 세로로 내려침",
+     "벤 자리에 빛의 십자가가 솟아 터짐"
+    ],
+    "name": "그랜드 크로스",
+    "desc": "가로 · 세로로 벤 자리에 빛의 십자가가 솟아 터짐",
+    "use": "광역 2연타 · 십자 폭발",
+    "cd": 34.5,
+    "look": "holy:transcend",
+    "scale": 0.9583
+   }
   }
  },
  "RUNE_FAMILY_ORDER": [
@@ -922,30 +1096,35 @@
   "icelance",
   "salamander",
   "rampart",
+  "crosscut",
   "solarwave",
   "chainarrow",
   "shadowstrike",
   "undine",
   "aurochs",
   "grove",
+  "brutalcleave",
   "fissureslam",
   "bladehail",
   "thundervolley",
   "frostburst",
   "firestorm",
   "fortress",
+  "phantomthrust",
   "titanhammer",
   "runejavelin",
   "shadowblitz",
   "blizzard",
   "gnome",
   "bastion",
+  "mortalstrike",
   "skyfall",
   "berserker",
   "lunaexec",
   "meteor",
   "spiritking",
-  "immortaloath"
+  "immortaloath",
+  "grandcross"
  ],
  "RUNE_HIDDEN": [
   "spirit",
@@ -978,7 +1157,7 @@
    "§r§7들고 누르면 룬 하나를 뽑습니다",
    "§r§7일반 50% · 희귀 28% · 고귀 14%",
    "§r§7영웅 6.5% · 초월 1.5%",
-   "§r§7등급마다 룬 6개 중 하나 (같은 확률)"
+   "§r§7등급마다 룬 7개 중 하나 (같은 확률)"
   ]
  },
  "RUNE_SET": {
@@ -1088,6 +1267,13 @@
      "reduce": 0.25
     }
    },
+   "crosscut.common": {
+    "t": 13,
+    "w": 3,
+    "u": [],
+    "a": "narrow",
+    "r": "melee"
+   },
    "solarwave.rare": {
     "t": 2,
     "u": [],
@@ -1134,6 +1320,14 @@
    "grove.rare": {
     "u": [],
     "r": "mid"
+   },
+   "brutalcleave.rare": {
+    "t": 12,
+    "w": 2,
+    "u": [
+     "knock"
+    ],
+    "r": "melee"
    },
    "fissureslam.noble": {
     "a": "narrow",
@@ -1184,6 +1378,13 @@
     "u": [
      "shield"
     ],
+    "r": "melee"
+   },
+   "phantomthrust.noble": {
+    "t": 21,
+    "w": 1,
+    "u": [],
+    "a": "narrow",
     "r": "melee"
    },
    "titanhammer.hero": {
@@ -1240,6 +1441,13 @@
      "allyGuard",
      "knock"
     ],
+    "r": "melee"
+   },
+   "mortalstrike.hero": {
+    "t": 18,
+    "w": 8,
+    "u": [],
+    "a": "single",
     "r": "melee"
    },
    "skyfall.transcend": {
@@ -1307,6 +1515,12 @@
      "undying": 0.175,
      "heal": 0.1313
     }
+   },
+   "grandcross.transcend": {
+    "t": 24,
+    "w": 1,
+    "u": [],
+    "r": "melee"
    }
   },
   "migrateFamilies": [
@@ -1364,6 +1578,9 @@
    "rampart": [
     "guardian_throw"
    ],
+   "crosscut": [
+    "assassin_bloom"
+   ],
    "solarwave": [
     "swordmaster_echo"
    ],
@@ -1379,6 +1596,9 @@
    "grove": [
     "priest_hymn"
    ],
+   "brutalcleave": [
+    "warrior_charge"
+   ],
    "bladehail": [
     "bloodknight_chains"
    ],
@@ -1390,6 +1610,9 @@
    ],
    "firestorm": [
     "warlock_nova"
+   ],
+   "phantomthrust": [
+    "pierrot_balloon"
    ],
    "titanhammer": [
     "warrior_spirit"
@@ -1409,6 +1632,9 @@
    "bastion": [
     "guardian_bulwark"
    ],
+   "mortalstrike": [
+    "swordmaster_blood"
+   ],
    "skyfall": [
     "swordmaster_ult"
    ],
@@ -1424,6 +1650,9 @@
    "immortaloath": [
     "priest_stigma",
     "saint_bond"
+   ],
+   "grandcross": [
+    "darkknight_frenzy"
    ]
   }
  }

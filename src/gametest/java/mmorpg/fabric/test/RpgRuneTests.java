@@ -151,10 +151,10 @@ public final class RpgRuneTests {
     @GameTest(maxTicks = 40)
     public void runeSignFlashes(GameTestHelper h) {
         ServerPlayer sp = player(h);
-        h.assertTrue(mmorpg.fabric.vfx.Vfx.hasSheet("rn_sign") && mmorpg.fabric.vfx.Vfx.sheet("rn_sign").frames() == 35 * RuneSign.FRAMES,
-                "sheet rn_sign 35 runes × " + RuneSign.FRAMES);
-        h.assertTrue(RuneSign.cellOf("earthbreaker") == 0 && RuneSign.cellOf("immortaloath") == 29 && RuneSign.cellOf("endless") == 30
-                && RuneSign.cellOf("glacier") == 34 && RuneSign.cellOf("str") == -1, "cells " + RuneSign.cellOf("earthbreaker") + " " + RuneSign.cellOf("glacier"));
+        h.assertTrue(mmorpg.fabric.vfx.Vfx.hasSheet("rn_sign") && mmorpg.fabric.vfx.Vfx.sheet("rn_sign").frames() == 40 * RuneSign.FRAMES,
+                "sheet rn_sign 40 runes (룬 35 + 한정 5 — 2026-11-28 근접 딜 다섯) × " + RuneSign.FRAMES);
+        h.assertTrue(RuneSign.cellOf("earthbreaker") == 0 && RuneSign.cellOf("immortaloath") == 33 && RuneSign.cellOf("grandcross") == 34
+                && RuneSign.cellOf("endless") == 35 && RuneSign.cellOf("glacier") == 39 && RuneSign.cellOf("str") == -1, "cells " + RuneSign.cellOf("earthbreaker") + " " + RuneSign.cellOf("glacier"));
         boolean[] target = {false};
         RuneCast.register("mmorpgSignRune", (p, r, P, k) -> target[0]);
         Map<String, Object> m = new HashMap<>();

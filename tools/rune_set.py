@@ -68,6 +68,12 @@ SET = [
     dict(key="rampart", name="램파트", grade="common", cd=15, pair=["guardian_throw"], r="melee", src="blade.noble", u=["reduce", "knock"], a="narrow", look="gladiator:common",
          set={"fn": "rampart", "ticks": 60, "reduce": 0.5, "knock": 0.9}, spread={"t": 60, "w": 60, "guard": True}, guard_sec=3,
          desc="빛의 방패 결계로 3초 버티고 앞으로 밀어 냄", use="받는 피해 −50% 3초 · 끝에 앞을 밀쳐냄"),
+    # 2026-11-28 근접 딜 새 룬 (사용자 "근접 및 힐러 등 같은 애들의 룬 추가가 필요할듯" → 고른 것 "등급마다 2개 · 10개" · "근접 딜 5개 먼저"):
+    # 옛 동작을 빌리지 않음 (src 없음 — 정의는 set 만, RuneMelee). 크로스 컷 = 민첩 (가는 칼 · 빠른 X) · 짝 암살자 블랙 로즈 8초
+    dict(key="crosscut", name="크로스 컷", grade="common", cd=8, pair=["assassin_bloom"], r="melee", stat_fam="dex", look="blade:common", u=[], a="narrow",
+         set={"fn": "crossCut", "mult": 1.6, "crush": 2.4, "range": 3.8, "cone": 120, "hold": 10, "multName": "X 베기 ", "crushName": "X 폭발",
+              "flow": ["칼날을 X 자로 두 번 그어 앞 {range}칸을 벰", "{t:hold} 뒤 허공의 X 가 터짐"]},
+         spread={"t": 13, "w": 3}, desc="칼날을 X 자로 두 번 그은 뒤 터뜨림", use="근접 X 베기 · 0.5초 뒤 폭발"),
     # ---------------------------------------------------------------- 희귀 (초당 58%)
     dict(key="solarwave", name="솔라 웨이브", grade="rare", cd=13, pair=["swordmaster_echo"], r="mid", src="blade.rare", u=[], look="holy:rare",
          desc="크게 감아 가로로 베어 태양빛 검기를 날림", use="직선 관통 검기"),
@@ -83,6 +89,11 @@ SET = [
          # 2026-11-17 쿨 6 → 15초: 회복도 초당 그대로 (0.0667 × 15 ÷ 6)
          set={"heal": 0.1667, "pulses": 4, "gap": 15, "radius": 5, "share": 0.5}, desc="발밑에 새싹이 자라 빛 잎을 흩날리며 나와 둘레 아군을 회복",
          use="회복 — 나 37% · 아군 19% (3초)"),
+    # 2026-11-28 근접 딜 새 룬: 브루탈 클리브 = 힘 (크게 쓸어 벰 · 갈라진 땅 · 낮은 쿵) · 짝 전사 램페이지 러시 12초
+    dict(key="brutalcleave", name="브루탈 클리브", grade="rare", cd=12, pair=["warrior_charge"], r="melee", stat_fam="str", look="str:rare", u=["knock"],
+         set={"fn": "brutalCleave", "mult": 4.2, "crush": 2.8, "radius": 5.0, "cone": 200, "knock": 0.8, "quake": 10, "multName": "휩쓸기 ", "crushName": "땅 터짐",
+              "flow": ["거대한 칼로 앞 {radius}칸 반원을 쓸어 벰 · 밀쳐냄", "{t:quake} 뒤 벤 자리를 따라 땅이 터짐"]},
+         spread={"t": 12, "w": 2}, desc="거대한 칼로 앞을 크게 쓸어 벤 뒤 땅이 터짐", use="앞 반원 · 밀쳐냄 · 땅 터짐"),
     # ---------------------------------------------------------------- 고귀 (초당 67%)
     dict(key="fissureslam", name="피셔 슬램", grade="noble", cd=16, r="mid", src="str.noble", u=["lift"], a="narrow",
          set={"vuln": 0, "vulnTicks": 0}, desc="위에서 아래로 내려찍어 앞 땅을 가름 · 띄움", use="직선 관통 · 띄움"),
@@ -96,6 +107,11 @@ SET = [
          desc="겨눈 곳에 불기둥 소용돌이 · 끌어당김", use="장판 · 끌어당김"),
     dict(key="fortress", name="포트리스 슬램", grade="noble", cd=22, r="melee", src="golem.rare", elem=None, u=["shield"],
          desc="땅을 내리쳐 둘레에 성벽 조각을 세웠다가 쓰러뜨림 · 몸을 지킴", use="둘레 2타 · 보호막"),
+    # 2026-11-28 근접 딜 새 룬: 팬텀 스러스트 = 민첩 (빠른 찌르기 · 그림자 분신) · 짝 피에로 벌룬 퍼레이드 15초
+    dict(key="phantomthrust", name="팬텀 스러스트", grade="noble", cd=15, pair=["pierrot_balloon"], r="melee", stat_fam="dex", look="assassin:noble", u=[], a="narrow",
+         set={"fn": "phantomThrust", "mult": 3.0, "hits": 2, "crush": 4.0, "length": 5.5, "width": 1.3, "gap": 10, "multName": "분신 찌르기 ", "crushName": "환영 창",
+              "flow": ["앞 {length}칸을 꿰뚫어 찌름", "그림자 분신 둘이 함께 찌름 → 셋이 환영 창으로"]},
+         spread={"t": 21, "w": 1}, desc="그림자 분신들과 함께 앞을 세 번 꿰뚫음", use="직선 관통 3연타"),
     # ---------------------------------------------------------------- 영웅 (초당 77%)
     dict(key="titanhammer", name="타이탄 해머", grade="hero", cd=37, pair=["warrior_spirit"], r="melee", src="str.hero", u=["leap", "stun1"],
          set={"range": 12}, desc="겨눈 곳으로 높이 뛰어 거대한 망치와 함께 내려찍음 · 기절", use="도약 · 기절 1초"),
@@ -113,6 +129,11 @@ SET = [
     dict(key="bastion", name="바스티온", grade="hero", cd=32, pair=["guardian_bulwark"], r="melee", src="vit.hero", u=["allyGuard", "knock"], look="gladiator:hero",
          set={"reduce": 0.2, "ticks": 100, "pulse": 10}, spread={"t": 100, "zone": True},
          desc="방패 벽을 둘러 세워 아군을 지키고 안의 적을 침", use="장판 5초 · 아군 받는 피해 −20%"),
+    # 2026-11-28 근접 딜 새 룬: 모탈 스트라이크 = 힘 (크게 젖혔다 내려찍는 한 방) · 짝 소드마스터 드래곤 블러드 27초
+    dict(key="mortalstrike", name="모탈 스트라이크", grade="hero", cd=27, pair=["swordmaster_blood"], r="melee", stat_fam="str", look="axe:hero", u=[], a="single",
+         set={"fn": "mortalStrike", "mult": 14, "crush": 6.7692, "range": 4.5, "cone": 50, "wound": 10, "multName": "처형 일격 ", "crushName": "상처 터짐",
+              "flow": ["앞 {range}칸의 적 하나에 처형의 검을 내리꽂음", "{t:wound} 뒤 깊은 상처가 터짐"]},
+         spread={"t": 18, "w": 8}, desc="처형의 검을 한 적에게 내리꽂고 상처를 터뜨림", use="단일 큰 한 방 · 상처 터짐"),
     # ---------------------------------------------------------------- 초월 (초당 89%)
     # 2026-11-17 도감 메모 (천붕 → 스카이폴 "유틸 삭제 및 쿨타임 증가, 이에 따른 데미지 소량 증가"): 띄움을 뺌 (유틸 −5% 가 피해로 · 쿨 50초 = 예산 × 50/36)
     dict(key="skyfall", name="스카이폴", grade="transcend", cd=50, pair=["swordmaster_ult"], r="far", src="str.transcend", u=[], cast=1.0,
@@ -143,6 +164,13 @@ SET = [
     dict(key="immortaloath", name="이모탈 오스", grade="transcend", cd=32, pair=["priest_stigma", "saint_bond"], r="melee", src="vit.transcend", u=["undying", "heal"],
          set={"ticks": 140}, spread={"t": 120}, fit={"undying": 0.875, "heal": 0.875},
          desc="쓰러지지 않는 맹약 — 버티며 회복하고 둘레를 침", use="버팀 · 회복"),
+    # 2026-11-28 근접 딜 새 룬: 그랜드 크로스 = 힘 (가로 · 세로 두 번 → 빛의 십자가) · 짝 다크 나이트 언홀리 프렌지 34.5초. 배율 합 32 (초월 돌파 선 32 · 39 · 50
+    # — rune_break.json grandCross) × scale (34.5 ÷ 36)
+    dict(key="grandcross", name="그랜드 크로스", grade="transcend", cd=34.5, pair=["darkknight_frenzy"], r="melee", stat_fam="str", look="holy:transcend", u=[],
+         set={"fn": "grandCross", "mult": 8, "hits": 2, "crush": 16, "radius": 5.0, "length": 7.5, "width": 2.0, "at": 3.0, "multName": "베기 ",
+              "crushName": "그랜드 크로스",
+              "flow": ["가로로 앞 {radius}칸을 휩쓸고 세로로 내려침", "벤 자리에 빛의 십자가가 솟아 터짐"]},
+         spread={"t": 24, "w": 1}, desc="가로 · 세로로 벤 자리에 빛의 십자가가 솟아 터짐", use="광역 2연타 · 십자 폭발"),
 ]
 
 
@@ -230,8 +258,15 @@ def build():
     order = []
     for g in GRADES:
         for e in [x for x in SET if x["grade"] == g]:
-            fam, grade = e["src"].split(".")
-            src = dict(runes[fam][grade])
+            if e.get("src"):
+                fam, grade = e["src"].split(".")
+                src = dict(runes[fam][grade])
+            else:
+                # 2026-11-28 새 룬 (근접 딜 다섯 — 옛 동작을 빌리지 않음): 정의는 set 만 · 피해 종류 (공격 / 마법) 는 stat_fam 계열 · 그림 묶음은 look
+                if not e.get("look") or not e.get("stat_fam"):
+                    raise SystemExit("새 룬은 look · stat_fam 이 있어야 함: " + e["name"])
+                fam, grade = e["stat_fam"], g
+                src = {}
             d = dict(src)
             d.update(e.get("set", {}))
             # 2026-11-28 옛 동작에서 이어받은 값 중 새 동작에 없는 것 (버서커 rageSlam — 난타 hits · gap · 흡혈 명수 healMax)
@@ -249,7 +284,7 @@ def build():
             old = total_mult(d)
             if not e.get("support") and old > 0:
                 d["scale"] = round(budget / old, 4)
-            sp = dict(S["runes"].get(e["src"]) or {})
+            sp = dict(S["runes"].get(e["src"]) or {}) if e.get("src") else {}
             sp.update(e.get("spread", {}))
             for k in [k for k, v in sp.items() if v is None]:
                 sp.pop(k)  # 2026-11-28 옛 표의 값을 뺌 (None — 버서커: 장판 zone)
@@ -342,7 +377,7 @@ def build():
         "RUNE_FAMILY_ORDER": order,
         "RUNE_HIDDEN": hidden,
         "RUNE": {"ticketLore": ["§r§7보스·퀘스트·룬술사에게서 얻음", "§r§7들고 누르면 룬 하나를 뽑습니다", "§r§7일반 50% · 희귀 28% · 고귀 14%",
-                                "§r§7영웅 6.5% · 초월 1.5%", "§r§7등급마다 룬 6개 중 하나 (같은 확률)"]},
+                                "§r§7영웅 6.5% · 초월 1.5%", "§r§7등급마다 룬 7개 중 하나 (같은 확률)"]},
         "RUNE_SET": {
             "range": RANGE,
             "rangeName": {"melee": "근거리", "mid": "중거리", "far": "원거리"},

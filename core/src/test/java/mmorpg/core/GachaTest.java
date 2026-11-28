@@ -56,7 +56,7 @@ public final class GachaTest {
         near(std.rate("transcend"), 0.015, 1e-12, "standard transcend 1.5%");
         near(std.rate("hero"), 0.065, 1e-12, "standard hero 6.5%");
         near(std.rate("common"), 0.5, 1e-12, "standard common 50%");
-        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 30, "standard: 30 runes (2026-11-17 새 룬) " + std.families().size());
+        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 35, "standard: 35 runes (2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5) " + std.families().size());
         for (String f : Runes.HIDDEN) check(!std.families().contains(f) && !Gacha.advanced().families().contains(f), "hidden family not drawn " + f);
         check(!std.pickup(), "standard has no pickup");
 
@@ -141,8 +141,8 @@ public final class GachaTest {
             Gacha.Pull x = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.0, 0.9, f)).pulls().get(0);
             lostFamilies.add(x.family());
         }
-        check(!lostFamilies.contains("spiritking") && lostFamilies.size() == 5 && lostFamilies.stream().noneMatch(Runes::hidden)
-                && lostFamilies.stream().allMatch(f -> Runes.hasGrade(f, "transcend")), "lost pool = 5 other transcend runes (2026-11-17) " + lostFamilies);
+        check(!lostFamilies.contains("spiritking") && lostFamilies.size() == 6 && lostFamilies.stream().noneMatch(Runes::hidden)
+                && lostFamilies.stream().allMatch(f -> Runes.hasGrade(f, "transcend")), "lost pool = 6 other transcend runes (2026-11-17 · 2026-11-28 그랜드 크로스) " + lostFamilies);
 
         // ---------------------------------------------------------- 고급 · 한 계열
         Gacha.Banner adv = Gacha.advanced();
