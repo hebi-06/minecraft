@@ -290,6 +290,8 @@ final class PierrotSkills {
         SkillFx.shock(level, V.up(feet, 0.06), GOLD, 1.2, 0.35);
         Vec3 look = sp.getViewVector(1F);
         JobFx.confetti(level, V.add(sp.getEyePosition(), look, 1.8), 0.6, 0.7, JobFx.only1p(sp));
+        // 1인칭: 눈앞 (조준점 조금 위) 에 작은 웃는 가면이 튀어나와 깔깔 웃으며 위로 사라짐 (주인만 — 남은 머리 위 가면을 봄)
+        JobFx.mask(level, V.up(V.add(sp.getEyePosition(), look, 2.4), 0.3), 0.26, 0.6, 0, 6, false, JobFx.only1p(sp).with("vel", new Vec3(0, 0.8, 0)));
         SkillFx.play(level, "entity.firework_rocket.blast", c, 1.5, 0.9);
         SkillFx.play(level, "entity.firework_rocket.twinkle", c, 1.3, 0.6);
         SkillFx.play(level, "entity.chicken.egg", c, 1.6, 0.8);
@@ -298,6 +300,9 @@ final class PierrotSkills {
         String life = RuneKit.lifeToken(sp);
         // 투명 · 몹이 놓침 (둘레 몬스터는 소환물이 끌어들임 — 쇼타임). 다음 틱에: 이 피해는 몬스터의 공격 처리 (싸움 기록) 안에서 왔으므로 그 안에서 싸움을 지우지 않음
         sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, popFor + 1, 0, false, false, true));
+        // 손에 든 무기도 (바닐라는 투명이어도 손에 든 것을 그림 — 몸 없이 단검만 떠 보였음, CI 46133563980 영상): 남에게는 장비 칸을 비우고 내 화면 (1 · 3인칭)
+        // 은 손 자리 빈 그림 (드라군 · 곰 변신과 같은 VanillaCosmetics.hideHands — 서버의 가방은 그대로)
+        mmorpg.fabric.vanilla.VanillaCosmetics.hideHands(sp, true);
         RuneKit.later(1, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Monsters.forgetMonsterFights(sp.getUUID());
@@ -305,6 +310,7 @@ final class PierrotSkills {
         });
         RuneKit.later(popFor, () -> {
             if (RuneKit.sameLife(sp, life)) reappear(sp, popFor);
+            else showHands(sp); // 사라진 동안 죽었으면 (낙하 · 공허 …) 손만 되돌림 — 다시 태어난 몸에
         });
         RuneKit.later(popCd, () -> {
             if (!RuneKit.sameLife(sp, life) || JobTraits10.jobIf(sp, JobTraits10.PR) == null || JobTraits10.popLeft(sp) > 0) return;
@@ -313,10 +319,17 @@ final class PierrotSkills {
         });
     }
 
-    /** 짠: 투명을 거두고 (펑! 이 건 짧은 투명만) 색종이 · 반짝임 · 윙크하는 가면 · 종소리 */
+    /** 펑! 이 숨긴 손을 되돌림 (지금 몸 — 죽어 다시 태어났으면 새 몸) */
+    private static void showHands(ServerPlayer sp) {
+        ServerPlayer now = sp.level().getServer().getPlayerList().getPlayer(sp.getUUID());
+        mmorpg.fabric.vanilla.VanillaCosmetics.hideHands(now != null ? now : sp, false);
+    }
+
+    /** 짠: 투명을 거두고 (펑! 이 건 짧은 투명만) 손에 든 것을 다시 보이고 색종이 · 반짝임 · 윙크하는 가면 · 종소리 */
     private static void reappear(ServerPlayer sp, int popFor) {
         MobEffectInstance e = sp.getEffect(MobEffects.INVISIBILITY);
         if (e != null && !e.isInfiniteDuration() && e.getDuration() <= popFor + 2) sp.removeEffect(MobEffects.INVISIBILITY);
+        showHands(sp);
         ServerLevel level = sp.level();
         Vec3 c = V.up(sp.position(), 1.0);
         JobFx.confetti(level, c, 0.8, 0.8, JobFx.hide1p(sp));

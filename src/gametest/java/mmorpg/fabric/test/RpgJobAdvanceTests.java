@@ -1755,6 +1755,7 @@ public final class RpgJobAdvanceTests {
             boolean hurt = sp.hurtServer(h.getLevel(), src, 4F);
             h.assertTrue(!hurt && sp.getHealth() == hp && JobTraits10.pops(sp) == pops0[0] + 1 && JobTraits10.popped(sp) && sp.hasEffect(MobEffects.INVISIBILITY),
                     "pop dodges the hit: hurt " + hurt + " · hp " + sp.getHealth() + " / " + hp + " · pops " + JobTraits10.pops(sp) + " (was " + pops0[0] + ")");
+            h.assertTrue(mmorpg.fabric.vanilla.VanillaCosmetics.handsHidden(sp), "the held dagger vanishes too (hideHands)");
             RpgMonsterTests.fresh(sp);
             h.assertTrue(!sp.hurtServer(h.getLevel(), src, 4F) && sp.getHealth() == hp && JobTraits10.pops(sp) == pops0[0] + 1,
                     "hidden: the next hit misses too (no second pop)");
@@ -1762,7 +1763,8 @@ public final class RpgJobAdvanceTests {
             mark[1] = hp;
         }));
         steps.add(new RpgJobTests.Step(40, () -> {
-            h.assertTrue(!JobTraits10.popped(sp) && !sp.hasEffect(MobEffects.INVISIBILITY), "reappears after 1.5s");
+            h.assertTrue(!JobTraits10.popped(sp) && !sp.hasEffect(MobEffects.INVISIBILITY) && !mmorpg.fabric.vanilla.VanillaCosmetics.handsHidden(sp),
+                    "reappears after 1.5s (with the dagger)");
             RpgMonsterTests.fresh(sp);
             float hp = sp.getHealth();
             boolean hurt = sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
