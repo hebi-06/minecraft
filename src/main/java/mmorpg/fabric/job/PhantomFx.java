@@ -963,12 +963,15 @@ final class PhantomFx {
     static final double MOON_ROLL = 65;
     /**
      * 2026-11-28 전방 참격 (사용자 "앞으로 참격 쓸때 내가 따로 말 안하면 참격 방향이 앞을 보게 하기 (1인칭 포함)" — 룬 도감 판 18 크로스 컷 · 브루탈 클리브 ·
-     * 그랜드 크로스 표시): 가로 반달이 보는 눈 쪽으로 도는 끝 (65 면 옆 카메라에서 하늘로 솟은 세로 베기처럼 보였음) · 1인칭 누운 반달로 볼 기울기 (|cos| — 가로에서
-     * ±20° 안) · 1인칭 누운 반달 높이 (발 위 칸 — 평타 가로 베기 fpHeight 와 같음: 화면 아래로 띠가 지나감)
+     * 그랜드 크로스 표시): 3인칭 반달은 보는 눈 쪽으로 돌리지 않고 휘두름 면 그대로 (CI 46110996192 — 눈 쪽으로 20° 만 돌려도 높은 옆 카메라에서 먼 끝이 솟아 판 18
+     * 과 같은 세로 "(" 로 보였음) · 가로 반달의 앞 날 들기 (도 — 뒤에서 얇은 줄로만 보이지 않을 만큼) · 1인칭 누운 반달로 볼 기울기 (|cos| — 가로에서 ±20° 안) ·
+     * 1인칭 누운 반달 높이 (발 위 칸 — 평타 가로 베기 fpHeight 와 같음: 화면 아래로 띠가 지나감) · 1인칭 곧은 칼빛의 거리 (눈에서 반 변 ÷ 이 값 이상 — 화면 키
+     * 2 tan 35° ≈ 1.4 × 거리 안에 칼빛 (호 1.8 × 반 변) 이 들게: 그랜드 크로스 세로 반 변 2.6칸을 2.2칸 앞에 두면 화면보다 커서 곧은 줄 대신 휜 띠로 보였음)
      */
-    static final double FRONT_ROLL = 20;
+    static final double FRONT_LIFT = 10;
     static final double FRONT_FLAT_COS = 0.94;
     static final double FRONT_FP_HEIGHT = 0.95;
+    static final double FRONT_FP_FIT = 0.7;
     static final double MOON_ROLL_V = 30;
     static final double MOON_LIFT = 18;
 
@@ -980,11 +983,6 @@ final class PhantomFx {
      * 보이지 않게). extraRoll = 앞 축 둘레로 더 기울임 (잔상 겹)
      */
     static Moon moon(Vec3 C, Vec3 fwd, double tilt, double R, Vec3 eye, double lift, double extraRoll) {
-        return moon(C, fwd, tilt, R, eye, lift, extraRoll, MOON_ROLL);
-    }
-
-    /** 같은 것 — 가로 반달이 보는 눈 쪽으로 도는 끝 rollMax (도 — 전방 참격 FRONT_ROLL: 앞을 보는 판이 카메라 쪽으로 세워지지 않게) */
-    static Moon moon(Vec3 C, Vec3 fwd, double tilt, double R, Vec3 eye, double lift, double extraRoll, double rollMax) {
         Vec3 h = V.flat(fwd);
         Vec3 r = V.cross(h, V.UP); // 오른쪽
         double c = Math.cos(Math.toRadians(tilt));
@@ -992,7 +990,7 @@ final class PhantomFx {
         if (Math.abs(c) >= 0.5) {
             double dev = wrap180(c >= 0 ? tilt : tilt - 180);
             double beta = 0;
-            if (e != null) beta = clamp(wrap90(Math.toDegrees(Math.atan2(-V.dot(e, r), V.dot(e, V.UP)))), rollMax);
+            if (e != null) beta = clamp(wrap90(Math.toDegrees(Math.atan2(-V.dot(e, r), V.dot(e, V.UP)))), MOON_ROLL);
             double g = Math.toRadians(clamp(dev + beta + extraRoll, MOON_ROLL + 15));
             Vec3 r1 = V.add(V.scale(r, Math.cos(g)), V.UP, Math.sin(g));
             Vec3 n1 = V.add(V.scale(V.UP, Math.cos(g)), r, -Math.sin(g));
@@ -1095,6 +1093,13 @@ final class PhantomFx {
     static final double FP_STRAIGHT_APEX_IN = 0.85;
     /** 세로 베기로 볼 기울기 (|cos tilt| 이 이 값 아래 — 90 · 270 에서 ±20° 안) */
     static final double FP_STRAIGHT_COS = 0.342;
+
+    /** 전방 곧은 칼빛 (1인칭) 의 자리: 눈에서 앞쪽 거리가 반 변 half ÷ FRONT_FP_FIT 보다 짧으면 그만큼 앞 (dir 의 수평) 으로 밈 */
+    static Vec3 fpFit(ServerPlayer owner, Vec3 at, Vec3 dir, double half) {
+        Vec3 h = V.len(V.flat(dir)) > 1e-6 ? V.flat(dir) : new Vec3(0, 0, 1);
+        double need = half / FRONT_FP_FIT - V.dot(V.sub(at, owner.getEyePosition()), h);
+        return need > 0 ? V.add(at, h, need) : at;
+    }
 
     /**
      * 2026-11-28 사용자 메모 (룬 도감 — 어스 브레이커 "1인칭 참격 방향이 왼쪽으로 가는거처럼 보임 정면으로 보이게", 피셔 슬램 "1인칭에서 참격이 일자로 안나가고 v자로
@@ -2347,17 +2352,19 @@ final class PhantomFx {
                 double speed = arc ? o.num("speed", 0) / 5.0 * (1 - Math.exp(-5 * life)) / life : o.num("speed", 0);
                 int own = mmorpg.fabric.Tasks.owner();
                 ServerPlayer owner = own != 0 && level.getEntity(own) instanceof ServerPlayer sp ? sp : null;
-                // 2026-11-28 전방 참격 (o.front — FRONT_ROLL 주석): 둘레 사람 · 3인칭 반달은 앞을 보는 휘두름 면에 (눈 쪽으로 FRONT_ROLL 까지만), 1인칭은 아래
+                // 2026-11-28 전방 참격 (o.front — FRONT_LIFT 주석): 둘레 사람 · 3인칭 반달은 휘두름 면 그대로 (보는 눈 쪽으로 돌리지 않음 · 앞 날만 조금 듦), 1인칭은 아래
                 boolean front = arc && o.truthy("front");
-                Moon m = moon(at, d, tilt, R, viewEye(owner, level, at), MOON_LIFT, 0, front ? FRONT_ROLL : MOON_ROLL).centered(at);
+                Moon m = (front ? moon(at, d, tilt, R, null, FRONT_LIFT, 0) : moon(at, d, tilt, R, viewEye(owner, level, at), MOON_LIFT, 0)).centered(at);
                 m = m.above(ground(level, at).y);
                 double alpha = Math.min(1, o.num("alpha", 1));
                 moonFly(level, L, m, d, speed, life, owner != null ? hide1p(owner) : who, alpha);
                 // 2026-11-28 세로 베기 (3인칭 반달이 선 반달 — 90 · 270 에서 ±20°) 의 1인칭은 화면 가운데를 곧게 (waveStraight): 예전 카메라를 보는 초승달은
                 // 왼쪽으로 불룩한 채 눈앞 왼쪽에 (어스 브레이커) · 아래로 불룩한 V 자 (피셔 슬램 — 기울기 174) 로 보였음
                 double tc = Math.cos(Math.toRadians(tilt));
+                // 전방 곧은 칼빛 (세로 · 대각선) 의 1인칭 자리: 눈에서 반 변 ÷ FRONT_FP_FIT 보다 가까우면 앞으로 밀어 화면 안에 곧게
+                Vec3 atFp = owner != null && front ? fpFit(owner, at, d, R / SLASH_R) : at;
                 if (owner != null && Math.abs(tc) < FP_STRAIGHT_COS)
-                    waveStraight(level, L, at, d, speed, R / SLASH_R, Math.sin(Math.toRadians(tilt)) > 0, life, only1p(owner), alpha);
+                    waveStraight(level, L, atFp, d, speed, R / SLASH_R, Math.sin(Math.toRadians(tilt)) > 0, life, only1p(owner), alpha);
                 else if (owner != null && front && Math.abs(tc) >= FRONT_FLAT_COS) {
                     // 전방 가로 베기의 1인칭: 앞으로 불룩한 누운 반달 (눈 아래 FRONT_FP_HEIGHT — 들지 않고 눈 쪽으로 돌리지 않음)
                     Vec3 at1 = new Vec3(at.x, Math.min(at.y, owner.getY() + FRONT_FP_HEIGHT), at.z);
@@ -2366,7 +2373,7 @@ final class PhantomFx {
                     // 전방 대각선 베기의 1인칭: 화면 가운데를 지나는 곧은 칼빛 — 3인칭 반달과 같은 기울기 (가로에서 dev · 오른쪽이 올라가면 +) · 같은 그림판
                     // (180 근처 = 미리 뒤집은 slashm — 오른쪽 → 왼쪽) 이라 같은 쪽으로 그어지고, 불룩한 쪽이 위 (앞으로 불룩한 반달을 뒤에서 본 쪽)
                     boolean mir = tc < 0;
-                    waveStraight(level, L, at, d, speed, R / SLASH_R, wrap180(mir ? tilt - 180 : tilt), mir, life, only1p(owner), alpha);
+                    waveStraight(level, L, atFp, d, speed, R / SLASH_R, wrap180(mir ? tilt - 180 : tilt), mir, life, only1p(owner), alpha);
                 } else if (owner != null) wave(level, L, at, d, speed, R / SLASH_R, spin + beta, life, only1p(owner), alpha);
             }
             case "flystreak" -> {
