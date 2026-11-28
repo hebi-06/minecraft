@@ -140,6 +140,8 @@ public final class RuneScaleTest {
     private static final Set<String> GUARD = Set.of("undying", "heal", "lifesteal", "reduce", "shield", "allyGuard");
     /** 등급의 재사용 (초 — 새 룬의 예산 = BUDGET ÷ BASE_CD × 룬의 재사용) */
     private static final double[] BASE_CD = {8, 12, 18, 26, 36};
+    /** 2026-11-28 다섯째: 초월 등급 상한의 "다음 등급" = 한정 룬 기준 (예산 34 · 재사용 36초) */
+    private static final double LIMITED_PER_SEC = 34.0 / 36;
 
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
@@ -190,18 +192,22 @@ public final class RuneScaleTest {
                 near(Runes.areaMult(r), am, id + " area mult");
                 double mods = (1 - Runes.utilCost(r)) * tm * am * Elements.mult(Runes.element(r)) * Runes.rangeMult(r);
                 near(Runes.scaleMods(r), mods, id + " mods = util × time × area × element × range");
-                // 2026-11-28 등급 상한 (사용자 "다음 등급을 못 넘게 상한"): 새 룬 (초월 밖) 의 보정 곱 ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값
-                double cap = Runes.isSet(fam) && gi + 1 < BUDGET.length ? BUDGET[gi + 1] / BASE_CD[gi + 1] / (BUDGET[gi] / BASE_CD[gi]) : Double.POSITIVE_INFINITY;
+                // 2026-11-28 등급 상한 (사용자 "다음 등급을 못 넘게 상한"): 새 룬의 보정 곱 ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값 — 다섯째부터 초월의 다음 = 한정 기준
+                // (34 ÷ 36 — 사용자 "모두가 해당 룬을 쓸거 같다는거 있으면 없애": 그랜드 크로스 112%)
+                double nextPerSec = gi + 1 < BUDGET.length ? BUDGET[gi + 1] / BASE_CD[gi + 1] : LIMITED_PER_SEC;
+                double cap = Runes.isSet(fam) ? nextPerSec / (BUDGET[gi] / BASE_CD[gi]) : Double.POSITIVE_INFINITY;
                 check(Double.isInfinite(cap) ? Double.isInfinite(Runes.gradeCap(r)) : Math.abs(Runes.gradeCap(r) - cap) < 1e-9, id + " grade cap " + Runes.gradeCap(r));
                 near(Runes.damageScale(r), Math.min(mods, cap) * Runes.budgetScale(r), id + " scale = min(mods, grade cap) × budget");
-                if (Runes.isSet(fam) && total > 0 && gi + 1 < BUDGET.length) {
+                if (Runes.isSet(fam) && total > 0) {
                     double perSec = total * Runes.damageScale(r) / r.cd();
-                    check(perSec <= BUDGET[gi + 1] / BASE_CD[gi + 1] + 1e-9, id + " 0돌 피해/초 " + perSec + " ≤ 다음 등급 " + BUDGET[gi + 1] / BASE_CD[gi + 1]);
+                    check(perSec <= nextPerSec + 1e-9, id + " 0돌 피해/초 " + perSec + " ≤ 다음 등급 " + nextPerSec);
                     if (mods > cap + 1e-12) {
                         capped.add(id);
                         near(Runes.gradeCapCut(r), 1 - cap / mods, id + " grade cap cut");
                     } else near(Runes.gradeCapCut(r), 0, id + " no grade cap cut");
                 }
+                // 2026-11-28 다섯째: 피해가 없는 지원 룬은 상한 몫 0 (에덴 블룸 보정 곱 1.1 > 초월 상한 1.0625 — 깎을 피해가 없음)
+                if (Runes.isSet(fam) && total <= 0) near(Runes.gradeCapCut(r), 0, id + " support: no grade cap cut");
                 // 2026-11-17 룬 재개발 (계열 없는 새 룬 30): 예산 = 등급 초당 값 × 재사용 · 거리 (근 1.2 · 중 1.1 · 원 1.0) · 받는 피해 증가 없음 · 시전 룬은 선딜 보정 없음
                 if (Runes.isSet(fam)) {
                     sets++;
@@ -258,6 +264,8 @@ public final class RuneScaleTest {
         }
         System.out.println("  등급 상한에 걸린 룬 (2026-11-28): " + capped);
         check(!capped.isEmpty(), "grade cap bites somewhere (노움 · 블레이드 헤일 …)");
+        // 2026-11-28 다섯째: 그랜드 크로스 (초월 근접 — 상한 없이 112%) 가 한정 기준 94.4% 로
+        check(capped.contains("grandcross.transcend"), "grand cross capped at the limited per-second (94.4%)");
         check(runes == 160, "160 runes (옛 120 — 숨김 · 2026-11-17 새 룬 30 · 2026-11-28 근접 딜 5 · 지원 5) " + runes);
         check(sets == 40, "40 set runes " + sets);
         pairs();

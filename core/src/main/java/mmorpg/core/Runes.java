@@ -568,25 +568,29 @@ public final class Runes {
     /**
      * 2026-11-28 등급 상한 (사용자 "다음 등급을 못 넘게 상한" — 0 ~ 2돌 한 대상 피해/초 가운데가 영웅 0.889 · 초월 0.866 으로 거꾸로였음 · 노움 1.037):
      * 보정 곱 ({@link #scaleMods}) 의 상한 = 다음 등급 초당 값 ÷ 이 등급 초당 값 (RUNE_SET.budget ÷ baseCd — 일반 ×1.167 · 희귀 ×1.143 · 고귀 ×1.154 ·
-     * 영웅 ×1.156) → 0돌 피해/초 (위력 P 의 몇 배) 가 다음 등급의 기준 초당 값을 넘지 않음. 초월 · 한정 · 옛 룬 · 대조 시험 (표 없음) 은 상한 없음 (무한)
+     * 영웅 ×1.156) → 0돌 피해/초 (위력 P 의 몇 배) 가 다음 등급의 기준 초당 값을 넘지 않음. 한정 · 옛 룬 · 대조 시험 (표 없음) 은 상한 없음 (무한).
+     * 2026-11-28 다섯째 (사용자 "모두가 해당 룬을 쓸거 같다는거 있으면 없애"): 초월은 위 등급이 없어 상한이 없었음 → 그랜드 크로스 0돌 피해/초 112% (다른 초월
+     * 80 ~ 89%) 로 근접이면 모두 고를 룬 → 초월의 다음 = 한정 룬 기준 (RUNE_SET.budget.limited ÷ baseCd.limited — 34 ÷ 36 = 94.4%, ×1.0625)
      */
     public static double gradeCap(Rune r) {
         if (r == null || SET == null || !SET.has("budget") || !SET.has("baseCd") || !isSet(r.family())) return Double.POSITIVE_INFINITY;
         int i = GRADE_ORDER.indexOf(r.grade());
-        if (i < 0 || i + 1 >= GRADE_ORDER.size()) return Double.POSITIVE_INFINITY;
-        double here = gradePerSec(r.grade()), next = gradePerSec(GRADE_ORDER.get(i + 1));
+        if (i < 0) return Double.POSITIVE_INFINITY;
+        String up = i + 1 < GRADE_ORDER.size() ? GRADE_ORDER.get(i + 1) : "limited";
+        double here = gradePerSec(r.grade()), next = gradePerSec(up);
         return here > 0 && next > 0 ? next / here : Double.POSITIVE_INFINITY;
     }
 
-    /** 등급의 기준 초당 값 (배율 합 ÷ 기준 재사용 — 일반 0.5 · 희귀 0.583 · 고귀 0.667 · 영웅 0.769 · 초월 0.889) — 표에 없으면 0 */
+    /** 등급의 기준 초당 값 (배율 합 ÷ 기준 재사용 — 일반 0.5 · 희귀 0.583 · 고귀 0.667 · 영웅 0.769 · 초월 0.889 · "limited" 한정 0.944) — 표에 없으면 0 */
     public static double gradePerSec(String grade) {
         if (SET == null || !SET.has("budget") || !SET.has("baseCd")) return 0;
         double cd = SET.obj("baseCd").numOr(grade, 0);
         return cd > 0 ? SET.obj("budget").numOr(grade, 0) / cd : 0;
     }
 
-    /** 등급 상한으로 깎인 몫 (0.14 = −14% — 상한 아래면 0) */
+    /** 등급 상한으로 깎인 몫 (0.14 = −14% — 상한 아래면 0 · 피해가 없는 지원 룬도 0: 2026-11-28 다섯째 초월 상한에서 에덴 블룸 보정 곱 1.1 > 1.0625 — 깎을 피해가 없음) */
     public static double gradeCapCut(Rune r) {
+        if (r == null || runeTotalMult(r.def()) <= 0) return 0;
         double m = scaleMods(r), cap = gradeCap(r);
         return m > cap + 1e-12 ? 1 - cap / m : 0;
     }

@@ -37,6 +37,8 @@ GRADES = ["common", "rare", "noble", "hero", "transcend"]
 GRADE_KO = {"common": "일반", "rare": "희귀", "noble": "고귀", "hero": "영웅", "transcend": "초월"}
 # 등급의 (예산 %, 재사용 초) — 초당 값 = 예산 ÷ 재사용
 GRADE_BASE = {"common": (400, 8), "rare": (700, 12), "noble": (1200, 18), "hero": (2000, 26), "transcend": (3200, 36)}
+# 2026-11-28 다섯째 한정 룬 기준 (예산 34 · 재사용 36초) — 초월 등급 상한의 "다음 등급" (사용자 "모두가 해당 룬을 쓸거 같다는거 있으면 없애": 그랜드 크로스 112%)
+LIMITED_BASE = (3400, 36)
 # 2026-11-17 등급마다 재사용 범위 (초 — 사용자가 정함, 양 끝 포함)
 # 2026-11-18 받는 피해 감소의 기준 (오록스 차지 −30% · 2초 = 완전히 막은 시간 0.6초 — 표의 값 0.1)
 REDUCE_REF = 0.3 * 2
@@ -269,12 +271,11 @@ def time_mult(sp, more, cast):
 
 
 def grade_cap(g):
-    """Runes.gradeCap — 2026-11-28 보정 곱 상한 = 다음 등급 초당 값 ÷ 이 등급 초당 값 (초월은 없음)"""
+    """Runes.gradeCap — 2026-11-28 보정 곱 상한 = 다음 등급 초당 값 ÷ 이 등급 초당 값 (초월은 다섯째부터 한정 룬 기준 LIMITED_BASE — 34 ÷ 36)"""
     i = GRADES.index(g)
-    if i + 1 >= len(GRADES):
-        return float("inf")
     per = lambda x: GRADE_BASE[x][0] / GRADE_BASE[x][1]
-    return per(GRADES[i + 1]) / per(g)
+    nxt = per(GRADES[i + 1]) if i + 1 < len(GRADES) else LIMITED_BASE[0] / LIMITED_BASE[1]
+    return nxt / per(g)
 
 
 def support_split(e, d, budget, S):
@@ -474,8 +475,8 @@ def build():
             "_baseCd": "2026-11-17 유틸 값의 기준 재사용 (등급 · 한정 — Runes.utilCdFactor: 유틸 값 × 기준 ÷ 룬의 재사용)",
             "baseCd": dict({g: GRADE_BASE[g][1] for g in GRADES}, limited=36),
             "_budget": "2026-11-28 등급의 배율 합 (기준 재사용 baseCd 의 예산 — 초당 값 = budget ÷ baseCd). 등급 상한 (사용자 \"다음 등급을 못 넘게 상한\" — Runes.gradeCap): "
-                       "보정 곱 (유틸 · 시간 · 범위 · 원소 · 거리) ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값 → 0돌 피해/초가 다음 등급 기준을 넘지 않음 (초월 · 한정은 없음)",
-            "budget": {g: GRADE_BASE[g][0] / 100 for g in GRADES},
+                       "보정 곱 (유틸 · 시간 · 범위 · 원소 · 거리) ≤ 다음 등급 초당 값 ÷ 이 등급 초당 값 → 0돌 피해/초가 다음 등급 기준을 넘지 않음 (초월의 다음 = 한정 기준 limited — 2026-11-28 다섯째, 한정은 없음)",
+            "budget": dict({g: GRADE_BASE[g][0] / 100 for g in GRADES}, limited=LIMITED_BASE[0] / 100),
             "spread": spread,
             "migrateFamilies": OLD_VISIBLE,
             "migrate": migrate,

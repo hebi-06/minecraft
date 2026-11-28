@@ -225,7 +225,8 @@ public final class RuneTip {
         double cut = dealsDamage(c) && !c.strike() ? Runes.gradeCapCut(c.r()) : 0;
         if (!(cut > 0.005)) return out;
         List<String> all = new ArrayList<>(out);
-        all.addAll(noteLine("등급 상한 ", "−" + pct(cut) + "%", "다음 등급 초당 피해까지"));
+        // 2026-11-28 다섯째: 초월은 한정 룬 기준까지 (Runes.gradeCap)
+        all.addAll(noteLine("등급 상한 ", "−" + pct(cut) + "%", "transcend".equals(c.r().grade()) ? "한정 룬 초당 피해까지" : "다음 등급 초당 피해까지"));
         return all;
     }
 
