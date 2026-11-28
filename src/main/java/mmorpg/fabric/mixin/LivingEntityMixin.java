@@ -47,7 +47,10 @@ public abstract class LivingEntityMixin {
         return m == 1 || !(m > 0) ? amount : (float) (amount * m);
     }
 
-    /** 2026-11-28 맞기 전에 피함 (RpgHealth.dodge — 피에로 펑!): 플레이어가 받을 피해를 통째로 막음 (넉백 · 맞는 동작 · 숫자 없음) */
+    /**
+     * 2026-11-28 맞기 전에 피함 (RpgHealth.dodge — 피에로 펑!): 플레이어가 받을 피해를 통째로 막음 (넉백 · 맞는 동작 · 숫자 없음). 플레이어는 ServerPlayer · Player 의
+     * hurtServer (무적 · 무적 능력 · 난이도 셈) 를 지나 여기 닿음 — 한 곳에서만 부름
+     */
     @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
     private void mmorpg$dodge(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this instanceof ServerPlayer sp && RpgHealth.dodge.dodge(sp, source, amount)) cir.setReturnValue(false);

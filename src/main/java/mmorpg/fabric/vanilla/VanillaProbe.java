@@ -1815,7 +1815,7 @@ final class VanillaProbe {
                     // 펑!: 앞 과녁 몬스터가 때림 (영상 과녁은 스스로 공격하지 않음) → 쇼타임이 그 공격을 막고 터져 사라짐 → 30틱 뒤 짠
                     mmorpg.fabric.job.JobTraits10.popReset(p);
                     p.setInvulnerableTime(0);
-                    boolean inv = p.getAbilities().invulnerable; // 영상 플레이어는 무적 능력 — 그동안은 피해 처리 (ALLOW_DAMAGE) 까지 가지 않음
+                    boolean inv = p.getAbilities().invulnerable; // 영상 플레이어는 무적 능력 — Player.hurtServer 가 거기서 끝나 펑! (LivingEntity.hurtServer 앞) 까지 가지 않음
                     p.getAbilities().invulnerable = false;
                     boolean hurt = !foes.isEmpty() && p.hurtServer(level, p.damageSources().mobAttack(foes.get(0)), 6F);
                     p.getAbilities().invulnerable = inv;

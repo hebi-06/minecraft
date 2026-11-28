@@ -1727,6 +1727,7 @@ public final class RpgJobAdvanceTests {
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
         RpgMonster[] mob = {null};
+        int[] pops0 = {0};
         // 핸드스프링: 앞 5칸 재주넘기 → 8틱 내려서며 둘레 3칸 2.85 · 맞은 몬스터 도발 (허수아비가 나를 노림). 2026-11-28 받는 피해 −30% 대신 쇼타임의 펑!
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
@@ -1744,14 +1745,18 @@ public final class RpgJobAdvanceTests {
             Monsters.Fight tf = Monsters.fightOf(mob[0]);
             h.assertTrue(tf != null && sp.getUUID().equals(tf.tauntId()), "the landing taunts the monster (it targets me)");
             // 펑!: 몬스터의 공격이 닿으려는 순간 막음 (체력 그대로 · 넉백 없음) → 30틱 투명 · 그동안 오는 공격도 피함
+            net.minecraft.world.damagesource.DamageSource src = sp.damageSources().mobAttack(z.get(0));
             JobTraits10.popReset(sp);
+            String why = JobTraits10.popBlock(sp, src, 4F);
+            h.assertTrue(why == null, "pop can fire on this hit: " + why);
+            pops0[0] = JobTraits10.pops(sp); // 도발된 허수아비가 먼저 쳤으면 이미 하나 (그 뒤 popReset 으로 다시 준비)
             RpgMonsterTests.fresh(sp);
             float hp = sp.getHealth();
-            boolean hurt = sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
-            h.assertTrue(!hurt && sp.getHealth() == hp && JobTraits10.pops(sp) == 1 && JobTraits10.popped(sp) && sp.hasEffect(MobEffects.INVISIBILITY),
-                    "pop dodges the hit: hurt " + hurt + " · hp " + sp.getHealth() + " / " + hp + " · pops " + JobTraits10.pops(sp));
+            boolean hurt = sp.hurtServer(h.getLevel(), src, 4F);
+            h.assertTrue(!hurt && sp.getHealth() == hp && JobTraits10.pops(sp) == pops0[0] + 1 && JobTraits10.popped(sp) && sp.hasEffect(MobEffects.INVISIBILITY),
+                    "pop dodges the hit: hurt " + hurt + " · hp " + sp.getHealth() + " / " + hp + " · pops " + JobTraits10.pops(sp) + " (was " + pops0[0] + ")");
             RpgMonsterTests.fresh(sp);
-            h.assertTrue(!sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F) && sp.getHealth() == hp && JobTraits10.pops(sp) == 1,
+            h.assertTrue(!sp.hurtServer(h.getLevel(), src, 4F) && sp.getHealth() == hp && JobTraits10.pops(sp) == pops0[0] + 1,
                     "hidden: the next hit misses too (no second pop)");
             h.assertTrue(JobTraits10.popLeft(sp) > 200 && JobTraits10.popLeft(sp) <= 240, "pop again in 12s: " + JobTraits10.popLeft(sp));
             mark[1] = hp;
@@ -1761,7 +1766,7 @@ public final class RpgJobAdvanceTests {
             RpgMonsterTests.fresh(sp);
             float hp = sp.getHealth();
             boolean hurt = sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
-            h.assertTrue(hurt && sp.getHealth() < hp && JobTraits10.pops(sp) == 1, "on cooldown: the hit lands: " + sp.getHealth() + " / " + hp);
+            h.assertTrue(hurt && sp.getHealth() < hp && JobTraits10.pops(sp) == pops0[0] + 1, "on cooldown: the hit lands: " + sp.getHealth() + " / " + hp);
             // 벌룬 퍼레이드: 둘레 7칸 과녁 둘 · 허수아비 (풍선 여섯이 나눠 붙음) — 14틱 감음 2.55 (둔화) → 24틱 펑 6.0 (= 8.55) · 도발
             z.get(0).discard();
             home(h, sp);

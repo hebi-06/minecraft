@@ -84,8 +84,9 @@ public final class JobTraits10 {
     static void init() {
         RpgCombat.addScaledBonusHook(JobTraits10::waltzBonus);
         RpgCombat.addWeaponHitHook(JobTraits10::onWeaponHit);
-        // 2026-11-28 피에로 펑!: 몬스터 · 보스의 공격이 닿으려는 순간 (받는 피해 나눠 받기 · 핸드스프링 감소 대신 — hurtServer 앞, RpgHealth.dodge. Fabric 의
-        // ALLOW_DAMAGE 는 플레이어가 맞을 때 불리지 않았음 — CI 46131283912)
+        // 2026-11-28 피에로 펑!: 몬스터 · 보스의 공격이 닿으려는 순간 (받는 피해 나눠 받기 · 핸드스프링 감소 대신 — LivingEntity.hurtServer 앞, RpgHealth.dodge:
+        // 플레이어 쪽 무적 · 난이도 셈 뒤). CI 46131283912 · 46132507660 에서 안 터진 것은 길이 아니라 조건 — 시험용 가짜 플레이어는 isCreative 가 늘 참 (DropGuard
+        // 와 같음) → 게임 모드는 isRpgMode (서버의 실제 모드 — 생존 · 모험) 로만 봄
         RpgHealth.Dodge dg = RpgHealth.dodge;
         RpgHealth.dodge = (p, src, amount) -> dg.dodge(p, src, amount) || popDodge(p, src, amount);
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, taken, blocked) -> storeMirror(entity, source, taken));
@@ -279,11 +280,22 @@ public final class JobTraits10 {
 
     // ------------------------------------------------------------ 피에로 쇼타임
 
+    /**
+     * 펑! 이 이번 피해에 걸리지 않는 까닭 (걸리면 null — 재사용 대기는 보지 않음 · 시험이 먼저 봄). 게임 모드는 서버의 실제 모드로 (isRpgMode — 생존 · 모험):
+     * 시험용 가짜 플레이어는 isCreative 가 늘 참 (CI 46131283912 · 46132507660 — 그래서 한 번도 안 터졌음)
+     */
+    public static String popBlock(ServerPlayer sp, DamageSource source, float amount) {
+        if (sp == null || !(amount > 0)) return "no damage";
+        if (jobIf(sp, PR) == null) return "not pierrot";
+        if (!RpgHealth.isRpgMode(sp)) return "not survival / adventure";
+        if (!hostile(sp, source)) return "not a monster's hit";
+        return null;
+    }
+
     /** 펑!: 이번 피해를 막는지 (RpgHealth.dodge — true 면 막음) */
     private static boolean popDodge(ServerPlayer sp, DamageSource source, float amount) {
-        if (sp == null || !(amount > 0) || sp.isSpectator() || sp.isCreative()) return false;
+        if (popBlock(sp, source, amount) != null) return false;
         Jobs.Job j = jobIf(sp, PR);
-        if (j == null || !RpgHealth.isRpgMode(sp) || !hostile(sp, source)) return false;
         State st = of(sp);
         long now = Tasks.now();
         if (st.popUntil > now) return true; // 사라진 동안 오는 공격도 피함

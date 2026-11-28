@@ -54,15 +54,6 @@ public abstract class PlayerMixin {
         return RpgCombat.meleeDamage((Player) (Object) this, this.mmorpg$target, amount, 1F);
     }
 
-    /**
-     * 2026-11-28 맞기 전에 피함 (RpgHealth.dodge — 피에로 펑!): 플레이어의 hurtServer 앞 (LivingEntityMixin 에도 — 어느 쪽이든 먼저 닿는 곳에서 막음 · 이 판에 Player 가
-     * hurtServer 를 덮지 않으면 이것은 붙지 않음 — require 0)
-     */
-    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true, require = 0)
-    private void mmorpg$dodge(net.minecraft.server.level.ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this instanceof ServerPlayer sp && RpgHealth.dodge.dodge(sp, source, amount)) cir.setReturnValue(false);
-    }
-
     @WrapOperation(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setHealth(F)V"))
     private void mmorpg$takeLoss(Player self, float health, Operation<Void> original, @Local(argsOnly = true) DamageSource source) {
         float next = self instanceof ServerPlayer sp ? RpgHealth.onLoss(sp, source, self.getHealth(), health) : health;
