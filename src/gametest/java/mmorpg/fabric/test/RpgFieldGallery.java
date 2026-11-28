@@ -42,7 +42,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 2026-11-07 섬 맵 사진첩 (화면 시험): 새 세계를 "월드 유형 = 섬 맵 (mmorpg:field)" 으로 만들어 찍음.
- * only=field: 섬마다 땅 모양 (fd_*) + 확인 (생성기 · 세계 경계 · 시작 자리 · 실제 청크 = 계획 · 다리 · 분수 · 제단 · 사냥터 · 메인 NPC · 이동 지점 돌).
+ * only=field: 섬마다 땅 모양 (fd_*) + 확인 (생성기 · 세계 경계 · 시작 자리 · 실제 청크 = 계획 · 다리 없음 · 분수 · 제단 · 사냥터 · 메인 NPC · 이동 지점 돌).
+ * 2026-11-28 다리 없이 섬을 멀리 옮김 (사진 자리도 섬과 같은 만큼) · 새 섬 셋 (눈꽃성 · 불 나라 · 균열 곶) · 도착 광장 (fc_12 ~ 14).
  * only=fieldb: 마을 (광장 · 분수 · 여신상 · 성당 · 마탑 · 길드 · 장터 · 무기소 — fb_*), only=fieldc: 거점 · 작은 마을 · 신전 · 세계수 (fc_*).
  * 사진마다 걸린 시간 · 서버 틱 · 스레드가 머문 곳을 기록. 사진 → ci-logs 의 shots/.
  */
@@ -64,19 +65,21 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             new Shot("fd_01_town_south", 0, 90, 214, 0, 85, 164),
             new Shot("fd_02_town_roofs", 67, 111, -7, 0, 75, 60),
             new Shot("fd_03_world_tree", 87, 114, -165, 0, 110, -215),
-            new Shot("fd_04_bridge_deck", 478, 71, 1, 620, 72, 1),
-            new Shot("fd_05_bridge_side", 560, 66, 45, 613, 68, 0),
-            new Shot("fd_06_farm_woods", 1093, 96, -143, 1151, 76, -74),
-            new Shot("fd_07_dunes", 105, 99, 1102, 5, 80, 1102),
-            new Shot("fd_08_red_mesa", -1, 111, 1615, -1, 101, 1505),
-            new Shot("fd_09_fjords", -1714, 101, -108, -1604, 97, -108),
-            new Shot("fd_10_mire", -1424, 82, 350, -1473, 66, 301),
-            new Shot("fd_11_frost_peaks", -340, 145, -1344, -400, 140, -1448),
-            new Shot("fd_12_glacier", -140, 160, -1598, -140, 115, -1698),
-            new Shot("fd_13_void_rift", -39, 107, -2326, -39, 86, -2426),
-            new Shot("fd_14_helheim", 69, 107, -2803, 69, 83, -2903),
-            new Shot("fd_15_volcano", -143, 140, 2497, -243, 100, 2439),
-            new Shot("fd_16_muspel", -1, 100, 2422, -1, 77, 2522));
+            new Shot("fd_04_snowcrown", -2300, 96, -1900, -2400, 88, -2080),
+            new Shot("fd_05_shieldwall", -330, 95, 4470, -150, 72, 4470),
+            new Shot("fd_06_farm_woods", 2293, 96, -143, 2351, 76, -74),
+            new Shot("fd_07_dunes", 105, 99, 2302, 5, 80, 2302),
+            new Shot("fd_08_red_mesa", -1, 111, 2815, -1, 101, 2705),
+            new Shot("fd_09_fjords", -2914, 101, -108, -2804, 97, -108),
+            new Shot("fd_10_mire", -2624, 82, 350, -2673, 66, 301),
+            new Shot("fd_11_frost_peaks", -340, 145, -2544, -400, 140, -2648),
+            new Shot("fd_12_glacier", -140, 160, -2798, -140, 115, -2898),
+            new Shot("fd_13_void_rift", -39, 107, -4946, -39, 86, -5046),
+            new Shot("fd_14_helheim", 69, 107, -5423, 69, 83, -5523),
+            new Shot("fd_15_volcano", -143, 140, 6567, -243, 100, 6509),
+            new Shot("fd_16_muspel", -1, 100, 6492, -1, 77, 6592),
+            new Shot("fd_17_cape_pass", 0, 112, -2970, 0, 78, -3160),
+            new Shot("fd_18_cape_tip", 70, 96, -3200, 0, 84, -3380));
 
     /**
      * only=fieldb: 다시 지은 마을 (2026-11-07 — 사용자 "건물들이 촘촘히 있는 변화한 곳과 성당, 마탑, 여신상, 커다란 분수" ·
@@ -101,16 +104,20 @@ public final class RpgFieldGallery implements FabricClientGameTest {
     /** only=fieldc: 거점 · 작은 마을 · 신전 · 세계수 (빈터 바이옴 — 나무 · 현무암 기둥에 묻히지 않는지) */
     private static final List<Shot> SHOTS_C = List.of(
             new Shot("fc_01_hamlet", 243, 89, -153, 255, 74, -120),
-            new Shot("fc_02_farm_camp", 868, 82, 2, 840, 72, 30),
-            new Shot("fc_03_desert_camp", 75, 88, 790, 40, 74, 790),
-            new Shot("fc_04_harbor", -641, 83, 66, -690, 70, 75),
-            new Shot("fc_05_lodge", 20, 86, -730, 20, 75, -770),
-            new Shot("fc_06_void_outpost", 0, 99, -2130, 0, 85, -2170),
-            new Shot("fc_07_ember_outpost", 0, 92, 2110, 0, 76, 2150),
-            new Shot("fc_08_scarecrow_temple", 1599, 86, 29, 1560, 80, -10),
-            new Shot("fc_09_surtr_arena", 0, 92, 2670, 0, 85, 2610),
-            new Shot("fc_10_nidhogg_arena", -360, 124, -1170, -420, 118, -1170),
-            new Shot("fc_11_world_tree_base", 25, 91, -172, 0, 90, -215));
+            new Shot("fc_02_farm_camp", 2068, 82, 2, 2040, 72, 30),
+            new Shot("fc_03_desert_camp", 75, 88, 1990, 40, 74, 1990),
+            new Shot("fc_04_harbor", -1841, 83, 66, -1890, 70, 75),
+            new Shot("fc_05_lodge", 20, 86, -1930, 20, 75, -1970),
+            new Shot("fc_06_void_outpost", 0, 90, -3080, 0, 77, -3120),
+            new Shot("fc_07_ember_outpost", 0, 92, 6180, 0, 76, 6220),
+            new Shot("fc_08_scarecrow_temple", 2799, 86, 29, 2760, 80, -10),
+            new Shot("fc_09_surtr_arena", 0, 92, 6740, 0, 85, 6680),
+            new Shot("fc_10_nidhogg_arena", -360, 124, -2370, -420, 118, -2370),
+            new Shot("fc_11_world_tree_base", 25, 91, -172, 0, 90, -215),
+            new Shot("fc_12_snow_gate", -2400, 105, -2142, -2400, 94, -2170),
+            new Shot("fc_13_shield_gate", 0, 86, 4278, 0, 75, 4250),
+            new Shot("fc_14_rift_gate", 0, 94, -4762, 0, 83, -4790),
+            new Shot("fc_15_knight_temple", 0, 96, -3320, 0, 84, -3360));
 
     /** 보이는 거리 (청크) — 12 는 CI 의 소프트웨어 그리기에서 사진마다 45초 안에 다 못 그림 (CI 42356359483) */
     private static final int VIEW = 8;
@@ -201,14 +208,8 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             if (!ground || !biome.equals(wantBiome)) bad.add(p[0] + " " + p[1] + ": " + got + " want " + want + " · " + biome + " want " + wantBiome);
         }
         check(bad.isEmpty(), "real chunks = plan (" + (probes.size() - bad.size()) + "/" + probes.size() + ") " + String.join(" / ", bad));
-        // 다리 갑판 (가운데)
-        for (FieldTerrain.Span sp : t.spans()) {
-            int mx = (int) Math.floor((sp.ax() + sp.bx()) / 2);
-            int mz = (int) Math.floor((sp.az() + sp.bz()) / 2);
-            level.getChunk(mx >> 4, mz >> 4);
-            BlockState deck = level.getBlockState(new BlockPos(mx, sp.deck(), mz));
-            check(deck.is(Blocks.SPRUCE_PLANKS) || deck.is(Blocks.STRIPPED_SPRUCE_LOG), "bridge " + sp.bridge().from() + "→" + sp.bridge().to() + " deck " + deck);
-        }
+        // 2026-11-28 다리 없음 (이동 지점 돌로만)
+        check(t.spans().isEmpty(), "no bridges");
         // 마을: 광장 분수 · 이동 지점 돌
         FieldPlan.Site town = plan.site("town");
         int g = plan.sea + 9;

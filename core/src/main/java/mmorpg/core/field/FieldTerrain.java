@@ -11,8 +11,11 @@ import mmorpg.core.Rules;
  * <p>
  * 섬 모양: 가운데에서 잰 거리 / 해안 반지름 = e (가운데 0 · 해안 1). 해안 반지름은 방향마다 잡음, 자리는 큰 물결로 비틀어 (domain warp) 곶 · 만이 생김.
  * 바다 섬은 서쪽에 피오르, 공허 섬은 둘레에 부서진 바위섬. 가장 작은 e 의 섬이 그 칸의 섬, e &lt; 1 이면 땅.
- * 땅 높이는 섬 지형 종류마다 (마을 · 농장 · 사막 · 바다 · 작은 섬 · 북쪽 · 공허 · 무스펠) → 자리 (마을 · 거점 · 보스 신전 · 다리 끝) 를 평평하게 →
- * 강 · 호수 (field.json rivers · lakes). 바다 밑은 해안에서 멀수록 깊음.
+ * 땅 높이는 섬 지형 종류마다 (마을 · 농장 · 사막 · 바다 · 작은 섬 · 북쪽 · 공허 · 무스펠 · 눈꽃성 · 곶 · 방패 성벽) → 자리 (마을 · 거점 · 보스 신전 ·
+ * 다리 끝) 를 평평하게 → 강 · 호수 (field.json rivers · lakes). 바다 밑은 해안에서 멀수록 깊음.
+ * <p>
+ * 2026-11-28 다리 없음 · 섬을 멀리 (사용자 "텔포로 이동시킬거여서 다리 없애고 그냥 섬을 멀리 둬도 됨"): 옮긴 섬은 잡음을 shapeAt 자리에서 읽어 (칸 + dx · dz)
+ * 모양 · 높이 · 겉흙 · 강 굽이가 옮기기 전과 같음. 붙은 두 섬 (북쪽 섬 · 균열 곶) 이 겹친 곳은 두 섬 높이를 섞어 (합친 땅의 해안 거리로) 안쪽 해안이 없음.
  */
 public final class FieldTerrain {
     /** 겉흙 (게임은 블록으로, 배치도는 색으로) */
@@ -67,7 +70,9 @@ public final class FieldTerrain {
             java.util.Map.entry("mmorpg:dune_sea", "mmorpg:dune_clearing"), java.util.Map.entry("mmorpg:red_mesa", "mmorpg:dune_clearing"),
             java.util.Map.entry("mmorpg:oasis", "mmorpg:oasis_clearing"), java.util.Map.entry("mmorpg:fjord_coast", "mmorpg:fjord_clearing"),
             java.util.Map.entry("mmorpg:mire", "mmorpg:mire_clearing"), java.util.Map.entry("mmorpg:frost_taiga", "mmorpg:frost_clearing"),
-            java.util.Map.entry("mmorpg:glacier", "mmorpg:glacier_clearing"), java.util.Map.entry("mmorpg:muspelheim", "mmorpg:muspel_clearing"));
+            java.util.Map.entry("mmorpg:glacier", "mmorpg:glacier_clearing"), java.util.Map.entry("mmorpg:muspelheim", "mmorpg:muspel_clearing"),
+            java.util.Map.entry("mmorpg:snowcrown", "mmorpg:snowcrown_clearing"), java.util.Map.entry("mmorpg:rift_cape", "mmorpg:rift_cape_clearing"),
+            java.util.Map.entry("mmorpg:shieldwall", "mmorpg:shieldwall_clearing"), java.util.Map.entry("mmorpg:black_fissures", "mmorpg:shieldwall_clearing"));
 
     /** 평평하게 고를 자리: 가운데 · 평평한 반지름 · 이어지는 반지름 · 높이 */
     public record Plot(String id, String kind, double x, double z, double flat, double blend, int y) {}
@@ -85,8 +90,8 @@ public final class FieldTerrain {
     /** 굽게 나눈 강 (토막들 · 상자) */
     private record RiverPath(FieldPlan.River river, List<Segment> segs, double minX, double maxX, double minZ, double maxZ) {}
 
-    /** 호수와 물 높이 (둘레 땅 − 1) */
-    private record LakeAt(FieldPlan.Lake lake, int level) {}
+    /** 호수와 물 높이 (둘레 땅 − 1) · 그 섬의 무늬 차이 (dx · dz) */
+    private record LakeAt(FieldPlan.Lake lake, int level, int ox, int oz) {}
 
     /** 화산 (무스펠) */
     private record Volcano(double x, double z, double r, double h) {}
@@ -187,7 +192,10 @@ public final class FieldTerrain {
                     }
                 }
             }
-            for (int i = 1; i < pts.size(); i++) curve(pts.get(i - 1), pts.get(i), r.width(), 0.16, segs);
+            FieldPlan.Island ri = plan.island(r.island());
+            int rox = ri == null ? 0 : ri.dx();
+            int roz = ri == null ? 0 : ri.dz();
+            for (int i = 1; i < pts.size(); i++) curve(pts.get(i - 1), pts.get(i), r.width(), 0.16, rox, roz, segs);
             double minX = 1e9;
             double maxX = -1e9;
             double minZ = 1e9;
@@ -207,7 +215,8 @@ public final class FieldTerrain {
                 double a = Math.PI * 2 * i / 32;
                 low = Math.min(low, plotted(l.x() + Math.cos(a) * (l.r() + 4), l.z() + Math.sin(a) * (l.r() + 4)));
             }
-            lakes.add(new LakeAt(l, Math.max(sea, (int) Math.floor(low) - 1)));
+            FieldPlan.Island li = plan.island(l.island());
+            lakes.add(new LakeAt(l, Math.max(sea, (int) Math.floor(low) - 1), li == null ? 0 : li.dx(), li == null ? 0 : li.dz()));
         }
         buildRoads();
     }
@@ -257,20 +266,23 @@ public final class FieldTerrain {
 
     // ------------------------------------------------------------------ 섬 모양
 
-    /** 섬의 e (가운데 0 · 해안 1) */
+    /** 섬의 e (가운데 0 · 해안 1) — 잡음은 무늬 자리 (shapeAt: 칸 + dx · dz) 에서 읽음 */
     double edgeOf(FieldPlan.Island is, double x, double z) {
         double R0 = is.radius();
         double u0 = x - is.x();
         double v0 = z - is.z();
         double r0 = Math.hypot(u0, v0);
-        if (r0 > R0 * 2.2) return r0 / R0;
+        boolean cape = is.terrain().equals("cape");
+        if (r0 > R0 * 2.2 && !(cape && r0 < R0 * 3.6)) return r0 / R0;
+        double X = x + is.dx();
+        double Z = z + is.dz();
         double k = is.index() * 101.0 + 13;
         double ws = R0 * 0.55;
         // 큰 물결로 자리를 비틀어 곶 · 만
-        double wx = x + R0 * 0.14 * warp.fbm((x + k) / ws, (z - k) / ws, 3);
-        double wz = z + R0 * 0.14 * warp.fbm((x - k * 1.7) / ws, (z + k * 0.6) / ws, 3);
-        double u = wx - is.x();
-        double v = wz - is.z();
+        double wx = X + R0 * 0.14 * warp.fbm((X + k) / ws, (Z - k) / ws, 3);
+        double wz = Z + R0 * 0.14 * warp.fbm((X - k * 1.7) / ws, (Z + k * 0.6) / ws, 3);
+        double u = wx - is.sx();
+        double v = wz - is.sz();
         double r = Math.hypot(u, v);
         double ca = r < 1e-6 ? 1 : u / r;
         double sa = r < 1e-6 ? 0 : v / r;
@@ -279,8 +291,13 @@ public final class FieldTerrain {
         // 섬마다 한쪽으로 조금 길쭉하게 (방향은 섬 번호로 고정)
         double phi = FieldNoise.hash(is.index(), 7, 3) * Math.PI;
         double stretch = 0.16 * Math.cos(2 * (Math.atan2(sa, ca) - phi));
+        // 곶: 남북으로 긴 땅 (동서 폭 0.62) — 늘림은 빼고 잡음만
+        if (cape) {
+            stretch = 0;
+            r = Math.hypot(u / CAPE_WIDTH, v);
+        }
         double R = R0 * (1 + is.coast() * 1.6 * n + stretch);
-        double e = r / R + 0.035 * noise.fbm((x + k) / 60, (z - k) / 60, 3);
+        double e = r / R + 0.035 * noise.fbm((X + k) / 60, (Z - k) / 60, 3);
         switch (is.terrain()) {
             case "sea" -> {
                 // 피오르: 서 · 북 · 남쪽 해안에서 안쪽으로 굽어 들어가는 좁은 만 다섯 남짓
@@ -291,7 +308,13 @@ public final class FieldTerrain {
             }
             case "void" -> {
                 // 둘레의 부서진 바위섬
-                if (e > 0.97 && e < 1.3 && noise.noise(x / 52.0 + k, z / 52.0 - k) > 0.42 + (e - 1) * 0.9) e = 0.965;
+                if (e > 0.97 && e < 1.3 && noise.noise(X / 52.0 + k, Z / 52.0 - k) > 0.42 + (e - 1) * 0.9) e = 0.965;
+            }
+            case "snowcrown" -> {
+                // 남쪽 항구 물목: 남쪽 해안에서 안으로 좁게 들어온 바다 (배가 닿는 곳 — 둘레는 고드름 절벽)
+                double a = Math.atan2(sa, ca) - Math.PI / 2;
+                double cove = Math.exp(-(a / 0.16) * (a / 0.16));
+                e += 0.32 * cove * smoothstep(0.72, 0.93, e);
             }
             default -> {
             }
@@ -299,28 +322,76 @@ public final class FieldTerrain {
         return e;
     }
 
+    /** 곶의 동서 폭 (남북 길이에 대한 몫) */
+    static final double CAPE_WIDTH = 0.62;
+    /** 붙은 두 섬이 섞이는 e 차이 (이보다 차이가 크면 한 섬만) */
+    static final double BLEND = 0.16;
+
     // ------------------------------------------------------------------ 높이
 
-    private FieldPlan.Island owner(double x, double z, double[] eOut) {
+    /** 가장 작은 e 의 섬 (eOut[0] = e) · 둘째 섬 (next[0] · eOut[1]) */
+    private FieldPlan.Island owner(double x, double z, double[] eOut, FieldPlan.Island[] next) {
         FieldPlan.Island best = null;
+        FieldPlan.Island second = null;
         double be = 9;
+        double ne = 9;
         for (FieldPlan.Island is : plan.islands) {
             double e = edgeOf(is, x, z);
             if (e < be) {
+                second = best;
+                ne = be;
                 be = e;
                 best = is;
+            } else if (e < ne) {
+                ne = e;
+                second = is;
             }
         }
         eOut[0] = be;
+        eOut[1] = ne;
+        next[0] = second;
         return best;
+    }
+
+    /** 붙은 두 섬 (with) 인지 */
+    static boolean joined(FieldPlan.Island a, FieldPlan.Island b) {
+        return a != null && b != null && a != b && a.group().equals(b.group());
+    }
+
+    /** 땅이 겹치는 붙은 두 섬 (가운데 사이 &lt; 두 반지름 합 — 곶 · 북쪽 섬). 작은 섬처럼 떨어진 것은 섞지 않음 */
+    private boolean merged(FieldPlan.Island a, FieldPlan.Island b) {
+        return joined(a, b) && Math.hypot(a.x() - b.x(), a.z() - b.z()) < a.radius() + b.radius();
+    }
+
+    /** 땅 높이: 붙은 두 섬이 겹친 곳 (e 차이 BLEND 안) 은 둘째 섬 높이도 섞음 — 둘 다 합친 땅의 해안 거리 (가장 작은 e) 로 재서 안쪽 해안이 없음 */
+    private double blendHeight(FieldPlan.Island best, double be, FieldPlan.Island next, double ne, double x, double z, Column out) {
+        double h = landHeight(best, x, z, (1 - be) * best.radius(), out);
+        if (ne - be >= BLEND || !merged(best, next)) return h;
+        double h2 = landHeight(next, x, z, (1 - be) * next.radius(), null);
+        return lerp(h, h2, 0.5 * (1 - smooth((ne - be) / BLEND)));
     }
 
     /** 땅 높이 (자리 고르기 전) — 섬 밖이면 바다 밑 */
     double rawHeight(double x, double z) {
-        double[] e = new double[1];
-        FieldPlan.Island best = owner(x, z, e);
+        double[] e = new double[2];
+        FieldPlan.Island[] nx = new FieldPlan.Island[1];
+        FieldPlan.Island best = owner(x, z, e, nx);
         if (best == null || e[0] >= 1) return sea - 6;
-        return landHeight(best, x, z, (1 - e[0]) * best.radius(), null);
+        return blendHeight(best, e[0], nx[0], e[1], x, z, null);
+    }
+
+    /**
+     * 가장 가까운 해안까지 거리 (바다 칸 — 땅이면 0): 섬마다 (e − 1) × 반지름 의 가장 작은 값. 바다 끝 안개 (fogPush · fogBack) 가 이 거리로 밀어냄
+     * (가장 작은 e 의 섬 하나로 재면 작은 섬 곁에서 멀게 나와 섬마다 잼).
+     */
+    public double offshore(double x, double z) {
+        double best = Double.MAX_VALUE;
+        for (FieldPlan.Island is : plan.islands) {
+            double e = edgeOf(is, x, z);
+            if (e < 1) return 0;
+            best = Math.min(best, (e - 1) * is.radius() * (is.terrain().equals("cape") ? CAPE_WIDTH : 1));
+        }
+        return best;
     }
 
     /** 자리까지 고른 땅 높이 (강 · 호수 전) */
@@ -333,93 +404,132 @@ public final class FieldTerrain {
         return h;
     }
 
-    /** 지형 종류마다의 땅 높이. out 이 있으면 바이옴 단서도 적음 */
+    /** 지형 종류마다의 땅 높이. out 이 있으면 바이옴 단서도 적음. 잡음은 무늬 자리 (X · Z = 칸 + dx · dz), 자리 (오아시스 · 헬 · 화산) 는 세계 칸으로 */
     private double landHeight(FieldPlan.Island is, double x, double z, double d, Column out) {
         double u = (x - is.x()) / is.radius();
         double v = (z - is.z()) / is.radius();
+        double X = x + is.dx();
+        double Z = z + is.dz();
         double h;
         switch (is.terrain()) {
             case "village" -> {
                 h = sea + 1 + smooth(d / 36) * 7;
-                h += 3.5 * noise.fbm(x / 150, z / 150, 3) * smooth(d / 60) + 1.1 * noise.fbm(x / 34, z / 34, 2);
-                boolean grove = noise.fbm(x / 190 + 3, z / 190 - 8, 2) > 0.16 && d > 45;
+                h += 3.5 * noise.fbm(X / 150, Z / 150, 3) * smooth(d / 60) + 1.1 * noise.fbm(X / 34, Z / 34, 2);
+                boolean grove = noise.fbm(X / 190 + 3, Z / 190 - 8, 2) > 0.16 && d > 45;
                 if (out != null) out.biome = grove ? "mmorpg:midgard_grove" : "mmorpg:midgard";
             }
             case "farm" -> {
                 h = sea + 1 + smooth(d / 30) * 5;
-                h += 6.5 * noise.fbm(x / 230, z / 230, 3) * smooth(d / 80) + 2.2 * noise.fbm(x / 55, z / 55, 2);
-                boolean woods = noise.fbm(x / 260 + 11, z / 260 - 5, 2) > 0.08 && d > 40;
+                h += 6.5 * noise.fbm(X / 230, Z / 230, 3) * smooth(d / 80) + 2.2 * noise.fbm(X / 55, Z / 55, 2);
+                boolean woods = noise.fbm(X / 260 + 11, Z / 260 - 5, 2) > 0.08 && d > 40;
                 if (out != null) out.biome = woods ? "mmorpg:harvest_woods" : "mmorpg:harvest_fields";
             }
             case "desert" -> {
                 h = sea + 1 + smooth(d / 25) * 4;
-                double s = (x * 0.819 + z * 0.574) / 46;
-                double q = (-x * 0.574 + z * 0.819) / 150;
+                double s = (X * 0.819 + Z * 0.574) / 46;
+                double q = (-X * 0.574 + Z * 0.819) / 150;
                 double dune = noise.ridged(s, q, 2);
-                h += dune * dune * 10 * smooth(d / 50) + 1.4 * noise.fbm(x / 40, z / 40, 2);
+                h += dune * dune * 10 * smooth(d / 50) + 1.4 * noise.fbm(X / 40, Z / 40, 2);
                 // 메사: 남쪽에 많은 큰 평평한 바위산, 가장자리는 네 계단
-                double m = noise.fbm(x / 330 + 9, z / 330 - 4, 3) + 0.42 * (v + 0.1) - 0.06;
+                double m = noise.fbm(X / 330 + 9, Z / 330 - 4, 3) + 0.42 * (v + 0.1) - 0.06;
                 double edge = smoothstep(0.1, 0.19, m) * smooth((d - 30) / 50);
                 if (edge > 0) {
-                    double top = sea + 29 + 4 * noise.fbm(x / 150, z / 150, 2);
+                    double top = sea + 29 + 4 * noise.fbm(X / 150, Z / 150, 2);
                     double steps = Math.floor(edge * 4) / 4;
                     h = lerp(h, top, lerp(steps, edge, 0.18));
                 }
                 if (out != null) {
                     out.biome = edge > 0.2 ? "mmorpg:red_mesa" : "mmorpg:dune_sea";
-                    if (oasis != null && Math.hypot(x - oasis.x(), z - oasis.z()) < oasis.r() + 45 + 16 * noise.noise(x / 20.0, z / 20.0)) out.biome = "mmorpg:oasis";
+                    if (oasis != null && Math.hypot(x - oasis.x(), z - oasis.z()) < oasis.r() + 45 + 16 * noise.noise(X / 20.0, Z / 20.0)) out.biome = "mmorpg:oasis";
                 }
             }
             case "sea" -> {
                 h = sea + 1 + smooth(d / 20) * 6;
-                h += 7 * noise.fbm(x / 160, z / 160, 3) * smooth(d / 70) + 2 * noise.fbm(x / 45, z / 45, 2);
-                double west = smoothstep(0.15, 0.6, -u + 0.25 * noise.fbm(x / 200, z / 200, 2));
+                h += 7 * noise.fbm(X / 160, Z / 160, 3) * smooth(d / 70) + 2 * noise.fbm(X / 45, Z / 45, 2);
+                double west = smoothstep(0.15, 0.6, -u + 0.25 * noise.fbm(X / 200, Z / 200, 2));
                 h += west * 15 * smooth(d / 13);
-                double mire = smoothstep(0.1, 0.45, v * 0.7 - u * 0.7 - 0.25 + 0.25 * noise.fbm(x / 150 + 3, z / 150, 2)) * smooth((d - 20) / 40);
-                if (mire > 0) h = lerp(h, sea + 0.4 + 1.6 * noise.fbm(x / 22, z / 22, 2), mire * 0.92);
+                double mire = smoothstep(0.1, 0.45, v * 0.7 - u * 0.7 - 0.25 + 0.25 * noise.fbm(X / 150 + 3, Z / 150, 2)) * smooth((d - 20) / 40);
+                if (mire > 0) h = lerp(h, sea + 0.4 + 1.6 * noise.fbm(X / 22, Z / 22, 2), mire * 0.92);
                 if (out != null) out.biome = mire > 0.5 ? "mmorpg:mire" : "mmorpg:fjord_coast";
             }
             case "islet" -> {
-                h = sea + 1 + smooth(d / 12) * 5 + 5 * noise.fbm(x / 60, z / 60, 2) * smooth(d / 30);
+                h = sea + 1 + smooth(d / 12) * 5 + 5 * noise.fbm(X / 60, Z / 60, 2) * smooth(d / 30);
                 if (out != null) out.biome = "mmorpg:fjord_coast";
             }
             case "north" -> {
                 h = sea + 2 + smooth(d / 28) * 6;
                 double north = -v;
-                double mount = smoothstep(-0.4, 0.3, north + 0.35 * noise.fbm(x / 320, z / 320, 2)) * smooth(d / 90);
-                double ridge = noise.ridged(x / 270, z / 270, 4);
-                h += mount * (10 + 80 * Math.pow(ridge, 1.6)) + 3 * noise.fbm(x / 50, z / 50, 2);
-                double g = smoothstep(0.5, 0.78, north + 0.15 * noise.fbm(x / 200, z / 200, 2)) * smooth(d / 60);
+                double mount = smoothstep(-0.4, 0.3, north + 0.35 * noise.fbm(X / 320, Z / 320, 2)) * smooth(d / 90);
+                double ridge = noise.ridged(X / 270, Z / 270, 4);
+                h += mount * (10 + 80 * Math.pow(ridge, 1.6)) + 3 * noise.fbm(X / 50, Z / 50, 2);
+                double g = smoothstep(0.5, 0.78, north + 0.15 * noise.fbm(X / 200, Z / 200, 2)) * smooth(d / 60);
                 if (g > 0) {
-                    double ice = sea + 46 + 6 * noise.fbm(x / 120, z / 120, 2);
+                    double ice = sea + 46 + 6 * noise.fbm(X / 120, Z / 120, 2);
                     h = lerp(h, Math.max(ice, h * 0.35 + ice * 0.65), g * 0.9);
-                    double c = Math.abs(noise.noise(x / 85 + 4, z / 85 - 2));
+                    double c = Math.abs(noise.noise(X / 85 + 4, Z / 85 - 2));
                     if (c < 0.04) h -= 13 * g * smoothstep(0.04, 0.015, c);
                 }
                 if (out != null) out.biome = g > 0.5 ? "mmorpg:glacier" : h > sea + 52 ? "mmorpg:frost_peaks" : "mmorpg:frost_taiga";
             }
             case "void" -> {
                 h = sea + 3 + smooth(d / 16) * 16;
-                h += 9 * noise.fbm(x / 120, z / 120, 3) + 4 * noise.fbm(x / 40, z / 40, 2);
+                h += 9 * noise.fbm(X / 120, Z / 120, 3) + 4 * noise.fbm(X / 40, Z / 40, 2);
                 h = Math.floor(h / 3) * 3 + 1;
-                double c = Math.abs(noise.fbm(x / 230 + 3, z / 230 - 7, 2));
+                double c = Math.abs(noise.fbm(X / 230 + 3, Z / 230 - 7, 2));
                 if (c < 0.05 && d > 40) h = lerp(h, 14, smoothstep(0.05, 0.022, c));
                 if (out != null) {
-                    boolean helZone = hel != null && z < hel.z() + 230 + 70 * noise.fbm(x / 160 + 2, z / 160, 2);
+                    boolean helZone = hel != null && z < hel.z() + 230 + 70 * noise.fbm(X / 160 + 2, Z / 160, 2);
                     out.biome = helZone ? "mmorpg:helheim" : "mmorpg:void_rift";
                 }
             }
             case "muspel" -> {
-                h = sea + 2 + smooth(d / 22) * 8 + 5 * noise.fbm(x / 90, z / 90, 3) + 2 * noise.fbm(x / 30, z / 30, 2);
+                h = sea + 2 + smooth(d / 22) * 8 + 5 * noise.fbm(X / 90, Z / 90, 3) + 2 * noise.fbm(X / 30, Z / 30, 2);
                 for (Volcano vo : volcanoes) {
                     double r = Math.hypot(x - vo.x(), z - vo.z());
                     if (r >= vo.r()) continue;
-                    double cone = sea + 4 + vo.h() * Math.pow(1 - r / vo.r(), 1.45) + 3 * noise.fbm(x / 25, z / 25, 2);
+                    double cone = sea + 4 + vo.h() * Math.pow(1 - r / vo.r(), 1.45) + 3 * noise.fbm(X / 25, Z / 25, 2);
                     double crater = vo.r() * 0.17;
                     if (r < crater) cone = sea + 4 + vo.h() * Math.pow(1 - crater / vo.r(), 1.45) - 9 * smooth(1 - r / crater);
                     h = Math.max(h, cone);
                 }
                 if (out != null) out.biome = "mmorpg:muspelheim";
+            }
+            case "snowcrown" -> {
+                // 눈꽃성 섬 (2026-11-28 · map-layout 2-5): 눈 덮인 높은 고원 · 해안은 고드름 절벽 (28칸 안에서 솟음) · 북쪽으로 조금 높아짐
+                double plateau = sea + 30 - 4 * v + 4 * noise.fbm(X / 170, Z / 170, 3) + 1.5 * noise.fbm(X / 40, Z / 40, 2);
+                double rise = 0.85 * smoothstep(1, 12, d) + 0.15 * smoothstep(12, 34, d);
+                h = sea + 1 + (plateau - sea - 1) * rise;
+                // 언덕 몇: 성이 설 가운데는 비움
+                double hill = noise.ridged(X / 140 + 5, Z / 140 - 3, 3);
+                h += 10 * Math.pow(hill, 2.2) * smoothstep(0.35, 0.6, Math.hypot(u, v)) * smooth(d / 40);
+                if (out != null) out.biome = "mmorpg:snowcrown";
+            }
+            case "cape" -> {
+                // 균열 곶 (2026-11-28 · map-layout 2-7): 남쪽 끝 = 북쪽 섬 빙하와 만나는 산줄기 (가운데 x 0 에 고개),
+                // 가운데 = 전초기지 들 (낮음), 북쪽 끝 = 바위 곶 (해안은 깊은 바다 골로 떨어지는 절벽)
+                double ux = x - is.x();
+                double ridge = sea + 46 + 16 * Math.pow(noise.ridged(X / 60, Z / 60, 3), 1.4) - 15 * Math.exp(-(ux / 34) * (ux / 34));
+                double plain = sea + 12 + 3 * noise.fbm(X / 90, Z / 90, 3) + 1.2 * noise.fbm(X / 26, Z / 26, 2);
+                double head = sea + 17 + 5 * noise.fbm(X / 60, Z / 60, 2) + 4 * smoothstep(-0.45, -0.85, v);
+                double hIn = lerp(plain, ridge, smoothstep(0.42, 0.7, v));
+                hIn = lerp(hIn, head, smoothstep(-0.38, -0.6, v));
+                double cliff = smooth(d / 16);
+                h = sea + 1 + (hIn - sea - 1) * cliff;
+                if (out != null) out.biome = "mmorpg:rift_cape";
+            }
+            case "shieldwall" -> {
+                // 불 나라 섬 (2026-11-28 · map-layout 2-9): 붉은 바위 들 · 바위 기둥 · 동서의 검은 틈 들 · 남쪽 해안 절벽 (큰 성벽 자리)
+                h = sea + 3 + smooth(d / 24) * 7 + 5 * noise.fbm(X / 140, Z / 140, 3) + 1.6 * noise.fbm(X / 34, Z / 34, 2);
+                double butte = noise.ridged(X / 75 + 2, Z / 75 - 9, 2);
+                if (butte > 0.86 && d > 40) h += 16 * smoothstep(0.86, 0.93, butte);
+                // 남쪽은 바다 쪽으로 천천히 높아져 해안이 절벽 (큰 성벽이 설 높은 곳 — 무스펠을 봄)
+                double south = smoothstep(0.15 + 0.12 * noise.fbm(X / 120 + 7, Z / 120, 2), 0.85, v) * smooth(d / 12);
+                h = Math.max(h, lerp(h, sea + 22 + 3 * noise.fbm(X / 50, Z / 50, 2), south));
+                double side = smoothstep(0.18, 0.4, Math.abs(u)) * smoothstep(0.55, 0.2, v) * smooth((d - 30) / 40);
+                double crack = Math.abs(noise.fbm(X / 70 + 4, Z / 70 + 1, 2));
+                boolean fissure = side > 0.3 && crack < 0.07;
+                if (fissure) h -= 9 * smoothstep(0.07, 0.03, crack) * side;
+                if (out != null) out.biome = side > 0.45 ? "mmorpg:black_fissures" : "mmorpg:shieldwall";
             }
             default -> {
                 h = sea + 1 + smooth(d / 20) * 4;
@@ -455,7 +565,7 @@ public final class FieldTerrain {
             List<double[]> done = new ArrayList<>();
             done.add(hub);
             for (double[] l : landings) {
-                curve(hub, l, 3.0, 0.07, roads);
+                curve(hub, l, 3.0, 0.07, is.dx(), is.dz(), roads);
                 done.add(l);
             }
             List<double[]> left = new ArrayList<>(nodes);
@@ -474,14 +584,14 @@ public final class FieldTerrain {
                     }
                 }
                 double[] to = left.remove(bi);
-                curve(from, to, 3.0, 0.07, roads);
+                curve(from, to, 3.0, 0.07, is.dx(), is.dz(), roads);
                 done.add(to);
             }
         }
     }
 
-    /** 굽은 줄: 토막을 나눠 가운데를 옆으로 밀어 냄 (자리마다 고정) */
-    private void curve(double[] a, double[] b, double width, double bendK, List<Segment> out) {
+    /** 굽은 줄: 토막을 나눠 가운데를 옆으로 밀어 냄 (자리마다 고정 — 잡음은 그 섬의 무늬 자리: 칸 + ox · oz) */
+    private void curve(double[] a, double[] b, double width, double bendK, int ox, int oz, List<Segment> out) {
         double len = Math.hypot(b[0] - a[0], b[1] - a[1]);
         int n = Math.max(1, (int) (len / 24));
         double nx = -(b[1] - a[1]) / Math.max(1e-6, len);
@@ -491,8 +601,8 @@ public final class FieldTerrain {
         for (int i = 1; i <= n; i++) {
             double t = (double) i / n;
             double bend = i == n ? 0
-                    : Math.sin(Math.PI * t) * len * bendK * noise.noise(a[0] / 97 + b[1] / 131, a[1] / 89 + t * 1.7)
-                            + Math.sin(Math.PI * t) * 6 * noise.noise(a[0] / 37 + t * 4.1, b[0] / 41 - t * 3.3);
+                    : Math.sin(Math.PI * t) * len * bendK * noise.noise((a[0] + ox) / 97 + (b[1] + oz) / 131, (a[1] + oz) / 89 + t * 1.7)
+                            + Math.sin(Math.PI * t) * 6 * noise.noise((a[0] + ox) / 37 + t * 4.1, (b[0] + ox) / 41 - t * 3.3);
             double qx = lerp(a[0], b[0], t) + nx * bend;
             double qz = lerp(a[1], b[1], t) + nz * bend;
             out.add(new Segment(px, pz, qx, qz, width));
@@ -548,8 +658,9 @@ public final class FieldTerrain {
         out.floatBottom = 0;
         out.floatTop = -1;
         out.depth = 3;
-        double[] eo = new double[1];
-        FieldPlan.Island best = owner(x, z, eo);
+        double[] eo = new double[2];
+        FieldPlan.Island[] nx = new FieldPlan.Island[1];
+        FieldPlan.Island best = owner(x, z, eo, nx);
         double be = eo[0];
         out.island = best;
         if (best == null || be >= 1) {
@@ -558,7 +669,7 @@ public final class FieldTerrain {
         }
         double d = (1 - be) * best.radius();
         out.coast = d;
-        double h = landHeight(best, x, z, d, out);
+        double h = blendHeight(best, be, nx[0], eo[1], x, z, out);
         // 자리 고르기 (마을 · 거점 · 신전 · 다리 끝)
         boolean clearing = false;
         for (Plot p : plots) {
@@ -604,7 +715,7 @@ public final class FieldTerrain {
         for (LakeAt la : lakes) {
             FieldPlan.Lake l = la.lake();
             double r = Math.hypot(x - l.x(), z - l.z());
-            double wob = l.r() * (1 + 0.18 * noise.noise(x / 14.0 + l.x(), z / 14.0 - l.z()));
+            double wob = l.r() * (1 + 0.18 * noise.noise((x + la.ox()) / 14.0 + (l.x() + la.ox()), (z + la.oz()) / 14.0 - (l.z() + la.oz())));
             if (r < wob) {
                 h = Math.min(h, la.level() - 1 - 4 * (1 - (r / wob) * (r / wob)));
                 lakeTop = la.level();
@@ -627,27 +738,33 @@ public final class FieldTerrain {
         } else if (out.ground < sea && !out.hasWater() && !best.terrain().equals("void")) {
             out.water = sea;
         }
-        if (best.terrain().equals("void")) floating(x, z, d, out);
+        if (best.terrain().equals("void")) floating(best, x, z, d, out);
         return out;
     }
 
     private void seaFloor(int x, int z, FieldPlan.Island near, double e, Column out) {
-        double R = near == null ? 400 : near.radius();
+        double R = near == null ? 400 : near.radius() * (near.terrain().equals("cape") ? CAPE_WIDTH : 1);
         double dc = Math.max(0, (e - 1) * R);
         out.coast = -dc;
-        double floor = sea - 3 - 22 * smooth(dc / 70) - 3 * noise.fbm(x / 80.0, z / 80.0, 2);
+        int X = near == null ? x : x + near.dx();
+        int Z = near == null ? z : z + near.dz();
+        double floor = sea - 3 - 22 * smooth(dc / 70) - 3 * noise.fbm(X / 80.0, Z / 80.0, 2);
         out.ground = (int) Math.floor(floor);
         out.water = sea;
         String t = near == null ? "" : near.terrain();
         boolean shallow = dc < 36;
         switch (t) {
-            case "north" -> {
+            case "north", "snowcrown" -> {
                 out.biome = shallow ? "mmorpg:frozen_shallows" : "mmorpg:open_sea";
                 out.top = Surface.GRAVEL;
             }
-            case "void" -> {
+            case "void", "cape" -> {
                 out.biome = shallow ? "mmorpg:rift_shallows" : "mmorpg:open_sea";
                 out.top = Surface.DEEPSLATE;
+            }
+            case "shieldwall" -> {
+                out.biome = shallow ? "mmorpg:shallows" : "mmorpg:open_sea";
+                out.top = dc < 26 ? Surface.RED_SAND : noise.noise(X / 40.0, Z / 40.0) > 0.2 ? Surface.TERRACOTTA : Surface.GRAVEL;
             }
             case "muspel" -> {
                 out.biome = shallow ? "mmorpg:ember_shallows" : "mmorpg:open_sea";
@@ -655,7 +772,7 @@ public final class FieldTerrain {
             }
             default -> {
                 out.biome = shallow ? "mmorpg:shallows" : "mmorpg:open_sea";
-                out.top = dc < 30 ? Surface.SAND : noise.noise(x / 40.0, z / 40.0) > 0.3 ? Surface.CLAY : Surface.GRAVEL;
+                out.top = dc < 30 ? Surface.SAND : noise.noise(X / 40.0, Z / 40.0) > 0.3 ? Surface.CLAY : Surface.GRAVEL;
             }
         }
         out.under = out.top == Surface.SAND ? Surface.SANDSTONE : Surface.STONE;
@@ -664,7 +781,9 @@ public final class FieldTerrain {
 
     private void surface(FieldPlan.Island is, int x, int z, double d, Column out) {
         int g = out.ground;
-        double n = noise.noise(x / 18.0, z / 18.0);
+        int X = x + is.dx();
+        int Z = z + is.dz();
+        double n = noise.noise(X / 18.0, Z / 18.0);
         out.under = Surface.DIRT;
         out.depth = 3;
         switch (is.terrain()) {
@@ -696,7 +815,7 @@ public final class FieldTerrain {
             }
             case "north" -> {
                 out.top = Surface.GRASS;
-                double rock = sea + 44 + 8 * noise.noise(x / 40.0, z / 40.0);
+                double rock = sea + 44 + 8 * noise.noise(X / 40.0, Z / 40.0);
                 if (g > rock) out.top = Surface.STONE;
                 if (g > sea + 66 + 6 * n) out.top = Surface.SNOW;
                 if (out.biome.equals("mmorpg:glacier")) out.top = n > 0.3 ? Surface.BLUE_ICE : n > -0.35 ? Surface.PACKED_ICE : Surface.SNOW;
@@ -706,14 +825,14 @@ public final class FieldTerrain {
             }
             case "void" -> {
                 boolean helZone = out.biome.equals("mmorpg:helheim");
-                double m = noise.noise(x / 26.0 + 9, z / 26.0 - 4);
+                double m = noise.noise(X / 26.0 + 9, Z / 26.0 - 4);
                 if (helZone) out.top = m > 0.35 ? Surface.BONE : m > -0.3 ? Surface.SOUL : Surface.BASALT;
                 else out.top = m > 0.45 ? Surface.SCULK : m < -0.5 ? Surface.OBSIDIAN : n > 0.2 ? Surface.VOID_DARK : Surface.VOID;
                 out.under = Surface.DEEPSLATE;
                 out.depth = 2;
             }
             case "muspel" -> {
-                double m = noise.noise(x / 22.0 - 3, z / 22.0 + 5);
+                double m = noise.noise(X / 22.0 - 3, Z / 22.0 + 5);
                 out.top = Math.abs(m) < 0.05 ? Surface.MAGMA : m > 0.3 ? Surface.BASALT : Surface.BLACKSTONE;
                 out.under = Surface.BLACKSTONE;
                 out.depth = 2;
@@ -731,14 +850,52 @@ public final class FieldTerrain {
                     }
                 }
             }
+            case "snowcrown" -> {
+                // 고원은 눈 · 얼음 조각, 해안 절벽 (28칸 안) 은 겉이 얼음이라 절벽 면이 얼음 기둥으로 보임 (고드름 절벽)
+                out.top = n > 0.48 ? Surface.PACKED_ICE : Surface.SNOW;
+                out.under = Surface.STONE;
+                if (d < 30) {
+                    out.top = n > 0.15 ? Surface.PACKED_ICE : n > -0.3 ? Surface.SNOW : Surface.BLUE_ICE;
+                    out.under = n > -0.1 ? Surface.PACKED_ICE : Surface.BLUE_ICE;
+                    out.depth = 9;
+                }
+                if (d < 4 && g <= sea + 2) out.top = Surface.GRAVEL;
+                if (g < sea) out.top = Surface.GRAVEL;
+            }
+            case "cape" -> {
+                // 눈 · 자갈 · 돌, 북쪽 끝으로 갈수록 공허에 물든 땅 (심층암 · 검은 공허 · 흑요석 줄)
+                double v = (z - is.z()) / is.radius();
+                double m = noise.noise(X / 24.0 + 6, Z / 24.0 - 2);
+                out.top = g > sea + 40 ? (n > -0.2 ? Surface.SNOW : Surface.STONE) : n > 0.2 ? Surface.SNOW : n > -0.35 ? Surface.GRAVEL : Surface.STONE;
+                out.under = Surface.STONE;
+                double taint = smoothstep(-0.1, -0.7, v);
+                if (m < -1 + taint * 1.5) out.top = m < -0.85 + taint ? Surface.VOID_DARK : Surface.DEEPSLATE;
+                if (taint > 0.6 && Math.abs(m) < 0.03) out.top = Surface.OBSIDIAN;
+                if (d < 16) {
+                    out.under = Surface.DEEPSLATE;
+                    out.depth = 6;
+                }
+                if (g < sea) out.top = Surface.GRAVEL;
+            }
+            case "shieldwall" -> {
+                boolean fissures = out.biome.equals("mmorpg:black_fissures");
+                double m = noise.noise(X / 20.0 - 7, Z / 20.0 + 3);
+                out.top = n > 0.3 ? Surface.TERRACOTTA : n > -0.45 ? Surface.RED_SAND : Surface.COARSE;
+                out.under = Surface.TERRACOTTA;
+                out.depth = 4;
+                if (fissures && m > 0.25) out.top = m > 0.55 ? Surface.OBSIDIAN : Surface.BLACKSTONE;
+                if (fissures && g < sea + 3) out.top = Surface.BLACKSTONE;
+                if (g < sea) out.top = Surface.RED_SAND;
+            }
             default -> out.top = Surface.GRASS;
         }
         if ((out.flags & (ROAD | LANDING)) != 0) {
             out.top = switch (is.terrain()) {
                 case "desert" -> Surface.SANDSTONE;
-                case "north" -> Surface.GRAVEL;
+                case "north", "snowcrown", "cape" -> Surface.GRAVEL;
                 case "void" -> Surface.DEEPSLATE;
                 case "muspel" -> Surface.BASALT;
+                case "shieldwall" -> Surface.COARSE;
                 default -> Surface.PATH;
             };
         } else if ((out.flags & ROAD_EDGE) != 0 && (is.terrain().equals("village") || is.terrain().equals("farm") || is.terrain().equals("sea"))) {
@@ -746,9 +903,11 @@ public final class FieldTerrain {
         }
     }
 
-    /** 공허 섬의 떠 있는 바위: 48칸 칸마다 하나 (있으면), 아래가 뾰족한 덩이 */
-    private void floating(int x, int z, double d, Column out) {
+    /** 공허 섬의 떠 있는 바위: 48칸 칸마다 하나 (있으면), 아래가 뾰족한 덩이 — 칸은 무늬 자리 (섬을 옮겨도 같은 바위) */
+    private void floating(FieldPlan.Island is, int wx, int wz, double d, Column out) {
         if (d < 30) return;
+        int x = wx + is.dx();
+        int z = wz + is.dz();
         int cx = Math.floorDiv(x, 48);
         int cz = Math.floorDiv(z, 48);
         for (int ox = -1; ox <= 1; ox++) {

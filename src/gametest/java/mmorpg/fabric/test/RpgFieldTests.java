@@ -12,6 +12,8 @@ import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.field.FieldBlocks;
 import mmorpg.fabric.field.FieldChunkGenerator;
 import mmorpg.fabric.field.FieldExtras;
+import mmorpg.fabric.field.FieldFog;
+import mmorpg.fabric.field.FieldWaystones;
 import mmorpg.fabric.field.FieldPieces;
 import mmorpg.fabric.field.FieldWorld;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -20,6 +22,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
@@ -43,8 +46,12 @@ public final class RpgFieldTests {
         // 바이옴: 지도 곳곳의 바이옴 이름이 모두 등록됨
         Set<String> seen = new HashSet<>();
         FieldTerrain.Column c = new FieldTerrain.Column();
-        for (int x = -2300; x <= 2000; x += 37) {
-            for (int z = -3200; z <= 3000; z += 41) seen.add(t.sample(x, z, c).biome);
+        // 섬마다 둘레 (2026-11-28 섬이 멀어져 섬 둘레만 — 바다 한가운데는 열린 바다뿐)
+        for (FieldPlan.Island is : plan.islands) {
+            int R = (int) (is.radius() * 1.3);
+            for (int x = (int) is.x() - R; x <= is.x() + R; x += 37) {
+                for (int z = (int) is.z() - R; z <= is.z() + R; z += 41) seen.add(t.sample(x, z, c).biome);
+            }
         }
         var biomes = ra.lookupOrThrow(Registries.BIOME);
         List<String> missing = new ArrayList<>();
@@ -100,6 +107,60 @@ public final class RpgFieldTests {
         h.assertTrue(FieldExtras.altars().size() == plan.sites("boss").size(), "temples " + FieldExtras.altars().size() + "/" + plan.sites("boss").size());
         h.assertTrue(FieldExtras.treeBase() != null, "world tree base");
         LOG.info("[field-test] OK preset · {} biomes · {} columns · {} building block kinds · {} temples", seen.size(), ok, texts.size(), FieldExtras.altars().size());
+        h.succeed();
+    }
+
+    /**
+     * 2026-11-28 다리 없음 (사용자 "텔포로 이동시킬거여서 다리 없애고 그냥 섬을 멀리 둬도 됨"): 이동 지점 돌 열 (이야기 차례 · 무리마다 하나 이상 ·
+     * 섬의 레벨에 열림) · 바다 끝 안개 (fog.push 밖이면 섬 쪽으로 밀고, fog.back 밖이면 되돌림).
+     */
+    @GameTest(maxTicks = 40)
+    public void fieldStonesAndFog(GameTestHelper h) {
+        FieldTerrain t = FieldWorld.terrain();
+        FieldPlan plan = t.plan();
+        List<FieldWaystones.Stone> stones = FieldWaystones.stones();
+        List<String> ids = new ArrayList<>();
+        for (FieldWaystones.Stone s : stones) ids.add(s.id());
+        h.assertTrue(ids.equals(List.of("waystone_midgard", "waystone_farm", "waystone_desert", "waystone_sea", "waystone_snow", "waystone_north",
+                "waystone_shield", "waystone_muspel", "waystone_void", "waystone_rift")), "stones in story order " + ids);
+        Set<String> groups = new HashSet<>();
+        for (FieldWaystones.Stone s : stones) {
+            FieldPlan.Island is = plan.island(s.island());
+            h.assertTrue(is != null, "stone " + s.id() + " on an island");
+            groups.add(is.group());
+            int want = s.id().equals("waystone_midgard") ? 0 : is.levelMin();
+            h.assertTrue(s.level() == want, "stone " + s.id() + " opens at " + s.level() + " (want " + want + ")");
+        }
+        for (FieldPlan.Island is : plan.islands) if (is.with() == null) h.assertTrue(groups.contains(is.id()), "a stone on " + is.id());
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+        FieldWaystones.Stone farm = stones.get(1);
+        FieldWaystones.Stone desert = stones.get(2);
+        sp.experienceLevel = 1;
+        h.assertTrue(FieldWaystones.open(sp, stones.get(0)) && FieldWaystones.open(sp, farm) && !FieldWaystones.open(sp, desert),
+                "level 1: square · farm open, desert locked");
+        sp.experienceLevel = desert.level();
+        h.assertTrue(FieldWaystones.open(sp, desert), "level " + desert.level() + ": desert open");
+        // 안개: 마을 섬 가운데에서 동쪽으로 — push 밖 첫 칸 · back 밖 첫 칸
+        double xPush = Double.NaN;
+        double xBack = Double.NaN;
+        for (double x = 0; x < 2400; x += 2) {
+            double off = t.offshore(x, 0);
+            if (Double.isNaN(xPush) && off >= plan.fogPush + 5) xPush = x;
+            if (off >= plan.fogBack + 5) {
+                xBack = x;
+                break;
+            }
+        }
+        h.assertTrue(!Double.isNaN(xPush) && !Double.isNaN(xBack) && xBack > xPush, "fog lines east of the village " + xPush + " · " + xBack);
+        sp.setPos(xPush, 70, 0);
+        int r1 = FieldFog.check(sp, h.getLevel(), t);
+        h.assertTrue(r1 == 1 && sp.getDeltaMovement().x < 0, "pushed back toward the island (" + r1 + ", vx " + sp.getDeltaMovement().x + ")");
+        sp.setPos(xBack, 70, 0);
+        int r2 = FieldFog.check(sp, h.getLevel(), t);
+        h.assertTrue(r2 == 2 && Math.abs(sp.getX() - xBack) > 50, "returned to land (" + r2 + ", x " + sp.getX() + ")");
+        sp.setPos(0, 80, 60);
+        h.assertTrue(FieldFog.check(sp, h.getLevel(), t) == 0, "on the island: untouched");
+        LOG.info("[field-test] OK stones {} · fog push at x {} · back at x {}", ids.size(), xPush, xBack);
         h.succeed();
     }
 }

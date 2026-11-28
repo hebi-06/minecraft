@@ -17,7 +17,7 @@ import mmorpg.core.field.FieldTerrain;
 
 /**
  * 섬 맵 배치도 (2026-11-07 — 시험 도구, JUnit 없이 main): field.json + FieldTerrain 으로 위에서 본 그림 (PNG) 과 이름표 자리 (JSON).
- * 쓰는 법: java -cp … mmorpg.core.FieldPreview 출력.png [블록/픽셀 = 4]
+ * 쓰는 법: java -cp … mmorpg.core.FieldPreview 출력.png [블록/픽셀 = 4] [x0 z0 x1 z1 — 이 네모만]
  * 이름표 (한글) 는 그림 도구가 JSON 을 읽어 덧그림.
  */
 public final class FieldPreview {
@@ -100,6 +100,13 @@ public final class FieldPreview {
             maxX = Math.max(maxX, is.x() + is.radius() * 1.35 + 260);
             minZ = Math.min(minZ, is.z() - is.radius() * 1.35);
             maxZ = Math.max(maxZ, is.z() + is.radius() * 1.35);
+        }
+        // 2026-11-28 섬이 멀어져 한 섬만 크게 볼 때: 출력.png 블록/픽셀 x0 z0 x1 z1 (세계 칸)
+        if (argv.length > 5) {
+            minX = Double.parseDouble(argv[2]);
+            minZ = Double.parseDouble(argv[3]);
+            maxX = Double.parseDouble(argv[4]);
+            maxZ = Double.parseDouble(argv[5]);
         }
         int x0 = (int) Math.floor(minX / k) * k;
         int z0 = (int) Math.floor(minZ / k) * k;

@@ -15,7 +15,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelData;
 
 /**
- * 섬 맵 (2026-11-07 — 사용자 "필드 전체" → "섬형으로 할래 … 섬하나하나를 크게"): 지형 생성기 · 바이옴 고르기를 등록하고,
+ * 섬 맵 (2026-11-07 — 사용자 "필드 전체" → "섬형으로 할래 … 섬하나하나를 크게"; 2026-11-28 다리 없이 섬을 멀리 — 이동 지점 돌 · 바다 끝 안개):
+ * 지형 생성기 · 바이옴 고르기를 등록하고,
  * 섬 맵으로 만든 세계를 처음 열 때 세계 경계 (field.json border) · 시작 자리 (마을 광장) 를 정함.
  * 새 세계 만들기의 "월드 유형 → 섬 맵 (MMO RPG)" 또는 서버 server.properties 의 level-type=mmorpg:field.
  */
@@ -34,6 +35,7 @@ public final class FieldWorld {
         ServerLifecycleEvents.SERVER_STARTED.register(FieldWorld::onStarted);
         FieldPieces.init();
         FieldWaystones.init();
+        FieldFog.init(); // 2026-11-28 다리 없음: 섬 사이는 이동 지점 돌로만 (먼 바다는 안개가 밀어냄)
     }
 
     /** 지형 (field.json 한 벌 — 처음 쓸 때 만듦) */

@@ -5,7 +5,8 @@ import java.util.List;
 
 /**
  * 섬마다의 거점 (2026-11-07 섬 맵): 올라프의 농가 (농장 섬) · 라그나르의 오아시스 (사막 섬) · 비요른의 항구 (바다 섬) · 스카디의 사냥막 (북쪽 섬) ·
- * 균열 전초기지 (공허 섬) · 불꽃 전초기지 (무스펠 섬). 거점마다 지역 NPC 자리표 (npc_13 …) · 상인 (shop_*) · 이동 지점 (waystone_*).
+ * 균열 전초기지 (균열 곶 — 2026-11-28 공허 섬에서 옮김) · 불꽃 전초기지 (무스펠 섬). 거점마다 지역 NPC 자리표 (npc_13 …) · 상인 (shop_*) · 이동 지점 (waystone_*).
+ * 2026-11-28 다리가 없어 섬마다 도착 광장 (gate — 거점이 아직 없는 눈꽃성 섬 · 불 나라 섬 · 공허 섬): 둥근 돌 바닥 · 룬 기둥 넷 · 가운데 이동 지점 돌.
  */
 public final class FieldCamps {
     private FieldCamps() {}
@@ -260,6 +261,9 @@ public final class FieldCamps {
                 case "north_camp" -> lodge(bps, x, g, z);
                 case "void_camp" -> rift(bps, x, g, z);
                 case "muspel_camp" -> ember(bps, x, g, z);
+                case "snow_gate" -> gate(bps, x, g, z, "snow", "waystone_snow");
+                case "shield_gate" -> gate(bps, x, g, z, "shield", "waystone_shield");
+                case "rift_gate" -> gate(bps, x, g, z, "rift", "waystone_rift");
                 default -> {
                 }
             }
@@ -454,6 +458,75 @@ public final class FieldCamps {
         bps.add(s1);
         Blueprint way = new Blueprint(x, g, z + 10, "south");
         FieldTown.waystone(way, "waystone_muspel");
+        bps.add(way);
+    }
+
+    /**
+     * 도착 광장 (2026-11-28 — 다리 대신 이동 지점 돌로 오는 섬): 반지름 7 의 둥근 바닥 (섬 돌 섞음) · 테두리 반 블록 · 네 모서리 룬 기둥 (높이 5, 꼭대기 빛) ·
+     * 가운데 이동 지점 돌 · 남북 길머리. style = snow (얼음 나라 — 방해석 · 얼음 · 바다 랜턴) · shield (불 나라 — 붉은 사암 · 검은돌 · 화로) ·
+     * rift (공허 섬 — 심층암 · 흑요석 · 우는 흑요석 · 영혼 등불).
+     */
+    static void gate(List<Blueprint> bps, int x, int g, int z, String style, String id) {
+        String floor;
+        String rim;
+        String pillar;
+        String cap;
+        String glow;
+        switch (style) {
+            case "snow" -> {
+                floor = "minecraft:polished_diorite|minecraft:calcite|minecraft:packed_ice|minecraft:calcite";
+                rim = "minecraft:diorite_slab[type=bottom]";
+                pillar = "minecraft:packed_ice|minecraft:blue_ice|minecraft:packed_ice";
+                cap = "minecraft:chiseled_quartz_block";
+                glow = "minecraft:sea_lantern";
+            }
+            case "shield" -> {
+                floor = "minecraft:smooth_red_sandstone|minecraft:cut_red_sandstone|minecraft:red_terracotta|minecraft:smooth_red_sandstone";
+                rim = "minecraft:red_sandstone_slab[type=bottom]";
+                pillar = "minecraft:polished_blackstone_bricks|minecraft:cracked_polished_blackstone_bricks|minecraft:polished_blackstone_bricks";
+                cap = "minecraft:chiseled_polished_blackstone";
+                glow = "minecraft:shroomlight";
+            }
+            default -> {
+                floor = "minecraft:polished_deepslate|minecraft:deepslate_tiles|minecraft:polished_deepslate|minecraft:obsidian";
+                rim = "minecraft:polished_deepslate_slab[type=bottom]";
+                pillar = "minecraft:deepslate_bricks|minecraft:obsidian|minecraft:deepslate_bricks";
+                cap = "minecraft:crying_obsidian";
+                glow = "minecraft:crying_obsidian";
+            }
+        }
+        Blueprint b = new Blueprint(x, g, z, "south");
+        int R = 7;
+        b.air(-R - 1, 1, -R - 1, R + 1, 7, R + 1);
+        for (int dx = -R - 1; dx <= R + 1; dx++) {
+            for (int dz = -R - 1; dz <= R + 1; dz++) {
+                double d = Math.hypot(dx, dz);
+                if (d <= R + 0.3) b.fill(dx, -1, dz, dx, 0, dz, floor);
+                else if (d <= R + 1.2) {
+                    b.fill(dx, -1, dz, dx, 0, dz, floor);
+                    b.set(dx, 1, dz, rim);
+                }
+            }
+        }
+        // 남북 길머리: 테두리를 비움
+        for (int dx = -1; dx <= 1; dx++) {
+            b.air(dx, 1, R, dx, 1, R + 1);
+            b.air(dx, 1, -R - 1, dx, 1, -R);
+        }
+        for (int[] p : new int[][] {{-5, -5}, {5, -5}, {-5, 5}, {5, 5}}) {
+            b.fill(p[0], 1, p[1], p[0], 4, p[1], pillar);
+            b.set(p[0], 5, p[1], cap);
+            if (style.equals("shield")) {
+                b.set(p[0], 6, p[1], "minecraft:magma_block");
+                b.set(p[0], 7, p[1], "minecraft:campfire[lit=true,signal_fire=false]");
+            } else {
+                b.set(p[0], 6, p[1], glow);
+                b.set(p[0], 7, p[1], style.equals("snow") ? "minecraft:end_rod[facing=up]" : "minecraft:soul_lantern[hanging=false]");
+            }
+        }
+        bps.add(b);
+        Blueprint way = new Blueprint(x, g, z, "south");
+        FieldTown.waystone(way, id);
         bps.add(way);
     }
 }

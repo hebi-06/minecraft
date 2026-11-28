@@ -180,13 +180,30 @@ B = {
                                 'loop': 'minecraft:ambient.basalt_deltas.loop',
                                 'mood': {'block_search_extent': 8, 'offset': 2.0, 'sound': 'minecraft:ambient.basalt_deltas.mood', 'tick_delay': 6000}},
                         ores=False, wg_spawn=0.0),
+    # ---- 2026-11-28 새 섬 셋 (다리 없이 이동 지점 돌로 감 — map-layout 2-5 · 2-7 · 2-9)
+    # 눈꽃성 섬: 얼음 나라 수도 — 어스름 같은 낮은 하늘 · 눈발 · 드문 가문비 (호수는 freeze_top_layer 로 얼음)
+    'snowcrown': biome(-0.9, 0.7, True, '#3938c9', '#5c6fb0', fog='#b8c4e6', veg=['minecraft:trees_snowy'],
+                       particles=[('minecraft:snowflake', 0.02)], music=MUSIC('minecraft:music.overworld.frozen_peaks'), wg_spawn=0.0),
+    # 균열 곶: 북쪽 끝 눈 덮인 바위 곶 — 보랏빛 잿빛 하늘 · 재 · 드문 공허 빛
+    'rift_cape': biome(-0.3, 0.3, True, '#2a2f6a', '#4a4470', fog='#8a84a8', water_fog='#120a22',
+                       particles=[('minecraft:white_ash', 0.01), ('minecraft:reverse_portal', 0.002)], music=MUSIC('minecraft:music.overworld.deep_dark'),
+                       ores=False, wg_spawn=0.0),
+    # 불 나라 섬: 붉은 노을빛 하늘 · 재 입자 · 마른 풀
+    'shieldwall': biome(2.0, 0.0, False, '#3f76e4', '#c97a52', fog='#d99a6c', grass='#90814d', foliage='#9e814d',
+                        veg=['minecraft:patch_dry_grass_badlands', 'minecraft:patch_dead_bush_badlands'],
+                        particles=[('minecraft:white_ash', 0.006)], music=MUSIC('minecraft:music.overworld.badlands'), wg_spawn=0.0),
+    # 검은 틈 들 (불 나라 동서): 공허가 스민 땅 — 어두운 붉은 하늘 · 공허 빛
+    'black_fissures': biome(2.0, 0.0, False, '#2a1f5a', '#7a4a52', fog='#6a4a5c', water_fog='#120a22',
+                            particles=[('minecraft:reverse_portal', 0.004), ('minecraft:ash', 0.006)], music=MUSIC('minecraft:music.overworld.badlands'),
+                            ores=False, wg_spawn=0.0),
 }
 
 
 # 빈터 (거점 · 작은 마을 · 신전 자리 — core FieldTerrain.CLEARING): 바탕 바이옴과 하늘 · 안개 · 색 · 소리는 같고, 나무 · 선인장 · 호박 · 사탕수수 ·
 # 덤불 · 버섯 · 바위 · 현무암 기둥 · 삼각주 · 얼음 가시 · 빙산 · 수련만 뺌 (CI 42359496849 사진: 항구 · 사냥막이 숲에, 불꽃 전초기지가 현무암 기둥에 묻힘)
 CLEAR = {'harvest_clearing': 'harvest_fields', 'dune_clearing': 'dune_sea', 'oasis_clearing': 'oasis', 'fjord_clearing': 'fjord_coast',
-         'mire_clearing': 'mire', 'frost_clearing': 'frost_taiga', 'glacier_clearing': 'glacier', 'muspel_clearing': 'muspelheim'}
+         'mire_clearing': 'mire', 'frost_clearing': 'frost_taiga', 'glacier_clearing': 'glacier', 'muspel_clearing': 'muspelheim',
+         'snowcrown_clearing': 'snowcrown', 'rift_cape_clearing': 'rift_cape', 'shieldwall_clearing': 'shieldwall'}
 BANNED = ('trees', 'cactus', 'pumpkin', 'sugar_cane', 'berry', 'large_fern', 'forest_rock', 'basalt', 'delta', 'ice_spike', 'ice_patch', 'iceberg',
           'waterlily', 'bush', 'mushroom')
 

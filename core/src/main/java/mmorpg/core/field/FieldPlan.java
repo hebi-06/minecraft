@@ -19,9 +19,28 @@ import mmorpg.core.Obj;
 public final class FieldPlan {
     public static final String RESOURCE = "/mmorpg/field.json";
 
-    /** 섬: 가운데 (x, z) · 반지름 · 지형 종류 (village · farm · desert · sea · islet · north · void · muspel) · 퀘스트 지역 (없으면 null) · 해안 들쭉날쭉함 */
+    /**
+     * 섬: 가운데 (x, z) · 반지름 · 지형 종류 (village · farm · desert · sea · islet · north · void · muspel · snowcrown · cape · shieldwall) · 퀘스트 지역
+     * (없으면 null) · 해안 들쭉날쭉함 · 레벨 (levelMin = 이동 지점 돌이 열리는 레벨). 2026-11-28 다리 없음 (사용자 "텔포로 이동시킬거여서 다리 없애고
+     * 그냥 섬을 멀리 둬도 됨"): shapeAt (sx, sz) = 모양 무늬를 고른 자리 — 섬을 옮겨도 잡음은 그 자리에서 읽어 땅 모양이 그대로 (옮긴 칸 = dx · dz).
+     * with = 붙은 섬 (작은 섬 · 곶 — 같은 무리로 셈: 바다 길 · 이동 지점 시험).
+     */
     public record Island(int index, String id, String name, String terrain, String region, double x, double z, double radius, double coast,
-            int levelMin, int levelMax) {}
+            int levelMin, int levelMax, double sx, double sz, String with) {
+        /** 세계 칸 x → 무늬 칸 (shapeAt 에서 읽음) 의 차이 */
+        public int dx() {
+            return (int) Math.round(sx - x);
+        }
+
+        public int dz() {
+            return (int) Math.round(sz - z);
+        }
+
+        /** 무리의 으뜸 섬 (붙은 섬이면 붙은 곳, 아니면 자기) */
+        public String group() {
+            return with == null ? id : with;
+        }
+    }
 
     /** 자리: kind = town · tree · camp · zone · boss. 사냥터는 mob, 보스는 boss, 거점은 지역 NPC 번호 npc (없으면 0) */
     public record Site(String id, String kind, String island, double x, double z, double r, String mob, String boss, int npc, String name) {}
@@ -42,6 +61,9 @@ public final class FieldPlan {
     public final double borderSize;
     public final int spawnX;
     public final int spawnZ;
+    /** 바다 끝 안개 (2026-11-28): 가장 가까운 해안에서 push 칸 밖이면 밀어냄, back 칸 밖이면 마지막 땅으로 되돌림 — 섬 사이는 이동 지점 돌로만 */
+    public final double fogPush;
+    public final double fogBack;
     public final int bridgeWidth;
     public final int bridgeDeck;
     public final List<Island> islands;
@@ -61,6 +83,9 @@ public final class FieldPlan {
         List<Double> sp = o.numbersOrNull("spawn");
         spawnX = sp == null ? 0 : sp.get(0).intValue();
         spawnZ = sp == null ? 0 : sp.get(1).intValue();
+        Obj fog = o.objOrNull("fog");
+        fogPush = fog == null ? 280 : fog.numOr("push", 280);
+        fogBack = fog == null ? 340 : fog.numOr("back", 340);
         Obj br = o.objOrNull("bridge");
         bridgeWidth = br == null ? 5 : (int) br.numOr("width", 5);
         bridgeDeck = br == null ? sea + 7 : (int) br.numOr("deck", sea + 7);
@@ -68,13 +93,16 @@ public final class FieldPlan {
         Map<String, Island> ids = new LinkedHashMap<>();
         for (Obj i : o.objsOrNull("islands")) {
             List<Double> lv = i.numbersOrNull("level");
+            List<Double> sh = i.numbersOrNull("shapeAt");
             Island isl = new Island(is.size(), i.str("id"), i.str("name"), i.str("terrain"), i.strOrNull("region"), i.num("x"), i.num("z"), i.num("radius"),
-                    i.numOr("coast", 0.15), lv == null ? 1 : lv.get(0).intValue(), lv == null ? 60 : lv.get(1).intValue());
+                    i.numOr("coast", 0.15), lv == null ? 1 : lv.get(0).intValue(), lv == null ? 60 : lv.get(1).intValue(),
+                    sh == null ? i.num("x") : sh.get(0), sh == null ? i.num("z") : sh.get(1), i.strOrNull("with"));
             if (ids.put(isl.id(), isl) != null) throw new IllegalStateException("field.json: island " + isl.id() + " twice");
             is.add(isl);
         }
         islands = List.copyOf(is);
         byId = Collections.unmodifiableMap(ids);
+        for (Island isl : islands) if (isl.with() != null && !byId.containsKey(isl.with())) throw new IllegalStateException("field.json: island " + isl.id() + " with unknown " + isl.with());
         List<Bridge> bs = new ArrayList<>();
         for (Obj x : o.objsOrNull("bridges")) {
             Bridge bridge = new Bridge(x.str("from"), x.str("to"));

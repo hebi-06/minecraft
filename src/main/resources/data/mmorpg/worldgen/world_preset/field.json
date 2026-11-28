@@ -28,6 +28,10 @@
             "mmorpg:void_rift",
             "mmorpg:helheim",
             "mmorpg:muspelheim",
+            "mmorpg:snowcrown",
+            "mmorpg:rift_cape",
+            "mmorpg:shieldwall",
+            "mmorpg:black_fissures",
             "mmorpg:harvest_clearing",
             "mmorpg:dune_clearing",
             "mmorpg:oasis_clearing",
@@ -35,7 +39,10 @@
             "mmorpg:mire_clearing",
             "mmorpg:frost_clearing",
             "mmorpg:glacier_clearing",
-            "mmorpg:muspel_clearing"
+            "mmorpg:muspel_clearing",
+            "mmorpg:snowcrown_clearing",
+            "mmorpg:rift_cape_clearing",
+            "mmorpg:shieldwall_clearing"
           ]
         }
       }
