@@ -154,13 +154,18 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         return new int[] {hit};
     }
 
-    /** 끝까지 기다릴 틱 */
+    /**
+     * 끝까지 기다릴 틱 — 등급 기본 · 마지막 피해 틱 (RUNE_SET.spread w) + 12 중 긴 것.
+     * 2026-11-28: 램파트는 3초 막은 뒤 60틱에 밀쳐냄 → 일반 50틱 안에 피해가 없어 "dealt no damage" (CI 46120874923 — 모든 묶음을 돈 첫 판에서 드러남)
+     */
     private static int total(Runes.Rune r) {
-        return switch (r.grade()) {
+        int base = switch (r.grade()) {
             case "transcend" -> 110;
             case "hero" -> 80;
             default -> 50;
         };
+        Obj e = Runes.spreadEntry(r);
+        return e == null ? base : Math.max(base, (int) Math.ceil(e.numOr("w", 0)) + 12);
     }
 
     /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 기록 */
